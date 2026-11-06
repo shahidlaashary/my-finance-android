@@ -29,7 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
+      - name: Fix file_picker Android SDK
+        run: |
+          find "$HOME/.pub-cache/hosted/pub.dev" -path "*/file_picker-*/android/build.gradle" -exec sed -i 's/compileSdkVersion 34/compileSdkVersion 36/g; s/compileSdk = 34/compileSdk = 36/g' {} +
       - name: Build APK
         run: flutter build apk --release
 

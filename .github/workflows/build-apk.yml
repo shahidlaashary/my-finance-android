@@ -21,7 +21,9 @@ jobs:
         run: |
           unzip "my_finance_flutter_v1_2(2).zip" -d extracted
           cp -r extracted/my_finance_flutter_v1_2/. .
-          flutter create . --platforms=android
+          flutter create . --platforms=android      - name: Set Android compile SDK
+        run: |
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' android/app/build.gradle.kts
 
       - name: Install dependencies
         run: flutter pub get

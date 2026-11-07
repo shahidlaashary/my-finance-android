@@ -297,4 +297,14 @@ class TransactionService {
       ORDER BY t.id DESC
     ''');
   }
+
+  static Future<List<Map<String, dynamic>>> getAccounts() async {
+    final db = await database;
+
+    return db.query(
+      'accounts',
+      columns: ['id', 'name', 'currency', 'balance'],
+      orderBy: 'name COLLATE NOCASE ASC',
+    );
+  }
 }

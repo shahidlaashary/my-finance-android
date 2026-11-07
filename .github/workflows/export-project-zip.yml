@@ -1,0 +1,23 @@
+
+name: Export My Finance ZIP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create ZIP
+        run: |
+          mkdir -p dist
+          zip -r dist/My-Finance-Project.zip . \
+            -x ".git/*" "dist/*"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: My-Finance-Project
+          path: dist/My-Finance-Project.zip
+          retention-days: 30

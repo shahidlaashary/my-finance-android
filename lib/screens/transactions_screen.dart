@@ -1,8 +1,10 @@
+
 import 'package:flutter/material.dart';
 
 import '../models/finance_category.dart';
 import '../services/category_service.dart';
 import '../services/transaction_service.dart';
+import '../widgets/attachment_section.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -23,9 +25,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   Future<void> loadTransactions() async {
-    if (mounted) {
-      setState(() => loading = true);
-    }
+    if (mounted) setState(() => loading = true);
 
     try {
       final result = await TransactionService.getTransactions();
@@ -55,6 +55,37 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return type.trim().toLowerCase();
   }
 
+  Future<void> showAttachments(Map<String, dynamic> item) async {
+    final transactionId = item['id'] as int;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 8,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.65,
+              child: SingleChildScrollView(
+                child: AttachmentSection(
+                  ownerType: 'transaction',
+                  ownerId: transactionId,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> editTransaction(
     Map<String, dynamic> item,
   ) async {
@@ -64,9 +95,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (accounts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No accounts available.'),
-        ),
+        const SnackBar(content: Text('No accounts available.')),
       );
       return;
     }
@@ -75,9 +104,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (!['income', 'expense', 'transfer'].contains(type)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unknown transaction type.'),
-        ),
+        const SnackBar(content: Text('Unknown transaction type.')),
       );
       return;
     }
@@ -151,15 +178,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         return DropdownMenuItem<int>(
                           value: account['id'] as int,
                           child: Text(
-                            '${account['name']} '
-                            '(${account['currency']})',
+                            '${account['name']} (${account['currency']})',
                           ),
                         );
                       }).toList(),
                       onChanged: (value) {
                         updateDialog(() {
                           accountId = value;
-
                           if (toAccountId == accountId) {
                             toAccountId = null;
                           }
@@ -179,8 +204,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           return DropdownMenuItem<int>(
                             value: account['id'] as int,
                             child: Text(
-                              '${account['name']} '
-                              '(${account['currency']})',
+                              '${account['name']} (${account['currency']})',
                             ),
                           );
                         }).toList(),
@@ -283,17 +307,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       return;
                     }
 
-                    if (accountId == null) {
-                      return;
-                    }
+                    if (accountId == null) return;
 
-                    if (type == 'transfer' &&
-                        toAccountId == null) {
+                    if (type == 'transfer' && toAccountId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                            'Select a destination account.',
-                          ),
+                          content: Text('Select a destination account.'),
                         ),
                       );
                       return;
@@ -305,12 +324,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         type: type,
                         amount: amount,
                         accountId: accountId!,
-                        toAccountId: type == 'transfer'
-                            ? toAccountId
-                            : null,
-                        categoryId: type == 'transfer'
-                            ? null
-                            : categoryId,
+                        toAccountId:
+                            type == 'transfer' ? toAccountId : null,
+                        categoryId:
+                            type == 'transfer' ? null : categoryId,
                         note: noteController.text.trim(),
                         date: selectedDate.toIso8601String(),
                       );
@@ -320,9 +337,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       }
                     } catch (e) {
                       if (dialogContext.mounted) {
-                        ScaffoldMessenger.of(
-                          dialogContext,
-                        ).showSnackBar(
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
                           SnackBar(content: Text('$e')),
                         );
                       }
@@ -399,9 +414,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ],
       ),
       body: loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : transactions.isEmpty
               ? const Center(
                   child: Text('No transactions available'),
@@ -434,9 +447,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               : 'Transfer';
 
                       return Card(
-                        margin: const EdgeInsets.only(
-                          bottom: 10,
-                        ),
+                        margin: const EdgeInsets.only(bottom: 10),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
@@ -465,9 +476,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 editTransaction(item);
                               } else if (value == 'delete') {
                                 deleteTransaction(item);
+                              } else if (value == 'attachments') {
+                                showAttachments(item);
                               }
                             },
                             itemBuilder: (context) => const [
+                              PopupMenuItem(
+                                value: 'attachments',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.attach_file),
+                                    SizedBox(width: 10),
+                                    Text('Attachments'),
+                                  ],
+                                ),
+                              ),
                               PopupMenuItem(
                                 value: 'edit',
                                 child: Text('Edit'),

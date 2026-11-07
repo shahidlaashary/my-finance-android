@@ -13,17 +13,17 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+  late final TabController _tabs;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabs = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabs.dispose();
     super.dispose();
   }
 
@@ -33,7 +33,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       appBar: AppBar(
         title: const Text('Categories'),
         bottom: TabBar(
-          controller: _tabController,
+          controller: _tabs,
           tabs: const [
             Tab(text: 'Income'),
             Tab(text: 'Expenses'),
@@ -41,27 +41,28 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         ),
       ),
       body: TabBarView(
-        controller: _tabController,
+        controller: _tabs,
         children: const [
-          _CategoryList(type: 'income'),
-          _CategoryList(type: 'expense'),
+          CategoryList(type: 'income'),
+          CategoryList(type: 'expense'),
         ],
       ),
     );
   }
 }
 
-class _CategoryList extends StatefulWidget {
+class CategoryList extends StatefulWidget {
   final String type;
 
-  const _CategoryList({required this.type});
+  const CategoryList({super.key, required this.type});
 
   @override
-  State<_CategoryList> createState() => _CategoryListState();
+  State<CategoryList> createState() => _CategoryListState();
 }
 
-class _CategoryListState extends State<_CategoryList> {
+class _CategoryListState extends State<CategoryList> {
   List<FinanceCategory> categories = [];
+  final Map<int, List<FinanceCategory>> subcategories = {};
   bool loading = true;
 
   static const icons = [
@@ -79,18 +80,41 @@ class _CategoryListState extends State<_CategoryList> {
   Future<void> loadCategories() async {
     setState(() => loading = true);
 
-    final result =
-        await CategoryService.getCategories(widget.type);
+    try {
+      final result =
+          await CategoryService.getCategories(widget.type);
 
-    if (!mounted) return;
+      final Map<int, List<FinanceCategory>> children = {};
 
-    setState(() {
-      categories = result;
-      loading = false;
-    });
+      for (final category in result) {
+        if (category.id == null) continue;
+
+        children[category.id!] =
+            await CategoryService.getCategories(
+          widget.type,
+          parentId: category.id,
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        categories = result;
+        subcategories
+          ..clear()
+          ..addAll(children);
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading categories: $e')),
+      );
+    }
   }
 
-  Future<void> openEditor({
+  Future<void> editCategory({
     FinanceCategory? category,
     int? parentId,
   }) async {
@@ -99,7 +123,7 @@ class _CategoryListState extends State<_CategoryList> {
 
     String selectedIcon = category?.icon ?? icons.first;
 
-    final result = await showDialog<bool>(
+    final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -118,48 +142,31 @@ class _CategoryListState extends State<_CategoryList> {
                   children: [
                     TextField(
                       controller: nameController,
-                      autofocus: true,
                       decoration: const InputDecoration(
-                        labelText: 'Category Name',
+                        labelText: 'Name',
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Choose Icon'),
-                    ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
                       children: icons.map((icon) {
-                        final selected = selectedIcon == icon;
-
                         return InkWell(
-                          onTap: () => updateDialog(
-                            () => selectedIcon = icon,
-                          ),
+                          onTap: () =>
+                              updateDialog(() => selectedIcon = icon),
                           child: Container(
                             padding: const EdgeInsets.all(9),
                             decoration: BoxDecoration(
-                              color: selected
+                              color: selectedIcon == icon
                                   ? Theme.of(context)
-                                      .colorScheme
-                                      .primaryContainer
-                                  : Colors.grey.withValues(alpha: 0.10),
+                                      .colorScheme.primaryContainer
+                                  : Colors.grey.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: selected
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                    : Colors.transparent,
-                              ),
                             ),
                             child: Text(
                               icon,
-                              style: const TextStyle(fontSize: 23),
+                              style: const TextStyle(fontSize: 22),
                             ),
                           ),
                         );
@@ -177,7 +184,6 @@ class _CategoryListState extends State<_CategoryList> {
                 FilledButton(
                   onPressed: () async {
                     final name = nameController.text.trim();
-
                     if (name.isEmpty) return;
 
                     final item = FinanceCategory(
@@ -209,9 +215,7 @@ class _CategoryListState extends State<_CategoryList> {
 
     nameController.dispose();
 
-    if (result == true) {
-      await loadCategories();
-    }
+    if (saved == true) await loadCategories();
   }
 
   Future<void> deleteCategory(FinanceCategory category) async {
@@ -220,8 +224,8 @@ class _CategoryListState extends State<_CategoryList> {
       builder: (context) => AlertDialog(
         title: const Text('Delete Category?'),
         content: const Text(
-          'This category will be hidden. Existing financial records '
-          'will not be physically deleted.',
+          'The category will be hidden. Existing transaction records '
+          'will be preserved.',
         ),
         actions: [
           TextButton(
@@ -242,74 +246,103 @@ class _CategoryListState extends State<_CategoryList> {
     }
   }
 
+  Widget categoryTile(FinanceCategory category) {
+    final children = subcategories[category.id] ?? [];
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        children: [
+          ListTile(
+            leading: CircleAvatar(
+              child: Text(
+                category.icon,
+                style: const TextStyle(fontSize: 21),
+              ),
+            ),
+            title: Text(
+              category.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') {
+                  editCategory(category: category);
+                } else if (value == 'delete') {
+                  deleteCategory(category);
+                } else if (value == 'add') {
+                  editCategory(parentId: category.id);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'add',
+                  child: Text('Add Subcategory'),
+                ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Edit'),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete'),
+                ),
+              ],
+            ),
+          ),
+          if (children.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 24, bottom: 8),
+              child: Column(
+                children: children.map((child) {
+                  return ListTile(
+                    dense: true,
+                    leading: Text(
+                      child.icon,
+                      style: const TextStyle(fontSize: 19),
+                    ),
+                    title: Text(child.name),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          editCategory(category: child);
+                        } else if (value == 'delete') {
+                          deleteCategory(child);
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return Column(
       children: [
         Expanded(
-          child: categories.isEmpty
-              ? const Center(
-                  child: Text('No categories added yet'),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(
-                            category.icon,
-                            style: const TextStyle(fontSize: 22),
-                          ),
-                        ),
-                        title: Text(
-                          category.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          widget.type == 'income'
-                              ? 'Income category'
-                              : 'Expense category',
-                        ),
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              openEditor(category: category);
-                            } else if (value == 'delete') {
-                              deleteCategory(category);
-                            } else if (value == 'sub') {
-                              openEditor(parentId: category.id);
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: 'sub',
-                              child: Text('Add Subcategory'),
-                            ),
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Text('Edit'),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          child: loading
+              ? const Center(child: CircularProgressIndicator())
+              : categories.isEmpty
+                  ? const Center(child: Text('No categories yet'))
+                  : ListView(
+                      padding: const EdgeInsets.all(12),
+                      children: categories.map(categoryTile).toList(),
+                    ),
         ),
         SafeArea(
           child: Padding(
@@ -317,7 +350,7 @@ class _CategoryListState extends State<_CategoryList> {
             child: SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () => openEditor(),
+                onPressed: () => editCategory(),
                 icon: const Icon(Icons.add),
                 label: const Text('Add Category'),
               ),

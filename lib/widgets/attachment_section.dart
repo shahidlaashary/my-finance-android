@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../models/attachment_model.dart';
 import '../services/attachment_service.dart';
@@ -23,11 +24,11 @@ class AttachmentSection extends StatefulWidget {
 }
 
 class _AttachmentSectionState extends State<AttachmentSection> {
-  final ImagePicker _picker = ImagePicker();
+  final ImagePicker _imagePicker = ImagePicker();
 
   List<AttachmentModel> _attachments = [];
   bool _loading = true;
-  bool _adding = false;
+  bool _processing = false;
 
   @override
   void initState() {
@@ -51,146 +52,153 @@ class _AttachmentSectionState extends State<AttachmentSection> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _showError(error);
+      _showMessage('Attachments load nahi ho sakin: $error');
     }
   }
 
-  Future<void> _addImage(ImageSource source) async {
-    if (_adding) return;
+  void _showMessage(String message) {
+    if (!mounted) return;
 
-    setState(() => _adding = true);
-
-    try {
-      if (source == ImageSource.camera) {
-        final image = await _picker.pickImage(
-          source: ImageSource.camera,
-          imageQuality: 85,
-        );
-
-        if (image != null) {
-          await _saveImage(image);
-        }
-      } else {
-        final images = await _picker.pickMultiImage(
-          imageQuality: 85,
-        );
-
-        for (final image in images) {
-          await _saveImage(image);
-        }
-      }
-
-      await _loadAttachments();
-    } catch (error) {
-      _showError(error);
-    } finally {
-      if (mounted) setState(() => _adding = false);
-    }
-  }
-
-  Future<void> _saveImage(XFile image) async {
-    await AttachmentService.addAttachment(
-      ownerType: widget.ownerType,
-      ownerId: widget.ownerId,
-      sourcePath: image.path,
-      originalFileName: image.name,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
-  Future<void> _addPdf() async {
-    if (_adding) return;
+  Future<void> _addFile(String path, String fileName) async {
+    try {
+      await AttachmentService.addAttachment(
+        ownerType: widget.ownerType,
+        ownerId: widget.ownerId,
+        sourcePath: path,
+        originalFileName: fileName,
+      );
 
-    setState(() => _adding = true);
+      await _loadAttachments();
+      _showMessage('Attachment successfully add ho gayi.');
+    } catch (error) {
+      _showMessage('Attachment add nahi hui: $error');
+    }
+  }
 
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? photo = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+      );
+
+      if (photo == null) return;
+
+      await _addFile(photo.path, photo.name);
+    } catch (error) {
+      _showMessage('Camera error: $error');
+    }
+  }
+
+  Future<void> _pickPhotos() async {
+    try {
+      final photos = await _imagePicker.pickMultiImage(
+        imageQuality: 85,
+      );
+
+      for (final photo in photos) {
+        await _addFile(photo.path, photo.name);
+      }
+    } catch (error) {
+      _showMessage('Gallery error: $error');
+    }
+  }
+
+  Future<void> _pickPdfs() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         allowMultiple: true,
-        withData: false,
       );
 
-      if (result != null) {
-        for (final file in result.files) {
-          final path = file.path;
-          if (path == null) continue;
+      if (result == null) return;
 
-          await AttachmentService.addAttachment(
-            ownerType: widget.ownerType,
-            ownerId: widget.ownerId,
-            sourcePath: path,
-            originalFileName: file.name,
-          );
+      for (final file in result.files) {
+        final path = file.path;
+
+        if (path != null) {
+          await _addFile(path, file.name);
         }
       }
-
-      await _loadAttachments();
     } catch (error) {
-      _showError(error);
-    } finally {
-      if (mounted) setState(() => _adding = false);
+      _showMessage('PDF select nahi ho saki: $error');
     }
   }
 
-  void _showError(Object error) {
-    if (!mounted) return;
+  Future<void> _replaceAttachment(
+    AttachmentModel oldAttachment,
+  ) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: [
+          'jpg',
+          'jpeg',
+          'png',
+          'webp',
+          'heic',
+          'pdf',
+        ],
+        allowMultiple: false,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Attachment error: $error')),
-    );
-  }
+      if (result == null || result.files.isEmpty) return;
 
-  void _showAddOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _addImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose Multiple Photos'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _addImage(ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf),
-                title: const Text('Choose Multiple PDFs'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _addPdf();
-                },
-              ),
-            ],
-          ),
+      final file = result.files.first;
+      final path = file.path;
+
+      if (path == null) {
+        _showMessage('Selected file ka path nahi mila.');
+        return;
+      }
+
+      // Pehle nayi file save hogi.
+      final newAttachment = await AttachmentService.addAttachment(
+        ownerType: widget.ownerType,
+        ownerId: widget.ownerId,
+        sourcePath: path,
+        originalFileName: file.name,
+      );
+
+      // Nayi file save hone ke baad purani file delete hogi.
+      if (oldAttachment.id != null) {
+        await AttachmentService.deleteAttachment(
+          oldAttachment.id!,
         );
-      },
-    );
+      }
+
+      await _loadAttachments();
+      _showMessage('Attachment replace ho gayi.');
+    } catch (error) {
+      _showMessage('Replacement error: $error');
+    }
   }
 
-  Future<void> _deleteAttachment(AttachmentModel attachment) async {
+  Future<void> _deleteAttachment(
+    AttachmentModel attachment,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Attachment?'),
-        content: Text('Delete "${attachment.fileName}"?'),
+        title: const Text('Delete Attachment'),
+        content: const Text(
+          'Kya aap is attachment ko delete karna chahte hain?',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () =>
+                Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
+            onPressed: () =>
+                Navigator.pop(dialogContext, true),
             child: const Text('Delete'),
           ),
         ],
@@ -200,14 +208,50 @@ class _AttachmentSectionState extends State<AttachmentSection> {
     if (confirm != true || attachment.id == null) return;
 
     try {
-      await AttachmentService.deleteAttachment(attachment.id!);
+      await AttachmentService.deleteAttachment(
+        attachment.id!,
+      );
+
       await _loadAttachments();
+      _showMessage('Attachment delete ho gayi.');
     } catch (error) {
-      _showError(error);
+      _showMessage('Delete error: $error');
     }
   }
 
-  void _previewImage(AttachmentModel attachment) {
+  Future<void> _openAttachment(
+    AttachmentModel attachment,
+  ) async {
+    try {
+      final file = File(attachment.filePath);
+
+      if (!await file.exists()) {
+        _showMessage('Attachment file device par nahi mili.');
+        return;
+      }
+
+      if (attachment.fileType == 'image') {
+        _showImagePreview(attachment);
+        return;
+      }
+
+      final result = await OpenFilex.open(
+        attachment.filePath,
+      );
+
+      if (!result.type.toString().toLowerCase().contains('done')) {
+        _showMessage(
+          result.message.isNotEmpty
+              ? result.message
+              : 'File open nahi ho saki.',
+        );
+      }
+    } catch (error) {
+      _showMessage('File open error: $error');
+    }
+  }
+
+  void _showImagePreview(AttachmentModel attachment) {
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -216,27 +260,37 @@ class _AttachmentSectionState extends State<AttachmentSection> {
           children: [
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                attachment.fileName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      attachment.fileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () =>
+                        Navigator.pop(dialogContext),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
             ),
             Flexible(
-              child: Image.file(
-                File(attachment.filePath),
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Padding(
+              child: InteractiveViewer(
+                child: Image.file(
+                  File(attachment.filePath),
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) =>
+                      const Padding(
                     padding: EdgeInsets.all(24),
-                    child: Text('Image could not be opened.'),
-                  );
-                },
+                    child: Text('Image preview available nahi.'),
+                  ),
+                ),
               ),
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Close'),
-            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -248,83 +302,149 @@ class _AttachmentSectionState extends State<AttachmentSection> {
     if (bytes < 1024 * 1024) {
       return '${(bytes / 1024).toStringAsFixed(1)} KB';
     }
+
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  Widget _buildAddButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: _processing ? null : onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Expanded(
-              child: Text(
-                'Attachments',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
+            Row(
+              children: [
+                const Icon(Icons.attach_file),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Attachments',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
+                Text('${_attachments.length}'),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildAddButton(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onPressed: _takePhoto,
+                ),
+                _buildAddButton(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  onPressed: _pickPhotos,
+                ),
+                _buildAddButton(
+                  icon: Icons.picture_as_pdf,
+                  label: 'Add PDFs',
+                  onPressed: _pickPdfs,
+                ),
+              ],
+            ),
+
+            const Divider(height: 24),
+
+            if (_loading)
+              const Center(
+                child: CircularProgressIndicator(),
+              )
+            else if (_attachments.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text('No attachments added yet.'),
+                ),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _attachments.length,
+                itemBuilder: (context, index) {
+                  final attachment = _attachments[index];
+                  final isImage =
+                      attachment.fileType == 'image';
+
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      isImage
+                          ? Icons.image
+                          : attachment.fileType == 'pdf'
+                              ? Icons.picture_as_pdf
+                              : Icons.insert_drive_file,
+                      color: isImage
+                          ? Colors.blue
+                          : attachment.fileType == 'pdf'
+                              ? Colors.red
+                              : null,
+                    ),
+                    title: Text(
+                      attachment.fileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      '${attachment.fileType.toUpperCase()} • '
+                      '${_formatSize(attachment.fileSize)}',
+                    ),
+                    onTap: () => _openAttachment(attachment),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'open') {
+                          _openAttachment(attachment);
+                        } else if (value == 'replace') {
+                          _replaceAttachment(attachment);
+                        } else if (value == 'delete') {
+                          _deleteAttachment(attachment);
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(
+                          value: 'open',
+                          child: Text('Open / Preview'),
+                        ),
+                        PopupMenuItem(
+                          value: 'replace',
+                          child: Text('Replace'),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ),
-            TextButton.icon(
-              onPressed: _adding ? null : _showAddOptions,
-              icon: const Icon(Icons.add),
-              label: const Text('Add'),
-            ),
           ],
         ),
-        if (_adding) const LinearProgressIndicator(),
-        if (_loading)
-          const Center(child: CircularProgressIndicator())
-        else if (_attachments.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'No attachments added yet.',
-              style: TextStyle(color: Colors.grey),
-            ),
-          )
-        else
-          ..._attachments.map((attachment) {
-            final isImage = attachment.fileType == 'image';
-            final isPdf = attachment.fileType == 'pdf';
-
-            return Card(
-              child: ListTile(
-                leading: isImage
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.file(
-                          File(attachment.filePath),
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.broken_image);
-                          },
-                        ),
-                      )
-                    : Icon(
-                        isPdf ? Icons.picture_as_pdf : Icons.insert_drive_file,
-                        color: isPdf ? Colors.red : Colors.grey,
-                        size: 36,
-                      ),
-                title: Text(
-                  attachment.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(_formatSize(attachment.fileSize)),
-                onTap: isImage ? () => _previewImage(attachment) : null,
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _deleteAttachment(attachment),
-                ),
-              ),
-            );
-          }),
-      ],
+      ),
     );
   }
 }

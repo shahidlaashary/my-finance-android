@@ -1,9 +1,22 @@
-
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class TransactionService {
   static Database? _database;
+
+  // Normalize transaction types to lowercase.
+  static String _normalizeType(String type) {
+    switch (type.trim().toLowerCase()) {
+      case 'income':
+        return 'income';
+      case 'expense':
+        return 'expense';
+      case 'transfer':
+        return 'transfer';
+      default:
+        throw Exception('Unknown transaction type: $type');
+    }
+  }
 
   static Future<Database> get database async {
     if (_database != null) return _database!;
@@ -22,7 +35,9 @@ class TransactionService {
     return _database!;
   }
 
-  static Future<void> _ensureCategoryColumn(DatabaseExecutor db) async {
+  static Future<void> _ensureCategoryColumn(
+    DatabaseExecutor db,
+  ) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS finance_categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,12 +79,12 @@ class TransactionService {
     }
   }
 
-  // Reverses the balance effect of an existing transaction.
+  // Reverse the balance effect of an existing transaction.
   static Future<void> _reverseTransaction(
     Transaction txn,
     Map<String, dynamic> item,
   ) async {
-    final type = item['type'] as String;
+    final type = _normalizeType(item['type'] as String);
     final amount = (item['amount'] as num).toDouble();
     final accountId = item['account_id'] as int;
     final toAccountId = item['to_account_id'] as int?;
@@ -85,12 +100,10 @@ class TransactionService {
 
       await _changeBalance(txn, accountId, amount);
       await _changeBalance(txn, toAccountId, -amount);
-    } else {
-      throw Exception('Unknown transaction type: $type');
     }
   }
 
-  // Applies the balance effect of a transaction.
+  // Apply the balance effect of a transaction.
   static Future<void> _applyTransaction(
     Transaction txn, {
     required String type,
@@ -98,15 +111,17 @@ class TransactionService {
     required int accountId,
     int? toAccountId,
   }) async {
+    final normalizedType = _normalizeType(type);
+
     if (amount <= 0) {
       throw Exception('Amount must be greater than zero.');
     }
 
-    if (type == 'income') {
+    if (normalizedType == 'income') {
       await _changeBalance(txn, accountId, amount);
-    } else if (type == 'expense') {
+    } else if (normalizedType == 'expense') {
       await _changeBalance(txn, accountId, -amount);
-    } else if (type == 'transfer') {
+    } else if (normalizedType == 'transfer') {
       if (toAccountId == null || toAccountId == accountId) {
         throw Exception('Select a different destination account.');
       }
@@ -125,6 +140,7 @@ class TransactionService {
       final source = accounts.firstWhere(
         (a) => a['id'] == accountId,
       );
+
       final destination = accounts.firstWhere(
         (a) => a['id'] == toAccountId,
       );
@@ -143,11 +159,10 @@ class TransactionService {
 
       await _changeBalance(txn, accountId, -amount);
       await _changeBalance(txn, toAccountId, amount);
-    } else {
-      throw Exception('Unknown transaction type: $type');
     }
   }
 
+  // Validate that the selected category matches the transaction type.
   static Future<void> _validateCategory(
     Transaction txn,
     int? categoryId,
@@ -155,10 +170,12 @@ class TransactionService {
   ) async {
     if (categoryId == null) return;
 
+    final normalizedType = _normalizeType(type);
+
     final rows = await txn.query(
       'finance_categories',
-      where: 'id = ? AND type = ? AND is_deleted = 0',
-      whereArgs: [categoryId, type],
+      where: 'id = ? AND LOWER(type) = ? AND is_deleted = 0',
+      whereArgs: [categoryId, normalizedType],
       limit: 1,
     );
 
@@ -179,6 +196,7 @@ class TransactionService {
     required String date,
   }) async {
     final db = await database;
+    final normalizedType = _normalizeType(type);
 
     await db.transaction((txn) async {
       final existing = await txn.query(
@@ -196,11 +214,15 @@ class TransactionService {
 
       await _reverseTransaction(txn, oldItem);
 
-      await _validateCategory(txn, categoryId, type);
+      await _validateCategory(
+        txn,
+        categoryId,
+        normalizedType,
+      );
 
       await _applyTransaction(
         txn,
-        type: type,
+        type: normalizedType,
         amount: amount,
         accountId: accountId,
         toAccountId: toAccountId,
@@ -209,10 +231,12 @@ class TransactionService {
       await txn.update(
         'transactions',
         {
-          'type': type,
+          'type': normalizedType,
           'amount': amount,
           'account_id': accountId,
-          'to_account_id': toAccountId,
+          'to_account_id': normalizedType == 'transfer'
+              ? toAccountId
+              : null,
           'category_id': categoryId,
           'note': note,
           'date': date,
@@ -269,7 +293,9 @@ class TransactionService {
         throw Exception('Transaction not found.');
       }
 
-      final type = rows.first['type'] as String;
+      final type = _normalizeType(
+        rows.first['type'] as String,
+      );
 
       await _validateCategory(txn, categoryId, type);
 
@@ -282,7 +308,7 @@ class TransactionService {
     });
   }
 
-  // Read transactions with their category names.
+  // Read transactions with their category names and icons.
   static Future<List<Map<String, dynamic>>> getTransactions() async {
     final db = await database;
 
@@ -298,6 +324,7 @@ class TransactionService {
     ''');
   }
 
+  // Get accounts for transaction forms.
   static Future<List<Map<String, dynamic>>> getAccounts() async {
     final db = await database;
 

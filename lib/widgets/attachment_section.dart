@@ -23,7 +23,7 @@ class AttachmentSection extends StatefulWidget {
 }
 
 class _AttachmentSectionState extends State<AttachmentSection> {
-  final ImagePicker _imagePicker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
 
   List<AttachmentModel> _attachments = [];
   bool _loading = true;
@@ -50,32 +50,35 @@ class _AttachmentSectionState extends State<AttachmentSection> {
       });
     } catch (error) {
       if (!mounted) return;
-
       setState(() => _loading = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not load attachments: $error')),
-      );
+      _showError(error);
     }
   }
 
   Future<void> _addImage(ImageSource source) async {
+    if (_adding) return;
+
+    setState(() => _adding = true);
+
     try {
-      setState(() => _adding = true);
+      if (source == ImageSource.camera) {
+        final image = await _picker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+        );
 
-      final image = await _imagePicker.pickImage(
-        source: source,
-        imageQuality: 85,
-      );
+        if (image != null) {
+          await _saveImage(image);
+        }
+      } else {
+        final images = await _picker.pickMultiImage(
+          imageQuality: 85,
+        );
 
-      if (image == null) return;
-
-      await AttachmentService.addAttachment(
-        ownerType: widget.ownerType,
-        ownerId: widget.ownerId,
-        sourcePath: image.path,
-        originalFileName: image.name,
-      );
+        for (final image in images) {
+          await _saveImage(image);
+        }
+      }
 
       await _loadAttachments();
     } catch (error) {
@@ -85,10 +88,21 @@ class _AttachmentSectionState extends State<AttachmentSection> {
     }
   }
 
-  Future<void> _addPdf() async {
-    try {
-      setState(() => _adding = true);
+  Future<void> _saveImage(XFile image) async {
+    await AttachmentService.addAttachment(
+      ownerType: widget.ownerType,
+      ownerId: widget.ownerId,
+      sourcePath: image.path,
+      originalFileName: image.name,
+    );
+  }
 
+  Future<void> _addPdf() async {
+    if (_adding) return;
+
+    setState(() => _adding = true);
+
+    try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
@@ -96,19 +110,18 @@ class _AttachmentSectionState extends State<AttachmentSection> {
         withData: false,
       );
 
-      if (result == null) return;
+      if (result != null) {
+        for (final file in result.files) {
+          final path = file.path;
+          if (path == null) continue;
 
-      for (final selectedFile in result.files) {
-        final filePath = selectedFile.path;
-
-        if (filePath == null) continue;
-
-        await AttachmentService.addAttachment(
-          ownerType: widget.ownerType,
-          ownerId: widget.ownerId,
-          sourcePath: filePath,
-          originalFileName: selectedFile.name,
-        );
+          await AttachmentService.addAttachment(
+            ownerType: widget.ownerType,
+            ownerId: widget.ownerId,
+            sourcePath: path,
+            originalFileName: file.name,
+          );
+        }
       }
 
       await _loadAttachments();
@@ -144,7 +157,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Choose Photos'),
+                title: const Text('Choose Multiple Photos'),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _addImage(ImageSource.gallery);
@@ -152,7 +165,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
               ),
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf),
-                title: const Text('Choose PDF Files'),
+                title: const Text('Choose Multiple PDFs'),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _addPdf();
@@ -168,22 +181,20 @@ class _AttachmentSectionState extends State<AttachmentSection> {
   Future<void> _deleteAttachment(AttachmentModel attachment) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Attachment?'),
-          content: Text('Delete "${attachment.fileName}"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Attachment?'),
+        content: Text('Delete "${attachment.fileName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
 
     if (confirm != true || attachment.id == null) return;
@@ -199,38 +210,36 @@ class _AttachmentSectionState extends State<AttachmentSection> {
   void _previewImage(AttachmentModel attachment) {
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  attachment.fileName,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+      builder: (dialogContext) => Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                attachment.fileName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              Flexible(
-                child: Image.file(
-                  File(attachment.filePath),
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('Image could not be opened.'),
-                    );
-                  },
-                ),
+            ),
+            Flexible(
+              child: Image.file(
+                File(attachment.filePath),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('Image could not be opened.'),
+                  );
+                },
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -265,8 +274,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
             ),
           ],
         ),
-        if (_adding)
-          const LinearProgressIndicator(),
+        if (_adding) const LinearProgressIndicator(),
         if (_loading)
           const Center(child: CircularProgressIndicator())
         else if (_attachments.isEmpty)
@@ -280,6 +288,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
         else
           ..._attachments.map((attachment) {
             final isImage = attachment.fileType == 'image';
+            final isPdf = attachment.fileType == 'pdf';
 
             return Card(
               child: ListTile(
@@ -296,9 +305,9 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                           },
                         ),
                       )
-                    : const Icon(
-                        Icons.picture_as_pdf,
-                        color: Colors.red,
+                    : Icon(
+                        isPdf ? Icons.picture_as_pdf : Icons.insert_drive_file,
+                        color: isPdf ? Colors.red : Colors.grey,
                         size: 36,
                       ),
                 title: Text(

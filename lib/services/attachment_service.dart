@@ -8,6 +8,23 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/attachment_model.dart';
 
+/// Standard owner types for all My Finance modules.
+class AttachmentOwnerTypes {
+  static const String transaction = 'transaction';
+  static const String asset = 'asset';
+  static const String loan = 'loan';
+  static const String savingsGoal = 'savings_goal';
+  static const String repayment = 'repayment';
+
+  static const List<String> all = [
+    transaction,
+    asset,
+    loan,
+    savingsGoal,
+    repayment,
+  ];
+}
+
 class AttachmentService {
   static const String _databaseName = 'my_finance.db';
   static const String _tableName = 'finance_attachments';
@@ -44,12 +61,33 @@ class AttachmentService {
       CREATE INDEX IF NOT EXISTS idx_attachments_owner
       ON $_tableName (owner_type, owner_id)
     ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_attachments_sync
+      ON $_tableName (is_synced)
+    ''');
+  }
+
+  static String _normalizeOwnerType(String ownerType) {
+    final value = ownerType.trim().toLowerCase();
+
+    if (!AttachmentOwnerTypes.all.contains(value)) {
+      throw ArgumentError('Unsupported attachment owner type: $value');
+    }
+
+    return value;
   }
 
   static String _getFileType(String fileName) {
     final extension = p.extension(fileName).toLowerCase();
 
-    if (['.jpg', '.jpeg', '.png', '.webp', '.heic'].contains(extension)) {
+    if ([
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.webp',
+      '.heic',
+    ].contains(extension)) {
       return 'image';
     }
 
@@ -60,16 +98,14 @@ class AttachmentService {
     return 'file';
   }
 
-  /// Copies a selected file into permanent app storage and saves its record.
+  /// Saves a photo, PDF or supported document against any finance record.
   static Future<AttachmentModel> addAttachment({
     required String ownerType,
     required int ownerId,
     required String sourcePath,
     String? originalFileName,
   }) async {
-    if (ownerType.trim().isEmpty) {
-      throw ArgumentError('Attachment owner type is required.');
-    }
+    final normalizedType = _normalizeOwnerType(ownerType);
 
     if (ownerId <= 0) {
       throw ArgumentError('A valid owner ID is required.');
@@ -85,13 +121,14 @@ class AttachmentService {
         ? originalFileName!.trim()
         : p.basename(sourcePath);
 
-    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final documentsDirectory =
+        await getApplicationDocumentsDirectory();
 
     final attachmentDirectory = Directory(
       p.join(
         documentsDirectory.path,
         'my_finance_attachments',
-        '${ownerType}_$ownerId',
+        '${normalizedType}_$ownerId',
       ),
     );
 
@@ -100,13 +137,16 @@ class AttachmentService {
     final uniqueName =
         '${DateTime.now().microsecondsSinceEpoch}_${p.basename(fileName)}';
 
-    final savedPath = p.join(attachmentDirectory.path, uniqueName);
+    final savedPath = p.join(
+      attachmentDirectory.path,
+      uniqueName,
+    );
 
     final savedFile = await sourceFile.copy(savedPath);
     final fileSize = await savedFile.length();
 
     final attachment = AttachmentModel(
-      ownerType: ownerType,
+      ownerType: normalizedType,
       ownerId: ownerId,
       filePath: savedPath,
       fileName: fileName,
@@ -117,6 +157,7 @@ class AttachmentService {
 
     try {
       final db = await _database;
+
       final id = await db.insert(
         _tableName,
         attachment.toMap()..remove('id'),
@@ -131,24 +172,71 @@ class AttachmentService {
     }
   }
 
-  /// Returns all attachments belonging to a transaction or another record.
+  /// Gets attachments for a specific record.
   static Future<List<AttachmentModel>> getAttachments({
     required String ownerType,
     required int ownerId,
   }) async {
+    final normalizedType = _normalizeOwnerType(ownerType);
     final db = await _database;
 
     final result = await db.query(
       _tableName,
       where: 'owner_type = ? AND owner_id = ?',
-      whereArgs: [ownerType, ownerId],
+      whereArgs: [normalizedType, ownerId],
       orderBy: 'created_at DESC',
     );
 
     return result.map(AttachmentModel.fromMap).toList();
   }
 
-  /// Deletes the database record and its local file.
+  /// Convenience methods for each finance module.
+  static Future<List<AttachmentModel>> getTransactionAttachments(
+    int transactionId,
+  ) {
+    return getAttachments(
+      ownerType: AttachmentOwnerTypes.transaction,
+      ownerId: transactionId,
+    );
+  }
+
+  static Future<List<AttachmentModel>> getAssetAttachments(
+    int assetId,
+  ) {
+    return getAttachments(
+      ownerType: AttachmentOwnerTypes.asset,
+      ownerId: assetId,
+    );
+  }
+
+  static Future<List<AttachmentModel>> getLoanAttachments(
+    int loanId,
+  ) {
+    return getAttachments(
+      ownerType: AttachmentOwnerTypes.loan,
+      ownerId: loanId,
+    );
+  }
+
+  static Future<List<AttachmentModel>> getSavingsAttachments(
+    int savingsGoalId,
+  ) {
+    return getAttachments(
+      ownerType: AttachmentOwnerTypes.savingsGoal,
+      ownerId: savingsGoalId,
+    );
+  }
+
+  static Future<List<AttachmentModel>> getRepaymentAttachments(
+    int repaymentId,
+  ) {
+    return getAttachments(
+      ownerType: AttachmentOwnerTypes.repayment,
+      ownerId: repaymentId,
+    );
+  }
+
+  /// Deletes one attachment record and its local file.
   static Future<void> deleteAttachment(int id) async {
     final db = await _database;
 
@@ -180,6 +268,23 @@ class AttachmentService {
     }
   }
 
+  /// Deletes all attachments linked to a record.
+  static Future<void> deleteOwnerAttachments({
+    required String ownerType,
+    required int ownerId,
+  }) async {
+    final attachments = await getAttachments(
+      ownerType: ownerType,
+      ownerId: ownerId,
+    );
+
+    for (final attachment in attachments) {
+      if (attachment.id != null) {
+        await deleteAttachment(attachment.id!);
+      }
+    }
+  }
+
   /// Updates the cloud URL after a successful Firebase upload.
   static Future<void> updateRemoteUrl({
     required int id,
@@ -204,13 +309,16 @@ class AttachmentService {
 
     await db.update(
       _tableName,
-      {'is_synced': 0},
+      {
+        'is_synced': 0,
+        'remote_url': null,
+      },
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  /// Returns attachments that still need cloud synchronization.
+  /// Gets all attachments waiting for cloud synchronization.
   static Future<List<AttachmentModel>> getPendingSync() async {
     final db = await _database;
 

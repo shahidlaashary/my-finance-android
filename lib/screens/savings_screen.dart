@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
 
 import '../models/savings_goal_model.dart';
 import '../services/savings_service.dart';
@@ -15,17 +17,22 @@ class SavingsScreen extends StatefulWidget {
 
 class _SavingsScreenState extends State<SavingsScreen> {
   final SavingsService _service = SavingsService();
-
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
 
   List<SavingsGoalModel> _goals = [];
+  List<Map<String, dynamic>> _accounts = [];
 
   double _totalSaved = 0;
   double _totalTarget = 0;
-
   bool _loading = true;
 
   String _money(double amount) => _numberFormat.format(amount);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
   void _message(String message) {
     if (!mounted) return;
@@ -35,16 +42,18 @@ class _SavingsScreenState extends State<SavingsScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
   Future<void> _loadData() async {
-    setState(() => _loading = true);
+    if (mounted) setState(() => _loading = true);
 
     try {
+      final dbPath = await getDatabasesPath();
+      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
+
+      final accounts = await db.query(
+        'accounts',
+        orderBy: 'name ASC',
+      );
+
       final goals = await _service.getGoals();
       final saved = await _service.getTotalSaved();
       final target = await _service.getTotalTarget();
@@ -52,6 +61,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
       if (!mounted) return;
 
       setState(() {
+        _accounts = accounts;
         _goals = goals;
         _totalSaved = saved;
         _totalTarget = target;
@@ -63,6 +73,25 @@ class _SavingsScreenState extends State<SavingsScreen> {
       setState(() => _loading = false);
       _message('Error loading savings: $e');
     }
+  }
+
+  List<DropdownMenuItem<int?>> _accountItems() {
+    return [
+      const DropdownMenuItem<int?>(
+        value: null,
+        child: Text('No linked account'),
+      ),
+      ..._accounts.map((account) {
+        final id = account['id'] as int;
+        final name = account['name'].toString();
+        final currency = account['currency']?.toString() ?? 'PKR';
+
+        return DropdownMenuItem<int?>(
+          value: id,
+          child: Text('$name ($currency)'),
+        );
+      }),
+    ];
   }
 
   Future<void> _showGoalDialog({
@@ -131,29 +160,22 @@ class _SavingsScreenState extends State<SavingsScreen> {
                             prefixIcon: Icon(Icons.savings),
                           ),
                           validator: (value) {
-                            final amount =
-                                double.tryParse(value ?? '');
+                            final amount = double.tryParse(value ?? '');
 
                             if (amount == null || amount <= 0) {
                               return 'Enter a valid target amount';
                             }
-
                             return null;
                           },
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<int?>(
                           value: accountId,
+                          isExpanded: true,
                           decoration: const InputDecoration(
-                            labelText: 'Linked Account (Optional)',
+                            labelText: 'Linked Account',
                           ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('No linked account'),
-                            ),
-                            ..._accountsForDropdown(),
-                          ],
+                          items: _accountItems(),
                           onChanged: (value) {
                             setDialogState(() {
                               accountId = value;
@@ -209,8 +231,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                       final model = SavingsGoalModel(
                         id: goal?.id,
                         name: nameController.text.trim(),
-                        targetAmount:
-                            double.parse(targetController.text),
+                        targetAmount: double.parse(targetController.text),
                         savedAmount: goal?.savedAmount ?? 0,
                         targetDate: DateFormat('yyyy-MM-dd')
                             .format(targetDate),
@@ -255,14 +276,15 @@ class _SavingsScreenState extends State<SavingsScreen> {
     notesController.dispose();
   }
 
-  List<DropdownMenuItem<int?>> _accountsForDropdown() {
-    return const [];
-  }
-
   Future<void> _showContributionDialog(
     SavingsGoalModel goal,
   ) async {
     if (goal.id == null) return;
+
+    if (goal.accountId == null) {
+      _message('Please edit this goal and select a linked account first.');
+      return;
+    }
 
     final controller = TextEditingController();
 
@@ -303,11 +325,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
     controller.dispose();
 
     if (amount == null) return;
-
-    if (goal.accountId == null) {
-      _message('Please edit this goal and link an account first.');
-      return;
-    }
 
     try {
       await _service.addContribution(
@@ -467,6 +484,15 @@ class _SavingsScreenState extends State<SavingsScreen> {
     final targetDate =
         DateTime.tryParse(goal.targetDate) ?? DateTime.now();
 
+    final linkedAccount = _accounts.where(
+      (account) => account['id'] == goal.accountId,
+    );
+
+    final accountLabel = linkedAccount.isEmpty
+        ? 'No linked account'
+        : '${linkedAccount.first['name']} '
+            '(${linkedAccount.first['currency'] ?? 'PKR'})';
+
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 12,
@@ -529,16 +555,22 @@ class _SavingsScreenState extends State<SavingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
+            Text(
+              'Account: $accountLabel',
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Saved Amount'),
                 Text(
                   _money(goal.savedAmount),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -549,9 +581,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                 value: progress,
                 minHeight: 10,
                 backgroundColor: Colors.grey.shade200,
-                color: completed
-                    ? Colors.green
-                    : const Color(0xFF147D59),
+                color: completed ? Colors.green : const Color(0xFF147D59),
               ),
             ),
             const SizedBox(height: 8),

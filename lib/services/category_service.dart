@@ -6,15 +6,38 @@ import '../models/finance_category.dart';
 
 class CategoryService {
   static Database? _database;
+  static Future<Database>? _databaseFuture;
 
   static Future<Database> get database async {
-    if (_database != null) return _database!;
+    if (_database != null && _database!.isOpen) {
+      return _database!;
+    }
 
+    final pendingFuture = _databaseFuture;
+
+    if (pendingFuture != null) {
+      return pendingFuture;
+    }
+
+    final future = _openDatabase();
+    _databaseFuture = future;
+
+    try {
+      return await future;
+    } catch (_) {
+      if (identical(_databaseFuture, future)) {
+        _databaseFuture = null;
+      }
+      rethrow;
+    }
+  }
+
+  static Future<Database> _openDatabase() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'my_finance.db');
+    final databasePath = join(dbPath, 'my_finance.db');
 
-    _database = await openDatabase(
-      path,
+    final db = await openDatabase(
+      databasePath,
       version: 1,
       onCreate: (db, version) async {
         await _createTable(db);
@@ -24,7 +47,27 @@ class CategoryService {
       },
     );
 
-    return _database!;
+    _database = db;
+    return db;
+  }
+
+  static Future<void> closeDatabase() async {
+    final pendingFuture = _databaseFuture;
+
+    if (pendingFuture != null) {
+      try {
+        await pendingFuture;
+      } catch (_) {}
+    }
+
+    final currentDatabase = _database;
+    _database = null;
+
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+
+    _databaseFuture = null;
   }
 
   static Future<void> _createTable(Database db) async {
@@ -42,6 +85,7 @@ class CategoryService {
 
   static Future<int> addCategory(FinanceCategory category) async {
     final db = await database;
+
     return db.insert(
       'finance_categories',
       category.toMap()..remove('id'),

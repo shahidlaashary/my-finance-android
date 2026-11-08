@@ -1,8 +1,10 @@
-import 'package:path/path.dart';
+
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 class TransactionService {
   static Database? _database;
+  static Future<Database>? _databaseFuture;
 
   // Normalize transaction types to lowercase.
   static String _normalizeType(String type) {
@@ -18,26 +20,73 @@ class TransactionService {
     }
   }
 
+  // Get the shared application database.
   static Future<Database> get database async {
-    if (_database != null) return _database!;
+    if (_database != null && _database!.isOpen) {
+      return _database!;
+    }
 
-    final dbPath = await getDatabasesPath();
+    // Prevent multiple simultaneous database openings.
+    if (_databaseFuture != null) {
+      return _databaseFuture!;
+    }
 
-    _database = await openDatabase(
-      join(dbPath, 'my_finance.db'),
-      version: 1,
-      onOpen: (db) async {
-        await _ensureCategoryColumn(db);
-      },
-    );
+    _databaseFuture = _openDatabase();
 
-    await _ensureCategoryColumn(_database!);
-    return _database!;
+    try {
+      _database = await _databaseFuture!;
+      return _database!;
+    } finally {
+      _databaseFuture = null;
+    }
   }
 
-  static Future<void> _ensureCategoryColumn(
+  static Future<Database> _openDatabase() async {
+    final dbPath = await getDatabasesPath();
+
+    final db = await openDatabase(
+      p.join(dbPath, 'my_finance.db'),
+      version: 1,
+    );
+
+    try {
+      await _ensureCategorySchema(db);
+      return db;
+    } catch (_) {
+      await db.close();
+      rethrow;
+    }
+  }
+
+  // Ensure category table and transaction category column exist.
+  static Future<void> _ensureCategorySchema(
     DatabaseExecutor db,
   ) async {
+    final tables = await db.rawQuery(
+      '''
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+      AND name IN ('accounts', 'transactions')
+      ''',
+    );
+
+    final existingTables = tables
+        .map((row) => row['name'] as String)
+        .toSet();
+
+    if (!existingTables.contains('accounts')) {
+      throw Exception(
+        'Accounts table is missing. Initialize FinanceDB first.',
+      );
+    }
+
+    if (!existingTables.contains('transactions')) {
+      throw Exception(
+        'Transactions table is missing. Initialize FinanceDB first.',
+      );
+    }
+
     await db.execute('''
       CREATE TABLE IF NOT EXISTS finance_categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,17 +102,23 @@ class TransactionService {
       'PRAGMA table_info(transactions)',
     );
 
-    final exists = columns.any(
+    final hasCategoryColumn = columns.any(
       (column) => column['name'] == 'category_id',
     );
 
-    if (!exists) {
+    if (!hasCategoryColumn) {
       await db.execute(
         'ALTER TABLE transactions ADD COLUMN category_id INTEGER',
       );
     }
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_transactions_category_id
+      ON transactions(category_id)
+    ''');
   }
 
+  // Change an account balance.
   static Future<void> _changeBalance(
     Transaction txn,
     int accountId,
@@ -123,7 +178,9 @@ class TransactionService {
       await _changeBalance(txn, accountId, -amount);
     } else if (normalizedType == 'transfer') {
       if (toAccountId == null || toAccountId == accountId) {
-        throw Exception('Select a different destination account.');
+        throw Exception(
+          'Select a different destination account.',
+        );
       }
 
       final accounts = await txn.query(
@@ -138,11 +195,11 @@ class TransactionService {
       }
 
       final source = accounts.firstWhere(
-        (a) => a['id'] == accountId,
+        (account) => account['id'] == accountId,
       );
 
       final destination = accounts.firstWhere(
-        (a) => a['id'] == toAccountId,
+        (account) => account['id'] == toAccountId,
       );
 
       if (source['currency'] != destination['currency']) {
@@ -151,7 +208,8 @@ class TransactionService {
         );
       }
 
-      final balance = (source['balance'] as num).toDouble();
+      final balance =
+          (source['balance'] as num).toDouble();
 
       if (balance < amount) {
         throw Exception('Insufficient account balance.');
@@ -212,14 +270,17 @@ class TransactionService {
 
       final oldItem = existing.first;
 
+      // Reverse the old transaction first.
       await _reverseTransaction(txn, oldItem);
 
+      // Validate the new category.
       await _validateCategory(
         txn,
         categoryId,
         normalizedType,
       );
 
+      // Apply the new transaction.
       await _applyTransaction(
         txn,
         type: normalizedType,
@@ -297,7 +358,11 @@ class TransactionService {
         rows.first['type'] as String,
       );
 
-      await _validateCategory(txn, categoryId, type);
+      await _validateCategory(
+        txn,
+        categoryId,
+        type,
+      );
 
       await txn.update(
         'transactions',

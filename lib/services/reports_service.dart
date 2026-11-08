@@ -1,16 +1,10 @@
-import 'package:path/path.dart' as p;
+
 import 'package:sqflite/sqflite.dart';
 
+import 'transaction_service.dart';
+
 class ReportsService {
-  static const String _databaseName = 'my_finance.db';
-
-  Future<Database> get _database async {
-    final dbPath = await getDatabasesPath();
-
-    return openDatabase(
-      p.join(dbPath, _databaseName),
-    );
-  }
+  Future<Database> get _database => TransactionService.database;
 
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);
@@ -24,6 +18,17 @@ class ReportsService {
     return _date(date.add(const Duration(days: 1)));
   }
 
+  void _validateDateRange(
+    DateTime startDate,
+    DateTime endDate,
+  ) {
+    if (endDate.isBefore(startDate)) {
+      throw ArgumentError(
+        'End date cannot be before start date.',
+      );
+    }
+  }
+
   // --------------------------------------------------
   // FINANCIAL SUMMARY BY CURRENCY
   // --------------------------------------------------
@@ -32,6 +37,8 @@ class ReportsService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
+    _validateDateRange(startDate, endDate);
+
     final db = await _database;
 
     final rows = await db.rawQuery(
@@ -104,6 +111,8 @@ class ReportsService {
     required DateTime endDate,
     String? currency,
   }) async {
+    _validateDateRange(startDate, endDate);
+
     final db = await _database;
 
     final conditions = <String>[
@@ -169,6 +178,8 @@ class ReportsService {
     required DateTime endDate,
     String? currency,
   }) async {
+    _validateDateRange(startDate, endDate);
+
     final db = await _database;
 
     final conditions = <String>[
@@ -247,7 +258,7 @@ class ReportsService {
     String type = 'expense',
     String? currency,
   }) async {
-    final db = await _database;
+    _validateDateRange(startDate, endDate);
 
     final normalizedType = type.toLowerCase();
 
@@ -256,6 +267,8 @@ class ReportsService {
         'Category breakdown supports income or expense only.',
       );
     }
+
+    final db = await _database;
 
     final conditions = <String>[
       't.date >= ?',
@@ -324,6 +337,8 @@ class ReportsService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
+    _validateDateRange(startDate, endDate);
+
     final db = await _database;
 
     final rows = await db.rawQuery(
@@ -406,6 +421,8 @@ class ReportsService {
     String? currency,
     int limit = 500,
   }) async {
+    _validateDateRange(startDate, endDate);
+
     final db = await _database;
 
     final conditions = <String>[
@@ -419,8 +436,14 @@ class ReportsService {
     ];
 
     if (type != null && type.isNotEmpty) {
+      final normalizedType = type.toLowerCase();
+
+      if (!['income', 'expense', 'transfer'].contains(normalizedType)) {
+        throw ArgumentError('Invalid transaction type.');
+      }
+
       conditions.add('LOWER(t.type) = ?');
-      arguments.add(type.toLowerCase());
+      arguments.add(normalizedType);
     }
 
     if (accountId != null) {

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'assets_screen.dart';
 import 'savings_screen.dart';
 import 'budgets_screen.dart';
 import 'recurring_transactions_screen.dart';
 import 'reports_screen.dart';
-
+import 'backup_restore_screen.dart';
 class MoreFeaturesScreen extends StatelessWidget {
   const MoreFeaturesScreen({super.key});
-
   void _openScreen(BuildContext context, Widget screen) {
     Navigator.push(
       context,
@@ -17,7 +15,6 @@ class MoreFeaturesScreen extends StatelessWidget {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final features = [
@@ -56,8 +53,14 @@ class MoreFeaturesScreen extends StatelessWidget {
         color: Colors.purple,
         screen: ReportsScreen(),
       ),
+      _FeatureItem(
+        title: 'Backup & Restore',
+        description: 'Create backups and restore your finance data',
+        icon: Icons.backup,
+        color: Colors.indigo,
+        screen: BackupRestoreScreen(),
+      ),
     ];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('More Features'),
@@ -157,14 +160,12 @@ class MoreFeaturesScreen extends StatelessWidget {
     );
   }
 }
-
 class _FeatureItem {
   final String title;
   final String description;
   final IconData icon;
   final Color color;
   final Widget screen;
-
   const _FeatureItem({
     required this.title,
     required this.description,

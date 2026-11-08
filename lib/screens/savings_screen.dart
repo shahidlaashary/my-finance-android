@@ -1,65 +1,47 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-
 import '../models/savings_goal_model.dart';
 import '../services/savings_service.dart';
 import '../widgets/attachment_section.dart';
-
 class SavingsScreen extends StatefulWidget {
   const SavingsScreen({super.key});
-
   @override
   State<SavingsScreen> createState() => _SavingsScreenState();
 }
-
 class _SavingsScreenState extends State<SavingsScreen> {
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
-
   List<SavingsGoalModel> _goals = [];
   List<Map<String, dynamic>> _accounts = [];
-
   Map<String, double> _savedByCurrency = {};
   Map<String, double> _targetByCurrency = {};
-
   bool _loading = true;
-
   String _money(double amount) => _numberFormat.format(amount);
-
   @override
   void initState() {
     super.initState();
     _loadData();
   }
-
   void _message(String message) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
-
   Future<void> _loadData() async {
     if (mounted) setState(() => _loading = true);
-
     try {
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
-
       final accounts = await db.query(
         'accounts',
         orderBy: 'name ASC',
       );
-
       final goals = await SavingsService.getGoals();
       final saved = await SavingsService.getTotalSavedByCurrency();
       final target = await SavingsService.getTotalTargetByCurrency();
-
       if (!mounted) return;
-
       setState(() {
         _accounts = accounts;
         _goals = goals;
@@ -69,12 +51,10 @@ class _SavingsScreenState extends State<SavingsScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-
       setState(() => _loading = false);
       _message('Error loading savings: $e');
     }
   }
-
   List<DropdownMenuItem<int?>> _accountItems() {
     return [
       const DropdownMenuItem<int?>(
@@ -85,7 +65,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
         final id = account['id'] as int;
         final name = account['name'].toString();
         final currency = account['currency']?.toString() ?? 'PKR';
-
         return DropdownMenuItem<int?>(
           value: id,
           child: Text('$name ($currency)'),
@@ -93,31 +72,22 @@ class _SavingsScreenState extends State<SavingsScreen> {
       }),
     ];
   }
-
   Future<void> _showGoalDialog({
     SavingsGoalModel? goal,
   }) async {
     final formKey = GlobalKey<FormState>();
-
     final nameController = TextEditingController(
       text: goal?.name ?? '',
     );
-
     final targetController = TextEditingController(
       text: goal == null ? '' : goal.targetAmount.toString(),
     );
-
     final notesController = TextEditingController(
       text: goal?.notes ?? '',
     );
-
-    DateTime targetDate = goal == null
-        ? DateTime.now().add(const Duration(days: 30))
-        : DateTime.tryParse(goal.targetDate) ??
-            DateTime.now().add(const Duration(days: 30));
-
+    DateTime targetDate = goal?.targetDate ??
+        DateTime.now().add(const Duration(days: 30));
     int? accountId = goal?.accountId;
-
     await showDialog(
       context: context,
       builder: (dialogContext) {
@@ -161,7 +131,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
                           ),
                           validator: (value) {
                             final amount = double.tryParse(value ?? '');
-
                             if (amount == null ||
                                 !amount.isFinite ||
                                 amount <= 0) {
@@ -199,7 +168,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
                               firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
                             );
-
                             if (selected != null) {
                               setDialogState(() {
                                 targetDate = selected;
@@ -228,33 +196,26 @@ class _SavingsScreenState extends State<SavingsScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
-
                     try {
                       final model = SavingsGoalModel(
                         id: goal?.id,
                         name: nameController.text.trim(),
                         targetAmount: double.parse(targetController.text),
                         savedAmount: goal?.savedAmount ?? 0,
-                        targetDate: DateFormat('yyyy-MM-dd')
-                            .format(targetDate),
+                        targetDate: targetDate,
                         accountId: accountId,
                         notes: notesController.text.trim(),
                         isCompleted: goal?.isCompleted ?? false,
-                        createdAt: goal?.createdAt ??
-                            DateTime.now().toIso8601String(),
+                        createdAt: goal?.createdAt ?? DateTime.now(),
                       );
-
                       if (goal == null) {
                         await SavingsService.addGoal(model);
                       } else {
                         await SavingsService.updateGoal(model);
                       }
-
                       if (!dialogContext.mounted) return;
-
                       Navigator.pop(dialogContext);
                       await _loadData();
-
                       _message(
                         goal == null
                             ? 'Savings goal created.'
@@ -272,24 +233,19 @@ class _SavingsScreenState extends State<SavingsScreen> {
         );
       },
     );
-
     nameController.dispose();
     targetController.dispose();
     notesController.dispose();
   }
-
   Future<void> _showContributionDialog(
     SavingsGoalModel goal,
   ) async {
     if (goal.id == null) return;
-
     if (goal.accountId == null) {
       _message('Please edit this goal and select a linked account first.');
       return;
     }
-
     final controller = TextEditingController();
-
     final amount = await showDialog<double>(
       context: context,
       builder: (context) {
@@ -312,9 +268,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
             ElevatedButton(
               onPressed: () {
                 final value = double.tryParse(controller.text);
-
                 if (value == null || !value.isFinite || value <= 0) return;
-
                 Navigator.pop(context, value);
               },
               child: const Text('Continue'),
@@ -323,30 +277,23 @@ class _SavingsScreenState extends State<SavingsScreen> {
         );
       },
     );
-
     controller.dispose();
-
     if (amount == null) return;
-
     try {
       await SavingsService.addContribution(
         goalId: goal.id!,
         accountId: goal.accountId!,
         amount: amount,
       );
-
       await _loadData();
       _message('Savings contribution added.');
     } catch (e) {
       _message('Error adding savings: $e');
     }
   }
-
   Future<void> _withdraw(SavingsGoalModel goal) async {
     if (goal.id == null) return;
-
     final controller = TextEditingController();
-
     final amount = await showDialog<double>(
       context: context,
       builder: (context) {
@@ -369,9 +316,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
             ElevatedButton(
               onPressed: () {
                 final value = double.tryParse(controller.text);
-
                 if (value == null || !value.isFinite || value <= 0) return;
-
                 Navigator.pop(context, value);
               },
               child: const Text('Withdraw'),
@@ -380,27 +325,21 @@ class _SavingsScreenState extends State<SavingsScreen> {
         );
       },
     );
-
     controller.dispose();
-
     if (amount == null) return;
-
     try {
       await SavingsService.withdraw(
         goalId: goal.id!,
         amount: amount,
       );
-
       await _loadData();
       _message('Withdrawal completed.');
     } catch (e) {
       _message('Error withdrawing savings: $e');
     }
   }
-
   Future<void> _deleteGoal(SavingsGoalModel goal) async {
     if (goal.id == null) return;
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -425,9 +364,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
         );
       },
     );
-
     if (confirm != true) return;
-
     try {
       await SavingsService.deleteGoal(goal.id!);
       await _loadData();
@@ -436,7 +373,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
       _message('Error deleting goal: $e');
     }
   }
-
   Widget _summaryCard(
     String title,
     double amount,
@@ -472,18 +408,15 @@ class _SavingsScreenState extends State<SavingsScreen> {
       ),
     );
   }
-
   Widget _currencySummary() {
     final currencies = <String>{
       ..._savedByCurrency.keys,
       ..._targetByCurrency.keys,
     }.toList()
       ..sort();
-
     if (currencies.isEmpty) {
       return const SizedBox.shrink();
     }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -500,7 +433,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
         ...currencies.map((currency) {
           final saved = _savedByCurrency[currency] ?? 0;
           final target = _targetByCurrency[currency] ?? 0;
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -543,33 +475,24 @@ class _SavingsScreenState extends State<SavingsScreen> {
       ],
     );
   }
-
   Widget _goalCard(SavingsGoalModel goal) {
     final progress = goal.targetAmount <= 0
         ? 0.0
         : (goal.savedAmount / goal.targetAmount).clamp(0.0, 1.0);
-
     final remaining =
         (goal.targetAmount - goal.savedAmount).clamp(0.0, double.infinity);
-
     final completed = goal.savedAmount >= goal.targetAmount;
-
-    final targetDate =
-        DateTime.tryParse(goal.targetDate) ?? DateTime.now();
-
+    final targetDate = goal.targetDate ?? DateTime.now();
     final linkedAccount = _accounts.where(
       (account) => account['id'] == goal.accountId,
     );
-
     final accountLabel = linkedAccount.isEmpty
         ? 'No linked account'
         : '${linkedAccount.first['name']} '
             '(${linkedAccount.first['currency'] ?? 'PKR'})';
-
     final currency = linkedAccount.isEmpty
         ? 'Unassigned'
         : linkedAccount.first['currency']?.toString() ?? 'PKR';
-
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 12,
@@ -715,7 +638,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

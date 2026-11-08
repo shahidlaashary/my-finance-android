@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -18,6 +19,8 @@ class LoansScreen extends StatefulWidget {
 class _LoansScreenState extends State<LoansScreen> {
   List<LoanModel> _loans = [];
   List<Map<String, dynamic>> _accounts = [];
+  Map<String, double> _outstandingByCurrency = {};
+
   bool _loading = true;
 
   final _nameController = TextEditingController();
@@ -63,17 +66,37 @@ class _LoansScreenState extends State<LoansScreen> {
 
   String _money(double amount) => amount.toStringAsFixed(2);
 
+  String _currencyForAccount(int accountId) {
+    final account = _accounts.cast<Map<String, dynamic>?>().firstWhere(
+      (item) => item?['id'] == accountId,
+      orElse: () => null,
+    );
+
+    return (account?['currency']?.toString() ?? 'PKR')
+        .trim()
+        .toUpperCase();
+  }
+
+  String _moneyWithCurrency(double amount, int accountId) {
+    return '${_currencyForAccount(accountId)} ${_money(amount)}';
+  }
+
   Future<void> _loadData() async {
     try {
       final db = await _database;
       final accounts = await db.query('accounts', orderBy: 'name ASC');
       final loans = await LoanService.getLoans();
+      final outstandingByCurrency =
+          await LoanService.getTotalOutstandingByCurrency();
 
       if (!mounted) return;
+
       setState(() {
         _accounts = accounts;
         _loans = loans;
+        _outstandingByCurrency = outstandingByCurrency;
         _loading = false;
+
         if (_accounts.isNotEmpty) {
           _selectedAccountId ??= _accounts.first['id'] as int;
           _selectedRepaymentAccountId ??= _accounts.first['id'] as int;
@@ -150,7 +173,10 @@ class _LoansScreenState extends State<LoansScreen> {
                   items: _accounts.map((account) {
                     return DropdownMenuItem<int>(
                       value: account['id'] as int,
-                      child: Text(account['name']?.toString() ?? 'Account'),
+                      child: Text(
+                        '${account['name']} '
+                        '(${(account['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) => setDialogState(() => accountId = value),
@@ -199,13 +225,15 @@ class _LoansScreenState extends State<LoansScreen> {
     );
 
     if (result != true) return;
+
     final name = _nameController.text.trim();
     final amount = double.tryParse(_amountController.text.trim());
 
-    if (name.isEmpty || amount == null || amount <= 0) {
+    if (name.isEmpty || amount == null || !amount.isFinite || amount <= 0) {
       _showMessage('Enter a valid borrower name and amount.');
       return;
     }
+
     if (accountId == null) {
       _showMessage('Please select an account.');
       return;
@@ -225,6 +253,7 @@ class _LoansScreenState extends State<LoansScreen> {
         notes: _notesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
+
       await LoanService.addLoan(loan);
       _selectedAccountId = accountId;
       await _loadData();
@@ -236,6 +265,7 @@ class _LoansScreenState extends State<LoansScreen> {
 
   Future<void> _addRepayment(LoanModel loan) async {
     if (loan.id == null) return;
+
     if (_accounts.isEmpty) {
       _showMessage('Please create an account first.');
       return;
@@ -243,6 +273,7 @@ class _LoansScreenState extends State<LoansScreen> {
 
     _repaymentAmountController.clear();
     _repaymentNotesController.clear();
+
     int? accountId = _selectedRepaymentAccountId;
     DateTime repaymentDate = DateTime.now();
 
@@ -257,7 +288,10 @@ class _LoansScreenState extends State<LoansScreen> {
               children: [
                 Text('Borrower: ${loan.borrowerName}'),
                 const SizedBox(height: 6),
-                Text('Outstanding: ${_money(loan.remainingAmount)}'),
+                Text(
+                  'Outstanding: '
+                  '${_moneyWithCurrency(loan.remainingAmount, loan.accountId)}',
+                ),
                 TextField(
                   controller: _repaymentAmountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -271,7 +305,10 @@ class _LoansScreenState extends State<LoansScreen> {
                   items: _accounts.map((account) {
                     return DropdownMenuItem<int>(
                       value: account['id'] as int,
-                      child: Text(account['name']?.toString() ?? 'Account'),
+                      child: Text(
+                        '${account['name']} '
+                        '(${(account['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) => setDialogState(() => accountId = value),
@@ -311,18 +348,27 @@ class _LoansScreenState extends State<LoansScreen> {
     );
 
     if (result != true) return;
+
     final amount = double.tryParse(_repaymentAmountController.text.trim());
 
-    if (amount == null || amount <= 0) {
+    if (amount == null || !amount.isFinite || amount <= 0) {
       _showMessage('Enter a valid repayment amount.');
       return;
     }
+
     if (amount > loan.remainingAmount + 0.000001) {
       _showMessage('Amount exceeds outstanding balance.');
       return;
     }
+
     if (accountId == null) {
       _showMessage('Please select a receiving account.');
+      return;
+    }
+
+    if (_currencyForAccount(accountId) !=
+        _currencyForAccount(loan.accountId)) {
+      _showMessage('Receiving account must use the same currency as the loan.');
       return;
     }
 
@@ -336,6 +382,7 @@ class _LoansScreenState extends State<LoansScreen> {
         notes: _repaymentNotesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
+
       await LoanService.addRepayment(repayment);
       _selectedRepaymentAccountId = accountId;
       await _loadData();
@@ -347,6 +394,8 @@ class _LoansScreenState extends State<LoansScreen> {
 
   Future<void> _showLoanDetails(LoanModel loan) async {
     if (loan.id == null) return;
+
+    final currency = _currencyForAccount(loan.accountId);
 
     await showDialog<void>(
       context: context,
@@ -377,20 +426,27 @@ class _LoansScreenState extends State<LoansScreen> {
                   const SizedBox(height: 8),
                   Text('Borrower: ${loan.borrowerName}'),
                   Text('Phone: ${loan.borrowerPhone ?? '-'}'),
-                  Text('Original Amount: ${_money(loan.amount)}'),
-                  Text('Repaid: ${_money(loan.repaidAmount)}'),
-                  Text('Outstanding: ${_money(loan.remainingAmount)}'),
+                  Text('Currency: $currency'),
+                  Text('Original Amount: ${_moneyWithCurrency(loan.amount, loan.accountId)}'),
+                  Text('Repaid: ${_moneyWithCurrency(loan.repaidAmount, loan.accountId)}'),
+                  Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.accountId)}'),
                   Text('Lending Date: ${loan.lendingDate}'),
                   Text('Due Date: ${loan.dueDate ?? '-'}'),
                   Text('Notes: ${loan.notes.isEmpty ? '-' : loan.notes}'),
                   const Divider(height: 28),
-                  const Text('Loan Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Loan Attachments',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   AttachmentSection(
                     ownerType: AttachmentOwnerTypes.loan,
                     ownerId: loan.id!,
                   ),
                   const Divider(height: 28),
-                  const Text('Repayment History', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Repayment History',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   FutureBuilder<List<RepaymentModel>>(
                     future: LoanService.getRepayments(loan.id!),
                     builder: (context, snapshot) {
@@ -400,10 +456,13 @@ class _LoansScreenState extends State<LoansScreen> {
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
+
                       if (snapshot.hasError) {
                         return Text('Could not load repayments: ${snapshot.error}');
                       }
+
                       final repayments = snapshot.data ?? [];
+
                       if (repayments.isEmpty) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
@@ -421,14 +480,22 @@ class _LoansScreenState extends State<LoansScreen> {
                                 children: [
                                   ListTile(
                                     contentPadding: EdgeInsets.zero,
-                                    title: Text(_money(repayment.amount)),
+                                    title: Text(
+                                      _moneyWithCurrency(
+                                        repayment.amount,
+                                        loan.accountId,
+                                      ),
+                                    ),
                                     subtitle: Text(
                                       'Date: ${repayment.repaymentDate}\n'
                                       'Notes: ${repayment.notes.isEmpty ? '-' : repayment.notes}',
                                     ),
                                     trailing: IconButton(
                                       tooltip: 'Delete repayment',
-                                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                      ),
                                       onPressed: () async {
                                         final confirm = await showDialog<bool>(
                                           context: context,
@@ -453,15 +520,21 @@ class _LoansScreenState extends State<LoansScreen> {
                                         if (confirm == true && repayment.id != null) {
                                           try {
                                             await LoanService.deleteRepayment(repayment.id!);
+
                                             await AttachmentService.deleteOwnerAttachments(
                                               ownerType: AttachmentOwnerTypes.repayment,
                                               ownerId: repayment.id!,
                                             );
+
                                             if (dialogContext.mounted) {
                                               Navigator.pop(dialogContext);
                                             }
+
                                             await _loadData();
-                                            if (mounted) _showMessage('Repayment deleted.');
+
+                                            if (mounted) {
+                                              _showMessage('Repayment deleted.');
+                                            }
                                           } catch (error) {
                                             _showMessage('Delete failed: $error');
                                           }
@@ -531,8 +604,6 @@ class _LoansScreenState extends State<LoansScreen> {
     if (confirm != true) return;
 
     try {
-      // Fetch repayment IDs before deletion; deleteLoan() removes
-      // the repayment rows, so fetching them afterwards returns none.
       final repayments = await LoanService.getRepayments(loan.id!);
 
       await LoanService.deleteLoan(loan.id!);
@@ -560,10 +631,6 @@ class _LoansScreenState extends State<LoansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final outstanding = _loans.fold<double>(
-      0,
-      (total, loan) => total + loan.remainingAmount,
-    );
     final overdueCount = _loans.where((loan) => loan.isOverdue).length;
 
     return Scaffold(
@@ -591,15 +658,44 @@ class _LoansScreenState extends State<LoansScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Total Outstanding',
-                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                            'Total Outstanding by Currency',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _money(outstanding),
-                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
+                          if (_outstandingByCurrency.isEmpty)
+                            const Text(
+                              'No outstanding loans.',
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          else
+                            ..._outstandingByCurrency.entries.map((entry) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 5),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      entry.key,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _money(entry.value),
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          const Divider(height: 24),
                           Text('Total loans: ${_loans.length}'),
                           Text('Overdue loans: $overdueCount'),
                         ],
@@ -634,6 +730,8 @@ class _LoansScreenState extends State<LoansScreen> {
                     )
                   else
                     ..._loans.map((loan) {
+                      final currency = _currencyForAccount(loan.accountId);
+
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(
@@ -646,7 +744,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                   Expanded(
                                     child: Text(
                                       loan.borrowerName,
-                                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                   if (loan.isPaid)
@@ -667,16 +768,26 @@ class _LoansScreenState extends State<LoansScreen> {
                                     ),
                                 ],
                               ),
-                              if (loan.borrowerPhone != null) Text(loan.borrowerPhone!),
+                              if (loan.borrowerPhone != null)
+                                Text(loan.borrowerPhone!),
                               const SizedBox(height: 8),
-                              Text('Loan Amount: ${_money(loan.amount)}'),
-                              Text('Repaid: ${_money(loan.repaidAmount)}'),
+                              Text('Currency: $currency'),
                               Text(
-                                'Remaining: ${_money(loan.remainingAmount)}',
+                                'Loan Amount: '
+                                '${_moneyWithCurrency(loan.amount, loan.accountId)}',
+                              ),
+                              Text(
+                                'Repaid: '
+                                '${_moneyWithCurrency(loan.repaidAmount, loan.accountId)}',
+                              ),
+                              Text(
+                                'Remaining: '
+                                '${_moneyWithCurrency(loan.remainingAmount, loan.accountId)}',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               Text('Lending Date: ${loan.lendingDate}'),
-                              if (loan.dueDate != null) Text('Due Date: ${loan.dueDate}'),
+                              if (loan.dueDate != null)
+                                Text('Due Date: ${loan.dueDate}'),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
                                 value: loan.amount <= 0
@@ -702,7 +813,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                     ),
                                   IconButton(
                                     onPressed: () => _deleteLoan(loan),
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.red,
+                                    ),
                                     tooltip: 'Delete loan',
                                   ),
                                 ],

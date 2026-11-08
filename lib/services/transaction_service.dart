@@ -219,6 +219,51 @@ class TransactionService {
       throw Exception('Selected category is not available.');
     }
   }
+    // Add a new transaction and update account balances.
+  static Future<int> addTransaction({
+    required String type,
+    required double amount,
+    required int accountId,
+    int? toAccountId,
+    int? categoryId,
+    required String note,
+    required String date,
+  }) async {
+    final db = await database;
+    final normalizedType = _normalizeType(type);
+
+    if (!amount.isFinite || amount <= 0) {
+      throw Exception('Enter a valid amount greater than zero.');
+    }
+
+    return db.transaction((txn) async {
+      await _validateCategory(
+        txn,
+        normalizedType == 'transfer' ? null : categoryId,
+        normalizedType,
+      );
+
+      await _applyTransaction(
+        txn,
+        type: normalizedType,
+        amount: amount,
+        accountId: accountId,
+        toAccountId: toAccountId,
+      );
+
+      return txn.insert('transactions', {
+        'type': normalizedType,
+        'amount': amount,
+        'account_id': accountId,
+        'to_account_id':
+            normalizedType == 'transfer' ? toAccountId : null,
+        'category_id':
+            normalizedType == 'transfer' ? null : categoryId,
+        'note': note,
+        'date': date,
+      });
+    });
+  }
   // Update an existing transaction and correct account balances.
   static Future<void> updateTransaction({
     required int id,

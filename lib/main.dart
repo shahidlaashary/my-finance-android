@@ -11,6 +11,7 @@ import 'screens/categories_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/more_features_screen.dart';
+import 'services/app_startup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,9 @@ void main() async {
   }
 
   await FinanceDB.instance.init();
+
+  // Initialize app services and process due recurring transactions.
+  await AppStartupService.initialize();
 
   runApp(const MyFinanceApp());
 }

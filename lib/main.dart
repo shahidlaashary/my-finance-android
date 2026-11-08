@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,11 +6,14 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 
+import 'models/finance_category.dart';
 import 'screens/categories_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/more_features_screen.dart';
 import 'services/app_startup_service.dart';
+import 'services/category_service.dart';
+import 'services/transaction_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,7 +86,6 @@ class FinanceDB {
     );
   }
 
-  // Close the current database connection.
   Future<void> close() async {
     final currentDatabase = _db;
     _db = null;
@@ -94,7 +95,6 @@ class FinanceDB {
     }
   }
 
-  // Reopen the database after backup restoration.
   Future<void> reopen() async {
     await close();
     await init();
@@ -443,7 +443,6 @@ class MyFinanceApp extends StatelessWidget {
     );
   }
 }
-
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -967,9 +966,7 @@ class AccountsPage extends StatelessWidget {
       },
     );
   }
-}
-
-class TransactionsPage extends StatelessWidget {
+}class TransactionsPage extends StatelessWidget {
   const TransactionsPage({super.key});
 
   @override
@@ -1354,5 +1351,327 @@ Future<void> showAccountDialog(
     balanceController.dispose();
     accountNumberController.dispose();
     customTypeController.dispose();
+  }
+}
+
+Future<void> showTransactionDialog(
+  BuildContext context, {
+  String initialType = 'income',
+}) async {
+  final accounts = await TransactionService.getAccounts();
+
+  if (!context.mounted) return;
+
+  if (accounts.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please add an account first.')),
+    );
+    return;
+  }
+
+  String type = initialType.toLowerCase();
+  if (!['income', 'expense', 'transfer'].contains(type)) {
+    type = 'income';
+  }
+
+  int? accountId = accounts.first['id'] as int;
+  int? toAccountId;
+  int? categoryId;
+  DateTime selectedDate = DateTime.now();
+
+  List<FinanceCategory> categories = type == 'transfer'
+      ? []
+      : await CategoryService.getCategories(type);
+
+  if (!context.mounted) return;
+
+  final amountController = TextEditingController();
+  final noteController = TextEditingController();
+  bool saving = false;
+
+  try {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, updateDialog) {
+            final destinations = accounts
+                .where((account) => account['id'] != accountId)
+                .toList();
+
+            return AlertDialog(
+              title: const Text('Add Transaction'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: type,
+                      decoration: const InputDecoration(
+                        labelText: 'Transaction Type',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'income',
+                          child: Text('Income'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'expense',
+                          child: Text('Expense'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'transfer',
+                          child: Text('Transfer'),
+                        ),
+                      ],
+                      onChanged: saving
+                          ? null
+                          : (value) async {
+                              if (value == null) return;
+
+                              final newCategories = value == 'transfer'
+                                  ? <FinanceCategory>[]
+                                  : await CategoryService.getCategories(value);
+
+                              if (!dialogContext.mounted) return;
+
+                              updateDialog(() {
+                                type = value;
+                                categories = newCategories;
+                                categoryId = null;
+                                toAccountId = null;
+                              });
+                            },
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Amount',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<int>(
+                      value: accountId,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Account',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: accounts.map((account) {
+                        return DropdownMenuItem<int>(
+                          value: account['id'] as int,
+                          child: Text(
+                            '${account['name']} (${account['currency']})',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: saving
+                          ? null
+                          : (value) {
+                              updateDialog(() {
+                                accountId = value;
+                                if (toAccountId == accountId) {
+                                  toAccountId = null;
+                                }
+                              });
+                            },
+                    ),
+                    if (type == 'transfer') ...[
+                      const SizedBox(height: 14),
+                      DropdownButtonFormField<int>(
+                        value: toAccountId,
+                        isExpanded: true,
+                        hint: const Text('Select destination'),
+                        decoration: const InputDecoration(
+                          labelText: 'Destination Account',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: destinations.map((account) {
+                          return DropdownMenuItem<int>(
+                            value: account['id'] as int,
+                            child: Text(
+                              '${account['name']} (${account['currency']})',
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: saving
+                            ? null
+                            : (value) {
+                                updateDialog(() {
+                                  toAccountId = value;
+                                });
+                              },
+                      ),
+                    ],
+                    if (type != 'transfer') ...[
+                      const SizedBox(height: 14),
+                      DropdownButtonFormField<int?>(
+                        value: categoryId,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('No category'),
+                          ),
+                          ...categories.map((category) {
+                            return DropdownMenuItem<int?>(
+                              value: category.id,
+                              child: Text(
+                                '${category.icon} ${category.name}',
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: saving
+                            ? null
+                            : (value) {
+                                updateDialog(() {
+                                  categoryId = value;
+                                });
+                              },
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: noteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Transaction Date'),
+                      subtitle: Text(
+                        DateFormat('yyyy-MM-dd').format(selectedDate),
+                      ),
+                      trailing: const Icon(Icons.calendar_month),
+                      onTap: saving
+                          ? null
+                          : () async {
+                              final date = await showDatePicker(
+                                context: dialogContext,
+                                initialDate: selectedDate,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                              );
+
+                              if (date != null && dialogContext.mounted) {
+                                updateDialog(() {
+                                  selectedDate = date;
+                                });
+                              }
+                            },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: saving
+                      ? null
+                      : () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: saving
+                      ? null
+                      : () async {
+                          final amount = double.tryParse(
+                            amountController.text.trim(),
+                          );
+
+                          if (amount == null ||
+                              !amount.isFinite ||
+                              amount <= 0) {
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              const SnackBar(
+                                content: Text('Enter a valid amount.'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (accountId == null) return;
+
+                          if (type == 'transfer' && toAccountId == null) {
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Select a destination account.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          updateDialog(() {
+                            saving = true;
+                          });
+
+                          try {
+                            await TransactionService.addTransaction(
+                              type: type,
+                              amount: amount,
+                              accountId: accountId!,
+                              toAccountId:
+                                  type == 'transfer' ? toAccountId : null,
+                              categoryId:
+                                  type == 'transfer' ? null : categoryId,
+                              note: noteController.text.trim(),
+                              date: selectedDate.toIso8601String(),
+                            );
+
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext, true);
+                            }
+                          } catch (e) {
+                            if (dialogContext.mounted) {
+                              updateDialog(() {
+                                saving = false;
+                              });
+
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                SnackBar(content: Text('$e')),
+                              );
+                            }
+                          }
+                        },
+                  child: saving
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save Transaction'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Transaction added successfully.'),
+        ),
+      );
+    }
+  } finally {
+    amountController.dispose();
+    noteController.dispose();
   }
 }

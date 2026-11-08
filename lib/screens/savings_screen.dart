@@ -16,14 +16,14 @@ class SavingsScreen extends StatefulWidget {
 }
 
 class _SavingsScreenState extends State<SavingsScreen> {
-  final SavingsService _service = SavingsService();
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
 
   List<SavingsGoalModel> _goals = [];
   List<Map<String, dynamic>> _accounts = [];
 
-  double _totalSaved = 0;
-  double _totalTarget = 0;
+  Map<String, double> _savedByCurrency = {};
+  Map<String, double> _targetByCurrency = {};
+
   bool _loading = true;
 
   String _money(double amount) => _numberFormat.format(amount);
@@ -54,17 +54,17 @@ class _SavingsScreenState extends State<SavingsScreen> {
         orderBy: 'name ASC',
       );
 
-      final goals = await _service.getGoals();
-      final saved = await _service.getTotalSaved();
-      final target = await _service.getTotalTarget();
+      final goals = await SavingsService.getGoals();
+      final saved = await SavingsService.getTotalSavedByCurrency();
+      final target = await SavingsService.getTotalTargetByCurrency();
 
       if (!mounted) return;
 
       setState(() {
         _accounts = accounts;
         _goals = goals;
-        _totalSaved = saved;
-        _totalTarget = target;
+        _savedByCurrency = saved;
+        _targetByCurrency = target;
         _loading = false;
       });
     } catch (e) {
@@ -162,7 +162,9 @@ class _SavingsScreenState extends State<SavingsScreen> {
                           validator: (value) {
                             final amount = double.tryParse(value ?? '');
 
-                            if (amount == null || amount <= 0) {
+                            if (amount == null ||
+                                !amount.isFinite ||
+                                amount <= 0) {
                               return 'Enter a valid target amount';
                             }
                             return null;
@@ -243,9 +245,9 @@ class _SavingsScreenState extends State<SavingsScreen> {
                       );
 
                       if (goal == null) {
-                        await _service.addGoal(model);
+                        await SavingsService.addGoal(model);
                       } else {
-                        await _service.updateGoal(model);
+                        await SavingsService.updateGoal(model);
                       }
 
                       if (!dialogContext.mounted) return;
@@ -311,7 +313,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               onPressed: () {
                 final value = double.tryParse(controller.text);
 
-                if (value == null || value <= 0) return;
+                if (value == null || !value.isFinite || value <= 0) return;
 
                 Navigator.pop(context, value);
               },
@@ -327,7 +329,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     if (amount == null) return;
 
     try {
-      await _service.addContribution(
+      await SavingsService.addContribution(
         goalId: goal.id!,
         accountId: goal.accountId!,
         amount: amount,
@@ -368,7 +370,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               onPressed: () {
                 final value = double.tryParse(controller.text);
 
-                if (value == null || value <= 0) return;
+                if (value == null || !value.isFinite || value <= 0) return;
 
                 Navigator.pop(context, value);
               },
@@ -384,7 +386,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     if (amount == null) return;
 
     try {
-      await _service.withdraw(
+      await SavingsService.withdraw(
         goalId: goal.id!,
         amount: amount,
       );
@@ -427,7 +429,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     if (confirm != true) return;
 
     try {
-      await _service.deleteGoal(goal.id!);
+      await SavingsService.deleteGoal(goal.id!);
       await _loadData();
       _message('Savings goal deleted.');
     } catch (e) {
@@ -471,6 +473,77 @@ class _SavingsScreenState extends State<SavingsScreen> {
     );
   }
 
+  Widget _currencySummary() {
+    final currencies = <String>{
+      ..._savedByCurrency.keys,
+      ..._targetByCurrency.keys,
+    }.toList()
+      ..sort();
+
+    if (currencies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Text(
+            'Savings Summary by Currency',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        ...currencies.map((currency) {
+          final saved = _savedByCurrency[currency] ?? 0;
+          final target = _targetByCurrency[currency] ?? 0;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Text(
+                  currency,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 1.65,
+                  children: [
+                    _summaryCard(
+                      'Total Saved ($currency)',
+                      saved,
+                      Icons.savings,
+                      Colors.green,
+                    ),
+                    _summaryCard(
+                      'Total Target ($currency)',
+                      target,
+                      Icons.flag,
+                      Colors.blue,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
   Widget _goalCard(SavingsGoalModel goal) {
     final progress = goal.targetAmount <= 0
         ? 0.0
@@ -492,6 +565,10 @@ class _SavingsScreenState extends State<SavingsScreen> {
         ? 'No linked account'
         : '${linkedAccount.first['name']} '
             '(${linkedAccount.first['currency'] ?? 'PKR'})';
+
+    final currency = linkedAccount.isEmpty
+        ? 'Unassigned'
+        : linkedAccount.first['currency']?.toString() ?? 'PKR';
 
     return Card(
       margin: const EdgeInsets.symmetric(
@@ -569,7 +646,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               children: [
                 const Text('Saved Amount'),
                 Text(
-                  _money(goal.savedAmount),
+                  '${_money(goal.savedAmount)} $currency',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -589,14 +666,14 @@ class _SavingsScreenState extends State<SavingsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('${(progress * 100).toStringAsFixed(1)}% completed'),
-                Text('Target: ${_money(goal.targetAmount)}'),
+                Text('Target: ${_money(goal.targetAmount)} $currency'),
               ],
             ),
             const SizedBox(height: 10),
             Text(
               completed
                   ? 'Goal completed!'
-                  : 'Remaining: ${_money(remaining)}',
+                  : 'Remaining: ${_money(remaining)} $currency',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: completed ? Colors.green : Colors.blueGrey,
@@ -667,29 +744,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 90),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1.65,
-                      children: [
-                        _summaryCard(
-                          'Total Saved',
-                          _totalSaved,
-                          Icons.savings,
-                          Colors.green,
-                        ),
-                        _summaryCard(
-                          'Total Target',
-                          _totalTarget,
-                          Icons.flag,
-                          Colors.blue,
-                        ),
-                      ],
-                    ),
-                  ),
+                  _currencySummary(),
                   if (_goals.isEmpty)
                     const Padding(
                       padding: EdgeInsets.all(40),

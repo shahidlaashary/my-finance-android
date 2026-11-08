@@ -1,3 +1,4 @@
+
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -93,7 +94,10 @@ class LoanService {
     int accountId,
   ) async {
     final account = await _getAccount(txn, accountId);
-    return (account['currency'] as String).trim().toUpperCase();
+
+    return (account['currency']?.toString() ?? 'PKR')
+        .trim()
+        .toUpperCase();
   }
 
   static Future<void> _changeAccountBalance(
@@ -121,7 +125,9 @@ class LoanService {
     }
 
     if (!loan.amount.isFinite || loan.amount <= 0) {
-      throw Exception('Loan amount must be a valid amount greater than zero.');
+      throw Exception(
+        'Loan amount must be a valid amount greater than zero.',
+      );
     }
 
     if (loan.accountId <= 0) {
@@ -129,7 +135,10 @@ class LoanService {
     }
 
     return db.transaction((txn) async {
-      final balance = await _getAccountBalance(txn, loan.accountId);
+      final balance = await _getAccountBalance(
+        txn,
+        loan.accountId,
+      );
 
       if (balance < loan.amount) {
         throw Exception('Insufficient account balance.');
@@ -154,8 +163,7 @@ class LoanService {
     });
   }
 
-  /// Records a partial or full repayment and updates the receiving account.
-  /// The receiving account must use the same currency as the original loan.
+  /// Records a repayment in an account with the same currency as the loan.
   static Future<int> addRepayment(RepaymentModel repayment) async {
     final db = await _database;
 
@@ -167,6 +175,10 @@ class LoanService {
 
     if (repayment.accountId <= 0) {
       throw Exception('Please select a valid receiving account.');
+    }
+
+    if (repayment.loanId <= 0) {
+      throw Exception('Invalid loan selected.');
     }
 
     return db.transaction((txn) async {
@@ -195,6 +207,7 @@ class LoanService {
 
       final loanCurrency =
           await _getAccountCurrency(txn, loan.accountId);
+
       final receivingCurrency =
           await _getAccountCurrency(txn, repayment.accountId);
 
@@ -237,6 +250,7 @@ class LoanService {
   /// Returns all loans, newest first.
   static Future<List<LoanModel>> getLoans() async {
     final db = await _database;
+
     final rows = await db.query(
       'loans',
       orderBy: 'lending_date DESC, id DESC',
@@ -248,6 +262,7 @@ class LoanService {
   /// Returns one loan by its ID.
   static Future<LoanModel?> getLoanById(int loanId) async {
     final db = await _database;
+
     final rows = await db.query(
       'loans',
       where: 'id = ?',
@@ -256,12 +271,16 @@ class LoanService {
     );
 
     if (rows.isEmpty) return null;
+
     return LoanModel.fromMap(rows.first);
   }
 
   /// Returns repayments belonging to a loan.
-  static Future<List<RepaymentModel>> getRepayments(int loanId) async {
+  static Future<List<RepaymentModel>> getRepayments(
+    int loanId,
+  ) async {
     final db = await _database;
+
     final rows = await db.query(
       'loan_repayments',
       where: 'loan_id = ?',
@@ -272,9 +291,34 @@ class LoanService {
     return rows.map(RepaymentModel.fromMap).toList();
   }
 
-  /// Returns the total outstanding amount across all loans.
+  /// Returns outstanding loan amounts grouped by source account currency.
+  static Future<Map<String, double>>
+      getTotalOutstandingByCurrency() async {
+    final db = await _database;
+
+    final rows = await db.rawQuery('''
+      SELECT
+        UPPER(TRIM(COALESCE(accounts.currency, 'PKR'))) AS currency,
+        COALESCE(SUM(loans.remaining_amount), 0) AS total
+      FROM loans
+      INNER JOIN accounts
+        ON accounts.id = loans.account_id
+      WHERE loans.remaining_amount > 0
+      GROUP BY UPPER(TRIM(COALESCE(accounts.currency, 'PKR')))
+      ORDER BY currency ASC
+    ''');
+
+    return {
+      for (final row in rows)
+        row['currency'].toString(): (row['total'] as num).toDouble(),
+    };
+  }
+
+  /// Legacy total across all currencies.
+  /// Prefer getTotalOutstandingByCurrency() for safe summaries.
   static Future<double> getTotalOutstanding() async {
     final db = await _database;
+
     final result = await db.rawQuery('''
       SELECT COALESCE(SUM(remaining_amount), 0) AS total
       FROM loans
@@ -287,7 +331,9 @@ class LoanService {
   /// Returns loans whose due date has passed and balance is outstanding.
   static Future<List<LoanModel>> getOverdueLoans() async {
     final db = await _database;
+
     final today = DateTime.now();
+
     final todayString =
         '${today.year.toString().padLeft(4, '0')}-'
         '${today.month.toString().padLeft(2, '0')}-'
@@ -323,6 +369,7 @@ class LoanService {
       if (rows.isEmpty) return;
 
       final repayment = RepaymentModel.fromMap(rows.first);
+
       final loanRows = await txn.query(
         'loans',
         where: 'id = ?',
@@ -335,6 +382,7 @@ class LoanService {
       }
 
       final loan = LoanModel.fromMap(loanRows.first);
+
       await _getAccount(txn, repayment.accountId);
 
       final restoredRemaining =
@@ -381,6 +429,7 @@ class LoanService {
       if (loanRows.isEmpty) return;
 
       final loan = LoanModel.fromMap(loanRows.first);
+
       await _getAccount(txn, loan.accountId);
 
       final repayments = await txn.query(
@@ -392,6 +441,7 @@ class LoanService {
       // Reverse every repayment credit first.
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
+
         await _getAccount(txn, repayment.accountId);
 
         await _changeAccountBalance(

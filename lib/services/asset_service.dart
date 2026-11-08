@@ -1,23 +1,15 @@
-import 'package:path/path.dart' as p;
+
 import 'package:sqflite/sqflite.dart';
 
 import '../models/asset_model.dart';
+import 'transaction_service.dart';
 
 class AssetService {
-  static const String _databaseName = 'my_finance.db';
-
-  static Future<Database> get _database async {
-    final databasePath = await getDatabasesPath();
-
-    return openDatabase(
-      p.join(databasePath, _databaseName),
-      onOpen: (db) async {
-        await _createTables(db);
-      },
-    );
+  Future<Database> get _database async {
+    return TransactionService.database;
   }
 
-  static Future<void> _createTables(Database db) async {
+  Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS assets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +38,11 @@ class AssetService {
     ''');
   }
 
-  static Future<Map<String, dynamic>> _getAccount(
+  Future<void> _ensureTables(Database db) async {
+    await _createTables(db);
+  }
+
+  Future<Map<String, dynamic>> _getAccount(
     Transaction txn,
     int accountId,
   ) async {
@@ -65,7 +61,7 @@ class AssetService {
     return rows.first;
   }
 
-  static Future<double> _getBalance(
+  Future<double> _getBalance(
     Transaction txn,
     int accountId,
   ) async {
@@ -73,7 +69,7 @@ class AssetService {
     return (account['balance'] as num).toDouble();
   }
 
-  static Future<void> _changeBalance(
+  Future<void> _changeBalance(
     Transaction txn, {
     required int accountId,
     required double amount,
@@ -88,7 +84,7 @@ class AssetService {
     );
   }
 
-  static void _validateAsset(AssetModel asset) {
+  void _validateAsset(AssetModel asset) {
     if (asset.name.trim().isEmpty) {
       throw Exception('Asset name is required.');
     }
@@ -119,49 +115,49 @@ class AssetService {
       }
 
       if (asset.saleDate!.isBefore(asset.purchaseDate)) {
-        throw Exception('Sale date cannot be before purchase date.');
+        throw Exception(
+          'Sale date cannot be before purchase date.',
+        );
       }
     }
   }
 
-  /// Adds an asset and deducts its purchase price from the account.
-  static Future<int> addAsset(AssetModel asset) async {
-    final db = await _database;
-
+  Future<int> addAsset(AssetModel asset) async {
     _validateAsset(asset);
 
+    if (asset.isSold) {
+      throw Exception(
+        'Please add the asset first, then record its sale.',
+      );
+    }
+
+    final db = await _database;
+    await _ensureTables(db);
+
     return db.transaction((txn) async {
-      final balance = await _getBalance(
+      final account = await _getAccount(
         txn,
         asset.accountId,
       );
 
-      final totalRequired =
-          asset.purchasePrice + (asset.isSold ? 0 : 0);
+      final balance = (account['balance'] as num).toDouble();
 
-      if (balance < totalRequired) {
+      if (balance < asset.purchasePrice) {
         throw Exception('Insufficient account balance.');
-      }
-
-      if (asset.isSold) {
-        throw Exception(
-          'Please add the asset first, then record its sale.',
-        );
       }
 
       final now = DateTime.now();
 
-      final assetId = await txn.insert(
-        'assets',
-        asset.copyWith(
-          name: asset.name.trim(),
-          category: asset.category.trim().isEmpty
-              ? 'Other'
-              : asset.category.trim(),
-          createdAt: asset.createdAt ?? now,
-        ).toMap()
-          ..remove('id'),
-      );
+      final map = asset.copyWith(
+        name: asset.name.trim(),
+        category: asset.category.trim().isEmpty
+            ? 'Other'
+            : asset.category.trim(),
+        createdAt: asset.createdAt ?? now,
+      ).toMap()
+        ..remove('id');
+
+      final assetId = await txn.insert('assets', map);
 
       await _changeBalance(
         txn,
@@ -173,11 +169,11 @@ class AssetService {
     });
   }
 
-  /// Returns all assets, newest first.
-  static Future<List<AssetModel>> getAssets({
+  Future<List<AssetModel>> getAssets({
     bool includeSold = true,
   }) async {
     final db = await _database;
+    await _ensureTables(db);
 
     final rows = await db.query(
       'assets',
@@ -188,9 +184,9 @@ class AssetService {
     return rows.map(AssetModel.fromMap).toList();
   }
 
-  /// Returns one asset by ID.
-  static Future<AssetModel?> getAssetById(int assetId) async {
+  Future<AssetModel?> getAssetById(int assetId) async {
     final db = await _database;
+    await _ensureTables(db);
 
     final rows = await db.query(
       'assets',
@@ -204,8 +200,7 @@ class AssetService {
     return AssetModel.fromMap(rows.first);
   }
 
-  /// Updates the current market value of an asset.
-  static Future<void> updateCurrentValue(
+  Future<void> updateCurrentValue(
     int assetId,
     double newValue,
   ) async {
@@ -214,6 +209,7 @@ class AssetService {
     }
 
     final db = await _database;
+    await _ensureTables(db);
 
     final result = await db.update(
       'assets',
@@ -227,9 +223,7 @@ class AssetService {
     }
   }
 
-  /// Records an asset sale and credits the sale amount
-  /// to the original linked account.
-  static Future<void> sellAsset({
+  Future<void> sellAsset({
     required int assetId,
     required double salePrice,
     required DateTime saleDate,
@@ -239,6 +233,7 @@ class AssetService {
     }
 
     final db = await _database;
+    await _ensureTables(db);
 
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -259,7 +254,9 @@ class AssetService {
       }
 
       if (saleDate.isBefore(asset.purchaseDate)) {
-        throw Exception('Sale date cannot be before purchase date.');
+        throw Exception(
+          'Sale date cannot be before purchase date.',
+        );
       }
 
       await _getAccount(txn, asset.accountId);
@@ -283,15 +280,21 @@ class AssetService {
     });
   }
 
-  /// Updates an asset and safely adjusts the linked account balance.
-  static Future<void> updateAsset(AssetModel updatedAsset) async {
+  Future<void> updateAsset(AssetModel updatedAsset) async {
     if (updatedAsset.id == null) {
       throw Exception('Asset ID is required for updating.');
     }
 
     _validateAsset(updatedAsset);
 
+    if (updatedAsset.isSold) {
+      throw Exception(
+        'Use the Sell Asset option to record a sale.',
+      );
+    }
+
     final db = await _database;
+    await _ensureTables(db);
 
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -308,24 +311,20 @@ class AssetService {
       final oldAsset = AssetModel.fromMap(rows.first);
 
       if (oldAsset.isSold) {
-        throw Exception(
-          'Sold assets cannot be edited. Delete and recreate if necessary.',
-        );
+        throw Exception('Sold assets cannot be edited.');
       }
 
-      final oldAccountBalance = await _getBalance(
-        txn,
-        oldAsset.accountId,
-      );
+      await _getAccount(txn, oldAsset.accountId);
+      await _getAccount(txn, updatedAsset.accountId);
 
-      // Restore the original purchase amount.
+      // Restore the old purchase amount.
       await _changeBalance(
         txn,
         accountId: oldAsset.accountId,
         amount: oldAsset.purchasePrice,
       );
 
-      // Deduct the updated purchase amount.
+      // Check the available balance after restoring the old amount.
       final newBalance = await _getBalance(
         txn,
         updatedAsset.accountId,
@@ -335,29 +334,34 @@ class AssetService {
         throw Exception('Insufficient account balance.');
       }
 
+      // Deduct the updated purchase amount.
       await _changeBalance(
         txn,
         accountId: updatedAsset.accountId,
         amount: -updatedAsset.purchasePrice,
       );
 
+      final map = updatedAsset.copyWith(
+        name: updatedAsset.name.trim(),
+        category: updatedAsset.category.trim().isEmpty
+            ? 'Other'
+            : updatedAsset.category.trim(),
+        createdAt: oldAsset.createdAt,
+      ).toMap()
+        ..remove('id');
+
       await txn.update(
         'assets',
-        updatedAsset.copyWith(
-          name: updatedAsset.name.trim(),
-          createdAt: oldAsset.createdAt,
-        ).toMap()
-          ..remove('id'),
+        map,
         where: 'id = ?',
         whereArgs: [updatedAsset.id],
       );
     });
   }
 
-  /// Deletes an asset and restores its purchase amount.
-  /// Sold asset proceeds are also reversed.
-  static Future<void> deleteAsset(int assetId) async {
+  Future<void> deleteAsset(int assetId) async {
     final db = await _database;
+    await _ensureTables(db);
 
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -373,7 +377,7 @@ class AssetService {
 
       await _getAccount(txn, asset.accountId);
 
-      // Reverse sale proceeds if the asset was sold.
+      // Reverse sale proceeds if already sold.
       if (asset.isSold && asset.salePrice != null) {
         await _changeBalance(
           txn,
@@ -382,7 +386,7 @@ class AssetService {
         );
       }
 
-      // Restore original purchase amount.
+      // Restore the original purchase amount.
       await _changeBalance(
         txn,
         accountId: asset.accountId,
@@ -397,52 +401,89 @@ class AssetService {
     });
   }
 
-  /// Total current value of unsold assets.
-  static Future<double> getTotalCurrentValue() async {
+  Future<Map<String, double>> getTotalCurrentValueByCurrency() async {
     final db = await _database;
+    await _ensureTables(db);
 
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(current_value), 0) AS total
-      FROM assets
-      WHERE is_sold = 0
+    final rows = await db.rawQuery('''
+      SELECT a.currency AS currency,
+             COALESCE(SUM(s.current_value), 0) AS total
+      FROM assets s
+      INNER JOIN accounts a ON a.id = s.account_id
+      WHERE s.is_sold = 0
+      GROUP BY a.currency
     ''');
 
-    return (result.first['total'] as num).toDouble();
+    return {
+      for (final row in rows)
+        (row['currency'] ?? 'PKR').toString():
+            (row['total'] as num).toDouble(),
+    };
   }
 
-  /// Total purchase cost of unsold assets.
-  static Future<double> getTotalPurchaseValue() async {
+  Future<Map<String, double>> getTotalPurchaseValueByCurrency() async {
     final db = await _database;
+    await _ensureTables(db);
 
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(purchase_price), 0) AS total
-      FROM assets
-      WHERE is_sold = 0
+    final rows = await db.rawQuery('''
+      SELECT a.currency AS currency,
+             COALESCE(SUM(s.purchase_price), 0) AS total
+      FROM assets s
+      INNER JOIN accounts a ON a.id = s.account_id
+      WHERE s.is_sold = 0
+      GROUP BY a.currency
     ''');
 
-    return (result.first['total'] as num).toDouble();
+    return {
+      for (final row in rows)
+        (row['currency'] ?? 'PKR').toString():
+            (row['total'] as num).toDouble(),
+    };
   }
 
-  /// Total realized profit or loss from sold assets.
-  static Future<double> getTotalRealizedProfitLoss() async {
+  Future<Map<String, double>> getTotalRealizedProfitLossByCurrency() async {
     final db = await _database;
+    await _ensureTables(db);
 
-    final result = await db.rawQuery('''
-      SELECT COALESCE(
-        SUM(sale_price - purchase_price), 0
-      ) AS total
-      FROM assets
-      WHERE is_sold = 1
+    final rows = await db.rawQuery('''
+      SELECT a.currency AS currency,
+             COALESCE(
+               SUM(s.sale_price - s.purchase_price), 0
+             ) AS total
+      FROM assets s
+      INNER JOIN accounts a ON a.id = s.account_id
+      WHERE s.is_sold = 1
+      GROUP BY a.currency
     ''');
 
-    return (result.first['total'] as num).toDouble();
+    return {
+      for (final row in rows)
+        (row['currency'] ?? 'PKR').toString():
+            (row['total'] as num).toDouble(),
+    };
   }
 
-  /// Returns assets belonging to a specific account.
-  static Future<List<AssetModel>> getAssetsByAccount(
+  Future<double> getTotalCurrentValue() async {
+    final values = await getTotalCurrentValueByCurrency();
+    return values.values.fold(0.0, (a, b) => a + b);
+  }
+
+  Future<double> getTotalPurchaseValue() async {
+    final values = await getTotalPurchaseValueByCurrency();
+    return values.values.fold(0.0, (a, b) => a + b);
+  }
+
+  Future<double> getTotalRealizedProfitLoss() async {
+    final values =
+        await getTotalRealizedProfitLossByCurrency();
+    return values.values.fold(0.0, (a, b) => a + b);
+  }
+
+  Future<List<AssetModel>> getAssetsByAccount(
     int accountId,
   ) async {
     final db = await _database;
+    await _ensureTables(db);
 
     final rows = await db.query(
       'assets',

@@ -1,3 +1,4 @@
+
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -449,7 +450,52 @@ class SavingsService {
     });
   }
 
-  /// Total saved amount across all goals.
+  /// Returns saved amounts grouped by account currency.
+  /// Goals without a linked account are grouped as Unassigned.
+  static Future<Map<String, double>> getTotalSavedByCurrency() async {
+    final db = await _database;
+
+    final rows = await db.rawQuery('''
+      SELECT
+        COALESCE(NULLIF(TRIM(accounts.currency), ''), 'Unassigned') AS currency,
+        COALESCE(SUM(savings_goals.saved_amount), 0) AS total
+      FROM savings_goals
+      LEFT JOIN accounts
+        ON accounts.id = savings_goals.account_id
+      GROUP BY currency
+      ORDER BY currency ASC
+    ''');
+
+    return {
+      for (final row in rows)
+        row['currency'].toString(): (row['total'] as num).toDouble(),
+    };
+  }
+
+  /// Returns target amounts grouped by account currency.
+  /// Goals without a linked account are grouped as Unassigned.
+  static Future<Map<String, double>> getTotalTargetByCurrency() async {
+    final db = await _database;
+
+    final rows = await db.rawQuery('''
+      SELECT
+        COALESCE(NULLIF(TRIM(accounts.currency), ''), 'Unassigned') AS currency,
+        COALESCE(SUM(savings_goals.target_amount), 0) AS total
+      FROM savings_goals
+      LEFT JOIN accounts
+        ON accounts.id = savings_goals.account_id
+      GROUP BY currency
+      ORDER BY currency ASC
+    ''');
+
+    return {
+      for (final row in rows)
+        row['currency'].toString(): (row['total'] as num).toDouble(),
+    };
+  }
+
+  /// Legacy total across all currencies.
+  /// Prefer getTotalSavedByCurrency() for currency-safe summaries.
   static Future<double> getTotalSaved() async {
     final db = await _database;
 
@@ -461,7 +507,8 @@ class SavingsService {
     return (result.first['total'] as num).toDouble();
   }
 
-  /// Total target amount across all goals.
+  /// Legacy total across all currencies.
+  /// Prefer getTotalTargetByCurrency() for currency-safe summaries.
   static Future<double> getTotalTarget() async {
     final db = await _database;
 

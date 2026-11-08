@@ -1,3 +1,4 @@
+
 class AssetModel {
   final int? id;
   final String name;
@@ -34,7 +35,7 @@ class AssetModel {
 
   factory AssetModel.fromMap(Map<String, dynamic> map) {
     return AssetModel(
-      id: map['id'] as int?,
+      id: (map['id'] as num?)?.toInt(),
       name: (map['name'] ?? '').toString(),
       category: (map['category'] ?? 'Other').toString(),
       purchasePrice: (map['purchase_price'] as num?)?.toDouble() ?? 0,
@@ -83,9 +84,9 @@ class AssetModel {
     int? accountId,
     String? notes,
     bool? isSold,
-    DateTime? saleDate,
-    double? salePrice,
-    DateTime? createdAt,
+    Object? saleDate = _unset,
+    Object? salePrice = _unset,
+    Object? createdAt = _unset,
   }) {
     return AssetModel(
       id: id ?? this.id,
@@ -97,9 +98,17 @@ class AssetModel {
       accountId: accountId ?? this.accountId,
       notes: notes ?? this.notes,
       isSold: isSold ?? this.isSold,
-      saleDate: saleDate ?? this.saleDate,
-      salePrice: salePrice ?? this.salePrice,
-      createdAt: createdAt ?? this.createdAt,
+      saleDate: identical(saleDate, _unset)
+          ? this.saleDate
+          : saleDate as DateTime?,
+      salePrice: identical(salePrice, _unset)
+          ? this.salePrice
+          : salePrice as double?,
+      createdAt: identical(createdAt, _unset)
+          ? this.createdAt
+          : createdAt as DateTime?,
     );
   }
 }
+
+const Object _unset = Object();

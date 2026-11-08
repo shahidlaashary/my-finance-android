@@ -51,12 +51,9 @@ class FinanceDB {
             balance REAL NOT NULL DEFAULT 0,
             exclude_total INTEGER NOT NULL DEFAULT 0,
             account_number TEXT NOT NULL DEFAULT '',
-            icon_code INTEGER NOT NULL DEFAULT account_balance_wallet
+            icon_code INTEGER NOT NULL DEFAULT ${Icons.account_balance_wallet.codePoint}
           )
-        '''.replaceAll(
-          'DEFAULT account_balance_wallet',
-          'DEFAULT ${Icons.account_balance_wallet.codePoint}',
-        ));
+        ''');
 
         await db.execute('''
           CREATE TABLE transactions (
@@ -138,29 +135,82 @@ class FinanceDB {
   }
 
   Future<void> deleteAccount(int id) async {
-    final linked = await db.rawQuery(
-      '''
-      SELECT COUNT(*) AS total
-      FROM transactions
-      WHERE account_id = ? OR to_account_id = ?
-      ''',
-      [id, id],
-    );
+    await db.transaction((txn) async {
+      final tables = await txn.rawQuery('''
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name NOT LIKE 'sqlite_%'
+      ''');
 
-    final count = (linked.first['total'] as num).toInt();
+      final accountColumns = {
+        'account_id',
+        'to_account_id',
+        'from_account_id',
+        'source_account_id',
+        'destination_account_id',
+      };
 
-    if (count > 0) {
-      throw Exception(
-        'This account has linked transactions. '
-        'You cannot delete it.',
+      final linkedTables = <String>[];
+
+      for (final table in tables) {
+        final tableName = table['name']?.toString();
+
+        if (tableName == null || tableName == 'accounts') {
+          continue;
+        }
+
+        final escapedTableName = tableName.replaceAll('"', '""');
+
+        final columns = await txn.rawQuery(
+          'PRAGMA table_info("$escapedTableName")',
+        );
+
+        final matchingColumns = columns
+            .map((column) => column['name']?.toString())
+            .whereType<String>()
+            .where(accountColumns.contains)
+            .toList();
+
+        if (matchingColumns.isEmpty) {
+          continue;
+        }
+
+        final conditions = matchingColumns
+            .map((column) => '"$column" = ?')
+            .join(' OR ');
+
+        final linked = await txn.rawQuery(
+          'SELECT COUNT(*) AS total FROM "$escapedTableName" '
+          'WHERE $conditions',
+          List.filled(matchingColumns.length, id),
+        );
+
+        final count = (linked.first['total'] as num).toInt();
+
+        if (count > 0) {
+          linkedTables.add(tableName);
+        }
+      }
+
+      if (linkedTables.isNotEmpty) {
+        throw Exception(
+          'This account has linked records in: '
+          '${linkedTables.join(', ')}. '
+          'Remove or reassign those records before deleting this account.',
+        );
+      }
+
+      final deleted = await txn.delete(
+        'accounts',
+        where: 'id = ?',
+        whereArgs: [id],
       );
-    }
 
-    await db.delete(
-      'accounts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+      if (deleted == 0) {
+        throw Exception('Account not found.');
+      }
+    });
   }
 
   Future<void> addTransaction({

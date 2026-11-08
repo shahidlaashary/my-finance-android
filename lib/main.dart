@@ -1,32 +1,46 @@
+
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
+
 import 'screens/categories_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/more_features_screen.dart';
 import 'services/app_startup_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+
   await FinanceDB.instance.init();
   await AppStartupService.initialize();
+
   runApp(const MyFinanceApp());
 }
+
 class FinanceDB {
   FinanceDB._();
+
   static final instance = FinanceDB._();
+
   Database? _db;
+
   Database get db => _db!;
+
   Future<void> init() async {
     if (_db != null && _db!.isOpen) return;
+
     final base = await getDatabasesPath();
+
     _db = await openDatabase(
       p.join(base, 'my_finance.db'),
       version: 2,
@@ -43,6 +57,7 @@ class FinanceDB {
             icon_code INTEGER NOT NULL DEFAULT ${Icons.account_balance_wallet.codePoint}
           )
         ''');
+
         await db.execute('''
           CREATE TABLE transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,6 +75,7 @@ class FinanceDB {
           await db.execute(
             "ALTER TABLE accounts ADD COLUMN account_number TEXT NOT NULL DEFAULT ''",
           );
+
           await db.execute(
             'ALTER TABLE accounts ADD COLUMN icon_code INTEGER NOT NULL DEFAULT ${Icons.account_balance_wallet.codePoint}',
           );
@@ -67,28 +83,34 @@ class FinanceDB {
       },
     );
   }
+
   // Close the current database connection.
   Future<void> close() async {
     final currentDatabase = _db;
     _db = null;
+
     if (currentDatabase != null && currentDatabase.isOpen) {
       await currentDatabase.close();
     }
   }
+
   // Reopen the database after backup restoration.
   Future<void> reopen() async {
     await close();
     await init();
   }
+
   Future<List<Map<String, dynamic>>> accounts() async {
     return db.query('accounts', orderBy: 'name ASC');
   }
+
   Future<List<Map<String, dynamic>>> transactions() async {
     return db.query(
       'transactions',
       orderBy: 'date DESC, id DESC',
     );
   }
+
   Future<void> addAccount({
     required String name,
     required String type,
@@ -108,6 +130,7 @@ class FinanceDB {
       'exclude_total': excludeTotal ? 1 : 0,
     });
   }
+
   Future<void> updateAccount({
     required int id,
     required String name,
@@ -129,6 +152,7 @@ class FinanceDB {
       whereArgs: [id],
     );
   }
+
   Future<void> deleteAccount(int id) async {
     await db.transaction((txn) async {
       final tables = await txn.rawQuery('''
@@ -137,6 +161,7 @@ class FinanceDB {
         WHERE type = 'table'
           AND name NOT LIKE 'sqlite_%'
       ''');
+
       final accountColumns = {
         'account_id',
         'to_account_id',
@@ -144,37 +169,49 @@ class FinanceDB {
         'source_account_id',
         'destination_account_id',
       };
+
       final linkedTables = <String>[];
+
       for (final table in tables) {
         final tableName = table['name']?.toString();
+
         if (tableName == null || tableName == 'accounts') {
           continue;
         }
+
         final escapedTableName = tableName.replaceAll('"', '""');
+
         final columns = await txn.rawQuery(
           'PRAGMA table_info("$escapedTableName")',
         );
+
         final matchingColumns = columns
             .map((column) => column['name']?.toString())
             .whereType<String>()
             .where(accountColumns.contains)
             .toList();
+
         if (matchingColumns.isEmpty) {
           continue;
         }
+
         final conditions = matchingColumns
             .map((column) => '"$column" = ?')
             .join(' OR ');
+
         final linked = await txn.rawQuery(
           'SELECT COUNT(*) AS total FROM "$escapedTableName" '
           'WHERE $conditions',
           List.filled(matchingColumns.length, id),
         );
+
         final count = (linked.first['total'] as num).toInt();
+
         if (count > 0) {
           linkedTables.add(tableName);
         }
       }
+
       if (linkedTables.isNotEmpty) {
         throw Exception(
           'This account has linked records in: '
@@ -182,16 +219,19 @@ class FinanceDB {
           'Remove or reassign those records before deleting this account.',
         );
       }
+
       final deleted = await txn.delete(
         'accounts',
         where: 'id = ?',
         whereArgs: [id],
       );
+
       if (deleted == 0) {
         throw Exception('Account not found.');
       }
     });
   }
+
   Future<void> addTransaction({
     required String type,
     required double amount,
@@ -202,44 +242,55 @@ class FinanceDB {
     if (amount <= 0) {
       throw Exception('Amount must be greater than zero.');
     }
+
     await db.transaction((txn) async {
       final source = await txn.query(
         'accounts',
         where: 'id = ?',
         whereArgs: [accountId],
       );
+
       if (source.isEmpty) {
         throw Exception('Account not found.');
       }
+
       if (type == 'Transfer') {
         if (toAccountId == null || toAccountId == accountId) {
           throw Exception('Select a different destination account.');
         }
+
         final destination = await txn.query(
           'accounts',
           where: 'id = ?',
           whereArgs: [toAccountId],
         );
+
         if (destination.isEmpty) {
           throw Exception('Destination account not found.');
         }
+
         if (source.first['currency'] != destination.first['currency']) {
           throw Exception(
             'Transfers between different currencies are not yet supported.',
           );
         }
+
         final balance = (source.first['balance'] as num).toDouble();
+
         if (balance < amount) {
           throw Exception('Insufficient account balance.');
         }
+
         await txn.update(
           'accounts',
           {'balance': balance - amount},
           where: 'id = ?',
           whereArgs: [accountId],
         );
+
         final destinationBalance =
             (destination.first['balance'] as num).toDouble();
+
         await txn.update(
           'accounts',
           {'balance': destinationBalance + amount},
@@ -248,6 +299,7 @@ class FinanceDB {
         );
       } else if (type == 'Expense') {
         final balance = (source.first['balance'] as num).toDouble();
+
         await txn.update(
           'accounts',
           {'balance': balance - amount},
@@ -256,6 +308,7 @@ class FinanceDB {
         );
       } else if (type == 'Income') {
         final balance = (source.first['balance'] as num).toDouble();
+
         await txn.update(
           'accounts',
           {'balance': balance + amount},
@@ -265,6 +318,7 @@ class FinanceDB {
       } else {
         throw Exception('Invalid transaction type.');
       }
+
       await txn.insert('transactions', {
         'type': type,
         'amount': amount,
@@ -275,6 +329,7 @@ class FinanceDB {
       });
     });
   }
+
   Future<List<Map<String, dynamic>>> dashboardSummary() async {
     final accountResults = await db.rawQuery('''
       SELECT
@@ -285,6 +340,7 @@ class FinanceDB {
       FROM accounts
       GROUP BY currency
     ''');
+
     final transactionResults = await db.rawQuery('''
       SELECT
         accounts.currency AS currency,
@@ -296,9 +352,12 @@ class FinanceDB {
       WHERE LOWER(transactions.type) IN ('income', 'expense')
       GROUP BY accounts.currency, LOWER(transactions.type)
     ''');
+
     final Map<String, Map<String, dynamic>> summaries = {};
+
     for (final account in accountResults) {
       final currency = (account['currency'] ?? 'PKR').toString();
+
       summaries[currency] = {
         'currency': currency,
         'balance': (account['total_balance'] as num?)?.toDouble() ?? 0,
@@ -306,11 +365,14 @@ class FinanceDB {
         'expense': 0.0,
       };
     }
+
     for (final transaction in transactionResults) {
       final currency = (transaction['currency'] ?? 'PKR').toString();
       final type = transaction['transaction_type'].toString();
+
       final amount =
           (transaction['total_amount'] as num?)?.toDouble() ?? 0;
+
       summaries.putIfAbsent(currency, () {
         return {
           'currency': currency,
@@ -319,28 +381,35 @@ class FinanceDB {
           'expense': 0.0,
         };
       });
+
       if (type == 'income') {
         summaries[currency]!['income'] = amount;
       } else if (type == 'expense') {
         summaries[currency]!['expense'] = amount;
       }
     }
+
     final result = summaries.values.toList();
+
     result.sort(
       (a, b) => a['currency'].toString().compareTo(
             b['currency'].toString(),
           ),
     );
+
     return result;
   }
+
   Future<double> totalBalance() async {
     final result = await db.rawQuery('''
       SELECT SUM(balance) AS total
       FROM accounts
       WHERE exclude_total = 0
     ''');
+
     return (result.first['total'] as num?)?.toDouble() ?? 0;
   }
+
   Future<double> totalByType(String type) async {
     final result = await db.rawQuery(
       '''
@@ -350,11 +419,14 @@ class FinanceDB {
       ''',
       [type],
     );
+
     return (result.first['total'] as num?)?.toDouble() ?? 0;
   }
 }
+
 class MyFinanceApp extends StatelessWidget {
   const MyFinanceApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -371,16 +443,21 @@ class MyFinanceApp extends StatelessWidget {
     );
   }
 }
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
+
 class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
+
   void refresh() {
     setState(() {});
   }
+
   @override
   Widget build(BuildContext context) {
     final pages = [
@@ -391,6 +468,7 @@ class _MainScreenState extends State<MainScreen> {
       const LoansScreen(),
       const MoreFeaturesScreen(),
     ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -448,15 +526,19 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+
 class DashboardPage extends StatelessWidget {
   final VoidCallback onRefresh;
+
   const DashboardPage({
     super.key,
     required this.onRefresh,
   });
+
   String money(String currency, double amount) {
     return '$currency ${NumberFormat('#,##0.00').format(amount)}';
   }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -465,10 +547,13 @@ class DashboardPage extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
+
         final summaries = snapshot.data ?? [];
+
         return RefreshIndicator(
           onRefresh: () async => onRefresh(),
           child: ListView(
@@ -518,6 +603,7 @@ class DashboardPage extends StatelessWidget {
                 final balance = (summary['balance'] as num).toDouble();
                 final income = (summary['income'] as num).toDouble();
                 final expense = (summary['expense'] as num).toDouble();
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 18),
                   child: Column(
@@ -535,7 +621,9 @@ class DashboardPage extends StatelessWidget {
                           children: [
                             Text(
                               '$currency Total Balance',
-                              style: const TextStyle(color: Colors.white70),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text(
@@ -634,11 +722,13 @@ class DashboardPage extends StatelessWidget {
     );
   }
 }
+
 class SummaryCard extends StatelessWidget {
   final String title;
   final String amount;
   final IconData icon;
   final Color color;
+
   const SummaryCard({
     super.key,
     required this.title,
@@ -646,6 +736,7 @@ class SummaryCard extends StatelessWidget {
     required this.icon,
     required this.color,
   });
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -668,16 +759,19 @@ class SummaryCard extends StatelessWidget {
     );
   }
 }
+
 class ActionTile extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+
   const ActionTile({
     super.key,
     required this.label,
     required this.icon,
     required this.onTap,
   });
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -701,12 +795,15 @@ class ActionTile extends StatelessWidget {
     );
   }
 }
+
 class AccountsPage extends StatelessWidget {
   final VoidCallback onRefresh;
+
   const AccountsPage({
     super.key,
     required this.onRefresh,
   });
+
   Future<void> _deleteAccount(
     BuildContext context,
     Map<String, dynamic> account,
@@ -730,10 +827,14 @@ class AccountsPage extends StatelessWidget {
         ],
       ),
     );
+
     if (confirmed != true || !context.mounted) return;
+
     try {
       await FinanceDB.instance.deleteAccount(account['id'] as int);
+
       onRefresh();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account deleted.')),
       );
@@ -743,6 +844,7 @@ class AccountsPage extends StatelessWidget {
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -751,10 +853,13 @@ class AccountsPage extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
+
         final accounts = snapshot.data ?? [];
+
         return Scaffold(
           backgroundColor: Colors.transparent,
           floatingActionButton: FloatingActionButton(
@@ -773,17 +878,21 @@ class AccountsPage extends StatelessWidget {
                   itemCount: accounts.length,
                   itemBuilder: (context, index) {
                     final account = accounts[index];
+
                     final balance =
                         (account['balance'] as num?)?.toDouble() ?? 0;
-                    final iconCode =
-                        account['icon_code'] as int? ??
+
+                    final iconCode = account['icon_code'] as int? ??
                         Icons.account_balance_wallet.codePoint;
+
                     final accountIcon = IconData(
                       iconCode,
                       fontFamily: 'MaterialIcons',
                     );
+
                     final accountNumber =
                         (account['account_number'] ?? '').toString();
+
                     return Card(
                       child: ListTile(
                         leading: CircleAvatar(
@@ -859,8 +968,10 @@ class AccountsPage extends StatelessWidget {
     );
   }
 }
+
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -869,23 +980,28 @@ class TransactionsPage extends StatelessWidget {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
+
         final items = snapshot.data!;
+
         if (items.isEmpty) {
           return const Center(
             child: Text('No transactions recorded yet.'),
           );
         }
+
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
             final type = (item['type'] as String).toLowerCase();
+
             final color = type == 'income'
                 ? Colors.green
                 : type == 'expense'
                     ? Colors.red
                     : Colors.blue;
+
             return Card(
               child: ListTile(
                 leading: CircleAvatar(
@@ -920,6 +1036,7 @@ class TransactionsPage extends StatelessWidget {
     );
   }
 }
+
 const List<String> _accountTypes = [
   'Cash',
   'Bank',
@@ -932,6 +1049,7 @@ const List<String> _accountTypes = [
   'Other',
   'Custom',
 ];
+
 const List<IconData> _accountIcons = [
   Icons.account_balance_wallet,
   Icons.account_balance,
@@ -946,251 +1064,295 @@ const List<IconData> _accountIcons = [
   Icons.business,
   Icons.home,
 ];
+
 Future<void> showAccountDialog(
   BuildContext context, {
   Map<String, dynamic>? account,
 }) async {
   final isEditing = account != null;
+
   final nameController = TextEditingController(
     text: account?['name']?.toString() ?? '',
   );
+
   final balanceController = TextEditingController(
     text: account == null
         ? '0'
         : ((account['balance'] as num?)?.toString() ?? '0'),
   );
+
   final accountNumberController = TextEditingController(
     text: account?['account_number']?.toString() ?? '',
   );
+
   final customTypeController = TextEditingController();
+
   final existingType = account?['type']?.toString() ?? 'Cash';
+
   String type = _accountTypes.contains(existingType) &&
           existingType != 'Custom'
       ? existingType
       : (account == null ? 'Cash' : 'Custom');
+
   if (type == 'Custom') {
-    customTypeController.text = existingType == 'Custom' ? '' : existingType;
+    customTypeController.text =
+        existingType == 'Custom' ? '' : existingType;
   }
+
   String currency = account?['currency']?.toString() ?? 'PKR';
+
   int iconCode = account?['icon_code'] as int? ??
       Icons.account_balance_wallet.codePoint;
-  bool excludeTotal = (account?['exclude_total'] as int? ?? 0) == 1;
-  await showDialog(
-    context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setDialogState) => AlertDialog(
-        title: Text(isEditing ? 'Edit Account' : 'Add Account'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Account name',
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                value: type,
-                decoration: const InputDecoration(
-                  labelText: 'Account type',
-                ),
-                items: _accountTypes.map((v) {
-                  return DropdownMenuItem(
-                    value: v,
-                    child: Text(v),
-                  );
-                }).toList(),
-                onChanged: (v) {
-                  if (v != null) {
-                    setDialogState(() => type = v);
-                  }
-                },
-              ),
-              if (type == 'Custom')
+
+  bool excludeTotal =
+      (account?['exclude_total'] as int? ?? 0) == 1;
+
+  try {
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isEditing ? 'Edit Account' : 'Add Account'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 TextField(
-                  controller: customTypeController,
+                  controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Custom account type',
+                    labelText: 'Account name',
                   ),
                 ),
-              DropdownButtonFormField<String>(
-                value: currency,
-                decoration: const InputDecoration(
-                  labelText: 'Currency',
+                DropdownButtonFormField<String>(
+                  value: type,
+                  decoration: const InputDecoration(
+                    labelText: 'Account type',
+                  ),
+                  items: _accountTypes.map((v) {
+                    return DropdownMenuItem(
+                      value: v,
+                      child: Text(v),
+                    );
+                  }).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setDialogState(() => type = v);
+                    }
+                  },
                 ),
-                items: const [
-                  'PKR',
-                  'USD',
-                  'GBP',
-                  'EUR',
-                  'AED',
-                  'SAR',
-                ].map((v) {
-                  return DropdownMenuItem(
-                    value: v,
-                    child: Text(v),
-                  );
-                }).toList(),
-                onChanged: isEditing
-                    ? null
-                    : (v) {
-                        if (v != null) {
-                          setDialogState(() => currency = v);
-                        }
-                      },
-              ),
-              if (isEditing)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Currency cannot be changed for existing accounts.',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                if (type == 'Custom')
+                  TextField(
+                    controller: customTypeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Custom account type',
                     ),
                   ),
-                ),
-              if (!isEditing)
-                TextField(
-                  controller: balanceController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
+                DropdownButtonFormField<String>(
+                  value: currency,
                   decoration: const InputDecoration(
-                    labelText: 'Opening balance',
+                    labelText: 'Currency',
+                  ),
+                  items: const [
+                    'PKR',
+                    'USD',
+                    'GBP',
+                    'EUR',
+                    'AED',
+                    'SAR',
+                  ].map((v) {
+                    return DropdownMenuItem(
+                      value: v,
+                      child: Text(v),
+                    );
+                  }).toList(),
+                  onChanged: isEditing
+                      ? null
+                      : (v) {
+                          if (v != null) {
+                            setDialogState(() => currency = v);
+                          }
+                        },
+                ),
+                if (isEditing)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Currency cannot be changed for existing accounts.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (!isEditing)
+                  TextField(
+                    controller: balanceController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Opening balance',
+                    ),
+                  ),
+                TextField(
+                  controller: accountNumberController,
+                  decoration: const InputDecoration(
+                    labelText: 'Account number (optional)',
                   ),
                 ),
-              TextField(
-                controller: accountNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Account number (optional)',
+                const SizedBox(height: 12),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Account Icon',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Account Icon',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _accountIcons.map((icon) {
+                    final selected = icon.codePoint == iconCode;
+
+                    return InkWell(
+                      onTap: () {
+                        setDialogState(
+                          () => iconCode = icon.codePoint,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(30),
+                      child: CircleAvatar(
+                        backgroundColor: selected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey.shade200,
+                        child: Icon(
+                          icon,
+                          color: selected
+                              ? Colors.white
+                              : Colors.black87,
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _accountIcons.map((icon) {
-                  final selected = icon.codePoint == iconCode;
-                  return InkWell(
-                    onTap: () {
-                      setDialogState(() => iconCode = icon.codePoint);
-                    },
-                    borderRadius: BorderRadius.circular(30),
-                    child: CircleAvatar(
-                      backgroundColor: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey.shade200,
-                      child: Icon(
-                        icon,
-                        color: selected ? Colors.white : Colors.black87,
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: excludeTotal,
+                  title: const Text(
+                    'Exclude from Total Balance',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'This account will not be included in dashboard balance.',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  controlAffinity:
+                      ListTileControlAffinity.leading,
+                  onChanged: (value) {
+                    setDialogState(
+                      () => excludeTotal = value ?? false,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+
+                final accountType = type == 'Custom'
+                    ? customTypeController.text.trim()
+                    : type;
+
+                final balanceText = balanceController.text.trim();
+                final balance = double.tryParse(balanceText);
+
+                if (name.isEmpty || accountType.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Enter account name and account type.',
                       ),
                     ),
                   );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                value: excludeTotal,
-                title: const Text(
-                  'Exclude from Total Balance',
-                  style: TextStyle(fontSize: 14),
-                ),
-                subtitle: const Text(
-                  'This account will not be included in dashboard balance.',
-                  style: TextStyle(fontSize: 11),
-                ),
-                controlAffinity: ListTileControlAffinity.leading,
-                onChanged: (value) {
-                  setDialogState(() => excludeTotal = value ?? false);
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final accountType = type == 'Custom'
-                  ? customTypeController.text.trim()
-                  : type;
-              final balance =
-                  double.tryParse(balanceController.text.trim()) ?? 0;
-              if (name.isEmpty || accountType.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Enter account name and account type.'),
-                  ),
-                );
-                return;
-              }
-              if (!isEditing && balance < 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Opening balance cannot be negative.'),
-                  ),
-                );
-                return;
-              }
-              try {
-                if (isEditing) {
-                  await FinanceDB.instance.updateAccount(
-                    id: account['id'] as int,
-                    name: name,
-                    type: accountType,
-                    accountNumber: accountNumberController.text.trim(),
-                    iconCode: iconCode,
-                    excludeTotal: excludeTotal,
-                  );
-                } else {
-                  await FinanceDB.instance.addAccount(
-                    name: name,
-                    type: accountType,
-                    currency: currency,
-                    openingBalance: balance,
-                    accountNumber: accountNumberController.text.trim(),
-                    iconCode: iconCode,
-                    excludeTotal: excludeTotal,
-                  );
-                  }
-
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
+                  return;
                 }
-              } catch (e) {
-                if (dialogContext.mounted) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(
-                      content: Text('Error saving account: $e'),
+
+                if (!isEditing &&
+                    (balance == null ||
+                        !balance.isFinite ||
+                        balance < 0)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Enter a valid non-negative opening balance.',
+                      ),
                     ),
                   );
+                  return;
                 }
-              }
-            },
-            child: Text(isEditing ? 'Update Account' : 'Save Account'),
-          ),
-        ],
-      ),
-    ),
-  );
 
-  nameController.dispose();
-  balanceController.dispose();
-  accountNumberController.dispose();
-  customTypeController.dispose();
+                try {
+                  if (isEditing) {
+                    await FinanceDB.instance.updateAccount(
+                      id: account['id'] as int,
+                      name: name,
+                      type: accountType,
+                      accountNumber:
+                          accountNumberController.text.trim(),
+                      iconCode: iconCode,
+                      excludeTotal: excludeTotal,
+                    );
+                  } else {
+                    await FinanceDB.instance.addAccount(
+                      name: name,
+                      type: accountType,
+                      currency: currency,
+                      openingBalance: balance!,
+                      accountNumber:
+                          accountNumberController.text.trim(),
+                      iconCode: iconCode,
+                      excludeTotal: excludeTotal,
+                    );
+                  }
+
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(
+                        content: Text('Error saving account: $e'),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(
+                isEditing ? 'Update Account' : 'Save Account',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  } finally {
+    nameController.dispose();
+    balanceController.dispose();
+    accountNumberController.dispose();
+    customTypeController.dispose();
+  }
 }

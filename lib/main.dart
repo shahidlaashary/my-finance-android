@@ -23,7 +23,6 @@ void main() async {
 
   await FinanceDB.instance.init();
 
-  // Initialize app services and process due recurring transactions.
   await AppStartupService.initialize();
 
   runApp(const MyFinanceApp());
@@ -203,18 +202,92 @@ class FinanceDB {
     });
   }
 
+  // Dashboard financial summary grouped by currency.
+  Future<List<Map<String, dynamic>>> dashboardSummary() async {
+    final accountResults = await db.rawQuery('''
+      SELECT
+        currency,
+        SUM(
+          CASE
+            WHEN exclude_total = 0 THEN balance
+            ELSE 0
+          END
+        ) AS total_balance
+      FROM accounts
+      GROUP BY currency
+    ''');
+
+    final transactionResults = await db.rawQuery('''
+      SELECT
+        accounts.currency AS currency,
+        LOWER(transactions.type) AS transaction_type,
+        SUM(transactions.amount) AS total_amount
+      FROM transactions
+      INNER JOIN accounts
+        ON accounts.id = transactions.account_id
+      WHERE LOWER(transactions.type) IN ('income', 'expense')
+      GROUP BY accounts.currency, LOWER(transactions.type)
+    ''');
+
+    final Map<String, Map<String, dynamic>> summaries = {};
+
+    for (final account in accountResults) {
+      final currency = (account['currency'] ?? 'PKR').toString();
+
+      summaries[currency] = {
+        'currency': currency,
+        'balance':
+            (account['total_balance'] as num?)?.toDouble() ?? 0,
+        'income': 0.0,
+        'expense': 0.0,
+      };
+    }
+
+    for (final transaction in transactionResults) {
+      final currency = (transaction['currency'] ?? 'PKR').toString();
+      final type = transaction['transaction_type'].toString();
+      final amount =
+          (transaction['total_amount'] as num?)?.toDouble() ?? 0;
+
+      summaries.putIfAbsent(currency, () {
+        return {
+          'currency': currency,
+          'balance': 0.0,
+          'income': 0.0,
+          'expense': 0.0,
+        };
+      });
+
+      if (type == 'income') {
+        summaries[currency]!['income'] = amount;
+      } else if (type == 'expense') {
+        summaries[currency]!['expense'] = amount;
+      }
+    }
+
+    final result = summaries.values.toList();
+
+    result.sort((a, b) {
+      return a['currency'].toString().compareTo(
+            b['currency'].toString(),
+          );
+    });
+
+    return result;
+  }
+
+  // Retained for compatibility with existing code.
   Future<double> totalBalance() async {
-    final result = await db.rawQuery(
-      '''
+    final result = await db.rawQuery('''
       SELECT SUM(balance) AS total
       FROM accounts
       WHERE exclude_total = 0
-      ''',
-    );
+    ''');
 
     return (result.first['total'] as num?)?.toDouble() ?? 0;
   }
 
+  // Retained for compatibility with existing code.
   Future<double> totalByType(String type) async {
     final result = await db.rawQuery(
       '''
@@ -344,20 +417,16 @@ class DashboardPage extends StatelessWidget {
     required this.onRefresh,
   });
 
-  String money(double amount) {
-    return 'PKR ${NumberFormat('#,##0.00').format(amount)}';
+  String money(String currency, double amount) {
+    return '$currency ${NumberFormat('#,##0.00').format(amount)}';
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<double>>(
-      future: Future.wait([
-        FinanceDB.instance.totalBalance(),
-        FinanceDB.instance.totalByType('Income'),
-        FinanceDB.instance.totalByType('Expense'),
-      ]),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: FinanceDB.instance.dashboardSummary(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(),
           );
@@ -369,7 +438,7 @@ class DashboardPage extends StatelessWidget {
           );
         }
 
-        final values = snapshot.data!;
+        final summaries = snapshot.data ?? [];
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -378,63 +447,124 @@ class DashboardPage extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(18),
             children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF147D59),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Balance',
-                      style: TextStyle(
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      money(values[0]),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 29,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'My Finance',
-                      style: TextStyle(
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
+              const Text(
+                'Financial Overview',
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: SummaryCard(
-                      title: 'Income',
-                      amount: money(values[1]),
-                      icon: Icons.trending_up,
-                      color: Colors.green,
-                    ),
+              const SizedBox(height: 16),
+
+              if (summaries.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF147D59),
+                    borderRadius: BorderRadius.circular(22),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SummaryCard(
-                      title: 'Expenses',
-                      amount: money(values[2]),
-                      icon: Icons.trending_down,
-                      color: Colors.red,
-                    ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Balance',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'No accounts yet',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Add an account to see your financial summary.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                ),
+
+              ...summaries.map((summary) {
+                final currency = summary['currency'].toString();
+                final balance =
+                    (summary['balance'] as num).toDouble();
+                final income =
+                    (summary['income'] as num).toDouble();
+                final expense =
+                    (summary['expense'] as num).toDouble();
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF147D59),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$currency Total Balance',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              money(currency, balance),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 27,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'My Finance',
+                              style: TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SummaryCard(
+                              title: '$currency Income',
+                              amount: money(currency, income),
+                              icon: Icons.trending_up,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: SummaryCard(
+                              title: '$currency Expenses',
+                              amount: money(currency, expense),
+                              icon: Icons.trending_down,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
+              const SizedBox(height: 8),
               const Text(
                 'Quick Actions',
                 style: TextStyle(
@@ -474,7 +604,10 @@ class DashboardPage extends StatelessWidget {
                   ActionTile(
                     label: 'Add Account',
                     icon: Icons.account_balance,
-                    onTap: () => showAccountDialog(context),
+                    onTap: () async {
+                      await showAccountDialog(context);
+                      onRefresh();
+                    },
                   ),
                 ],
               ),
@@ -574,7 +707,7 @@ class AccountsPage extends StatelessWidget {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: FinanceDB.instance.accounts(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(),
           );
@@ -586,7 +719,7 @@ class AccountsPage extends StatelessWidget {
           );
         }
 
-        final accounts = snapshot.data!;
+        final accounts = snapshot.data ?? [];
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -609,6 +742,9 @@ class AccountsPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final account = accounts[index];
 
+                    final balance =
+                        (account['balance'] as num?)?.toDouble() ?? 0;
+
                     return Card(
                       child: ListTile(
                         leading: const CircleAvatar(
@@ -616,14 +752,14 @@ class AccountsPage extends StatelessWidget {
                             Icons.account_balance_wallet,
                           ),
                         ),
-                        title: Text(account['name']),
+                        title: Text(account['name'].toString()),
                         subtitle: Text(
                           '${account['type']} • '
                           '${account['currency']}',
                         ),
                         trailing: Text(
                           '${account['currency']} '
-                          '${NumberFormat('#,##0.00').format(account['balance'])}',
+                          '${NumberFormat('#,##0.00').format(balance)}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),

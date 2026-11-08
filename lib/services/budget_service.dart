@@ -1,0 +1,347 @@
+import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
+
+import '../models/budget_model.dart';
+
+class BudgetService {
+  static const String _databaseName = 'my_finance.db';
+
+  static Future<Database> get _database async {
+    final databasePath = await getDatabasesPath();
+
+    return openDatabase(
+      p.join(databasePath, _databaseName),
+      onOpen: (db) async {
+        await _createTables(db);
+      },
+    );
+  }
+
+  static Future<void> _createTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS budgets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category_id INTEGER,
+        limit_amount REAL NOT NULL,
+        spent_amount REAL NOT NULL DEFAULT 0,
+        period TEXT NOT NULL DEFAULT 'Monthly',
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'PKR',
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_budgets_active
+      ON budgets(is_active)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_budgets_dates
+      ON budgets(start_date, end_date)
+    ''');
+  }
+
+  static void _validateBudget(BudgetModel budget) {
+    if (budget.name.trim().isEmpty) {
+      throw Exception('Budget name is required.');
+    }
+
+    if (!budget.limitAmount.isFinite ||
+        budget.limitAmount <= 0) {
+      throw Exception('Budget limit must be greater than zero.');
+    }
+
+    if (budget.startDate.isAfter(budget.endDate)) {
+      throw Exception('Start date cannot be after end date.');
+    }
+
+    if (budget.currency.trim().isEmpty) {
+      throw Exception('Budget currency is required.');
+    }
+
+    const validPeriods = [
+      'Daily',
+      'Weekly',
+      'Monthly',
+      'Yearly',
+      'Custom',
+    ];
+
+    if (!validPeriods.any(
+      (period) =>
+          period.toLowerCase() == budget.period.toLowerCase(),
+    )) {
+      throw Exception('Invalid budget period.');
+    }
+  }
+
+  /// Creates a new budget.
+  static Future<int> addBudget(BudgetModel budget) async {
+    final db = await _database;
+
+    _validateBudget(budget);
+
+    final now = DateTime.now();
+
+    return db.insert(
+      'budgets',
+      budget.copyWith(
+        name: budget.name.trim(),
+        spentAmount: 0,
+        currency: budget.currency.trim().toUpperCase(),
+        createdAt: budget.createdAt ?? now,
+      ).toMap()
+        ..remove('id'),
+    );
+  }
+
+  /// Returns all budgets.
+  static Future<List<BudgetModel>> getBudgets({
+    bool activeOnly = false,
+  }) async {
+    final db = await _database;
+
+    final rows = await db.query(
+      'budgets',
+      where: activeOnly ? 'is_active = 1' : null,
+      orderBy: 'start_date DESC, id DESC',
+    );
+
+    final budgets = rows.map(BudgetModel.fromMap).toList();
+
+    final result = <BudgetModel>[];
+
+    for (final budget in budgets) {
+      result.add(await _refreshBudget(db, budget));
+    }
+
+    return result;
+  }
+
+  /// Returns a single budget by ID.
+  static Future<BudgetModel?> getBudgetById(int budgetId) async {
+    final db = await _database;
+
+    final rows = await db.query(
+      'budgets',
+      where: 'id = ?',
+      whereArgs: [budgetId],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) return null;
+
+    return _refreshBudget(
+      db,
+      BudgetModel.fromMap(rows.first),
+    );
+  }
+
+  /// Recalculates actual expenses for a budget.
+  static Future<BudgetModel> _refreshBudget(
+    DatabaseExecutor db,
+    BudgetModel budget,
+  ) async {
+    final result = await db.rawQuery(
+      '''
+      SELECT COALESCE(SUM(t.amount), 0) AS total
+      FROM transactions t
+      INNER JOIN accounts a ON a.id = t.account_id
+      WHERE LOWER(t.type) = 'expense'
+        AND UPPER(a.currency) = ?
+        AND date(t.date) >= date(?)
+        AND date(t.date) <= date(?)
+        AND (? IS NULL OR t.category_id = ?)
+      ''',
+      [
+        budget.currency.toUpperCase(),
+        budget.startDate.toIso8601String(),
+        budget.endDate.toIso8601String(),
+        budget.categoryId,
+        budget.categoryId,
+      ],
+    );
+
+    final spent = (result.first['total'] as num).toDouble();
+
+    await db.update(
+      'budgets',
+      {'spent_amount': spent},
+      where: 'id = ?',
+      whereArgs: [budget.id],
+    );
+
+    return budget.copyWith(spentAmount: spent);
+  }
+
+  /// Manually refreshes one budget's spending.
+  static Future<BudgetModel> refreshBudget(int budgetId) async {
+    final budget = await getBudgetById(budgetId);
+
+    if (budget == null) {
+      throw Exception('Budget was not found.');
+    }
+
+    return budget;
+  }
+
+  /// Updates budget details.
+  static Future<void> updateBudget(BudgetModel budget) async {
+    if (budget.id == null) {
+      throw Exception('Budget ID is required.');
+    }
+
+    _validateBudget(budget);
+
+    final db = await _database;
+
+    final existing = await db.query(
+      'budgets',
+      where: 'id = ?',
+      whereArgs: [budget.id],
+      limit: 1,
+    );
+
+    if (existing.isEmpty) {
+      throw Exception('Budget was not found.');
+    }
+
+    final oldBudget = BudgetModel.fromMap(existing.first);
+
+    await db.update(
+      'budgets',
+      {
+        'name': budget.name.trim(),
+        'category_id': budget.categoryId,
+        'limit_amount': budget.limitAmount,
+        'period': budget.period,
+        'start_date': budget.startDate.toIso8601String(),
+        'end_date': budget.endDate.toIso8601String(),
+        'currency': budget.currency.trim().toUpperCase(),
+        'is_active': budget.isActive ? 1 : 0,
+        'spent_amount': oldBudget.spentAmount,
+      },
+      where: 'id = ?',
+      whereArgs: [budget.id],
+    );
+  }
+
+  /// Activates or deactivates a budget.
+  static Future<void> setBudgetStatus(
+    int budgetId,
+    bool isActive,
+  ) async {
+    final db = await _database;
+
+    final count = await db.update(
+      'budgets',
+      {'is_active': isActive ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [budgetId],
+    );
+
+    if (count == 0) {
+      throw Exception('Budget was not found.');
+    }
+  }
+
+  /// Deletes a budget.
+  static Future<void> deleteBudget(int budgetId) async {
+    final db = await _database;
+
+    await db.delete(
+      'budgets',
+      where: 'id = ?',
+      whereArgs: [budgetId],
+    );
+  }
+
+  /// Returns budgets that have exceeded their limits.
+  static Future<List<BudgetModel>> getExceededBudgets() async {
+    final budgets = await getBudgets(activeOnly: true);
+
+    return budgets.where((budget) {
+      return budget.spentAmount > budget.limitAmount;
+    }).toList();
+  }
+
+  /// Returns budgets that have reached at least 80% of their limit.
+  static Future<List<BudgetModel>> getNearLimitBudgets({
+    double threshold = 0.8,
+  }) async {
+    if (threshold <= 0 || threshold > 1) {
+      throw Exception('Threshold must be greater than 0 and at most 1.');
+    }
+
+    final budgets = await getBudgets(activeOnly: true);
+
+    return budgets.where((budget) {
+      return budget.progress >= threshold &&
+          !budget.isExceeded;
+    }).toList();
+  }
+
+  /// Total budget limit grouped by currency.
+  static Future<Map<String, double>> getTotalLimitsByCurrency() async {
+    final db = await _database;
+
+    final rows = await db.rawQuery('''
+      SELECT currency, COALESCE(SUM(limit_amount), 0) AS total
+      FROM budgets
+      WHERE is_active = 1
+      GROUP BY currency
+    ''');
+
+    return {
+      for (final row in rows)
+        row['currency'].toString():
+            (row['total'] as num).toDouble(),
+    };
+  }
+
+  /// Actual spending grouped by currency.
+  static Future<Map<String, double>> getTotalSpendingByCurrency() async {
+    final budgets = await getBudgets(activeOnly: true);
+    final totals = <String, double>{};
+
+    for (final budget in budgets) {
+      final currency = budget.currency.toUpperCase();
+
+      totals[currency] =
+          (totals[currency] ?? 0) + budget.spentAmount;
+    }
+
+    return totals;
+  }
+
+  /// Returns budgets for a particular category.
+  static Future<List<BudgetModel>> getBudgetsByCategory(
+    int categoryId,
+  ) async {
+    final db = await _database;
+
+    final rows = await db.query(
+      'budgets',
+      where: 'category_id = ?',
+      whereArgs: [categoryId],
+      orderBy: 'start_date DESC',
+    );
+
+    final result = <BudgetModel>[];
+
+    for (final row in rows) {
+      result.add(
+        await _refreshBudget(
+          db,
+          BudgetModel.fromMap(row),
+        ),
+      );
+    }
+
+    return result;
+  }
+}

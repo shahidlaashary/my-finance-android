@@ -8,15 +8,64 @@ import '../models/repayment_model.dart';
 class LoanService {
   static const String _databaseName = 'my_finance.db';
 
+  static Database? _databaseInstance;
+  static Future<Database>? _databaseFuture;
+
   static Future<Database> get _database async {
+    if (_databaseInstance != null && _databaseInstance!.isOpen) {
+      return _databaseInstance!;
+    }
+
+    final pendingFuture = _databaseFuture;
+
+    if (pendingFuture != null) {
+      return pendingFuture;
+    }
+
+    final future = _openDatabase();
+    _databaseFuture = future;
+
+    try {
+      return await future;
+    } catch (_) {
+      if (identical(_databaseFuture, future)) {
+        _databaseFuture = null;
+      }
+      rethrow;
+    }
+  }
+
+  static Future<Database> _openDatabase() async {
     final databasePath = await getDatabasesPath();
 
-    return openDatabase(
+    final db = await openDatabase(
       p.join(databasePath, _databaseName),
       onOpen: (db) async {
         await _createTables(db);
       },
     );
+
+    _databaseInstance = db;
+    return db;
+  }
+
+  static Future<void> closeDatabase() async {
+    final pendingFuture = _databaseFuture;
+
+    if (pendingFuture != null) {
+      try {
+        await pendingFuture;
+      } catch (_) {}
+    }
+
+    final currentDatabase = _databaseInstance;
+    _databaseInstance = null;
+
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+
+    _databaseFuture = null;
   }
 
   static Future<void> _createTables(Database db) async {

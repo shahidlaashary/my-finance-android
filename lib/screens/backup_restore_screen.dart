@@ -1,30 +1,49 @@
+
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
 import '../main.dart';
 import '../services/backup_service.dart';
+import '../services/transaction_service.dart';
+import '../services/budget_service.dart';
+import '../services/savings_service.dart';
+import '../services/recurring_transaction_service.dart';
+import '../services/category_service.dart';
+import '../services/loan_service.dart';
+import '../services/attachment_service.dart';
+
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
+
   @override
   State<BackupRestoreScreen> createState() =>
       _BackupRestoreScreenState();
 }
+
 class _BackupRestoreScreenState
     extends State<BackupRestoreScreen> {
   bool _isProcessing = false;
+
   Future<void> _createBackup() async {
     if (_isProcessing) return;
+
     setState(() {
       _isProcessing = true;
     });
+
     try {
       final database = FinanceDB.instance.db;
+
       final Uint8List backupBytes =
           await BackupService.createBackup(
         database: database,
       );
+
       if (!mounted) return;
+
       final savedPath = await FilePicker.platform.saveFile(
         dialogTitle: 'Save My Finance Backup',
         fileName: 'My_Finance_Backup.zip',
@@ -32,7 +51,9 @@ class _BackupRestoreScreenState
         allowedExtensions: ['zip'],
         bytes: backupBytes,
       );
+
       if (!mounted) return;
+
       if (savedPath == null) {
         _showMessage('Backup save cancelled.');
       } else {
@@ -53,8 +74,10 @@ class _BackupRestoreScreenState
       }
     }
   }
+
   Future<void> _selectAndRestoreBackup() async {
     if (_isProcessing) return;
+
     try {
       final result = await FilePicker.platform.pickFiles(
         dialogTitle: 'Select My Finance Backup',
@@ -62,14 +85,21 @@ class _BackupRestoreScreenState
         allowedExtensions: ['zip'],
         withData: true,
       );
+
       if (!mounted || result == null || result.files.isEmpty) {
         return;
       }
+
       final selectedFile = result.files.single;
+
       Uint8List? backupBytes = selectedFile.bytes;
+
       if (backupBytes == null && selectedFile.path != null) {
-        backupBytes = await File(selectedFile.path!).readAsBytes();
+        backupBytes = await File(
+          selectedFile.path!,
+        ).readAsBytes();
       }
+
       if (backupBytes == null || backupBytes.isEmpty) {
         _showMessage(
           'Could not read the selected backup file.',
@@ -77,23 +107,43 @@ class _BackupRestoreScreenState
         );
         return;
       }
+
       if (!mounted) return;
+
       final confirmed = await _confirmRestore();
+
       if (!mounted || confirmed != true) return;
+
       setState(() {
         _isProcessing = true;
       });
-      // Close the active database before replacing its file.
-      await FinanceDB.instance.close();
+
       try {
+        // Close all independent database connections first.
+        await Future.wait([
+          TransactionService.closeDatabase(),
+          BudgetService.closeDatabase(),
+          SavingsService.closeDatabase(),
+          RecurringTransactionService.closeDatabase(),
+          CategoryService.closeDatabase(),
+          LoanService.closeDatabase(),
+          AttachmentService.closeDatabase(),
+        ]);
+
+        // Close the main database connection.
+        await FinanceDB.instance.close();
+
+        // Restore database and attachment files.
         await BackupService.restoreBackup(
           backupBytes: backupBytes,
         );
       } finally {
-        // Reopen the database whether restore succeeds or fails.
+        // Reopen the main database even if restore fails.
         await FinanceDB.instance.reopen();
       }
+
       if (!mounted) return;
+
       _showMessage(
         'Backup restored successfully. Your finance data has been updated.',
       );
@@ -112,6 +162,7 @@ class _BackupRestoreScreenState
       }
     }
   }
+
   Future<bool?> _confirmRestore() {
     return showDialog<bool>(
       context: context,
@@ -147,6 +198,7 @@ class _BackupRestoreScreenState
       },
     );
   }
+
   void _showMessage(
     String message, {
     bool isError = false,
@@ -158,6 +210,7 @@ class _BackupRestoreScreenState
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -283,6 +336,7 @@ class _BackupRestoreScreenState
       ),
     );
   }
+
   Widget _buildFeatureCard({
     required IconData icon,
     required String title,

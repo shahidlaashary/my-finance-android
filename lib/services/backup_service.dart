@@ -11,13 +11,14 @@ class BackupService {
   static const String _attachmentFolder = 'my_finance_attachments';
   static const String _backupDatabasePath = 'database/my_finance.db';
   static const String _manifestPath = 'manifest.json';
-  /// Creates a ZIP backup containing the database and all attachments.
-  ///
-  /// The caller must ensure the database is not being modified during
-  /// backup creation. A WAL checkpoint is performed before reading it.
+  /// Creates a ZIP backup containing a consistent database snapshot
+  /// and all available attachment files.
   static Future<Uint8List> createBackup({
     required Database database,
   }) async {
+    if (!database.isOpen) {
+      throw Exception('Database connection is not open.');
+    }
     final databaseDirectory = await getDatabasesPath();
     final databaseFile = File(
       p.join(databaseDirectory, _databaseName),
@@ -25,98 +26,141 @@ class BackupService {
     if (!await databaseFile.exists()) {
       throw Exception('Finance database could not be found.');
     }
-    // Flush pending SQLite WAL changes into the main database file.
-    await database.rawQuery('PRAGMA wal_checkpoint(FULL)');
-    final archive = Archive();
-    final databaseBytes = await databaseFile.readAsBytes();
-    archive.addFile(
-      ArchiveFile(
-        _backupDatabasePath,
-        databaseBytes.length,
-        databaseBytes,
-      ),
+    final temporaryDirectory = await getTemporaryDirectory();
+    final snapshotName =
+        'my_finance_backup_${DateTime.now().microsecondsSinceEpoch}.db';
+    final snapshotFile = File(
+      p.join(temporaryDirectory.path, snapshotName),
     );
-    final documentsDirectory =
-        await getApplicationDocumentsDirectory();
-    final attachmentDirectory = Directory(
-      p.join(documentsDirectory.path, _attachmentFolder),
-    );
-    var attachmentCount = 0;
-    if (await attachmentDirectory.exists()) {
-      await for (final entity
-          in attachmentDirectory.list(recursive: true)) {
-        if (entity is! File) continue;
-        final relativePath = p.relative(
-          entity.path,
-          from: attachmentDirectory.path,
-        );
-        final normalizedPath = p.posix.join(
-          'attachments',
-          p.posix.joinAll(p.split(relativePath)),
-        );
-        final bytes = await entity.readAsBytes();
-        archive.addFile(
-          ArchiveFile(
-            normalizedPath,
-            bytes.length,
-            bytes,
-          ),
-        );
-        attachmentCount++;
+    try {
+      // VACUUM INTO creates a consistent database snapshot,
+      // including committed WAL changes.
+      final escapedPath = snapshotFile.path.replaceAll("'", "''");
+      await database.execute(
+        "VACUUM INTO '$escapedPath'",
+      );
+      if (!await snapshotFile.exists()) {
+        throw Exception('Could not create database backup snapshot.');
+      }
+      final databaseBytes = await snapshotFile.readAsBytes();
+      if (databaseBytes.isEmpty) {
+        throw Exception('Database backup snapshot is empty.');
+      }
+      final archive = Archive();
+      archive.addFile(
+        ArchiveFile(
+          _backupDatabasePath,
+          databaseBytes.length,
+          databaseBytes,
+        ),
+      );
+      final documentsDirectory =
+          await getApplicationDocumentsDirectory();
+      final attachmentDirectory = Directory(
+        p.join(documentsDirectory.path, _attachmentFolder),
+      );
+      var attachmentCount = 0;
+      if (await attachmentDirectory.exists()) {
+        await for (final entity
+            in attachmentDirectory.list(recursive: true)) {
+          if (entity is! File) continue;
+          // Do not include symbolic links.
+          final entityType = await FileSystemEntity.type(
+            entity.path,
+            followLinks: false,
+          );
+          if (entityType != FileSystemEntityType.file) {
+            continue;
+          }
+          final relativePath = p.relative(
+            entity.path,
+            from: attachmentDirectory.path,
+          );
+          final normalizedRelativePath = p.posix.joinAll(
+            p.split(relativePath),
+          );
+          final archivePath = p.posix.join(
+            'attachments',
+            normalizedRelativePath,
+          );
+          _validateArchivePath(archivePath);
+          final bytes = await entity.readAsBytes();
+          archive.addFile(
+            ArchiveFile(
+              archivePath,
+              bytes.length,
+              bytes,
+            ),
+          );
+          attachmentCount++;
+        }
+      }
+      final manifest = {
+        'app': 'My Finance',
+        'format_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'database': _backupDatabasePath,
+        'attachment_count': attachmentCount,
+      };
+      final manifestBytes = utf8.encode(
+        jsonEncode(manifest),
+      );
+      archive.addFile(
+        ArchiveFile(
+          _manifestPath,
+          manifestBytes.length,
+          manifestBytes,
+        ),
+      );
+      final zipBytes = ZipEncoder().encode(archive);
+      return Uint8List.fromList(zipBytes);
+    } finally {
+      if (await snapshotFile.exists()) {
+        await snapshotFile.delete();
       }
     }
-    final manifest = {
-      'app': 'My Finance',
-      'format_version': 1,
-      'created_at': DateTime.now().toIso8601String(),
-      'database': _backupDatabasePath,
-      'attachment_count': attachmentCount,
-    };
-    final manifestBytes = utf8.encode(jsonEncode(manifest));
-    archive.addFile(
-      ArchiveFile(
-        _manifestPath,
-        manifestBytes.length,
-        manifestBytes,
-      ),
-    );
-    final zipBytes = ZipEncoder().encode(archive);
-    return Uint8List.fromList(zipBytes);
   }
   /// Restores a previously created My Finance ZIP backup.
   ///
-  /// The caller MUST close the active database connection before calling
-  /// this method, then reopen it after a successful restore.
+  /// IMPORTANT:
+  /// The caller must close the active database connection
+  /// before calling this method and reopen it afterwards.
   static Future<void> restoreBackup({
     required Uint8List backupBytes,
   }) async {
+    if (backupBytes.isEmpty) {
+      throw Exception('Backup file is empty.');
+    }
     final archive = ZipDecoder().decodeBytes(backupBytes);
     final files = <String, ArchiveFile>{};
     for (final entry in archive.files) {
       if (!entry.isFile) continue;
-      final fileName = entry.name.replaceAll('\\', '/');
-      final normalized = p.posix.normalize(fileName);
-      if (normalized.startsWith('/') ||
-          normalized == '..' ||
-          normalized.startsWith('../') ||
-          normalized.contains('/../')) {
-        throw Exception('Backup contains an unsafe file path.');
+      final normalizedPath = _validateArchivePath(
+        entry.name,
+      );
+      if (files.containsKey(normalizedPath)) {
+        throw Exception('Backup contains duplicate file paths.');
       }
-      files[normalized] = entry;
+      files[normalizedPath] = entry;
     }
+    // Validate manifest.
     final manifestFile = files[_manifestPath];
     if (manifestFile == null) {
-      throw Exception('This ZIP is not a valid My Finance backup.');
+      throw Exception(
+        'This ZIP is not a valid My Finance backup.',
+      );
     }
     final manifestBytes = manifestFile.content as List<int>;
-    final manifest = jsonDecode(
+    final decodedManifest = jsonDecode(
       utf8.decode(manifestBytes),
     );
-    if (manifest is! Map<String, dynamic> ||
-        manifest['app'] != 'My Finance' ||
-        manifest['format_version'] != 1) {
+    if (decodedManifest is! Map<String, dynamic> ||
+        decodedManifest['app'] != 'My Finance' ||
+        decodedManifest['format_version'] != 1 ||
+        decodedManifest['database'] != _backupDatabasePath) {
       throw Exception('Unsupported or invalid backup format.');
     }
+    // Validate database file.
     final databaseArchiveFile = files[_backupDatabasePath];
     if (databaseArchiveFile == null) {
       throw Exception('Backup database file is missing.');
@@ -127,24 +171,56 @@ class BackupService {
     if (databaseBytes.isEmpty) {
       throw Exception('Backup database file is empty.');
     }
-    final temporaryDirectory =
-        await getTemporaryDirectory();
-    final stagingDirectory = Directory(
+    final databaseDirectory = await getDatabasesPath();
+    final documentsDirectory =
+        await getApplicationDocumentsDirectory();
+    await Directory(databaseDirectory).create(
+      recursive: true,
+    );
+    final currentDatabase = File(
+      p.join(databaseDirectory, _databaseName),
+    );
+    final currentAttachments = Directory(
+      p.join(documentsDirectory.path, _attachmentFolder),
+    );
+    final uniqueId = DateTime.now().microsecondsSinceEpoch;
+    // Temporary files are created beside their final destinations
+    // so rename operations stay on the same filesystem.
+    final stagedDatabase = File(
       p.join(
-        temporaryDirectory.path,
-        'my_finance_restore_${DateTime.now().microsecondsSinceEpoch}',
+        databaseDirectory,
+        'my_finance_restore_$uniqueId.db',
       ),
     );
-    await stagingDirectory.create(recursive: true);
+    final oldDatabase = File(
+      p.join(
+        databaseDirectory,
+        'my_finance_previous_$uniqueId.db',
+      ),
+    );
+    final stagedAttachments = Directory(
+      p.join(
+        documentsDirectory.path,
+        'my_finance_attachments_restore_$uniqueId',
+      ),
+    );
+    final oldAttachments = Directory(
+      p.join(
+        documentsDirectory.path,
+        'my_finance_attachments_previous_$uniqueId',
+      ),
+    );
+    var databaseMoved = false;
+    var databaseInstalled = false;
+    var attachmentsMoved = false;
+    var attachmentsInstalled = false;
     try {
-      // Validate the database before replacing the existing one.
-      final stagedDatabase = File(
-        p.join(stagingDirectory.path, _databaseName),
-      );
+      // Write database into staging.
       await stagedDatabase.writeAsBytes(
         databaseBytes,
         flush: true,
       );
+      // Validate SQLite database before replacing current data.
       final validationDatabase = await openDatabase(
         stagedDatabase.path,
         readOnly: true,
@@ -154,9 +230,13 @@ class BackupService {
           'PRAGMA integrity_check',
         );
         if (integrity.isEmpty ||
-            integrity.first.values.first.toString().toLowerCase() !=
+            integrity.first.values.first
+                    .toString()
+                    .toLowerCase() !=
                 'ok') {
-          throw Exception('Backup database failed integrity check.');
+          throw Exception(
+            'Backup database failed integrity check.',
+          );
         }
         final tables = await validationDatabase.rawQuery('''
           SELECT name
@@ -177,74 +257,128 @@ class BackupService {
       } finally {
         await validationDatabase.close();
       }
-      // Extract attachment files into a separate staging directory.
-      final stagedAttachments = Directory(
-        p.join(stagingDirectory.path, _attachmentFolder),
-      );
+      // Prepare attachment staging directory.
       await stagedAttachments.create(recursive: true);
       for (final entry in files.entries) {
-        if (!entry.key.startsWith('attachments/')) continue;
+        if (!entry.key.startsWith('attachments/')) {
+          continue;
+        }
         final relativePath = entry.key.substring(
           'attachments/'.length,
         );
-        if (relativePath.isEmpty) continue;
+        if (relativePath.isEmpty) {
+          continue;
+        }
+        _validateArchivePath(relativePath);
         final outputPath = p.join(
           stagedAttachments.path,
           p.joinAll(p.posix.split(relativePath)),
         );
         final outputFile = File(outputPath);
-        await outputFile.parent.create(recursive: true);
+        await outputFile.parent.create(
+          recursive: true,
+        );
         await outputFile.writeAsBytes(
           entry.value.content as List<int>,
           flush: true,
         );
       }
-      final databaseDirectory = await getDatabasesPath();
-      final currentDatabase = File(
-        p.join(databaseDirectory, _databaseName),
-      );
-      final documentsDirectory =
-          await getApplicationDocumentsDirectory();
-      final currentAttachments = Directory(
-        p.join(documentsDirectory.path, _attachmentFolder),
-      );
-      // Keep the old files temporarily so a failed copy can be rolled back.
-      final oldDatabase = File(
-        p.join(stagingDirectory.path, 'old_database.db'),
-      );
-      final oldAttachments = Directory(
-        p.join(stagingDirectory.path, 'old_attachments'),
-      );
-      var databaseReplaced = false;
-      var attachmentsReplaced = false;
-      try {
-        if (await currentDatabase.exists()) {
-          await currentDatabase.copy(oldDatabase.path);
-        }
-        if (await currentAttachments.exists()) {
-          await currentAttachments.rename(oldAttachments.path);
-        }
-        await stagedAttachments.rename(currentAttachments.path);
-        attachmentsReplaced = true;
-        await stagedDatabase.copy(currentDatabase.path);
-        databaseReplaced = true;
-      } catch (error) {
-        // Restore previous files if replacement fails.
-        if (databaseReplaced && await oldDatabase.exists()) {
-          await oldDatabase.copy(currentDatabase.path);
-        }
-        if (attachmentsReplaced &&
-            await currentAttachments.exists()) {
-          await currentAttachments.delete(recursive: true);
-        }
-        if (await oldAttachments.exists()) {
-          await oldAttachments.rename(currentAttachments.path);
-        }
-        rethrow;
+      // Move existing database aside.
+      if (await currentDatabase.exists()) {
+        await currentDatabase.rename(oldDatabase.path);
+        databaseMoved = true;
       }
+      // Remove old SQLite sidecar files.
+      await _deleteDatabaseSidecars(currentDatabase.path);
+      // Install restored database.
+      await stagedDatabase.rename(currentDatabase.path);
+      databaseInstalled = true;
+      // Move existing attachments aside.
+      if (await currentAttachments.exists()) {
+        await currentAttachments.rename(oldAttachments.path);
+        attachmentsMoved = true;
+      }
+      // Install restored attachments.
+      await stagedAttachments.rename(
+        currentAttachments.path,
+      );
+      attachmentsInstalled = true;
+      // Restore completed successfully.
+      // Remove previous backup copies.
+      if (await oldDatabase.exists()) {
+        await oldDatabase.delete();
+      }
+      if (await oldAttachments.exists()) {
+        await oldAttachments.delete(recursive: true);
+      }
+    } catch (error) {
+      // Roll back attachments if installation failed.
+      if (attachmentsInstalled &&
+          await currentAttachments.exists()) {
+        await currentAttachments.delete(recursive: true);
+      }
+      if (attachmentsMoved &&
+          await oldAttachments.exists()) {
+        await oldAttachments.rename(
+          currentAttachments.path,
+        );
+      }
+      // Roll back database if installation failed.
+      if (databaseInstalled &&
+          await currentDatabase.exists()) {
+        await currentDatabase.delete();
+      }
+      if (databaseMoved && await oldDatabase.exists()) {
+        await oldDatabase.rename(
+          currentDatabase.path,
+        );
+      }
+      rethrow;
     } finally {
-      if (await stagingDirectory.exists()) {
-        await stagingDirectory.delete(recursive: true);
+      if (await stagedDatabase.exists()) {
+        await stagedDatabase.delete();
+      }
+      if (await stagedAttachments.exists()) {
+        await stagedAttachments.delete(recursive: true);
+      }
+      // Do not delete oldDatabase or oldAttachments here.
+      // They may be needed if rollback itself encountered an error.
+    }
+  }
+  /// Validates archive paths to prevent directory traversal.
+  static String _validateArchivePath(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    if (normalized.isEmpty ||
+        normalized.startsWith('/') ||
+        normalized.startsWith('~') ||
+        RegExp(r'^[a-zA-Z]:').hasMatch(normalized)) {
+      throw Exception('Backup contains an unsafe file path.');
+    }
+    final segments = normalized.split('/');
+    if (segments.any(
+      (segment) =>
+          segment.isEmpty ||
+          segment == '.' ||
+          segment == '..',
+    )) {
+      throw Exception('Backup contains an unsafe file path.');
+    }
+    final result = p.posix.normalize(normalized);
+    if (result == '.' ||
+        result == '..' ||
+        result.startsWith('../')) {
+      throw Exception('Backup contains an unsafe file path.');
+    }
+    return result;
+  }
+  /// Removes SQLite WAL and shared-memory sidecar files.
+  static Future<void> _deleteDatabaseSidecars(
+    String databasePath,
+  ) async {
+    for (final suffix in ['-wal', '-shm', '-journal']) {
+      final sidecar = File('$databasePath$suffix');
+      if (await sidecar.exists()) {
+        await sidecar.delete();
       }
     }
   }

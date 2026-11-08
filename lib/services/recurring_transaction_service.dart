@@ -1,43 +1,32 @@
-
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-
 import '../models/recurring_transaction_model.dart';
-
 class RecurringTransactionService {
   static const String _databaseName = 'my_finance.db';
   static const String _tableName = 'recurring_transactions';
-
   static Database? _databaseInstance;
   static Future<Database>? _databaseFuture;
-
   Future<Database> get _database async {
-    if (_databaseInstance != null) {
+    if (_databaseInstance != null &&
+        _databaseInstance!.isOpen) {
       return _databaseInstance!;
     }
-
     if (_databaseFuture != null) {
       return _databaseFuture!;
     }
-
     _databaseFuture = _openDatabase();
-
     try {
       _databaseInstance = await _databaseFuture!;
       return _databaseInstance!;
-    } catch (_) {
+    } finally {
       _databaseFuture = null;
-      rethrow;
     }
   }
-
   Future<Database> _openDatabase() async {
     final dbPath = await getDatabasesPath();
-
     final db = await openDatabase(
       p.join(dbPath, _databaseName),
     );
-
     try {
       await _createTable(db);
       return db;
@@ -46,7 +35,23 @@ class RecurringTransactionService {
       rethrow;
     }
   }
-
+  /// Closes the database connection before restoring a backup.
+  static Future<void> closeDatabase() async {
+    final pendingFuture = _databaseFuture;
+    if (pendingFuture != null) {
+      try {
+        await pendingFuture;
+      } catch (_) {
+        // Ignore opening errors while preparing to close.
+      }
+    }
+    final currentDatabase = _databaseInstance;
+    _databaseInstance = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+    _databaseFuture = null;
+  }
   Future<void> _createTable(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $_tableName (
@@ -66,104 +71,81 @@ class RecurringTransactionService {
         created_at TEXT NOT NULL
       )
     ''');
-
     final transactionColumns =
         await db.rawQuery('PRAGMA table_info(transactions)');
-
     final hasCategoryId = transactionColumns.any(
       (column) => column['name'] == 'category_id',
     );
-
     if (transactionColumns.isNotEmpty && !hasCategoryId) {
       await db.execute(
         'ALTER TABLE transactions ADD COLUMN category_id INTEGER',
       );
     }
   }
-
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);
-
     return '${value.year.toString().padLeft(4, '0')}-'
         '${value.month.toString().padLeft(2, '0')}-'
         '${value.day.toString().padLeft(2, '0')}';
   }
-
   DateTime _parseDate(String value) {
     return DateTime.parse(value);
   }
-
   DateTime _nextDate(DateTime current, String frequency) {
     switch (frequency.toLowerCase()) {
       case 'daily':
         return current.add(const Duration(days: 1));
-
       case 'weekly':
         return current.add(const Duration(days: 7));
-
       case 'monthly':
         final nextMonth = current.month == 12
             ? DateTime(current.year + 1, 1, 1)
             : DateTime(current.year, current.month + 1, 1);
-
         final lastDay = DateTime(
           nextMonth.year,
           nextMonth.month + 1,
           0,
         ).day;
-
         return DateTime(
           nextMonth.year,
           nextMonth.month,
           current.day > lastDay ? lastDay : current.day,
         );
-
       case 'yearly':
         final year = current.year + 1;
-
         final lastDay = DateTime(
           year,
           current.month + 1,
           0,
         ).day;
-
         return DateTime(
           year,
           current.month,
           current.day > lastDay ? lastDay : current.day,
         );
-
       default:
         throw ArgumentError('Invalid frequency: $frequency');
     }
   }
-
   void _validateModel(RecurringTransactionModel model) {
     if (model.title.trim().isEmpty) {
       throw Exception('Transaction title is required.');
     }
-
     if (model.amount <= 0) {
       throw Exception('Amount must be greater than zero.');
     }
-
     final type = model.type.toLowerCase();
-
     if (!['income', 'expense', 'transfer'].contains(type)) {
       throw Exception('Invalid transaction type.');
     }
-
     final frequency = model.frequency.toLowerCase();
-
     if (!['daily', 'weekly', 'monthly', 'yearly']
         .contains(frequency)) {
       throw Exception('Invalid recurring frequency.');
     }
-
     if (model.accountId <= 0) {
       throw Exception('A valid account is required.');
     }
-
     if (type == 'transfer') {
       if (model.toAccountId == null ||
           model.toAccountId! <= 0 ||
@@ -175,27 +157,21 @@ class RecurringTransactionService {
         'Destination account is only allowed for transfers.',
       );
     }
-
     final startDate = _parseDate(model.startDate);
     final nextRunDate = _parseDate(model.nextRunDate);
-
     if (nextRunDate.isBefore(startDate)) {
       throw Exception('Next run date cannot be before start date.');
     }
-
     if (model.endDate != null) {
       final endDate = _parseDate(model.endDate!);
-
       if (endDate.isBefore(startDate)) {
         throw Exception('End date cannot be before start date.');
       }
-
       if (endDate.isBefore(nextRunDate)) {
         throw Exception('End date cannot be before next run date.');
       }
     }
   }
-
   Future<void> _validateAccounts(
     DatabaseExecutor db,
     RecurringTransactionModel model,
@@ -206,11 +182,9 @@ class RecurringTransactionService {
       whereArgs: [model.accountId],
       limit: 1,
     );
-
     if (sourceAccounts.isEmpty) {
       throw Exception('Selected account does not exist.');
     }
-
     if (model.type.toLowerCase() == 'transfer') {
       final destinationAccounts = await db.query(
         'accounts',
@@ -218,17 +192,13 @@ class RecurringTransactionService {
         whereArgs: [model.toAccountId],
         limit: 1,
       );
-
       if (destinationAccounts.isEmpty) {
         throw Exception('Destination account does not exist.');
       }
-
       final sourceCurrency =
           sourceAccounts.first['currency']?.toString();
-
       final destinationCurrency =
           destinationAccounts.first['currency']?.toString();
-
       if (sourceCurrency != destinationCurrency) {
         throw Exception(
           'Transfer accounts must have the same currency.',
@@ -236,7 +206,6 @@ class RecurringTransactionService {
       }
     }
   }
-
   Map<String, Object?> _toMap(
     RecurringTransactionModel model,
   ) {
@@ -258,71 +227,55 @@ class RecurringTransactionService {
       'created_at': model.createdAt,
     };
   }
-
   Future<int> addRecurringTransaction(
     RecurringTransactionModel model,
   ) async {
     _validateModel(model);
-
     final db = await _database;
-
     await _validateAccounts(db, model);
-
     return db.insert(
       _tableName,
       _toMap(model),
     );
   }
-
   Future<List<RecurringTransactionModel>> getRecurringTransactions({
     bool activeOnly = false,
   }) async {
     final db = await _database;
-
     final rows = await db.query(
       _tableName,
       where: activeOnly ? 'is_active = ?' : null,
       whereArgs: activeOnly ? [1] : null,
       orderBy: 'next_run_date ASC',
     );
-
     return rows
         .map((row) => RecurringTransactionModel.fromMap(row))
         .toList();
   }
-
   Future<RecurringTransactionModel?> getRecurringTransactionById(
     int id,
   ) async {
     final db = await _database;
-
     final rows = await db.query(
       _tableName,
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
     );
-
     if (rows.isEmpty) {
       return null;
     }
-
     return RecurringTransactionModel.fromMap(rows.first);
   }
-
   Future<int> updateRecurringTransaction(
     RecurringTransactionModel model,
   ) async {
     if (model.id == null) {
       throw Exception('Recurring transaction ID is required.');
     }
-
     _validateModel(model);
-
     final db = await _database;
-
     await _validateAccounts(db, model);
-
     return db.update(
       _tableName,
       _toMap(model),
@@ -330,13 +283,11 @@ class RecurringTransactionService {
       whereArgs: [model.id],
     );
   }
-
   Future<int> setRecurringTransactionStatus(
     int id,
     bool isActive,
   ) async {
     final db = await _database;
-
     return db.update(
       _tableName,
       {'is_active': isActive ? 1 : 0},
@@ -344,17 +295,14 @@ class RecurringTransactionService {
       whereArgs: [id],
     );
   }
-
   Future<int> deleteRecurringTransaction(int id) async {
     final db = await _database;
-
     return db.delete(
       _tableName,
       where: 'id = ?',
       whereArgs: [id],
     );
   }
-
   Future<void> _applyTransaction(
     Transaction txn,
     Map<String, Object?> recurring,
@@ -364,48 +312,38 @@ class RecurringTransactionService {
     final amount = (recurring['amount'] as num).toDouble();
     final accountId = recurring['account_id'] as int;
     final toAccountId = recurring['to_account_id'] as int?;
-
     final accounts = await txn.query(
       'accounts',
       where: 'id = ?',
       whereArgs: [accountId],
       limit: 1,
     );
-
     if (accounts.isEmpty) {
       throw Exception('Recurring transaction account not found.');
     }
-
     final account = accounts.first;
     final balance = (account['balance'] as num).toDouble();
-
     Map<String, Object?>? destination;
-
     if (type == 'transfer') {
       if (toAccountId == null || toAccountId == accountId) {
         throw Exception('Invalid destination account.');
       }
-
       final destinationAccounts = await txn.query(
         'accounts',
         where: 'id = ?',
         whereArgs: [toAccountId],
         limit: 1,
       );
-
       if (destinationAccounts.isEmpty) {
         throw Exception('Destination account not found.');
       }
-
       destination = destinationAccounts.first;
-
       if (destination['currency'] != account['currency']) {
         throw Exception(
           'Transfer accounts must have the same currency.',
         );
       }
     }
-
     if (type == 'expense' || type == 'transfer') {
       if (balance < amount) {
         throw Exception(
@@ -413,7 +351,6 @@ class RecurringTransactionService {
         );
       }
     }
-
     if (type == 'income') {
       await txn.update(
         'accounts',
@@ -429,11 +366,9 @@ class RecurringTransactionService {
         whereArgs: [accountId],
       );
     }
-
     if (type == 'transfer') {
       final destinationBalance =
           (destination!['balance'] as num).toDouble();
-
       await txn.update(
         'accounts',
         {'balance': destinationBalance + amount},
@@ -441,7 +376,6 @@ class RecurringTransactionService {
         whereArgs: [toAccountId],
       );
     }
-
     await txn.insert('transactions', {
       'type': type,
       'amount': amount,
@@ -452,7 +386,6 @@ class RecurringTransactionService {
       'date': _date(transactionDate),
     });
   }
-
   /// Processes all due recurring transactions.
   ///
   /// Returns the number of generated transactions.
@@ -460,15 +393,12 @@ class RecurringTransactionService {
     DateTime? throughDate,
   }) async {
     final db = await _database;
-
     final referenceDate = throughDate ?? DateTime.now();
-
     final today = DateTime(
       referenceDate.year,
       referenceDate.month,
       referenceDate.day,
     );
-
     return db.transaction((txn) async {
       final recurringRows = await txn.query(
         _tableName,
@@ -476,18 +406,14 @@ class RecurringTransactionService {
         whereArgs: [1, _date(today)],
         orderBy: 'next_run_date ASC',
       );
-
       int processedCount = 0;
-
       for (final recurring in recurringRows) {
         final id = recurring['id'] as int;
         final frequency = recurring['frequency'].toString();
         final endDate = recurring['end_date'] as String?;
-
         var nextDate = _parseDate(
           recurring['next_run_date'].toString(),
         );
-
         while (!nextDate.isAfter(today)) {
           if (endDate != null &&
               nextDate.isAfter(_parseDate(endDate))) {
@@ -499,17 +425,13 @@ class RecurringTransactionService {
             );
             break;
           }
-
           await _applyTransaction(
             txn,
             recurring,
             nextDate,
           );
-
           processedCount++;
-
           nextDate = _nextDate(nextDate, frequency);
-
           if (endDate != null &&
               nextDate.isAfter(_parseDate(endDate))) {
             await txn.update(
@@ -523,7 +445,6 @@ class RecurringTransactionService {
             );
             break;
           }
-
           await txn.update(
             _tableName,
             {'next_run_date': _date(nextDate)},
@@ -532,7 +453,6 @@ class RecurringTransactionService {
           );
         }
       }
-
       return processedCount;
     });
   }

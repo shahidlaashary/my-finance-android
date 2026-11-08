@@ -1,22 +1,53 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-
 import '../models/budget_model.dart';
-
 class BudgetService {
   static const String _databaseName = 'my_finance.db';
-
+  static Database? _databaseInstance;
+  static Future<Database>? _databaseFuture;
   static Future<Database> get _database async {
+    if (_databaseInstance != null &&
+        _databaseInstance!.isOpen) {
+      return _databaseInstance!;
+    }
+    if (_databaseFuture != null) {
+      return _databaseFuture!;
+    }
+    _databaseFuture = _openDatabase();
+    try {
+      _databaseInstance = await _databaseFuture!;
+      return _databaseInstance!;
+    } finally {
+      _databaseFuture = null;
+    }
+  }
+  static Future<Database> _openDatabase() async {
     final databasePath = await getDatabasesPath();
-
-    return openDatabase(
+    final db = await openDatabase(
       p.join(databasePath, _databaseName),
       onOpen: (db) async {
         await _createTables(db);
       },
     );
+    return db;
   }
-
+  // Close the budget database connection before restoring a backup.
+  static Future<void> closeDatabase() async {
+    final pendingFuture = _databaseFuture;
+    if (pendingFuture != null) {
+      try {
+        await pendingFuture;
+      } catch (_) {
+        // Ignore opening errors while preparing to close.
+      }
+    }
+    final currentDatabase = _databaseInstance;
+    _databaseInstance = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+    _databaseFuture = null;
+  }
   static Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS budgets (
@@ -33,36 +64,29 @@ class BudgetService {
         created_at TEXT NOT NULL
       )
     ''');
-
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_budgets_active
       ON budgets(is_active)
     ''');
-
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_budgets_dates
       ON budgets(start_date, end_date)
     ''');
   }
-
   static void _validateBudget(BudgetModel budget) {
     if (budget.name.trim().isEmpty) {
       throw Exception('Budget name is required.');
     }
-
     if (!budget.limitAmount.isFinite ||
         budget.limitAmount <= 0) {
       throw Exception('Budget limit must be greater than zero.');
     }
-
     if (budget.startDate.isAfter(budget.endDate)) {
       throw Exception('Start date cannot be after end date.');
     }
-
     if (budget.currency.trim().isEmpty) {
       throw Exception('Budget currency is required.');
     }
-
     const validPeriods = [
       'Daily',
       'Weekly',
@@ -70,7 +94,6 @@ class BudgetService {
       'Yearly',
       'Custom',
     ];
-
     if (!validPeriods.any(
       (period) =>
           period.toLowerCase() == budget.period.toLowerCase(),
@@ -78,15 +101,11 @@ class BudgetService {
       throw Exception('Invalid budget period.');
     }
   }
-
   /// Creates a new budget.
   static Future<int> addBudget(BudgetModel budget) async {
     final db = await _database;
-
     _validateBudget(budget);
-
     final now = DateTime.now();
-
     return db.insert(
       'budgets',
       budget.copyWith(
@@ -98,49 +117,38 @@ class BudgetService {
         ..remove('id'),
     );
   }
-
   /// Returns all budgets.
   static Future<List<BudgetModel>> getBudgets({
     bool activeOnly = false,
   }) async {
     final db = await _database;
-
     final rows = await db.query(
       'budgets',
       where: activeOnly ? 'is_active = 1' : null,
       orderBy: 'start_date DESC, id DESC',
     );
-
     final budgets = rows.map(BudgetModel.fromMap).toList();
-
     final result = <BudgetModel>[];
-
     for (final budget in budgets) {
       result.add(await _refreshBudget(db, budget));
     }
-
     return result;
   }
-
   /// Returns a single budget by ID.
   static Future<BudgetModel?> getBudgetById(int budgetId) async {
     final db = await _database;
-
     final rows = await db.query(
       'budgets',
       where: 'id = ?',
       whereArgs: [budgetId],
       limit: 1,
     );
-
     if (rows.isEmpty) return null;
-
     return _refreshBudget(
       db,
       BudgetModel.fromMap(rows.first),
     );
   }
-
   /// Recalculates actual expenses for a budget.
   static Future<BudgetModel> _refreshBudget(
     DatabaseExecutor db,
@@ -165,53 +173,40 @@ class BudgetService {
         budget.categoryId,
       ],
     );
-
     final spent = (result.first['total'] as num).toDouble();
-
     await db.update(
       'budgets',
       {'spent_amount': spent},
       where: 'id = ?',
       whereArgs: [budget.id],
     );
-
     return budget.copyWith(spentAmount: spent);
   }
-
   /// Manually refreshes one budget's spending.
   static Future<BudgetModel> refreshBudget(int budgetId) async {
     final budget = await getBudgetById(budgetId);
-
     if (budget == null) {
       throw Exception('Budget was not found.');
     }
-
     return budget;
   }
-
   /// Updates budget details.
   static Future<void> updateBudget(BudgetModel budget) async {
     if (budget.id == null) {
       throw Exception('Budget ID is required.');
     }
-
     _validateBudget(budget);
-
     final db = await _database;
-
     final existing = await db.query(
       'budgets',
       where: 'id = ?',
       whereArgs: [budget.id],
       limit: 1,
     );
-
     if (existing.isEmpty) {
       throw Exception('Budget was not found.');
     }
-
     final oldBudget = BudgetModel.fromMap(existing.first);
-
     await db.update(
       'budgets',
       {
@@ -229,110 +224,91 @@ class BudgetService {
       whereArgs: [budget.id],
     );
   }
-
   /// Activates or deactivates a budget.
   static Future<void> setBudgetStatus(
     int budgetId,
     bool isActive,
   ) async {
     final db = await _database;
-
     final count = await db.update(
       'budgets',
       {'is_active': isActive ? 1 : 0},
       where: 'id = ?',
       whereArgs: [budgetId],
     );
-
     if (count == 0) {
       throw Exception('Budget was not found.');
     }
   }
-
   /// Deletes a budget.
   static Future<void> deleteBudget(int budgetId) async {
     final db = await _database;
-
     await db.delete(
       'budgets',
       where: 'id = ?',
       whereArgs: [budgetId],
     );
   }
-
   /// Returns budgets that have exceeded their limits.
   static Future<List<BudgetModel>> getExceededBudgets() async {
     final budgets = await getBudgets(activeOnly: true);
-
     return budgets.where((budget) {
       return budget.spentAmount > budget.limitAmount;
     }).toList();
   }
-
   /// Returns budgets that have reached at least 80% of their limit.
   static Future<List<BudgetModel>> getNearLimitBudgets({
     double threshold = 0.8,
   }) async {
     if (threshold <= 0 || threshold > 1) {
-      throw Exception('Threshold must be greater than 0 and at most 1.');
+      throw Exception(
+        'Threshold must be greater than 0 and at most 1.',
+      );
     }
-
     final budgets = await getBudgets(activeOnly: true);
-
     return budgets.where((budget) {
       return budget.progress >= threshold &&
           !budget.isExceeded;
     }).toList();
   }
-
   /// Total budget limit grouped by currency.
   static Future<Map<String, double>> getTotalLimitsByCurrency() async {
     final db = await _database;
-
     final rows = await db.rawQuery('''
       SELECT currency, COALESCE(SUM(limit_amount), 0) AS total
       FROM budgets
       WHERE is_active = 1
       GROUP BY currency
     ''');
-
     return {
       for (final row in rows)
         row['currency'].toString():
             (row['total'] as num).toDouble(),
     };
   }
-
   /// Actual spending grouped by currency.
   static Future<Map<String, double>> getTotalSpendingByCurrency() async {
     final budgets = await getBudgets(activeOnly: true);
     final totals = <String, double>{};
-
     for (final budget in budgets) {
       final currency = budget.currency.toUpperCase();
-
       totals[currency] =
           (totals[currency] ?? 0) + budget.spentAmount;
     }
-
     return totals;
   }
-
   /// Returns budgets for a particular category.
   static Future<List<BudgetModel>> getBudgetsByCategory(
     int categoryId,
   ) async {
     final db = await _database;
-
     final rows = await db.query(
       'budgets',
       where: 'category_id = ?',
       whereArgs: [categoryId],
       orderBy: 'start_date DESC',
     );
-
     final result = <BudgetModel>[];
-
     for (final row in rows) {
       result.add(
         await _refreshBudget(
@@ -341,7 +317,6 @@ class BudgetService {
         ),
       );
     }
-
     return result;
   }
 }

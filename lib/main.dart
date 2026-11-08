@@ -1,3 +1,4 @@
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'screens/categories_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/loans_screen.dart';
+import 'screens/more_features_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -265,6 +267,7 @@ class _MainScreenState extends State<MainScreen> {
       const TransactionsScreen(),
       const CategoriesScreen(),
       const LoansScreen(),
+      const MoreFeaturesScreen(),
     ];
 
     return Scaffold(
@@ -317,6 +320,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.handshake_outlined),
             selectedIcon: Icon(Icons.handshake),
             label: 'Loans',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_customize_outlined),
+            selectedIcon: Icon(Icons.dashboard_customize),
+            label: 'More',
           ),
         ],
       ),

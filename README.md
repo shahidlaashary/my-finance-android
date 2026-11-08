@@ -1,219 +1,219 @@
+My Finance
 
-# My Finance
+A personal finance management application built with Flutter and Dart.
 
-A comprehensive personal finance management application built with Flutter.
+My Finance aims to provide a single place to manage accounts, transactions, assets, savings, loans, budgets, recurring transactions, attachments, and financial reports.
 
-## Project Overview
+Project Overview
 
-My Finance is designed to manage personal finances, accounts, transactions, assets, savings, loans, budgets, and financial reports from one place.
+The application uses a shared Flutter codebase with SQLite for local financial data storage.
 
-The project uses a shared Flutter codebase for Android and Windows, with plans for iOS and other desktop platforms.
+The project targets Android and Windows Desktop, with plans to support iOS and other desktop platforms.
 
-## Platforms
+Platforms
 
-- Android
-- Windows Desktop
-- iOS (planned)
-- macOS and Linux (planned)
+* Android
+* Windows Desktop
+* iOS (planned)
+* macOS (planned)
+* Linux (planned)
 
-## Core Features
+Features Under Development
 
-### 1. Dashboard
-- Total account balance
-- Income and expense summary
-- Recent transactions
-- Financial overview
+1. Dashboard and Accounts
 
-### 2. Account Management
-- Cash accounts
-- Bank accounts
-- Savings and current accounts
-- Credit and debit cards
-- Digital and mobile wallets
-- Investment accounts
-- Fixed deposits
-- Foreign currency accounts
-- Custom account types
-- Custom account icons
-- Opening balances
-- Optional account numbers
-- Exclude accounts from total balance
+* Account management
+* Multiple account types
+* Opening balances
+* Account balance tracking
+* Custom account categories and icons
+* Account exclusion from total balance
+* Income and expense overview
 
-### 3. Transactions
-- Income
-- Expenses
-- Own-account transfers
-- Transaction history
-- Multiple transaction categories
-- Transaction attachments
+2. Transactions
 
-### 4. Loans and Receivables
-- Record money lent to other people
-- Borrower details
-- Loan dates and due dates
-- Partial and full repayments
-- Outstanding balance tracking
+* Income and expense records
+* Own-account transfers
+* Transaction history
+* Transaction categories
+* Transaction attachments
 
-### 5. Assets Management
-- Add and manage assets
-- Record asset purchases and sales
-- Link assets to accounts
-- Track asset value
-- Depreciation
-- Profit and loss calculations
+3. Loans and Repayments
 
-### 6. Savings Goals
-- Multiple savings goals
-- Target amounts and dates
-- Linked accounts
-- Contributions and progress tracking
-- Completion notifications
+* Record money lent to others
+* Borrower details
+* Loan dates and due dates
+* Partial and full repayments
+* Outstanding balance tracking
+* Repayment attachments
 
-### 7. Budget Management
-- Monthly and custom budgets
-- Category-based spending limits
-- Budget progress tracking
-- Spending alerts
+4. Assets Management
 
-### 8. Recurring Transactions
-- Daily, weekly, monthly and yearly schedules
-- Income and expense schedules
-- Transfer schedules
-- Pause, resume and cancel options
-- Automatic transaction processing
+* Add and manage assets
+* Record asset purchases and sales
+* Link assets to accounts
+* Track purchase and current values
+* Realized profit and loss tracking
 
-### 9. Multi-Currency Support
-- PKR
-- USD
-- GBP
-- EUR
-- AED
-- SAR
-- Custom currencies
-- Automatic and manual exchange rates
-- Historical transaction exchange rates
-- PKR consolidated reports
+5. Savings Goals
 
-### 10. Attachments
-- Camera photos
-- Gallery photos
-- Multiple photos per transaction
-- PDF documents
-- Attachment preview and management
-- Cloud backup of original files
+* Multiple savings goals
+* Target amounts and dates
+* Linked accounts
+* Contributions and progress tracking
 
-### 11. Reports and Analytics
-- Income reports
-- Expense reports
-- Account reports
-- Asset reports
-- Loan reports
-- Savings reports
-- Budget reports
-- Charts and financial summaries
+6. Budget Management
 
-### 12. Firebase Cloud Services
-- Firebase Authentication
-- Cloud Firestore
-- Firebase Storage
-- Automatic background synchronization
-- Manual Sync Now
-- Automatic and manual backup
-- Restore financial data and attachments
-- Offline data support
+* Monthly and custom budgets
+* Category-based spending limits
+* Budget progress tracking
 
-### 13. Security
-- PIN lock
-- Biometric authentication
-- Face ID and Touch ID support where available
-- Android biometric authentication
-- Encrypted local data
+7. Recurring Transactions
 
-### 14. Multiple Languages
-- Urdu (RTL)
-- English (LTR)
-- Arabic (RTL)
-- Hindi (LTR)
-- Language selection in settings
+* Daily, weekly, monthly, and yearly schedules
+* Income and expense schedules
+* Transfer schedules
+* Pause, resume, and cancel options
+* Automatic processing of due transactions
 
-## Technology Stack
+8. Attachments
 
-- Flutter
-- Dart
-- SQLite
-- Firebase Authentication
-- Cloud Firestore
-- Firebase Storage
-- Flutter Local Notifications
-- Material Design 3
+* Camera and gallery images
+* PDF documents
+* Multiple attachments
+* Attachment preview and management
+* Integration with supported financial records
 
-## Current Development Status
+9. Reports and Analytics
+
+* Income and expense reports
+* Account summaries
+* Category-based reports
+* Financial trends
+* Currency-wise summaries
+
+10. Multi-Currency Support
+
+* Currency information associated with accounts
+* Currency-wise financial summaries
+* Planned currencies include PKR, USD, GBP, EUR, AED, and SAR
+* Exchange-rate conversion and consolidated reporting are planned
+
+Technology Stack
+
+* Flutter
+* Dart
+* SQLite
+* sqflite
+* Material Design
+
+Current Development Status
 
 The project is under active development.
 
-The current starter implementation includes:
+The current implementation includes development work on:
 
-- Flutter application structure
-- SQLite local database
-- Basic dashboard
-- Account creation
-- Income and expense transactions
-- Own-account transfers
-- Basic account balance updates
+* Flutter application structure
+* SQLite local database
+* Account management
+* Income and expense transactions
+* Own-account transfers
+* Transaction categories
+* Loans and repayments
+* Financial attachments
+* Asset management
+* Savings goals
+* Budget management
+* Recurring transactions
+* Financial reports and analytics
 
-Other listed features are planned requirements and will be implemented in subsequent development stages. They should not be considered completed until their code and testing are finished.
+Features are being reviewed and integrated incrementally. Final completion and testing are still pending.
 
-## Getting Started
+Planned Features
 
-### Requirements
+Firebase and Cloud Services
 
-- Flutter SDK
-- Dart SDK
-- Android Studio or compatible Android build environment
-- Git
+* Firebase Authentication
+* Cloud Firestore
+* Firebase Storage
+* Automatic background synchronization
+* Manual Sync Now
+* Cloud backup and restore
+* Offline synchronization support
 
-### Install Dependencies
+Security
 
-```bash
+* PIN lock
+* Biometric authentication
+* Face ID and Touch ID where available
+* Android biometric authentication
+* Encrypted local financial data
+
+Notifications
+
+* Savings goal notifications
+* Budget spending alerts
+* Loan due-date reminders
+* Recurring transaction reminders
+
+Localization
+
+* Urdu (RTL)
+* English (LTR)
+* Arabic (RTL)
+* Hindi (LTR)
+* Language selection in settings
+
+Advanced Financial Features
+
+* Automatic and manual exchange rates
+* Historical exchange rates
+* PKR consolidated reports
+* Advanced asset depreciation
+* Additional financial analytics
+
+Getting Started
+
+Requirements
+
+* Flutter SDK
+* Dart SDK
+* Android Studio or a compatible Android build environment
+* Git
+
+Install Dependencies
+
 flutter pub get
-```
 
-### Run on Android
+Run on Android
 
-```bash
 flutter run
-```
 
-### Build Android APK
+Build Android APK
 
-```bash
 flutter build apk --release
-```
 
-### Run on Windows
+Run on Windows
 
-```bash
 flutter run -d windows
-```
 
-### Build Windows Application
+Build Windows Application
 
-```bash
 flutter build windows --release
-```
 
-## Database
+Database
 
-The current implementation uses SQLite for local financial data.
+The application currently uses SQLite for local financial data.
 
-Firebase integration will provide cloud synchronization, backup, and attachment storage in later development stages.
+Cloud synchronization, remote backup, and cloud attachment storage are planned for future development.
 
-## Repository
+Repository
 
 GitHub:
+
 https://github.com/shahidlaashary/my-finance-android
 
-## License
+License
 
 Private personal finance project.
 

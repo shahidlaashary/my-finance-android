@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -22,7 +21,6 @@ void main() async {
   }
 
   await FinanceDB.instance.init();
-
   await AppStartupService.initialize();
 
   runApp(const MyFinanceApp());
@@ -42,7 +40,7 @@ class FinanceDB {
 
     _db = await openDatabase(
       p.join(base, 'my_finance.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE accounts (
@@ -51,9 +49,14 @@ class FinanceDB {
             type TEXT NOT NULL,
             currency TEXT NOT NULL DEFAULT 'PKR',
             balance REAL NOT NULL DEFAULT 0,
-            exclude_total INTEGER NOT NULL DEFAULT 0
+            exclude_total INTEGER NOT NULL DEFAULT 0,
+            account_number TEXT NOT NULL DEFAULT '',
+            icon_code INTEGER NOT NULL DEFAULT account_balance_wallet
           )
-        ''');
+        '''.replaceAll(
+          'DEFAULT account_balance_wallet',
+          'DEFAULT ${Icons.account_balance_wallet.codePoint}',
+        ));
 
         await db.execute('''
           CREATE TABLE transactions (
@@ -67,14 +70,22 @@ class FinanceDB {
           )
         ''');
       },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE accounts ADD COLUMN account_number TEXT NOT NULL DEFAULT ''",
+          );
+
+          await db.execute(
+            'ALTER TABLE accounts ADD COLUMN icon_code INTEGER NOT NULL DEFAULT ${Icons.account_balance_wallet.codePoint}',
+          );
+        }
+      },
     );
   }
 
   Future<List<Map<String, dynamic>>> accounts() async {
-    return db.query(
-      'accounts',
-      orderBy: 'name ASC',
-    );
+    return db.query('accounts', orderBy: 'name ASC');
   }
 
   Future<List<Map<String, dynamic>>> transactions() async {
@@ -89,13 +100,67 @@ class FinanceDB {
     required String type,
     required String currency,
     required double openingBalance,
+    required String accountNumber,
+    required int iconCode,
+    required bool excludeTotal,
   }) async {
     await db.insert('accounts', {
       'name': name,
       'type': type,
       'currency': currency,
       'balance': openingBalance,
+      'account_number': accountNumber,
+      'icon_code': iconCode,
+      'exclude_total': excludeTotal ? 1 : 0,
     });
+  }
+
+  Future<void> updateAccount({
+    required int id,
+    required String name,
+    required String type,
+    required String accountNumber,
+    required int iconCode,
+    required bool excludeTotal,
+  }) async {
+    await db.update(
+      'accounts',
+      {
+        'name': name,
+        'type': type,
+        'account_number': accountNumber,
+        'icon_code': iconCode,
+        'exclude_total': excludeTotal ? 1 : 0,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteAccount(int id) async {
+    final linked = await db.rawQuery(
+      '''
+      SELECT COUNT(*) AS total
+      FROM transactions
+      WHERE account_id = ? OR to_account_id = ?
+      ''',
+      [id, id],
+    );
+
+    final count = (linked.first['total'] as num).toInt();
+
+    if (count > 0) {
+      throw Exception(
+        'This account has linked transactions. '
+        'You cannot delete it.',
+      );
+    }
+
+    await db.delete(
+      'accounts',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> addTransaction({
@@ -122,9 +187,7 @@ class FinanceDB {
 
       if (type == 'Transfer') {
         if (toAccountId == null || toAccountId == accountId) {
-          throw Exception(
-            'Select a different destination account.',
-          );
+          throw Exception('Select a different destination account.');
         }
 
         final destination = await txn.query(
@@ -137,15 +200,13 @@ class FinanceDB {
           throw Exception('Destination account not found.');
         }
 
-        if (source.first['currency'] !=
-            destination.first['currency']) {
+        if (source.first['currency'] != destination.first['currency']) {
           throw Exception(
             'Transfers between different currencies are not yet supported.',
           );
         }
 
-        final balance =
-            (source.first['balance'] as num).toDouble();
+        final balance = (source.first['balance'] as num).toDouble();
 
         if (balance < amount) {
           throw Exception('Insufficient account balance.');
@@ -168,8 +229,7 @@ class FinanceDB {
           whereArgs: [toAccountId],
         );
       } else if (type == 'Expense') {
-        final balance =
-            (source.first['balance'] as num).toDouble();
+        final balance = (source.first['balance'] as num).toDouble();
 
         await txn.update(
           'accounts',
@@ -178,8 +238,7 @@ class FinanceDB {
           whereArgs: [accountId],
         );
       } else if (type == 'Income') {
-        final balance =
-            (source.first['balance'] as num).toDouble();
+        final balance = (source.first['balance'] as num).toDouble();
 
         await txn.update(
           'accounts',
@@ -202,16 +261,12 @@ class FinanceDB {
     });
   }
 
-  // Dashboard financial summary grouped by currency.
   Future<List<Map<String, dynamic>>> dashboardSummary() async {
     final accountResults = await db.rawQuery('''
       SELECT
         currency,
         SUM(
-          CASE
-            WHEN exclude_total = 0 THEN balance
-            ELSE 0
-          END
+          CASE WHEN exclude_total = 0 THEN balance ELSE 0 END
         ) AS total_balance
       FROM accounts
       GROUP BY currency
@@ -236,8 +291,7 @@ class FinanceDB {
 
       summaries[currency] = {
         'currency': currency,
-        'balance':
-            (account['total_balance'] as num?)?.toDouble() ?? 0,
+        'balance': (account['total_balance'] as num?)?.toDouble() ?? 0,
         'income': 0.0,
         'expense': 0.0,
       };
@@ -267,16 +321,15 @@ class FinanceDB {
 
     final result = summaries.values.toList();
 
-    result.sort((a, b) {
-      return a['currency'].toString().compareTo(
+    result.sort(
+      (a, b) => a['currency'].toString().compareTo(
             b['currency'].toString(),
-          );
-    });
+          ),
+    );
 
     return result;
   }
 
-  // Retained for compatibility with existing code.
   Future<double> totalBalance() async {
     final result = await db.rawQuery('''
       SELECT SUM(balance) AS total
@@ -287,7 +340,6 @@ class FinanceDB {
     return (result.first['total'] as num?)?.toDouble() ?? 0;
   }
 
-  // Retained for compatibility with existing code.
   Future<double> totalByType(String type) async {
     final result = await db.rawQuery(
       '''
@@ -351,9 +403,7 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: const Text(
           'My Finance',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
       ),
@@ -370,9 +420,7 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (value) {
-          setState(() {
-            selectedIndex = value;
-          });
+          setState(() => selectedIndex = value);
         },
         destinations: const [
           NavigationDestination(
@@ -427,23 +475,17 @@ class DashboardPage extends StatelessWidget {
       future: FinanceDB.instance.dashboardSummary(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
         final summaries = snapshot.data ?? [];
 
         return RefreshIndicator(
-          onRefresh: () async {
-            onRefresh();
-          },
+          onRefresh: () async => onRefresh(),
           child: ListView(
             padding: const EdgeInsets.all(18),
             children: [
@@ -455,7 +497,6 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-
               if (summaries.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -487,15 +528,11 @@ class DashboardPage extends StatelessWidget {
                     ],
                   ),
                 ),
-
               ...summaries.map((summary) {
                 final currency = summary['currency'].toString();
-                final balance =
-                    (summary['balance'] as num).toDouble();
-                final income =
-                    (summary['income'] as num).toDouble();
-                final expense =
-                    (summary['expense'] as num).toDouble();
+                final balance = (summary['balance'] as num).toDouble();
+                final income = (summary['income'] as num).toDouble();
+                final expense = (summary['expense'] as num).toDouble();
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 18),
@@ -514,9 +551,7 @@ class DashboardPage extends StatelessWidget {
                           children: [
                             Text(
                               '$currency Total Balance',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                              ),
+                              style: const TextStyle(color: Colors.white70),
                             ),
                             const SizedBox(height: 10),
                             Text(
@@ -530,9 +565,7 @@ class DashboardPage extends StatelessWidget {
                             const SizedBox(height: 8),
                             const Text(
                               'My Finance',
-                              style: TextStyle(
-                                color: Colors.white70,
-                              ),
+                              style: TextStyle(color: Colors.white70),
                             ),
                           ],
                         ),
@@ -563,7 +596,6 @@ class DashboardPage extends StatelessWidget {
                   ),
                 );
               }),
-
               const SizedBox(height: 8),
               const Text(
                 'Quick Actions',
@@ -647,9 +679,7 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               amount,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -702,21 +732,57 @@ class AccountsPage extends StatelessWidget {
     required this.onRefresh,
   });
 
+  Future<void> _deleteAccount(
+    BuildContext context,
+    Map<String, dynamic> account,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: Text(
+          'Are you sure you want to delete "${account['name']}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await FinanceDB.instance.deleteAccount(account['id'] as int);
+      onRefresh();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account deleted.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: FinanceDB.instance.accounts(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
         final accounts = snapshot.data ?? [];
@@ -732,37 +798,92 @@ class AccountsPage extends StatelessWidget {
           ),
           body: accounts.isEmpty
               ? const Center(
-                  child: Text(
-                    'No accounts yet. Add your first account.',
-                  ),
+                  child: Text('No accounts yet. Add your first account.'),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: accounts.length,
                   itemBuilder: (context, index) {
                     final account = accounts[index];
-
                     final balance =
                         (account['balance'] as num?)?.toDouble() ?? 0;
+                    final iconCode =
+                        account['icon_code'] as int? ??
+                        Icons.account_balance_wallet.codePoint;
+
+                    final accountIcon = IconData(
+                      iconCode,
+                      fontFamily: 'MaterialIcons',
+                    );
+
+                    final accountNumber =
+                        (account['account_number'] ?? '').toString();
 
                     return Card(
                       child: ListTile(
-                        leading: const CircleAvatar(
-                          child: Icon(
-                            Icons.account_balance_wallet,
-                          ),
+                        leading: CircleAvatar(
+                          child: Icon(accountIcon),
                         ),
                         title: Text(account['name'].toString()),
-                        subtitle: Text(
-                          '${account['type']} • '
-                          '${account['currency']}',
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${account['type']} • ${account['currency']}',
+                            ),
+                            if (accountNumber.isNotEmpty)
+                              Text('A/C: $accountNumber'),
+                            if ((account['exclude_total'] as int? ?? 0) == 1)
+                              const Text(
+                                'Excluded from total balance',
+                                style: TextStyle(color: Colors.orange),
+                              ),
+                          ],
                         ),
-                        trailing: Text(
-                          '${account['currency']} '
-                          '${NumberFormat('#,##0.00').format(balance)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        isThreeLine: accountNumber.isNotEmpty ||
+                            (account['exclude_total'] as int? ?? 0) == 1,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '${account['currency']} '
+                                '${NumberFormat('#,##0.00').format(balance)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  await showAccountDialog(
+                                    context,
+                                    account: account,
+                                  );
+                                  onRefresh();
+                                } else if (value == 'delete') {
+                                  await _deleteAccount(context, account);
+                                }
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: ListTile(
+                                    leading: Icon(Icons.edit),
+                                    title: Text('Edit'),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: ListTile(
+                                    leading: Icon(Icons.delete_outline),
+                                    title: Text('Delete'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -783,9 +904,7 @@ class TransactionsPage extends StatelessWidget {
       future: FinanceDB.instance.transactions(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         final items = snapshot.data!;
@@ -844,18 +963,73 @@ class TransactionsPage extends StatelessWidget {
   }
 }
 
-Future<void> showAccountDialog(BuildContext context) async {
-  final nameController = TextEditingController();
-  final balanceController = TextEditingController(text: '0');
+const List<String> _accountTypes = [
+  'Cash',
+  'Bank',
+  'Savings',
+  'Current',
+  'Credit Card',
+  'Debit Card',
+  'Digital Wallet',
+  'Investment',
+  'Other',
+  'Custom',
+];
 
-  String type = 'Cash';
-  String currency = 'PKR';
+const List<IconData> _accountIcons = [
+  Icons.account_balance_wallet,
+  Icons.account_balance,
+  Icons.savings,
+  Icons.credit_card,
+  Icons.account_box,
+  Icons.wallet,
+  Icons.phone_android,
+  Icons.trending_up,
+  Icons.attach_money,
+  Icons.money,
+  Icons.business,
+  Icons.home,
+];
+
+Future<void> showAccountDialog(
+  BuildContext context, {
+  Map<String, dynamic>? account,
+}) async {
+  final isEditing = account != null;
+
+  final nameController = TextEditingController(
+    text: account?['name']?.toString() ?? '',
+  );
+  final balanceController = TextEditingController(
+    text: account == null
+        ? '0'
+        : ((account['balance'] as num?)?.toString() ?? '0'),
+  );
+  final accountNumberController = TextEditingController(
+    text: account?['account_number']?.toString() ?? '',
+  );
+  final customTypeController = TextEditingController();
+
+  final existingType = account?['type']?.toString() ?? 'Cash';
+  String type = _accountTypes.contains(existingType) &&
+          existingType != 'Custom'
+      ? existingType
+      : (account == null ? 'Cash' : 'Custom');
+
+  if (type == 'Custom') {
+    customTypeController.text = existingType == 'Custom' ? '' : existingType;
+  }
+
+  String currency = account?['currency']?.toString() ?? 'PKR';
+  int iconCode = account?['icon_code'] as int? ??
+      Icons.account_balance_wallet.codePoint;
+  bool excludeTotal = (account?['exclude_total'] as int? ?? 0) == 1;
 
   await showDialog(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setDialogState) => AlertDialog(
-        title: const Text('Add Account'),
+        title: Text(isEditing ? 'Edit Account' : 'Add Account'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -871,17 +1045,7 @@ Future<void> showAccountDialog(BuildContext context) async {
                 decoration: const InputDecoration(
                   labelText: 'Account type',
                 ),
-                items: [
-                  'Cash',
-                  'Bank',
-                  'Savings',
-                  'Current',
-                  'Credit Card',
-                  'Debit Card',
-                  'Digital Wallet',
-                  'Investment',
-                  'Other',
-                ].map((v) {
+                items: _accountTypes.map((v) {
                   return DropdownMenuItem(
                     value: v,
                     child: Text(v),
@@ -893,12 +1057,19 @@ Future<void> showAccountDialog(BuildContext context) async {
                   }
                 },
               ),
+              if (type == 'Custom')
+                TextField(
+                  controller: customTypeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Custom account type',
+                  ),
+                ),
               DropdownButtonFormField<String>(
                 value: currency,
                 decoration: const InputDecoration(
                   labelText: 'Currency',
                 ),
-                items: [
+                items: const [
                   'PKR',
                   'USD',
                   'GBP',
@@ -911,21 +1082,89 @@ Future<void> showAccountDialog(BuildContext context) async {
                     child: Text(v),
                   );
                 }).toList(),
-                onChanged: (v) {
-                  if (v != null) {
-                    setDialogState(() => currency = v);
-                  }
-                },
+                onChanged: isEditing
+                    ? null
+                    : (v) {
+                        if (v != null) {
+                          setDialogState(() => currency = v);
+                        }
+                      },
               ),
+              if (isEditing)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Currency cannot be changed for existing accounts.',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ),
+                ),
+              if (!isEditing)
+                TextField(
+                  controller: balanceController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Opening balance',
+                  ),
+                ),
               TextField(
-                controller: balanceController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                controller: accountNumberController,
                 decoration: const InputDecoration(
-                  labelText: 'Opening balance',
+                  labelText: 'Account number (optional)',
                 ),
+              ),
+              const SizedBox(height: 12),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Account Icon',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _accountIcons.map((icon) {
+                  final selected = icon.codePoint == iconCode;
+
+                  return InkWell(
+                    onTap: () {
+                      setDialogState(() => iconCode = icon.codePoint);
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    child: CircleAvatar(
+                      backgroundColor: selected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey.shade200,
+                      child: Icon(
+                        icon,
+                        color: selected ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: excludeTotal,
+                title: const Text(
+                  'Exclude from Total Balance',
+                  style: TextStyle(fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'This account will not be included in dashboard balance.',
+                  style: TextStyle(fontSize: 11),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                onChanged: (value) {
+                  setDialogState(() => excludeTotal = value ?? false);
+                },
               ),
             ],
           ),
@@ -938,20 +1177,62 @@ Future<void> showAccountDialog(BuildContext context) async {
           FilledButton(
             onPressed: () async {
               final name = nameController.text.trim();
+              final accountType = type == 'Custom'
+                  ? customTypeController.text.trim()
+                  : type;
+
               final balance =
-                  double.tryParse(balanceController.text) ?? 0;
+                  double.tryParse(balanceController.text.trim()) ?? 0;
 
-              if (name.isEmpty || balance < 0) return;
+              if (name.isEmpty || accountType.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Enter account name and account type.'),
+                  ),
+                );
+                return;
+              }
 
-              await FinanceDB.instance.addAccount(
-                name: name,
-                type: type,
-                currency: currency,
-                openingBalance: balance,
-              );
+              if (!isEditing && balance < 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Opening balance cannot be negative.'),
+                  ),
+                );
+                return;
+              }
 
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
+              try {
+                if (isEditing) {
+                  await FinanceDB.instance.updateAccount(
+                    id: account['id'] as int,
+                    name: name,
+                    type: accountType,
+                    accountNumber: accountNumberController.text.trim(),
+                    iconCode: iconCode,
+                    excludeTotal: excludeTotal,
+                  );
+                } else {
+                  await FinanceDB.instance.addAccount(
+                    name: name,
+                    type: accountType,
+                    currency: currency,
+                    openingBalance: balance,
+                    accountNumber: accountNumberController.text.trim(),
+                    iconCode: iconCode,
+                    excludeTotal: excludeTotal,
+                  );
+                }
+
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                }
+              } catch (e) {
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text(e.toString())),
+                  );
+                }
               }
             },
             child: const Text('Save'),
@@ -963,6 +1244,8 @@ Future<void> showAccountDialog(BuildContext context) async {
 
   nameController.dispose();
   balanceController.dispose();
+  accountNumberController.dispose();
+  customTypeController.dispose();
 }
 
 Future<void> showTransactionDialog(
@@ -982,7 +1265,6 @@ Future<void> showTransactionDialog(
         content: Text('Please create an account first.'),
       ),
     );
-
     return;
   }
 
@@ -1001,14 +1283,8 @@ Future<void> showTransactionDialog(
             children: [
               DropdownButtonFormField<String>(
                 value: type,
-                decoration: const InputDecoration(
-                  labelText: 'Type',
-                ),
-                items: [
-                  'Income',
-                  'Expense',
-                  'Transfer',
-                ].map((v) {
+                decoration: const InputDecoration(labelText: 'Type'),
+                items: ['Income', 'Expense', 'Transfer'].map((v) {
                   return DropdownMenuItem(
                     value: v,
                     child: Text(v),
@@ -1025,13 +1301,10 @@ Future<void> showTransactionDialog(
               ),
               TextField(
                 controller: amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(
+                keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                ),
+                decoration: const InputDecoration(labelText: 'Amount'),
               ),
               DropdownButtonFormField<int>(
                 value: accountId,
@@ -1048,7 +1321,6 @@ Future<void> showTransactionDialog(
                   if (v != null) {
                     setDialogState(() {
                       accountId = v;
-
                       if (destinationId == accountId) {
                         destinationId = null;
                       }
@@ -1071,9 +1343,7 @@ Future<void> showTransactionDialog(
                     );
                   }).toList(),
                   onChanged: (v) {
-                    setDialogState(() {
-                      destinationId = v;
-                    });
+                    setDialogState(() => destinationId = v);
                   },
                 ),
               TextField(
@@ -1087,9 +1357,7 @@ Future<void> showTransactionDialog(
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-            },
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           FilledButton(
@@ -1107,13 +1375,10 @@ Future<void> showTransactionDialog(
                 return;
               }
 
-              if (type == 'Transfer' &&
-                  destinationId == null) {
+              if (type == 'Transfer' && destinationId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text(
-                      'Select a destination account.',
-                    ),
+                    content: Text('Select a destination account.'),
                   ),
                 );
                 return;
@@ -1133,12 +1398,8 @@ Future<void> showTransactionDialog(
                 }
               } catch (e) {
                 if (dialogContext.mounted) {
-                  ScaffoldMessenger.of(
-                    dialogContext,
-                  ).showSnackBar(
-                    SnackBar(
-                      content: Text(e.toString()),
-                    ),
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text(e.toString())),
                   );
                 }
               }

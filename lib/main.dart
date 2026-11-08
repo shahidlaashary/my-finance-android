@@ -1167,4 +1167,30 @@ Future<void> showAccountDialog(
                     iconCode: iconCode,
                     excludeTotal: excludeTotal,
                   );
+                  }
+
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
                 }
+              } catch (e) {
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(
+                      content: Text('Error saving account: $e'),
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(isEditing ? 'Update Account' : 'Save Account'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  nameController.dispose();
+  balanceController.dispose();
+  accountNumberController.dispose();
+  customTypeController.dispose();
+}

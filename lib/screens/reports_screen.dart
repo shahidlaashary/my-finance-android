@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -41,6 +42,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _loadReports() async {
+    if (!mounted) return;
+
     setState(() {
       _loading = true;
       _error = null;
@@ -80,18 +83,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
       setState(() {
         _currencies = results[0] as List<String>;
-        _summary =
-            results[1] as List<Map<String, dynamic>>;
-        _trend =
-            results[2] as List<Map<String, dynamic>>;
-        _categories =
-            results[3] as List<Map<String, dynamic>>;
-        _accounts =
-            results[4] as List<Map<String, dynamic>>;
-        _balances =
-            results[5] as List<Map<String, dynamic>>;
-        _history =
-            results[6] as List<Map<String, dynamic>>;
+        _summary = results[1] as List<Map<String, dynamic>>;
+        _trend = results[2] as List<Map<String, dynamic>>;
+        _categories = results[3] as List<Map<String, dynamic>>;
+        _accounts = results[4] as List<Map<String, dynamic>>;
+        _balances = results[5] as List<Map<String, dynamic>>;
+        _history = results[6] as List<Map<String, dynamic>>;
 
         _loading = false;
       });
@@ -187,38 +184,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
           (item) => item['currency'] == _selectedCurrency,
         )
         .toList();
-  }
-
-  double get _totalIncome {
-    return _filteredSummary.fold(
-      0.0,
-      (sum, item) => sum + _number(item['income']),
-    );
-  }
-
-  double get _totalExpense {
-    return _filteredSummary.fold(
-      0.0,
-      (sum, item) => sum + _number(item['expense']),
-    );
-  }
-
-  double get _totalTransfers {
-    return _filteredSummary.fold(
-      0.0,
-      (sum, item) => sum + _number(item['transfers']),
-    );
-  }
-
-  double get _netAmount {
-    return _totalIncome - _totalExpense;
-  }
-
-  String get _displayCurrency {
-    return _selectedCurrency ??
-        (_filteredSummary.length == 1
-            ? _filteredSummary.first['currency'].toString()
-            : 'Multiple');
   }
 
   @override
@@ -398,7 +363,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
+  // Currency-wise financial summary.
   Widget _buildSummaryCards() {
+    final currencies = _filteredSummary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -411,35 +379,71 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
         const SizedBox(height: 12),
 
-        _summaryCard(
-          title: 'Total Income',
-          amount: _totalIncome,
-          color: Colors.green,
-          icon: Icons.trending_up,
-        ),
+        if (currencies.isEmpty)
+          _emptyMessage('No financial summary available'),
 
-        _summaryCard(
-          title: 'Total Expenses',
-          amount: _totalExpense,
-          color: Colors.red,
-          icon: Icons.trending_down,
-        ),
+        ...currencies.map((item) {
+          final currency =
+              item['currency']?.toString() ?? 'PKR';
 
-        _summaryCard(
-          title: 'Net Balance',
-          amount: _netAmount,
-          color: _netAmount >= 0
-              ? Colors.blue
-              : Colors.orange,
-          icon: Icons.account_balance_wallet,
-        ),
+          final income = _number(item['income']);
+          final expense = _number(item['expense']);
+          final transfers = _number(item['transfers']);
+          final net = income - expense;
 
-        _summaryCard(
-          title: 'Transfers',
-          amount: _totalTransfers,
-          color: Colors.purple,
-          icon: Icons.swap_horiz,
-        ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 8,
+                  bottom: 8,
+                ),
+                child: Text(
+                  'Currency: $currency',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              _summaryCard(
+                title: 'Total Income',
+                amount: income,
+                currency: currency,
+                color: Colors.green,
+                icon: Icons.trending_up,
+              ),
+
+              _summaryCard(
+                title: 'Total Expenses',
+                amount: expense,
+                currency: currency,
+                color: Colors.red,
+                icon: Icons.trending_down,
+              ),
+
+              _summaryCard(
+                title: 'Net Balance',
+                amount: net,
+                currency: currency,
+                color: net >= 0
+                    ? Colors.blue
+                    : Colors.orange,
+                icon: Icons.account_balance_wallet,
+              ),
+
+              _summaryCard(
+                title: 'Transfers',
+                amount: transfers,
+                currency: currency,
+                color: Colors.purple,
+                icon: Icons.swap_horiz,
+              ),
+            ],
+          );
+        }),
       ],
     );
   }
@@ -447,6 +451,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _summaryCard({
     required String title,
     required double amount,
+    required String currency,
     required Color color,
     required IconData icon,
   }) {
@@ -459,7 +464,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
         title: Text(title),
         subtitle: Text(
-          _money(amount, _displayCurrency),
+          _money(amount, currency),
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.bold,
@@ -526,19 +531,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _buildMonthlyTrend(ThemeData theme) {
     final data = _trend;
 
-    final maximum = data.fold<double>(
-      0,
-      (value, item) {
-        final income = _number(item['income']);
-        final expense = _number(item['expense']);
+    // Use a separate scale for each currency.
+    final currencyGroups = <String, List<Map<String, dynamic>>>{};
 
-        final current = income > expense
-            ? income
-            : expense;
-
-        return current > value ? current : value;
-      },
-    );
+    for (final item in data) {
+      final currency = item['currency']?.toString() ?? '';
+      currencyGroups.putIfAbsent(currency, () => []).add(item);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,64 +558,92 @@ class _ReportsScreenState extends State<ReportsScreen> {
               children: [
                 Row(
                   children: [
-                    _legend(
-                      'Income',
-                      Colors.green,
-                    ),
+                    _legend('Income', Colors.green),
                     const SizedBox(width: 20),
-                    _legend(
-                      'Expense',
-                      Colors.red,
-                    ),
+                    _legend('Expense', Colors.red),
                   ],
                 ),
                 const SizedBox(height: 20),
 
                 if (data.isEmpty)
-                  _emptyMessage(
-                    'No monthly data available',
-                  )
+                  _emptyMessage('No monthly data available')
                 else
-                  ...data.map((item) {
-                    final income = _number(item['income']);
-                    final expense = _number(item['expense']);
+                  ...currencyGroups.entries.map((group) {
+                    final currency = group.key;
+                    final currencyData = group.value;
 
-                    final currency =
-                        item['currency']?.toString() ?? '';
+                    final maximum = currencyData.fold<double>(
+                      0,
+                      (value, item) {
+                        final income = _number(item['income']);
+                        final expense = _number(item['expense']);
+                        final current = income > expense
+                            ? income
+                            : expense;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 18,
-                      ),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${item['month']} ($currency)',
+                        return current > value ? current : value;
+                      },
+                    );
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 12,
+                            top: 8,
+                          ),
+                          child: Text(
+                            currency.isEmpty
+                                ? 'Currency'
+                                : currency,
                             style: const TextStyle(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                        ),
 
-                          _trendBar(
-                            label: 'Income',
-                            amount: income,
-                            maximum: maximum,
-                            color: Colors.green,
-                          ),
+                        ...currencyData.map((item) {
+                          final income = _number(item['income']);
+                          final expense = _number(item['expense']);
 
-                          const SizedBox(height: 6),
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 18,
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item['month']?.toString() ?? '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
 
-                          _trendBar(
-                            label: 'Expense',
-                            amount: expense,
-                            maximum: maximum,
-                            color: Colors.red,
-                          ),
-                        ],
-                      ),
+                                _trendBar(
+                                  label: 'Income',
+                                  amount: income,
+                                  maximum: maximum,
+                                  color: Colors.green,
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                _trendBar(
+                                  label: 'Expense',
+                                  amount: expense,
+                                  maximum: maximum,
+                                  color: Colors.red,
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
                     );
                   }),
               ],
@@ -868,9 +895,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           _emptyMessage('No transactions found'),
 
         ..._history.map((item) {
-          final type =
-              item['type']?.toString() ?? '';
-
+          final type = item['type']?.toString() ?? '';
           final normalized = type.toLowerCase();
 
           final isIncome = normalized == 'income';
@@ -911,8 +936,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           return Card(
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor:
-                    color.withOpacity(0.12),
+                backgroundColor: color.withOpacity(0.12),
                 child: Icon(icon, color: color),
               ),
               title: Text(
@@ -929,10 +953,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 maxLines: 2,
               ),
               trailing: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                crossAxisAlignment:
-                    CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     amount,

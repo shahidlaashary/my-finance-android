@@ -1,74 +1,53 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-
 import '../models/budget_model.dart';
 import '../services/budget_service.dart';
-
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
-
   @override
   State<BudgetsScreen> createState() => _BudgetsScreenState();
 }
-
 class _BudgetsScreenState extends State<BudgetsScreen> {
-  final BudgetService _service = BudgetService();
-
   final NumberFormat _format = NumberFormat('#,##0.00');
-
   List<BudgetModel> _budgets = [];
   List<Map<String, dynamic>> _categories = [];
   List<String> _currencies = ['PKR'];
-
   bool _loading = true;
   String _filter = 'All';
-
   String _money(double amount) => _format.format(amount);
-
   @override
   void initState() {
     super.initState();
     _loadData();
   }
-
   void _message(String message) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
-
   Future<void> _loadData() async {
     setState(() => _loading = true);
-
     try {
-      final budgets = await _service.getBudgets();
-
+      final budgets = await BudgetService.getBudgets();
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(
         p.join(dbPath, 'my_finance.db'),
       );
-
       final categories = await db.query(
         'finance_categories',
         where: 'is_deleted = ?',
         whereArgs: [0],
         orderBy: 'name ASC',
       );
-
       final accounts = await db.query('accounts');
-
       final currencies = accounts
           .map((e) => e['currency']?.toString() ?? 'PKR')
           .toSet()
           .toList();
-
       if (!mounted) return;
-
       setState(() {
         _budgets = budgets;
         _categories = categories;
@@ -77,49 +56,37 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-
       setState(() => _loading = false);
       _message('Error loading budgets: $e');
     }
   }
-
   String _categoryName(int? id) {
     if (id == null) return 'All Categories';
-
     final matches = _categories.where(
       (category) => category['id'] == id,
     );
-
     if (matches.isEmpty) return 'Unknown Category';
-
     return matches.first['name'].toString();
   }
-
   Future<void> _showBudgetDialog({
     BudgetModel? budget,
   }) async {
     final formKey = GlobalKey<FormState>();
-
     final nameController = TextEditingController(
       text: budget?.name ?? '',
     );
-
     final amountController = TextEditingController(
       text: budget == null ? '' : budget.limitAmount.toString(),
     );
-
     int? categoryId = budget?.categoryId;
     String currency = budget?.currency ?? _currencies.first;
     String period = budget?.period ?? 'Monthly';
-
     DateTime startDate = budget == null
         ? DateTime(DateTime.now().year, DateTime.now().month, 1)
-        : DateTime.tryParse(budget.startDate) ?? DateTime.now();
-
+        : budget.startDate;
     DateTime endDate = budget == null
         ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0)
-        : DateTime.tryParse(budget.endDate) ?? DateTime.now();
-
+        : budget.endDate;
     await showDialog(
       context: context,
       builder: (dialogContext) {
@@ -161,10 +128,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                             labelText: 'Budget Limit',
                           ),
                           validator: (value) {
-                            final amount =
-                                double.tryParse(value ?? '');
-
-                            if (amount == null || amount <= 0) {
+                            final amount = double.tryParse(value ?? '');
+                            if (amount == null ||
+                                !amount.isFinite ||
+                                amount <= 0) {
                               return 'Enter a valid budget amount';
                             }
                             return null;
@@ -227,7 +194,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           ],
                           onChanged: (value) {
                             if (value == null) return;
-
                             setDialogState(() {
                               period = value;
                             });
@@ -247,7 +213,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           }).toList(),
                           onChanged: (value) {
                             if (value == null) return;
-
                             setDialogState(() {
                               currency = value;
                             });
@@ -268,7 +233,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                               firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
                             );
-
                             if (selected != null) {
                               setDialogState(() {
                                 startDate = selected;
@@ -290,7 +254,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                               firstDate: startDate,
                               lastDate: DateTime(2100),
                             );
-
                             if (selected != null) {
                               setDialogState(() {
                                 endDate = selected;
@@ -311,12 +274,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
-
                     if (endDate.isBefore(startDate)) {
                       _message('End date cannot be before start date.');
                       return;
                     }
-
                     try {
                       final model = BudgetModel(
                         id: budget?.id,
@@ -325,27 +286,20 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         limitAmount: double.parse(amountController.text),
                         spentAmount: budget?.spentAmount ?? 0,
                         period: period,
-                        startDate: DateFormat('yyyy-MM-dd')
-                            .format(startDate),
-                        endDate: DateFormat('yyyy-MM-dd')
-                            .format(endDate),
+                        startDate: startDate,
+                        endDate: endDate,
                         currency: currency,
                         isActive: budget?.isActive ?? true,
-                        createdAt: budget?.createdAt ??
-                            DateTime.now().toIso8601String(),
+                        createdAt: budget?.createdAt ?? DateTime.now(),
                       );
-
                       if (budget == null) {
-                        await _service.addBudget(model);
+                        await BudgetService.addBudget(model);
                       } else {
-                        await _service.updateBudget(model);
+                        await BudgetService.updateBudget(model);
                       }
-
                       if (!dialogContext.mounted) return;
-
                       Navigator.pop(dialogContext);
                       await _loadData();
-
                       _message(
                         budget == null
                             ? 'Budget created successfully.'
@@ -365,22 +319,17 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         );
       },
     );
-
     nameController.dispose();
     amountController.dispose();
   }
-
   Future<void> _toggleBudget(BudgetModel budget) async {
     if (budget.id == null) return;
-
     try {
-      await _service.setBudgetStatus(
+      await BudgetService.setBudgetStatus(
         budget.id!,
         !budget.isActive,
       );
-
       await _loadData();
-
       _message(
         budget.isActive ? 'Budget paused.' : 'Budget activated.',
       );
@@ -388,10 +337,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       _message('Error: $e');
     }
   }
-
   Future<void> _deleteBudget(BudgetModel budget) async {
     if (budget.id == null) return;
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -416,35 +363,28 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         );
       },
     );
-
     if (confirm != true) return;
-
     try {
-      await _service.deleteBudget(budget.id!);
+      await BudgetService.deleteBudget(budget.id!);
       await _loadData();
       _message('Budget deleted.');
     } catch (e) {
       _message('Error: $e');
     }
   }
-
   Widget _budgetCard(BudgetModel budget) {
     final spent = budget.spentAmount;
     final limit = budget.limitAmount;
-
     final progress = limit <= 0
         ? 0.0
         : (spent / limit).clamp(0.0, 1.0);
-
     final exceeded = spent > limit;
     final remaining = limit - spent;
-
     final color = exceeded
         ? Colors.red
         : progress >= 0.8
             ? Colors.orange
             : Colors.green;
-
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 12,
@@ -562,7 +502,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              '${budget.startDate}  —  ${budget.endDate}',
+              '${DateFormat('dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.grey,
@@ -581,7 +521,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final visibleBudgets = _budgets.where((budget) {
@@ -589,7 +528,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       if (_filter == 'Paused') return !budget.isActive;
       return true;
     }).toList();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(

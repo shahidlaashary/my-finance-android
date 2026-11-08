@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,15 +28,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
       - name: Create Android project
         run: flutter create . --platforms=android
-
-      - name: Set Android SDK
-        run: |
-          if [ -f android/app/build.gradle.kts ]; then
-            sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' android/app/build.gradle.kts
-          fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -46,3 +44,4 @@ jobs:
         with:
           name: My-Finance-Android-APK
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

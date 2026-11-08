@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -119,16 +118,14 @@ class _BackupRestoreScreenState
       });
 
       try {
-        // Close all independent database connections first.
-        await Future.wait([
-          TransactionService.closeDatabase(),
-          BudgetService.closeDatabase(),
-          SavingsService.closeDatabase(),
-          RecurringTransactionService.closeDatabase(),
-          CategoryService.closeDatabase(),
-          LoanService.closeDatabase(),
-          AttachmentService.closeDatabase(),
-        ]);
+        // Close independent database connections one by one.
+        await TransactionService.closeDatabase();
+        await BudgetService.closeDatabase();
+        await SavingsService.closeDatabase();
+        await RecurringTransactionService.closeDatabase();
+        await CategoryService.closeDatabase();
+        await LoanService.closeDatabase();
+        await AttachmentService.closeDatabase();
 
         // Close the main database connection.
         await FinanceDB.instance.close();

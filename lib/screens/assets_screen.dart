@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../models/asset_model.dart';
 import '../services/asset_service.dart';
+import '../services/transaction_service.dart';
 import '../widgets/attachment_section.dart';
 
 class AssetsScreen extends StatefulWidget {
@@ -21,21 +21,15 @@ class _AssetsScreenState extends State<AssetsScreen> {
   List<AssetModel> _assets = [];
   List<Map<String, dynamic>> _accounts = [];
 
-  double _currentValue = 0;
-  double _purchaseValue = 0;
-  double _realizedProfitLoss = 0;
+  Map<String, double> _currentValues = {};
+  Map<String, double> _purchaseValues = {};
+  Map<String, double> _realizedProfitLoss = {};
 
   bool _loading = true;
   bool _showSold = true;
 
   final NumberFormat _numberFormat =
       NumberFormat('#,##0.00');
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
 
   String _money(double value) {
     return _numberFormat.format(value);
@@ -59,16 +53,16 @@ class _AssetsScreenState extends State<AssetsScreen> {
         includeSold: _showSold,
       );
 
-      final current = await _service.getTotalCurrentValue();
-      final purchase = await _service.getTotalPurchaseValue();
+      final current =
+          await _service.getTotalCurrentValueByCurrency();
+
+      final purchase =
+          await _service.getTotalPurchaseValueByCurrency();
+
       final realized =
-          await _service.getTotalRealizedProfitLoss();
+          await _service.getTotalRealizedProfitLossByCurrency();
 
-      final dbPath = await getDatabasesPath();
-
-      final db = await openDatabase(
-        p.join(dbPath, 'my_finance.db'),
-      );
+      final Database db = await TransactionService.database;
 
       final accounts = await db.query(
         'accounts',
@@ -80,8 +74,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
       setState(() {
         _assets = assets;
         _accounts = accounts;
-        _currentValue = current;
-        _purchaseValue = purchase;
+        _currentValues = current;
+        _purchaseValues = purchase;
         _realizedProfitLoss = realized;
         _loading = false;
       });
@@ -95,7 +89,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   String _accountName(int accountId) {
     final matches = _accounts.where(
-      (account) => account['id'] == accountId,
+      (account) =>
+          (account['id'] as num).toInt() == accountId,
     );
 
     if (matches.isEmpty) return 'Unknown account';
@@ -105,12 +100,26 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   String _currency(int accountId) {
     final matches = _accounts.where(
-      (account) => account['id'] == accountId,
+      (account) =>
+          (account['id'] as num).toInt() == accountId,
     );
 
     if (matches.isEmpty) return 'PKR';
 
     return matches.first['currency']?.toString() ?? 'PKR';
+  }
+
+  List<String> get _availableCurrencies {
+    final currencies = <String>{
+      ..._currentValues.keys,
+      ..._purchaseValues.keys,
+      ..._realizedProfitLoss.keys,
+      ..._assets.map((asset) => _currency(asset.accountId)),
+    };
+
+    final result = currencies.toList()..sort();
+
+    return result;
   }
 
   Future<void> _showAssetDialog({
@@ -144,10 +153,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
     int? selectedAccount = asset?.accountId;
 
-    DateTime purchaseDate = asset == null
-        ? DateTime.now()
-        : DateTime.tryParse(asset.purchaseDate) ??
-            DateTime.now();
+    DateTime purchaseDate =
+        asset?.purchaseDate ?? DateTime.now();
 
     await showDialog(
       context: context,
@@ -173,7 +180,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             prefixIcon: Icon(Icons.inventory_2),
                           ),
                           validator: (value) =>
-                              value == null || value.trim().isEmpty
+                              value == null ||
+                                      value.trim().isEmpty
                                   ? 'Enter asset name'
                                   : null,
                         ),
@@ -199,7 +207,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             final amount =
                                 double.tryParse(value ?? '');
 
-                            if (amount == null || amount <= 0) {
+                            if (amount == null ||
+                                !amount.isFinite ||
+                                amount <= 0) {
                               return 'Enter a valid purchase price';
                             }
 
@@ -220,7 +230,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             final amount =
                                 double.tryParse(value ?? '');
 
-                            if (amount == null || amount < 0) {
+                            if (amount == null ||
+                                !amount.isFinite ||
+                                amount < 0) {
                               return 'Enter a valid current value';
                             }
 
@@ -236,7 +248,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           ),
                           items: _accounts.map((account) {
                             return DropdownMenuItem<int>(
-                              value: account['id'] as int,
+                              value:
+                                  (account['id'] as num).toInt(),
                               child: Text(
                                 '${account['name']} '
                                 '(${account['currency'] ?? 'PKR'})',
@@ -249,20 +262,25 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             });
                           },
                           validator: (value) =>
-                              value == null ? 'Select account' : null,
+                              value == null
+                                  ? 'Select account'
+                                  : null,
                         ),
                         const SizedBox(height: 12),
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.calendar_month),
+                          leading:
+                              const Icon(Icons.calendar_month),
                           title: const Text('Purchase Date'),
                           subtitle: Text(
                             DateFormat('dd MMM yyyy')
                                 .format(purchaseDate),
                           ),
-                          trailing: const Icon(Icons.edit_calendar),
+                          trailing:
+                              const Icon(Icons.edit_calendar),
                           onTap: () async {
-                            final selected = await showDatePicker(
+                            final selected =
+                                await showDatePicker(
                               context: context,
                               initialDate: purchaseDate,
                               firstDate: DateTime(1950),
@@ -292,12 +310,15 @@ class _AssetsScreenState extends State<AssetsScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
+                  onPressed: () =>
+                      Navigator.pop(dialogContext),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
+                    if (!formKey.currentState!.validate()) {
+                      return;
+                    }
 
                     try {
                       final purchasePrice =
@@ -312,15 +333,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         category: categoryController.text.trim(),
                         purchasePrice: purchasePrice,
                         currentValue: currentValue,
-                        purchaseDate: DateFormat('yyyy-MM-dd')
-                            .format(purchaseDate),
+                        purchaseDate: purchaseDate,
                         accountId: selectedAccount!,
                         notes: notesController.text.trim(),
                         isSold: asset?.isSold ?? false,
                         saleDate: asset?.saleDate,
                         salePrice: asset?.salePrice,
                         createdAt: asset?.createdAt ??
-                            DateTime.now().toIso8601String(),
+                            DateTime.now(),
                       );
 
                       if (asset == null) {
@@ -345,7 +365,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     }
                   },
                   child: Text(
-                    asset == null ? 'Save Asset' : 'Update Asset',
+                    asset == null
+                        ? 'Save Asset'
+                        : 'Update Asset',
                   ),
                 ),
               ],
@@ -376,7 +398,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
             controller: controller,
             autofocus: true,
             keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+                const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
             decoration: const InputDecoration(
               labelText: 'New Current Value',
             ),
@@ -388,9 +412,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                final value = double.tryParse(controller.text);
+                final value =
+                    double.tryParse(controller.text);
 
-                if (value == null || value < 0) return;
+                if (value == null ||
+                    !value.isFinite ||
+                    value < 0) {
+                  return;
+                }
 
                 Navigator.pop(context, value);
               },
@@ -446,14 +475,16 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Sale Date'),
                     subtitle: Text(
-                      DateFormat('dd MMM yyyy').format(saleDate),
+                      DateFormat('dd MMM yyyy')
+                          .format(saleDate),
                     ),
-                    trailing: const Icon(Icons.calendar_month),
+                    trailing:
+                        const Icon(Icons.calendar_month),
                     onTap: () async {
                       final selected = await showDatePicker(
                         context: context,
                         initialDate: saleDate,
-                        firstDate: DateTime(1950),
+                        firstDate: asset.purchaseDate,
                         lastDate: DateTime.now(),
                       );
 
@@ -473,9 +504,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    final price = double.tryParse(controller.text);
+                    final price =
+                        double.tryParse(controller.text);
 
-                    if (price == null || price < 0) return;
+                    if (price == null ||
+                        !price.isFinite ||
+                        price < 0) {
+                      return;
+                    }
 
                     Navigator.pop(context, {
                       'price': price,
@@ -520,11 +556,13 @@ class _AssetsScreenState extends State<AssetsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () =>
+                  Navigator.pop(context, false),
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () =>
+                  Navigator.pop(context, true),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
@@ -548,6 +586,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   Widget _summaryCard(
     String title,
+    String currency,
     double amount,
     IconData icon, {
     Color color = const Color(0xFF147D59),
@@ -569,10 +608,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
             ),
             const SizedBox(height: 5),
             Text(
-              _money(amount),
+              '$currency ${_money(amount)}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 17,
+                fontSize: 16,
                 color: color,
               ),
             ),
@@ -583,8 +622,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
   }
 
   Widget _assetCard(AssetModel asset) {
-    final profitLoss = asset.currentValue - asset.purchasePrice;
     final currency = _currency(asset.accountId);
+
+    final profitLoss = asset.isSold && asset.salePrice != null
+        ? asset.salePrice! - asset.purchasePrice
+        : asset.currentValue - asset.purchasePrice;
 
     return Card(
       margin: const EdgeInsets.symmetric(
@@ -608,7 +650,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
                         asset.name,
@@ -632,107 +675,90 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   const Chip(
                     label: Text('Sold'),
                     backgroundColor: Color(0xFFFFE9E9),
-                  )
-                else
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _showAssetDialog(asset: asset);
-                      } else if (value == 'valuation') {
-                        _updateValuation(asset);
-                      } else if (value == 'sell') {
-                        _sellAsset(asset);
-                      } else if (value == 'delete') {
-                        _deleteAsset(asset);
-                      }
-                    },
-                    itemBuilder: (context) => [
+                  ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit' && !asset.isSold) {
+                      _showAssetDialog(asset: asset);
+                    } else if (value == 'valuation' &&
+                        !asset.isSold) {
+                      _updateValuation(asset);
+                    } else if (value == 'sell' &&
+                        !asset.isSold) {
+                      _sellAsset(asset);
+                    } else if (value == 'delete') {
+                      _deleteAsset(asset);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'edit',
                         child: Text('Edit Asset'),
                       ),
+                    if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'valuation',
                         child: Text('Update Valuation'),
                       ),
+                    if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'sell',
                         child: Text('Sell Asset'),
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Delete Asset'),
-                      ),
-                    ],
-                  ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete Asset'),
+                    ),
+                  ],
+                ),
               ],
             ),
             const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Purchase Price'),
-                Text('$currency ${_money(asset.purchasePrice)}'),
-              ],
+            _detailRow(
+              'Purchase Price',
+              '$currency ${_money(asset.purchasePrice)}',
             ),
             const SizedBox(height: 7),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Current Value'),
-                Text(
-                  '$currency ${_money(asset.currentValue)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            if (!asset.isSold)
+              _detailRow(
+                'Current Value',
+                '$currency ${_money(asset.currentValue)}',
+                bold: true,
+              ),
+            if (asset.isSold && asset.salePrice != null)
+              _detailRow(
+                'Sale Price',
+                '$currency ${_money(asset.salePrice!)}',
+                bold: true,
+              ),
+            const SizedBox(height: 7),
+            _detailRow(
+              asset.isSold
+                  ? 'Realized Profit/Loss'
+                  : 'Unrealized Profit/Loss',
+              '$currency ${_money(profitLoss)}',
+              valueColor:
+                  profitLoss >= 0 ? Colors.green : Colors.red,
+              bold: true,
             ),
             const SizedBox(height: 7),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Unrealized Profit/Loss'),
-                Text(
-                  '$currency ${_money(profitLoss)}',
-                  style: TextStyle(
-                    color: profitLoss >= 0
-                        ? Colors.green
-                        : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            _detailRow(
+              'Account',
+              _accountName(asset.accountId),
             ),
             const SizedBox(height: 7),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Account'),
-                Text(_accountName(asset.accountId)),
-              ],
+            _detailRow(
+              'Purchase Date',
+              DateFormat('dd MMM yyyy')
+                  .format(asset.purchaseDate),
             ),
-            const SizedBox(height: 7),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Purchase Date'),
-                Text(
-                  DateFormat('dd MMM yyyy').format(
-                    DateTime.tryParse(asset.purchaseDate) ??
-                        DateTime.now(),
-                  ),
-                ),
-              ],
-            ),
-            if (asset.isSold && asset.salePrice != null) ...[
+            if (asset.isSold && asset.saleDate != null) ...[
               const SizedBox(height: 7),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Sale Price'),
-                  Text('$currency ${_money(asset.salePrice!)}'),
-                ],
+              _detailRow(
+                'Sale Date',
+                DateFormat('dd MMM yyyy')
+                    .format(asset.saleDate!),
               ),
             ],
             if (asset.notes.isNotEmpty) ...[
@@ -755,8 +781,108 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
+  Widget _detailRow(
+    String title,
+    String value, {
+    Color? valueColor,
+    bool bold = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(child: Text(title)),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              color: valueColor,
+              fontWeight:
+                  bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _currencySummary(String currency) {
+    final current = _currentValues[currency] ?? 0;
+    final purchase = _purchaseValues[currency] ?? 0;
+    final realized = _realizedProfitLoss[currency] ?? 0;
+
+    final unrealized = current - purchase;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Text(
+            currency,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 1.65,
+            children: [
+              _summaryCard(
+                'Current Value',
+                currency,
+                current,
+                Icons.account_balance,
+              ),
+              _summaryCard(
+                'Purchase Value',
+                currency,
+                purchase,
+                Icons.shopping_bag,
+                color: Colors.blue,
+              ),
+              _summaryCard(
+                'Realized Profit/Loss',
+                currency,
+                realized,
+                Icons.trending_up,
+                color: realized >= 0
+                    ? Colors.green
+                    : Colors.red,
+              ),
+              _summaryCard(
+                'Unrealized Profit/Loss',
+                currency,
+                unrealized,
+                Icons.show_chart,
+                color: unrealized >= 0
+                    ? Colors.green
+                    : Colors.red,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currencies = _availableCurrencies;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
@@ -771,7 +897,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAssetDialog(),
+        onPressed: _showAssetDialog,
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
@@ -784,44 +910,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 90),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1.65,
-                      children: [
-                        _summaryCard(
-                          'Current Value',
-                          _currentValue,
-                          Icons.account_balance,
-                        ),
-                        _summaryCard(
-                          'Purchase Value',
-                          _purchaseValue,
-                          Icons.shopping_bag,
-                          color: Colors.blue,
-                        ),
-                        _summaryCard(
-                          'Realized Profit/Loss',
-                          _realizedProfitLoss,
-                          Icons.trending_up,
-                          color: _realizedProfitLoss >= 0
-                              ? Colors.green
-                              : Colors.red,
-                        ),
-                        _summaryCard(
-                          'Unrealized Profit/Loss',
-                          _currentValue - _purchaseValue,
-                          Icons.show_chart,
-                          color: _currentValue >= _purchaseValue
-                              ? Colors.green
-                              : Colors.red,
-                        ),
-                      ],
-                    ),
-                  ),
+                  if (currencies.isNotEmpty)
+                    ...currencies.map(_currencySummary),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,

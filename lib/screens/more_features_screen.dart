@@ -79,7 +79,7 @@ class MoreFeaturesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'More Features',
+          'More',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),

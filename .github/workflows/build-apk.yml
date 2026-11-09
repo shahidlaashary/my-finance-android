@@ -26,7 +26,7 @@ jobs:
         run: flutter create . --platforms=android
       - name: Configure Gradle download
         run: |
-          sed -i 's#github.com/gradle/gradle-distributions/releases/download/v[0-9.]*/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
+          sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
           cat android/gradle/wrapper/gradle-wrapper.properties
       - name: Install dependencies
         run: flutter pub get

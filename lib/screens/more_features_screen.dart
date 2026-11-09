@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../services/appearance_settings_service.dart';
 import 'categories_screen.dart';
 import 'assets_screen.dart';
 import 'savings_screen.dart';
@@ -15,15 +16,12 @@ class MoreFeaturesScreen extends StatelessWidget {
   void _openScreen(BuildContext context, Widget screen) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => screen,
-      ),
+      MaterialPageRoute(builder: (_) => screen),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // More Features - Alphabetical Order
     final features = [
       _FeatureItem(
         title: 'Assets',
@@ -76,6 +74,8 @@ class MoreFeaturesScreen extends StatelessWidget {
       ),
     ];
 
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -90,22 +90,15 @@ class MoreFeaturesScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [
-                  Color(0xFF147D59),
-                  Color(0xFF20A477),
+                  primary,
+                  Color.lerp(primary, Colors.white, 0.25)!,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF147D59).withOpacity(0.18),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +142,6 @@ class MoreFeaturesScreen extends StatelessWidget {
             (feature) => Card(
               elevation: 1,
               margin: const EdgeInsets.only(bottom: 11),
-              color: Theme.of(context).cardColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
@@ -188,13 +180,8 @@ class MoreFeaturesScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                trailing: const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 23,
-                ),
-                onTap: () {
-                  _openScreen(context, feature.screen);
-                },
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => _openScreen(context, feature.screen),
               ),
             ),
           ),
@@ -203,7 +190,7 @@ class MoreFeaturesScreen extends StatelessWidget {
             child: Text(
               'My Finance',
               style: TextStyle(
-                color: Colors.grey.shade500,
+                color: Theme.of(context).hintColor,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -214,7 +201,7 @@ class MoreFeaturesScreen extends StatelessWidget {
             child: Text(
               'Personal Finance Manager',
               style: TextStyle(
-                color: Colors.grey.shade500,
+                color: Theme.of(context).hintColor,
                 fontSize: 11,
               ),
             ),
@@ -236,15 +223,12 @@ class AppSettingsScreen extends StatelessWidget {
   void _openScreen(BuildContext context, Widget screen) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => screen,
-      ),
+      MaterialPageRoute(builder: (_) => screen),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Settings - Alphabetical Order
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -258,18 +242,18 @@ class AppSettingsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF147D59).withOpacity(0.08),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(
                   Icons.settings_rounded,
-                  color: Color(0xFF147D59),
+                  color: Theme.of(context).colorScheme.primary,
                   size: 32,
                 ),
-                SizedBox(width: 14),
-                Expanded(
+                const SizedBox(width: 14),
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -292,88 +276,48 @@ class AppSettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
-          // 1. Appearance
           _SettingsInfoTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
             subtitle: 'Theme, colors, fonts and display preferences',
-            onTap: () {
-              _openScreen(
-                context,
-                const AppearanceScreen(),
-              );
-            },
+            onTap: () => _openScreen(
+              context,
+              const AppearanceScreen(),
+            ),
           ),
-
-          // 2. App Settings
           const _SettingsInfoTile(
             icon: Icons.tune_rounded,
             title: 'App Settings',
             subtitle: 'General application preferences',
           ),
-
-          // 3. Backup & Restore
           _SettingsInfoTile(
             icon: Icons.backup_rounded,
             title: 'Backup & Restore',
             subtitle: 'Create backups and restore your finance data',
-            onTap: () {
-              _openScreen(
-                context,
-                BackupRestoreScreen(),
-              );
-            },
+            onTap: () => _openScreen(
+              context,
+              BackupRestoreScreen(),
+            ),
           ),
-
-          // 4. Base Currency
           const _SettingsInfoTile(
             icon: Icons.currency_exchange_rounded,
             title: 'Base Currency',
             subtitle: 'Default currency: PKR',
           ),
-
-          // 5. Language
           const _SettingsInfoTile(
             icon: Icons.language_rounded,
             title: 'Language',
             subtitle: 'English, Urdu and other languages',
           ),
-
-          // 6. Manual Exchange Rates
           const _SettingsInfoTile(
             icon: Icons.price_change_rounded,
             title: 'Manual Exchange Rates',
             subtitle: 'Manage buy and sell exchange rates',
           ),
-
           const SizedBox(height: 16),
-
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: Colors.orange,
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Some settings are currently displayed as options and will be made functional in upcoming updates.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _ComingSoonNotice(
+            message:
+                'Other settings will be made functional in upcoming updates.',
           ),
         ],
       ),
@@ -385,10 +329,275 @@ class AppSettingsScreen extends StatelessWidget {
 // APPEARANCE SCREEN
 // =====================================================
 
-class AppearanceScreen extends StatelessWidget {
+class AppearanceScreen extends StatefulWidget {
   const AppearanceScreen({super.key});
 
-  Widget _buildSection({
+  @override
+  State<AppearanceScreen> createState() => _AppearanceScreenState();
+}
+
+class _AppearanceScreenState extends State<AppearanceScreen> {
+  final AppearanceSettingsService _settings =
+      AppearanceSettingsService.instance;
+
+  Future<void> _changeThemeMode(ThemeMode mode) async {
+    try {
+      await _settings.setThemeMode(mode);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Theme mode updated successfully.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to save theme mode: $e')),
+      );
+    }
+  }
+
+  Future<void> _changeColorTheme(String color) async {
+    try {
+      await _settings.setColorTheme(color);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$color theme applied successfully.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to save color theme: $e')),
+      );
+    }
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            primary,
+            Color.lerp(primary, Colors.white, 0.25)!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        children: [
+          Icon(
+            Icons.palette_rounded,
+            color: Colors.white,
+            size: 34,
+          ),
+          SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Personalize Your App',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Customize the look and feel of My Finance.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveSection({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String description,
+    required List<Widget> children,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 13),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: primary.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: primary, size: 23),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.check_circle, color: Colors.green, size: 19),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeModeOptions() {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: _settings.themeMode,
+      builder: (context, selectedMode, _) {
+        final options = [
+          (ThemeMode.light, 'Light', Icons.light_mode_outlined),
+          (ThemeMode.dark, 'Dark', Icons.dark_mode_outlined),
+          (ThemeMode.system, 'System Default', Icons.settings_brightness),
+        ];
+
+        return Column(
+          children: options.map((option) {
+            final selected = selectedMode == option.$1;
+
+            return RadioListTile<ThemeMode>(
+              value: option.$1,
+              groupValue: selectedMode,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(option.$2),
+              secondary: Icon(option.$3),
+              onChanged: (value) {
+                if (value != null) {
+                  _changeThemeMode(value);
+                }
+              },
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildColorOptions() {
+    const colors = {
+      'Green': Color(0xFF147D59),
+      'Blue': Color(0xFF2563EB),
+      'Purple': Color(0xFF7C3AED),
+      'Teal': Color(0xFF0F766E),
+      'Orange': Color(0xFFEA580C),
+      'Red': Color(0xFFDC2626),
+    };
+
+    return ValueListenableBuilder<String>(
+      valueListenable: _settings.colorTheme,
+      builder: (context, selectedColor, _) {
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: colors.entries.map((entry) {
+            final selected = selectedColor == entry.key;
+
+            return InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () => _changeColorTheme(entry.key),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: selected
+                        ? entry.value
+                        : Theme.of(context).dividerColor,
+                    width: selected ? 2 : 1,
+                  ),
+                  color: entry.value.withOpacity(0.08),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 9,
+                      backgroundColor: entry.value,
+                      child: selected
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 12,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildPlannedSection({
     required BuildContext context,
     required IconData icon,
     required String title,
@@ -408,68 +617,46 @@ class AppearanceScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF147D59).withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: const Color(0xFF147D59),
-                    size: 23,
+                Icon(icon, color: Theme.of(context).hintColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
+                const Text(
+                  'Coming soon',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 5),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: options.map((option) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF147D59).withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF147D59).withOpacity(0.18),
-                    ),
-                  ),
-                  child: Text(
+                return Chip(
+                  label: Text(
                     option,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: const TextStyle(fontSize: 11),
                   ),
+                  visualDensity: VisualDensity.compact,
                 );
               }).toList(),
             ),
@@ -491,108 +678,37 @@ class AppearanceScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF147D59),
-                  Color(0xFF20A477),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.palette_rounded,
-                  color: Colors.white,
-                  size: 34,
-                ),
-                SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Personalize Your App',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        'Customize the look and feel of My Finance.',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
+          _buildHeader(context),
           const SizedBox(height: 20),
-
-          _buildSection(
+          _buildActiveSection(
             context: context,
             icon: Icons.dark_mode_rounded,
             title: 'Theme Mode',
             description: 'Choose how the app should look',
-            options: [
-              'Light',
-              'Dark',
-              'System Default',
-            ],
+            children: [_buildThemeModeOptions()],
           ),
-
-          _buildSection(
+          _buildActiveSection(
             context: context,
             icon: Icons.color_lens_rounded,
             title: 'Color Theme',
             description: 'Choose your preferred app color',
-            options: [
-              'Green',
-              'Blue',
-              'Purple',
-              'Teal',
-              'Orange',
-              'Red',
-            ],
+            children: [_buildColorOptions()],
           ),
-
-          _buildSection(
+          _buildPlannedSection(
             context: context,
             icon: Icons.format_size_rounded,
             title: 'Font Size',
             description: 'Adjust text size throughout the app',
-            options: [
-              'Small',
-              'Medium',
-              'Large',
-            ],
+            options: ['Small', 'Medium', 'Large'],
           ),
-
-          _buildSection(
+          _buildPlannedSection(
             context: context,
             icon: Icons.text_fields_rounded,
             title: 'Font Style',
             description: 'Choose your preferred font appearance',
-            options: [
-              'Default',
-              'Modern',
-              'Classic',
-            ],
+            options: ['Default', 'Modern', 'Classic'],
           ),
-
-          _buildSection(
+          _buildPlannedSection(
             context: context,
             icon: Icons.dashboard_rounded,
             title: 'Dashboard Layout',
@@ -604,8 +720,7 @@ class AppearanceScreen extends StatelessWidget {
               'Detailed Layout',
             ],
           ),
-
-          _buildSection(
+          _buildPlannedSection(
             context: context,
             icon: Icons.display_settings_rounded,
             title: 'Display Preferences',
@@ -617,8 +732,7 @@ class AppearanceScreen extends StatelessWidget {
               'Animations Off',
             ],
           ),
-
-          _buildSection(
+          _buildPlannedSection(
             context: context,
             icon: Icons.phone_android_rounded,
             title: 'App Icon',
@@ -630,36 +744,41 @@ class AppearanceScreen extends StatelessWidget {
               'Dark Icon',
             ],
           ),
-
           const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
 
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: Colors.orange,
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'These are the planned appearance options. Their actual selection and application will be implemented in a later update.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
+// =====================================================
+// COMING SOON NOTICE
+// =====================================================
+
+class _ComingSoonNotice extends StatelessWidget {
+  final String message;
+
+  const _ComingSoonNotice({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline_rounded, color: Colors.orange),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 12, height: 1.5),
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -698,7 +817,7 @@ class _SettingsInfoTile extends StatelessWidget {
         ),
         leading: Icon(
           icon,
-          color: const Color(0xFF147D59),
+          color: Theme.of(context).colorScheme.primary,
           size: 25,
         ),
         title: Text(

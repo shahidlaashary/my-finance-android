@@ -18,10 +18,6 @@ class AppearanceSettingsService {
   final ValueNotifier<String> colorTheme =
       ValueNotifier<String>('Green');
 
-  // Font Size
-  final ValueNotifier<String> fontSize =
-      ValueNotifier<String>('Medium');
-
   void configure({
     required Future<String?> Function(String key) readSetting,
     required Future<void> Function(String key, String value) writeSetting,
@@ -37,7 +33,6 @@ class AppearanceSettingsService {
 
     final savedMode = await read('theme_mode');
     final savedColor = await read('color_theme');
-    final savedFontSize = await read('font_size');
 
     switch (savedMode) {
       case 'light':
@@ -62,17 +57,6 @@ class AppearanceSettingsService {
     if (savedColor != null &&
         availableColors.contains(savedColor)) {
       colorTheme.value = savedColor;
-    }
-
-    const availableFontSizes = [
-      'Small',
-      'Medium',
-      'Large',
-    ];
-
-    if (savedFontSize != null &&
-        availableFontSizes.contains(savedFontSize)) {
-      fontSize.value = savedFontSize;
     }
   }
 
@@ -110,39 +94,6 @@ class AppearanceSettingsService {
     final write = _writeSetting;
     if (write != null) {
       await write('color_theme', color);
-    }
-  }
-
-  // Save Font Size
-  Future<void> setFontSize(String size) async {
-    const availableFontSizes = [
-      'Small',
-      'Medium',
-      'Large',
-    ];
-
-    if (!availableFontSizes.contains(size)) return;
-
-    fontSize.value = size;
-
-    final write = _writeSetting;
-    if (write != null) {
-      await write('font_size', size);
-    }
-  }
-
-  // Font Size Scale
-  double get fontSizeFactor {
-    switch (fontSize.value) {
-      case 'Small':
-        return 0.90;
-
-      case 'Large':
-        return 1.15;
-
-      case 'Medium':
-      default:
-        return 1.0;
     }
   }
 

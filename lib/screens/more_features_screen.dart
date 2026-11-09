@@ -378,6 +378,26 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     }
   }
 
+  Future<void> _changeFontSize(String size) async {
+    try {
+      await _settings.setFontSize(size);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$size font size applied successfully.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to save font size: $e')),
+      );
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
@@ -507,8 +527,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
         return Column(
           children: options.map((option) {
-            final selected = selectedMode == option.$1;
-
             return RadioListTile<ThemeMode>(
               value: option.$1,
               groupValue: selectedMode,
@@ -590,6 +608,39 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   ],
                 ),
               ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildFontSizeOptions() {
+    return ValueListenableBuilder<String>(
+      valueListenable: _settings.fontSize,
+      builder: (context, selectedSize, _) {
+        const options = ['Small', 'Medium', 'Large'];
+
+        return Column(
+          children: options.map((option) {
+            return RadioListTile<String>(
+              value: option,
+              groupValue: selectedSize,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(option),
+              subtitle: Text(
+                option == 'Small'
+                    ? 'Smaller text'
+                    : option == 'Large'
+                        ? 'Larger, easier-to-read text'
+                        : 'Standard text size',
+              ),
+              onChanged: (value) {
+                if (value != null) {
+                  _changeFontSize(value);
+                }
+              },
             );
           }).toList(),
         );
@@ -694,12 +745,12 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             description: 'Choose your preferred app color',
             children: [_buildColorOptions()],
           ),
-          _buildPlannedSection(
+          _buildActiveSection(
             context: context,
             icon: Icons.format_size_rounded,
             title: 'Font Size',
             description: 'Adjust text size throughout the app',
-            options: ['Small', 'Medium', 'Large'],
+            children: [_buildFontSizeOptions()],
           ),
           _buildPlannedSection(
             context: context,

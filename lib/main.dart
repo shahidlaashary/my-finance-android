@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 
 import 'models/finance_category.dart';
-import 'screens/categories_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/more_features_screen.dart';
@@ -329,7 +328,8 @@ class FinanceDB {
       });
     });
   }
-    Future<List<Map<String, dynamic>>> dashboardSummary() async {
+
+  Future<List<Map<String, dynamic>>> dashboardSummary() async {
     final accountResults = await db.rawQuery('''
       SELECT
         currency,
@@ -463,7 +463,6 @@ class _MainScreenState extends State<MainScreen> {
       DashboardPage(onRefresh: refresh),
       AccountsPage(onRefresh: refresh),
       const TransactionsScreen(),
-      const CategoriesScreen(),
       const LoansScreen(),
       const MoreFeaturesScreen(),
     ];
@@ -506,11 +505,6 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Transactions',
           ),
           NavigationDestination(
-            icon: Icon(Icons.category_outlined),
-            selectedIcon: Icon(Icons.category),
-            label: 'Categories',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.handshake_outlined),
             selectedIcon: Icon(Icons.handshake),
             label: 'Loans',
@@ -525,7 +519,6 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-
 class DashboardPage extends StatelessWidget {
   final VoidCallback onRefresh;
 
@@ -667,7 +660,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                 );
               }),
-                            const SizedBox(height: 8),
+              const SizedBox(height: 8),
               const Text(
                 'Quick Actions',
                 style: TextStyle(
@@ -978,6 +971,7 @@ class AccountsPage extends StatelessWidget {
     );
   }
 }
+
 class AccountDetailsPage extends StatefulWidget {
   final int accountId;
 
@@ -1611,7 +1605,7 @@ Future<void> showAccountDialog(
               ],
             ),
           ),
-                    actions: [
+          actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel'),
@@ -1928,7 +1922,7 @@ Future<void> showTransactionDialog(
                   ],
                 ),
               ),
-                            actions: [
+              actions: [
                 TextButton(
                   onPressed: saving
                       ? null

@@ -473,6 +473,7 @@ class FinanceDB {
   }
 }
 
+// Updated: Font Size now applies across the whole app.
 class MyFinanceApp extends StatelessWidget {
   const MyFinanceApp({super.key});
 
@@ -484,9 +485,11 @@ class MyFinanceApp extends StatelessWidget {
       animation: Listenable.merge([
         settings.themeMode,
         settings.colorTheme,
+        settings.fontSize,
       ]),
       builder: (context, _) {
         final seed = settings.seedColor;
+        final fontSizeFactor = settings.fontSizeFactor;
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -499,6 +502,12 @@ class MyFinanceApp extends StatelessWidget {
               brightness: Brightness.light,
             ),
             scaffoldBackgroundColor: const Color(0xFFF5F7F6),
+            textTheme: ThemeData.light()
+                .textTheme
+                .apply(fontSizeFactor: fontSizeFactor),
+            primaryTextTheme: ThemeData.light()
+                .primaryTextTheme
+                .apply(fontSizeFactor: fontSizeFactor),
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
@@ -507,6 +516,12 @@ class MyFinanceApp extends StatelessWidget {
               brightness: Brightness.dark,
             ),
             scaffoldBackgroundColor: const Color(0xFF121212),
+            textTheme: ThemeData.dark()
+                .textTheme
+                .apply(fontSizeFactor: fontSizeFactor),
+            primaryTextTheme: ThemeData.dark()
+                .primaryTextTheme
+                .apply(fontSizeFactor: fontSizeFactor),
           ),
           home: const MainScreen(),
         );

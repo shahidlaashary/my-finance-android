@@ -68,7 +68,7 @@ class MoreFeaturesScreen extends StatelessWidget {
       ),
       _FeatureItem(
         title: 'Backup & Restore',
-        description: 'Create backups and restore your finance data',
+        description: 'Manage backup preferences and restore finance data',
         icon: Icons.backup_rounded,
         color: Colors.indigo,
         screen: BackupRestoreScreen(),
@@ -86,9 +86,7 @@ class MoreFeaturesScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'More Features',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
@@ -201,10 +199,7 @@ class MoreFeaturesScreen extends StatelessWidget {
                   size: 23,
                 ),
                 onTap: () {
-                  _openScreen(
-                    context,
-                    feature.screen,
-                  );
+                  _openScreen(context, feature.screen);
                 },
               ),
             ),
@@ -305,11 +300,6 @@ class AppSettingsScreen extends StatelessWidget {
             icon: Icons.palette_outlined,
             title: 'Appearance',
             subtitle: 'App theme and display preferences',
-          ),
-          _SettingsInfoTile(
-            icon: Icons.backup_rounded,
-            title: 'Backup Preferences',
-            subtitle: 'Automatic and manual backup options',
           ),
           const SizedBox(height: 16),
           Container(

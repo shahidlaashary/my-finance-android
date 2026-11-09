@@ -11,6 +11,7 @@ import 'screens/transactions_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/more_features_screen.dart';
 import 'services/app_startup_service.dart';
+import 'services/appearance_settings_service.dart';
 import 'services/category_service.dart';
 import 'services/transaction_service.dart';
 
@@ -23,6 +24,14 @@ void main() async {
   }
 
   await FinanceDB.instance.init();
+
+  AppearanceSettingsService.instance.configure(
+    readSetting: FinanceDB.instance.getSetting,
+    writeSetting: FinanceDB.instance.setSetting,
+  );
+
+  await AppearanceSettingsService.instance.load();
+
   await AppStartupService.initialize();
 
   runApp(const MyFinanceApp());
@@ -44,7 +53,7 @@ class FinanceDB {
 
     _db = await openDatabase(
       p.join(base, 'my_finance.db'),
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE accounts (
@@ -70,6 +79,13 @@ class FinanceDB {
             date TEXT NOT NULL
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE app_settings (
+            setting_key TEXT PRIMARY KEY,
+            setting_value TEXT NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -81,7 +97,41 @@ class FinanceDB {
             'ALTER TABLE accounts ADD COLUMN icon_code INTEGER NOT NULL DEFAULT ${Icons.account_balance_wallet.codePoint}',
           );
         }
+
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS app_settings (
+              setting_key TEXT PRIMARY KEY,
+              setting_value TEXT NOT NULL
+            )
+          ''');
+        }
       },
+    );
+  }
+
+  Future<String?> getSetting(String key) async {
+    final result = await db.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return null;
+
+    return result.first['setting_value']?.toString();
+  }
+
+  Future<void> setSetting(String key, String value) async {
+    await db.insert(
+      'app_settings',
+      {
+        'setting_key': key,
+        'setting_value': value,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
@@ -428,17 +478,39 @@ class MyFinanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'My Finance',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF147D59),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF5F7F6),
-      ),
-      home: const MainScreen(),
+    final settings = AppearanceSettingsService.instance;
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        settings.themeMode,
+        settings.colorTheme,
+      ]),
+      builder: (context, _) {
+        final seed = settings.seedColor;
+
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'My Finance',
+          themeMode: settings.themeMode.value,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: seed,
+              brightness: Brightness.light,
+            ),
+            scaffoldBackgroundColor: const Color(0xFFF5F7F6),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: seed,
+              brightness: Brightness.dark,
+            ),
+            scaffoldBackgroundColor: const Color(0xFF121212),
+          ),
+          home: const MainScreen(),
+        );
+      },
     );
   }
 }
@@ -473,7 +545,7 @@ class _MainScreenState extends State<MainScreen> {
           'My Finance',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
       body: pages[selectedIndex],
       floatingActionButton: selectedIndex == 2
@@ -519,6 +591,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+
 class DashboardPage extends StatelessWidget {
   final VoidCallback onRefresh;
 
@@ -545,6 +618,7 @@ class DashboardPage extends StatelessWidget {
         }
 
         final summaries = snapshot.data ?? [];
+        final primaryColor = Theme.of(context).colorScheme.primary;
 
         return RefreshIndicator(
           onRefresh: () async => onRefresh(),
@@ -563,7 +637,7 @@ class DashboardPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF147D59),
+                    color: primaryColor,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: const Column(
@@ -605,7 +679,7 @@ class DashboardPage extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF147D59),
+                          color: primaryColor,
                           borderRadius: BorderRadius.circular(22),
                         ),
                         child: Column(
@@ -1115,7 +1189,7 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
           padding: const EdgeInsets.all(16),
           children: [
             Card(
-              color: const Color(0xFF147D59),
+              color: Theme.of(context).colorScheme.primary,
               child: Padding(
                 padding: const EdgeInsets.all(22),
                 child: Column(

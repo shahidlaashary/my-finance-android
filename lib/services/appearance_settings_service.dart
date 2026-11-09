@@ -18,6 +18,23 @@ class AppearanceSettingsService {
   final ValueNotifier<String> colorTheme =
       ValueNotifier<String>('Green');
 
+  // Font Size
+  final ValueNotifier<String> fontSize =
+      ValueNotifier<String>('Medium');
+
+  // Global Font Size Factor
+  double get fontSizeFactor {
+    switch (fontSize.value) {
+      case 'Small':
+        return 0.90;
+      case 'Large':
+        return 1.15;
+      case 'Medium':
+      default:
+        return 1.0;
+    }
+  }
+
   void configure({
     required Future<String?> Function(String key) readSetting,
     required Future<void> Function(String key, String value) writeSetting,
@@ -26,13 +43,14 @@ class AppearanceSettingsService {
     _writeSetting = writeSetting;
   }
 
-  // Load saved appearance settings
+  // Load saved settings
   Future<void> load() async {
     final read = _readSetting;
     if (read == null) return;
 
     final savedMode = await read('theme_mode');
     final savedColor = await read('color_theme');
+    final savedFontSize = await read('font_size');
 
     switch (savedMode) {
       case 'light':
@@ -57,6 +75,17 @@ class AppearanceSettingsService {
     if (savedColor != null &&
         availableColors.contains(savedColor)) {
       colorTheme.value = savedColor;
+    }
+
+    const availableFontSizes = [
+      'Small',
+      'Medium',
+      'Large',
+    ];
+
+    if (savedFontSize != null &&
+        availableFontSizes.contains(savedFontSize)) {
+      fontSize.value = savedFontSize;
     }
   }
 
@@ -97,24 +126,37 @@ class AppearanceSettingsService {
     }
   }
 
+  // Save Font Size
+  Future<void> setFontSize(String size) async {
+    const availableFontSizes = [
+      'Small',
+      'Medium',
+      'Large',
+    ];
+
+    if (!availableFontSizes.contains(size)) return;
+
+    fontSize.value = size;
+
+    final write = _writeSetting;
+    if (write != null) {
+      await write('font_size', size);
+    }
+  }
+
   // Selected Theme Color
   Color get seedColor {
     switch (colorTheme.value) {
       case 'Blue':
         return const Color(0xFF2563EB);
-
       case 'Purple':
         return const Color(0xFF7C3AED);
-
       case 'Teal':
         return const Color(0xFF0F766E);
-
       case 'Orange':
         return const Color(0xFFEA580C);
-
       case 'Red':
         return const Color(0xFFDC2626);
-
       case 'Green':
       default:
         return const Color(0xFF147D59);

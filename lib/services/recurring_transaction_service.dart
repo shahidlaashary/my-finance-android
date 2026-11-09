@@ -7,8 +7,7 @@ class RecurringTransactionService {
   static Database? _databaseInstance;
   static Future<Database>? _databaseFuture;
   Future<Database> get _database async {
-    if (_databaseInstance != null &&
-        _databaseInstance!.isOpen) {
+    if (_databaseInstance != null && _databaseInstance!.isOpen) {
       return _databaseInstance!;
     }
     if (_databaseFuture != null) {
@@ -88,8 +87,8 @@ class RecurringTransactionService {
         '${value.month.toString().padLeft(2, '0')}-'
         '${value.day.toString().padLeft(2, '0')}';
   }
-  DateTime _parseDate(String value) {
-    return DateTime.parse(value);
+  DateTime _parseDate(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
   DateTime _nextDate(DateTime current, String frequency) {
     switch (frequency.toLowerCase()) {
@@ -131,7 +130,7 @@ class RecurringTransactionService {
     if (model.title.trim().isEmpty) {
       throw Exception('Transaction title is required.');
     }
-    if (model.amount <= 0) {
+    if (!model.amount.isFinite || model.amount <= 0) {
       throw Exception('Amount must be greater than zero.');
     }
     final type = model.type.toLowerCase();
@@ -158,7 +157,9 @@ class RecurringTransactionService {
       );
     }
     final startDate = _parseDate(model.startDate);
-    final nextRunDate = _parseDate(model.nextRunDate);
+    final nextRunDate = _parseDate(
+      model.nextRunDate ?? model.startDate,
+    );
     if (nextRunDate.isBefore(startDate)) {
       throw Exception('Next run date cannot be before start date.');
     }
@@ -218,13 +219,16 @@ class RecurringTransactionService {
       'category_id': model.categoryId,
       'note': model.note,
       'frequency': model.frequency.toLowerCase(),
-      'start_date': _date(_parseDate(model.startDate)),
+      'start_date': _date(model.startDate),
       'end_date': model.endDate == null
           ? null
-          : _date(_parseDate(model.endDate!)),
-      'next_run_date': _date(_parseDate(model.nextRunDate)),
+          : _date(model.endDate!),
+      'next_run_date': _date(
+        model.nextRunDate ?? model.startDate,
+      ),
       'is_active': model.isActive ? 1 : 0,
-      'created_at': model.createdAt,
+      'created_at':
+          (model.createdAt ?? DateTime.now()).toIso8601String(),
     };
   }
   Future<int> addRecurringTransaction(
@@ -411,12 +415,12 @@ class RecurringTransactionService {
         final id = recurring['id'] as int;
         final frequency = recurring['frequency'].toString();
         final endDate = recurring['end_date'] as String?;
-        var nextDate = _parseDate(
+        var nextDate = DateTime.parse(
           recurring['next_run_date'].toString(),
         );
         while (!nextDate.isAfter(today)) {
           if (endDate != null &&
-              nextDate.isAfter(_parseDate(endDate))) {
+              nextDate.isAfter(DateTime.parse(endDate))) {
             await txn.update(
               _tableName,
               {'is_active': 0},
@@ -433,7 +437,7 @@ class RecurringTransactionService {
           processedCount++;
           nextDate = _nextDate(nextDate, frequency);
           if (endDate != null &&
-              nextDate.isAfter(_parseDate(endDate))) {
+              nextDate.isAfter(DateTime.parse(endDate))) {
             await txn.update(
               _tableName,
               {

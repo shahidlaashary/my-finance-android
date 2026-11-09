@@ -279,7 +279,7 @@ class AppSettingsScreen extends StatelessWidget {
           _SettingsInfoTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
-            subtitle: 'Theme, colors, fonts and display preferences',
+            subtitle: 'Customize theme mode and app colors',
             onTap: () => _openScreen(
               context,
               const AppearanceScreen(),
@@ -374,26 +374,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to save color theme: $e')),
-      );
-    }
-  }
-
-  Future<void> _changeFontSize(String size) async {
-    try {
-      await _settings.setFontSize(size);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$size font size applied successfully.'),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save font size: $e')),
       );
     }
   }
@@ -615,39 +595,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildFontSizeOptions() {
-    return ValueListenableBuilder<String>(
-      valueListenable: _settings.fontSize,
-      builder: (context, selectedSize, _) {
-        const options = ['Small', 'Medium', 'Large'];
-
-        return Column(
-          children: options.map((option) {
-            return RadioListTile<String>(
-              value: option,
-              groupValue: selectedSize,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: Text(option),
-              subtitle: Text(
-                option == 'Small'
-                    ? 'Smaller text'
-                    : option == 'Large'
-                        ? 'Larger, easier-to-read text'
-                        : 'Standard text size',
-              ),
-              onChanged: (value) {
-                if (value != null) {
-                  _changeFontSize(value);
-                }
-              },
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-
   Widget _buildPlannedSection({
     required BuildContext context,
     required IconData icon,
@@ -744,20 +691,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             title: 'Color Theme',
             description: 'Choose your preferred app color',
             children: [_buildColorOptions()],
-          ),
-          _buildActiveSection(
-            context: context,
-            icon: Icons.format_size_rounded,
-            title: 'Font Size',
-            description: 'Adjust text size throughout the app',
-            children: [_buildFontSizeOptions()],
-          ),
-          _buildPlannedSection(
-            context: context,
-            icon: Icons.text_fields_rounded,
-            title: 'Font Style',
-            description: 'Choose your preferred font appearance',
-            options: ['Default', 'Modern', 'Classic'],
           ),
           _buildPlannedSection(
             context: context,

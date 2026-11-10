@@ -968,18 +968,16 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     final screenHeight = MediaQuery.sizeOf(context).height;
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final keyboardIsOpen = keyboardHeight > 0;
+    final maxSheetHeight = keyboardIsOpen
+        ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
+        : screenHeight * 0.72;
 
-    // Keyboard open hone par poori sheet ko halka sa upar animate karna.
-    // Modal bottom-sheet route keyboard inset bhi handle karta hai.
-    return AnimatedSlide(
-      offset: Offset(0, keyboardIsOpen ? -0.10 : 0),
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-      child: SafeArea(
-        top: false,
-        child: ConstrainedBox(
-          // Sheet ki original maximum height aur design preserve rakhein.
-          constraints: BoxConstraints(maxHeight: screenHeight * 0.72),
+    // Modal bottom sheet keyboard ke viewInsets ke sath smoothly upar move hoti hai.
+    // Keyboard band hone par route sheet ko original position par le aata hai.
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
           child: Container(
             decoration: const BoxDecoration(
               color: Colors.white,
@@ -991,7 +989,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                 key: formKey,
                 // Sheet ko scroll karne ke bajaye keyboard par upar move karna.
                 child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1253,7 +1251,6 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
               ),
             ),
           ),
-        ),
       ),
     );
   }

@@ -1,7 +1,9 @@
+
 name: my_finance
-description: Complete personal finance management application.
+description: My Finance - Personal Finance Management App
 publish_to: 'none'
-version: 1.0.0+1
+
+version: 1.0.0
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -10,21 +12,30 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Local Database
   sqflite: ^2.4.2
-  sqflite_common_ffi: ">=2.3.7 <2.4.0"
+  sqflite_common_ffi: ^2.3.7
   sqlite3: ^2.9.4
 
+  # File and Path Management
   path: ^1.9.1
+  path_provider: ^2.1.5
+
+  # Date and Currency Formatting
   intl: ^0.20.2
+
+  # Images and Attachments
   image_picker: ^1.2.0
   file_picker: ^10.3.3
-  path_provider: ^2.1.5
   open_filex: ^5.0.0
+
+  # Backup and Restore
   archive: ^4.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^4.0.0
 
 flutter:

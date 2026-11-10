@@ -14,7 +14,6 @@ import 'services/attachment_service.dart';
 import 'models/attachment_model.dart';
 
 // ============================================================
-// MY FINANCE - PART 1
 // Fresh Database + Wallet Management
 // ============================================================
 

@@ -974,10 +974,14 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
     // Modal bottom sheet keyboard ke viewInsets ke sath smoothly upar move hoti hai.
     // Keyboard band hone par route sheet ko original position par le aata hai.
-    return SafeArea(
-      top: false,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxSheetHeight),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxSheetHeight),
           child: Container(
             decoration: const BoxDecoration(
               color: Colors.white,
@@ -989,6 +993,9 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                 key: formKey,
                 // Sheet ko scroll karne ke bajaye keyboard par upar move karna.
                 child: SingleChildScrollView(
+                  primary: false,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   physics: const ClampingScrollPhysics(),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1251,6 +1258,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
               ),
             ),
           ),
+        ),
       ),
     );
   }
@@ -1481,41 +1489,49 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: Center(
-                  child: Icon(
-                    isSelected ? activeIcon : icon,
-                    size: 21,
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.muted,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              SizedBox(
-                height: 14,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        softWrap: false,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+              Transform.translate(
+                offset: Offset(0, index == 0 ? -3 : 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Center(
+                        child: Icon(
+                          isSelected ? activeIcon : icon,
+                          size: 21,
                           color: isSelected
                               ? AppColors.primary
                               : AppColors.muted,
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    SizedBox(
+                      height: 14,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 1),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.muted,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1855,14 +1871,14 @@ class _HomePageState extends State<HomePage> {
             ),
             _overviewCard(
               icon: Icons.flag_outlined,
-              title: 'Savings Goals Overview',
+              title: 'Goals Overview',
               subtitle: 'Track your saving goals',
               color: const Color(0xFF279C83),
               destinationTitle: 'Goals',
             ),
             _overviewCard(
               icon: Icons.repeat_rounded,
-              title: 'Recurring Transactions Overview',
+              title: 'Recurring Txns',
               subtitle: 'Manage scheduled transactions',
               color: const Color(0xFF6C78C7),
               destinationTitle: 'Recurring Transactions',
@@ -2942,7 +2958,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       Icon(
                         Icons.receipt_long_outlined,
                         size: 55,
-                        color: AppColors.muted,
+                        color: AppColors.primary,
                       ),
                       SizedBox(height: 12),
                       Text(

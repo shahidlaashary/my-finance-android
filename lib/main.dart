@@ -1,3 +1,4 @@
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,484 +7,239 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 
-import 'screens/assets_screen.dart';
-import 'screens/loans_screen.dart';
-import 'screens/transactions_screen.dart';
-import 'screens/more_features_screen.dart';
-
-import 'services/app_startup_service.dart';
-import 'services/appearance_settings_service.dart';
-import 'services/category_service.dart';
-import 'services/transaction_service.dart';
-
-// ============================================================
-// APPLICATION START
-// ============================================================
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
 
   await FinanceDB.instance.init();
 
-  await AppearanceSettingsService.configure(
-    getSetting: FinanceDB.instance.getSetting,
-    setSetting: FinanceDB.instance.setSetting,
-  );
-
-  await AppearanceSettingsService.load();
-
-  await AppStartupService.initialize();
-
   runApp(const MyFinanceApp());
 }
 
-// ============================================================
+// ------------------------------------------------------------
+// APP COLORS
+// ------------------------------------------------------------
+
+class AppColors {
+  static const primary = Color(0xFF147D59);
+  static const background = Color(0xFFF5F7F6);
+  static const dark = Color(0xFF17231F);
+  static const muted = Color(0xFF7B8983);
+  static const income = Color(0xFF16865D);
+  static const expense = Color(0xFFE05252);
+}
+
+// ------------------------------------------------------------
 // DATABASE
-// ============================================================
+// ------------------------------------------------------------
 
 class FinanceDB {
   FinanceDB._();
 
   static final FinanceDB instance = FinanceDB._();
 
-  Database? _database;
+  Database? _db;
 
   Database get db {
-    if (_database == null || !_database!.isOpen) {
-      throw Exception('My Finance database is not initialized.');
+    if (_db == null) {
+      throw Exception('Database is not initialized');
     }
-    return _database!;
+    return _db!;
   }
 
   Future<void> init() async {
-    if (_database != null && _database!.isOpen) return;
+    if (_db != null) return;
 
-    final databaseDirectory = await getDatabasesPath();
-    final databasePath = p.join(
-      databaseDirectory,
-      'my_finance.db',
-    );
+    final directory = await getDatabasesPath();
+    final path = p.join(directory, 'my_finance.db');
 
-    _database = await openDatabase(
-      databasePath,
-      version: 4,
+    _db = await openDatabase(
+      path,
+      version: 1,
       onCreate: (database, version) async {
-        await _createTables(database);
-      },
-      onUpgrade: (database, oldVersion, newVersion) async {
-        await _upgradeDatabase(
-          database,
-          oldVersion,
-          newVersion,
-        );
-      },
-    );
-  }
-
-  // ----------------------------------------------------------
-  // CREATE TABLES
-  // ----------------------------------------------------------
-
-  Future<void> _createTables(Database database) async {
-    await database.execute('''
-      CREATE TABLE wallets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        currency TEXT NOT NULL DEFAULT 'PKR',
-        balance REAL NOT NULL DEFAULT 0,
-        exclude_total INTEGER NOT NULL DEFAULT 0,
-        wallet_number TEXT,
-        icon_code INTEGER
-      )
-    ''');
-
-    await database.execute('''
-      CREATE TABLE transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL,
-        amount REAL NOT NULL,
-        wallet_id INTEGER NOT NULL,
-        to_wallet_id INTEGER,
-        note TEXT NOT NULL DEFAULT '',
-        date TEXT NOT NULL
-      )
-    ''');
-
-    await database.execute('''
-      CREATE TABLE app_settings (
-        setting_key TEXT PRIMARY KEY,
-        setting_value TEXT
-      )
-    ''');
-  }
-
-  // ----------------------------------------------------------
-  // DATABASE HELPERS
-  // ----------------------------------------------------------
-
-  Future<bool> _tableExists(
-    Database database,
-    String tableName,
-  ) async {
-    final result = await database.rawQuery(
-      '''
-      SELECT name
-      FROM sqlite_master
-      WHERE type = 'table' AND name = ?
-      ''',
-      [tableName],
-    );
-
-    return result.isNotEmpty;
-  }
-
-  Future<List<String>> _getColumns(
-    Database database,
-    String tableName,
-  ) async {
-    final result = await database.rawQuery(
-      'PRAGMA table_info($tableName)',
-    );
-
-    return result
-        .map((row) => row['name'].toString())
-        .toList();
-  }
-
-  // ----------------------------------------------------------
-  // MIGRATION
-  // Old Accounts data will be transferred to Wallets.
-  // ----------------------------------------------------------
-
-  Future<void> _upgradeDatabase(
-    Database database,
-    int oldVersion,
-    int newVersion,
-  ) async {
-    await _migrateAccountsToWallets(database);
-  }
-
-  Future<void> _migrateAccountsToWallets(
-    Database database,
-  ) async {
-    if (!await _tableExists(database, 'wallets')) {
-      await database.execute('''
-        CREATE TABLE wallets (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          type TEXT NOT NULL,
-          currency TEXT NOT NULL DEFAULT 'PKR',
-          balance REAL NOT NULL DEFAULT 0,
-          exclude_total INTEGER NOT NULL DEFAULT 0,
-          wallet_number TEXT,
-          icon_code INTEGER
-        )
-      ''');
-    }
-
-    if (await _tableExists(database, 'accounts')) {
-      final columns = await _getColumns(
-        database,
-        'accounts',
-      );
-
-      final accountNumber = columns.contains('account_number')
-          ? 'account_number'
-          : 'NULL';
-
-      final iconCode = columns.contains('icon_code')
-          ? 'icon_code'
-          : 'NULL';
-
-      final excludeTotal = columns.contains('exclude_total')
-          ? 'exclude_total'
-          : '0';
-
-      await database.execute('''
-        INSERT OR IGNORE INTO wallets (
-          id,
-          name,
-          type,
-          currency,
-          balance,
-          exclude_total,
-          wallet_number,
-          icon_code
-        )
-        SELECT
-          id,
-          name,
-          type,
-          currency,
-          balance,
-          $excludeTotal,
-          $accountNumber,
-          $iconCode
-        FROM accounts
-      ''');
-    }
-
-    if (await _tableExists(database, 'transactions')) {
-      final columns = await _getColumns(
-        database,
-        'transactions',
-      );
-
-      if (!columns.contains('wallet_id')) {
-        await database.execute(
-          'ALTER TABLE transactions ADD COLUMN wallet_id INTEGER',
-        );
-      }
-
-      if (!columns.contains('to_wallet_id')) {
-        await database.execute(
-          'ALTER TABLE transactions ADD COLUMN to_wallet_id INTEGER',
-        );
-      }
-
-      if (columns.contains('account_id')) {
         await database.execute('''
-          UPDATE transactions
-          SET wallet_id = account_id
-          WHERE wallet_id IS NULL
+          CREATE TABLE wallets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL,
+            custom_type TEXT,
+            currency TEXT NOT NULL DEFAULT 'PKR',
+            balance REAL NOT NULL DEFAULT 0,
+            wallet_number TEXT,
+            icon_code INTEGER NOT NULL DEFAULT 57680,
+            exclude_total INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL
+          )
         ''');
-      }
 
-      if (columns.contains('to_account_id')) {
         await database.execute('''
-          UPDATE transactions
-          SET to_wallet_id = to_account_id
-          WHERE to_wallet_id IS NULL
+          CREATE TABLE transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            amount REAL NOT NULL,
+            wallet_id INTEGER NOT NULL,
+            to_wallet_id INTEGER,
+            category TEXT,
+            note TEXT,
+            date TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(wallet_id) REFERENCES wallets(id),
+            FOREIGN KEY(to_wallet_id) REFERENCES wallets(id)
+          )
         ''');
-      }
-    }
 
-    if (!await _tableExists(database, 'app_settings')) {
-      await database.execute('''
-        CREATE TABLE app_settings (
-          setting_key TEXT PRIMARY KEY,
-          setting_value TEXT
-        )
-      ''');
-    }
-  }
+        await database.execute('''
+          CREATE TABLE exchange_rates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            currency TEXT NOT NULL UNIQUE,
+            rate REAL NOT NULL
+          )
+        ''');
 
-  // ==========================================================
-  // APP SETTINGS
-  // ==========================================================
+        await database.execute('''
+          CREATE TABLE app_settings (
+            setting_key TEXT PRIMARY KEY,
+            setting_value TEXT
+          )
+        ''');
 
-  Future<String?> getSetting(String key) async {
-    final result = await db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [key],
-      limit: 1,
-    );
-
-    if (result.isEmpty) return null;
-
-    return result.first['setting_value'] as String?;
-  }
-
-  Future<void> setSetting(
-    String key,
-    String value,
-  ) async {
-    await db.insert(
-      'app_settings',
-      {
-        'setting_key': key,
-        'setting_value': value,
+        await database.insert('app_settings', {
+          'setting_key': 'main_currency',
+          'setting_value': 'PKR',
+        });
       },
-      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // ==========================================================
-  // WALLET FUNCTIONS
-  // ==========================================================
+  // WALLET OPERATIONS
 
-  Future<List<Map<String, dynamic>>> getWallets() async {
-    return db.query(
-      'wallets',
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
+  Future<List<Map<String, dynamic>>> getWallets() {
+    return db.query('wallets', orderBy: 'name COLLATE NOCASE ASC');
   }
 
-  Future<Map<String, dynamic>?> getWallet(int walletId) async {
+  Future<Map<String, dynamic>?> getWallet(int id) async {
     final result = await db.query(
       'wallets',
       where: 'id = ?',
-      whereArgs: [walletId],
+      whereArgs: [id],
       limit: 1,
     );
-
     return result.isEmpty ? null : result.first;
   }
 
-  Future<int> addWallet({
-    required String name,
-    required String type,
-    required String currency,
-    required double openingBalance,
-    String? walletNumber,
-    required int iconCode,
-    required bool excludeTotal,
-  }) async {
-    if (name.trim().isEmpty) {
-      throw Exception('Wallet name is required.');
-    }
-
-    return db.insert(
-      'wallets',
-      {
-        'name': name.trim(),
-        'type': type,
-        'currency': currency,
-        'balance': openingBalance,
-        'wallet_number': walletNumber,
-        'icon_code': iconCode,
-        'exclude_total': excludeTotal ? 1 : 0,
-      },
-    );
+  Future<int> addWallet(Map<String, dynamic> wallet) {
+    return db.insert('wallets', {
+      ...wallet,
+      'created_at': DateTime.now().toIso8601String(),
+    });
   }
 
-  Future<int> updateWallet({
-    required int id,
-    required String name,
-    required String type,
-    String? walletNumber,
-    required int iconCode,
-    required bool excludeTotal,
-  }) async {
+  Future<int> updateWallet(
+    int id,
+    Map<String, dynamic> wallet,
+  ) {
     return db.update(
       'wallets',
-      {
-        'name': name.trim(),
-        'type': type,
-        'wallet_number': walletNumber,
-        'icon_code': iconCode,
-        'exclude_total': excludeTotal ? 1 : 0,
-      },
+      wallet,
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  Future<void> deleteWallet(int walletId) async {
-    final transactions = await db.query(
+  Future<int> deleteWallet(int id) async {
+    final used = await db.query(
       'transactions',
       where: 'wallet_id = ? OR to_wallet_id = ?',
-      whereArgs: [walletId, walletId],
+      whereArgs: [id, id],
       limit: 1,
     );
 
-    if (transactions.isNotEmpty) {
+    if (used.isNotEmpty) {
       throw Exception(
-        'This wallet has transaction history. '
-        'You cannot delete it.',
+        'Is Wallet ki transactions mojood hain. Pehle transactions delete karein.',
       );
     }
 
-    await db.delete(
+    return db.delete(
       'wallets',
       where: 'id = ?',
-      whereArgs: [walletId],
+      whereArgs: [id],
     );
   }
 
-  // ==========================================================
-  // TRANSACTION FUNCTIONS
-  // ==========================================================
+  // TRANSACTION OPERATIONS
 
   Future<List<Map<String, dynamic>>> getTransactions() async {
-    return db.query(
-      'transactions',
-      orderBy: 'date DESC, id DESC',
-    );
+    return db.rawQuery('''
+      SELECT
+        t.*,
+        w.name AS wallet_name,
+        w.currency AS wallet_currency,
+        tw.name AS to_wallet_name
+      FROM transactions t
+      LEFT JOIN wallets w ON w.id = t.wallet_id
+      LEFT JOIN wallets tw ON tw.id = t.to_wallet_id
+      ORDER BY t.date DESC, t.id DESC
+    ''');
   }
 
-  Future<int> addTransaction({
+  Future<void> addTransaction({
     required String type,
     required double amount,
     required int walletId,
     int? toWalletId,
-    required String note,
-    DateTime? date,
+    String? category,
+    String? note,
+    required DateTime date,
   }) async {
     if (amount <= 0) {
-      throw Exception('Amount must be greater than zero.');
+      throw Exception('Amount zero se zyada hona chahiye.');
     }
 
-    final sourceWallet = await getWallet(walletId);
+    await db.transaction((txn) async {
+      final source = await txn.query(
+        'wallets',
+        where: 'id = ?',
+        whereArgs: [walletId],
+        limit: 1,
+      );
 
-    if (sourceWallet == null) {
-      throw Exception('Selected wallet was not found.');
-    }
+      if (source.isEmpty) {
+        throw Exception('Wallet nahi mila.');
+      }
 
-    final transactionDate =
-        (date ?? DateTime.now()).toIso8601String();
-
-    return db.transaction((txn) async {
-      final sourceBalance =
-          (sourceWallet['balance'] as num).toDouble();
-
-      if (type == 'Expense') {
-        if (sourceBalance < amount) {
-          throw Exception('Insufficient wallet balance.');
-        }
-
-        await txn.update(
-          'wallets',
-          {'balance': sourceBalance - amount},
-          where: 'id = ?',
-          whereArgs: [walletId],
-        );
-      } else if (type == 'Income') {
-        await txn.update(
-          'wallets',
-          {'balance': sourceBalance + amount},
-          where: 'id = ?',
-          whereArgs: [walletId],
-        );
-      } else if (type == 'Transfer') {
+      if (type == 'Transfer') {
         if (toWalletId == null || toWalletId == walletId) {
-          throw Exception('Please select a different destination wallet.');
+          throw Exception('Destination Wallet select karein.');
         }
 
-        final destinationResult = await txn.query(
+        final destination = await txn.query(
           'wallets',
           where: 'id = ?',
           whereArgs: [toWalletId],
           limit: 1,
         );
 
-        if (destinationResult.isEmpty) {
-          throw Exception('Destination wallet was not found.');
+        if (destination.isEmpty) {
+          throw Exception('Destination Wallet nahi mila.');
         }
 
-        final destinationWallet = destinationResult.first;
-
-        if (sourceWallet['currency'] !=
-            destinationWallet['currency']) {
+        if (source.first['currency'] != destination.first['currency']) {
           throw Exception(
-            'Different-currency transfers require an exchange rate.',
+            'Filhal transfer dono Wallets ki same currency mein hona chahiye.',
           );
         }
 
-        if (sourceBalance < amount) {
-          throw Exception('Insufficient wallet balance.');
-        }
+        final sourceBalance =
+            (source.first['balance'] as num).toDouble();
 
-        final destinationBalance =
-            (destinationWallet['balance'] as num).toDouble();
+        if (sourceBalance < amount) {
+          throw Exception('Wallet mein kafi balance nahi hai.');
+        }
 
         await txn.update(
           'wallets',
@@ -491,6 +247,9 @@ class FinanceDB {
           where: 'id = ?',
           whereArgs: [walletId],
         );
+
+        final destinationBalance =
+            (destination.first['balance'] as num).toDouble();
 
         await txn.update(
           'wallets',
@@ -499,199 +258,170 @@ class FinanceDB {
           whereArgs: [toWalletId],
         );
       } else {
-        throw Exception('Invalid transaction type.');
+        final currentBalance =
+            (source.first['balance'] as num).toDouble();
+
+        final newBalance = type == 'Income'
+            ? currentBalance + amount
+            : currentBalance - amount;
+
+        await txn.update(
+          'wallets',
+          {'balance': newBalance},
+          where: 'id = ?',
+          whereArgs: [walletId],
+        );
       }
 
-      return txn.insert(
+      await txn.insert('transactions', {
+        'type': type,
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': toWalletId,
+        'category': category,
+        'note': note,
+        'date': date.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    });
+  }
+
+  Future<void> deleteTransaction(int id) async {
+    await db.transaction((txn) async {
+      final rows = await txn.query(
         'transactions',
-        {
-          'type': type,
-          'amount': amount,
-          'wallet_id': walletId,
-          'to_wallet_id': toWalletId,
-          'note': note,
-          'date': transactionDate,
-        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (rows.isEmpty) return;
+
+      final item = rows.first;
+      final amount = (item['amount'] as num).toDouble();
+      final walletId = item['wallet_id'] as int;
+      final toWalletId = item['to_wallet_id'] as int?;
+
+      final sourceRows = await txn.query(
+        'wallets',
+        where: 'id = ?',
+        whereArgs: [walletId],
+      );
+
+      if (sourceRows.isNotEmpty) {
+        final balance =
+            (sourceRows.first['balance'] as num).toDouble();
+
+        double restored = balance;
+
+        if (item['type'] == 'Income') {
+          restored -= amount;
+        } else {
+          restored += amount;
+        }
+
+        await txn.update(
+          'wallets',
+          {'balance': restored},
+          where: 'id = ?',
+          whereArgs: [walletId],
+        );
+      }
+
+      if (item['type'] == 'Transfer' && toWalletId != null) {
+        final destinationRows = await txn.query(
+          'wallets',
+          where: 'id = ?',
+          whereArgs: [toWalletId],
+        );
+
+        if (destinationRows.isNotEmpty) {
+          final balance =
+              (destinationRows.first['balance'] as num).toDouble();
+
+          await txn.update(
+            'wallets',
+            {'balance': balance - amount},
+            where: 'id = ?',
+            whereArgs: [toWalletId],
+          );
+        }
+      }
+
+      await txn.delete(
+        'transactions',
+        where: 'id = ?',
+        whereArgs: [id],
       );
     });
   }
 
-  // ==========================================================
-  // DASHBOARD SUMMARY
-  // ==========================================================
-
-  Future<List<Map<String, dynamic>>> dashboardSummary() async {
-    final walletTotals = await db.rawQuery('''
-      SELECT
-        currency,
-        SUM(balance) AS total_balance
-      FROM wallets
-      WHERE exclude_total = 0
-      GROUP BY currency
-      ORDER BY currency
-    ''');
-
-    final incomeTotals = await db.rawQuery('''
-      SELECT
-        w.currency,
-        SUM(t.amount) AS total_income
-      FROM transactions t
-      INNER JOIN wallets w ON w.id = t.wallet_id
-      WHERE t.type = 'Income'
-      GROUP BY w.currency
-    ''');
-
-    final expenseTotals = await db.rawQuery('''
-      SELECT
-        w.currency,
-        SUM(t.amount) AS total_expense
-      FROM transactions t
-      INNER JOIN wallets w ON w.id = t.wallet_id
-      WHERE t.type = 'Expense'
-      GROUP BY w.currency
-    ''');
-
-    final currencies = <String>{};
-
-    for (final row in walletTotals) {
-      currencies.add(row['currency'].toString());
-    }
-
-    for (final row in incomeTotals) {
-      currencies.add(row['currency'].toString());
-    }
-
-    for (final row in expenseTotals) {
-      currencies.add(row['currency'].toString());
-    }
-
-    return currencies.map((currency) {
-      final wallet = walletTotals.firstWhere(
-        (row) => row['currency'] == currency,
-        orElse: () => {'total_balance': 0},
-      );
-
-      final income = incomeTotals.firstWhere(
-        (row) => row['currency'] == currency,
-        orElse: () => {'total_income': 0},
-      );
-
-      final expense = expenseTotals.firstWhere(
-        (row) => row['currency'] == currency,
-        orElse: () => {'total_expense': 0},
-      );
-
-      return {
-        'currency': currency,
-        'balance': wallet['total_balance'] ?? 0,
-        'income': income['total_income'] ?? 0,
-        'expense': expense['total_expense'] ?? 0,
-      };
-    }).toList();
-  }
-
-  Future<double> totalBalance() async {
-    final result = await db.rawQuery('''
-      SELECT SUM(balance) AS total
-      FROM wallets
-      WHERE exclude_total = 0 AND currency = 'PKR'
-    ''');
-
-    return (result.first['total'] as num?)?.toDouble() ?? 0;
-  }
+  // DASHBOARD TOTALS
 
   Future<double> totalByType(String type) async {
     final result = await db.rawQuery(
-      '''
-      SELECT SUM(amount) AS total
-      FROM transactions
-      WHERE type = ?
-      ''',
+      'SELECT COALESCE(SUM(amount), 0) AS total '
+      'FROM transactions WHERE type = ?',
       [type],
     );
 
-    return (result.first['total'] as num?)?.toDouble() ?? 0;
+    return (result.first['total'] as num).toDouble();
   }
 
-  // ==========================================================
-  // DATABASE CLOSE / REOPEN
-  // ==========================================================
+  Future<double> totalBalance() async {
+    final result = await db.rawQuery(
+      'SELECT COALESCE(SUM(balance), 0) AS total '
+      'FROM wallets WHERE exclude_total = 0 AND currency = ?',
+      ['PKR'],
+    );
+
+    return (result.first['total'] as num).toDouble();
+  }
 
   Future<void> close() async {
-    if (_database != null && _database!.isOpen) {
-      await _database!.close();
-    }
-
-    _database = null;
-  }
-
-  Future<void> reopen() async {
-    await close();
-    await init();
+    await _db?.close();
+    _db = null;
   }
 }
-// ============================================================
-// MY FINANCE APPLICATION
-// ============================================================
+
+// ------------------------------------------------------------
+// APP
+// ------------------------------------------------------------
 
 class MyFinanceApp extends StatelessWidget {
   const MyFinanceApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: AppearanceSettingsService.themeMode,
-      builder: (context, themeMode, child) {
-        return MaterialApp(
-          title: 'My Finance',
-          debugShowCheckedModeBanner: false,
-          themeMode: themeMode,
-          theme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.light,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF147D59),
-              brightness: Brightness.light,
-            ),
-            scaffoldBackgroundColor:
-                const Color(0xFFF5F7F6),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFFF5F7F6),
-              elevation: 0,
-              centerTitle: false,
-            ),
-            cardTheme: CardThemeData(
-              elevation: 0,
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
+    return MaterialApp(
+      title: 'My Finance',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+        ),
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          centerTitle: false,
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.dark,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF147D59),
-              brightness: Brightness.dark,
-            ),
-            cardTheme: CardThemeData(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-          home: const MainScreen(),
-        );
-      },
+        ),
+      ),
+      home: const MainScreen(),
     );
   }
 }
 
-// ============================================================
-// MAIN SCREEN AND NAVIGATION
-// ============================================================
+// ------------------------------------------------------------
+// MAIN NAVIGATION
+// ------------------------------------------------------------
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -702,220 +432,102 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
+  int refreshKey = 0;
 
-  void refreshScreen() {
-    if (mounted) {
-      setState(() {});
-    }
+  void refreshPages() {
+    setState(() => refreshKey++);
   }
 
-  final List<String> pageTitles = const [
-    'Home',
-    'Assets',
-    'Loans',
-    'Transactions',
-    'Wallets',
-  ];
-
-  Future<void> showPlusMenu() async {
-    await showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Create New',
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _plusOption(
-                        icon: Icons.trending_up_rounded,
-                        title: 'Income',
-                        color: Colors.green,
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          showTransactionDialog(
-                            context,
-                            initialType: 'Income',
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _plusOption(
-                        icon: Icons.trending_down_rounded,
-                        title: 'Expense',
-                        color: Colors.red,
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          showTransactionDialog(
-                            context,
-                            initialType: 'Expense',
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _plusOption(
-                        icon: Icons.swap_horiz_rounded,
-                        title: 'Transfer',
-                        color: Colors.blue,
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          showTransactionDialog(
-                            context,
-                            initialType: 'Transfer',
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _plusOption(
-                        icon: Icons.account_balance_wallet_rounded,
-                        title: 'Wallet',
-                        color: Colors.deepPurple,
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          showWalletDialog(context);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    refreshScreen();
-  }
-
-  Widget _plusOption({
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: color.withValues(alpha: 0.15),
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 30),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> get pages => [
-        DashboardPage(
-          onRefresh: refreshScreen,
-        ),
-        const AssetsScreen(),
-        const LoansScreen(),
-        const TransactionsScreen(),
-        WalletsPage(
-          onRefresh: refreshScreen,
-        ),
-      ];
-
-  Future<void> openMoreFeatures() async {
-    await Navigator.push(
+  void openPlus() {
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const MoreFeaturesScreen(),
+        builder: (_) => PlusFormScreen(onSaved: refreshPages),
       ),
     );
+  }
 
-    refreshScreen();
+  void openMore() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MoreFeaturesPage(),
+      ),
+    );
+  }
+
+  void openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const NotificationsPage(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      HomePage(key: ValueKey('home_$refreshKey'),
+          onRefresh: refreshPages),
+      const SimpleFeaturePage(
+        title: 'Assets',
+        icon: Icons.diamond_outlined,
+        description: 'Manage your assets',
+      ),
+      const SimpleFeaturePage(
+        title: 'Loans',
+        icon: Icons.handshake_outlined,
+        description: 'Manage loans and repayments',
+      ),
+      TransactionsPage(key: ValueKey('transactions_$refreshKey'),
+          onRefresh: refreshPages),
+      WalletsPage(key: ValueKey('wallets_$refreshKey'),
+          onRefresh: refreshPages),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          pageTitles[selectedIndex],
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (selectedIndex == 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'My Finance',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.dark,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: openNotifications,
+                      icon: const Icon(Icons.notifications_none_rounded),
+                    ),
+                    IconButton(
+                      onPressed: openMore,
+                      icon: const Icon(Icons.settings_outlined),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(child: pages[selectedIndex]),
+          ],
         ),
-        actions: [
-          IconButton(
-            onPressed: openMoreFeatures,
-            tooltip: 'More Features and Settings',
-            icon: const Icon(Icons.settings_outlined),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
-      body: IndexedStack(
-        index: selectedIndex,
-        children: pages,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: showPlusMenu,
-        backgroundColor:
-            Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: const Icon(Icons.add_rounded, size: 30),
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
+          if (index == 5) {
+            openPlus();
+            return;
+          }
+          setState(() => selectedIndex = index);
         },
         destinations: const [
           NavigationDestination(
@@ -940,9 +552,13 @@ class _MainScreenState extends State<MainScreen> {
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon:
-                Icon(Icons.account_balance_wallet_rounded),
+            selectedIcon: Icon(Icons.account_balance_wallet_rounded),
             label: 'Wallets',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.add_circle_outline_rounded),
+            selectedIcon: Icon(Icons.add_circle_rounded),
+            label: 'Plus',
           ),
         ],
       ),
@@ -950,25 +566,38 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// ============================================================
+// ------------------------------------------------------------
 // HOME DASHBOARD
-// ============================================================
+// ------------------------------------------------------------
 
-class DashboardPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   final VoidCallback onRefresh;
 
-  const DashboardPage({
+  const HomePage({
     super.key,
     required this.onRefresh,
   });
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  List<Map<String, dynamic>> summaries = [];
-  bool isLoading = true;
+class _HomePageState extends State<HomePage> {
+  List<Map<String, dynamic>> wallets = [];
+  double income = 0;
+  double expense = 0;
+  double total = 0;
+  bool loading = true;
+
+  final Map<String, double> exchangeRates = {
+    'PKR': 1,
+    'USD': 280,
+    'AED': 76,
+    'SAR': 74,
+    'GBP': 360,
+    'EUR': 325,
+    'INR': 3.35,
+  };
 
   @override
   void initState() {
@@ -977,211 +606,44 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> loadDashboard() async {
-    try {
-      final data =
-          await FinanceDB.instance.dashboardSummary();
+    setState(() => loading = true);
 
-      if (!mounted) return;
+    final data = await FinanceDB.instance.getWallets();
 
-      setState(() {
-        summaries = data;
-        isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
+    double convertedTotal = 0;
 
-      setState(() {
-        isLoading = false;
-      });
+    for (final wallet in data) {
+      if ((wallet['exclude_total'] as int) == 1) {
+        continue;
+      }
+
+      final currency = wallet['currency'] as String;
+      final balance = (wallet['balance'] as num).toDouble();
+
+      final rate = exchangeRates[currency] ?? 1;
+      convertedTotal += balance * rate;
     }
+
+    final inc = await FinanceDB.instance.totalByType('Income');
+    final exp = await FinanceDB.instance.totalByType('Expense');
+
+    if (!mounted) return;
+
+    setState(() {
+      wallets = data;
+      income = inc;
+      expense = exp;
+      total = convertedTotal;
+      loading = false;
+    });
   }
 
-  String money(dynamic value, String currency) {
-    final amount = value is num ? value.toDouble() : 0.0;
-
-    return '$currency ${NumberFormat('#,##0.00').format(amount)}';
-  }
-
-  Widget overviewCard({
-    required String title,
-    required String amount,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(17),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 5),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                amount,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget balanceCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF147D59),
-            Color(0xFF07543C),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(
-                Icons.account_balance_wallet_rounded,
-                color: Colors.white70,
-              ),
-              SizedBox(width: 9),
-              Text(
-                'My Wallet Overview',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Text(
-            'Your balances by currency',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (summaries.isEmpty)
-            const Text(
-              'No wallet balance available',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          else
-            ...summaries.map((summary) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 9),
-                child: Row(
-                  children: [
-                    Text(
-                      summary['currency'].toString(),
-                      style: const TextStyle(
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      money(
-                        summary['balance'],
-                        summary['currency'].toString(),
-                      ),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          const Divider(color: Colors.white24, height: 24),
-          const Text(
-            'Excluded wallets are not included in this overview.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget currencyOverview(Map<String, dynamic> summary) {
-    final currency = summary['currency'].toString();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            currency,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              overviewCard(
-                title: 'Income',
-                amount: money(summary['income'], currency),
-                icon: Icons.trending_up_rounded,
-                color: Colors.green,
-              ),
-              const SizedBox(width: 10),
-              overviewCard(
-                title: 'Expenses',
-                amount: money(summary['expense'], currency),
-                icon: Icons.trending_down_rounded,
-                color: Colors.red,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  String money(double amount) {
+    return NumberFormat.currency(
+      locale: 'en_PK',
+      symbol: 'Rs. ',
+      decimalDigits: 2,
+    ).format(amount);
   }
 
   @override
@@ -1189,66 +651,253 @@ class _DashboardPageState extends State<DashboardPage> {
     return RefreshIndicator(
       onRefresh: loadDashboard,
       child: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           const Text(
-            'Welcome Back!',
+            'Your Financial Overview',
             style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
+              color: AppColors.muted,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            'Here is your financial overview.',
-            style: TextStyle(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 22),
-          if (isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(30),
-                child: CircularProgressIndicator(),
+          const SizedBox(height: 16),
+
+          // TOTAL BALANCE CARD
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF147D59),
+                  Color(0xFF0B5940),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            )
-          else ...[
-            balanceCard(),
-            const SizedBox(height: 25),
-            const Text(
-              'Income & Expense Overview',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.20),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            const SizedBox(height: 13),
-            if (summaries.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                  child: Text(
-                    'Add a wallet to start managing your finances.',
-                    textAlign: TextAlign.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Total Balance',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Colors.white70,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  loading ? 'Loading...' : money(total),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 31,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              )
-            else
-              ...summaries.map(currencyOverview),
-          ],
-          const SizedBox(height: 25),
+                const SizedBox(height: 8),
+                const Text(
+                  'Consolidated balance in PKR',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 22),
+
+          Row(
+            children: [
+              Expanded(
+                child: _summaryCard(
+                  title: 'Income',
+                  amount: income,
+                  icon: Icons.arrow_downward_rounded,
+                  color: AppColors.income,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _summaryCard(
+                  title: 'Expense',
+                  amount: expense,
+                  icon: Icons.arrow_upward_rounded,
+                  color: AppColors.expense,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 28),
+
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'My Wallets',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.dark,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  widget.onRefresh();
+                },
+                child: const Text('Refresh'),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          if (loading)
+            const Center(
+              child: CircularProgressIndicator(),
+            )
+          else if (wallets.isEmpty)
+            _emptyState(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'No Wallets Yet',
+              subtitle: 'Create your first Wallet using the Plus button.',
+            )
+          else
+            ...wallets.map((wallet) {
+              return _dashboardWalletCard(wallet);
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryCard({
+    required String title,
+    required double amount,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(19),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 7),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            NumberFormat('#,##0.00').format(amount),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w800,
+              fontSize: 17,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dashboardWalletCard(Map<String, dynamic> wallet) {
+    final balance = (wallet['balance'] as num).toDouble();
+    final currency = wallet['currency'] as String;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(19),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.10),
+            child: Icon(
+              IconData(
+                wallet['icon_code'] as int,
+                fontFamily: 'MaterialIcons',
+              ),
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  wallet['name'] as String,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${wallet['type']} • $currency',
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '$currency ${NumberFormat('#,##0.00').format(balance)}',
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// ============================================================
-// WALLETS SCREEN
-// ============================================================
+// ------------------------------------------------------------
+// WALLET MANAGEMENT PAGE
+// ------------------------------------------------------------
 
 class WalletsPage extends StatefulWidget {
   final VoidCallback onRefresh;
@@ -1264,7 +913,7 @@ class WalletsPage extends StatefulWidget {
 
 class _WalletsPageState extends State<WalletsPage> {
   List<Map<String, dynamic>> wallets = [];
-  bool isLoading = true;
+  bool loading = true;
 
   @override
   void initState() {
@@ -1273,764 +922,188 @@ class _WalletsPageState extends State<WalletsPage> {
   }
 
   Future<void> loadWallets() async {
-    try {
-      final result = await FinanceDB.instance.getWallets();
+    setState(() => loading = true);
 
-      if (!mounted) return;
+    final data = await FinanceDB.instance.getWallets();
 
-      setState(() {
-        wallets = result;
-        isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        isLoading = false;
-      });
-    }
+    setState(() {
+      wallets = data;
+      loading = false;
+    });
   }
 
-  String formatBalance(dynamic value, String currency) {
-    final amount = value is num ? value.toDouble() : 0.0;
+  Future<void> openWalletForm({
+    Map<String, dynamic>? wallet,
+  }) async {
+    await showDialog(
+      context: context,
+      builder: (_) => WalletFormDialog(wallet: wallet),
+    );
 
-    return '$currency ${NumberFormat('#,##0.00').format(amount)}';
-  }
-
-  IconData walletIcon(dynamic code) {
-    if (code is int) {
-      return IconData(
-        code,
-        fontFamily: 'MaterialIcons',
-      );
-    }
-
-    return Icons.account_balance_wallet_rounded;
-  }
-
-  Future<void> addWallet() async {
-    await showWalletDialog(context);
     await loadWallets();
     widget.onRefresh();
   }
 
-  Future<void> deleteWallet(Map<String, dynamic> wallet) async {
-    final id = wallet['id'] as int;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Wallet?'),
-          content: Text(
-            'Are you sure you want to delete "${wallet['name']}"?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, true),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm != true) return;
-
+  Future<void> removeWallet(int id) async {
     try {
       await FinanceDB.instance.deleteWallet(id);
+      await loadWallets();
+      widget.onRefresh();
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Wallet deleted successfully.'),
-        ),
+        const SnackBar(content: Text('Wallet deleted successfully')),
       );
-
-      await loadWallets();
-      widget.onRefresh();
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-        ),
+        SnackBar(content: Text(e.toString())),
       );
     }
-  }
-
-  Widget walletCard(Map<String, dynamic> wallet) {
-    final currency = wallet['currency'].toString();
-    final balance = wallet['balance'];
-    final excluded = wallet['exclude_total'] == 1;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 13),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                walletIcon(wallet['icon_code']),
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    wallet['name'].toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    wallet['type'].toString(),
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    formatBalance(balance, currency),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  if (excluded)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 5),
-                      child: Text(
-                        'Excluded from Total Balance',
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'delete') {
-                  deleteWallet(wallet);
-                } else if (value == 'edit') {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Wallet editing will be connected in Part 3.',
-                      ),
-                    ),
-                  );
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Text('Edit Wallet'),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Delete Wallet'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: loadWallets,
-        child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : wallets.isEmpty
-                ? ListView(
-                    children: const [
-                      SizedBox(height: 100),
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        size: 65,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 18),
-                      Center(
-                        child: Text(
-                          'No Wallets Yet',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Center(
-                        child: Text(
-                          'Create your first wallet to get started.',
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: wallets.length,
-                    itemBuilder: (context, index) {
-                      return walletCard(wallets[index]);
-                    },
-                  ),
-      ),
+      backgroundColor: AppColors.background,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: addWallet,
+        onPressed: () => openWalletForm(),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Add Wallet'),
       ),
-    );
-  }
-}
-// ============================================================
-// PLUS FORM
-// INCOME / EXPENSE / TRANSFER / WALLET
-// ============================================================
-
-Future<void> showTransactionDialog(
-  BuildContext context, {
-  String initialType = 'Income',
-}) async {
-  await Navigator.push(
-    context,
-    MaterialPageRoute(
-      fullscreenDialog: true,
-      builder: (_) => PlusFormScreen(
-        initialType: initialType,
-      ),
-    ),
-  );
-}
-
-// ============================================================
-// WALLET DIALOG
-// ============================================================
-
-Future<void> showWalletDialog(
-  BuildContext context, {
-  Map<String, dynamic>? wallet,
-}) async {
-  await showDialog(
-    context: context,
-    builder: (_) => WalletFormDialog(
-      wallet: wallet,
-    ),
-  );
-}
-
-// ============================================================
-// PLUS FORM SCREEN
-// ============================================================
-
-class PlusFormScreen extends StatefulWidget {
-  final String initialType;
-
-  const PlusFormScreen({
-    super.key,
-    required this.initialType,
-  });
-
-  @override
-  State<PlusFormScreen> createState() => _PlusFormScreenState();
-}
-
-class _PlusFormScreenState extends State<PlusFormScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController tabController;
-
-  final List<String> tabs = [
-    'Income',
-    'Expense',
-    'Transfer',
-    'Wallet',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-
-    final initialIndex = tabs.indexOf(widget.initialType);
-
-    tabController = TabController(
-      length: tabs.length,
-      vsync: this,
-      initialIndex: initialIndex < 0 ? 0 : initialIndex,
-    );
-  }
-
-  @override
-  void dispose() {
-    tabController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Create New',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: TabBar(
-          controller: tabController,
-          isScrollable: true,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.trending_up_rounded),
-              text: 'Income',
-            ),
-            Tab(
-              icon: Icon(Icons.trending_down_rounded),
-              text: 'Expense',
-            ),
-            Tab(
-              icon: Icon(Icons.swap_horiz_rounded),
-              text: 'Transfer',
-            ),
-            Tab(
-              icon: Icon(Icons.account_balance_wallet_rounded),
-              text: 'Wallet',
-            ),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: tabController,
-        children: const [
-          TransactionEntryForm(type: 'Income'),
-          TransactionEntryForm(type: 'Expense'),
-          TransactionEntryForm(type: 'Transfer'),
-          WalletEntryForm(),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
-// TRANSACTION ENTRY FORM
-// ============================================================
-
-class TransactionEntryForm extends StatefulWidget {
-  final String type;
-
-  const TransactionEntryForm({
-    super.key,
-    required this.type,
-  });
-
-  @override
-  State<TransactionEntryForm> createState() =>
-      _TransactionEntryFormState();
-}
-
-class _TransactionEntryFormState
-    extends State<TransactionEntryForm> {
-  final amountController = TextEditingController();
-  final noteController = TextEditingController();
-
-  List<Map<String, dynamic>> wallets = [];
-
-  int? selectedWalletId;
-  int? destinationWalletId;
-
-  DateTime selectedDate = DateTime.now();
-
-  bool isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    loadWallets();
-  }
-
-  @override
-  void dispose() {
-    amountController.dispose();
-    noteController.dispose();
-    super.dispose();
-  }
-
-  Future<void> loadWallets() async {
-    try {
-      final result = await FinanceDB.instance.getWallets();
-
-      if (!mounted) return;
-
-      setState(() {
-        wallets = result;
-
-        if (wallets.isNotEmpty) {
-          selectedWalletId ??= wallets.first['id'] as int;
-        }
-      });
-    } catch (_) {}
-  }
-
-  double get amount {
-    return double.tryParse(
-          amountController.text.trim().replaceAll(',', ''),
-        ) ??
-        0;
-  }
-
-  String get selectedCurrency {
-    final wallet = wallets.where(
-      (item) => item['id'] == selectedWalletId,
-    );
-
-    if (wallet.isEmpty) return 'PKR';
-
-    return wallet.first['currency'].toString();
-  }
-
-  Future<void> selectDate() async {
-    final result = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (result != null) {
-      setState(() {
-        selectedDate = result;
-      });
-    }
-  }
-
-  Future<void> saveTransaction() async {
-    if (isSaving) return;
-
-    if (wallets.isEmpty) {
-      showMessage('Please create a wallet first.');
-      return;
-    }
-
-    if (selectedWalletId == null) {
-      showMessage('Please select a wallet.');
-      return;
-    }
-
-    if (amount <= 0) {
-      showMessage('Please enter a valid amount.');
-      return;
-    }
-
-    if (widget.type == 'Transfer') {
-      if (destinationWalletId == null) {
-        showMessage('Please select destination wallet.');
-        return;
-      }
-
-      if (destinationWalletId == selectedWalletId) {
-        showMessage('Source and destination wallets must be different.');
-        return;
-      }
-    }
-
-    setState(() {
-      isSaving = true;
-    });
-
-    try {
-      await FinanceDB.instance.addTransaction(
-        type: widget.type,
-        amount: amount,
-        walletId: selectedWalletId!,
-        toWalletId: widget.type == 'Transfer'
-            ? destinationWalletId
-            : null,
-        note: noteController.text.trim(),
-        date: selectedDate,
-      );
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${widget.type} saved successfully.'),
-        ),
-      );
-
-      Navigator.pop(context);
-    } catch (e) {
-      showMessage(
-        e.toString().replaceFirst('Exception: ', ''),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          isSaving = false;
-        });
-      }
-    }
-  }
-
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  InputDecoration inputDecoration(
-    String label,
-    IconData icon,
-  ) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-    );
-  }
-
-  Widget walletDropdown({
-    required String label,
-    required int? value,
-    required ValueChanged<int?> onChanged,
-    int? excludedWalletId,
-  }) {
-    final availableWallets = wallets.where(
-      (wallet) => wallet['id'] != excludedWalletId,
-    ).toList();
-
-    return DropdownButtonFormField<int>(
-      value: availableWallets.any(
-        (wallet) => wallet['id'] == value,
-      )
-          ? value
-          : null,
-      decoration: inputDecoration(
-        label,
-        Icons.account_balance_wallet_outlined,
-      ),
-      items: availableWallets.map((wallet) {
-        return DropdownMenuItem<int>(
-          value: wallet['id'] as int,
-          child: Text(
-            '${wallet['name']} (${wallet['currency']})',
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
-      }).toList(),
-      onChanged: onChanged,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isTransfer = widget.type == 'Transfer';
-
-    final color = widget.type == 'Income'
-        ? Colors.green
-        : widget.type == 'Expense'
-            ? Colors.red
-            : Colors.blue;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.09),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isTransfer
-                      ? Icons.swap_horiz_rounded
-                      : widget.type == 'Income'
-                          ? Icons.trending_up_rounded
-                          : Icons.trending_down_rounded,
-                  color: color,
-                  size: 30,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Add ${widget.type}',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 22),
-
-          TextField(
-            controller: amountController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
-            decoration: inputDecoration(
-              'Amount ($selectedCurrency)',
-              Icons.payments_outlined,
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          walletDropdown(
-            label: isTransfer ? 'From Wallet' : 'Wallet',
-            value: selectedWalletId,
-            onChanged: (value) {
-              setState(() {
-                selectedWalletId = value;
-              });
-            },
-          ),
-
-          if (isTransfer) ...[
-            const SizedBox(height: 18),
-            walletDropdown(
-              label: 'To Wallet',
-              value: destinationWalletId,
-              excludedWalletId: selectedWalletId,
-              onChanged: (value) {
-                setState(() {
-                  destinationWalletId = value;
-                });
-              },
-            ),
-            const SizedBox(height: 10),
+      body: RefreshIndicator(
+        onRefresh: loadWallets,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 100),
+          children: [
             const Text(
-              'Transfers between different currencies require an exchange rate. This basic form currently supports same-currency transfers only.',
+              'My Wallets',
               style: TextStyle(
-                color: Colors.orange,
-                fontSize: 12,
+                fontSize: 25,
+                fontWeight: FontWeight.w800,
+                color: AppColors.dark,
               ),
             ),
+            const SizedBox(height: 6),
+            const Text(
+              'Manage all your money sources in one place.',
+              style: TextStyle(color: AppColors.muted),
+            ),
+            const SizedBox(height: 22),
+
+            if (loading)
+              const Center(child: CircularProgressIndicator())
+            else if (wallets.isEmpty)
+              _emptyState(
+                icon: Icons.wallet_outlined,
+                title: 'No Wallets Created',
+                subtitle: 'Tap Add Wallet to create your first Wallet.',
+              )
+            else
+              ...wallets.map((wallet) {
+                final id = wallet['id'] as int;
+                final balance =
+                    (wallet['balance'] as num).toDouble();
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 13),
+                  child: Padding(
+                    padding: const EdgeInsets.all(17),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 25,
+                          backgroundColor:
+                              AppColors.primary.withValues(alpha: 0.10),
+                          child: Icon(
+                            IconData(
+                              wallet['icon_code'] as int,
+                              fontFamily: 'MaterialIcons',
+                            ),
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                wallet['name'] as String,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${wallet['type']} • ${wallet['currency']}',
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 7),
+                              Text(
+                                '${wallet['currency']} ${NumberFormat('#,##0.00').format(balance)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              if ((wallet['exclude_total'] as int) == 1)
+                                const Text(
+                                  'Excluded from Total Balance',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.expense,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              openWalletForm(wallet: wallet);
+                            } else if (value == 'delete') {
+                              removeWallet(id);
+                            }
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text('Edit Wallet'),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete Wallet'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
           ],
-
-          const SizedBox(height: 18),
-
-          TextField(
-            controller: noteController,
-            maxLines: 3,
-            decoration: inputDecoration(
-              'Note (Optional)',
-              Icons.notes_rounded,
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          InkWell(
-            onTap: selectDate,
-            borderRadius: BorderRadius.circular(15),
-            child: InputDecorator(
-              decoration: inputDecoration(
-                'Transaction Date',
-                Icons.calendar_month_rounded,
-              ),
-              child: Text(
-                DateFormat('dd MMM yyyy').format(selectedDate),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: FilledButton.icon(
-              onPressed: isSaving ? null : saveTransaction,
-              icon: isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(Icons.save_rounded),
-              label: Text(
-                isSaving ? 'Saving...' : 'Save ${widget.type}',
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// ============================================================
-// WALLET ENTRY FORM
-// ============================================================
+// ------------------------------------------------------------
+// WALLET CREATE / EDIT DIALOG
+// ------------------------------------------------------------
 
-class WalletEntryForm extends StatelessWidget {
-  const WalletEntryForm({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const SingleChildScrollView(
-      padding: EdgeInsets.all(20),
-      child: WalletFormFields(),
-    );
-  }
-}
-
-// ============================================================
-// WALLET FORM DIALOG
-// ============================================================
-
-class WalletFormDialog extends StatelessWidget {
+class WalletFormDialog extends StatefulWidget {
   final Map<String, dynamic>? wallet;
 
   const WalletFormDialog({
@@ -2039,51 +1112,18 @@ class WalletFormDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Dialog.fullscreen(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            wallet == null ? 'Add Wallet' : 'Edit Wallet',
-          ),
-          leading: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-          ),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: WalletFormFields(wallet: wallet),
-        ),
-      ),
-    );
-  }
+  State<WalletFormDialog> createState() => _WalletFormDialogState();
 }
 
-// ============================================================
-// WALLET FORM FIELDS
-// ============================================================
+class _WalletFormDialogState extends State<WalletFormDialog> {
+  final formKey = GlobalKey<FormState>();
 
-class WalletFormFields extends StatefulWidget {
-  final Map<String, dynamic>? wallet;
+  late TextEditingController nameController;
+  late TextEditingController numberController;
+  late TextEditingController balanceController;
+  late TextEditingController customTypeController;
 
-  const WalletFormFields({
-    super.key,
-    this.wallet,
-  });
-
-  @override
-  State<WalletFormFields> createState() =>
-      _WalletFormFieldsState();
-}
-
-class _WalletFormFieldsState extends State<WalletFormFields> {
-  final nameController = TextEditingController();
-  final customTypeController = TextEditingController();
-  final numberController = TextEditingController();
-  final balanceController = TextEditingController();
-
-  final List<String> walletTypes = [
+  final walletTypes = [
     'Cash',
     'Bank',
     'Savings',
@@ -2095,38 +1135,35 @@ class _WalletFormFieldsState extends State<WalletFormFields> {
     'Other',
   ];
 
-  final List<String> currencies = [
+  final currencies = [
     'PKR',
     'USD',
     'GBP',
     'EUR',
     'AED',
     'SAR',
+    'INR',
   ];
 
-  final List<IconData> availableIcons = [
+  final icons = <IconData>[
     Icons.account_balance_wallet_rounded,
     Icons.account_balance_rounded,
     Icons.savings_rounded,
     Icons.credit_card_rounded,
-    Icons.payments_rounded,
+    Icons.money_rounded,
     Icons.phone_android_rounded,
     Icons.trending_up_rounded,
-    Icons.money_rounded,
-    Icons.home_work_rounded,
+    Icons.payments_rounded,
     Icons.business_rounded,
-    Icons.currency_exchange_rounded,
     Icons.wallet_rounded,
   ];
 
-  String selectedType = 'Cash';
-  String selectedCurrency = 'PKR';
+  late String selectedType;
+  late String selectedCurrency;
+  late int selectedIcon;
+  late bool excludeTotal;
 
-  int selectedIconCode =
-      Icons.account_balance_wallet_rounded.codePoint;
-
-  bool excludeTotal = false;
-  bool isSaving = false;
+  bool saving = false;
 
   bool get isEditing => widget.wallet != null;
 
@@ -2136,99 +1173,68 @@ class _WalletFormFieldsState extends State<WalletFormFields> {
 
     final wallet = widget.wallet;
 
-    if (wallet != null) {
-      nameController.text = wallet['name']?.toString() ?? '';
+    nameController = TextEditingController(
+      text: wallet?['name']?.toString() ?? '',
+    );
 
-      selectedType = wallet['type']?.toString() ?? 'Cash';
+    numberController = TextEditingController(
+      text: wallet?['wallet_number']?.toString() ?? '',
+    );
 
-      if (!walletTypes.contains(selectedType)) {
-        selectedType = 'Other';
-        customTypeController.text =
-            wallet['type']?.toString() ?? '';
-      }
+    balanceController = TextEditingController(
+      text: wallet?['balance']?.toString() ?? '0',
+    );
 
-      selectedCurrency =
-          wallet['currency']?.toString() ?? 'PKR';
+    customTypeController = TextEditingController(
+      text: wallet?['custom_type']?.toString() ?? '',
+    );
 
-      if (!currencies.contains(selectedCurrency)) {
-        selectedCurrency = 'PKR';
-      }
+    selectedType = wallet?['type']?.toString() ?? 'Cash';
+    selectedCurrency = wallet?['currency']?.toString() ?? 'PKR';
+    selectedIcon = wallet?['icon_code'] as int? ??
+        Icons.account_balance_wallet_rounded.codePoint;
 
-      numberController.text =
-          wallet['wallet_number']?.toString() ?? '';
-
-      balanceController.text =
-          wallet['balance']?.toString() ?? '0';
-
-      selectedIconCode =
-          wallet['icon_code'] as int? ??
-          Icons.account_balance_wallet_rounded.codePoint;
-
-      excludeTotal = wallet['exclude_total'] == 1;
-    } else {
-      balanceController.text = '0';
-    }
+    excludeTotal = (wallet?['exclude_total'] as int? ?? 0) == 1;
   }
 
   @override
   void dispose() {
     nameController.dispose();
-    customTypeController.dispose();
     numberController.dispose();
     balanceController.dispose();
+    customTypeController.dispose();
     super.dispose();
   }
 
   Future<void> saveWallet() async {
-    if (isSaving) return;
+    if (!formKey.currentState!.validate()) return;
 
-    final name = nameController.text.trim();
-
-    final type = selectedType == 'Other'
-        ? customTypeController.text.trim()
-        : selectedType;
-
-    final openingBalance =
-        double.tryParse(balanceController.text.trim()) ?? 0;
-
-    if (name.isEmpty) {
-      showMessage('Please enter wallet name.');
-      return;
-    }
-
-    if (type.isEmpty) {
-      showMessage('Please enter wallet type.');
-      return;
-    }
-
-    if (!isEditing && openingBalance < 0) {
-      showMessage('Opening balance cannot be negative.');
-      return;
-    }
-
-    setState(() {
-      isSaving = true;
-    });
+    setState(() => saving = true);
 
     try {
-      if (isEditing) {
-        await FinanceDB.instance.updateWallet(
-          id: widget.wallet!['id'] as int,
-          name: name,
-          type: type,
-          walletNumber: numberController.text.trim(),
-          iconCode: selectedIconCode,
-          excludeTotal: excludeTotal,
-        );
+      final data = <String, dynamic>{
+        'name': nameController.text.trim(),
+        'type': selectedType,
+        'custom_type': selectedType == 'Other'
+            ? customTypeController.text.trim()
+            : null,
+        'wallet_number': numberController.text.trim().isEmpty
+            ? null
+            : numberController.text.trim(),
+        'icon_code': selectedIcon,
+        'exclude_total': excludeTotal ? 1 : 0,
+      };
+
+      if (!isEditing) {
+        data['currency'] = selectedCurrency;
+        data['balance'] =
+            double.tryParse(balanceController.text.trim()) ?? 0;
+
+        await FinanceDB.instance.addWallet(data);
       } else {
-        await FinanceDB.instance.addWallet(
-          name: name,
-          type: type,
-          currency: selectedCurrency,
-          openingBalance: openingBalance,
-          walletNumber: numberController.text.trim(),
-          iconCode: selectedIconCode,
-          excludeTotal: excludeTotal,
+        await FinanceDB.instance.updateWallet(
+          widget.wallet!['id'] as int,
+          data,
         );
       }
 
@@ -2240,289 +1246,1107 @@ class _WalletFormFieldsState extends State<WalletFormFields> {
         SnackBar(
           content: Text(
             isEditing
-                ? 'Wallet updated successfully.'
-                : 'Wallet created successfully.',
+                ? 'Wallet updated successfully'
+                : 'Wallet created successfully',
           ),
         ),
       );
     } catch (e) {
-      showMessage(
-        e.toString().replaceFirst('Exception: ', ''),
+      if (!mounted) return;
+
+      setState(() => saving = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          isSaving = false;
-        });
-      }
-    }
-  }
-
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  InputDecoration decoration(
-    String label,
-    IconData icon,
-  ) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-    );
-  }
-
-  Future<void> chooseIcon() async {
-    final result = await showModalBottomSheet<IconData>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return GridView.builder(
-          padding: const EdgeInsets.all(20),
-          gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            mainAxisSpacing: 15,
-            crossAxisSpacing: 15,
-          ),
-          itemCount: availableIcons.length,
-          itemBuilder: (context, index) {
-            final icon = availableIcons[index];
-
-            return InkWell(
-              onTap: () => Navigator.pop(sheetContext, icon),
-              borderRadius: BorderRadius.circular(15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(
-                  icon,
-                  size: 30,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary,
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (result != null) {
-      setState(() {
-        selectedIconCode = result.codePoint;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: InkWell(
-            onTap: chooseIcon,
-            borderRadius: BorderRadius.circular(25),
-            child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primaryContainer,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Icon(
-                IconData(
-                  selectedIconCode,
-                  fontFamily: 'MaterialIcons',
+    return Dialog(
+      insetPadding: const EdgeInsets.all(18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEditing ? 'Edit Wallet' : 'Create Wallet',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-                size: 42,
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary,
-              ),
+                const SizedBox(height: 20),
+
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Wallet Name',
+                    prefixIcon: Icon(Icons.wallet_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value == null || value.trim().isEmpty
+                          ? 'Wallet name required'
+                          : null,
+                ),
+
+                const SizedBox(height: 15),
+
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Wallet Type',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: walletTypes.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => selectedType = value);
+                    }
+                  },
+                ),
+
+                if (selectedType == 'Other') ...[
+                  const SizedBox(height: 15),
+                  TextFormField(
+                    controller: customTypeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Custom Wallet Type',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        selectedType == 'Other' &&
+                                (value == null || value.trim().isEmpty)
+                            ? 'Enter custom type'
+                            : null,
+                  ),
+                ],
+
+                const SizedBox(height: 15),
+
+                if (!isEditing)
+                  DropdownButtonFormField<String>(
+                    value: selectedCurrency,
+                    decoration: const InputDecoration(
+                      labelText: 'Currency',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: currencies.map((currency) {
+                      return DropdownMenuItem(
+                        value: currency,
+                        child: Text(currency),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => selectedCurrency = value);
+                      }
+                    },
+                  ),
+
+                if (!isEditing) ...[
+                  const SizedBox(height: 15),
+                  TextFormField(
+                    controller: balanceController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Opening Balance',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null ||
+                          double.tryParse(value.trim()) == null) {
+                        return 'Enter a valid balance';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+
+                const SizedBox(height: 15),
+
+                TextFormField(
+                  controller: numberController,
+                  decoration: const InputDecoration(
+                    labelText: 'Wallet Number (Optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                const Text(
+                  'Choose Wallet Icon',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+
+                const SizedBox(height: 10),
+
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: icons.map((icon) {
+                    final selected = selectedIcon == icon.codePoint;
+
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          selectedIcon = icon.codePoint;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(11),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : AppColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selected
+                                ? AppColors.primary
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.muted,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: 15),
+
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(
+                    'Exclude from Total Balance',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  value: excludeTotal,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: (value) {
+                    setState(() => excludeTotal = value);
+                  },
+                ),
+
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: saving
+                            ? null
+                            : () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: saving ? null : saveWallet,
+                        child: saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(isEditing ? 'Update' : 'Create'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
 
-        const SizedBox(height: 8),
+// ------------------------------------------------------------
+// EMPTY STATE
+// ------------------------------------------------------------
 
-        const Center(
-          child: Text(
-            'Tap to choose wallet icon',
-            style: TextStyle(fontSize: 12),
+Widget _emptyState({
+  required IconData icon,
+  required String title,
+  required String subtitle,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 45),
+    child: Column(
+      children: [
+        Icon(
+          icon,
+          size: 55,
+          color: AppColors.muted.withValues(alpha: 0.55),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
           ),
         ),
-
-        const SizedBox(height: 25),
-
-        TextField(
-          controller: nameController,
-          decoration: decoration(
-            'Wallet Name',
-            Icons.account_balance_wallet_outlined,
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.muted,
           ),
         ),
+      ],
+    ),
+  );
+}
 
-        const SizedBox(height: 18),
+// ------------------------------------------------------------
+// PLUS FORM SCREEN
+// ------------------------------------------------------------
 
-        DropdownButtonFormField<String>(
-          value: selectedType,
-          decoration: decoration(
-            'Wallet Type',
-            Icons.category_outlined,
+class PlusFormScreen extends StatelessWidget {
+  final VoidCallback onSaved;
+
+  const PlusFormScreen({
+    super.key,
+    required this.onSaved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Add New',
+            style: TextStyle(fontWeight: FontWeight.w800),
           ),
-          items: walletTypes.map((type) {
-            return DropdownMenuItem(
-              value: type,
-              child: Text(type),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) {
-              setState(() {
-                selectedType = value;
-              });
-            }
-          },
+          bottom: const TabBar(
+            isScrollable: true,
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            tabs: [
+              Tab(text: 'Income'),
+              Tab(text: 'Expense'),
+              Tab(text: 'Transfer'),
+              Tab(text: 'Wallet'),
+            ],
+          ),
         ),
+        body: TabBarView(
+          children: [
+            TransactionEntryForm(
+              type: 'Income',
+              onSaved: onSaved,
+            ),
+            TransactionEntryForm(
+              type: 'Expense',
+              onSaved: onSaved,
+            ),
+            TransactionEntryForm(
+              type: 'Transfer',
+              onSaved: onSaved,
+            ),
+            WalletEntryTab(onSaved: onSaved),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-        if (selectedType == 'Other') ...[
-          const SizedBox(height: 18),
-          TextField(
-            controller: customTypeController,
-            decoration: decoration(
-              'Custom Wallet Type',
-              Icons.edit_outlined,
+// ------------------------------------------------------------
+// WALLET TAB
+// ------------------------------------------------------------
+
+class WalletEntryTab extends StatelessWidget {
+  final VoidCallback onSaved;
+
+  const WalletEntryTab({
+    super.key,
+    required this.onSaved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(25),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_rounded,
+                size: 55,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Create a New Wallet',
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Add a bank account, cash wallet, savings wallet or any other money source.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.muted),
+            ),
+            const SizedBox(height: 25),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (_) => const WalletFormDialog(),
+                  );
+                  onSaved();
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Create Wallet'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// TRANSACTION ENTRY FORM
+// ------------------------------------------------------------
+
+class TransactionEntryForm extends StatefulWidget {
+  final String type;
+  final VoidCallback onSaved;
+
+  const TransactionEntryForm({
+    super.key,
+    required this.type,
+    required this.onSaved,
+  });
+
+  @override
+  State<TransactionEntryForm> createState() =>
+      _TransactionEntryFormState();
+}
+
+class _TransactionEntryFormState
+    extends State<TransactionEntryForm> {
+  final formKey = GlobalKey<FormState>();
+
+  final amountController = TextEditingController();
+  final categoryController = TextEditingController();
+  final noteController = TextEditingController();
+
+  List<Map<String, dynamic>> wallets = [];
+
+  int? selectedWalletId;
+  int? destinationWalletId;
+
+  DateTime selectedDate = DateTime.now();
+
+  bool saving = false;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadWallets();
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    categoryController.dispose();
+    noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> loadWallets() async {
+    final data = await FinanceDB.instance.getWallets();
+
+    if (!mounted) return;
+
+    setState(() {
+      wallets = data;
+      loading = false;
+
+      if (wallets.isNotEmpty) {
+        selectedWalletId ??= wallets.first['id'] as int;
+      }
+
+      if (wallets.length > 1) {
+        destinationWalletId ??= wallets[1]['id'] as int;
+      }
+    });
+  }
+
+  Future<void> selectDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (date != null) {
+      setState(() => selectedDate = date);
+    }
+  }
+
+  Future<void> saveTransaction() async {
+    if (!formKey.currentState!.validate()) return;
+
+    if (selectedWalletId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please create a Wallet first.')),
+      );
+      return;
+    }
+
+    if (widget.type == 'Transfer') {
+      if (destinationWalletId == null ||
+          destinationWalletId == selectedWalletId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Select a different destination Wallet.'),
+          ),
+        );
+        return;
+      }
+    }
+
+    setState(() => saving = true);
+
+    try {
+      await FinanceDB.instance.addTransaction(
+        type: widget.type,
+        amount: double.parse(amountController.text.trim()),
+        walletId: selectedWalletId!,
+        toWalletId: widget.type == 'Transfer'
+            ? destinationWalletId
+            : null,
+        category: categoryController.text.trim(),
+        note: noteController.text.trim(),
+        date: selectedDate,
+      );
+
+      if (!mounted) return;
+
+      amountController.clear();
+      categoryController.clear();
+      noteController.clear();
+
+      setState(() {
+        saving = false;
+        selectedDate = DateTime.now();
+      });
+
+      widget.onSaved();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${widget.type} saved successfully.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => saving = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (wallets.isEmpty) {
+      return _emptyState(
+        icon: Icons.account_balance_wallet_outlined,
+        title: 'No Wallet Available',
+        subtitle: 'Please create a Wallet before adding a transaction.',
+      );
+    }
+
+    return Form(
+      key: formKey,
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            'Add ${widget.type}',
+            style: const TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          TextFormField(
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: InputDecoration(
+              labelText: 'Amount',
+              prefixIcon: const Icon(Icons.payments_outlined),
+              prefixText: '',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            validator: (value) {
+              final amount = double.tryParse(value ?? '');
+              if (amount == null || amount <= 0) {
+                return 'Enter a valid amount';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          DropdownButtonFormField<int>(
+            value: selectedWalletId,
+            decoration: InputDecoration(
+              labelText: widget.type == 'Transfer'
+                  ? 'From Wallet'
+                  : 'Wallet',
+              prefixIcon: const Icon(
+                Icons.account_balance_wallet_outlined,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            items: wallets.map((wallet) {
+              return DropdownMenuItem<int>(
+                value: wallet['id'] as int,
+                child: Text(wallet['name'] as String),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() => selectedWalletId = value);
+            },
+          ),
+
+          if (widget.type == 'Transfer') ...[
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: destinationWalletId,
+              decoration: InputDecoration(
+                labelText: 'To Wallet',
+                prefixIcon: const Icon(Icons.swap_horiz_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              items: wallets
+                  .where((wallet) =>
+                      wallet['id'] != selectedWalletId)
+                  .map((wallet) {
+                return DropdownMenuItem<int>(
+                  value: wallet['id'] as int,
+                  child: Text(wallet['name'] as String),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => destinationWalletId = value);
+              },
+            ),
+          ],
+
+          if (widget.type != 'Transfer') ...[
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: categoryController,
+              decoration: InputDecoration(
+                labelText: 'Category (Optional)',
+                prefixIcon: const Icon(Icons.category_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 16),
+
+          InkWell(
+            onTap: selectDate,
+            borderRadius: BorderRadius.circular(15),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: 'Transaction Date',
+                prefixIcon: const Icon(Icons.calendar_month_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Text(
+                DateFormat('dd MMM yyyy').format(selectedDate),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: noteController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Notes (Optional)',
+              prefixIcon: const Icon(Icons.notes_rounded),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 25),
+
+          SizedBox(
+            height: 53,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.type == 'Expense'
+                    ? AppColors.expense
+                    : AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              onPressed: saving ? null : saveTransaction,
+              child: saving
+                  ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    )
+                  : Text(
+                      'Save ${widget.type}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
 
-        const SizedBox(height: 18),
+// ------------------------------------------------------------
+// TRANSACTIONS PAGE
+// ------------------------------------------------------------
 
-        DropdownButtonFormField<String>(
-          value: selectedCurrency,
-          decoration: decoration(
-            'Currency',
-            Icons.currency_exchange_rounded,
-          ),
-          items: currencies.map((currency) {
-            return DropdownMenuItem(
-              value: currency,
-              child: Text(currency),
-            );
-          }).toList(),
-          onChanged: isEditing
-              ? null
-              : (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedCurrency = value;
-                    });
-                  }
-                },
-        ),
+class TransactionsPage extends StatefulWidget {
+  final VoidCallback onRefresh;
 
-        const SizedBox(height: 18),
+  const TransactionsPage({
+    super.key,
+    required this.onRefresh,
+  });
 
-        TextField(
-          controller: numberController,
-          decoration: decoration(
-            'Wallet Number (Optional)',
-            Icons.numbers_rounded,
-          ),
-        ),
+  @override
+  State<TransactionsPage> createState() => _TransactionsPageState();
+}
 
-        const SizedBox(height: 18),
+class _TransactionsPageState extends State<TransactionsPage> {
+  List<Map<String, dynamic>> transactions = [];
+  bool loading = true;
 
-        if (!isEditing)
-          TextField(
-            controller: balanceController,
-            keyboardType:
-                const TextInputType.numberWithOptions(
-              decimal: true,
+  @override
+  void initState() {
+    super.initState();
+    loadTransactions();
+  }
+
+  Future<void> loadTransactions() async {
+    setState(() => loading = true);
+
+    final data = await FinanceDB.instance.getTransactions();
+
+    if (!mounted) return;
+
+    setState(() {
+      transactions = data;
+      loading = false;
+    });
+  }
+
+  Future<void> removeTransaction(int id) async {
+    await FinanceDB.instance.deleteTransaction(id);
+    await loadTransactions();
+    widget.onRefresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: loadTransactions,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 25),
+        children: [
+          const Text(
+            'Transactions',
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w800,
+              color: AppColors.dark,
             ),
-            decoration: decoration(
-              'Opening Balance',
-              Icons.payments_outlined,
-            ),
           ),
-
-        if (!isEditing) const SizedBox(height: 18),
-
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 8,
+          const SizedBox(height: 6),
+          const Text(
+            'Your income, expenses and transfers.',
+            style: TextStyle(color: AppColors.muted),
           ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Theme.of(context).cardColor,
-            border: Border.all(
-              color: Theme.of(context).dividerColor,
-            ),
-          ),
-          child: SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text(
-              'Exclude from Total Balance',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            subtitle: const Text(
-              'Keep this wallet visible but exclude it from the combined total.',
-              style: TextStyle(fontSize: 11),
-            ),
-            value: excludeTotal,
-            onChanged: (value) {
-              setState(() {
-                excludeTotal = value;
-              });
-            },
-          ),
-        ),
+          const SizedBox(height: 20),
 
-        const SizedBox(height: 28),
+          if (loading)
+            const Center(child: CircularProgressIndicator())
+          else if (transactions.isEmpty)
+            _emptyState(
+              icon: Icons.receipt_long_outlined,
+              title: 'No Transactions Yet',
+              subtitle: 'Your transactions will appear here.',
+            )
+          else
+            ...transactions.map((item) {
+              final type = item['type'] as String;
+              final amount = (item['amount'] as num).toDouble();
 
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: FilledButton.icon(
-            onPressed: isSaving ? null : saveWallet,
-            icon: isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+              final color = type == 'Income'
+                  ? AppColors.income
+                  : type == 'Expense'
+                      ? AppColors.expense
+                      : AppColors.primary;
+
+              final icon = type == 'Income'
+                  ? Icons.arrow_downward_rounded
+                  : type == 'Expense'
+                      ? Icons.arrow_upward_rounded
+                      : Icons.swap_horiz_rounded;
+
+              final date = DateTime.tryParse(
+                    item['date']?.toString() ?? '',
+                  ) ??
+                  DateTime.now();
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 7,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: color.withValues(alpha: 0.12),
+                    child: Icon(icon, color: color),
+                  ),
+                  title: Text(
+                    type,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
                     ),
-                  )
-                : const Icon(Icons.save_rounded),
-            label: Text(
-              isSaving
-                  ? 'Saving...'
-                  : isEditing
-                      ? 'Update Wallet'
-                      : 'Create Wallet',
-            ),
+                  ),
+                  subtitle: Text(
+                    '${item['wallet_name'] ?? 'Wallet'}'
+                    '${item['to_wallet_name'] == null ? '' : ' → ${item['to_wallet_name']}'}'
+                    '\n${DateFormat('dd MMM yyyy').format(date)}'
+                    '${item['note'] == null || item['note'].toString().isEmpty ? '' : '\n${item['note']}'}',
+                  ),
+                  isThreeLine: true,
+                  trailing: SizedBox(
+                    width: 115,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${item['wallet_currency'] ?? 'PKR'} ${NumberFormat('#,##0.00').format(amount)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: color,
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          padding: EdgeInsets.zero,
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              removeTransaction(item['id'] as int);
+                            }
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete Transaction'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// NOTIFICATIONS PAGE
+// ------------------------------------------------------------
+
+class NotificationsPage extends StatelessWidget {
+  const NotificationsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Notifications',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: _emptyState(
+        icon: Icons.notifications_none_rounded,
+        title: 'No Notifications',
+        subtitle: 'Your important updates and reminders will appear here.',
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// MORE FEATURES PAGE
+// ------------------------------------------------------------
+
+class MoreFeaturesPage extends StatelessWidget {
+  const MoreFeaturesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final features = [
+      {
+        'title': 'Budgets',
+        'subtitle': 'Manage your spending limits',
+        'icon': Icons.pie_chart_outline_rounded,
+      },
+      {
+        'title': 'Categories',
+        'subtitle': 'Manage income and expense categories',
+        'icon': Icons.category_outlined,
+      },
+      {
+        'title': 'Recurring Transactions',
+        'subtitle': 'Manage scheduled transactions',
+        'icon': Icons.repeat_rounded,
+      },
+      {
+        'title': 'Reports & Analytics',
+        'subtitle': 'Review your financial performance',
+        'icon': Icons.analytics_outlined,
+      },
+      {
+        'title': 'Savings Goals',
+        'subtitle': 'Track your savings progress',
+        'icon': Icons.savings_outlined,
+      },
+      {
+        'title': 'Settings',
+        'subtitle': 'Manage app preferences',
+        'icon': Icons.settings_outlined,
+      },
+      {
+        'title': 'Backup & Restore',
+        'subtitle': 'Protect your finance data',
+        'icon': Icons.backup_outlined,
+      },
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'More Features',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          ...features.map((feature) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(12),
+                leading: CircleAvatar(
+                  backgroundColor:
+                      AppColors.primary.withValues(alpha: 0.10),
+                  child: Icon(
+                    feature['icon'] as IconData,
+                    color: AppColors.primary,
+                  ),
+                ),
+                title: Text(
+                  feature['title'] as String,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                subtitle: Text(
+                  feature['subtitle'] as String,
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SimpleFeaturePage(
+                        title: feature['title'] as String,
+                        icon: feature['icon'] as IconData,
+                        description:
+                            feature['subtitle'] as String,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// SIMPLE FEATURE PLACEHOLDER
+// ------------------------------------------------------------
+
+class SimpleFeaturePage extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final String description;
+
+  const SimpleFeaturePage({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 65,
+                color: AppColors.primary,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text(
+                'This feature will be implemented in its dedicated screen.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
           ),
         ),
-
-        const SizedBox(height: 20),
-      ],
+      ),
     );
   }
 }

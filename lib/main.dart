@@ -1484,30 +1484,39 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                isSelected ? activeIcon : icon,
-                size: 21,
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.muted,
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Center(
+                  child: Icon(
+                    isSelected ? activeIcon : icon,
+                    size: 21,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.muted,
+                  ),
+                ),
               ),
-              const SizedBox(height: 3),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: isSelected
-                          ? FontWeight.w800
-                          : FontWeight.w500,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.muted,
+              const SizedBox(height: 2),
+              SizedBox(
+                height: 14,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.muted,
+                        ),
+                      ),
                     ),
                   ),
                 ),

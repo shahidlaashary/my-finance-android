@@ -1233,70 +1233,80 @@ class _MainScreenState extends State<MainScreen> {
         children: pages,
       ),
       bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          height: 66,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(color: Color(0xFFE9EEEB)),
-            ),
-          ),
-          child: Row(
-            children: [
-              _navItem(0, Icons.home_outlined, 'Home'),
-              _navItem(1, Icons.real_estate_agent_outlined, 'Assets'),
-              _navItem(2, Icons.handshake_outlined, 'Loans'),
-              _navItem(3, Icons.receipt_long_outlined, 'Txns'),
-              _navItem(4, Icons.account_balance_wallet_outlined, 'Wallets'),
-              _navItem(5, Icons.add_circle_outline, 'Plus'),
-            ],
-          ),
-        ),
+  top: false,
+  child: Container(
+    height: 72,
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(
+        top: BorderSide(color: Color(0xFFE9EEEB)),
       ),
+    ),
+    child: Row(
+      children: [
+        _navItem(0, Icons.home_outlined, 'Home'),
+        _navItem(1, Icons.real_estate_agent_outlined, 'Assets'),
+        _navItem(2, Icons.handshake_outlined, 'Loans'),
+        _navItem(3, Icons.receipt_long_outlined, 'Txns'),
+        _navItem(4, Icons.account_balance_wallet_outlined, 'Wallets'),
+        _navItem(5, Icons.add_circle_outline, 'Plus'),
+      ],
+    ),
+  ),
+),
     );
   }
 
   Widget _navItem(int index, IconData icon, String label) {
-    final selected = selectedIndex == index;
-    final isPlus = index == 5;
+  final selected = selectedIndex == index;
+  final isPlus = index == 5;
 
-    return Expanded(
-      child: InkWell(
-        onTap: () => selectNavigation(index),
-        child: SizedBox(
-          height: 66,
+  return Expanded(
+    child: InkWell(
+      onTap: () => selectNavigation(index),
+      child: SizedBox(
+        height: 72,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 1),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: isPlus ? 25 : 21,
+                size: isPlus ? 27 : 24,
                 color: selected || isPlus
                     ? AppColors.primary
                     : AppColors.muted,
               ),
               const SizedBox(height: 3),
-              Text(
-                label,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.clip,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight:
-                      selected ? FontWeight.bold : FontWeight.w500,
-                  color: selected || isPlus
-                      ? AppColors.primary
-                      : AppColors.muted,
+              SizedBox(
+                width: double.infinity,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: selected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      color: selected || isPlus
+                          ? AppColors.primary
+                          : AppColors.muted,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ------------------------------------------------------------

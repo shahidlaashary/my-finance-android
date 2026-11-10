@@ -2346,9 +2346,9 @@ extension FinanceTransactionFunctions on FinanceDB {
 
     // Database record delete hone ke baad uski attachments delete karna.
     await AttachmentService.deleteOwnerAttachments(
-      AttachmentOwnerTypes.transaction,
-      id,
-    );
+  ownerType: AttachmentOwnerTypes.transaction,
+  ownerId: id,
+);
   }
 
   Future<List<Map<String, dynamic>>> getTransactions() {

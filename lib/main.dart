@@ -633,7 +633,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       Icon(
                         Icons.account_balance_wallet_outlined,
                         size: 58,
-                        color: AppColors.muted,
+                        color: AppColors.primary,
                       ),
                       SizedBox(height: 12),
                       Text(
@@ -3003,8 +3003,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
                           ),
                           leading: CircleAvatar(
                             backgroundColor:
-                                color.withValues(alpha: 0.10),
-                            child: Icon(icon, color: color),
+                                AppColors.primary.withValues(alpha: 0.10),
+                            child: Icon(icon, color: AppColors.primary),
                           ),
                           title: Text(
                             isTransfer

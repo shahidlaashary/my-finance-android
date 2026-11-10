@@ -1244,6 +1244,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
           ),
         ),
       ),
+    ),
     );
   }
 }

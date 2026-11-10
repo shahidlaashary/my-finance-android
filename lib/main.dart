@@ -737,7 +737,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
-                      childAspectRatio: 1.42,
+                      childAspectRatio: 1.68,
                     ),
                     itemCount: wallets.length,
                     itemBuilder: (context, index) {
@@ -758,15 +758,15 @@ class _WalletsPageState extends State<WalletsPage> {
                           side: const BorderSide(color: Color(0xFFE5ECE8)),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(11, 10, 10, 11),
+                          padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
                                   Container(
-                                    width: 35,
-                                    height: 35,
+                                    width: 31,
+                                    height: 31,
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
@@ -776,22 +776,22 @@ class _WalletsPageState extends State<WalletsPage> {
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       ),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
                                       IconData(iconCode, fontFamily: 'MaterialIcons'),
                                       color: AppColors.primary,
-                                      size: 20,
+                                      size: 18,
                                     ),
                                   ),
-                                  const SizedBox(width: 7),
+                                  const SizedBox(width: 5),
                                   Expanded(
                                     child: Text(
                                       wallet['name'] as String,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w800,
                                         color: AppColors.text,
                                       ),
@@ -850,20 +850,20 @@ class _WalletsPageState extends State<WalletsPage> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w900,
                                   color: AppColors.text,
                                   letterSpacing: -0.3,
                                 ),
                               ),
-                              const SizedBox(height: 7),
+                              const SizedBox(height: 4),
                               Row(
                                 children: [
                                   Flexible(
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 7,
-                                        vertical: 3,
+                                        vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFF1F6F3),

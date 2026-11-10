@@ -614,6 +614,7 @@ class _WalletsPageState extends State<WalletsPage> {
         ),
         backgroundColor: AppColors.background,
         elevation: 0,
+        actions: _sharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => openWalletForm(),
@@ -2045,6 +2046,36 @@ class MoreFeaturesPage extends StatelessWidget {
   }
 }
 
+// Shared actions for all bottom navigation tabs.
+List<Widget> _sharedAppBarActions(BuildContext context) {
+  return [
+    IconButton(
+      tooltip: 'Notifications',
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No new notifications'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      icon: const Icon(Icons.notifications_none_rounded),
+    ),
+    IconButton(
+      tooltip: 'Settings',
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const MoreFeaturesPage(),
+          ),
+        );
+      },
+      icon: const Icon(Icons.settings_outlined),
+    ),
+  ];
+}
+
 // ============================================================
 // SIMPLE FEATURE PAGE
 // ============================================================
@@ -2066,6 +2097,7 @@ class SimpleFeaturePage extends StatelessWidget {
           title,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
+        actions: _sharedAppBarActions(context),
       ),
       body: Center(
         child: Padding(
@@ -2892,6 +2924,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           'Transactions',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
+        actions: _sharedAppBarActions(context),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

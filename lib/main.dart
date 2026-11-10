@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -968,6 +967,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardIsOpen = keyboardHeight > 0;
 
     return SafeArea(
       top: false,
@@ -983,10 +984,15 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
             child: Form(
               key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              // Keyboard ke waqt form scroll ho sakta hai; normal sheet mein scrolling band rahegi.
+              child: SingleChildScrollView(
+                physics: keyboardIsOpen
+                    ? const ClampingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   // Sheet ka chhota drag handle.
                   Center(
                     child: Container(
@@ -1218,19 +1224,20 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  isEditing ? 'Save Changes' : 'Save Wallet',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
+                                                                        ),
+                                  )
+                              : const Text(
+                                  'Save Wallet',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
                                   ),
                                 ),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
                 ],
               ),
             ),
@@ -1241,14 +1248,9 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
   }
 }
 
-
 // ============================================================
-// PART 2: APP THEME, NAVIGATION AUR HOME DASHBOARD
+// MY FINANCE APP
 // ============================================================
-
-// ------------------------------------------------------------
-// MAIN APP
-// ------------------------------------------------------------
 
 class MyFinanceApp extends StatelessWidget {
   const MyFinanceApp({super.key});
@@ -1256,13 +1258,14 @@ class MyFinanceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'My Finance',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,
-          brightness: Brightness.light,
+          primary: AppColors.primary,
+          surface: Colors.white,
         ),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
@@ -1278,15 +1281,22 @@ class MyFinanceApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
           ),
         ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF8FAF9),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
       home: const MainScreen(),
     );
   }
 }
 
-// ------------------------------------------------------------
-// MAIN SCREEN AND BOTTOM NAVIGATION
-// ------------------------------------------------------------
+// ============================================================
+// MAIN SCREEN - 9 POSITION BOTTOM NAVIGATION
+// ============================================================
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -1296,46 +1306,37 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  // Plus button page nahi hai. Is liye pages mein sirf 8 screens hain.
   int selectedIndex = 0;
 
+  // Navigation ka exact order.
   final List<Widget> pages = const [
-    HomePage(),
-    AssetsPage(),
-    SimpleFeaturePage(title: 'Budgets'),
-    LoansPage(),
-    TransactionsPage(),
-    WalletsPage(),
+    HomePage(),                         // 0
+    AssetsPage(),                       // 1
+    SimpleFeaturePage(title: 'Budgets'), // 2
+    SimpleFeaturePage(title: 'Goals'),   // 3
+    LoansPage(),                        // 4
+    SimpleFeaturePage(title: 'Stats'),  // 5
+    TransactionsPage(),                // 6
+    WalletsPage(),                      // 7
   ];
 
-  // Plus button ek modal bottom sheet open karta hai.
-  Future<void> openPlusSheet() async {
-    final selectedType = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return const PlusActionSheet();
-      },
-    );
+  void selectPage(int index) {
+    if (index < 0 || index >= pages.length) return;
 
-    if (!mounted || selectedType == null) return;
-
-    // Sheet band hone ke baad transaction form open hota hai.
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TransactionEntryForm(
-          transactionType: selectedType,
-        ),
-      ),
-    ).then((_) {
-      if (mounted) setState(() {});
+    setState(() {
+      selectedIndex = index;
     });
   }
 
-  void selectNavigation(int index) {
-    setState(() => selectedIndex = index);
+  void openPlusSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const PlusActionSheet(),
+    );
   }
 
   @override
@@ -1345,97 +1346,104 @@ class _MainScreenState extends State<MainScreen> {
         index: selectedIndex,
         children: pages,
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          height: 72,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(color: Color(0xFFE9EEEB)),
+
+      // Nine positions: eight navigation tabs + center Plus.
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.055),
+              blurRadius: 14,
+              offset: const Offset(0, -3),
             ),
-          ),
-          child: Row(
-            children: [
-              _navItem(0, Icons.home_outlined, 'Home'),
-              _navItem(1, Icons.real_estate_agent_outlined, 'Assets'),
-              _navItem(2, Icons.account_balance_wallet_outlined, 'Budgets'),
-              _plusNavItem(),
-              _navItem(3, Icons.handshake_outlined, 'Loans'),
-              _navItem(4, Icons.receipt_long_outlined, 'Txns'),
-              _navItem(5, Icons.wallet_outlined, 'Wallets'),
-            ],
-          ),
+          ],
         ),
-      ),
-    );
-  }
-
-  // Center Plus action: icon only, no Plus/Add label.
-  Widget _plusNavItem() {
-    return Expanded(
-      child: InkWell(
-        onTap: openPlusSheet,
-        borderRadius: BorderRadius.circular(24),
-        child: SizedBox(
-          height: 72,
-          child: Center(
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                size: 30,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Baqi navigation tabs: icon ke neeche chhota responsive label.
-  Widget _navItem(int index, IconData icon, String label) {
-    final selected = selectedIndex == index;
-
-    return Expanded(
-      child: InkWell(
-        onTap: () => selectNavigation(index),
-        child: SizedBox(
-          height: 72,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 1),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 66,
+            child: Row(
               children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: selected ? AppColors.primary : AppColors.muted,
+                _navItem(
+                  index: 0,
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                  label: 'Home',
                 ),
-                const SizedBox(height: 3),
-                SizedBox(
-                  width: double.infinity,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      softWrap: false,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight:
-                            selected ? FontWeight.bold : FontWeight.w500,
-                        color: selected ? AppColors.primary : AppColors.muted,
+                _navItem(
+                  index: 1,
+                  icon: Icons.real_estate_agent_outlined,
+                  activeIcon: Icons.real_estate_agent_rounded,
+                  label: 'Assets',
+                ),
+                _navItem(
+                  index: 2,
+                  icon: Icons.account_balance_wallet_outlined,
+                  activeIcon: Icons.account_balance_wallet_rounded,
+                  label: 'Budgets',
+                ),
+                _navItem(
+                  index: 3,
+                  icon: Icons.flag_outlined,
+                  activeIcon: Icons.flag_rounded,
+                  label: 'Goals',
+                ),
+
+                // Center Plus: sirf icon, koi text label nahi.
+                Expanded(
+                  flex: 1,
+                  child: InkWell(
+                    onTap: openPlusSheet,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Center(
+                      child: Container(
+                        width: 43,
+                        height: 43,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.22),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 29,
+                        ),
                       ),
                     ),
                   ),
+                ),
+
+                _navItem(
+                  index: 4,
+                  icon: Icons.handshake_outlined,
+                  activeIcon: Icons.handshake_rounded,
+                  label: 'Loans',
+                ),
+                _navItem(
+                  index: 5,
+                  icon: Icons.bar_chart_outlined,
+                  activeIcon: Icons.bar_chart_rounded,
+                  label: 'Stats',
+                ),
+                _navItem(
+                  index: 6,
+                  icon: Icons.receipt_long_outlined,
+                  activeIcon: Icons.receipt_long_rounded,
+                  label: 'Txns',
+                ),
+                _navItem(
+                  index: 7,
+                  icon: Icons.account_balance_outlined,
+                  activeIcon: Icons.account_balance_rounded,
+                  label: 'Wallets',
                 ),
               ],
             ),
@@ -1444,11 +1452,66 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+
+  // Har navigation item ko barabar width milti hai.
+  // FittedBox labels ko ek line mein fit karne mein madad karta hai.
+  Widget _navItem({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+  }) {
+    final isSelected = selectedIndex == index;
+
+    return Expanded(
+      flex: 1,
+      child: InkWell(
+        onTap: () => selectPage(index),
+        child: SizedBox(
+          height: 66,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? activeIcon : icon,
+                size: 21,
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.muted,
+              ),
+              const SizedBox(height: 3),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-// ------------------------------------------------------------
-// PLUS BOTTOM SHEET
-// ------------------------------------------------------------
+// ============================================================
+// PLUS ACTION SHEET
+// ============================================================
 
 class PlusActionSheet extends StatelessWidget {
   const PlusActionSheet({super.key});
@@ -1463,121 +1526,149 @@ class PlusActionSheet extends StatelessWidget {
           top: Radius.circular(26),
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 42,
-            height: 5,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(10),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD9E0DC),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Add Transaction',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            const SizedBox(height: 18),
+            const Text(
+              'Add New Transaction',
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+                color: AppColors.text,
               ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _actionTile(
-            context,
-            'Income',
-            'Record money received',
-            Icons.arrow_downward_rounded,
-            AppColors.income,
-          ),
-          _actionTile(
-            context,
-            'Expense',
-            'Record money spent',
-            Icons.arrow_upward_rounded,
-            AppColors.expense,
-          ),
-          _actionTile(
-            context,
-            'Transfer',
-            'Move money between wallets',
-            Icons.swap_horiz_rounded,
-            AppColors.primary,
-          ),
-        ],
+            ),
+            const SizedBox(height: 18),
+
+            _actionTile(
+              context,
+              icon: Icons.south_west_rounded,
+              title: 'Income',
+              subtitle: 'Add money received',
+              color: AppColors.income,
+              type: 'Income',
+            ),
+
+            const SizedBox(height: 10),
+
+            _actionTile(
+              context,
+              icon: Icons.north_east_rounded,
+              title: 'Expense',
+              subtitle: 'Record money spent',
+              color: AppColors.expense,
+              type: 'Expense',
+            ),
+
+            const SizedBox(height: 10),
+
+            _actionTile(
+              context,
+              icon: Icons.swap_horiz_rounded,
+              title: 'Transfer',
+              subtitle: 'Move money between wallets',
+              color: AppColors.primary,
+              type: 'Transfer',
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _actionTile(
-    BuildContext context,
-    String type,
-    String description,
-    IconData icon,
-    Color color,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.pop(context, type),
-        child: Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.07),
-            borderRadius: BorderRadius.circular(16),
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required String type,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.pop(context);
+
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => TransactionEntryForm(
+              transactionType: type,
+            ),
           ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.13),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      type,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAF9),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFFEDF1EE),
           ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.11),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 23,
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 15,
+              color: AppColors.muted,
+            ),
+          ],
         ),
       ),
     );
   }
 }
-
-// ------------------------------------------------------------
+      // ============================================================
 // HOME DASHBOARD
-// ------------------------------------------------------------
+// ============================================================
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -1587,22 +1678,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String selectedPeriod = 'Monthly';
-
   double totalBalance = 0;
-  double income = 0;
-  double expenses = 0;
+  double totalIncome = 0;
+  double totalExpenses = 0;
   bool loading = true;
-
-  List<Map<String, dynamic>> expenseCategories = [];
-
-  final List<String> periods = [
-    'Daily',
-    'Weekly',
-    'Monthly',
-    'Yearly',
-    'All Time',
-  ];
 
   @override
   void initState() {
@@ -1610,583 +1689,375 @@ class _HomePageState extends State<HomePage> {
     loadDashboard();
   }
 
-  // Selected period ke mutabiq transactions ka date filter.
-  DateTime? getPeriodStart() {
-    final now = DateTime.now();
-
-    switch (selectedPeriod) {
-      case 'Daily':
-        return DateTime(now.year, now.month, now.day);
-      case 'Weekly':
-        return DateTime(now.year, now.month, now.day)
-            .subtract(Duration(days: now.weekday - 1));
-      case 'Monthly':
-        return DateTime(now.year, now.month, 1);
-      case 'Yearly':
-        return DateTime(now.year, 1, 1);
-      case 'All Time':
-        return null;
-      default:
-        return DateTime(now.year, now.month, 1);
-    }
-  }
-
   Future<void> loadDashboard() async {
-    setState(() => loading = true);
+    try {
+      final balance = await FinanceDB.instance.getTotalBalancePKR();
+      final income = await FinanceDB.instance.totalByType('Income');
+      final expenses = await FinanceDB.instance.totalByType('Expense');
 
-    final db = FinanceDB.instance.db;
+      if (!mounted) return;
 
-    // Total Balance selected period se independent hota hai.
-    final balance = await FinanceDB.instance.getTotalBalancePKR();
-
-    final start = getPeriodStart();
-
-    String dateCondition = '';
-    List<dynamic> dateArgs = [];
-
-    if (start != null) {
-      dateCondition = 'AND date >= ?';
-      dateArgs = [start.toIso8601String()];
+      setState(() {
+        totalBalance = balance;
+        totalIncome = income;
+        totalExpenses = expenses;
+        loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => loading = false);
     }
-
-    final incomeRows = await db.rawQuery(
-      '''
-      SELECT COALESCE(SUM(amount), 0) AS total
-      FROM transactions
-      WHERE type = 'Income' $dateCondition
-      ''',
-      dateArgs,
-    );
-
-    final expenseRows = await db.rawQuery(
-      '''
-      SELECT COALESCE(SUM(amount), 0) AS total
-      FROM transactions
-      WHERE type = 'Expense' $dateCondition
-      ''',
-      dateArgs,
-    );
-
-    final categoryRows = await db.rawQuery(
-      '''
-      SELECT category, SUM(amount) AS total
-      FROM transactions
-      WHERE type = 'Expense' $dateCondition
-      GROUP BY category
-      ORDER BY total DESC
-      ''',
-      dateArgs,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      totalBalance = balance;
-      income = (incomeRows.first['total'] as num).toDouble();
-      expenses = (expenseRows.first['total'] as num).toDouble();
-      expenseCategories = categoryRows;
-      loading = false;
-    });
   }
 
-  String formatPKR(double amount) {
+  String money(double amount) {
     return 'PKR ${NumberFormat('#,##0.00').format(amount)}';
-  }
-
-  Future<void> openMoreFeatures() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const MoreFeaturesPage(),
-      ),
-    );
-
-    if (mounted) loadDashboard();
-  }
-
-  Future<void> openNotifications() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const NotificationsPage(),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final netChange = income - expenses;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'My Finance',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
           IconButton(
-            tooltip: 'Notifications',
-            onPressed: openNotifications,
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          IconButton(
-            tooltip: 'More Features',
-            onPressed: openMoreFeatures,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MoreFeaturesPage(),
+                ),
+              );
+            },
             icon: const Icon(Icons.settings_outlined),
           ),
-          const SizedBox(width: 5),
         ],
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: loadDashboard,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+      body: RefreshIndicator(
+        onRefresh: loadDashboard,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          children: [
+            // Main balance card.
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF147D59),
+                    Color(0xFF0B6245),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(23),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Consolidated Total Balance.
-                  Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF147D59),
-                          Color(0xFF0C5B42),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Total Balance',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 9),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            formatPKR(totalBalance),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 29,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Consolidated wallet balance',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Period selector.
                   const Text(
-                    'Financial Overview',
+                    'Total Balance',
                     style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
+                      color: Colors.white70,
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 12),
-
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: periods.map((period) {
-                        final selected = selectedPeriod == period;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(period),
-                            selected: selected,
-                            onSelected: (_) {
-                              setState(() => selectedPeriod = period);
-                              loadDashboard();
-                            },
-                            selectedColor: AppColors.primary,
-                            labelStyle: TextStyle(
-                              fontSize: 12,
-                              color: selected
-                                  ? Colors.white
-                                  : AppColors.text,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            backgroundColor: Colors.white,
-                            side: BorderSide.none,
+                  const SizedBox(height: 8),
+                  loading
+                      ? const SizedBox(
+                          height: 34,
+                          width: 34,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Income and Expense summary.
+                        )
+                      : Text(
+                          money(totalBalance),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 27,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                  const SizedBox(height: 22),
                   Row(
                     children: [
                       Expanded(
-                        child: _summaryCard(
+                        child: _balanceSummary(
                           'Income',
-                          income,
-                          AppColors.income,
+                          totalIncome,
                           Icons.south_west_rounded,
+                          const Color(0xFFB9F6D5),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _summaryCard(
+                        child: _balanceSummary(
                           'Expenses',
-                          expenses,
-                          AppColors.expense,
+                          totalExpenses,
                           Icons.north_east_rounded,
+                          const Color(0xFFFFD0CC),
                         ),
                       ),
                     ],
                   ),
+                ],
+              ),
+            ),
 
-                  const SizedBox(height: 18),
+            const SizedBox(height: 22),
 
-                  // Financial overview chart.
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Income vs Expenses',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            height: 150,
-                            width: double.infinity,
-                            child: FinanceOverviewChart(
-                              income: income,
-                              expenses: expenses,
-                            ),
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Net Change',
-                                style: TextStyle(
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                              Text(
-                                formatPKR(netChange),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: netChange >= 0
-                                      ? AppColors.income
-                                      : AppColors.expense,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _quickAction(
+                    icon: Icons.add_circle_outline,
+                    label: 'Income',
+                    color: AppColors.income,
+                    onTap: () => _openTransaction('Income'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _quickAction(
+                    icon: Icons.remove_circle_outline,
+                    label: 'Expense',
+                    color: AppColors.expense,
+                    onTap: () => _openTransaction('Expense'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _quickAction(
+                    icon: Icons.swap_horiz_rounded,
+                    label: 'Transfer',
+                    color: AppColors.primary,
+                    onTap: () => _openTransaction('Transfer'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Overview',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            _overviewCard(
+              icon: Icons.real_estate_agent_outlined,
+              title: 'Assets Overview',
+              subtitle: 'View and manage your assets',
+              color: const Color(0xFF3978C5),
+              destinationTitle: 'Assets',
+            ),
+            _overviewCard(
+              icon: Icons.handshake_outlined,
+              title: 'Loans Overview',
+              subtitle: 'Manage borrowed and lent money',
+              color: const Color(0xFF9A65C7),
+              destinationTitle: 'Loans',
+            ),
+            _overviewCard(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Budgets Overview',
+              subtitle: 'Track your budgets',
+              color: const Color(0xFFDB9840),
+              destinationTitle: 'Budgets',
+            ),
+            _overviewCard(
+              icon: Icons.flag_outlined,
+              title: 'Savings Goals Overview',
+              subtitle: 'Track your saving goals',
+              color: const Color(0xFF279C83),
+              destinationTitle: 'Goals',
+            ),
+            _overviewCard(
+              icon: Icons.repeat_rounded,
+              title: 'Recurring Transactions Overview',
+              subtitle: 'Manage scheduled transactions',
+              color: const Color(0xFF6C78C7),
+              destinationTitle: 'Recurring Transactions',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openTransaction(String type) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TransactionEntryForm(
+          transactionType: type,
+        ),
+      ),
+    ).then((_) => loadDashboard());
+  }
+
+  Widget _balanceSummary(
+    String label,
+    double amount,
+    IconData icon,
+    Color color,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 19),
+        const SizedBox(width: 7),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                NumberFormat('#,##0.00').format(amount),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _quickAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xFFEDF1EE)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 25),
+            const SizedBox(height: 7),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _overviewCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required String destinationTitle,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SimpleFeaturePage(
+              title: destinationTitle,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(17),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: const Color(0xFFEDF1EE)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 43,
+              height: 43,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.11),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(icon, color: color, size: 23),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
                     ),
                   ),
-
-                  const SizedBox(height: 18),
-
-                  // Expense structure.
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Expenses Structure',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          if (expenseCategories.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 15),
-                              child: Center(
-                                child: Text(
-                                  'No expenses in this period.',
-                                  style: TextStyle(
-                                    color: AppColors.muted,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            ...expenseCategories.take(5).map((item) {
-                              final category =
-                                  item['category'] as String? ?? 'Other';
-                              final amount =
-                                  (item['total'] as num).toDouble();
-                              final ratio = expenses <= 0
-                                  ? 0.0
-                                  : (amount / expenses).clamp(0.0, 1.0);
-
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            category,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          formatPKR(amount),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 7),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: LinearProgressIndicator(
-                                        value: ratio,
-                                        minHeight: 7,
-                                        backgroundColor:
-                                            AppColors.background,
-                                        color: AppColors.expense,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // Five compact feature overviews sit above Show More Details.
-                  // Live figures will be connected when each feature's data module
-                  // is implemented; these cards do not display invented totals.
-                  _featureOverviewCard(
-                    title: 'Assets Overview',
-                    description: 'Track asset value, purchases and sales.',
-                    icon: Icons.real_estate_agent_outlined,
-                    color: const Color(0xFF3976C8),
-                    destinationTitle: 'Assets',
-                  ),
-                  _featureOverviewCard(
-                    title: 'Loans Overview',
-                    description: 'Review money lent, borrowed and repayments.',
-                    icon: Icons.handshake_outlined,
-                    color: const Color(0xFF9A6BC8),
-                    destinationTitle: 'Loans',
-                  ),
-                  _featureOverviewCard(
-                    title: 'Budgets Overview',
-                    description: 'Keep an eye on category limits and spending.',
-                    icon: Icons.pie_chart_outline_rounded,
-                    color: const Color(0xFFE19A35),
-                    destinationTitle: 'Budgets',
-                  ),
-                  _featureOverviewCard(
-                    title: 'Savings Goals Overview',
-                    description: 'Follow your targets and savings progress.',
-                    icon: Icons.savings_outlined,
-                    color: const Color(0xFF16865B),
-                    destinationTitle: 'Savings Goals',
-                  ),
-                  _featureOverviewCard(
-                    title: 'Recurring Transactions Overview',
-                    description: 'Review scheduled income, expenses and transfers.',
-                    icon: Icons.event_repeat_outlined,
-                    color: const Color(0xFF4D83A8),
-                    destinationTitle: 'Recurring Transactions',
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Existing Show More Details button remains unchanged.
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SimpleFeaturePage(
-                            title: 'Financial Details',
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.analytics_outlined),
-                    label: const Text('Show More Details'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
                     ),
                   ),
                 ],
               ),
             ),
-    );
-  }
-
-  // Reusable compact card for the five Home Page feature overviews.
-  // Tapping View All opens the existing feature page for that section.
-  Widget _featureOverviewCard({
-    required String title,
-    required String description,
-    required IconData icon,
-    required Color color,
-    required String destinationTitle,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => SimpleFeaturePage(title: destinationTitle),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.11),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'View All',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 2),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.primary,
-                size: 19,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryCard(
-    String title,
-    double amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 18, color: color),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                formatPKR(amount),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  fontSize: 17,
-                ),
-              ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.muted,
             ),
           ],
         ),
@@ -2195,95 +2066,9 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ------------------------------------------------------------
-// FINANCIAL OVERVIEW CHART
-// ------------------------------------------------------------
-
-class FinanceOverviewChart extends StatelessWidget {
-  final double income;
-  final double expenses;
-
-  const FinanceOverviewChart({
-    super.key,
-    required this.income,
-    required this.expenses,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final maxValue = [
-      income,
-      expenses,
-      1.0,
-    ].reduce((a, b) => a > b ? a : b);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _bar(
-          'Income',
-          income,
-          maxValue,
-          AppColors.income,
-        ),
-        const SizedBox(width: 45),
-        _bar(
-          'Expenses',
-          expenses,
-          maxValue,
-          AppColors.expense,
-        ),
-      ],
-    );
-  }
-
-  Widget _bar(
-    String label,
-    double amount,
-    double maxValue,
-    Color color,
-  ) {
-    final barHeight = (amount / maxValue * 95).clamp(4.0, 95.0);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          NumberFormat.compact().format(amount),
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 7),
-        Container(
-          width: 48,
-          height: barHeight,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(9),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppColors.muted,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ------------------------------------------------------------
-// BASIC FEATURE SCREENS
-// Part 3 mein TransactionsPage complete implement hogi.
-// ------------------------------------------------------------
+// ============================================================
+// ASSETS PAGE
+// ============================================================
 
 class AssetsPage extends StatelessWidget {
   const AssetsPage({super.key});
@@ -2294,6 +2079,10 @@ class AssetsPage extends StatelessWidget {
   }
 }
 
+// ============================================================
+// LOANS PAGE
+// ============================================================
+
 class LoansPage extends StatelessWidget {
   const LoansPage({super.key});
 
@@ -2303,54 +2092,90 @@ class LoansPage extends StatelessWidget {
   }
 }
 
-class NotificationsPage extends StatelessWidget {
-  const NotificationsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const SimpleFeaturePage(title: 'Notifications');
-  }
-}
+// ============================================================
+// MORE FEATURES
+// ============================================================
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Budgets, Goals aur Stats ab bottom navigation mein hain.
+    // Is liye yahan unki duplicate entries nahi hain.
     final features = [
-      'Categories',
-      'Recurring Transactions',
-      'Reports & Analytics',
-      'Savings Goals',
-      'Exchange Rates',
-      'Settings',
-      'Backup & Restore',
+      {
+        'title': 'Categories',
+        'icon': Icons.category_outlined,
+      },
+      {
+        'title': 'Recurring Transactions',
+        'icon': Icons.repeat_rounded,
+      },
+      {
+        'title': 'Exchange Rates',
+        'icon': Icons.currency_exchange_rounded,
+      },
+      {
+        'title': 'Settings',
+        'icon': Icons.settings_outlined,
+      },
+      {
+        'title': 'Backup & Restore',
+        'icon': Icons.backup_outlined,
+      },
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('More Features')),
-      body: ListView(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text(
+          'More Features',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        children: features.map((feature) {
+        itemCount: features.length,
+        itemBuilder: (context, index) {
+          final feature = features[index];
+
           return Card(
+            margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
-              title: Text(feature),
-              trailing: const Icon(Icons.chevron_right),
+              leading: Icon(
+                feature['icon'] as IconData,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                feature['title'] as String,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.muted,
+              ),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => SimpleFeaturePage(title: feature),
+                    builder: (_) => SimpleFeaturePage(
+                      title: feature['title'] as String,
+                    ),
                   ),
                 );
               },
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
 }
+
+// ============================================================
+// SIMPLE FEATURE PAGE
+// ============================================================
 
 class SimpleFeaturePage extends StatelessWidget {
   final String title;
@@ -2363,29 +2188,35 @@ class SimpleFeaturePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(25),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.construction_outlined,
+              Icon(
+                _getIcon(),
                 size: 55,
                 color: AppColors.primary,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
-                'This feature will be implemented in a later development step.',
+                'This section is ready for its feature implementation.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.muted),
               ),
@@ -2395,28 +2226,56 @@ class SimpleFeaturePage extends StatelessWidget {
       ),
     );
   }
+
+  IconData _getIcon() {
+    switch (title) {
+      case 'Assets':
+        return Icons.real_estate_agent_outlined;
+      case 'Loans':
+        return Icons.handshake_outlined;
+      case 'Budgets':
+        return Icons.account_balance_wallet_outlined;
+      case 'Goals':
+        return Icons.flag_outlined;
+      case 'Stats':
+        return Icons.bar_chart_outlined;
+      case 'Categories':
+        return Icons.category_outlined;
+      case 'Recurring Transactions':
+        return Icons.repeat_rounded;
+      case 'Exchange Rates':
+        return Icons.currency_exchange_rounded;
+      case 'Backup & Restore':
+        return Icons.backup_outlined;
+      default:
+        return Icons.settings_outlined;
+    }
+  }
 }
 
 // ============================================================
-// PART 3: TRANSACTION DATABASE FUNCTIONS
+// TRANSACTION DATABASE OPERATIONS
 // ============================================================
 
-extension FinanceTransactionFunctions on FinanceDB {
-  // Transaction save karke us ka ID return karna.
-  // Isi ID ke saath photos aur documents link honge.
+extension FinanceTransactionOperations on FinanceDB {
+  // Transaction save karna aur linked wallet balance update karna.
   Future<int> addTransaction({
     required String type,
     required double amount,
     required int walletId,
     int? toWalletId,
     double? toAmount,
-    required String category,
-    required String note,
-    required DateTime date,
+    double? exchangeRate,
+    String category = '',
+    String note = '',
+    DateTime? date,
   }) async {
     if (amount <= 0) {
-      throw Exception('Amount zero se zyada honi chahiye.');
+      throw Exception('Amount zero se zyada hona chahiye.');
     }
+
+    final transactionDate = date ?? DateTime.now();
+    final now = DateTime.now().toIso8601String();
 
     return db.transaction((txn) async {
       final sourceRows = await txn.query(
@@ -2430,31 +2289,21 @@ extension FinanceTransactionFunctions on FinanceDB {
         throw Exception('Selected wallet nahi mila.');
       }
 
-      final sourceWallet = sourceRows.first;
-      final sourceBalance =
-          (sourceWallet['balance'] as num).toDouble();
+      final source = sourceRows.first;
+      final sourceBalance = (source['balance'] as num).toDouble();
 
-      int? destinationId;
-      double? finalDestinationAmount;
-      double? exchangeRate;
+      if (type == 'Expense' || type == 'Transfer') {
+        if (sourceBalance < amount) {
+          throw Exception('Wallet mein itna balance available nahi hai.');
+        }
+      }
 
-      if (type == 'Income') {
-        await txn.update(
-          'wallets',
-          {'balance': sourceBalance + amount},
-          where: 'id = ?',
-          whereArgs: [walletId],
-        );
-      } else if (type == 'Expense') {
-        await txn.update(
-          'wallets',
-          {'balance': sourceBalance - amount},
-          where: 'id = ?',
-          whereArgs: [walletId],
-        );
-      } else if (type == 'Transfer') {
+      double? finalToAmount;
+      double? finalRate;
+
+      if (type == 'Transfer') {
         if (toWalletId == null || toWalletId == walletId) {
-          throw Exception('Doosra wallet select karein.');
+          throw Exception('Do different wallets select karein.');
         }
 
         final destinationRows = await txn.query(
@@ -2468,19 +2317,29 @@ extension FinanceTransactionFunctions on FinanceDB {
           throw Exception('Destination wallet nahi mila.');
         }
 
-        final destinationWallet = destinationRows.first;
-        final destinationBalance =
-            (destinationWallet['balance'] as num).toDouble();
+        final destination = destinationRows.first;
+        final sourceCurrency = source['currency'] as String;
+        final destinationCurrency = destination['currency'] as String;
 
-        finalDestinationAmount = toAmount ?? amount;
+        if (sourceCurrency == destinationCurrency) {
+          finalToAmount = amount;
+          finalRate = 1;
+        } else {
+          if (toAmount == null || toAmount <= 0) {
+            throw Exception(
+              'Different currencies ke transfer ke liye '
+              'destination amount enter karein.',
+            );
+          }
 
-        if (finalDestinationAmount <= 0) {
-          throw Exception('Transfer amount durust nahi.');
+          finalToAmount = toAmount;
+          finalRate = finalToAmount / amount;
         }
 
-        destinationId = toWalletId;
-        exchangeRate = finalDestinationAmount / amount;
+        final destinationBalance =
+            (destination['balance'] as num).toDouble();
 
+        // Dono wallets ki balances ek hi database transaction mein update.
         await txn.update(
           'wallets',
           {'balance': sourceBalance - amount},
@@ -2490,49 +2349,78 @@ extension FinanceTransactionFunctions on FinanceDB {
 
         await txn.update(
           'wallets',
-          {'balance': destinationBalance + finalDestinationAmount},
+          {'balance': destinationBalance + finalToAmount},
           where: 'id = ?',
           whereArgs: [toWalletId],
         );
+      } else if (type == 'Income') {
+        await txn.update(
+          'wallets',
+          {'balance': sourceBalance + amount},
+          where: 'id = ?',
+          whereArgs: [walletId],
+        );
+      } else if (type == 'Expense') {
+        await txn.update(
+          'wallets',
+          {'balance': sourceBalance - amount},
+          where: 'id = ?',
+          whereArgs: [walletId],
+        );
       } else {
-        throw Exception('Transaction type durust nahi.');
+        throw Exception('Transaction type valid nahi hai.');
       }
-
-      final now = DateTime.now().toIso8601String();
 
       return txn.insert('transactions', {
         'type': type,
         'amount': amount,
         'wallet_id': walletId,
-        'to_wallet_id': destinationId,
-        'to_amount': finalDestinationAmount,
-        'exchange_rate': exchangeRate,
+        'to_wallet_id': toWalletId,
+        'to_amount': finalToAmount,
+        'exchange_rate': finalRate,
         'balance_delta': null,
         'category': category,
         'note': note,
-        'date': date.toIso8601String(),
+        'date': transactionDate.toIso8601String(),
         'created_at': now,
       });
     });
   }
 
-  // Transaction delete karte waqt wallet balances reverse karna.
+  // Transaction history hasil karna.
+  Future<List<Map<String, dynamic>>> getTransactions() async {
+    return db.rawQuery('''
+      SELECT
+        transactions.*,
+        source.name AS wallet_name,
+        source.currency AS wallet_currency,
+        destination.name AS to_wallet_name,
+        destination.currency AS to_wallet_currency
+      FROM transactions
+      LEFT JOIN wallets AS source
+        ON transactions.wallet_id = source.id
+      LEFT JOIN wallets AS destination
+        ON transactions.to_wallet_id = destination.id
+      ORDER BY transactions.date DESC, transactions.id DESC
+    ''');
+  }
+
+  // Transaction delete karne par wallet balances reverse karna.
   Future<void> deleteTransaction(int id) async {
-    final rows = await db.query(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    if (rows.isEmpty) return;
-
-    final transaction = rows.first;
-
     await db.transaction((txn) async {
-      final type = transaction['type'] as String;
-      final amount = (transaction['amount'] as num).toDouble();
-      final walletId = transaction['wallet_id'] as int;
+      final rows = await txn.query(
+        'transactions',
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+
+      if (rows.isEmpty) return;
+
+      final item = rows.first;
+      final type = item['type'] as String;
+      final amount = (item['amount'] as num).toDouble();
+      final walletId = item['wallet_id'] as int;
 
       final sourceRows = await txn.query(
         'wallets',
@@ -2542,67 +2430,65 @@ extension FinanceTransactionFunctions on FinanceDB {
       );
 
       if (sourceRows.isNotEmpty) {
-        final balance =
+        final sourceBalance =
             (sourceRows.first['balance'] as num).toDouble();
 
         if (type == 'Income') {
           await txn.update(
             'wallets',
-            {'balance': balance - amount},
+            {'balance': sourceBalance - amount},
             where: 'id = ?',
             whereArgs: [walletId],
           );
         } else if (type == 'Expense') {
           await txn.update(
             'wallets',
-            {'balance': balance + amount},
-            where: 'id = ?',
-            whereArgs: [walletId],
-          );
-        } else if (type == 'Adjustment') {
-          final delta =
-              (transaction['balance_delta'] as num?)?.toDouble() ?? 0;
-
-          await txn.update(
-            'wallets',
-            {'balance': balance - delta},
+            {'balance': sourceBalance + amount},
             where: 'id = ?',
             whereArgs: [walletId],
           );
         } else if (type == 'Transfer') {
           await txn.update(
             'wallets',
-            {'balance': balance + amount},
+            {'balance': sourceBalance + amount},
             where: 'id = ?',
             whereArgs: [walletId],
           );
-        }
-      }
 
-      if (type == 'Transfer') {
-        final destinationId = transaction['to_wallet_id'] as int?;
-        final destinationAmount =
-            (transaction['to_amount'] as num?)?.toDouble() ?? amount;
+          final destinationId = item['to_wallet_id'] as int?;
+          final destinationAmount =
+              (item['to_amount'] as num?)?.toDouble() ?? amount;
 
-        if (destinationId != null) {
-          final destinationRows = await txn.query(
-            'wallets',
-            where: 'id = ?',
-            whereArgs: [destinationId],
-            limit: 1,
-          );
-
-          if (destinationRows.isNotEmpty) {
-            final balance =
-                (destinationRows.first['balance'] as num).toDouble();
-
-            await txn.update(
+          if (destinationId != null) {
+            final destinationRows = await txn.query(
               'wallets',
-              {'balance': balance - destinationAmount},
               where: 'id = ?',
               whereArgs: [destinationId],
+              limit: 1,
             );
+
+            if (destinationRows.isNotEmpty) {
+              final destinationBalance =
+                  (destinationRows.first['balance'] as num).toDouble();
+
+              await txn.update(
+                'wallets',
+                {'balance': destinationBalance - destinationAmount},
+                where: 'id = ?',
+                whereArgs: [destinationId],
+              );
+            }
           }
+        } else if (type == 'Adjustment') {
+          final delta =
+              (item['balance_delta'] as num?)?.toDouble() ?? 0;
+
+          await txn.update(
+            'wallets',
+            {'balance': sourceBalance - delta},
+            where: 'id = ?',
+            whereArgs: [walletId],
+          );
         }
       }
 
@@ -2612,36 +2498,7 @@ extension FinanceTransactionFunctions on FinanceDB {
         whereArgs: [id],
       );
     });
-
-    // Database record delete hone ke baad uski attachments delete karna.
-    await AttachmentService.deleteOwnerAttachments(
-  ownerType: AttachmentOwnerTypes.transaction,
-  ownerId: id,
-);
   }
-
-  Future<List<Map<String, dynamic>>> getTransactions() {
-    return db.query(
-      'transactions',
-      orderBy: 'date DESC, id DESC',
-    );
-  }
-}
-
-// ============================================================
-// TEMPORARY ATTACHMENT MODEL
-// ============================================================
-
-class PendingAttachment {
-  final String path;
-  final String name;
-  final bool isImage;
-
-  const PendingAttachment({
-    required this.path,
-    required this.name,
-    required this.isImage,
-  });
 }
 
 // ============================================================
@@ -2665,24 +2522,20 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   final formKey = GlobalKey<FormState>();
 
   final amountController = TextEditingController();
-  final categoryController = TextEditingController();
+  final destinationAmountController = TextEditingController();
   final noteController = TextEditingController();
 
-  final ImagePicker imagePicker = ImagePicker();
-
   List<Map<String, dynamic>> wallets = [];
-  List<PendingAttachment> selectedAttachments = [];
 
   int? selectedWalletId;
-  int? selectedDestinationId;
+  int? selectedDestinationWalletId;
 
   DateTime selectedDate = DateTime.now();
 
-  bool loading = true;
   bool saving = false;
+  bool loading = true;
 
-  double? destinationAmount;
-  String? currencyWarning;
+  String selectedCategory = '';
 
   bool get isTransfer => widget.transactionType == 'Transfer';
 
@@ -2690,15 +2543,12 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   void initState() {
     super.initState();
     loadWallets();
-
-    amountController.addListener(updateTransferPreview);
   }
 
   @override
   void dispose() {
-    amountController.removeListener(updateTransferPreview);
     amountController.dispose();
-    categoryController.dispose();
+    destinationAmountController.dispose();
     noteController.dispose();
     super.dispose();
   }
@@ -2714,424 +2564,239 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
       if (wallets.isNotEmpty) {
         selectedWalletId = wallets.first['id'] as int;
-
-        if (wallets.length > 1) {
-          selectedDestinationId = wallets[1]['id'] as int;
+        if (isTransfer && wallets.length > 1) {
+          selectedDestinationWalletId =
+              wallets[1]['id'] as int;
         }
       }
     });
-
-    await updateTransferPreview();
   }
 
-  Map<String, dynamic>? get sourceWallet {
+  Map<String, dynamic>? get selectedWallet {
     for (final wallet in wallets) {
       if (wallet['id'] == selectedWalletId) return wallet;
     }
     return null;
   }
 
-  Map<String, dynamic>? get destinationWallet {
+  Map<String, dynamic>? get selectedDestinationWallet {
     for (final wallet in wallets) {
-      if (wallet['id'] == selectedDestinationId) return wallet;
+      if (wallet['id'] == selectedDestinationWalletId) {
+        return wallet;
+      }
     }
     return null;
   }
 
-  // Cross-currency transfer ka destination amount calculate karna.
-  Future<void> updateTransferPreview() async {
-    if (!isTransfer || !mounted) return;
-
-    final amount = double.tryParse(amountController.text) ?? 0;
-    final source = sourceWallet;
-    final destination = destinationWallet;
-
-    if (source == null || destination == null || amount <= 0) {
-      setState(() {
-        destinationAmount = null;
-        currencyWarning = null;
-      });
-      return;
-    }
-
-    final sourceCurrency = source['currency'] as String;
-    final destinationCurrency = destination['currency'] as String;
-
-    if (sourceCurrency == destinationCurrency) {
-      setState(() {
-        destinationAmount = amount;
-        currencyWarning = null;
-      });
-      return;
-    }
-
-    final sourceRate =
-        await FinanceDB.instance.getExchangeRate(sourceCurrency);
-    final destinationRate =
-        await FinanceDB.instance.getExchangeRate(destinationCurrency);
-
-    if (!mounted) return;
-
-    if (sourceRate == null || destinationRate == null) {
-      setState(() {
-        destinationAmount = null;
-        currencyWarning =
-            'Transfer ke liye dono currencies ke exchange rates set karein.';
-      });
-      return;
-    }
-
-    setState(() {
-      destinationAmount = amount * sourceRate / destinationRate;
-      currencyWarning = null;
-    });
-  }
-
-  // Camera se photo lena.
-  Future<void> takePhoto() async {
-    try {
-      final image = await imagePicker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-      );
-
-      if (image == null || !mounted) return;
-
-      setState(() {
-        selectedAttachments.add(
-          PendingAttachment(
-            path: image.path,
-            name: image.name,
-            isImage: true,
-          ),
-        );
-      });
-    } catch (e) {
-      showMessage('Camera open nahi ho saka: $e');
-    }
-  }
-
-  // Gallery se multiple photos select karna.
-  Future<void> pickGalleryPhotos() async {
-    try {
-      final images = await imagePicker.pickMultiImage(
-        imageQuality: 85,
-      );
-
-      if (!mounted || images.isEmpty) return;
-
-      setState(() {
-        selectedAttachments.addAll(
-          images.map(
-            (image) => PendingAttachment(
-              path: image.path,
-              name: image.name,
-              isImage: true,
-            ),
-          ),
-        );
-      });
-    } catch (e) {
-      showMessage('Gallery se photos select nahi ho sake: $e');
-    }
-  }
-
-  // File manager se PDF aur documents select karna.
-  Future<void> pickDocuments() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
-        type: FileType.custom,
-        allowedExtensions: [
-          'pdf',
-          'doc',
-          'docx',
-          'xls',
-          'xlsx',
-          'txt',
-          'csv',
-        ],
-      );
-
-      if (result == null || !mounted) return;
-
-      final newFiles = <PendingAttachment>[];
-
-      for (final file in result.files) {
-        final path = file.path;
-
-        if (path == null) continue;
-
-        newFiles.add(
-          PendingAttachment(
-            path: path,
-            name: file.name,
-            isImage: false,
-          ),
-        );
-      }
-
-      setState(() {
-        selectedAttachments.addAll(newFiles);
-      });
-    } catch (e) {
-      showMessage('Documents select nahi ho sake: $e');
-    }
-  }
-
-  void showAttachmentOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.camera_alt_outlined),
-                  title: const Text('Take Photo'),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    takePhoto();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
-                  title: const Text('Choose from Gallery'),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    pickGalleryPhotos();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.attach_file),
-                  title: const Text('Choose PDF or Document'),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    pickDocuments();
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+  InputDecoration decoration(String label, {IconData? icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: icon == null ? null : Icon(icon),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(13),
+      ),
     );
   }
 
-  void showMessage(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  String formatAmount(double amount, String currency) {
-    return '$currency ${NumberFormat('#,##0.00').format(amount)}';
-  }
-
-  // Transaction save karna aur us ke baad attachments link karna.
-  Future<void> saveTransaction() async {
+  Future<void> save() async {
     if (!formKey.currentState!.validate()) return;
 
+    final amount = double.tryParse(amountController.text.trim());
+
+    if (amount == null || amount <= 0) return;
+
     if (selectedWalletId == null) {
-      showMessage('Pehle wallet select karein.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wallet select karein.')),
+      );
       return;
     }
 
-    if (isTransfer) {
-      if (selectedDestinationId == null ||
-          selectedDestinationId == selectedWalletId) {
-        showMessage('Doosra destination wallet select karein.');
-        return;
-      }
+    double? destinationAmount;
 
-      if (destinationAmount == null) {
-        showMessage(
-          currencyWarning ?? 'Transfer amount calculate nahi ho saka.',
+    if (isTransfer) {
+      if (selectedDestinationWalletId == null ||
+          selectedDestinationWalletId == selectedWalletId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Different destination wallet select karein.'),
+          ),
         );
         return;
       }
-    }
 
-    final amount = double.parse(amountController.text.trim());
+      final sourceCurrency = selectedWallet?['currency'];
+      final destinationCurrency =
+          selectedDestinationWallet?['currency'];
+
+      if (sourceCurrency != destinationCurrency) {
+        destinationAmount = double.tryParse(
+          destinationAmountController.text.trim(),
+        );
+
+        if (destinationAmount == null || destinationAmount <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Destination amount enter karein.'),
+            ),
+          );
+          return;
+        }
+      }
+    }
 
     setState(() => saving = true);
 
     try {
-      final transactionId =
-          await FinanceDB.instance.addTransaction(
+      await FinanceDB.instance.addTransaction(
         type: widget.transactionType,
         amount: amount,
         walletId: selectedWalletId!,
-        toWalletId: isTransfer ? selectedDestinationId : null,
-        toAmount: isTransfer ? destinationAmount : null,
-        category: categoryController.text.trim().isEmpty
-            ? (isTransfer ? 'Transfer' : 'Other')
-            : categoryController.text.trim(),
+        toWalletId: isTransfer ? selectedDestinationWalletId : null,
+        toAmount: destinationAmount,
+        category: selectedCategory,
         note: noteController.text.trim(),
         date: selectedDate,
       );
 
-      int savedAttachments = 0;
-      int failedAttachments = 0;
-
-      // Pehle transaction save hota hai, phir attachments us ID se link.
-      for (final attachment in selectedAttachments) {
-        try {
-          await AttachmentService.addAttachment(
-            ownerType: AttachmentOwnerTypes.transaction,
-            ownerId: transactionId,
-            sourcePath: attachment.path,
-            originalFileName: attachment.name,
-          );
-          savedAttachments++;
-        } catch (_) {
-          failedAttachments++;
-        }
-      }
-
       if (!mounted) return;
 
-      String message = 'Transaction saved successfully.';
-
-      if (failedAttachments > 0) {
-        message +=
-            ' $savedAttachments attachments saved; '
-            '$failedAttachments attachments failed.';
-      } else if (savedAttachments > 0) {
-        message += ' $savedAttachments attachments saved.';
-      }
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(
+          content: Text('Transaction successfully saved.'),
+        ),
       );
 
       Navigator.pop(context, true);
     } catch (e) {
-      showMessage(
-        e.toString().replaceFirst('Exception: ', ''),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
       );
 
-      if (mounted) {
-        setState(() => saving = false);
-      }
+      setState(() => saving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final type = widget.transactionType;
+    final isIncome = widget.transactionType == 'Income';
 
-    final typeColor = type == 'Income'
+    final accentColor = isIncome
         ? AppColors.income
-        : type == 'Expense'
-            ? AppColors.expense
-            : AppColors.primary;
+        : isTransfer
+            ? AppColors.primary
+            : AppColors.expense;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Add $type'),
+        title: Text(
+          'Add ${widget.transactionType}',
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : wallets.isEmpty
               ? const Center(
-                  child: Text('Pehle Wallets tab mein wallet banayein.'),
+                  child: Text('Pehle ek wallet add karein.'),
                 )
               : Form(
                   key: formKey,
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Column(
-                            children: [
-                              Icon(
-                                type == 'Income'
-                                    ? Icons.arrow_downward_rounded
-                                    : type == 'Expense'
-                                        ? Icons.arrow_upward_rounded
-                                        : Icons.swap_horiz_rounded,
-                                size: 32,
-                                color: typeColor,
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.09),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isIncome
+                                  ? Icons.south_west_rounded
+                                  : isTransfer
+                                      ? Icons.swap_horiz_rounded
+                                      : Icons.north_east_rounded,
+                              color: accentColor,
+                              size: 27,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${widget.transactionType} Transaction',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: accentColor,
+                                fontSize: 16,
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Amount',
-                                style: TextStyle(
-                                  color: typeColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              TextFormField(
-                                controller: amountController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 27,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText: '0.00',
-                                  border: InputBorder.none,
-                                ),
-                                validator: (value) {
-                                  final amount =
-                                      double.tryParse(value ?? '');
-
-                                  if (amount == null || amount <= 0) {
-                                    return 'Valid amount enter karein.';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+
+                      TextFormField(
+                        controller: amountController,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: decoration(
+                          'Amount',
+                          icon: Icons.payments_outlined,
+                        ),
+                        validator: (value) {
+                          final amount =
+                              double.tryParse(value?.trim() ?? '');
+
+                          if (amount == null || amount <= 0) {
+                            return 'Valid amount enter karein.';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 14),
 
                       DropdownButtonFormField<int>(
                         value: selectedWalletId,
-                        decoration: const InputDecoration(
-                          labelText: 'From Wallet',
-                          border: OutlineInputBorder(),
-                          prefixIcon:
-                              Icon(Icons.account_balance_wallet_outlined),
+                        isExpanded: true,
+                        decoration: decoration(
+                          isTransfer ? 'From Wallet' : 'Wallet',
+                          icon: Icons.account_balance_wallet_outlined,
                         ),
                         items: wallets.map((wallet) {
                           return DropdownMenuItem<int>(
                             value: wallet['id'] as int,
                             child: Text(
                               '${wallet['name']} (${wallet['currency']})',
+                              overflow: TextOverflow.ellipsis,
                             ),
                           );
                         }).toList(),
                         onChanged: (value) {
                           setState(() => selectedWalletId = value);
-                          updateTransferPreview();
                         },
                       ),
 
                       if (isTransfer) ...[
                         const SizedBox(height: 14),
+
                         DropdownButtonFormField<int>(
-                          value: selectedDestinationId,
-                          decoration: const InputDecoration(
-                            labelText: 'To Wallet',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.account_balance_outlined),
+                          value: selectedDestinationWalletId,
+                          isExpanded: true,
+                          decoration: decoration(
+                            'To Wallet',
+                            icon: Icons.account_balance_outlined,
                           ),
                           items: wallets
                               .where(
@@ -3143,234 +2808,115 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                               value: wallet['id'] as int,
                               child: Text(
                                 '${wallet['name']} (${wallet['currency']})',
+                                overflow: TextOverflow.ellipsis,
                               ),
                             );
                           }).toList(),
                           onChanged: (value) {
                             setState(
-                              () => selectedDestinationId = value,
+                              () => selectedDestinationWalletId = value,
                             );
-                            updateTransferPreview();
                           },
                         ),
 
-                        if (destinationAmount != null &&
-                            destinationWallet != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Card(
-                              color: AppColors.primary.withValues(
-                                alpha: 0.07,
-                              ),
-                              child: ListTile(
-                                title: const Text(
-                                  'Destination Amount',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                                subtitle: Text(
-                                  formatAmount(
-                                    destinationAmount!,
-                                    destinationWallet!['currency'] as String,
-                                  ),
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17,
-                                  ),
-                                ),
-                              ),
+                        if (selectedWallet != null &&
+                            selectedDestinationWallet != null &&
+                            selectedWallet!['currency'] !=
+                                selectedDestinationWallet!['currency']) ...[
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: destinationAmountController,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: decoration(
+                              'Destination Amount '
+                              '(${selectedDestinationWallet!['currency']})',
+                              icon: Icons.currency_exchange_rounded,
                             ),
                           ),
-
-                        if (currencyWarning != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              currencyWarning!,
-                              style: const TextStyle(
-                                color: AppColors.expense,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
+                        ],
                       ],
 
                       const SizedBox(height: 14),
 
-                      if (!isTransfer)
-                        TextFormField(
-                          controller: categoryController,
-                          decoration: const InputDecoration(
-                            labelText: 'Category',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.category_outlined),
-                          ),
+                      TextFormField(
+                        initialValue: selectedCategory,
+                        decoration: decoration(
+                          'Category (Optional)',
+                          icon: Icons.category_outlined,
                         ),
+                        onChanged: (value) {
+                          selectedCategory = value;
+                        },
+                      ),
 
                       const SizedBox(height: 14),
 
                       TextFormField(
                         controller: noteController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Note (Optional)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.notes_outlined),
+                        decoration: decoration(
+                          'Notes (Optional)',
+                          icon: Icons.notes_rounded,
                         ),
                       ),
 
                       const SizedBox(height: 14),
 
-                      Card(
-                        child: ListTile(
-                          leading: const Icon(
-                            Icons.calendar_month_outlined,
-                            color: AppColors.primary,
-                          ),
-                          title: const Text('Transaction Date'),
-                          subtitle: Text(
-                            DateFormat('dd MMM yyyy').format(selectedDate),
-                          ),
-                          trailing: const Icon(Icons.edit_calendar_outlined),
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                            );
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
 
-                            if (picked != null) {
-                              setState(() => selectedDate = picked);
-                            }
-                          },
+                          if (picked != null) {
+                            setState(() => selectedDate = picked);
+                          }
+                        },
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        label: Text(
+                          DateFormat('dd MMM yyyy').format(selectedDate),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13),
+                          ),
                         ),
                       ),
-
-                      const SizedBox(height: 18),
-
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Attachments',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          TextButton.icon(
-                            onPressed: showAttachmentOptions,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add'),
-                          ),
-                        ],
-                      ),
-
-                      if (selectedAttachments.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(22),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFFE5EAE7),
-                            ),
-                          ),
-                          child: const Column(
-                            children: [
-                              Icon(
-                                Icons.attach_file,
-                                color: AppColors.muted,
-                                size: 30,
-                              ),
-                              SizedBox(height: 7),
-                              Text(
-                                'Photos or documents attach karein',
-                                style: TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        ...List.generate(
-                          selectedAttachments.length,
-                          (index) {
-                            final attachment =
-                                selectedAttachments[index];
-
-                            return Card(
-                              child: ListTile(
-                                leading: attachment.isImage
-                                    ? ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        child: Image.file(
-                                          File(attachment.path),
-                                          width: 48,
-                                          height: 48,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.picture_as_pdf_outlined,
-                                        color: AppColors.expense,
-                                        size: 32,
-                                      ),
-                                title: Text(
-                                  attachment.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  attachment.isImage ? 'Image' : 'Document',
-                                ),
-                                trailing: IconButton(
-                                  tooltip: 'Remove attachment',
-                                  icon: const Icon(
-                                    Icons.close,
-                                    color: AppColors.expense,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      selectedAttachments.removeAt(index);
-                                    });
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
 
                       const SizedBox(height: 24),
 
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: saving ? null : saveTransaction,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: typeColor,
+                      FilledButton(
+                        onPressed: saving ? null : save,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accentColor,
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          child: saving
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  'Save $type',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
                         ),
+                        child: saving
+                            ? const SizedBox(
+                                height: 21,
+                                width: 21,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Save Transaction',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                ),
+                              ),
                       ),
                     ],
                   ),
@@ -3380,7 +2926,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 }
 
 // ============================================================
-// TRANSACTIONS HISTORY PAGE
+// TRANSACTIONS HISTORY
 // ============================================================
 
 class TransactionsPage extends StatefulWidget {
@@ -3403,18 +2949,25 @@ class _TransactionsPageState extends State<TransactionsPage> {
   Future<void> loadTransactions() async {
     setState(() => loading = true);
 
-    final result = await FinanceDB.instance.getTransactions();
+    try {
+      final result =
+          await FinanceDB.instance.getTransactions();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      transactions = result;
-      loading = false;
-    });
-  }
+      setState(() {
+        transactions = result;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
 
-  String money(double amount, String currency) {
-    return '$currency ${NumberFormat('#,##0.00').format(amount)}';
+      setState(() => loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   Future<void> deleteTransaction(
@@ -3425,8 +2978,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Transaction?'),
         content: const Text(
-          'Is transaction ko delete karne par wallet balance bhi reverse '
-          'ho jayega aur linked attachments bhi delete hongi.',
+          'Kya aap is transaction ko delete karna chahte hain? '
+          'Wallet balance bhi reverse ho jayega.',
         ),
         actions: [
           TextButton(
@@ -3449,16 +3002,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
       );
 
       await loadTransactions();
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction deleted.')),
-      );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Delete failed: $e')),
+        SnackBar(content: Text(e.toString())),
       );
     }
   }
@@ -3470,7 +3018,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
       appBar: AppBar(
         title: const Text(
           'Transactions',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: loading
@@ -3499,167 +3047,124 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                     itemCount: transactions.length,
                     itemBuilder: (context, index) {
-                      final transaction = transactions[index];
+                      final item = transactions[index];
 
-                      final type = transaction['type'] as String;
+                      final type = item['type'] as String;
                       final amount =
-                          (transaction['amount'] as num).toDouble();
+                          (item['amount'] as num).toDouble();
+
+                      final currency =
+                          item['wallet_currency'] as String? ?? 'PKR';
+
                       final date = DateTime.tryParse(
-                            transaction['date'] as String,
+                            item['date'] as String? ?? '',
                           ) ??
                           DateTime.now();
 
-                      final walletId =
-                          transaction['wallet_id'] as int;
+                      final isIncome = type == 'Income';
+                      final isExpense = type == 'Expense';
+                      final isTransfer = type == 'Transfer';
 
-                      final color = type == 'Income'
+                      final color = isIncome
                           ? AppColors.income
-                          : type == 'Expense'
+                          : isExpense
                               ? AppColors.expense
                               : AppColors.primary;
 
-                      final icon = type == 'Income'
-                          ? Icons.arrow_downward_rounded
-                          : type == 'Expense'
-                              ? Icons.arrow_upward_rounded
-                              : type == 'Transfer'
-                                  ? Icons.swap_horiz_rounded
-                                  : Icons.tune_rounded;
+                      final icon = isIncome
+                          ? Icons.south_west_rounded
+                          : isExpense
+                              ? Icons.north_east_rounded
+                              : Icons.swap_horiz_rounded;
 
-                      return FutureBuilder<Map<String, dynamic>?>(
-                        future: FinanceDB.instance.getWallet(walletId),
-                        builder: (context, walletSnapshot) {
-                          final wallet = walletSnapshot.data;
-                          final currency =
-                              wallet?['currency'] as String? ?? 'PKR';
+                      final destinationName =
+                          item['to_wallet_name'] as String?;
 
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor:
-                                        color.withValues(alpha: 0.12),
-                                    child: Icon(icon, color: color),
-                                  ),
-                                  title: Text(
-                                    transaction['category'] as String? ??
-                                        type,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '$type • ${DateFormat('dd MMM yyyy').format(date)}',
-                                      ),
-                                      if ((transaction['note'] as String?)
-                                              ?.isNotEmpty ==
-                                          true)
-                                        Text(
-                                          transaction['note'] as String,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        money(amount, currency),
-                                        style: TextStyle(
-                                          color: color,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      PopupMenuButton<String>(
-                                        onSelected: (value) {
-                                          if (value == 'delete') {
-                                            deleteTransaction(transaction);
-                                          }
-                                        },
-                                        itemBuilder: (_) => const [
-                                          PopupMenuItem(
-                                            value: 'delete',
-                                            child: Text('Delete'),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Transaction ke linked attachments.
-                                FutureBuilder<List<AttachmentModel>>(
-                                  future: AttachmentService
-                                      .getTransactionAttachments(
-                                    transaction['id'] as int,
-                                  ),
-                                  builder: (context, snapshot) {
-                                    final attachments =
-                                        snapshot.data ?? [];
-
-                                    if (attachments.isEmpty) {
-                                      return const SizedBox.shrink();
-                                    }
-
-                                    return Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        0,
-                                        16,
-                                        12,
-                                      ),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children: attachments.map((item) {
-                                            final isImage =
-                                                item.fileType
-                                                    .toLowerCase()
-                                                    .contains('image');
-
-                                            return ActionChip(
-                                              avatar: Icon(
-                                                isImage
-                                                    ? Icons.image_outlined
-                                                    : Icons
-                                                        .description_outlined,
-                                                size: 17,
-                                              ),
-                                              label: SizedBox(
-                                                width: 130,
-                                                child: Text(
-                                                  item.fileName,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              onPressed: () async {
-                                                await OpenFilex.open(
-                                                  item.filePath,
-                                                );
-                                              },
-                                            );
-                                          }).toList(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 13,
+                            vertical: 8,
+                          ),
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                color.withValues(alpha: 0.10),
+                            child: Icon(icon, color: color),
+                          ),
+                          title: Text(
+                            isTransfer
+                                ? '${
+                                    item['wallet_name'] ?? 'Wallet'
+                                  } → ${destinationName ?? 'Wallet'}'
+                                : (item['wallet_name'] ?? 'Wallet')
+                                    .toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
                             ),
-                          );
-                        },
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text(
+                                '$type • ${DateFormat('dd MMM yyyy').format(date)}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                              if ((item['category'] ?? '')
+                                  .toString()
+                                  .isNotEmpty)
+                                Text(
+                                  item['category'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              if ((item['note'] ?? '')
+                                  .toString()
+                                  .isNotEmpty)
+                                Text(
+                                  item['note'] as String,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                isTransfer
+                                    ? '$currency ${NumberFormat('#,##0.##').format(amount)}'
+                                    : '${isIncome ? '+' : isExpense ? '-' : ''}$currency ${NumberFormat('#,##0.##').format(amount)}',
+                                style: TextStyle(
+                                  color: color,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == 'delete') {
+                                    deleteTransaction(item);
+                                  }
+                                },
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),

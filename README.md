@@ -1,7 +1,7 @@
 My Finance
 
 A personal & business finance management application built with Flutter and Dart.
-My Finance aims to provide a single place to manage Accounts, Attachments, Assets, Budgets, Goals, Loans, Savings, Transaction, Recurring Transactio, Stats and Walles.
+My Finance aims to provide a single place to manage Accounts, Attachments, Assets, Budgets, Goals, Loans, Savings, Transaction, Recurring Transactio, Stats and Wallets.
 
 Project Overview
 

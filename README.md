@@ -1,8 +1,7 @@
 My Finance
 
-A personal finance management application built with Flutter and Dart.
-
-My Finance aims to provide a single place to manage accounts, transactions, assets, savings, loans, budgets, recurring transactions, attachments, and financial reports.
+A personal & business finance management application built with Flutter and Dart.
+My Finance aims to provide a single place to manage Accounts, Attachments, Assets, Budgets, Goals, Loans, Savings, Transaction, Recurring Transactio, Stats and Walles.
 
 Project Overview
 
@@ -55,7 +54,7 @@ Features Under Development
 * Track purchase and current values
 * Realized profit and loss tracking
 
-5. Savings Goals
+5. Goals Management
 
 * Multiple savings goals
 * Target amounts and dates
@@ -193,7 +192,7 @@ Build Android APK
 
 flutter build apk --release
 
-Run on Windows
+Run on Windows:
 
 flutter run -d windows
 
@@ -201,7 +200,7 @@ Build Windows Application
 
 flutter build windows --release
 
-Database
+Database:
 
 The application currently uses SQLite for local financial data.
 
@@ -213,8 +212,8 @@ GitHub:
 
 https://github.com/shahidlaashary/my-finance-android
 
-License
+License:
 
 Private personal finance project.
 
-All rights reserved.
+All rights reserved by Shahid Laashary

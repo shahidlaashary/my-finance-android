@@ -798,8 +798,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     super.initState();
 
     final wallet = widget.wallet;
-
-    nameController = TextEditingController(
+        nameController = TextEditingController(
       text: wallet?['name'] as String? ?? '',
     );
     customTypeController = TextEditingController(
@@ -969,281 +968,292 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final keyboardIsOpen = keyboardHeight > 0;
 
-    return SafeArea(
-      top: false,
-      child: ConstrainedBox(
-        // Sheet ko content ke mutabiq compact rakhein; full-screen na banayein.
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.72),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
-            child: Form(
-              key: formKey,
-              // Keyboard ke waqt form scroll ho sakta hai; normal sheet mein scrolling band rahegi.
-              child: SingleChildScrollView(
-                physics: keyboardIsOpen
-                    ? const ClampingScrollPhysics()
-                    : const NeverScrollableScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                  // Sheet ka chhota drag handle.
-                  Center(
-                    child: Container(
-                      width: 38,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD9E0DC),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+    // Keyboard open hone par poori sheet ko halka sa upar animate karna.
+    // Modal bottom-sheet route keyboard inset bhi handle karta hai.
+    return AnimatedSlide(
+      offset: Offset(0, keyboardIsOpen ? -0.10 : 0),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      child: SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          // Sheet ki original maximum height aur design preserve rakhein.
+          constraints: BoxConstraints(maxHeight: screenHeight * 0.72),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+              child: Form(
+                key: formKey,
+                // Sheet ko scroll karne ke bajaye keyboard par upar move karna.
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          isEditing ? 'Edit Wallet' : 'Add Wallet',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.text,
+                      // Sheet ka chhota drag handle.
+                      Center(
+                        child: Container(
+                          width: 38,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD9E0DC),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        onPressed: saving
-                            ? null
-                            : () => Navigator.pop(context, false),
-                        icon: const Icon(Icons.close_rounded),
-                        color: AppColors.muted,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Pehli row: Wallet Name aur Wallet Type.
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 6,
-                        child: TextFormField(
-                          controller: nameController,
-                          decoration: _fieldDecoration(
-                            'Wallet Name',
-                            icon: Icons.account_balance_wallet_outlined,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Name required';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 3,
-                        child: DropdownButtonFormField<String>(
-                          value: selectedType,
-                          isExpanded: true,
-                          decoration: _fieldDecoration('Wallet Type'),
-                          items: walletTypes.map((type) {
-                            return DropdownMenuItem(
-                              value: type,
-                              child: Text(
-                                type,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              isEditing ? 'Edit Wallet' : 'Add Wallet',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.text,
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => selectedType = value);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (selectedType == 'Custom') ...[
-                    const SizedBox(height: 9),
-                    TextFormField(
-                      controller: customTypeController,
-                      decoration: _fieldDecoration('Custom Wallet Type'),
-                      validator: (value) {
-                        if (selectedType == 'Custom' &&
-                            (value == null || value.trim().isEmpty)) {
-                          return 'Custom type required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Wallet Icon',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  _buildIconPicker(),
-
-                  const SizedBox(height: 8),
-
-                  // Currency aur amount ek hi row mein.
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: DropdownButtonFormField<String>(
-                          value: selectedCurrency,
-                          isExpanded: true,
-                          decoration: _fieldDecoration('Currency'),
-                          items: walletCurrencies.map((currency) {
-                            return DropdownMenuItem(
-                              value: currency,
-                              child: Text(
-                                currency,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => selectedCurrency = value);
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 5,
-                        child: TextFormField(
-                          controller:
-                              isEditing ? currentController : openingController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                            signed: true,
-                          ),
-                          decoration: _fieldDecoration(
-                            isEditing ? 'Current Balance' : 'Opening Balance',
-                          ),
-                          validator: (value) {
-                            if (value == null ||
-                                double.tryParse(value.trim()) == null) {
-                              return 'Enter valid amount';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 7),
-                  TextFormField(
-                    controller: numberController,
-                    decoration: _fieldDecoration(
-                      'Wallet Number (Optional)',
-                      icon: Icons.numbers_outlined,
-                    ),
-                  ),
-
-                  const SizedBox(height: 3),
-                  // Label aur standard toggle ek hi horizontal line par.
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Exclude from Total Balance',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.text,
-                          ),
-                        ),
-                      ),
-                      Switch.adaptive(
-                        value: excludeTotal,
-                        activeTrackColor: AppColors.primary,
-                        onChanged: (value) {
-                          setState(() => excludeTotal = value);
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: saving
-                              ? null
-                              : () => Navigator.pop(context, false),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            foregroundColor: AppColors.text,
-                            side: const BorderSide(color: Color(0xFFDDE5E0)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(13),
                             ),
                           ),
-                          child: const Text('Cancel'),
-                        ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            onPressed: saving
+                                ? null
+                                : () => Navigator.pop(context, false),
+                            icon: const Icon(Icons.close_rounded),
+                            color: AppColors.muted,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
-                        child: FilledButton(
-                          onPressed: saving ? null : saveWallet,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            minimumSize: const Size.fromHeight(48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(13),
+                      const SizedBox(height: 10),
+
+                      // Pehli row: Wallet Name aur Wallet Type.
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 6,
+                            child: TextFormField(
+                              controller: nameController,
+                              decoration: _fieldDecoration(
+                                'Wallet Name',
+                                icon: Icons.account_balance_wallet_outlined,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Name required';
+                                }
+                                return null;
+                              },
                             ),
                           ),
-                          child: saving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                                                        ),
-                                  )
-                              : const Text(
-                                  'Save Wallet',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 3,
+                            child: DropdownButtonFormField<String>(
+                              value: selectedType,
+                              isExpanded: true,
+                              decoration: _fieldDecoration('Wallet Type'),
+                              items: walletTypes.map((type) {
+                                return DropdownMenuItem(
+                                  value: type,
+                                  child: Text(
+                                    type,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13),
                                   ),
-                                ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() => selectedType = value);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      if (selectedType == 'Custom') ...[
+                        const SizedBox(height: 9),
+                        TextFormField(
+                          controller: customTypeController,
+                          decoration: _fieldDecoration('Custom Wallet Type'),
+                          validator: (value) {
+                            if (selectedType == 'Custom' &&
+                                (value == null || value.trim().isEmpty)) {
+                              return 'Custom type required';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Wallet Icon',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.text,
                         ),
                       ),
+                      const SizedBox(height: 5),
+                      _buildIconPicker(),
+
+                      const SizedBox(height: 8),
+
+                      // Currency aur amount ek hi row mein.
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: DropdownButtonFormField<String>(
+                              value: selectedCurrency,
+                              isExpanded: true,
+                              decoration: _fieldDecoration('Currency'),
+                              items: walletCurrencies.map((currency) {
+                                return DropdownMenuItem(
+                                  value: currency,
+                                  child: Text(
+                                    currency,
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() => selectedCurrency = value);
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 5,
+                            child: TextFormField(
+                              controller: isEditing
+                                  ? currentController
+                                  : openingController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: true,
+                              ),
+                              decoration: _fieldDecoration(
+                                isEditing
+                                    ? 'Current Balance'
+                                    : 'Opening Balance',
+                              ),
+                              validator: (value) {
+                                if (value == null ||
+                                    double.tryParse(value.trim()) == null) {
+                                  return 'Enter valid amount';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 7),
+                      TextFormField(
+                        controller: numberController,
+                        decoration: _fieldDecoration(
+                          'Wallet Number (Optional)',
+                          icon: Icons.numbers_outlined,
+                        ),
+                      ),
+
+                      const SizedBox(height: 3),
+                      // Label aur standard toggle ek hi horizontal line par.
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Exclude from Total Balance',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.text,
+                              ),
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: excludeTotal,
+                            activeTrackColor: AppColors.primary,
+                            onChanged: (value) {
+                              setState(() => excludeTotal = value);
+                            },
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => Navigator.pop(context, false),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                                foregroundColor: AppColors.text,
+                                side: const BorderSide(
+                                  color: Color(0xFFDDE5E0),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 2,
+                            child: FilledButton(
+                              onPressed: saving ? null : saveWallet,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                minimumSize: const Size.fromHeight(48),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                              child: saving
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Save Wallet',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }
@@ -1598,8 +1608,7 @@ class PlusActionSheet extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: () {
         Navigator.pop(context);
-
-        Navigator.of(context).push(
+                Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => TransactionEntryForm(
               transactionType: type,
@@ -1666,7 +1675,8 @@ class PlusActionSheet extends StatelessWidget {
     );
   }
 }
-      // ============================================================
+
+// ============================================================
 // HOME DASHBOARD
 // ============================================================
 
@@ -1679,8 +1689,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   double totalBalance = 0;
-  double totalIncome = 0;
-  double totalExpenses = 0;
   bool loading = true;
 
   @override
@@ -1692,15 +1700,11 @@ class _HomePageState extends State<HomePage> {
   Future<void> loadDashboard() async {
     try {
       final balance = await FinanceDB.instance.getTotalBalancePKR();
-      final income = await FinanceDB.instance.totalByType('Income');
-      final expenses = await FinanceDB.instance.totalByType('Expense');
 
       if (!mounted) return;
 
       setState(() {
         totalBalance = balance;
-        totalIncome = income;
-        totalExpenses = expenses;
         loading = false;
       });
     } catch (_) {
@@ -1723,7 +1727,22 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
+          // Notification bell: abhi basic empty-state feedback deta hai.
           IconButton(
+            tooltip: 'Notifications',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No new notifications'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
+          // Existing Settings route ko bilkul waise hi rakha gaya hai.
+          IconButton(
+            tooltip: 'Settings',
             onPressed: () {
               Navigator.push(
                 context,
@@ -1790,73 +1809,8 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _balanceSummary(
-                          'Income',
-                          totalIncome,
-                          Icons.south_west_rounded,
-                          const Color(0xFFB9F6D5),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _balanceSummary(
-                          'Expenses',
-                          totalExpenses,
-                          Icons.north_east_rounded,
-                          const Color(0xFFFFD0CC),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 22),
-
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _quickAction(
-                    icon: Icons.add_circle_outline,
-                    label: 'Income',
-                    color: AppColors.income,
-                    onTap: () => _openTransaction('Income'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _quickAction(
-                    icon: Icons.remove_circle_outline,
-                    label: 'Expense',
-                    color: AppColors.expense,
-                    onTap: () => _openTransaction('Expense'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _quickAction(
-                    icon: Icons.swap_horiz_rounded,
-                    label: 'Transfer',
-                    color: AppColors.primary,
-                    onTap: () => _openTransaction('Transfer'),
-                  ),
-                ),
-              ],
             ),
 
             const SizedBox(height: 24),
@@ -1905,88 +1859,6 @@ class _HomePageState extends State<HomePage> {
               subtitle: 'Manage scheduled transactions',
               color: const Color(0xFF6C78C7),
               destinationTitle: 'Recurring Transactions',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _openTransaction(String type) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TransactionEntryForm(
-          transactionType: type,
-        ),
-      ),
-    ).then((_) => loadDashboard());
-  }
-
-  Widget _balanceSummary(
-    String label,
-    double amount,
-    IconData icon,
-    Color color,
-  ) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 19),
-        const SizedBox(width: 7),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                ),
-              ),
-              Text(
-                NumberFormat('#,##0.00').format(amount),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _quickAction({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: const Color(0xFFEDF1EE)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 25),
-            const SizedBox(height: 7),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
             ),
           ],
         ),
@@ -2398,7 +2270,7 @@ extension FinanceTransactionOperations on FinanceDB {
         destination.currency AS to_wallet_currency
       FROM transactions
       LEFT JOIN wallets AS source
-        ON transactions.wallet_id = source.id
+              ON transactions.wallet_id = source.id
       LEFT JOIN wallets AS destination
         ON transactions.to_wallet_id = destination.id
       ORDER BY transactions.date DESC, transactions.id DESC

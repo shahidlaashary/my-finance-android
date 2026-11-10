@@ -2951,6 +2951,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   final noteController = TextEditingController();
 
   List<Map<String, dynamic>> wallets = [];
+  List<Map<String, dynamic>> transactionCategories = [];
 
   int? selectedWalletId;
   int? selectedDestinationWalletId;
@@ -2980,11 +2981,15 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   Future<void> loadWallets() async {
     final result = await FinanceDB.instance.getWallets();
+    final categories = isTransfer
+        ? <Map<String, dynamic>>[]
+        : await FinanceDB.instance.getCategories(widget.transactionType);
 
     if (!mounted) return;
 
     setState(() {
       wallets = result;
+      transactionCategories = categories;
       loading = false;
 
       if (wallets.isNotEmpty) {
@@ -2993,6 +2998,13 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           selectedDestinationWalletId =
               wallets[1]['id'] as int;
         }
+      }
+
+      if (transactionCategories.isNotEmpty &&
+          !transactionCategories.any(
+            (category) => category['name'] == selectedCategory,
+          )) {
+        selectedCategory = transactionCategories.first['name'] as String;
       }
     });
   }
@@ -3266,16 +3278,52 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
                       const SizedBox(height: 14),
 
-                      TextFormField(
-                        initialValue: selectedCategory,
-                        decoration: decoration(
-                          'Category (Optional)',
-                          icon: Icons.category_outlined,
+                      if (!isTransfer) ...[
+                        DropdownButtonFormField<String>(
+                          value: transactionCategories.any(
+                            (category) =>
+                                category['name'] == selectedCategory,
+                          )
+                              ? selectedCategory
+                              : null,
+                          isExpanded: true,
+                          decoration: decoration(
+                            'Category',
+                            icon: Icons.category_outlined,
+                          ),
+                          hint: const Text('Select Category'),
+                          items: transactionCategories.map((category) {
+                            final iconCode = category['icon'] as int;
+                            return DropdownMenuItem<String>(
+                              value: category['name'] as String,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    IconData(
+                                      iconCode,
+                                      fontFamily: 'MaterialIcons',
+                                    ),
+                                    size: 19,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      category['name'] as String,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => selectedCategory = value);
+                            }
+                          },
                         ),
-                        onChanged: (value) {
-                          selectedCategory = value;
-                        },
-                      ),
+                      ],
 
                       const SizedBox(height: 14),
 

@@ -442,16 +442,19 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     amount.dispose(); odo.dispose(); vendor.dispose(); notes.dispose();
   }
 
-  Future<void> _showReminderForm() async {
+  Future<void> _showReminderForm({Map<String, dynamic>? reminder}) async {
     if (_vehicles.isEmpty) { _message('Please add a vehicle first.'); return; }
     final key = GlobalKey<FormState>();
-    final title = TextEditingController(); final dueOdo = TextEditingController(); final notes = TextEditingController();
-    var vehicleId = _vehicles.first['id'] as int; var dueDate = DateTime.now().add(const Duration(days: 30));
+    final title = TextEditingController(text: reminder?['title']?.toString() ?? '');
+    final dueOdo = TextEditingController(text: reminder?['due_odometer']?.toString() ?? '');
+    final notes = TextEditingController(text: reminder?['notes']?.toString() ?? '');
+    var vehicleId = (reminder?['vehicle_id'] as int?) ?? (_vehicles.first['id'] as int);
+    var dueDate = DateTime.tryParse(reminder?['due_date']?.toString() ?? '') ?? DateTime.now().add(const Duration(days: 30));
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: Colors.transparent, elevation: 0,
       builder: (sheet) => StatefulBuilder(builder: (context, setSheet) => _sheetFrame(context,
         Form(key: key, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _sheetHeader('Add Service Reminder', sheet),
+            _sheetHeader(reminder == null ? 'Add Service Reminder' : 'Edit Service Reminder', sheet),
             DropdownButtonFormField<int>(value: vehicleId, isExpanded: true, decoration: _decoration('Vehicle', Icons.directions_car_outlined),
               items: _vehicles.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name'].toString()))).toList(), onChanged: (v) { if (v != null) setSheet(() => vehicleId = v); }),
             const SizedBox(height: 12),
@@ -472,14 +475,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                 if (!key.currentState!.validate()) return;
                 setSheet(() => _saving = true);
                 try {
-                  await VehicleService.saveReminder({'vehicle_id': vehicleId, 'title': title.text.trim(),
+                  await VehicleService.saveReminder({'id': reminder?['id'], 'vehicle_id': vehicleId, 'title': title.text.trim(),
                     'due_date': dueDate.toIso8601String(), 'due_odometer': double.tryParse(dueOdo.text),
                     'notes': notes.text.trim()});
                   if (!sheet.mounted) return;
                   Navigator.pop(sheet); await _load(); _message('Reminder saved.');
                 } catch (e) { _message('Unable to save reminder: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: const Text('Save Reminder'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: const Icon(Icons.check_rounded), label: Text(reminder == null ? 'Save Reminder' : 'Update Reminder'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -672,7 +675,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         leading: Icon(Icons.notifications_active_outlined, color: overdue ? Colors.red : _green),
         title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text('${_vehicleName(r['vehicle_id'])} • ${_date(r['due_date'])}${r['due_odometer'] == null ? '' : ' • ${_amount(r['due_odometer'])} km'}'),
-        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Reminder'))]),
+        trailing: PopupMenuButton<String>(onSelected: (v) {
+          if (v == 'edit') _showReminderForm(reminder: r);
+          if (v == 'delete') _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder');
+        }, itemBuilder: (_) => const [
+          PopupMenuItem(value: 'edit', child: Text('Edit Reminder')),
+          PopupMenuItem(value: 'delete', child: Text('Delete Reminder')),
+        ]),
       ));
     }).toList()));
 

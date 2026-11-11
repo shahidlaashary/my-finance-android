@@ -47,6 +47,7 @@ class GoalsService {
         name TEXT NOT NULL,
         target_amount REAL NOT NULL,
         saved_amount REAL NOT NULL DEFAULT 0,
+        start_date TEXT,
         target_date TEXT,
         wallet_id INTEGER,
         notes TEXT NOT NULL DEFAULT '',
@@ -54,6 +55,17 @@ class GoalsService {
         created_at TEXT NOT NULL
       )
     ''');
+    final goalColumns = await db.rawQuery('PRAGMA table_info(goals)');
+    final hasStartDate = goalColumns.any(
+      (column) => column['name'] == 'start_date',
+    );
+    if (!hasStartDate) {
+      await db.execute('ALTER TABLE goals ADD COLUMN start_date TEXT');
+      await db.execute(
+        "UPDATE goals SET start_date = COALESCE(created_at, date('now')) "
+        "WHERE start_date IS NULL",
+      );
+    }
     await db.execute('''
       CREATE TABLE IF NOT EXISTS goal_contributions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,6 +122,11 @@ class GoalsService {
     }
     if (!goal.savedAmount.isFinite || goal.savedAmount < 0) {
       throw Exception('Saved amount cannot be negative.');
+    }
+    if (goal.startDate != null &&
+        goal.targetDate != null &&
+        goal.startDate!.isAfter(goal.targetDate!)) {
+      throw Exception('Start date cannot be after target date.');
     }
   }
   /// Naya savings goal banata hai.
@@ -349,6 +366,7 @@ class GoalsService {
         {
           'name': updatedGoal.name.trim(),
           'target_amount': updatedGoal.targetAmount,
+          'start_date': updatedGoal.startDate?.toIso8601String(),
           'target_date': updatedGoal.targetDate?.toIso8601String(),
           'notes': updatedGoal.notes,
           'is_completed':

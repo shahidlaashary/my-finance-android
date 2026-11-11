@@ -12,7 +12,7 @@ class BudgetsScreen extends StatefulWidget {
 }
 class _BudgetsScreenState extends State<BudgetsScreen> {
   final NumberFormat _format = NumberFormat('#,##0.00');
-  List<BudgetModel> _budgets = [];
+  List<BudgetsModel> _budgets = [];
   List<Map<String, dynamic>> _categories = [];
   List<String> _currencies = ['PKR'];
   bool _loading = true;
@@ -32,7 +32,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
-      final budgets = await BudgetService.getBudgets();
+      final budgets = await BudgetsService.getBudgets();
       final categoryItems = await CategoryService.getCategories('expense');
       final categories = categoryItems.map((item) => {'name': item.name}).toList();
       final dbPath = await getDatabasesPath();
@@ -57,7 +57,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   }
   String _categoryName(String? name) => name == null || name.isEmpty ? 'All Categories' : name;
   Future<void> _showBudgetDialog({
-    BudgetModel? budget,
+    BudgetsModel? budget,
   }) async {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(
@@ -267,7 +267,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       return;
                     }
                     try {
-                      final model = BudgetModel(
+                      final model = BudgetsModel(
                         id: budget?.id,
                         name: nameController.text.trim(),
                         category: category,
@@ -281,9 +281,9 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         createdAt: budget?.createdAt ?? DateTime.now(),
                       );
                       if (budget == null) {
-                        await BudgetService.addBudget(model);
+                        await BudgetsService.addBudget(model);
                       } else {
-                        await BudgetService.updateBudget(model);
+                        await BudgetsService.updateBudget(model);
                       }
                       if (!dialogContext.mounted) return;
                       Navigator.pop(dialogContext);
@@ -310,10 +310,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     nameController.dispose();
     amountController.dispose();
   }
-  Future<void> _toggleBudget(BudgetModel budget) async {
+  Future<void> _toggleBudget(BudgetsModel budget) async {
     if (budget.id == null) return;
     try {
-      await BudgetService.setBudgetStatus(
+      await BudgetsService.setBudgetStatus(
         budget.id!,
         !budget.isActive,
       );
@@ -325,7 +325,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       _message('Error: $e');
     }
   }
-  Future<void> _deleteBudget(BudgetModel budget) async {
+  Future<void> _deleteBudget(BudgetsModel budget) async {
     if (budget.id == null) return;
     final confirm = await showDialog<bool>(
       context: context,
@@ -353,14 +353,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     );
     if (confirm != true) return;
     try {
-      await BudgetService.deleteBudget(budget.id!);
+      await BudgetsService.deleteBudget(budget.id!);
       await _loadData();
       _message('Budget deleted.');
     } catch (e) {
       _message('Error: $e');
     }
   }
-  Widget _budgetCard(BudgetModel budget) {
+  Widget _budgetCard(BudgetsModel budget) {
     final spent = budget.spentAmount;
     final limit = budget.limitAmount;
     final progress = limit <= 0

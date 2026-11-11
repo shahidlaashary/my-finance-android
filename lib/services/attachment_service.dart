@@ -70,12 +70,13 @@ class AttachmentService {
     final databasePath = await getDatabasesPath();
     final path = p.join(databasePath, _databaseName);
 
-    final db = await openDatabase(
-      path,
-      onOpen: (db) async {
-        await _createTable(db);
-      },
-    );
+    // openDatabase may reuse FinanceDB's already-open connection, in
+    // which case its onOpen callback is not guaranteed to run.
+    final db = await openDatabase(path);
+
+    // Always ensure the attachment table exists on the shared connection.
+    // CREATE TABLE IF NOT EXISTS preserves existing attachment records.
+    await _createTable(db);
 
     _databaseInstance = db;
     return db;

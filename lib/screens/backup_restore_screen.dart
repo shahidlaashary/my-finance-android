@@ -366,8 +366,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Note: Android may delay background jobs due to battery and network restrictions. '
-              'The first cloud backup can be started manually.',
+              'First-time Google Drive use requires the Android OAuth app setup and Drive API to be enabled. '
+              'Android may also delay background jobs due to battery and network restrictions.',
               style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11, height: 1.4),
             ),
           ],

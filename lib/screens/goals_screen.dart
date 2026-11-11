@@ -597,7 +597,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F7F6),
+        backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF202A26),
         elevation: 0,
         titleSpacing: 16,

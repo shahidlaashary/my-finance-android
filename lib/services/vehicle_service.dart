@@ -100,7 +100,7 @@ class VehicleService {
     final total = quantity * unitPrice;
     final txId = await TransactionsService.addTransaction(type: 'Expense',
       amount: total, walletId: walletId, category: 'Vehicle Fuel',
-      note: 'Fuel • $vehicleName • \${quantity.toStringAsFixed(2)} $unit • \${odometer.toStringAsFixed(0)} km\${station.isEmpty ? '' : ' • $station'}',
+      note: 'Fuel • $vehicleName • ${quantity.toStringAsFixed(2)} $unit • ${odometer.toStringAsFixed(0)} km${station.isEmpty ? '' : ' • $station'}',
       date: date.toIso8601String());
     try {
       final data = await _read();
@@ -129,7 +129,7 @@ class VehicleService {
     }
     final txId = await TransactionsService.addTransaction(type: 'Expense',
       amount: amount, walletId: walletId, category: 'Vehicle • $category',
-      note: 'Vehicle • $vehicleName • $category\${vendor.isEmpty ? '' : ' • $vendor'}\${notes.isEmpty ? '' : ' • $notes'}',
+      note: 'Vehicle • $vehicleName • $category${vendor.isEmpty ? '' : ' • $vendor'}${notes.isEmpty ? '' : ' • $notes'}',
       date: date.toIso8601String());
     try {
       final data = await _read();

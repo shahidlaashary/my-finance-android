@@ -19,6 +19,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   late final TabController _tabs;
   bool _loading = true;
   bool _saving = false;
+  String _reportRange = 'All Time';
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _fuel = [];
   List<Map<String, dynamic>> _expenses = [];
@@ -494,8 +495,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   Future<void> _export(bool excel) async {
     try {
       final file = excel
-        ? await VehicleExportService.exportExcel(vehicles: _vehicles, fuel: _fuel, expenses: _expenses, reminders: _reminders)
-        : await VehicleExportService.exportPdf(vehicles: _vehicles, fuel: _fuel, expenses: _expenses, reminders: _reminders);
+        ? await VehicleExportService.exportExcel(vehicles: _vehicles, fuel: reportFuel, expenses: reportExpenses, reminders: reportReminders)
+        : await VehicleExportService.exportPdf(vehicles: _vehicles, fuel: reportFuel, expenses: reportExpenses, reminders: reportReminders);
       if (!mounted) return;
       _message('Report saved: ${file.path}');
       await OpenFilex.open(file.path);
@@ -665,17 +666,38 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       ));
     }).toList()));
 
+  List<Map<String, dynamic>> _rangeRows(List<Map<String, dynamic>> rows) {
+    if (_reportRange == 'All Time') return rows;
+    final now = DateTime.now();
+    return rows.where((r) {
+      final date = DateTime.tryParse(r['date']?.toString() ?? r['due_date']?.toString() ?? '');
+      if (date == null) return false;
+      if (_reportRange == 'Daily') return date.year == now.year && date.month == now.month && date.day == now.day;
+      if (_reportRange == 'Weekly') return !date.isBefore(now.subtract(const Duration(days: 7)));
+      if (_reportRange == 'Monthly') return date.year == now.year && date.month == now.month;
+      if (_reportRange == 'Yearly') return date.year == now.year;
+      return true;
+    }).toList();
+  }
+
   Widget _reportsTab() {
-    final sortedFuel = [..._fuel]..sort((a,b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
+    final reportFuel = _rangeRows(_fuel);
+    final reportExpenses = _rangeRows(_expenses);
+    final reportReminders = _rangeRows(_reminders);
+    final sortedFuel = [...reportFuel]..sort((a,b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
     return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: [
+      DropdownButtonFormField<String>(value: _reportRange, decoration: _decoration('Report Period', Icons.date_range_outlined),
+        items: const ['Daily', 'Weekly', 'Monthly', 'Yearly', 'All Time'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+        onChanged: (v) => setState(() => _reportRange = v ?? 'All Time')),
+      const SizedBox(height: 12),
       const Text('Vehicle Comparison', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       const SizedBox(height: 8),
       if (_vehicles.isEmpty) _empty('No comparison data', 'Add vehicles and fuel records to compare running costs.', Icons.compare_arrows_rounded)
       else ..._vehicles.map((v) {
         final id = v['id'] as int; final mileage = _averageMileage(id);
         final distance = _distanceFor(id);
-        final vehicleFuel = _fuel.where((f) => f['vehicle_id'] == id).fold<double>(0, (s,f) => s + ((f['total'] as num?)?.toDouble() ?? 0));
-        final vehicleExpense = _expenses.where((e) => e['vehicle_id'] == id).fold<double>(0, (s,e) => s + ((e['amount'] as num?)?.toDouble() ?? 0));
+        final vehicleFuel = reportFuel.where((f) => f['vehicle_id'] == id).fold<double>(0, (s,f) => s + ((f['total'] as num?)?.toDouble() ?? 0));
+        final vehicleExpense = reportExpenses.where((e) => e['vehicle_id'] == id).fold<double>(0, (s,e) => s + ((e['amount'] as num?)?.toDouble() ?? 0));
         return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(v['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
           const SizedBox(height: 8),

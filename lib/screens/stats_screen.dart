@@ -30,6 +30,13 @@ class _StatsScreenState extends State<StatsScreen> {
   String? _error;
   String _period = 'This Month';
   String _currency = 'PKR';
+  String _trendView = 'Both';
+  bool _showAllCategories = false;
+  static const List<Color> _chartColors = [
+    Color(0xFF3978F6), Color(0xFF17B890), Color(0xFFFFA62B),
+    Color(0xFF9B6BDF), Color(0xFFFF6685), Color(0xFF20B8C9),
+    Color(0xFF6C9A45), Color(0xFFE07835),
+  ];
   List<String> _currencies = [];
   List<Map<String, dynamic>> _balances = [];
   List<Map<String, dynamic>> _trend = [];
@@ -205,46 +212,131 @@ class _StatsScreenState extends State<StatsScreen> {
     final maxValue = _trend.fold<double>(0, (maxValue, row) {
       final income = (row['income'] as num?)?.toDouble() ?? 0;
       final expense = (row['expense'] as num?)?.toDouble() ?? 0;
-      return math.max(maxValue, math.max(income, expense)).toDouble();
+      final visible = _trendView == 'Income'
+          ? income
+          : _trendView == 'Expense'
+              ? expense
+              : math.max(income, expense).toDouble();
+      return math.max(maxValue, visible).toDouble();
     });
+
     return Column(
-      children: _trend.map((row) {
-        final month = DateTime.tryParse('${row['month']}-01');
-        final label = month == null ? row['month'].toString() : DateFormat('MMM yy').format(month);
-        final income = (row['income'] as num?)?.toDouble() ?? 0;
-        final expense = (row['expense'] as num?)?.toDouble() ?? 0;
-        final incomeFactor = maxValue <= 0 ? 0.0 : (income / maxValue).clamp(0.0, 1.0).toDouble();
-        final expenseFactor = maxValue <= 0 ? 0.0 : (expense / maxValue).clamp(0.0, 1.0).toDouble();
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 13),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-              const SizedBox(height: 5),
-              Row(children: [
-                const SizedBox(width: 58, child: Text('Income', style: TextStyle(fontSize: 11, color: Colors.black54))),
-                Expanded(child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(value: incomeFactor, minHeight: 8, color: const Color(0xFF16865B), backgroundColor: const Color(0xFFEAF1ED)),
-                )),
-                const SizedBox(width: 8),
-                Text(_money(income), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              ]),
-              const SizedBox(height: 4),
-              Row(children: [
-                const SizedBox(width: 58, child: Text('Expense', style: TextStyle(fontSize: 11, color: Colors.black54))),
-                Expanded(child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(value: expenseFactor, minHeight: 8, color: const Color(0xFFD9534F), backgroundColor: const Color(0xFFF6EDEC)),
-                )),
-                const SizedBox(width: 8),
-                Text(_money(expense), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              ]),
-            ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 7,
+          children: ['Both', 'Income', 'Expense'].map((view) {
+            final selected = _trendView == view;
+            return ChoiceChip(
+              label: Text(view),
+              selected: selected,
+              showCheckmark: false,
+              labelStyle: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : const Color(0xFF52645C),
+              ),
+              selectedColor: const Color(0xFF246B52),
+              backgroundColor: const Color(0xFFF0F4F1),
+              visualDensity: VisualDensity.compact,
+              onSelected: (_) => setState(() => _trendView = view),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          height: 174,
+          padding: const EdgeInsets.fromLTRB(10, 12, 10, 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAF9),
+            borderRadius: BorderRadius.circular(14),
           ),
-        );
-      }).toList(),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _trend.map((row) {
+              final month = DateTime.tryParse('${row['month']}-01');
+              final label = month == null ? row['month'].toString() : DateFormat('MMM').format(month);
+              final income = (row['income'] as num?)?.toDouble() ?? 0;
+              final expense = (row['expense'] as num?)?.toDouble() ?? 0;
+              final incomeFactor = maxValue <= 0 ? 0.0 : (income / maxValue).clamp(0.0, 1.0).toDouble();
+              final expenseFactor = maxValue <= 0 ? 0.0 : (expense / maxValue).clamp(0.0, 1.0).toDouble();
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (_trendView != 'Expense')
+                              Tooltip(
+                                message: 'Income: $_currency ${_money(income)}',
+                                child: Container(
+                                  width: _trendView == 'Both' ? 11 : 19,
+                                  height: math.max(3.0, 112 * incomeFactor),
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [Color(0xFF16865B), Color(0xFF55D6A2)],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (_trendView == 'Both') const SizedBox(width: 4),
+                            if (_trendView != 'Income')
+                              Tooltip(
+                                message: 'Expense: $_currency ${_money(expense)}',
+                                child: Container(
+                                  width: _trendView == 'Both' ? 11 : 19,
+                                  height: math.max(3.0, 112 * expenseFactor),
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [Color(0xFFE45D67), Color(0xFFFFA17A)],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF68766F), fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 11),
+        Wrap(
+          spacing: 16,
+          runSpacing: 6,
+          children: [
+            if (_trendView != 'Expense') _chartLegend(const Color(0xFF20B987), 'Income'),
+            if (_trendView != 'Income') _chartLegend(const Color(0xFFEF7371), 'Expense'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _chartLegend(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 9, height: 9, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600)),
+      ],
     );
   }
 
@@ -252,29 +344,106 @@ class _StatsScreenState extends State<StatsScreen> {
     if (_categories.isEmpty) {
       return const Text('No expense categories recorded for this period.', style: TextStyle(color: Colors.black54));
     }
-    final maxValue = _categories.fold<double>(
+    final visibleCategories = _showAllCategories ? _categories : _categories.take(5).toList();
+    final total = visibleCategories.fold<double>(
       0,
-      (value, row) => math.max(value, (row['total'] as num?)?.toDouble() ?? 0).toDouble(),
+      (sum, row) => sum + ((row['total'] as num?)?.toDouble() ?? 0),
     );
+    final values = visibleCategories.map((row) => (row['total'] as num?)?.toDouble() ?? 0).toList();
+    final colors = List<Color>.generate(values.length, (index) => _chartColors[index % _chartColors.length]);
+
     return Column(
-      children: _categories.take(8).map((row) {
-        final total = (row['total'] as num?)?.toDouble() ?? 0;
-        final factor = maxValue <= 0 ? 0.0 : (total / maxValue).clamp(0.0, 1.0).toDouble();
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(child: Text(row['category_name'].toString(), style: const TextStyle(fontWeight: FontWeight.w600))),
-              Text('$_currency ${_money(total)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-            ]),
-            const SizedBox(height: 5),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(value: factor, minHeight: 7, color: const Color(0xFFD9534F), backgroundColor: const Color(0xFFF6EDEC)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _showAllCategories ? 'All categories' : 'Top 5 categories',
+              style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600),
             ),
-          ]),
-        );
-      }).toList(),
+            TextButton(
+              onPressed: () => setState(() => _showAllCategories = !_showAllCategories),
+              style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
+              child: Text(_showAllCategories ? 'Show top 5' : 'View all'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            SizedBox(
+              width: 142,
+              height: 142,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: const Size(142, 142),
+                    painter: _DonutChartPainter(values: values, colors: colors),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Total', style: TextStyle(fontSize: 10, color: Colors.black54)),
+                      const SizedBox(height: 3),
+                      Text(
+                        _money(total),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                      ),
+                      Text(_currency, style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                children: List.generate(visibleCategories.length, (index) {
+                  final row = visibleCategories[index];
+                  final amount = values[index];
+                  final percent = total <= 0 ? 0 : amount / total * 100;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(width: 9, height: 9, decoration: BoxDecoration(color: colors[index], shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            row['category_name'].toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Text('${percent.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...List.generate(visibleCategories.length, (index) {
+          final row = visibleCategories[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(
+              children: [
+                Expanded(child: Text(row['category_name'].toString(), style: const TextStyle(fontSize: 11, color: Colors.black54))),
+                Text('$_currency ${_money(values[index])}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -350,7 +519,6 @@ class _StatsScreenState extends State<StatsScreen> {
     }).toList();
     final loanOutstanding = currencyLoans.fold<double>(0, (sum, l) => sum + l.remainingAmount);
     final loanRepaid = currencyLoans.fold<double>(0, (sum, l) => sum + l.repaidAmount);
-    final walletCount = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == _currency.toUpperCase()).length;
     return [
       _buildOverviewSection('Assets', Icons.real_estate_agent_outlined, [
         _overviewLine('Active assets', assetRows.length.toString()),
@@ -386,10 +554,6 @@ class _StatsScreenState extends State<StatsScreen> {
         _overviewLine('Net savings', '$_currency ${_money(_totals['net'])}'),
       ]),
       const SizedBox(height: 12),
-      _buildOverviewSection('Wallets / Accounts', Icons.account_balance_wallet_outlined, [
-        _overviewLine('Accounts in $_currency', walletCount.toString()),
-        _overviewLine('Total currencies', _balances.length.toString()),
-      ]),
     ];
   }
   @override
@@ -477,5 +641,41 @@ class _StatsScreenState extends State<StatsScreen> {
                   ),
                 ),
     );
+  }
+}
+
+class _DonutChartPainter extends CustomPainter {
+  final List<double> values;
+  final List<Color> colors;
+
+  const _DonutChartPainter({required this.values, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = values.fold<double>(0, (sum, value) => sum + value);
+    if (total <= 0 || values.isEmpty) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final strokeWidth = size.width * 0.19;
+    final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    var startAngle = -math.pi / 2;
+    for (var i = 0; i < values.length; i++) {
+      final sweep = values[i] / total * math.pi * 2;
+      if (sweep <= 0) continue;
+      paint.color = colors[i % colors.length];
+      canvas.drawArc(rect, startAngle + 0.025, math.max(0, sweep - 0.05), false, paint);
+      startAngle += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
+    return oldDelegate.values != values || oldDelegate.colors != colors;
   }
 }

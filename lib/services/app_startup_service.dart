@@ -35,11 +35,11 @@ class AppStartupService {
   }
 
   static Future<void> _initializeServices() async {
-    // Initialize the transaction database and required category schema.
+    // Transaction database aur zaroori category structure ko tayyar karta hai.
     await TransactionsService.database;
 
-    // Process recurring transactions that are due.
-    // Any processing error is logged so it can be investigated.
+    // Jin recurring transactions ki date aa chuki ho unhein process karta hai.
+    // Kisi bhi error ko log karta hai taake baad mein uski jaanch ho sake.
     try {
       final recurringService = RecurringTransactionService();
 

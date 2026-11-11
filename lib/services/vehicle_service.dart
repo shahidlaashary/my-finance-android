@@ -87,16 +87,32 @@ class VehicleService {
     await _write(data);
   }
 
+  static Future<void> _validateOdometer(int vehicleId, double reading) async {
+    if (!reading.isFinite || reading < 0) throw Exception('Enter a valid odometer reading.');
+    final data = await _read();
+    final readings = <double>[];
+    for (final key in ['fuel_logs', 'expenses']) {
+      for (final row in data[key] as List) {
+        if (row is Map && row['vehicle_id'] == vehicleId && row['odometer'] is num) {
+          readings.add((row['odometer'] as num).toDouble());
+        }
+      }
+    }
+    if (readings.isNotEmpty && reading < readings.reduce((a,b) => a > b ? a : b)) {
+      throw Exception('Odometer reading cannot be lower than a previous vehicle record.');
+    }
+  }
+
   static Future<int> addFuel({
     required int vehicleId, required String vehicleName, required DateTime date,
     required double odometer, required double quantity, required double unitPrice,
     required bool fullTank, required int walletId, required String station,
     required String notes, required String unit,
   }) async {
-    if (!odometer.isFinite || odometer < 0 || !quantity.isFinite || quantity <= 0 ||
-        !unitPrice.isFinite || unitPrice <= 0) {
-      throw Exception('Enter valid odometer, quantity and unit price.');
+    if (!quantity.isFinite || quantity <= 0 || !unitPrice.isFinite || unitPrice <= 0) {
+      throw Exception('Enter valid quantity and unit price.');
     }
+    await _validateOdometer(vehicleId, odometer);
     final total = quantity * unitPrice;
     final txId = await TransactionsService.addTransaction(type: 'Expense',
       amount: total, walletId: walletId, category: 'Vehicle Fuel',
@@ -124,9 +140,8 @@ class VehicleService {
     required double amount, required double odometer, required int walletId,
     required String category, required String vendor, required String notes,
   }) async {
-    if (!amount.isFinite || amount <= 0 || !odometer.isFinite || odometer < 0) {
-      throw Exception('Enter a valid amount and odometer reading.');
-    }
+    if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid amount.');
+    await _validateOdometer(vehicleId, odometer);
     final txId = await TransactionsService.addTransaction(type: 'Expense',
       amount: amount, walletId: walletId, category: 'Vehicle • $category',
       note: 'Vehicle • $vehicleName • $category${vendor.isEmpty ? '' : ' • $vendor'}${notes.isEmpty ? '' : ' • $notes'}',

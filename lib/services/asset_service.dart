@@ -33,6 +33,11 @@ class AssetService {
   }
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
+    final columns = await db.rawQuery('PRAGMA table_info(assets)');
+    final hasSaleWallet = columns.any((column) => column['name'] == 'sale_wallet_id');
+    if (!hasSaleWallet) {
+      await db.execute('ALTER TABLE assets ADD COLUMN sale_wallet_id INTEGER');
+    }
   }
   Future<Map<String, dynamic>> _getAccount(
     Transaction txn,
@@ -185,6 +190,7 @@ class AssetService {
     required int assetId,
     required double salePrice,
     required DateTime saleDate,
+    required int saleWalletId,
   }) async {
     if (!salePrice.isFinite || salePrice < 0) {
       throw Exception('Please enter a valid sale price.');
@@ -210,20 +216,21 @@ class AssetService {
           'Sale date cannot be before purchase date.',
         );
       }
-      await _getAccount(txn, asset.walletId);
+      await _getAccount(txn, saleWalletId);
       await txn.update(
         'assets',
         {
           'is_sold': 1,
           'sale_date': saleDate.toIso8601String(),
           'sale_price': salePrice,
+          'sale_wallet_id': saleWalletId,
         },
         where: 'id = ?',
         whereArgs: [assetId],
       );
       await _changeBalance(
         txn,
-        walletId: asset.walletId,
+        walletId: saleWalletId,
         amount: salePrice,
       );
     });
@@ -303,9 +310,11 @@ class AssetService {
       final asset = AssetModel.fromMap(rows.first);
       await _getAccount(txn, asset.walletId);
       if (asset.isSold && asset.salePrice != null) {
+        final saleWalletId = asset.saleWalletId ?? asset.walletId;
+        await _getAccount(txn, saleWalletId);
         await _changeBalance(
           txn,
-          walletId: asset.walletId,
+          walletId: saleWalletId,
           amount: -asset.salePrice!,
         );
       }

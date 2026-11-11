@@ -2,7 +2,7 @@
 
 Feature-first Flutter structure designed for one shared Android, iOS, Windows and macOS codebase.
 
-- `main.dart`: thin application entry point; initializes platform services and starts the app.
+- `main.dart`: current application entry point; legacy database and screen responsibilities will be extracted incrementally.
 - `app/`: app composition, navigation and responsive layout.
 - `core/`: cross-feature infrastructure such as database platform selection, platform capabilities, security, files, notifications, startup and theme.
 - `features/`: feature-owned screens, models and services.

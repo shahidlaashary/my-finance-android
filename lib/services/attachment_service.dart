@@ -15,6 +15,7 @@ class AttachmentOwnerTypes {
   static const String loan = 'loan';
   static const String goal = 'goal';
   static const String repayment = 'repayment';
+  static const String document = 'document';
 
   static const List<String> all = [
     transaction,
@@ -22,6 +23,7 @@ class AttachmentOwnerTypes {
     loan,
     goal,
     repayment,
+    document,
   ];
 }
 

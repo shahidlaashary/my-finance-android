@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/assets_model.dart';
+import 'app_refresh_service.dart';
 import 'transactions_service.dart';
 class AssetsService {
   Future<Database> get _database async {
@@ -71,6 +72,7 @@ class AssetsService {
       ''',
       [amount, walletId],
     );
+    AppRefreshController.notifyChanged();
   }
   void _validateAsset(AssetsModel asset) {
     if (asset.name.trim().isEmpty) {
@@ -181,6 +183,7 @@ class AssetsService {
     if (result == 0) {
       throw Exception('Asset not found or already sold.');
     }
+    AppRefreshController.notifyChanged();
   }
   Future<void> sellAsset({
     required int assetId,

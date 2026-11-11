@@ -3,8 +3,8 @@ class RecurringTransactionModel {
   final String title;
   final String type;
   final double amount;
-  final int accountId;
-  final int? toAccountId;
+  final int walletId;
+  final int? toWalletId;
   final int? categoryId;
   final String note;
   final String frequency;
@@ -19,8 +19,8 @@ class RecurringTransactionModel {
     required this.title,
     required this.type,
     required this.amount,
-    required this.accountId,
-    this.toAccountId,
+    required this.walletId,
+    this.toWalletId,
     this.categoryId,
     this.note = '',
     required this.frequency,
@@ -50,8 +50,8 @@ class RecurringTransactionModel {
       title: (map['title'] ?? '').toString(),
       type: (map['type'] ?? 'Expense').toString(),
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
-      accountId: (map['account_id'] as num?)?.toInt() ?? 0,
-      toAccountId: (map['to_account_id'] as num?)?.toInt(),
+      walletId: (map['wallet_id'] as num?)?.toInt() ?? 0,
+      toWalletId: (map['to_wallet_id'] as num?)?.toInt(),
       categoryId: (map['category_id'] as num?)?.toInt(),
       note: (map['note'] ?? '').toString(),
       frequency: (map['frequency'] ?? 'Monthly').toString(),
@@ -78,8 +78,8 @@ class RecurringTransactionModel {
       'title': title,
       'type': type,
       'amount': amount,
-      'account_id': accountId,
-      'to_account_id': toAccountId,
+      'wallet_id': walletId,
+      'to_wallet_id': toWalletId,
       'category_id': categoryId,
       'note': note,
       'frequency': frequency,
@@ -96,8 +96,8 @@ class RecurringTransactionModel {
     String? title,
     String? type,
     double? amount,
-    int? accountId,
-    int? toAccountId,
+    int? walletId,
+    int? toWalletId,
     int? categoryId,
     String? note,
     String? frequency,
@@ -112,8 +112,8 @@ class RecurringTransactionModel {
       title: title ?? this.title,
       type: type ?? this.type,
       amount: amount ?? this.amount,
-      accountId: accountId ?? this.accountId,
-      toAccountId: toAccountId ?? this.toAccountId,
+      walletId: walletId ?? this.walletId,
+      toWalletId: toWalletId ?? this.toWalletId,
       categoryId: categoryId ?? this.categoryId,
       note: note ?? this.note,
       frequency: frequency ?? this.frequency,

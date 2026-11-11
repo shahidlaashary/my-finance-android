@@ -62,7 +62,6 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     try {
       final enabled = await _readSetting('auto_backup_enabled');
       final frequency = await _readSetting('auto_backup_frequency');
-      final email = await _readSetting('google_drive_email');
       final last = await _readSetting('auto_backup_last_success');
       String? connectedEmail;
       try {

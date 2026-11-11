@@ -12,7 +12,7 @@ class GoalsScreen extends StatefulWidget {
 }
 class _GoalsScreenState extends State<GoalsScreen> {
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
-  List<SavingsGoalModel> _goals = [];
+  List<GoalsModel> _goals = [];
   List<Map<String, dynamic>> _wallets = [];
   Map<String, double> _savedByCurrency = {};
   Map<String, double> _targetByCurrency = {};
@@ -38,9 +38,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
         'wallets',
         orderBy: 'name ASC',
       );
-      final goals = await SavingsService.getGoals();
-      final saved = await SavingsService.getTotalSavedByCurrency();
-      final target = await SavingsService.getTotalTargetByCurrency();
+      final goals = await GoalsService.getGoals();
+      final saved = await GoalsService.getTotalSavedByCurrency();
+      final target = await GoalsService.getTotalTargetByCurrency();
       if (!mounted) return;
       setState(() {
         _wallets = wallets;
@@ -73,7 +73,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     ];
   }
   Future<void> _showGoalDialog({
-    SavingsGoalModel? goal,
+    GoalsModel? goal,
   }) async {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(
@@ -197,7 +197,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
                     try {
-                      final model = SavingsGoalModel(
+                      final model = GoalsModel(
                         id: goal?.id,
                         name: nameController.text.trim(),
                         targetAmount: double.parse(targetController.text),
@@ -209,9 +209,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         createdAt: goal?.createdAt ?? DateTime.now(),
                       );
                       if (goal == null) {
-                        await SavingsService.addGoal(model);
+                        await GoalsService.addGoal(model);
                       } else {
-                        await SavingsService.updateGoal(model);
+                        await GoalsService.updateGoal(model);
                       }
                       if (!dialogContext.mounted) return;
                       Navigator.pop(dialogContext);
@@ -238,7 +238,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     notesController.dispose();
   }
   Future<void> _showContributionDialog(
-    SavingsGoalModel goal,
+    GoalsModel goal,
   ) async {
     if (goal.id == null) return;
     if (goal.walletId == null) {
@@ -280,7 +280,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     controller.dispose();
     if (amount == null) return;
     try {
-      await SavingsService.addContribution(
+      await GoalsService.addContribution(
         goalId: goal.id!,
         walletId: goal.walletId!,
         amount: amount,
@@ -291,7 +291,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       _message('Error adding savings: $e');
     }
   }
-  Future<void> _withdraw(SavingsGoalModel goal) async {
+  Future<void> _withdraw(GoalsModel goal) async {
     if (goal.id == null) return;
     final controller = TextEditingController();
     final amount = await showDialog<double>(
@@ -328,7 +328,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     controller.dispose();
     if (amount == null) return;
     try {
-      await SavingsService.withdraw(
+      await GoalsService.withdraw(
         goalId: goal.id!,
         amount: amount,
       );
@@ -338,7 +338,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       _message('Error withdrawing savings: $e');
     }
   }
-  Future<void> _deleteGoal(SavingsGoalModel goal) async {
+  Future<void> _deleteGoal(GoalsModel goal) async {
     if (goal.id == null) return;
     final confirm = await showDialog<bool>(
       context: context,
@@ -366,7 +366,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
     if (confirm != true) return;
     try {
-      await SavingsService.deleteGoal(goal.id!);
+      await GoalsService.deleteGoal(goal.id!);
       await _loadData();
       _message('Savings goal deleted.');
     } catch (e) {
@@ -475,7 +475,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       ],
     );
   }
-  Widget _goalCard(SavingsGoalModel goal) {
+  Widget _goalCard(GoalsModel goal) {
     final progress = goal.targetAmount <= 0
         ? 0.0
         : (goal.savedAmount / goal.targetAmount).clamp(0.0, 1.0);

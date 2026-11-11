@@ -1100,6 +1100,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardIsOpen = keyboardHeight > 0;
     final maxSheetHeight = keyboardIsOpen
         ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
         : screenHeight * 0.72;

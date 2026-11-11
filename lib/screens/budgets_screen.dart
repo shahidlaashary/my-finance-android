@@ -94,28 +94,64 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
                     validator: (v) => v == null || v.trim().isEmpty ? 'Enter budget name' : null),
                   const SizedBox(height: 12),
-                  TextFormField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: decoration('Budget Limit', Icons.currency_exchange),
-                    validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid budget amount' : null; }),
+                  Row(children: [
+                    Expanded(child: TextFormField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: decoration('Budget Limit', Icons.currency_exchange),
+                      validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid budget amount' : null; },
+                    )),
+                    const SizedBox(width: 10),
+                    Expanded(child: DropdownButtonFormField<String>(
+                      value: currency, isExpanded: true,
+                      decoration: decoration('Currency', Icons.payments_outlined),
+                      items: _currencies.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      onChanged: (v) { if (v != null) setSheetState(() => currency = v); },
+                    )),
+                  ]),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String?>(value: category, isExpanded: true, decoration: decoration('Category', Icons.category_outlined),
-                    items: [const DropdownMenuItem<String?>(value: null, child: Text('All Categories')),
-                      ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString())))],
-                    onChanged: (v) => setSheetState(() => category = v)),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(value: period, isExpanded: true, decoration: decoration('Budget Period', Icons.calendar_view_month),
-                    items: const ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-                    onChanged: (v) { if (v != null) setSheetState(() => period = v); }),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(value: currency, isExpanded: true, decoration: decoration('Currency', Icons.payments_outlined),
-                    items: _currencies.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-                    onChanged: (v) { if (v != null) setSheetState(() => currency = v); }),
-                  ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
-                    title: const Text('Start Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(startDate)), trailing: const Icon(Icons.edit_calendar),
-                    onTap: () async { final v = await showDatePicker(context: context, initialDate: startDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (v != null) setSheetState(() => startDate = v); }),
-                  ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.event, color: Color(0xFF147D59)),
-                    title: const Text('End Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(endDate)), trailing: const Icon(Icons.edit_calendar),
-                    onTap: () async { final v = await showDatePicker(context: context, initialDate: endDate, firstDate: startDate, lastDate: DateTime(2100)); if (v != null) setSheetState(() => endDate = v); }),
+                  Row(children: [
+                    Expanded(child: DropdownButtonFormField<String?>(
+                      value: category, isExpanded: true,
+                      decoration: decoration('Category', Icons.category_outlined),
+                      items: [const DropdownMenuItem<String?>(value: null, child: Text('All Categories')),
+                        ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis)))],
+                      onChanged: (v) => setSheetState(() => category = v),
+                    )),
+                    const SizedBox(width: 10),
+                    Expanded(child: DropdownButtonFormField<String>(
+                      value: period, isExpanded: true,
+                      decoration: decoration('Budget Period', Icons.calendar_view_month),
+                      items: const ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      onChanged: (v) { if (v != null) setSheetState(() => period = v); },
+                    )),
+                  ]),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final v = await showDatePicker(context: context, initialDate: startDate, firstDate: DateTime(2000), lastDate: DateTime(2100));
+                        if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
+                      },
+                      child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
+                      ])),
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final v = await showDatePicker(context: context, initialDate: endDate, firstDate: startDate, lastDate: DateTime(2100));
+                        if (v != null) setSheetState(() => endDate = v);
+                      },
+                      child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
+                      ])),
+                    )),
+                  ]),
                   const SizedBox(height: 12),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),

@@ -3462,6 +3462,15 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         date: selectedDate,
       );
 
+      await FinanceDB.instance.db.insert(
+        'app_settings',
+        {
+          'setting_key': 'transaction_recurrence_$transactionId',
+          'setting_value': selectedRecurring,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
       String? attachmentWarning;
       if (selectedNoteImage != null) {
         try {
@@ -3798,70 +3807,3 @@ class _TransactionsPageState extends State<TransactionsPage> {
                             ),
                           ),
                           subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                '$type • ${DateFormat('dd MMM yyyy').format(date)}',
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                              if ((item['category'] ?? '')
-                                  .toString()
-                                  .isNotEmpty)
-                                Text(
-                                  item['category'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.muted,
-                                  ),
-                                ),
-                              if ((item['note'] ?? '')
-                                  .toString()
-                                  .isNotEmpty)
-                                Text(
-                                  item['note'] as String,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.muted,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                isTransfer
-                                    ? '$currency ${NumberFormat('#,##0.##').format(amount)}'
-                                    : '${isIncome ? '+' : isExpense ? '-' : ''}$currency ${NumberFormat('#,##0.##').format(amount)}',
-                                style: TextStyle(
-                                  color: color,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    deleteTransaction(item);
-                                  }
-                                },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-    );
-  }
-}

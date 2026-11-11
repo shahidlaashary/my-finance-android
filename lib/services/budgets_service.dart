@@ -115,6 +115,9 @@ class BudgetsService {
     bool activeOnly = false,
   }) async {
     final db = await _database;
+    // Ensure the budget table exists on this service connection without
+    // changing database versions or migrating existing records.
+    await _createTables(db);
     final rows = await db.query(
       'budgets',
       where: activeOnly ? 'is_active = 1' : null,

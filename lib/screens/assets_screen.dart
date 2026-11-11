@@ -132,259 +132,134 @@ class _AssetsScreenState extends State<AssetsScreen> {
     String? initialCategory,
   }) async {
     final formKey = GlobalKey<FormState>();
-
-    final nameController = TextEditingController(
-      text: asset?.name ?? '',
-    );
-
-    final categoryController = TextEditingController(
-      text: asset?.category ?? initialCategory ?? '',
-    );
-
-    final purchaseController = TextEditingController(
-      text: asset == null
-          ? ''
-          : asset.purchasePrice.toString(),
-    );
-
-    final currentController = TextEditingController(
-      text: asset == null
-          ? ''
-          : asset.currentValue.toString(),
-    );
-
-    final notesController = TextEditingController(
-      text: asset?.notes ?? '',
-    );
-
+    final nameController = TextEditingController(text: asset?.name ?? '');
+    final purchaseController = TextEditingController(text: asset?.purchasePrice.toString() ?? '');
+    final currentController = TextEditingController(text: asset?.currentValue.toString() ?? '');
+    final notesController = TextEditingController(text: asset?.notes ?? '');
     int? selectedAccount = asset?.walletId;
+    DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
+    String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
+    const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments'];
 
-    DateTime purchaseDate =
-        asset?.purchaseDate ?? DateTime.now();
+    InputDecoration fieldDecoration(String label, IconData icon) => InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 19),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      isDense: true,
+    );
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                asset == null ? 'Add Asset' : 'Edit Asset',
-              ),
-              content: SizedBox(
-                width: 450,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Asset Name',
-                            prefixIcon: Icon(Icons.inventory_2),
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+          final screenHeight = MediaQuery.sizeOf(context).height;
+          final keyboardOpen = keyboardHeight > 0;
+          final maxHeight = keyboardOpen
+              ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * .95
+              : screenHeight * .72;
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: keyboardHeight),
+            child: SafeArea(
+              top: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxHeight),
+                child: Container(
+                  decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+                  child: Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      primary: false,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+                          const SizedBox(height: 12),
+                          Row(children: [
+                            Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
+                            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey),
+                          ]),
+                          const SizedBox(height: 10),
+                          TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
+                            validator: (v) => v == null || v.trim().isEmpty ? 'Enter asset name' : null),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: categories.contains(selectedCategory) ? selectedCategory : categories.first,
+                            isExpanded: true, decoration: fieldDecoration('Asset Category', Icons.category_outlined),
+                            items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                            onChanged: (v) { if (v != null) setSheetState(() => selectedCategory = v); },
                           ),
-                          validator: (value) =>
-                              value == null ||
-                                      value.trim().isEmpty
-                                  ? 'Enter asset name'
-                                  : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: categoryController,
-                          decoration: const InputDecoration(
-                            labelText: 'Category',
-                            prefixIcon: Icon(Icons.category),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: purchaseController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'Purchase Price',
-                          ),
-                          validator: (value) {
-                            final amount =
-                                double.tryParse(value ?? '');
-
-                            if (amount == null ||
-                                !amount.isFinite ||
-                                amount <= 0) {
-                              return 'Enter a valid purchase price';
-                            }
-
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: currentController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'Current Value',
-                          ),
-                          validator: (value) {
-                            final amount =
-                                double.tryParse(value ?? '');
-
-                            if (amount == null ||
-                                !amount.isFinite ||
-                                amount < 0) {
-                              return 'Enter a valid current value';
-                            }
-
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<int>(
-                          value: selectedAccount,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Payment Account',
-                          ),
-                          items: _wallets.map((account) {
-                            return DropdownMenuItem<int>(
-                              value:
-                                  (account['id'] as num).toInt(),
-                              child: Text(
-                                '${account['name']} '
-                                '(${account['currency'] ?? 'PKR'})',
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setDialogState(() {
-                              selectedAccount = value;
-                            });
-                          },
-                          validator: (value) =>
-                              value == null
-                                  ? 'Select account'
-                                  : null,
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading:
-                              const Icon(Icons.calendar_month),
-                          title: const Text('Purchase Date'),
-                          subtitle: Text(
-                            DateFormat('dd MMM yyyy')
-                                .format(purchaseDate),
-                          ),
-                          trailing:
-                              const Icon(Icons.edit_calendar),
-                          onTap: () async {
-                            final selected =
-                                await showDatePicker(
-                              context: context,
-                              initialDate: purchaseDate,
-                              firstDate: DateTime(1950),
-                              lastDate: DateTime.now(),
-                            );
-
-                            if (selected != null) {
-                              setDialogState(() {
-                                purchaseDate = selected;
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: notesController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Notes',
-                            alignLabelWithHint: true,
-                          ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          TextFormField(controller: purchaseController, keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: fieldDecoration('Purchase Price', Icons.shopping_bag_outlined),
+                            validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid purchase price' : null; }),
+                          const SizedBox(height: 12),
+                          TextFormField(controller: currentController, keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: fieldDecoration('Current Value', Icons.trending_up_rounded),
+                            validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter a valid current value' : null; }),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<int>(value: selectedAccount, isExpanded: true,
+                            decoration: fieldDecoration('Payment Account', Icons.account_balance_wallet_outlined),
+                            items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${w['currency'] ?? 'PKR'})'))).toList(),
+                            onChanged: (v) => setSheetState(() => selectedAccount = v),
+                            validator: (v) => v == null ? 'Select account' : null),
+                          const SizedBox(height: 8),
+                          ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
+                            title: const Text('Purchase Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
+                            trailing: const Icon(Icons.edit_calendar), onTap: () async {
+                              final picked = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime.now());
+                              if (picked != null) setSheetState(() => purchaseDate = picked);
+                            }),
+                          TextFormField(controller: notesController, maxLines: 2, decoration: fieldDecoration('Notes (optional)', Icons.notes_outlined)),
+                          const SizedBox(height: 16),
+                          Row(children: [
+                            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))),
+                            const SizedBox(width: 10),
+                            Expanded(child: ElevatedButton.icon(
+                              icon: const Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
+                              onPressed: () async {
+                                if (!formKey.currentState!.validate()) return;
+                                try {
+                                  final model = AssetsModel(id: asset?.id, name: nameController.text.trim(), category: selectedCategory,
+                                    purchasePrice: double.parse(purchaseController.text), currentValue: double.parse(currentController.text),
+                                    purchaseDate: purchaseDate, walletId: selectedAccount!, notes: notesController.text.trim(),
+                                    isSold: asset?.isSold ?? false, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
+                                    createdAt: asset?.createdAt ?? DateTime.now());
+                                  if (asset == null) { await _service.addAsset(model); } else { await _service.updateAsset(model); }
+                                  if (!sheetContext.mounted) return;
+                                  Navigator.pop(sheetContext);
+                                  await _loadData();
+                                  _message(asset == null ? 'Asset added successfully.' : 'Asset updated successfully.');
+                                } catch (e) { _message('Error: $e'); }
+                              },
+                            )),
+                          ]),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) {
-                      return;
-                    }
-
-                    try {
-                      final purchasePrice =
-                          double.parse(purchaseController.text);
-
-                      final currentValue =
-                          double.parse(currentController.text);
-
-                      final model = AssetsModel(
-                        id: asset?.id,
-                        name: nameController.text.trim(),
-                        category: categoryController.text.trim(),
-                        purchasePrice: purchasePrice,
-                        currentValue: currentValue,
-                        purchaseDate: purchaseDate,
-                        walletId: selectedAccount!,
-                        notes: notesController.text.trim(),
-                        isSold: asset?.isSold ?? false,
-                        saleDate: asset?.saleDate,
-                        salePrice: asset?.salePrice,
-                        createdAt: asset?.createdAt ??
-                            DateTime.now(),
-                      );
-
-                      if (asset == null) {
-                        await _service.addAsset(model);
-                      } else {
-                        await _service.updateAsset(model);
-                      }
-
-                      if (!dialogContext.mounted) return;
-
-                      Navigator.pop(dialogContext);
-
-                      await _loadData();
-
-                      _message(
-                        asset == null
-                            ? 'Asset added successfully.'
-                            : 'Asset updated successfully.',
-                      );
-                    } catch (e) {
-                      _message('Error: $e');
-                    }
-                  },
-                  child: Text(
-                    asset == null
-                        ? 'Save Asset'
-                        : 'Update Asset',
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
 
     nameController.dispose();
-    categoryController.dispose();
     purchaseController.dispose();
     currentController.dispose();
     notesController.dispose();

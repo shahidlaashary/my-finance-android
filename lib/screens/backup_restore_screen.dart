@@ -421,10 +421,10 @@ class _BackupRestoreScreenState
 
       try {
         // Close independent database connections.
-        await TransactionService.closeDatabase();
+        await TransactionsService.closeDatabase();
         await BudgetsService.closeDatabase();
         await GoalsService.closeDatabase();
-        await RecurringTransactionService.closeDatabase();
+        await RecurringTransactionsService.closeDatabase();
         await CategoryService.closeDatabase();
         await LoansService.closeDatabase();
         await AttachmentService.closeDatabase();

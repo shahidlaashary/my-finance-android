@@ -165,10 +165,12 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(
-      appBar: AppBar(title: Text('App Lock & Security')),
-      body: Center(child: CircularProgressIndicator()),
-    );
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('App Lock & Security')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

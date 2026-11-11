@@ -531,7 +531,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Vehicle Overview', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
             SizedBox(height: 5), Text('Fuel, mileage and running costs in one place', style: TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
+          ])),
           CircleAvatar(radius: 25, backgroundColor: Colors.white24, child: Icon(Icons.directions_car_filled_rounded, color: Colors.white, size: 27)),
         ]),
       ),

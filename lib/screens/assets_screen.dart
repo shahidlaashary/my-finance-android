@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/asset_model.dart';
-import '../services/asset_service.dart';
-import '../services/transaction_service.dart';
+import '../models/assets_model.dart';
+import '../services/assets_service.dart';
+import '../services/transactions_service.dart';
 import '../widgets/attachment_section.dart';
 
 class AssetsScreen extends StatefulWidget {

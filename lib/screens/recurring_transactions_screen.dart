@@ -16,8 +16,8 @@ class RecurringTransactionsScreen extends StatefulWidget {
 
 class _RecurringTransactionsScreenState
     extends State<RecurringTransactionsScreen> {
-  final RecurringTransactionsService _service =
-      RecurringTransactionsService();
+  final RecurringTransactionService _service =
+      RecurringTransactionService();
 
   List<RecurringTransactionModel> _items = [];
   List<Map<String, dynamic>> _wallets = [];
@@ -721,11 +721,11 @@ class _RecurringTransactionDialogState
       );
 
       if (widget.existing == null) {
-        await RecurringTransactionsService().addRecurringTransaction(
+        await RecurringTransactionService().addRecurringTransaction(
           model,
         );
       } else {
-        await RecurringTransactionsService().updateRecurringTransaction(
+        await RecurringTransactionService().updateRecurringTransaction(
           model,
         );
       }

@@ -124,6 +124,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   Future<void> _showAssetDialog({
     AssetModel? asset,
+    String? initialCategory,
   }) async {
     final formKey = GlobalKey<FormState>();
 
@@ -132,7 +133,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
 
     final categoryController = TextEditingController(
-      text: asset?.category ?? '',
+      text: asset?.category ?? initialCategory ?? '',
     );
 
     final purchaseController = TextEditingController(
@@ -452,6 +453,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       context: context,
       builder: (context) {
         DateTime saleDate = DateTime.now();
+        int? selectedSaleWallet = asset.walletId;
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -469,6 +471,22 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Sale Price',
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: selectedSaleWallet,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Sale Account',
+                      prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                    ),
+                    items: _wallets.map((wallet) {
+                      return DropdownMenuItem<int>(
+                        value: (wallet['id'] as num).toInt(),
+                        child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})'),
+                      );
+                    }).toList(),
+                    onChanged: (value) => setDialogState(() => selectedSaleWallet = value),
                   ),
                   const SizedBox(height: 12),
                   ListTile(
@@ -513,9 +531,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       return;
                     }
 
+                    if (selectedSaleWallet == null) return;
                     Navigator.pop(context, {
                       'price': price,
                       'date': saleDate,
+                      'walletId': selectedSaleWallet,
                     });
                   },
                   child: const Text('Confirm Sale'),
@@ -536,6 +556,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         assetId: asset.id!,
         salePrice: result['price'] as double,
         saleDate: result['date'] as DateTime,
+        saleWalletId: result['walletId'] as int,
       );
 
       await _loadData();
@@ -584,6 +605,18 @@ class _AssetsScreenState extends State<AssetsScreen> {
     }
   }
 
+  Widget _heroMetric(String label, String value, {Color valueColor = Colors.white}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
+        const SizedBox(height: 5),
+        Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.w800)),
+      ],
+    );
+  }
+
   Widget _summaryCard(
     String title,
     String currency,
@@ -622,7 +655,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
   }
 
   Widget _assetCard(AssetModel asset) {
-    final currency = _currency(asset.walletId);
+    final purchaseCurrency = _currency(asset.walletId);
+    final saleCurrency = _currency(asset.saleWalletId ?? asset.walletId);
+    final currency = asset.isSold ? saleCurrency : purchaseCurrency;
 
     final profitLoss = asset.isSold && asset.salePrice != null
         ? asset.salePrice! - asset.purchasePrice
@@ -717,7 +752,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             const Divider(height: 24),
             _detailRow(
               'Purchase Price',
-              '$currency ${_money(asset.purchasePrice)}',
+              '$purchaseCurrency ${_money(asset.purchasePrice)}',
             ),
             const SizedBox(height: 7),
             if (!asset.isSold)
@@ -729,7 +764,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             if (asset.isSold && asset.salePrice != null)
               _detailRow(
                 'Sale Price',
-                '$currency ${_money(asset.salePrice!)}',
+                '$saleCurrency ${_money(asset.salePrice!)}',
                 bold: true,
               ),
             const SizedBox(height: 7),
@@ -744,9 +779,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
             ),
             const SizedBox(height: 7),
             _detailRow(
-              'Account',
+              'Purchase Account',
               _accountName(asset.walletId),
             ),
+            if (asset.isSold)
+              _detailRow(
+                'Sale Account',
+                _accountName(asset.saleWalletId ?? asset.walletId),
+              ),
             const SizedBox(height: 7),
             _detailRow(
               'Purchase Date',
@@ -883,15 +923,30 @@ class _AssetsScreenState extends State<AssetsScreen> {
   Widget build(BuildContext context) {
     final currencies = _availableCurrencies;
 
+    final primaryCurrency = currencies.contains('PKR')
+        ? 'PKR'
+        : (currencies.isNotEmpty ? currencies.first : 'PKR');
+    final currentTotal = _currentValues[primaryCurrency] ?? 0;
+    final purchaseTotal = _purchaseValues[primaryCurrency] ?? 0;
+    final unrealized = currentTotal - purchaseTotal;
+    final categoryItems = <Map<String, dynamic>>[
+      {'name': 'Property', 'icon': Icons.home_work_outlined},
+      {'name': 'Vehicles', 'icon': Icons.directions_car_outlined},
+      {'name': 'Gold', 'icon': Icons.diamond_outlined},
+      {'name': 'Jewellery', 'icon': Icons.watch_outlined},
+      {'name': 'Electronics', 'icon': Icons.devices_other_outlined},
+      {'name': 'Investments', 'icon': Icons.trending_up_rounded},
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
-        title: const Text('Assets'),
-        backgroundColor: Colors.white,
+        title: const Text('Assets', style: TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: const Color(0xFFF5F7F6),
         actions: [
           IconButton(
             onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Refresh',
           ),
         ],
@@ -900,7 +955,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         onPressed: _showAssetDialog,
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Add Asset'),
       ),
       body: _loading
@@ -908,41 +963,98 @@ class _AssetsScreenState extends State<AssetsScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 90),
+                padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
                 children: [
-                  if (currencies.isNotEmpty)
-                    ...currencies.map(_currencySummary),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF147D59), Color(0xFF0B6245)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Show Sold Assets'),
-                      value: _showSold,
-                      onChanged: (value) {
-                        setState(() => _showSold = value);
-                        _loadData();
-                      },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('TOTAL ASSET VALUE  •  $primaryCurrency',
+                          style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
+                        const SizedBox(height: 7),
+                        Text('$primaryCurrency ${_money(currentTotal)}',
+                          style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(child: _heroMetric('Purchase Value', '$primaryCurrency ${_money(purchaseTotal)}')),
+                            Container(width: 1, height: 34, color: Colors.white24),
+                            const SizedBox(width: 14),
+                            Expanded(child: _heroMetric('Unrealized P/L', '$primaryCurrency ${_money(unrealized)}', valueColor: unrealized >= 0 ? const Color(0xFFB9F6D3) : const Color(0xFFFFC5C5))),
+                          ],
+                        ),
+                        if (currencies.length > 1) ...[
+                          const SizedBox(height: 10),
+                          const Text('Totals shown for this currency; other currencies below.',
+                            style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
+                        ],
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  const Text('Asset Categories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 10),
+                  GridView.builder(
+                    itemCount: categoryItems.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3, crossAxisSpacing: 9, mainAxisSpacing: 9, childAspectRatio: 1.18),
+                    itemBuilder: (context, index) {
+                      final item = categoryItems[index];
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => _showAssetDialog(initialCategory: item['name'] as String),
+                        child: Container(
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE7EEEA))),
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 25),
+                            const SizedBox(height: 6),
+                            Text(item['name'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                          ]),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Expanded(child: Text('My Assets', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
+                      Text('${_assets.where((a) => !a.isSold).length} Active',
+                        style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                  if (currencies.isNotEmpty)
+                    ...currencies.where((c) => c != primaryCurrency).map(_currencySummary),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Show Sold Assets', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    value: _showSold,
+                    onChanged: (value) {
+                      setState(() => _showSold = value);
+                      _loadData();
+                    },
+                  ),
                   if (_assets.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 55,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No assets found.',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
+                    Container(
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+                      child: const Column(children: [
+                        Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
+                        SizedBox(height: 10),
+                        Text('No assets added yet', style: TextStyle(fontWeight: FontWeight.w700)),
+                        SizedBox(height: 4),
+                        Text('Add your first asset to start tracking its value.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      ]),
                     )
                   else
                     ..._assets.map(_assetCard),

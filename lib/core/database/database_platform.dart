@@ -6,7 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 ///
 /// Android and iOS continue to use the native sqflite implementation.
 /// Windows, macOS and Linux use the FFI implementation.
-Future<void> initializeDatabasePlatform() async {
+void initializeDatabasePlatform() {
   final platform = defaultTargetPlatform;
   final useDesktopFfi = platform == TargetPlatform.windows ||
       platform == TargetPlatform.macOS ||

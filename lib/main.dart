@@ -14,6 +14,10 @@ import 'package:open_filex/open_filex.dart';
 import 'services/attachment_service.dart';
 import 'models/attachment_model.dart';
 import 'screens/assets_screen.dart';
+import 'screens/budgets_screen.dart';
+import 'screens/goals_screen.dart';
+import 'screens/loans_screen.dart';
+import 'screens/transactions_screen.dart';
 
 // ============================================================
 // Fresh Database + Wallet Management
@@ -1443,11 +1447,11 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> pages = const [
     HomePage(),                         // 0
     AssetsPage(),                       // 1
-    SimpleFeaturePage(title: 'Budgets'), // 2
-    SimpleFeaturePage(title: 'Goals'),   // 3
-    LoansPage(),                        // 4
+    BudgetsScreen(),                    // 2
+    GoalsScreen(),                      // 3
+    LoansScreen(),                      // 4
     SimpleFeaturePage(title: 'Stats'),  // 5
-    TransactionsPage(),                // 6
+    TransactionsScreen(),               // 6
     WalletsPage(),                      // 7
   ];
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import '../models/loan_model.dart';
+import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
-import '../services/loan_service.dart';
+import '../services/loans_service.dart';
 import '../services/attachment_service.dart';
 import '../widgets/attachment_section.dart';
 class LoansScreen extends StatefulWidget {

@@ -84,7 +84,7 @@ class BudgetsService {
       throw Exception('Invalid budget period.');
     }
   }
-  /// Creates a new budget.
+  /// Naya budget banata hai.
   static Future<int> addBudget(BudgetsModel budget) async {
     final db = await _database;
     _validateBudget(budget);
@@ -100,7 +100,7 @@ class BudgetsService {
         ..remove('id'),
     );
   }
-  /// Returns all budgets.
+  /// Tamam budgets hasil karta hai.
   static Future<List<BudgetsModel>> getBudgets({
     bool activeOnly = false,
   }) async {
@@ -117,7 +117,7 @@ class BudgetsService {
     }
     return result;
   }
-  /// Returns a single budget by ID.
+  /// ID ki madad se aik budget hasil karta hai.
   static Future<BudgetsModel?> getBudgetById(int budgetId) async {
     final db = await _database;
     final rows = await db.query(
@@ -132,7 +132,7 @@ class BudgetsService {
       BudgetsModel.fromMap(rows.first),
     );
   }
-  /// Recalculates actual expenses for a budget.
+  /// Budget ke asal expenses dobara calculate karta hai.
   static Future<BudgetsModel> _refreshBudget(
     DatabaseExecutor db,
     BudgetsModel budget,
@@ -165,7 +165,7 @@ class BudgetsService {
     );
     return budget.copyWith(spentAmount: spent);
   }
-  /// Manually refreshes one budget's spending.
+  /// Aik budget ki spending ko manually refresh karta hai.
   static Future<BudgetsModel> refreshBudget(int budgetId) async {
     final budget = await getBudgetById(budgetId);
     if (budget == null) {
@@ -173,7 +173,7 @@ class BudgetsService {
     }
     return budget;
   }
-  /// Updates budget details.
+  /// Budget ki maloomat update karta hai.
   static Future<void> updateBudget(BudgetsModel budget) async {
     if (budget.id == null) {
       throw Exception('Budget ID is required.');
@@ -207,7 +207,7 @@ class BudgetsService {
       whereArgs: [budget.id],
     );
   }
-  /// Activates or deactivates a budget.
+  /// Budget ko active ya inactive karta hai.
   static Future<void> setBudgetStatus(
     int budgetId,
     bool isActive,
@@ -223,7 +223,7 @@ class BudgetsService {
       throw Exception('Budget was not found.');
     }
   }
-  /// Deletes a budget.
+  /// Budget delete karta hai.
   static Future<void> deleteBudget(int budgetId) async {
     final db = await _database;
     await db.delete(
@@ -232,14 +232,14 @@ class BudgetsService {
       whereArgs: [budgetId],
     );
   }
-  /// Returns budgets that have exceeded their limits.
+  /// Un budgets ki list deta hai jinhon ne apni limit cross kar li ho.
   static Future<List<BudgetsModel>> getExceededBudgets() async {
     final budgets = await getBudgets(activeOnly: true);
     return budgets.where((budget) {
       return budget.spentAmount > budget.limitAmount;
     }).toList();
   }
-  /// Returns budgets that have reached at least 80% of their limit.
+  /// Un budgets ki list deta hai jo kam az kam 80 feesad limit tak pohanch chuke hon.
   static Future<List<BudgetsModel>> getNearLimitBudgets({
     double threshold = 0.8,
   }) async {
@@ -254,7 +254,7 @@ class BudgetsService {
           !budget.isExceeded;
     }).toList();
   }
-  /// Total budget limit grouped by currency.
+  /// Currency ke mutabiq budgets ki kul limits deta hai.
   static Future<Map<String, double>> getTotalLimitsByCurrency() async {
     final db = await _database;
     final rows = await db.rawQuery('''
@@ -269,7 +269,7 @@ class BudgetsService {
             (row['total'] as num).toDouble(),
     };
   }
-  /// Actual spending grouped by currency.
+  /// Currency ke mutabiq asal spending deta hai.
   static Future<Map<String, double>> getTotalSpendingByCurrency() async {
     final budgets = await getBudgets(activeOnly: true);
     final totals = <String, double>{};
@@ -280,7 +280,7 @@ class BudgetsService {
     }
     return totals;
   }
-  /// Returns budgets for a particular category.
+  /// Kisi khaas category ke budgets deta hai.
   static Future<List<BudgetsModel>> getBudgetsByCategory(
     String category,
   ) async {

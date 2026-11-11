@@ -368,9 +368,9 @@ class RecurringTransactionService {
       'created_at': DateTime.now().toIso8601String(),
     });
   }
-  /// Processes all due recurring transactions.
+  /// Jin recurring transactions ki date aa chuki ho un sab ko process karta hai.
   ///
-  /// Returns the number of generated transactions.
+  /// Banayi gayi transactions ki tadaad return karta hai.
   Future<int> processDueTransactions({
     DateTime? throughDate,
   }) async {

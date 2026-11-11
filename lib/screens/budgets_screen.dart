@@ -385,7 +385,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.text,
         elevation: 0,
         titleSpacing: 16,

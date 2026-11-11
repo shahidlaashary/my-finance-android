@@ -134,7 +134,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         } catch (e) { _message('Error: $e'); }
                       }))]),
                 ]))),
-          ));
+          ))));
       }),
     );
     nameController.dispose(); targetController.dispose(); notesController.dispose();

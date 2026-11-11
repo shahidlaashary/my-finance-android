@@ -26,7 +26,6 @@ import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'widgets/shared_app_bar_actions.dart';
-import 'widgets/app_lock_gate.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam
@@ -1607,7 +1606,7 @@ class MyFinanceApp extends StatelessWidget {
       builder: (context, child) => Stack(
         fit: StackFit.expand,
         children: [
-          AppLockGate(child: child ?? const SizedBox.shrink()),
+          child ?? const SizedBox.shrink(),
           ValueListenableBuilder<String?>(
             valueListenable: _StartupDiagnostics.message,
             builder: (context, message, _) {

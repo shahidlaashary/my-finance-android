@@ -33,7 +33,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     setState(() => _loading = true);
     try {
       final budgets = await BudgetService.getBudgets();
-      final categoryItems = await CategoryService.getCategories('expense');\n      final categories = categoryItems.map((item) => {'name': item.name}).toList();\n      final dbPath = await getDatabasesPath();\n      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));\n      final wallets = await db.query('wallets');
+      final categoryItems = await CategoryService.getCategories('expense');
+      final categories = categoryItems.map((item) => {'name': item.name}).toList();
+      final dbPath = await getDatabasesPath();
+      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
+      final wallets = await db.query('wallets');
       final currencies = wallets
           .map((e) => e['currency']?.toString() ?? 'PKR')
           .toSet()

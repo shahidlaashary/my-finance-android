@@ -396,7 +396,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stats', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Reports and Analytics', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
         actions: buildSharedAppBarActions(context),
       ),
       body: _loading

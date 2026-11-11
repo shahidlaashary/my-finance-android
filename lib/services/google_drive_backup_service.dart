@@ -75,4 +75,85 @@ class GoogleDriveBackupService {
     final result = jsonDecode(response.body) as Map<String, dynamic>;
     return result['id']?.toString() ?? '';
   }
+  static Future<List<GoogleDriveBackupFile>> listBackups({
+    required GoogleSignInAccount account,
+  }) async {
+    final authentication = await account.authentication;
+    final accessToken = authentication.accessToken;
+    if (accessToken == null || accessToken.isEmpty) {
+      throw Exception('Google Drive authorization expired. Reconnect your account.');
+    }
+
+    final uri = Uri.https(
+      'www.googleapis.com',
+      '/drive/v3/files',
+      {
+        'q': "mimeType = 'application/zip' and name contains 'My_Finance_Auto_Backup_' and trashed = false",
+        'orderBy': 'createdTime desc',
+        'pageSize': '50',
+        'fields': 'files(id,name,createdTime)',
+      },
+    );
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Could not list Google Drive backups: ${response.statusCode}');
+    }
+
+    final result = jsonDecode(response.body) as Map<String, dynamic>;
+    final files = result['files'] as List<dynamic>? ?? [];
+    return files
+        .whereType<Map<String, dynamic>>()
+        .map((file) => GoogleDriveBackupFile(
+              id: file['id']?.toString() ?? '',
+              name: file['name']?.toString() ?? 'My Finance Backup',
+              createdTime: file['createdTime']?.toString(),
+            ))
+        .where((file) => file.id.isNotEmpty)
+        .toList();
+  }
+
+  static Future<Uint8List> downloadBackup({
+    required GoogleSignInAccount account,
+    required String fileId,
+  }) async {
+    final authentication = await account.authentication;
+    final accessToken = authentication.accessToken;
+    if (accessToken == null || accessToken.isEmpty) {
+      throw Exception('Google Drive authorization expired. Reconnect your account.');
+    }
+
+    final uri = Uri.https(
+      'www.googleapis.com',
+      '/drive/v3/files/$fileId',
+      {'alt': 'media'},
+    );
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Could not download Google Drive backup: ${response.statusCode}');
+    }
+    if (response.bodyBytes.isEmpty) {
+      throw Exception('Google Drive backup file is empty.');
+    }
+    return response.bodyBytes;
+  }
+
+}
+
+
+class GoogleDriveBackupFile {
+  final String id;
+  final String name;
+  final String? createdTime;
+
+  const GoogleDriveBackupFile({
+    required this.id,
+    required this.name,
+    this.createdTime,
+  });
 }

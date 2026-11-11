@@ -2104,7 +2104,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 18),
-            const Text('This Month',
+            const Text('Financial Snapshot',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
             const SizedBox(height: 10),
@@ -2161,6 +2161,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 18),
+            const Text('This Month',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
+                    color: AppColors.text)),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(

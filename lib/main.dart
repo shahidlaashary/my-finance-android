@@ -3197,6 +3197,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       child: Row(
         children: [
           Expanded(
+            flex: 1,
             child: InkWell(
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(8),
@@ -3225,19 +3226,21 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               ),
             ),
           ),
-          Container(width: 1, height: 30, color: Theme.of(context).dividerColor),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
           Expanded(
+            flex: 1,
             child: InkWell(
               onTap: _pickTime,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text('Time', style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     const SizedBox(height: 3),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.access_time_rounded, size: 15),
                         const SizedBox(width: 5),
@@ -3257,25 +3260,27 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           ),
           Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
           Expanded(
-            flex: 3,
+            flex: 1,
             child: InkWell(
               onTap: _showRecurringOptions,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.only(left: 6, top: 4, bottom: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     const Text('Recurring', style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     const SizedBox(height: 3),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         const Icon(Icons.repeat_rounded, size: 15),
                         const SizedBox(width: 4),
-                        Expanded(
+                        Flexible(
                           child: Text(
                             selectedRecurring,
                             overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                           ),
                         ),

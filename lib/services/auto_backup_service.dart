@@ -10,18 +10,22 @@ class AutoBackupService {
   AutoBackupService._();
 
   static const String taskName = 'myFinanceAutomaticDriveBackup';
+  static bool _initialized = false;
 
-  static Future<void> initialize() async {
+  static Future<void> _ensureInitialized() async {
+    if (_initialized) return;
     await Workmanager().initialize(
       autoBackupCallbackDispatcher,
       isInDebugMode: false,
     );
+    _initialized = true;
   }
 
   static Future<void> configure({
     required bool enabled,
     required String frequency,
   }) async {
+    await _ensureInitialized();
     await Workmanager().cancelByUniqueName(taskName);
     if (!enabled) return;
 

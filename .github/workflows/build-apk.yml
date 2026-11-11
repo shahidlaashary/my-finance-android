@@ -35,12 +35,12 @@ jobs:
           if [ -f android/app/src/main/res/values/styles.xml ]; then
             sed -i 's#parent="@android:style/Theme.Light.NoTitleBar"#parent="Theme.AppCompat.DayNight"#' android/app/src/main/res/values/styles.xml
           fi
-          APP_GRADLE=$(find android/app -maxdepth 1 \\( -name 'build.gradle' -o -name 'build.gradle.kts' \\) | head -n 1)
+          APP_GRADLE=$(find android/app -maxdepth 1 \( -name 'build.gradle' -o -name 'build.gradle.kts' \) | head -n 1)
           if [ -n "$APP_GRADLE" ]; then
             if [[ "$APP_GRADLE" == *.kts ]]; then
-              sed -i '/dependencies {/a\\    implementation("androidx.appcompat:appcompat:1.7.0")' "$APP_GRADLE"
+              sed -i '/dependencies {/a\    implementation("androidx.appcompat:appcompat:1.7.0")' "$APP_GRADLE"
             else
-              sed -i '/dependencies {/a\\    implementation "androidx.appcompat:appcompat:1.7.0"' "$APP_GRADLE"
+              sed -i '/dependencies {/a\    implementation "androidx.appcompat:appcompat:1.7.0"' "$APP_GRADLE"
             fi
           fi
       - name: Configure Gradle download

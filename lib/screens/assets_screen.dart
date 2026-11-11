@@ -928,12 +928,12 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-                      child: const Column(children: [
-                        Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
-                        SizedBox(height: 10),
-                        Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: TextStyle(fontWeight: FontWeight.w700)),
-                        SizedBox(height: 4),
-                        Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      child: Column(children: [
+                        const Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
+                        const SizedBox(height: 10),
+                        Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: const TextStyle(fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                       ]),
                     )
                   else

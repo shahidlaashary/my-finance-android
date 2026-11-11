@@ -31,6 +31,7 @@ class AutoBackupService {
       taskName,
       frequency: Duration(days: days),
       initialDelay: Duration(days: days),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
   }
 

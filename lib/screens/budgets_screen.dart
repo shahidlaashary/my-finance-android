@@ -134,7 +134,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         } catch (e) { _message('Error: $e'); }
                       }))]),
                 ]))),
-          ));
+          ))));
       }),
     );
     nameController.dispose(); amountController.dispose();

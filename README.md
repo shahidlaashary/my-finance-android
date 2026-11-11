@@ -1,7 +1,7 @@
 My Finance
 
 A personal & business finance management application built with Flutter and Dart.
-My Finance aims to provide a single place to manage Accounts, Attachments, Assets, Budgets, Goals, Loans, Savings, Transaction, Recurring Transactio, Stats and Wallets.
+My Finance aims to provide a single place to manage Wallets, Attachments, Assets, Budgets, Goals, Loans, Savings, Transaction, Recurring Transactio, Stats and Wallets.
 
 Project Overview
 
@@ -19,20 +19,20 @@ Platforms
 
 Features Under Development
 
-1. Dashboard and Accounts
+1. Dashboard and Wallets
 
 * Account management
-* Multiple account types
+* Multiple wallet types
 * Opening balances
 * Account balance tracking
-* Custom account categories and icons
+* Custom wallet categories and icons
 * Account exclusion from total balance
 * Income and expense overview
 
 2. Transactions
 
 * Income and expense records
-* Own-account transfers
+* Own-wallet transfers
 * Transaction history
 * Transaction categories
 * Transaction attachments
@@ -50,7 +50,7 @@ Features Under Development
 
 * Add and manage assets
 * Record asset purchases and sales
-* Link assets to accounts
+* Link assets to wallets
 * Track purchase and current values
 * Realized profit and loss tracking
 
@@ -58,7 +58,7 @@ Features Under Development
 
 * Multiple savings goals
 * Target amounts and dates
-* Linked accounts
+* Linked wallets
 * Contributions and progress tracking
 
 6. Budget Management
@@ -93,7 +93,7 @@ Features Under Development
 
 10. Multi-Currency Support
 
-* Currency information associated with accounts
+* Currency information associated with wallets
 * Currency-wise financial summaries
 * Planned currencies include PKR, USD, GBP, EUR, AED, and SAR
 * Exchange-rate conversion and consolidated reporting are planned
@@ -116,7 +116,7 @@ The current implementation includes development work on:
 * SQLite local database
 * Account management
 * Income and expense transactions
-* Own-account transfers
+* Own-wallet transfers
 * Transaction categories
 * Loans and repayments
 * Financial attachments

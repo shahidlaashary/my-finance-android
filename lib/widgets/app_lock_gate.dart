@@ -43,17 +43,19 @@ class _AppLockGateState extends State<AppLockGate>
 
   Future<void> _loadSettings({bool initial = false}) async {
     try {
+      // isEnabled() already checks whether a PIN exists. When app lock is
+      // disabled it short-circuits before touching Android secure storage.
       final enabled = await AppLockService.isEnabled();
-      final hasPin = await AppLockService.hasPin();
-      final biometric = await AppLockService.biometricEnabled();
-      // Biometric plugin ko startup par tabhi call karein jab user ne
-      // biometric unlock enable kiya ho.
+      final biometric =
+          enabled && await AppLockService.biometricEnabled();
+      // Native biometric plugin sirf tab call ho jab lock aur biometrics
+      // dono user ki taraf se enabled hon.
       final biometricAvailable =
           biometric && await AppLockService.isBiometricAvailable();
       if (!mounted) return;
 
       setState(() {
-        _enabled = enabled && hasPin;
+        _enabled = enabled;
         _biometricEnabled = biometric && biometricAvailable;
         if (!_enabled) {
           _locked = false;
@@ -62,7 +64,15 @@ class _AppLockGateState extends State<AppLockGate>
         }
         _loading = false;
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'app lock startup',
+          context: ErrorDescription('while loading app lock settings'),
+        ),
+      );
       if (!mounted) return;
       setState(() {
         _enabled = false;

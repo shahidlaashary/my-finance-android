@@ -9,7 +9,6 @@ import 'budgets_screen.dart';
 import 'recurring_transactions_screen.dart';
 import 'reports_screen.dart';
 import 'backup_restore_screen.dart';
-import 'app_lock_screen.dart';
 
 class MoreFeaturesScreen extends StatelessWidget {
   const MoreFeaturesScreen({super.key});
@@ -298,15 +297,6 @@ class AppSettingsScreen extends StatelessWidget {
             onTap: () => _openScreen(
               context,
               const BackupRestoreScreen(),
-            ),
-          ),
-          _SettingsInfoTile(
-            icon: Icons.security_rounded,
-            title: 'App Lock & Security',
-            subtitle: 'Protect the app with a PIN and biometrics',
-            onTap: () => _openScreen(
-              context,
-              const AppLockScreen(),
             ),
           ),
           const _SettingsInfoTile(

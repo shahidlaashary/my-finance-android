@@ -447,7 +447,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
                       final isIncome = type == 'income';
                       final isExpense = type == 'expense';
-                      final isTransfer = type == 'transfer';
 
                       final color = isIncome
                           ? Colors.green

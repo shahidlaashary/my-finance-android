@@ -3,12 +3,9 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../main.dart';
-import '../services/auto_backup_service.dart';
 import '../services/backup_service.dart';
-import '../services/google_drive_backup_service.dart';
 import '../services/transactions_service.dart';
 import '../services/budgets_service.dart';
 import '../services/goals_service.dart';
@@ -26,239 +23,45 @@ class BackupRestoreScreen extends StatefulWidget {
 
 class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   bool _isProcessing = false;
-  bool _loadingCloud = true;
-  bool _autoEnabled = false;
-  String _frequency = 'daily';
-  String? _googleEmail;
-  String? _lastSuccess;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadCloudSettings();
-  }
-
-  Future<String?> _readSetting(String key) async {
-    final rows = await FinanceDB.instance.db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [key],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : rows.first['setting_value']?.toString();
-  }
-
-  Future<void> _writeSetting(String key, String value) async {
-    await FinanceDB.instance.db.insert(
-      'app_settings',
-      {'setting_key': key, 'setting_value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<void> _loadCloudSettings() async {
-    try {
-      final enabled = await _readSetting('auto_backup_enabled');
-      final frequency = await _readSetting('auto_backup_frequency');
-      final last = await _readSetting('auto_backup_last_success');
-      String? connectedEmail;
-      try {
-        connectedEmail =
-            (await GoogleDriveBackupService.signInSilently())?.email;
-      } catch (_) {
-        connectedEmail = null;
-      }
-      if (!mounted) return;
-      setState(() {
-        _autoEnabled = enabled == '1';
-        _frequency = frequency == 'weekly' ? 'weekly' : 'daily';
-        _googleEmail = connectedEmail;
-        _lastSuccess = last;
-        _loadingCloud = false;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _loadingCloud = false);
-    }
-  }
-
-  Future<bool> _connectDrive() async {
-    try {
-      final email = await GoogleDriveBackupService.connect();
-      if (email == null) return false;
-      await _writeSetting('google_drive_email', email);
-      if (!mounted) return false;
-      setState(() => _googleEmail = email);
-      _showMessage('Google Drive connected: $email');
-      return true;
-    } catch (error) {
-      _showMessage(
-        'Google Drive connection failed. Check Android OAuth setup: $error',
-        isError: true,
-      );
-      return false;
-    }
-  }
-
-  Future<void> _setAutomaticBackup(bool enabled) async {
-    if (_isProcessing) return;
-    setState(() => _isProcessing = true);
-    try {
-      if (enabled && _googleEmail == null) {
-        final connected = await _connectDrive();
-        if (!connected) return;
-      }
-      await _writeSetting('auto_backup_enabled', enabled ? '1' : '0');
-      await _writeSetting('auto_backup_frequency', _frequency);
-      await AutoBackupService.configure(
-        enabled: enabled,
-        frequency: _frequency,
-      );
-      if (!mounted) return;
-      setState(() => _autoEnabled = enabled);
-      _showMessage(enabled
-          ? 'Automatic Google Drive backup scheduled.'
-          : 'Automatic backup disabled.');
-    } catch (error) {
-      _showMessage('Could not update automatic backup: $error', isError: true);
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  Future<void> _changeFrequency(String? value) async {
-    if (value == null) return;
-    setState(() => _frequency = value);
-    await _writeSetting('auto_backup_frequency', value);
-    if (_autoEnabled) {
-      try {
-        await AutoBackupService.configure(enabled: true, frequency: value);
-        _showMessage('Backup frequency updated.');
-      } catch (error) {
-        _showMessage('Could not update schedule: $error', isError: true);
-      }
-    }
-  }
-
-  Future<void> _runCloudBackup() async {
-    if (_isProcessing) return;
-    setState(() => _isProcessing = true);
-    try {
-      if (_googleEmail == null) {
-        final connected = await _connectDrive();
-        if (!connected) return;
-      }
-      await AutoBackupService.runNow();
-      await _loadCloudSettings();
-      if (mounted) _showMessage('Backup uploaded to Google Drive successfully.');
-    } catch (error) {
-      _showMessage('Google Drive backup failed: $error', isError: true);
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  // Reuse the existing Android save-location picker so users can choose
-  // a visible folder in the phone's internal storage.
+  // User ke liye manual ZIP backup banata hai.
   Future<void> _createBackup() async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
+
     try {
       final backupBytes = await BackupService.createBackup(
         database: FinanceDB.instance.db,
       );
+
       if (!mounted) return;
       final savedPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save My Finance Backup to Phone Storage',
+        dialogTitle: 'Save My Finance Backup',
         fileName: 'My_Finance_Backup.zip',
         type: FileType.custom,
         allowedExtensions: ['zip'],
         bytes: backupBytes,
       );
+
       if (!mounted) return;
       _showMessage(
         savedPath == null
             ? 'Backup save cancelled.'
-            : 'Backup saved successfully to phone storage.',
+            : 'Backup created successfully.',
       );
     } catch (error) {
-      if (mounted) _showMessage('Backup failed: $error', isError: true);
+      if (mounted) {
+        _showMessage('Backup failed: $error', isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
-  Future<void> _restoreFromDrive() async {
+  // User ki select ki hui ZIP file se database aur attachments restore karta hai.
+  Future<void> _selectAndRestoreBackup() async {
     if (_isProcessing) return;
-    setState(() => _isProcessing = true);
-    try {
-      if (_googleEmail == null) {
-        final connected = await _connectDrive();
-        if (!connected) return;
-      }
-      final account = await GoogleDriveBackupService.signInSilently();
-      if (account == null) {
-        throw Exception('Connect your Google Drive account first.');
-      }
-      final backups =
-          await GoogleDriveBackupService.listBackups(account: account);
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
 
-      if (backups.isEmpty) {
-        _showMessage('No My Finance automatic backups were found in Google Drive.');
-        return;
-      }
-
-      final selected = await showDialog<GoogleDriveBackupFile>(
-        context: context,
-        builder: (dialogContext) => SimpleDialog(
-          title: const Text('Restore from Google Drive'),
-          children: [
-            SizedBox(
-              width: double.maxFinite,
-              height: 300,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: backups.length,
-                itemBuilder: (context, index) {
-                  final backup = backups[index];
-                  return ListTile(
-                    leading: const Icon(Icons.cloud_download_outlined),
-                    title: Text(backup.name,
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(backup.createdTime ?? 'Backup file'),
-                    onTap: () => Navigator.pop(dialogContext, backup),
-                  );
-                },
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-          ],
-        ),
-      );
-      if (selected == null || !mounted) return;
-
-      setState(() => _isProcessing = true);
-      final bytes = await GoogleDriveBackupService.downloadBackup(
-        account: account,
-        fileId: selected.id,
-      );
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
-      await _restoreBackupBytes(bytes);
-    } catch (error) {
-      _showMessage('Google Drive restore failed: $error', isError: true);
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  Future<void> _importBackupFile() async {
-    if (_isProcessing) return;
     try {
       final result = await FilePicker.platform.pickFiles(
         dialogTitle: 'Select My Finance Backup',
@@ -266,49 +69,55 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         allowedExtensions: ['zip'],
         withData: true,
       );
+
       if (!mounted || result == null || result.files.isEmpty) return;
 
       final selectedFile = result.files.single;
-      Uint8List? bytes = selectedFile.bytes;
-      if (bytes == null && selectedFile.path != null) {
-        bytes = await File(selectedFile.path!).readAsBytes();
+      Uint8List? backupBytes = selectedFile.bytes;
+
+      if (backupBytes == null && selectedFile.path != null) {
+        backupBytes = await File(selectedFile.path!).readAsBytes();
       }
-      if (bytes == null || bytes.isEmpty) {
-        _showMessage('Selected backup file could not be read.', isError: true);
+
+      if (backupBytes == null || backupBytes.isEmpty) {
+        _showMessage('Selected backup file parhi nahi ja saki.', isError: true);
         return;
       }
-      await _restoreBackupBytes(bytes);
-    } catch (error) {
-      if (mounted) _showMessage('Unable to import backup: $error', isError: true);
-    }
-  }
 
-  Future<void> _restoreBackupBytes(Uint8List backupBytes) async {
-    if (!mounted) return;
-    final confirmed = await _confirmRestore();
-    if (!mounted || confirmed != true) return;
+      if (!mounted) return;
+      final confirmed = await _confirmRestore();
+      if (!mounted || confirmed != true) return;
 
-    setState(() => _isProcessing = true);
-    try {
-      await TransactionsService.closeDatabase();
-      await BudgetsService.closeDatabase();
-      await GoalsService.closeDatabase();
-      await RecurringTransactionService.closeDatabase();
-      await CategoryService.closeDatabase();
-      await LoansService.closeDatabase();
-      await AttachmentService.closeDatabase();
-      await FinanceDB.instance.close();
+      setState(() => _isProcessing = true);
 
-      await BackupService.restoreBackup(backupBytes: backupBytes);
-      if (mounted) _showMessage('Backup restore successfully complete ho gaya.');
+      try {
+        // Restore se pehle tamam database connections band karta hai.
+        await TransactionsService.closeDatabase();
+        await BudgetsService.closeDatabase();
+        await GoalsService.closeDatabase();
+        await RecurringTransactionService.closeDatabase();
+        await CategoryService.closeDatabase();
+        await LoansService.closeDatabase();
+        await AttachmentService.closeDatabase();
+        await FinanceDB.instance.close();
+
+        await BackupService.restoreBackup(backupBytes: backupBytes);
+      } finally {
+        // Restore kamyab ho ya fail, main database dobara kholta hai.
+        await FinanceDB.instance.reopen();
+      }
+
+      if (mounted) {
+        _showMessage('Backup restore successfully complete ho gaya.');
+      }
     } catch (error) {
       if (mounted) _showMessage('Restore failed: $error', isError: true);
     } finally {
-      await FinanceDB.instance.reopen();
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
+  // Restore se pehle user se tasdeeq leta hai.
   Future<bool?> _confirmRestore() {
     return showDialog<bool>(
       context: context,
@@ -337,163 +146,13 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     );
   }
 
+  // Screen par natija dikhata hai.
   void _showMessage(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: isError ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  }
-
-  Widget _buildCloudBackupCard() {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(17),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const CircleAvatar(
-                  child: Icon(Icons.cloud_sync_rounded),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Automatic Google Drive Backup',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 4),
-                      Text('Keep a scheduled copy of your finance data in Drive.',
-                          style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                ),
-                if (_loadingCloud)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.account_circle_outlined),
-              title: Text(_googleEmail ?? 'Google account not connected'),
-              subtitle: const Text('Google Drive account'),
-              trailing: TextButton(
-                onPressed: _isProcessing ? null : _connectDrive,
-                child: Text(_googleEmail == null ? 'Connect' : 'Reconnect'),
-              ),
-            ),
-            const Divider(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Enable Automatic Backup'),
-              subtitle: const Text('Runs in the background when Android allows it'),
-              value: _autoEnabled,
-              onChanged: _loadingCloud || _isProcessing
-                  ? null
-                  : _setAutomaticBackup,
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Backup Frequency'),
-              trailing: DropdownButton<String>(
-                value: _frequency,
-                underline: const SizedBox.shrink(),
-                items: const [
-                  DropdownMenuItem(value: 'daily', child: Text('Daily')),
-                  DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
-                ],
-                onChanged: _autoEnabled ? _changeFrequency : null,
-              ),
-            ),
-            if (_lastSuccess != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  'Last successful backup: $_lastSuccess',
-                  style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11),
-                ),
-              ),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _isProcessing ? null : _runCloudBackup,
-                icon: const Icon(Icons.cloud_upload_outlined),
-                label: const Text('Back Up to Google Drive Now'),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'First-time Google Drive use requires the Android OAuth app setup and Drive API to be enabled. '
-              'Android may also delay background jobs due to battery and network restrictions.',
-              style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11, height: 1.4),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required String buttonText,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: color.withOpacity(0.12),
-                  child: Icon(icon, color: color),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(description),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isProcessing ? null : onPressed,
-                icon: Icon(icon),
-                label: Text(buttonText),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -501,10 +160,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Backup & Restore',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
+      appBar: AppBar(title: const Text('Backup & Restore')),
       body: Stack(
         children: [
           ListView(
@@ -518,59 +174,55 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.backup_rounded,
-                        size: 48, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(height: 10),
-                    const Text('Protect Your Finance Data',
-                        style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 7),
+                    Icon(
+                      Icons.backup_rounded,
+                      size: 52,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 12),
                     const Text(
-                      'Keep a local copy on your phone or schedule a cloud backup to Google Drive.',
+                      'Protect Your Finance Data',
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Apne finance data aur attachments ka manual backup banayein '
+                      'ya pehle banaya gaya backup restore karein.',
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
-              _buildCloudBackupCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _buildActionCard(
-                icon: Icons.save_alt_rounded,
-                title: 'Manual Backup',
-                description: 'Save your database and attachments as a ZIP file in a folder you choose on your phone storage.',
-                buttonText: 'Save Backup to Phone',
+                icon: Icons.cloud_upload_rounded,
+                title: 'Create Manual Backup',
+                description: 'Database aur attachments ki ZIP file save karein.',
+                buttonText: 'Create Backup',
                 color: Colors.indigo,
                 onPressed: _createBackup,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               _buildActionCard(
                 icon: Icons.settings_backup_restore_rounded,
                 title: 'Restore Backup',
-                description: 'Select a previously saved My Finance ZIP backup from your phone or another location.',
-                buttonText: 'Select Backup ZIP',
+                description: 'Pehle banayi hui My Finance ZIP file restore karein.',
+                buttonText: 'Select Backup File',
                 color: Colors.teal,
-                onPressed: _importBackupFile,
+                onPressed: _selectAndRestoreBackup,
               ),
-              const SizedBox(height: 12),
-              _buildActionCard(
-                icon: Icons.cloud_download_rounded,
-                title: 'Restore from Google Drive',
-                description: 'View your saved automatic cloud backups and restore one to this device.',
-                buttonText: 'Browse Drive Backups',
-                color: Colors.blue,
-                onPressed: _restoreFromDrive,
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.orange.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
-                  'Important: Restoring a backup replaces your current database and attachments. '
-                  'Always verify the selected ZIP before continuing.',
-                  style: TextStyle(height: 1.45, fontSize: 12),
+                  'Zaroori: Backup restore karne se current database aur '
+                  'attachments replace ho jayenge. Restore se pehle confirm '
+                  'kar lein ke selected ZIP file sahi hai.',
+                  style: TextStyle(height: 1.45),
                 ),
               ),
             ],
@@ -597,6 +249,60 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  // Backup aur restore ke action cards banata hai.
+  Widget _buildActionCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required String buttonText,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: color.withOpacity(0.12),
+                  child: Icon(icon, color: color),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(description),
+            const SizedBox(height: 15),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isProcessing ? null : onPressed,
+                icon: Icon(icon),
+                label: Text(buttonText),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

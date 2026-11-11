@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/budgets_model.dart';
+import 'app_refresh_service.dart';
 class BudgetsService {
 
   // Restore se pehle is service ka database connection band karta hai.
@@ -99,7 +100,7 @@ class BudgetsService {
     final db = await _database;
     _validateBudget(budget);
     final now = DateTime.now();
-    return db.insert(
+    final id = await db.insert(
       'budgets',
       budget.copyWith(
         name: budget.name.trim(),
@@ -109,6 +110,8 @@ class BudgetsService {
       ).toMap()
         ..remove('id'),
     );
+    AppRefreshController.notifyChanged();
+    return id;
   }
   /// Tamam budgets hasil karta hai.
   static Future<List<BudgetsModel>> getBudgets({
@@ -219,6 +222,7 @@ class BudgetsService {
       where: 'id = ?',
       whereArgs: [budget.id],
     );
+    AppRefreshController.notifyChanged();
   }
   /// Budget ko active ya inactive karta hai.
   static Future<void> setBudgetStatus(
@@ -235,6 +239,7 @@ class BudgetsService {
     if (count == 0) {
       throw Exception('Budget was not found.');
     }
+    AppRefreshController.notifyChanged();
   }
   /// Budget delete karta hai.
   static Future<void> deleteBudget(int budgetId) async {
@@ -244,6 +249,7 @@ class BudgetsService {
       where: 'id = ?',
       whereArgs: [budgetId],
     );
+    AppRefreshController.notifyChanged();
   }
   /// Un budgets ki list deta hai jinhon ne apni limit cross kar li ho.
   static Future<List<BudgetsModel>> getExceededBudgets() async {

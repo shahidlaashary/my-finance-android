@@ -84,19 +84,12 @@ class AttachmentService {
         file_type TEXT NOT NULL,
         file_size INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
-        remote_url TEXT,
-        is_synced INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_attachments_owner
       ON $_tableName (owner_type, owner_id)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_attachments_sync
-      ON $_tableName (is_synced)
     ''');
   }
 
@@ -317,50 +310,4 @@ class AttachmentService {
     }
   }
 
-  /// Updates the cloud URL after a successful Firebase upload.
-  static Future<void> updateRemoteUrl({
-    required int id,
-    required String remoteUrl,
-  }) async {
-    final db = await _database;
-
-    await db.update(
-      _tableName,
-      {
-        'remote_url': remoteUrl,
-        'is_synced': 1,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  /// Marks an attachment as pending cloud synchronization.
-  static Future<void> markPendingSync(int id) async {
-    final db = await _database;
-
-    await db.update(
-      _tableName,
-      {
-        'is_synced': 0,
-        'remote_url': null,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  /// Gets all attachments waiting for cloud synchronization.
-  static Future<List<AttachmentModel>> getPendingSync() async {
-    final db = await _database;
-
-    final result = await db.query(
-      _tableName,
-      where: 'is_synced = ?',
-      whereArgs: [0],
-      orderBy: 'created_at ASC',
-    );
-
-    return result.map(AttachmentModel.fromMap).toList();
-  }
 }

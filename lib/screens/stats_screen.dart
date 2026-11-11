@@ -669,7 +669,7 @@ class _DonutChartPainter extends CustomPainter {
       final sweep = values[i] / total * math.pi * 2;
       if (sweep <= 0) continue;
       paint.color = colors[i % colors.length];
-      canvas.drawArc(rect, startAngle + 0.025, math.max(0, sweep - 0.05), false, paint);
+      canvas.drawArc(rect, startAngle + 0.025, math.max(0.0, sweep - 0.05), false, paint);
       startAngle += sweep;
     }
   }

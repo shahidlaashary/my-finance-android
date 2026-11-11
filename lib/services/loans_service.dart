@@ -48,12 +48,14 @@ class LoansService {
   static Future<Database> _openDatabase() async {
     final databasePath = await getDatabasesPath();
 
+    // FinanceDB may already have this file open. In that case sqflite
+    // reuses its connection and does not run this service's onOpen callback.
+    // Create loan tables explicitly so they exist on fresh and existing DBs.
     final db = await openDatabase(
       p.join(databasePath, _databaseName),
-      onOpen: (db) async {
-        await _createTables(db);
-      },
     );
+
+    await _createTables(db);
 
     _databaseInstance = db;
     return db;

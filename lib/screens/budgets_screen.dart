@@ -383,10 +383,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       return true;
     }).toList();
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+        titleSpacing: 16,
+        toolbarHeight: 56,
         title: const Text('My Budgets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(

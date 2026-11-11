@@ -363,7 +363,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  // Currency-wise financial summary.
+  // Currency ke mutabiq mali khulasa.
   Widget _buildSummaryCards() {
     final currencies = _filteredSummary;
 
@@ -531,7 +531,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _buildMonthlyTrend(ThemeData theme) {
     final data = _trend;
 
-    // Use a separate scale for each currency.
+    // Har currency ke liye alag scale istemal karein.
     final currencyGroups = <String, List<Map<String, dynamic>>>{};
 
     for (final item in data) {

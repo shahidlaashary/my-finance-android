@@ -237,4 +237,3 @@ class _AppLockGateState extends State<AppLockGate>
     );
   }
 }
-}

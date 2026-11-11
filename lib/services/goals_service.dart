@@ -2,6 +2,16 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/goals_model.dart';
 class GoalsService {
+
+  // Restore se pehle is service ka database connection band karta hai.
+  static Future<void> closeDatabase() async {
+    final currentDatabase = _databaseInstance;
+    _databaseInstance = null;
+    _databaseFuture = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+  }
   static const String _databaseName = 'my_finance.db';
   static Database? _databaseInstance;
   static Future<Database>? _databaseFuture;

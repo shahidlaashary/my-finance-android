@@ -3,7 +3,8 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../models/recurring_transaction_model.dart';
-import '../services/recurring_transaction_service.dart';\nimport '../services/category_service.dart';
+import '../services/recurring_transaction_service.dart';
+import '../services/category_service.dart';
 
 class RecurringTransactionsScreen extends StatefulWidget {
   const RecurringTransactionsScreen({super.key});

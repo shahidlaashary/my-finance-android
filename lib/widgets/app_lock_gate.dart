@@ -46,7 +46,10 @@ class _AppLockGateState extends State<AppLockGate>
       final enabled = await AppLockService.isEnabled();
       final hasPin = await AppLockService.hasPin();
       final biometric = await AppLockService.biometricEnabled();
-      final biometricAvailable = await AppLockService.isBiometricAvailable();
+      // Biometric plugin ko startup par tabhi call karein jab user ne
+      // biometric unlock enable kiya ho.
+      final biometricAvailable =
+          biometric && await AppLockService.isBiometricAvailable();
       if (!mounted) return;
 
       setState(() {

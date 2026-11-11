@@ -45,33 +45,26 @@ class _StartupDiagnostics {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    _StartupDiagnostics.report(
-      'Flutter error: ${details.exceptionAsString()}\\n${details.stack ?? ''}',
-    );
-  };
-  PlatformDispatcher.instance.onError = (error, stackTrace) {
-    _StartupDiagnostics.report(
-      'Uncaught async error: $error\\n$stackTrace',
-    );
-    return true;
-  };
-
-  // Desktop platforms ke liye SQLite initialize karna.
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
-
-  try {
-    await FinanceDB.instance.init();
-    runApp(const MyFinanceApp());
-  } catch (error) {
-    // Startup errors ko app band karne ke bajaye screen par dikhayein.
-    runApp(_StartupRecoveryApp(error: error.toString()));
-  }
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      backgroundColor: Color(0xFFF5F7F6),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF147D59)),
+            SizedBox(height: 16),
+            Text('My Finance Startup Test', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('Native Android launch + Flutter UI is working.'),
+            SizedBox(height: 8),
+            Text('Temporary diagnostic screen only. No database opened.'),
+          ],
+        ),
+      ),
+    ),
+  ));
 }
 
 class _StartupRecoveryApp extends StatefulWidget {

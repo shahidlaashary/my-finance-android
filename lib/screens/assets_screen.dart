@@ -835,8 +835,13 @@ class _AssetsScreenState extends State<AssetsScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+        titleSpacing: 16,
+        toolbarHeight: 56,
         title: const Text('My Assets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
         backgroundColor: const Color(0xFFF5F7F6),
         actions: buildSharedAppBarActions(context),

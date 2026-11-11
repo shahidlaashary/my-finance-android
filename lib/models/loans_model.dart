@@ -1,4 +1,4 @@
-class LoanModel {
+class LoansModel {
   final int? id;
   final String borrowerName;
   final String? borrowerPhone;
@@ -11,7 +11,7 @@ class LoanModel {
   final String status;
   final String createdAt;
 
-  const LoanModel({
+  const LoansModel({
     this.id,
     required this.borrowerName,
     this.borrowerPhone,
@@ -59,8 +59,8 @@ class LoanModel {
     };
   }
 
-  factory LoanModel.fromMap(Map<String, dynamic> map) {
-    return LoanModel(
+  factory LoansModel.fromMap(Map<String, dynamic> map) {
+    return LoansModel(
       id: map['id'] as int?,
       borrowerName: map['borrower_name'] as String,
       borrowerPhone: map['borrower_phone'] as String?,
@@ -75,7 +75,7 @@ class LoanModel {
     );
   }
 
-  LoanModel copyWith({
+  LoansModel copyWith({
     int? id,
     String? borrowerName,
     String? borrowerPhone,
@@ -88,7 +88,7 @@ class LoanModel {
     String? status,
     String? createdAt,
   }) {
-    return LoanModel(
+    return LoansModel(
       id: id ?? this.id,
       borrowerName: borrowerName ?? this.borrowerName,
       borrowerPhone: borrowerPhone ?? this.borrowerPhone,

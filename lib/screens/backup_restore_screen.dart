@@ -424,7 +424,7 @@ class _BackupRestoreScreenState
         await TransactionsService.closeDatabase();
         await BudgetsService.closeDatabase();
         await GoalsService.closeDatabase();
-        await RecurringTransactionsService.closeDatabase();
+        await RecurringTransactionService.closeDatabase();
         await CategoryService.closeDatabase();
         await LoansService.closeDatabase();
         await AttachmentService.closeDatabase();

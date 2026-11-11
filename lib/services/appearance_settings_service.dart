@@ -9,7 +9,7 @@ class AppearanceSettingsService {
   Future<String?> Function(String key)? _readSetting;
   Future<void> Function(String key, String value)? _writeSetting;
 
-  /// Available theme modes: System, Light and Dark.
+  /// Theme ke modes: System, Light aur Dark.
   final ValueNotifier<ThemeMode> themeMode =
       ValueNotifier<ThemeMode>(ThemeMode.system);
 
@@ -21,7 +21,7 @@ class AppearanceSettingsService {
     _writeSetting = writeSetting;
   }
 
-  /// Load the saved theme mode.
+  /// App ke liye select kiya gaya theme mode load karta hai.
   Future<void> load() async {
     final read = _readSetting;
     if (read == null) return;
@@ -44,7 +44,7 @@ class AppearanceSettingsService {
     }
   }
 
-  /// Save the selected theme mode.
+  /// Select kiya gaya theme mode save karta hai.
   Future<void> setThemeMode(ThemeMode mode) async {
     themeMode.value = mode;
 

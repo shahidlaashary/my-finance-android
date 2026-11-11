@@ -1765,7 +1765,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                       const SizedBox(width: 8),
                       _transactionTab(
                         title: 'Transfer',
-                        subtitle: 'Money between wallets',
+                        subtitle: 'Between wallets',
                         icon: Icons.swap_horiz_rounded,
                         color: AppColors.primary,
                       ),

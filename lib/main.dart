@@ -1988,6 +1988,7 @@ class _HomePageState extends State<HomePage> {
       final assetsValue = await _convertValuesToPKR(assetsByCurrency);
       final loansValue = await _convertValuesToPKR(loansByCurrency);
       final budgets = await BudgetsService.getBudgets(activeOnly: true);
+      final newBudgetNotifications = await _checkBudgetThresholds(budgets);
       final alerts = budgets
           .where((budget) =>
               budget.isCurrentlyActive &&
@@ -2008,6 +2009,18 @@ class _HomePageState extends State<HomePage> {
         budgetAlerts = alerts;
         loading = false;
       });
+      if (newBudgetNotifications.isNotEmpty && mounted) {
+        final first = newBudgetNotifications.first;
+        final extraCount = newBudgetNotifications.length - 1;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(extraCount > 0
+                ? '$first (+$extraCount more budget alert(s))'
+                : first),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => loading = false);
@@ -2015,6 +2028,64 @@ class _HomePageState extends State<HomePage> {
         SnackBar(content: Text('Dashboard update failed: $error')),
       );
     }
+  }
+
+  Future<List<String>> _checkBudgetThresholds(
+    List<BudgetsModel> budgets,
+  ) async {
+    final db = FinanceDB.instance.db;
+    final notifications = <String>[];
+
+    for (final budget in budgets) {
+      if (!budget.isCurrentlyActive ||
+          budget.id == null ||
+          budget.limitAmount <= 0) {
+        continue;
+      }
+
+      final percent = budget.spentAmount / budget.limitAmount * 100;
+      final currentLevel = percent >= 100
+          ? 100
+          : percent >= 90
+              ? 90
+              : percent >= 75
+                  ? 75
+                  : percent >= 50
+                      ? 50
+                      : 0;
+      final key = 'budget_alert_level_${budget.id}';
+      final savedRows = await db.query(
+        'app_settings',
+        columns: ['setting_value'],
+        where: 'setting_key = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      final previousLevel = savedRows.isEmpty
+          ? 0
+          : int.tryParse(
+                  savedRows.first['setting_value']?.toString() ?? '0') ??
+              0;
+
+      if (currentLevel > previousLevel) {
+        final status = currentLevel >= 100
+            ? 'has reached its limit'
+            : 'has used $currentLevel% of its budget';
+        notifications.add('${budget.name} $status.');
+      }
+
+      if (currentLevel != previousLevel) {
+        await db.insert(
+          'app_settings',
+          {
+            'setting_key': key,
+            'setting_value': currentLevel.toString(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+    return notifications;
   }
 
   Future<double> _convertValuesToPKR(

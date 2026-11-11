@@ -28,7 +28,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     if (mounted) setState(() => loading = true);
 
     try {
-      final result = await TransactionService.getTransactions();
+      final result = await TransactionsService.getTransactions();
 
       if (!mounted) return;
 
@@ -89,7 +89,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> editTransaction(
     Map<String, dynamic> item,
   ) async {
-    final wallets = await TransactionService.getAccounts();
+    final wallets = await TransactionsService.getAccounts();
 
     if (!mounted) return;
 
@@ -319,7 +319,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     }
 
                     try {
-                      await TransactionService.updateTransaction(
+                      await TransactionsService.updateTransaction(
                         id: item['id'] as int,
                         type: type,
                         amount: amount,
@@ -386,7 +386,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (confirmed == true) {
       try {
-        await TransactionService.deleteTransaction(
+        await TransactionsService.deleteTransaction(
           item['id'] as int,
         );
 

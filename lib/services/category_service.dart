@@ -4,6 +4,16 @@ import 'package:sqflite/sqflite.dart';
 import '../models/finance_category.dart';
 
 class CategoryService {
+
+  // Restore se pehle is service ka database connection band karta hai.
+  static Future<void> closeDatabase() async {
+    final currentDatabase = _database;
+    _database = null;
+    _databaseFuture = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+  }
   static Database? _database;
   static Future<Database>? _databaseFuture;
 

@@ -407,10 +407,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('Transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        foregroundColor: const Color(0xFF202A26),
+        elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        elevation: 0,
+        title: const Text('Transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       body: loading

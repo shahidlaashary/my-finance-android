@@ -1,7 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-class TransactionService {
+class TransactionsService {
   static Database? _database;
   static Future<Database>? _databaseFuture;
 

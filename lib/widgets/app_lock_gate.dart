@@ -136,87 +136,105 @@ class _AppLockGateState extends State<AppLockGate>
         if (_locked && _enabled)
           Positioned.fill(
             child: Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(28),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 380),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 82,
-                    height: 82,
-                    decoration: BoxDecoration(
-                      color: primary.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Icon(Icons.lock_rounded, size: 42, color: primary),
-                  ),
-                  const SizedBox(height: 22),
-                  const Text(
-                    'My Finance is Locked',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Authenticate to securely access your financial data.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Theme.of(context).hintColor),
-                  ),
-                  const SizedBox(height: 26),
-                  if (_biometricEnabled)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _authenticating ? null : _unlockWithBiometrics,
-                        icon: const Icon(Icons.fingerprint_rounded),
-                        label: Text(_authenticating
-                            ? 'Authenticating...'
-                            : 'Unlock with Biometrics'),
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(28),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 380),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 82,
+                            height: 82,
+                            decoration: BoxDecoration(
+                              color: primary.withOpacity(0.10),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Icon(
+                              Icons.lock_rounded,
+                              size: 42,
+                              color: primary,
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          const Text(
+                            'My Finance is Locked',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Authenticate to securely access your financial data.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).hintColor,
+                            ),
+                          ),
+                          const SizedBox(height: 26),
+                          if (_biometricEnabled)
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _authenticating
+                                    ? null
+                                    : _unlockWithBiometrics,
+                                icon: const Icon(Icons.fingerprint_rounded),
+                                label: Text(
+                                  _authenticating
+                                      ? 'Authenticating...'
+                                      : 'Unlock with Biometrics',
+                                ),
+                              ),
+                            ),
+                          if (_biometricEnabled)
+                            const SizedBox(height: 12),
+                          if (!_showPin)
+                            TextButton(
+                              onPressed: () =>
+                                  setState(() => _showPin = true),
+                              child: const Text('Use PIN instead'),
+                            ),
+                          if (_showPin || !_biometricEnabled) ...[
+                            TextField(
+                              controller: _pinController,
+                              autofocus: true,
+                              obscureText: true,
+                              keyboardType: TextInputType.number,
+                              maxLength: 8,
+                              onSubmitted: (_) => _unlockWithPin(),
+                              decoration: InputDecoration(
+                                labelText: 'Enter your PIN',
+                                errorText: _error,
+                                counterText: '',
+                                border: const OutlineInputBorder(),
+                                prefixIcon:
+                                    const Icon(Icons.password_rounded),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: _unlockWithPin,
+                                child: const Text('Unlock'),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                  if (_biometricEnabled) const SizedBox(height: 12),
-                  if (!_showPin)
-                    TextButton(
-                      onPressed: () => setState(() => _showPin = true),
-                      child: const Text('Use PIN instead'),
-                    ),
-                  if (_showPin || !_biometricEnabled) ...[
-                    TextField(
-                      controller: _pinController,
-                      autofocus: true,
-                      obscureText: true,
-                      keyboardType: TextInputType.number,
-                      maxLength: 8,
-                      onSubmitted: (_) => _unlockWithPin(),
-                      decoration: InputDecoration(
-                        labelText: 'Enter your PIN',
-                        errorText: _error,
-                        counterText: '',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.password_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _unlockWithPin,
-                        child: const Text('Unlock'),
-                      ),
-                    ),
-                  ],
-                ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-    ),
       ],
     );
   }
+}
 }

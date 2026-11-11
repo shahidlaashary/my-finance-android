@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -386,12 +387,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       appBar: AppBar(
         title: const Text('Budgets'),
         backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
+        actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showBudgetDialog(),
@@ -440,12 +436,12 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           Icon(
                             Icons.pie_chart_outline,
                             size: 55,
-                            color: Colors.grey,
+                            color: const Color(0xFF147D59),
                           ),
                           SizedBox(height: 12),
                           Text(
                             'No budgets found.',
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(color: Color(0xFF7B8781)),
                           ),
                         ],
                       ),

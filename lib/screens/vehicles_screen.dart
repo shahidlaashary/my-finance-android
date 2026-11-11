@@ -406,17 +406,22 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     odo.dispose(); quantity.dispose(); unitPrice.dispose(); station.dispose(); notes.dispose();
   }
 
-  Future<void> _showExpenseForm() async {
+  Future<void> _showExpenseForm({Map<String, dynamic>? record}) async {
     if (_vehicles.isEmpty || _wallets.isEmpty) { _message(_vehicles.isEmpty ? 'Please add a vehicle first.' : 'Please add a wallet first.'); return; }
     final key = GlobalKey<FormState>();
-    final amount = TextEditingController(); final odo = TextEditingController(); final vendor = TextEditingController(); final notes = TextEditingController();
-    var vehicleId = _vehicles.first['id'] as int; var walletId = _wallets.first['id'] as int;
-    var category = _expenseCategories.first; var date = DateTime.now();
+    final amount = TextEditingController(text: record?['amount']?.toString() ?? '');
+    final odo = TextEditingController(text: record?['odometer']?.toString() ?? '');
+    final vendor = TextEditingController(text: record?['vendor']?.toString() ?? '');
+    final notes = TextEditingController(text: record?['notes']?.toString() ?? '');
+    var vehicleId = (record?['vehicle_id'] as int?) ?? (_vehicles.first['id'] as int);
+    var walletId = (record?['wallet_id'] as int?) ?? (_wallets.first['id'] as int);
+    var category = (record?['category'] ?? _expenseCategories.first).toString();
+    var date = DateTime.tryParse(record?['date']?.toString() ?? '') ?? DateTime.now();
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: Colors.transparent, elevation: 0,
       builder: (sheet) => StatefulBuilder(builder: (context, setSheet) => _sheetFrame(context,
         Form(key: key, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _sheetHeader('Add Vehicle Expense', sheet),
+            _sheetHeader(record == null ? 'Add Vehicle Expense' : 'Edit Vehicle Expense', sheet),
             DropdownButtonFormField<int>(value: vehicleId, isExpanded: true, decoration: _decoration('Vehicle', Icons.directions_car_outlined),
               items: _vehicles.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name'].toString()))).toList(), onChanged: (v) { if (v != null) setSheet(() => vehicleId = v); }),
             const SizedBox(height: 12),
@@ -448,14 +453,20 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                 setSheet(() => _saving = true);
                 try {
                   final v = _vehicles.firstWhere((e) => e['id'] == vehicleId);
-                  await VehicleService.addExpense(vehicleId: vehicleId, vehicleName: v['name'].toString(), date: date,
-                    amount: double.parse(amount.text), odometer: double.parse(odo.text), walletId: walletId,
-                    category: category, vendor: vendor.text.trim(), notes: notes.text.trim());
+                  if (record == null) {
+                    await VehicleService.addExpense(vehicleId: vehicleId, vehicleName: v['name'].toString(), date: date,
+                      amount: double.parse(amount.text), odometer: double.parse(odo.text), walletId: walletId,
+                      category: category, vendor: vendor.text.trim(), notes: notes.text.trim());
+                  } else {
+                    await VehicleService.updateExpense(id: record['id'] as int, vehicleId: vehicleId, vehicleName: v['name'].toString(), date: date,
+                      amount: double.parse(amount.text), odometer: double.parse(odo.text), walletId: walletId,
+                      category: category, vendor: vendor.text.trim(), notes: notes.text.trim());
+                  }
                   if (!sheet.mounted) return;
-                  Navigator.pop(sheet); await _load(); _message('Expense saved and linked to Finance transactions.');
+                  Navigator.pop(sheet); await _load(); _message(record == null ? 'Expense saved and linked to Finance transactions.' : 'Vehicle expense updated.');
                 } catch (e) { _message('Unable to save expense: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: const Text('Save Expense'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: const Icon(Icons.check_rounded), label: Text(record == null ? 'Save Expense' : 'Update Expense'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -684,7 +695,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         leading: const CircleAvatar(backgroundColor: Color(0xFFFCEBEA), child: Icon(Icons.build_outlined, color: Colors.red)),
         title: Text('${e['category']} • ${_amount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
-        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() async { final id = e['id'] as int; await VehicleService.deleteExpense(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_expense', ownerId: id); }, 'vehicle expense'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Expense'))]),
+        trailing: PopupMenuButton<String>(onSelected: (v) {
+          if (v == 'edit') _showExpenseForm(record: e);
+          if (v == 'delete') _deleteRecord(() async { final id = e['id'] as int; await VehicleService.deleteExpense(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_expense', ownerId: id); }, 'vehicle expense');
+        }, itemBuilder: (_) => const [
+          PopupMenuItem(value: 'edit', child: Text('Edit Expense')),
+          PopupMenuItem(value: 'delete', child: Text('Delete Expense')),
+        ]),
         children: [
           ListTile(dense: true, title: const Text('Paid from'), trailing: Text(_walletName(e['wallet_id']))),
           ListTile(dense: true, title: const Text('Workshop / Vendor'), trailing: Text((e['vendor'] ?? '—').toString())),

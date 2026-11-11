@@ -908,7 +908,7 @@ class _RecurringTransactionDialogState
                       );
                     }).toList(),
                     onChanged: (value) {
-                      setState(() => _categoryId = value);
+                      setState(() => _category = value);
                     },
                   ),
                 ],

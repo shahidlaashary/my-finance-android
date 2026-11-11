@@ -331,20 +331,24 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     name.dispose(); model.dispose(); registration.dispose(); price.dispose(); notes.dispose();
   }
 
-  Future<void> _showFuelForm() async {
+  Future<void> _showFuelForm({Map<String, dynamic>? record}) async {
     if (_vehicles.isEmpty || _wallets.isEmpty) { _message(_vehicles.isEmpty ? 'Please add a vehicle first.' : 'Please add a wallet first.'); return; }
     final key = GlobalKey<FormState>();
-    final odo = TextEditingController(); final quantity = TextEditingController(); final unitPrice = TextEditingController();
-    final station = TextEditingController(); final notes = TextEditingController();
-    var vehicleId = _vehicles.first['id'] as int;
-    var walletId = _wallets.first['id'] as int;
-    var date = DateTime.now(); var fullTank = true;
-    String unit = _vehicles.first['fuel_type'] == 'Electric' ? 'kWh' : 'L';
+    final odo = TextEditingController(text: record?['odometer']?.toString() ?? '');
+    final quantity = TextEditingController(text: record?['quantity']?.toString() ?? '');
+    final unitPrice = TextEditingController(text: record?['unit_price']?.toString() ?? '');
+    final station = TextEditingController(text: record?['station']?.toString() ?? '');
+    final notes = TextEditingController(text: record?['notes']?.toString() ?? '');
+    var vehicleId = (record?['vehicle_id'] as int?) ?? (_vehicles.first['id'] as int);
+    var walletId = (record?['wallet_id'] as int?) ?? (_wallets.first['id'] as int);
+    var date = DateTime.tryParse(record?['date']?.toString() ?? '') ?? DateTime.now();
+    var fullTank = (record?['full_tank'] as bool?) ?? true;
+    String unit = (record?['unit'] ?? (_vehicles.firstWhere((v) => v['id'] == vehicleId)['fuel_type'] == 'Electric' ? 'kWh' : 'L')).toString();
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: Colors.transparent, elevation: 0,
       builder: (sheet) => StatefulBuilder(builder: (context, setSheet) => _sheetFrame(context,
         Form(key: key, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _sheetHeader('Add Fuel Entry', sheet),
+            _sheetHeader(record == null ? 'Add Fuel Entry' : 'Edit Fuel Entry', sheet),
             DropdownButtonFormField<int>(value: vehicleId, isExpanded: true, decoration: _decoration('Vehicle', Icons.directions_car_outlined),
               items: _vehicles.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name'].toString()))).toList(),
               onChanged: (v) { if (v != null) setSheet(() { vehicleId = v; final selected = _vehicles.firstWhere((e) => e['id'] == v); unit = selected['fuel_type'] == 'Electric' ? 'kWh' : 'L'; }); }),
@@ -380,14 +384,20 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                 setSheet(() => _saving = true);
                 try {
                   final v = _vehicles.firstWhere((e) => e['id'] == vehicleId);
-                  await VehicleService.addFuel(vehicleId: vehicleId, vehicleName: v['name'].toString(), date: date,
-                    odometer: double.parse(odo.text), quantity: double.parse(quantity.text), unitPrice: double.parse(unitPrice.text),
-                    fullTank: fullTank, walletId: walletId, station: station.text.trim(), notes: notes.text.trim(), unit: unit);
+                  if (record == null) {
+                    await VehicleService.addFuel(vehicleId: vehicleId, vehicleName: v['name'].toString(), date: date,
+                      odometer: double.parse(odo.text), quantity: double.parse(quantity.text), unitPrice: double.parse(unitPrice.text),
+                      fullTank: fullTank, walletId: walletId, station: station.text.trim(), notes: notes.text.trim(), unit: unit);
+                  } else {
+                    await VehicleService.updateFuel(id: record['id'] as int, vehicleId: vehicleId, vehicleName: v['name'].toString(), date: date,
+                      odometer: double.parse(odo.text), quantity: double.parse(quantity.text), unitPrice: double.parse(unitPrice.text),
+                      fullTank: fullTank, walletId: walletId, station: station.text.trim(), notes: notes.text.trim(), unit: unit);
+                  }
                   if (!sheet.mounted) return;
-                  Navigator.pop(sheet); await _load(); _message('Fuel entry saved and linked to Finance expenses.');
+                  Navigator.pop(sheet); await _load(); _message(record == null ? 'Fuel entry saved and linked to Finance expenses.' : 'Fuel entry updated.');
                 } catch (e) { _message('Unable to save fuel entry: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: const Text('Save Fuel Entry'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: const Icon(Icons.check_rounded), label: Text(record == null ? 'Save Fuel Entry' : 'Update Fuel Entry'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -650,7 +660,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         leading: const CircleAvatar(backgroundColor: Color(0xFFFFF2DE), child: Icon(Icons.local_gas_station_outlined, color: Colors.orange)),
         title: Text('${_vehicleName(f['vehicle_id'])} • ${_amount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
-        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry'))]),
+        trailing: PopupMenuButton<String>(onSelected: (v) {
+          if (v == 'edit') _showFuelForm(record: f);
+          if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry');
+        }, itemBuilder: (_) => const [
+          PopupMenuItem(value: 'edit', child: Text('Edit Fuel Entry')),
+          PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry')),
+        ]),
         children: [
           ListTile(dense: true, title: const Text('Price per unit'), trailing: Text(_amount(f['unit_price']))),
           ListTile(dense: true, title: const Text('Fuel station'), trailing: Text((f['station'] ?? '—').toString())),

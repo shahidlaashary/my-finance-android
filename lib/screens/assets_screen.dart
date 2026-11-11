@@ -16,9 +16,9 @@ class AssetsScreen extends StatefulWidget {
 }
 
 class _AssetsScreenState extends State<AssetsScreen> {
-  final AssetService _service = AssetService();
+  final AssetsService _service = AssetsService();
 
-  List<AssetModel> _assets = [];
+  List<AssetsModel> _assets = [];
   List<Map<String, dynamic>> _wallets = [];
 
   Map<String, double> _currentValues = {};
@@ -62,7 +62,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       final realized =
           await _service.getTotalRealizedProfitLossByCurrency();
 
-      final Database db = await TransactionService.database;
+      final Database db = await TransactionsService.database;
 
       final wallets = await db.query(
         'wallets',
@@ -123,7 +123,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   }
 
   Future<void> _showAssetDialog({
-    AssetModel? asset,
+    AssetsModel? asset,
     String? initialCategory,
   }) async {
     final formKey = GlobalKey<FormState>();
@@ -328,7 +328,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       final currentValue =
                           double.parse(currentController.text);
 
-                      final model = AssetModel(
+                      final model = AssetsModel(
                         id: asset?.id,
                         name: nameController.text.trim(),
                         category: categoryController.text.trim(),
@@ -385,7 +385,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     notesController.dispose();
   }
 
-  Future<void> _updateValuation(AssetModel asset) async {
+  Future<void> _updateValuation(AssetsModel asset) async {
     final controller = TextEditingController(
       text: asset.currentValue.toString(),
     );
@@ -444,7 +444,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     }
   }
 
-  Future<void> _sellAsset(AssetModel asset) async {
+  Future<void> _sellAsset(AssetsModel asset) async {
     final controller = TextEditingController(
       text: asset.currentValue.toString(),
     );
@@ -566,7 +566,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     }
   }
 
-  Future<void> _deleteAsset(AssetModel asset) async {
+  Future<void> _deleteAsset(AssetsModel asset) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -654,7 +654,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
-  Widget _assetCard(AssetModel asset) {
+  Widget _assetCard(AssetsModel asset) {
     final purchaseCurrency = _currency(asset.walletId);
     final saleCurrency = _currency(asset.saleWalletId ?? asset.walletId);
     final currency = asset.isSold ? saleCurrency : purchaseCurrency;

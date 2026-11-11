@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
 
-class LoanService {
+class LoansService {
   static const String _databaseName = 'my_finance.db';
 
   static Database? _databaseInstance;
@@ -165,7 +165,7 @@ class LoanService {
   }
 
   /// Creates a loan and deducts the lending amount from the source account.
-  static Future<int> addLoan(LoanModel loan) async {
+  static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;
     final borrower = loan.borrowerName.trim();
 
@@ -242,7 +242,7 @@ class LoanService {
         throw Exception('Loan was not found.');
       }
 
-      final loan = LoanModel.fromMap(loans.first);
+      final loan = LoansModel.fromMap(loans.first);
 
       if (loan.remainingAmount <= 0) {
         throw Exception('This loan has already been fully repaid.');
@@ -297,7 +297,7 @@ class LoanService {
   }
 
   /// Returns all loans, newest first.
-  static Future<List<LoanModel>> getLoans() async {
+  static Future<List<LoansModel>> getLoans() async {
     final db = await _database;
 
     final rows = await db.query(
@@ -305,11 +305,11 @@ class LoanService {
       orderBy: 'lending_date DESC, id DESC',
     );
 
-    return rows.map(LoanModel.fromMap).toList();
+    return rows.map(LoansModel.fromMap).toList();
   }
 
   /// Returns one loan by its ID.
-  static Future<LoanModel?> getLoanById(int loanId) async {
+  static Future<LoansModel?> getLoanById(int loanId) async {
     final db = await _database;
 
     final rows = await db.query(
@@ -321,7 +321,7 @@ class LoanService {
 
     if (rows.isEmpty) return null;
 
-    return LoanModel.fromMap(rows.first);
+    return LoansModel.fromMap(rows.first);
   }
 
   /// Returns repayments belonging to a loan.
@@ -378,7 +378,7 @@ class LoanService {
   }
 
   /// Returns loans whose due date has passed and balance is outstanding.
-  static Future<List<LoanModel>> getOverdueLoans() async {
+  static Future<List<LoansModel>> getOverdueLoans() async {
     final db = await _database;
 
     final today = DateTime.now();
@@ -400,7 +400,7 @@ class LoanService {
       orderBy: 'due_date ASC',
     );
 
-    return rows.map(LoanModel.fromMap).toList();
+    return rows.map(LoansModel.fromMap).toList();
   }
 
   /// Deletes a repayment and reverses its account and loan balances.
@@ -430,7 +430,7 @@ class LoanService {
         throw Exception('Related loan was not found.');
       }
 
-      final loan = LoanModel.fromMap(loanRows.first);
+      final loan = LoansModel.fromMap(loanRows.first);
 
       await _getAccount(txn, repayment.walletId);
 
@@ -477,7 +477,7 @@ class LoanService {
 
       if (loanRows.isEmpty) return;
 
-      final loan = LoanModel.fromMap(loanRows.first);
+      final loan = LoansModel.fromMap(loanRows.first);
 
       await _getAccount(txn, loan.walletId);
 

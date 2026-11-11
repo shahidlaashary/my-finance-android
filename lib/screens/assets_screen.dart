@@ -900,7 +900,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4, crossAxisSpacing: 7, mainAxisSpacing: 7, childAspectRatio: 1.85),
+                      crossAxisCount: 4, crossAxisSpacing: 7, mainAxisSpacing: 7, childAspectRatio: 1.70),
                     itemBuilder: (context, index) {
                       final item = categoryItems[index];
                       return InkWell(

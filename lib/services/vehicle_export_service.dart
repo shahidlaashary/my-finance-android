@@ -126,9 +126,18 @@ class VehicleExportService {
       'REMINDERS',
       ...reminders.map((v) => '${v['title']} | Due ${v['due_date']} | Odo ${v['due_odometer']}'),
     ];
-    final safeLines = lines.map((line) => line
-      .replaceAll(RegExp(r'[^\\x20-\\x7E]'), '?')
-      .replaceAll('\\\\', '\\\\\\\\').replaceAll('(', '\\\\(').replaceAll(')', '\\\\)')).toList();
+    final safeLines = lines.map((line) {
+      final out = StringBuffer();
+      for (final rune in line.runes) {
+        if (rune < 32 || rune > 126) {
+          out.write('?');
+          continue;
+        }
+        if (rune == 92 || rune == 40 || rune == 41) out.writeCharCode(92);
+        out.writeCharCode(rune);
+      }
+      return out.toString();
+    }).toList();
     const linesPerPage = 52;
     final pageCount = (safeLines.length / linesPerPage).ceil().clamp(1, 1000);
     final objects = <String>[

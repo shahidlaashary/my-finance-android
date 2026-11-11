@@ -3200,40 +3200,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-                                Center(
-                                  child: Container(
-                                    width: 38,
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFD9E0DC),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Add ${widget.transactionType}',
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.text,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: saving
-                                          ? null
-                                          : () => Navigator.pop(context, false),
-                                      icon: const Icon(Icons.close_rounded),
-                                      color: AppColors.muted,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
                                 Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
@@ -3482,7 +3448,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       ),
     );
   }
-}
 }
 
 // ============================================================

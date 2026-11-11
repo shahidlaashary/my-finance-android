@@ -102,7 +102,7 @@ class BudgetModel {
     return BudgetModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      categoryId: categoryId ?? this.category,
+      category: category ?? this.category,
       limitAmount: limitAmount ?? this.limitAmount,
       spentAmount: spentAmount ?? this.spentAmount,
       period: period ?? this.period,

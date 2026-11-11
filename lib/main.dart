@@ -653,9 +653,9 @@ class _WalletWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Path wave(double offset) => Path()
-      ..moveTo(0, size.height * 0.38 + offset)
-      ..quadraticBezierTo(size.width * 0.28, -offset, size.width * 0.52, size.height * 0.48)
-      ..quadraticBezierTo(size.width * 0.78, size.height + offset, size.width, size.height * 0.28)
+      ..moveTo(0, size.height * 0.30 + offset)
+      ..quadraticBezierTo(size.width * 0.28, -size.height * 0.08 - offset, size.width * 0.52, size.height * 0.38)
+      ..quadraticBezierTo(size.width * 0.78, size.height * 0.88 + offset, size.width, size.height * 0.20)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
@@ -835,7 +835,7 @@ class _WalletsPageState extends State<WalletsPage> {
                         child: Stack(
                           children: [
                             Positioned(
-                              left: 0, right: 0, bottom: 0, height: 27,
+                              left: 0, right: 0, bottom: 0, height: 52,
                               child: CustomPaint(
                                 painter: _WalletWavePainter(AppColors.primary),
                               ),

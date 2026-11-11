@@ -71,8 +71,8 @@ class ReportsService {
 
       FROM transactions t
 
-      LEFT JOIN accounts a
-        ON a.id = t.account_id
+      LEFT JOIN wallets a
+        ON a.id = t.wallet_id
 
       WHERE t.date >= ?
         AND t.date < ?
@@ -149,8 +149,8 @@ class ReportsService {
 
       FROM transactions t
 
-      LEFT JOIN accounts a
-        ON a.id = t.account_id
+      LEFT JOIN wallets a
+        ON a.id = t.wallet_id
 
       WHERE ${conditions.join(' AND ')}
       ''',
@@ -220,8 +220,8 @@ class ReportsService {
 
       FROM transactions t
 
-      LEFT JOIN accounts a
-        ON a.id = t.account_id
+      LEFT JOIN wallets a
+        ON a.id = t.wallet_id
 
       WHERE ${conditions.join(' AND ')}
 
@@ -302,8 +302,8 @@ class ReportsService {
       LEFT JOIN finance_categories c
         ON c.id = t.category_id
 
-      LEFT JOIN accounts a
-        ON a.id = t.account_id
+      LEFT JOIN wallets a
+        ON a.id = t.wallet_id
 
       WHERE ${conditions.join(' AND ')}
 
@@ -344,8 +344,8 @@ class ReportsService {
     final rows = await db.rawQuery(
       '''
       SELECT
-        a.id AS account_id,
-        a.name AS account_name,
+        a.id AS wallet_id,
+        a.name AS wallet_name,
         a.currency AS currency,
 
         SUM(
@@ -371,10 +371,10 @@ class ReportsService {
 
         COUNT(t.id) AS transaction_count
 
-      FROM accounts a
+      FROM wallets a
 
       LEFT JOIN transactions t
-        ON t.account_id = a.id
+        ON t.wallet_id = a.id
         AND t.date >= ?
         AND t.date < ?
 
@@ -396,8 +396,8 @@ class ReportsService {
       final expense = _number(row['expense']);
 
       return {
-        'account_id': row['account_id'],
-        'account_name': row['account_name'],
+        'wallet_id': row['wallet_id'],
+        'wallet_name': row['wallet_name'],
         'currency': row['currency'],
         'income': income,
         'expense': expense,
@@ -417,7 +417,7 @@ class ReportsService {
     required DateTime startDate,
     required DateTime endDate,
     String? type,
-    int? accountId,
+    int? walletId,
     String? currency,
     int limit = 500,
   }) async {
@@ -446,13 +446,13 @@ class ReportsService {
       arguments.add(normalizedType);
     }
 
-    if (accountId != null) {
+    if (walletId != null) {
       conditions.add(
-        '(t.account_id = ? OR t.to_account_id = ?)',
+        '(t.wallet_id = ? OR t.to_wallet_id = ?)',
       );
 
-      arguments.add(accountId);
-      arguments.add(accountId);
+      arguments.add(walletId);
+      arguments.add(walletId);
     }
 
     if (currency != null && currency.isNotEmpty) {
@@ -468,26 +468,26 @@ class ReportsService {
         t.id,
         t.type,
         t.amount,
-        t.account_id,
-        t.to_account_id,
+        t.wallet_id,
+        t.to_wallet_id,
         t.category_id,
         t.note,
         t.date,
 
-        a.name AS account_name,
+        a.name AS wallet_name,
         a.currency AS currency,
 
-        destination.name AS destination_account_name,
+        destination.name AS destination_wallet_name,
 
         c.name AS category_name
 
       FROM transactions t
 
-      LEFT JOIN accounts a
-        ON a.id = t.account_id
+      LEFT JOIN wallets a
+        ON a.id = t.wallet_id
 
-      LEFT JOIN accounts destination
-        ON destination.id = t.to_account_id
+      LEFT JOIN wallets destination
+        ON destination.id = t.to_wallet_id
 
       LEFT JOIN finance_categories c
         ON c.id = t.category_id
@@ -512,7 +512,7 @@ class ReportsService {
     final rows = await db.rawQuery(
       '''
       SELECT DISTINCT currency
-      FROM accounts
+      FROM wallets
       WHERE currency IS NOT NULL
         AND currency != ''
       ORDER BY currency ASC
@@ -538,7 +538,7 @@ class ReportsService {
         SUM(balance) AS total_balance,
         COUNT(id) AS account_count
 
-      FROM accounts
+      FROM wallets
 
       WHERE exclude_total = 0
 
@@ -571,18 +571,18 @@ class ReportsService {
       '''
       SELECT
         t.*,
-        a.name AS account_name,
+        a.name AS wallet_name,
         a.currency AS currency,
-        destination.name AS destination_account_name,
+        destination.name AS destination_wallet_name,
         c.name AS category_name
 
       FROM transactions t
 
-      LEFT JOIN accounts a
-        ON a.id = t.account_id
+      LEFT JOIN wallets a
+        ON a.id = t.wallet_id
 
-      LEFT JOIN accounts destination
-        ON destination.id = t.to_account_id
+      LEFT JOIN wallets destination
+        ON destination.id = t.to_wallet_id
 
       LEFT JOIN finance_categories c
         ON c.id = t.category_id

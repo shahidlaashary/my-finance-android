@@ -13,7 +13,7 @@ class LoansScreen extends StatefulWidget {
 }
 class _LoansScreenState extends State<LoansScreen> {
   List<LoanModel> _loans = [];
-  List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _wallets = [];
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
   final _nameController = TextEditingController();
@@ -51,34 +51,34 @@ class _LoansScreenState extends State<LoansScreen> {
         '${date.day.toString().padLeft(2, '0')}';
   }
   String _money(double amount) => amount.toStringAsFixed(2);
-  String _currencyForAccount(int accountId) {
-    final account = _accounts.cast<Map<String, dynamic>?>().firstWhere(
-      (item) => item?['id'] == accountId,
+  String _currencyForAccount(int walletId) {
+    final account = _wallets.cast<Map<String, dynamic>?>().firstWhere(
+      (item) => item?['id'] == walletId,
       orElse: () => null,
     );
     return (account?['currency']?.toString() ?? 'PKR')
         .trim()
         .toUpperCase();
   }
-  String _moneyWithCurrency(double amount, int accountId) {
-    return '${_currencyForAccount(accountId)} ${_money(amount)}';
+  String _moneyWithCurrency(double amount, int walletId) {
+    return '${_currencyForAccount(walletId)} ${_money(amount)}';
   }
   Future<void> _loadData() async {
     try {
       final db = await _database;
-      final accounts = await db.query('accounts', orderBy: 'name ASC');
+      final wallets = await db.query('wallets', orderBy: 'name ASC');
       final loans = await LoanService.getLoans();
       final outstandingByCurrency =
           await LoanService.getTotalOutstandingByCurrency();
       if (!mounted) return;
       setState(() {
-        _accounts = accounts;
+        _wallets = wallets;
         _loans = loans;
         _outstandingByCurrency = outstandingByCurrency;
         _loading = false;
-        if (_accounts.isNotEmpty) {
-          _selectedAccountId ??= _accounts.first['id'] as int;
-          _selectedRepaymentAccountId ??= _accounts.first['id'] as int;
+        if (_wallets.isNotEmpty) {
+          _selectedAccountId ??= _wallets.first['id'] as int;
+          _selectedRepaymentAccountId ??= _wallets.first['id'] as int;
         }
       });
     } catch (error) {
@@ -108,11 +108,11 @@ class _LoansScreenState extends State<LoansScreen> {
     _notesController.clear();
     _lendingDate = DateTime.now();
     _dueDate = null;
-    if (_accounts.isEmpty) {
+    if (_wallets.isEmpty) {
       _showMessage('Please create an account first.');
       return;
     }
-    int? accountId = _selectedAccountId;
+    int? walletId = _selectedAccountId;
     DateTime lendingDate = _lendingDate;
     DateTime? dueDate = _dueDate;
     final result = await showDialog<bool>(
@@ -140,10 +140,10 @@ class _LoansScreenState extends State<LoansScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: accountId,
+                  value: walletId,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Payment Account *'),
-                  items: _accounts.map((account) {
+                  items: _wallets.map((account) {
                     return DropdownMenuItem<int>(
                       value: account['id'] as int,
                       child: Text(
@@ -152,7 +152,7 @@ class _LoansScreenState extends State<LoansScreen> {
                       ),
                     );
                   }).toList(),
-                  onChanged: (value) => setDialogState(() => accountId = value),
+                  onChanged: (value) => setDialogState(() => walletId = value),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
@@ -203,7 +203,7 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Enter a valid borrower name and amount.');
       return;
     }
-    if (accountId == null) {
+    if (walletId == null) {
       _showMessage('Please select an account.');
       return;
     }
@@ -215,14 +215,14 @@ class _LoansScreenState extends State<LoansScreen> {
             : _phoneController.text.trim(),
         amount: amount,
         remainingAmount: amount,
-        accountId: accountId!,
+        walletId: walletId!,
         lendingDate: _dateString(lendingDate),
         dueDate: dueDate == null ? null : _dateString(dueDate!),
         notes: _notesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
       await LoanService.addLoan(loan);
-      _selectedAccountId = accountId;
+      _selectedAccountId = walletId;
       await _loadData();
       _showMessage('Loan saved successfully.');
     } catch (error) {
@@ -231,13 +231,13 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _addRepayment(LoanModel loan) async {
     if (loan.id == null) return;
-    if (_accounts.isEmpty) {
+    if (_wallets.isEmpty) {
       _showMessage('Please create an account first.');
       return;
     }
     _repaymentAmountController.clear();
     _repaymentNotesController.clear();
-    int? accountId = _selectedRepaymentAccountId;
+    int? walletId = _selectedRepaymentAccountId;
     DateTime repaymentDate = DateTime.now();
     final result = await showDialog<bool>(
       context: context,
@@ -252,7 +252,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 const SizedBox(height: 6),
                 Text(
                   'Outstanding: '
-                  '${_moneyWithCurrency(loan.remainingAmount, loan.accountId)}',
+                  '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
                 ),
                 TextField(
                   controller: _repaymentAmountController,
@@ -261,10 +261,10 @@ class _LoansScreenState extends State<LoansScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: accountId,
+                  value: walletId,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Receiving Account *'),
-                  items: _accounts.map((account) {
+                  items: _wallets.map((account) {
                     return DropdownMenuItem<int>(
                       value: account['id'] as int,
                       child: Text(
@@ -273,7 +273,7 @@ class _LoansScreenState extends State<LoansScreen> {
                       ),
                     );
                   }).toList(),
-                  onChanged: (value) => setDialogState(() => accountId = value),
+                  onChanged: (value) => setDialogState(() => walletId = value),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -318,12 +318,12 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Amount exceeds outstanding balance.');
       return;
     }
-    if (accountId == null) {
+    if (walletId == null) {
       _showMessage('Please select a receiving account.');
       return;
     }
-    if (_currencyForAccount(accountId!) !=
-        _currencyForAccount(loan.accountId)) {
+    if (_currencyForAccount(walletId!) !=
+        _currencyForAccount(loan.walletId)) {
       _showMessage('Receiving account must use the same currency as the loan.');
       return;
     }
@@ -331,14 +331,14 @@ class _LoansScreenState extends State<LoansScreen> {
       final repayment = RepaymentModel(
         loanId: loan.id!,
         amount: amount,
-        accountId: accountId!,
+        walletId: walletId!,
         repaymentDate: _dateString(repaymentDate),
         paymentMethod: 'cash',
         notes: _repaymentNotesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
       await LoanService.addRepayment(repayment);
-      _selectedRepaymentAccountId = accountId;
+      _selectedRepaymentAccountId = walletId;
       await _loadData();
       _showMessage('Repayment saved successfully.');
     } catch (error) {
@@ -347,7 +347,7 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _showLoanDetails(LoanModel loan) async {
     if (loan.id == null) return;
-    final currency = _currencyForAccount(loan.accountId);
+    final currency = _currencyForAccount(loan.walletId);
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -378,9 +378,9 @@ class _LoansScreenState extends State<LoansScreen> {
                   Text('Borrower: ${loan.borrowerName}'),
                   Text('Phone: ${loan.borrowerPhone ?? '-'}'),
                   Text('Currency: $currency'),
-                  Text('Original Amount: ${_moneyWithCurrency(loan.amount, loan.accountId)}'),
-                  Text('Repaid: ${_moneyWithCurrency(loan.repaidAmount, loan.accountId)}'),
-                  Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.accountId)}'),
+                  Text('Original Amount: ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
+                  Text('Repaid: ${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}'),
+                  Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}'),
                   Text('Lending Date: ${loan.lendingDate}'),
                   Text('Due Date: ${loan.dueDate ?? '-'}'),
                   Text('Notes: ${loan.notes.isEmpty ? '-' : loan.notes}'),
@@ -430,7 +430,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                     title: Text(
                                       _moneyWithCurrency(
                                         repayment.amount,
-                                        loan.accountId,
+                                        loan.walletId,
                                       ),
                                     ),
                                     subtitle: Text(
@@ -662,7 +662,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     )
                   else
                     ..._loans.map((loan) {
-                      final currency = _currencyForAccount(loan.accountId);
+                      final currency = _currencyForAccount(loan.walletId);
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(
@@ -705,15 +705,15 @@ class _LoansScreenState extends State<LoansScreen> {
                               Text('Currency: $currency'),
                               Text(
                                 'Loan Amount: '
-                                '${_moneyWithCurrency(loan.amount, loan.accountId)}',
+                                '${_moneyWithCurrency(loan.amount, loan.walletId)}',
                               ),
                               Text(
                                 'Repaid: '
-                                '${_moneyWithCurrency(loan.repaidAmount, loan.accountId)}',
+                                '${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}',
                               ),
                               Text(
                                 'Remaining: '
-                                '${_moneyWithCurrency(loan.remainingAmount, loan.accountId)}',
+                                '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               Text('Lending Date: ${loan.lendingDate}'),

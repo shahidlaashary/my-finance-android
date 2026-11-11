@@ -52,10 +52,17 @@ class TransactionService {
   }
 
   static Future<void> _reverse(Transaction txn, Map<String, dynamic> row) async {
-    final type = _normalizeType(row['type'].toString());
+    final rawType = row['type'].toString().trim().toLowerCase();
     final amount = (row['amount'] as num).toDouble();
     final walletId = (row['wallet_id'] as num).toInt();
     final toWalletId = (row['to_wallet_id'] as num?)?.toInt();
+    if (rawType == 'adjustment') {
+      final delta = (row['balance_delta'] as num?)?.toDouble();
+      if (delta == null) throw Exception('Adjustment balance change is missing.');
+      await _changeBalance(txn, walletId, -delta);
+      return;
+    }
+    final type = _normalizeType(rawType);
     if (type == 'Income') {
       await _changeBalance(txn, walletId, -amount);
     } else if (type == 'Expense') {

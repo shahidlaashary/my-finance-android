@@ -213,7 +213,7 @@ class MoreFeaturesScreen extends StatelessWidget {
 }
 
 // =====================================================
-// SETTINGS SCREEN
+// Settings ka safha
 // =====================================================
 
 class AppSettingsScreen extends StatelessWidget {
@@ -316,7 +316,7 @@ class AppSettingsScreen extends StatelessWidget {
 }
 
 // =====================================================
-// APPEARANCE SCREEN
+// App ki zahiri soorat ka safha
 // =====================================================
 
 class AppearanceScreen extends StatefulWidget {
@@ -726,7 +726,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 }
 
 // =====================================================
-// COMING SOON NOTICE
+// Jald anay wali sahulat ka paigham
 // =====================================================
 
 class _ComingSoonNotice extends StatelessWidget {
@@ -760,7 +760,7 @@ class _ComingSoonNotice extends StatelessWidget {
 }
 
 // =====================================================
-// SETTINGS TILE
+// Settings ka option
 // =====================================================
 
 class _SettingsInfoTile extends StatelessWidget {
@@ -815,7 +815,7 @@ class _SettingsInfoTile extends StatelessWidget {
 }
 
 // =====================================================
-// FEATURE ITEM MODEL
+// Feature item ka model
 // =====================================================
 
 class _FeatureItem {

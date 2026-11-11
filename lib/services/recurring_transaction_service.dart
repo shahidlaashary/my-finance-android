@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/recurring_transaction_model.dart';
+import 'app_refresh_service.dart';
 class RecurringTransactionService {
 
   // Restore se pehle is service ka database connection band karta hai.
@@ -221,10 +222,12 @@ class RecurringTransactionService {
     _validateModel(model);
     final db = await _database;
     await _validateAccounts(db, model);
-    return db.insert(
+    final id = await db.insert(
       _tableName,
       _toMap(model),
     );
+    AppRefreshController.notifyChanged();
+    return id;
   }
   Future<List<RecurringTransactionModel>> getRecurringTransactions({
     bool activeOnly = false,
@@ -264,32 +267,38 @@ class RecurringTransactionService {
     _validateModel(model);
     final db = await _database;
     await _validateAccounts(db, model);
-    return db.update(
+    final count = await db.update(
       _tableName,
       _toMap(model),
       where: 'id = ?',
       whereArgs: [model.id],
     );
+    if (count > 0) AppRefreshController.notifyChanged();
+    return count;
   }
   Future<int> setRecurringTransactionStatus(
     int id,
     bool isActive,
   ) async {
     final db = await _database;
-    return db.update(
+    final count = await db.update(
       _tableName,
       {'is_active': isActive ? 1 : 0},
       where: 'id = ?',
       whereArgs: [id],
     );
+    if (count > 0) AppRefreshController.notifyChanged();
+    return count;
   }
   Future<int> deleteRecurringTransaction(int id) async {
     final db = await _database;
-    return db.delete(
+    final count = await db.delete(
       _tableName,
       where: 'id = ?',
       whereArgs: [id],
     );
+    if (count > 0) AppRefreshController.notifyChanged();
+    return count;
   }
   Future<void> _applyTransaction(
     Transaction txn,
@@ -391,7 +400,7 @@ class RecurringTransactionService {
       referenceDate.month,
       referenceDate.day,
     );
-    return db.transaction((txn) async {
+    final processedCount = await db.transaction((txn) async {
       final recurringRows = await txn.query(
         _tableName,
         where: 'is_active = ? AND next_run_date <= ?',
@@ -447,5 +456,7 @@ class RecurringTransactionService {
       }
       return processedCount;
     });
+    if (processedCount > 0) AppRefreshController.notifyChanged();
+    return processedCount;
   }
 }

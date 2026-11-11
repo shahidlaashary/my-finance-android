@@ -36,12 +36,12 @@ class AppStartupService {
 
   static Future<void> _initializeServices() async {
     // Initialize the transaction database and required category schema.
-    await TransactionService.database;
+    await TransactionsService.database;
 
     // Process recurring transactions that are due.
     // Any processing error is logged so it can be investigated.
     try {
-      final recurringService = RecurringTransactionService();
+      final recurringService = RecurringTransactionsService();
 
       final processedCount =
           await recurringService.processDueTransactions();

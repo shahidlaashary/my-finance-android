@@ -26,7 +26,6 @@ import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'widgets/shared_app_bar_actions.dart';
 import 'widgets/app_lock_gate.dart';
-import 'services/auto_backup_service.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam
@@ -41,17 +40,94 @@ Future<void> main() async {
     databaseFactory = databaseFactoryFfi;
   }
 
-  await FinanceDB.instance.init();
+  try {
+    await FinanceDB.instance.init();
+    runApp(const MyFinanceApp());
+  } catch (error) {
+    // Startup errors ko app band karne ke bajaye screen par dikhayein.
+    runApp(_StartupRecoveryApp(error: error.toString()));
+  }
+}
 
-  if (Platform.isAndroid) {
+class _StartupRecoveryApp extends StatefulWidget {
+  final String error;
+
+  const _StartupRecoveryApp({required this.error});
+
+  @override
+  State<_StartupRecoveryApp> createState() => _StartupRecoveryAppState();
+}
+
+class _StartupRecoveryAppState extends State<_StartupRecoveryApp> {
+  bool _retrying = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _error = widget.error;
+  }
+
+  Future<void> _retry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
     try {
-      await AutoBackupService.initialize();
-    } catch (_) {
-      // The app remains usable if background scheduling is unavailable.
+      await FinanceDB.instance.init();
+      runApp(const MyFinanceApp());
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.toString());
+    } finally {
+      if (mounted) setState(() => _retrying = false);
     }
   }
 
-  runApp(const MyFinanceApp());
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFFF5F7F6),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      size: 56, color: Colors.redAccent),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'My Finance could not start',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Your financial database has not been intentionally changed. '
+                    'Please share this error with support.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 14),
+                  SelectableText(
+                    _error ?? widget.error,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 22),
+                  FilledButton(
+                    onPressed: _retrying ? null : _retry,
+                    child: Text(_retrying ? 'Retrying...' : 'Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ============================================================

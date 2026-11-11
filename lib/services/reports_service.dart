@@ -470,7 +470,7 @@ class ReportsService {
         t.amount,
         t.wallet_id,
         t.to_wallet_id,
-        t.category_id,
+        t.category,
         t.note,
         t.date,
 
@@ -479,7 +479,7 @@ class ReportsService {
 
         destination.name AS destination_wallet_name,
 
-        c.name AS category_name
+        t.category AS category_name
 
       FROM transactions t
 
@@ -574,7 +574,7 @@ class ReportsService {
         a.name AS wallet_name,
         a.currency AS currency,
         destination.name AS destination_wallet_name,
-        c.name AS category_name
+        t.category AS category_name
 
       FROM transactions t
 

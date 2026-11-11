@@ -45,9 +45,10 @@ class CategoryService {
     try {
       final decoded = jsonDecode((rows.first['setting_value'] ?? '[]').toString());
       if (decoded is! List) return [];
-      return decoded.whereType<Map>().map((item) {
-        final map = Map<String, dynamic>.from(item);
+      return decoded.whereType<Map>().toList().asMap().entries.map((entry) {
+        final map = Map<String, dynamic>.from(entry.value);
         return FinanceCategory(
+          id: entry.key + 1,
           name: (map['name'] ?? '').toString(),
           type: type.trim().toLowerCase(),
           icon: (map['icon'] ?? 'category').toString(),
@@ -82,14 +83,19 @@ class CategoryService {
 
   static Future<int> updateCategory(FinanceCategory category) async {
     final items = await getCategories(category.type);
-    final index = items.indexWhere((item) => item.name == category.name);
+    final index = category.id == null ? -1 : category.id! - 1;
     if (index < 0) throw Exception('Category not found.');
     items[index] = category;
     await _save(category.type, items);
     return 1;
   }
 
-  static Future<int> deleteCategory(int id) async {
-    throw UnsupportedError('Categories are stored by name in app_settings; delete by category name instead.');
+  static Future<int> deleteCategory(int id, {String type = 'expense'}) async {
+    final items = await getCategories(type);
+    final index = id - 1;
+    if (index < 0 || index >= items.length) return 0;
+    items.removeAt(index);
+    await _save(type, items);
+    return 1;
   }
 }

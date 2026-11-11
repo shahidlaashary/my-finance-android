@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import '../services/transactions_service.dart';
 import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
 import '../services/loans_service.dart';
@@ -41,10 +40,6 @@ class _LoansScreenState extends State<LoansScreen> {
     _repaymentNotesController.dispose();
     super.dispose();
   }
-  Future<Database> get _database async {
-    final databasePath = await getDatabasesPath();
-    return openDatabase(p.join(databasePath, 'my_finance.db'));
-  }
   String _dateString(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-'
         '${date.month.toString().padLeft(2, '0')}-'
@@ -65,8 +60,7 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _loadData() async {
     try {
-      final db = await _database;
-      final wallets = await db.query('wallets', orderBy: 'name ASC');
+      final wallets = await TransactionsService.getAccounts();
       final loans = await LoansService.getLoans();
       final outstandingByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
@@ -102,6 +96,8 @@ class _LoansScreenState extends State<LoansScreen> {
     );
   }
   Future<void> _addLoan() async {
+    await _loadData();
+    if (!mounted) return;
     _nameController.clear();
     _phoneController.clear();
     _amountController.clear();
@@ -231,6 +227,8 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return;
+    await _loadData();
+    if (!mounted) return;
     if (_wallets.isEmpty) {
       _showMessage('Please create an account first.');
       return;
@@ -576,6 +574,13 @@ class _LoansScreenState extends State<LoansScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addLoan,
+        backgroundColor: const Color(0xFF147D59),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('New Loan'),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -641,11 +646,6 @@ class _LoansScreenState extends State<LoansScreen> {
                       const Text(
                         'All Loans',
                         style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: _addLoan,
-                        icon: const Icon(Icons.add),
-                        label: const Text('New Loan'),
                       ),
                     ],
                   ),

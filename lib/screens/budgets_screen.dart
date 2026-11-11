@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/budget_model.dart';
-import '../services/budget_service.dart';
+import '../services/budget_service.dart';\nimport '../services/category_service.dart';
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
   @override
@@ -32,17 +32,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     setState(() => _loading = true);
     try {
       final budgets = await BudgetService.getBudgets();
-      final dbPath = await getDatabasesPath();
-      final db = await openDatabase(
-        p.join(dbPath, 'my_finance.db'),
-      );
-      final categories = await db.query(
-        'finance_categories',
-        where: 'is_deleted = ?',
-        whereArgs: [0],
-        orderBy: 'name ASC',
-      );
-      final wallets = await db.query('wallets');
+      final categoryItems = await CategoryService.getCategories('expense');\n      final categories = categoryItems.map((item) => {'name': item.name}).toList();\n      final dbPath = await getDatabasesPath();\n      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));\n      final wallets = await db.query('wallets');
       final currencies = wallets
           .map((e) => e['currency']?.toString() ?? 'PKR')
           .toSet()
@@ -78,7 +68,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     final amountController = TextEditingController(
       text: budget == null ? '' : budget.limitAmount.toString(),
     );
-    int? categoryId = budget?.categoryId;
+    String? category = budget?.category;
     String currency = budget?.currency ?? _currencies.first;
     String period = budget?.period ?? 'Monthly';
     DateTime startDate = budget == null
@@ -138,20 +128,20 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<int?>(
-                          value: categoryId,
+                        DropdownButtonFormField<String?>(
+                          value: category,
                           isExpanded: true,
                           decoration: const InputDecoration(
                             labelText: 'Category',
                           ),
                           items: [
-                            const DropdownMenuItem<int?>(
+                            const DropdownMenuItem<String?>(
                               value: null,
                               child: Text('All Categories'),
                             ),
                             ..._categories.map((category) {
-                              return DropdownMenuItem<int?>(
-                                value: category['id'] as int,
+                              return DropdownMenuItem<String?>(
+                                value: category['name'].toString(),
                                 child: Text(
                                   category['name'].toString(),
                                 ),
@@ -160,7 +150,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           ],
                           onChanged: (value) {
                             setDialogState(() {
-                              categoryId = value;
+                              category = value;
                             });
                           },
                         ),
@@ -282,7 +272,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       final model = BudgetModel(
                         id: budget?.id,
                         name: nameController.text.trim(),
-                        categoryId: categoryId,
+                        category: category,
                         limitAmount: double.parse(amountController.text),
                         spentAmount: budget?.spentAmount ?? 0,
                         period: period,
@@ -417,7 +407,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         ),
                       ),
                       Text(
-                        '${budget.period} • ${_categoryName(budget.categoryId)}',
+                        '${budget.period} • ${_categoryName(budget.category)}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,

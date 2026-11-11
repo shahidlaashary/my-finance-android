@@ -33,7 +33,12 @@ jobs:
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main -name MainActivity.kt | head -n 1)
           PACKAGE_LINE=$(grep '^package ' "$MAIN_ACTIVITY")
-          printf '%s\\nimport io.flutter.embedding.android.FlutterActivity\\n\\nclass MainActivity : FlutterActivity()\\n' "$PACKAGE_LINE" > "$MAIN_ACTIVITY"
+          cat > "$MAIN_ACTIVITY" <<EOF
+          $PACKAGE_LINE
+          import io.flutter.embedding.android.FlutterActivity
+
+          class MainActivity : FlutterActivity()
+          EOF
           cat "$MAIN_ACTIVITY"
           # Keep Flutter's generated Android theme and dependencies unchanged.
       - name: Configure Gradle download

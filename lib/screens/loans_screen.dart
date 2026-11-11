@@ -575,7 +575,7 @@ class _LoansScreenState extends State<LoansScreen> {
     final overdueCount = _loans.where((loan) => loan.isOverdue).length;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Loans & Lending'),
+        title: const Text('Loans & Lending', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(

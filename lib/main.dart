@@ -3555,32 +3555,22 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _amountField()),
-                  const SizedBox(width: 8),
-                  Expanded(child: _notesField()),
-                ],
-              ),
+              _amountField(),
+              const SizedBox(height: 12),
+              _notesField(),
             ] else ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _amountField()),
-                  const SizedBox(width: 8),
-                  Expanded(child: _walletField()),
-                ],
-              ),
+              _amountField(),
               const SizedBox(height: 12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _categoryField()),
+                  Expanded(child: _walletField()),
                   const SizedBox(width: 8),
-                  Expanded(child: _notesField()),
+                  Expanded(child: _categoryField()),
                 ],
               ),
+              const SizedBox(height: 12),
+              _notesField(),
             ],
             if (isTransfer &&
                 selectedWallet != null &&

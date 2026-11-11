@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 
@@ -11,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
+import 'package:my_finance/core/database/database_platform.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
@@ -37,11 +36,7 @@ import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Desktop platforms ke liye SQLite initialize karna.
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
+  await initializeDatabasePlatform();
 
   await FinanceDB.instance.init();
 

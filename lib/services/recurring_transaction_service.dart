@@ -58,8 +58,8 @@ class RecurringTransactionService {
         title TEXT NOT NULL,
         type TEXT NOT NULL,
         amount REAL NOT NULL,
-        account_id INTEGER NOT NULL,
-        to_account_id INTEGER,
+        wallet_id INTEGER NOT NULL,
+        to_wallet_id INTEGER,
         category_id INTEGER,
         note TEXT,
         frequency TEXT NOT NULL,
@@ -142,16 +142,16 @@ class RecurringTransactionService {
         .contains(frequency)) {
       throw Exception('Invalid recurring frequency.');
     }
-    if (model.accountId <= 0) {
+    if (model.walletId <= 0) {
       throw Exception('A valid account is required.');
     }
     if (type == 'transfer') {
-      if (model.toAccountId == null ||
-          model.toAccountId! <= 0 ||
-          model.toAccountId == model.accountId) {
+      if (model.toWalletId == null ||
+          model.toWalletId! <= 0 ||
+          model.toWalletId == model.walletId) {
         throw Exception('A valid destination account is required.');
       }
-    } else if (model.toAccountId != null) {
+    } else if (model.toWalletId != null) {
       throw Exception(
         'Destination account is only allowed for transfers.',
       );
@@ -178,9 +178,9 @@ class RecurringTransactionService {
     RecurringTransactionModel model,
   ) async {
     final sourceAccounts = await db.query(
-      'accounts',
+      'wallets',
       where: 'id = ?',
-      whereArgs: [model.accountId],
+      whereArgs: [model.walletId],
       limit: 1,
     );
     if (sourceAccounts.isEmpty) {
@@ -188,9 +188,9 @@ class RecurringTransactionService {
     }
     if (model.type.toLowerCase() == 'transfer') {
       final destinationAccounts = await db.query(
-        'accounts',
+        'wallets',
         where: 'id = ?',
-        whereArgs: [model.toAccountId],
+        whereArgs: [model.toWalletId],
         limit: 1,
       );
       if (destinationAccounts.isEmpty) {
@@ -202,7 +202,7 @@ class RecurringTransactionService {
           destinationAccounts.first['currency']?.toString();
       if (sourceCurrency != destinationCurrency) {
         throw Exception(
-          'Transfer accounts must have the same currency.',
+          'Transfer wallets must have the same currency.',
         );
       }
     }
@@ -214,8 +214,8 @@ class RecurringTransactionService {
       'title': model.title.trim(),
       'type': model.type.toLowerCase(),
       'amount': model.amount,
-      'account_id': model.accountId,
-      'to_account_id': model.toAccountId,
+      'wallet_id': model.walletId,
+      'to_wallet_id': model.toWalletId,
       'category_id': model.categoryId,
       'note': model.note,
       'frequency': model.frequency.toLowerCase(),
@@ -314,28 +314,28 @@ class RecurringTransactionService {
   ) async {
     final type = recurring['type'].toString().toLowerCase();
     final amount = (recurring['amount'] as num).toDouble();
-    final accountId = recurring['account_id'] as int;
-    final toAccountId = recurring['to_account_id'] as int?;
-    final accounts = await txn.query(
-      'accounts',
+    final walletId = recurring['wallet_id'] as int;
+    final toWalletId = recurring['to_wallet_id'] as int?;
+    final wallets = await txn.query(
+      'wallets',
       where: 'id = ?',
-      whereArgs: [accountId],
+      whereArgs: [walletId],
       limit: 1,
     );
-    if (accounts.isEmpty) {
+    if (wallets.isEmpty) {
       throw Exception('Recurring transaction account not found.');
     }
-    final account = accounts.first;
+    final account = wallets.first;
     final balance = (account['balance'] as num).toDouble();
     Map<String, Object?>? destination;
     if (type == 'transfer') {
-      if (toAccountId == null || toAccountId == accountId) {
+      if (toWalletId == null || toWalletId == walletId) {
         throw Exception('Invalid destination account.');
       }
       final destinationAccounts = await txn.query(
-        'accounts',
+        'wallets',
         where: 'id = ?',
-        whereArgs: [toAccountId],
+        whereArgs: [toWalletId],
         limit: 1,
       );
       if (destinationAccounts.isEmpty) {
@@ -344,7 +344,7 @@ class RecurringTransactionService {
       destination = destinationAccounts.first;
       if (destination['currency'] != account['currency']) {
         throw Exception(
-          'Transfer accounts must have the same currency.',
+          'Transfer wallets must have the same currency.',
         );
       }
     }
@@ -357,34 +357,34 @@ class RecurringTransactionService {
     }
     if (type == 'income') {
       await txn.update(
-        'accounts',
+        'wallets',
         {'balance': balance + amount},
         where: 'id = ?',
-        whereArgs: [accountId],
+        whereArgs: [walletId],
       );
     } else {
       await txn.update(
-        'accounts',
+        'wallets',
         {'balance': balance - amount},
         where: 'id = ?',
-        whereArgs: [accountId],
+        whereArgs: [walletId],
       );
     }
     if (type == 'transfer') {
       final destinationBalance =
           (destination!['balance'] as num).toDouble();
       await txn.update(
-        'accounts',
+        'wallets',
         {'balance': destinationBalance + amount},
         where: 'id = ?',
-        whereArgs: [toAccountId],
+        whereArgs: [toWalletId],
       );
     }
     await txn.insert('transactions', {
       'type': type,
       'amount': amount,
-      'account_id': accountId,
-      'to_account_id': toAccountId,
+      'wallet_id': walletId,
+      'to_wallet_id': toWalletId,
       'category_id': recurring['category_id'],
       'note': recurring['note'] ?? recurring['title'],
       'date': _date(transactionDate),

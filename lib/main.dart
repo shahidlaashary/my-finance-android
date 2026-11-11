@@ -14,6 +14,8 @@ import 'package:open_filex/open_filex.dart';
 import 'services/attachment_service.dart';
 import 'services/app_refresh_service.dart';
 import 'services/budgets_service.dart';
+import 'services/assets_service.dart';
+import 'services/loans_service.dart';
 import 'models/budgets_model.dart';
 import 'models/attachment_model.dart';
 import 'screens/assets_screen.dart';
@@ -1934,6 +1936,8 @@ class _HomePageState extends State<HomePage> {
   double totalBalance = 0;
   double monthlyIncome = 0;
   double monthlyExpense = 0;
+  double currentAssetsPKR = 0;
+  double loansReceivablePKR = 0;
   List<BudgetsModel> budgetAlerts = [];
   bool loading = true;
 
@@ -1977,6 +1981,12 @@ class _HomePageState extends State<HomePage> {
       }
 
       final balance = await FinanceDB.instance.getTotalBalancePKR();
+      final assetsByCurrency =
+          await AssetsService().getTotalCurrentValueByCurrency();
+      final loansByCurrency =
+          await LoansService.getTotalOutstandingByCurrency();
+      final assetsValue = await _convertValuesToPKR(assetsByCurrency);
+      final loansValue = await _convertValuesToPKR(loansByCurrency);
       final budgets = await BudgetsService.getBudgets(activeOnly: true);
       final alerts = budgets
           .where((budget) =>
@@ -1993,6 +2003,8 @@ class _HomePageState extends State<HomePage> {
         totalBalance = balance;
         monthlyIncome = income;
         monthlyExpense = expense;
+        currentAssetsPKR = assetsValue;
+        loansReceivablePKR = loansValue;
         budgetAlerts = alerts;
         loading = false;
       });
@@ -2004,6 +2016,22 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
+
+  Future<double> _convertValuesToPKR(
+    Map<String, double> values,
+  ) async {
+    double total = 0;
+    for (final entry in values.entries) {
+      final rate = await FinanceDB.instance.getExchangeRate(
+        entry.key.toUpperCase(),
+      );
+      if (rate != null) total += entry.value * rate;
+    }
+    return total;
+  }
+
+  double get estimatedNetWorth =>
+      totalBalance + currentAssetsPKR + loansReceivablePKR;
 
   String money(double amount) =>
       'PKR ${NumberFormat('#,##0.00').format(amount)}';
@@ -2080,6 +2108,59 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
             const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _metricCard(
+                    title: 'Assets',
+                    value: currentAssetsPKR,
+                    icon: Icons.real_estate_agent_outlined,
+                    color: const Color(0xFF3978C5),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _metricCard(
+                    title: 'Loans Receivable',
+                    value: loansReceivablePKR,
+                    icon: Icons.handshake_outlined,
+                    color: const Color(0xFF9A65C7),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: const Color(0xFFEDF1EE)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.account_balance_wallet_outlined,
+                      color: AppColors.primary, size: 25),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('Estimated Net Worth',
+                        style: TextStyle(fontWeight: FontWeight.w700,
+                            color: AppColors.text, fontSize: 13)),
+                  ),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        loading ? '...' : money(estimatedNetWorth),
+                        style: const TextStyle(fontWeight: FontWeight.w800,
+                            color: AppColors.primary, fontSize: 17),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
@@ -31,121 +30,18 @@ import 'widgets/shared_app_bar_actions.dart';
 // Naya database aur wallet ka intizam
 // ============================================================
 
-class _StartupDiagnostics {
-  static final ValueNotifier<String?> message = ValueNotifier<String?>(null);
-
-  static void report(String details) {
-    message.value = details;
-  }
-
-  static void clear() {
-    message.value = null;
-  }
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Scaffold(
-      backgroundColor: Color(0xFFF5F7F6),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF147D59)),
-            SizedBox(height: 16),
-            Text('My Finance Startup Test', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('Native Android launch + Flutter UI is working.'),
-            SizedBox(height: 8),
-            Text('Temporary diagnostic screen only. No database opened.'),
-          ],
-        ),
-      ),
-    ),
-  ));
-}
 
-class _StartupRecoveryApp extends StatefulWidget {
-  final String error;
-
-  const _StartupRecoveryApp({required this.error});
-
-  @override
-  State<_StartupRecoveryApp> createState() => _StartupRecoveryAppState();
-}
-
-class _StartupRecoveryAppState extends State<_StartupRecoveryApp> {
-  bool _retrying = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _error = widget.error;
+  // Desktop platforms ke liye SQLite initialize karna.
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
   }
 
-  Future<void> _retry() async {
-    if (_retrying) return;
-    setState(() => _retrying = true);
-    try {
-      await FinanceDB.instance.init();
-      runApp(const MyFinanceApp());
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _error = error.toString());
-    } finally {
-      if (mounted) setState(() => _retrying = false);
-    }
-  }
+  await FinanceDB.instance.init();
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: const Color(0xFFF5F7F6),
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline_rounded,
-                      size: 56, color: Colors.redAccent),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'My Finance could not start',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Your financial database has not been intentionally changed. '
-                    'Please share this error with support.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 14),
-                  SelectableText(
-                    _error ?? widget.error,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 22),
-                  FilledButton(
-                    onPressed: _retrying ? null : _retry,
-                    child: Text(_retrying ? 'Retrying...' : 'Retry'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  runApp(const MyFinanceApp());
 }
 
 // ============================================================
@@ -1596,54 +1492,6 @@ class MyFinanceApp extends StatelessWidget {
       routes: {
         '/settings': (_) => const MoreFeaturesPage(),
       },
-      builder: (context, child) => Stack(
-        fit: StackFit.expand,
-        children: [
-          child ?? const SizedBox.shrink(),
-          ValueListenableBuilder<String?>(
-            valueListenable: _StartupDiagnostics.message,
-            builder: (context, message, _) {
-              if (message == null) return const SizedBox.shrink();
-              return Positioned(
-                left: 12,
-                right: 12,
-                bottom: 12,
-                child: SafeArea(
-                  child: Material(
-                    color: const Color(0xFF7A241E),
-                    borderRadius: BorderRadius.circular(12),
-                    elevation: 8,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.error_outline, color: Colors.white),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: SelectableText(
-                              message,
-                              maxLines: 5,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Dismiss error',
-                            onPressed: _StartupDiagnostics.clear,
-                            icon: const Icon(Icons.close, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       home: const MainScreen(),
     );
   }

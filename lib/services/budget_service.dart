@@ -158,7 +158,7 @@ class BudgetService {
       '''
       SELECT COALESCE(SUM(t.amount), 0) AS total
       FROM transactions t
-      INNER JOIN accounts a ON a.id = t.account_id
+      INNER JOIN wallets a ON a.id = t.wallet_id
       WHERE LOWER(t.type) = 'expense'
         AND UPPER(a.currency) = ?
         AND date(t.date) >= date(?)

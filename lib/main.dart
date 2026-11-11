@@ -683,7 +683,8 @@ class _WalletsPageState extends State<WalletsPage> {
       isDismissible: true,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      elevation: 0,
+      elevation: 2,
+        shadowColor: const Color(0x18000000),
       builder: (_) => WalletFormDialog(wallet: wallet),
     );
 

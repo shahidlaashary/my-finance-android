@@ -19,6 +19,7 @@ class AssetsService {
         is_sold INTEGER NOT NULL DEFAULT 0,
         sale_date TEXT,
         sale_price REAL,
+        sale_wallet_id INTEGER,
         created_at TEXT NOT NULL
       )
     ''');

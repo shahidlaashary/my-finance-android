@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/finance_category.dart';
 import '../services/category_service.dart';
-import '../services/transaction_service.dart';
+import '../services/transactions_service.dart';
 import '../widgets/attachment_section.dart';
 
 class TransactionsScreen extends StatefulWidget {

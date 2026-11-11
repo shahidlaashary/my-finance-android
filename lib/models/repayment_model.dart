@@ -3,7 +3,7 @@ class RepaymentModel {
   final int? id;
   final int loanId;
   final double amount;
-  final int accountId;
+  final int walletId;
   final String repaymentDate;
   final String paymentMethod;
   final String notes;
@@ -13,7 +13,7 @@ class RepaymentModel {
     this.id,
     required this.loanId,
     required this.amount,
-    required this.accountId,
+    required this.walletId,
     required this.repaymentDate,
     this.paymentMethod = 'cash',
     this.notes = '',
@@ -25,7 +25,7 @@ class RepaymentModel {
       'id': id,
       'loan_id': loanId,
       'amount': amount,
-      'account_id': accountId,
+      'wallet_id': walletId,
       'repayment_date': repaymentDate,
       'payment_method': paymentMethod,
       'notes': notes,
@@ -38,7 +38,7 @@ class RepaymentModel {
       id: map['id'] as int?,
       loanId: map['loan_id'] as int,
       amount: (map['amount'] as num).toDouble(),
-      accountId: map['account_id'] as int,
+      walletId: map['wallet_id'] as int,
       repaymentDate: map['repayment_date'] as String,
       paymentMethod:
           map['payment_method'] as String? ?? 'cash',
@@ -51,7 +51,7 @@ class RepaymentModel {
     int? id,
     int? loanId,
     double? amount,
-    int? accountId,
+    int? walletId,
     String? repaymentDate,
     String? paymentMethod,
     String? notes,
@@ -61,7 +61,7 @@ class RepaymentModel {
       id: id ?? this.id,
       loanId: loanId ?? this.loanId,
       amount: amount ?? this.amount,
-      accountId: accountId ?? this.accountId,
+      walletId: walletId ?? this.walletId,
       repaymentDate: repaymentDate ?? this.repaymentDate,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       notes: notes ?? this.notes,

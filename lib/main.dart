@@ -595,6 +595,28 @@ const List<IconData> walletIcons = [
 // WALLETS PAGE
 // ============================================================
 
+class _WalletWavePainter extends CustomPainter {
+  final Color color;
+  const _WalletWavePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Path wave(double offset) => Path()
+      ..moveTo(0, size.height * 0.38 + offset)
+      ..quadraticBezierTo(size.width * 0.28, -offset, size.width * 0.52, size.height * 0.48)
+      ..quadraticBezierTo(size.width * 0.78, size.height + offset, size.width, size.height * 0.28)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(wave(2), Paint()..color = color.withValues(alpha: 0.22));
+    canvas.drawPath(wave(0), Paint()..color = color.withValues(alpha: 0.55));
+    canvas.drawPath(wave(-2), Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _WalletWavePainter oldDelegate) => oldDelegate.color != color;
+}
+
 class WalletsPage extends StatefulWidget {
   const WalletsPage({super.key});
 
@@ -737,7 +759,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
-                      childAspectRatio: 1.68,
+                      childAspectRatio: 1.92,
                     ),
                     itemCount: wallets.length,
                     itemBuilder: (context, index) {
@@ -754,145 +776,94 @@ class _WalletsPageState extends State<WalletsPage> {
                         margin: EdgeInsets.zero,
                         clipBehavior: Clip.antiAlias,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(16),
                           side: const BorderSide(color: Color(0xFFE5ECE8)),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(9, 7, 9, 7),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 0, right: 0, bottom: 0, height: 17,
+                              child: CustomPaint(
+                                painter: _WalletWavePainter(AppColors.primary),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 6, 6, 15),
+                              child: Column(
                                 children: [
-                                  Container(
-                                    width: 31,
-                                    height: 31,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.primary.withValues(alpha: 0.16),
-                                          AppColors.primary.withValues(alpha: 0.07),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 29, height: 29,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(9),
+                                        ),
+                                        child: Icon(IconData(iconCode, fontFamily: 'MaterialIcons'),
+                                            color: AppColors.primary, size: 17),
                                       ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      IconData(iconCode, fontFamily: 'MaterialIcons'),
-                                      color: AppColors.primary,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: Text(
-                                      wallet['name'] as String,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.text,
-                                      ),
-                                    ),
-                                  ),
-                                  PopupMenuButton<String>(
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 145),
-                                    icon: const Icon(Icons.more_vert_rounded),
-                                    iconSize: 19,
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        openWalletForm(wallet);
-                                      } else if (value == 'delete') {
-                                        deleteWallet(wallet);
-                                      }
-                                    },
-                                    itemBuilder: (_) => const [
-                                      PopupMenuItem(
-                                        value: 'edit',
-                                        child: Row(
+                                      const SizedBox(width: 5),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Icon(Icons.edit_outlined, size: 18),
-                                            SizedBox(width: 9),
-                                            Text('Edit Wallet'),
+                                            Text(wallet['name'] as String,
+                                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(fontSize: 10.5,
+                                                fontWeight: FontWeight.w800, color: AppColors.text)),
+                                            const SizedBox(height: 2),
+                                            Text(walletType, maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(fontSize: 9,
+                                                fontWeight: FontWeight.w700, color: AppColors.primary)),
                                           ],
                                         ),
                                       ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
+                                      PopupMenuButton<String>(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 145),
+                                        icon: const Icon(Icons.more_vert_rounded),
+                                        iconSize: 17,
+                                        onSelected: (value) {
+                                          if (value == 'edit') openWalletForm(wallet);
+                                          else if (value == 'delete') deleteWallet(wallet);
+                                        },
+                                        itemBuilder: (_) => const [
+                                          PopupMenuItem(value: 'edit', child: Row(children: [
+                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text('Edit Wallet')])),
+                                          PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9),
-                                            Text('Delete Wallet'),
-                                          ],
-                                        ),
+                                            SizedBox(width: 9), Text('Delete Wallet')])),
+                                        ],
                                       ),
+                                    ],
+                                  ),
+                                  const Spacer(),
+                                  Row(
+                                    children: [
+                                      const Text('BALANCE', style: TextStyle(fontSize: 8,
+                                        fontWeight: FontWeight.w700, color: AppColors.muted)),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(formatMoney(balance, currency),
+                                          maxLines: 1, textAlign: TextAlign.end,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 12,
+                                            fontWeight: FontWeight.w900, color: AppColors.primary,
+                                            letterSpacing: -0.3)),
+                                      ),
+                                      if (excluded) ...[
+                                        const SizedBox(width: 3),
+                                        const Icon(Icons.visibility_off_outlined,
+                                          size: 11, color: AppColors.muted),
+                                      ],
                                     ],
                                   ),
                                 ],
                               ),
-                              const Spacer(),
-                              const Text(
-                                'BALANCE',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  letterSpacing: 0.8,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                formatMoney(balance, currency),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.text,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 7,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F6F3),
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      child: Text(
-                                        walletType,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (excluded) ...[
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.visibility_off_outlined,
-                                      size: 12,
-                                      color: AppColors.muted,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -1632,7 +1603,7 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Transform.translate(
-                offset: Offset(0, index == 0 ? -1.5 : 0),
+                offset: Offset(0, index == 0 ? -0.75 : 0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

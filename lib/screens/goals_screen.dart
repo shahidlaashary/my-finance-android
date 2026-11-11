@@ -72,170 +72,72 @@ class _GoalsScreenState extends State<GoalsScreen> {
       }),
     ];
   }
-  Future<void> _showGoalDialog({
-    GoalsModel? goal,
-  }) async {
+  Future<void> _showGoalDialog({GoalsModel? goal}) async {
     final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController(
-      text: goal?.name ?? '',
-    );
-    final targetController = TextEditingController(
-      text: goal == null ? '' : goal.targetAmount.toString(),
-    );
-    final notesController = TextEditingController(
-      text: goal?.notes ?? '',
-    );
-    DateTime targetDate = goal?.targetDate ??
-        DateTime.now().add(const Duration(days: 30));
+    final nameController = TextEditingController(text: goal?.name ?? '');
+    final targetController = TextEditingController(text: goal?.targetAmount.toString() ?? '');
+    final notesController = TextEditingController(text: goal?.notes ?? '');
+    DateTime targetDate = goal?.targetDate ?? DateTime.now().add(const Duration(days: 30));
     int? walletId = goal?.walletId;
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                goal == null ? 'Create Savings Goal' : 'Edit Savings Goal',
-              ),
-              content: SizedBox(
-                width: 450,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Goal Name',
-                            prefixIcon: Icon(Icons.flag),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Enter goal name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: targetController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'Target Amount',
-                            prefixIcon: Icon(Icons.savings),
-                          ),
-                          validator: (value) {
-                            final amount = double.tryParse(value ?? '');
-                            if (amount == null ||
-                                !amount.isFinite ||
-                                amount <= 0) {
-                              return 'Enter a valid target amount';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<int?>(
-                          value: walletId,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Linked Account',
-                          ),
-                          items: _accountItems(),
-                          onChanged: (value) {
-                            setDialogState(() {
-                              walletId = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Target Date'),
-                          subtitle: Text(
-                            DateFormat('dd MMM yyyy').format(targetDate),
-                          ),
-                          trailing: const Icon(Icons.calendar_month),
-                          onTap: () async {
-                            final selected = await showDatePicker(
-                              context: context,
-                              initialDate: targetDate,
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                            );
-                            if (selected != null) {
-                              setDialogState(() {
-                                targetDate = selected;
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: notesController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Notes',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    try {
-                      final model = GoalsModel(
-                        id: goal?.id,
-                        name: nameController.text.trim(),
-                        targetAmount: double.parse(targetController.text),
-                        savedAmount: goal?.savedAmount ?? 0,
-                        targetDate: targetDate,
-                        walletId: walletId,
-                        notes: notesController.text.trim(),
-                        isCompleted: goal?.isCompleted ?? false,
-                        createdAt: goal?.createdAt ?? DateTime.now(),
-                      );
-                      if (goal == null) {
-                        await GoalsService.addGoal(model);
-                      } else {
-                        await GoalsService.updateGoal(model);
-                      }
-                      if (!dialogContext.mounted) return;
-                      Navigator.pop(dialogContext);
-                      await _loadData();
-                      _message(
-                        goal == null
-                            ? 'Savings goal created.'
-                            : 'Savings goal updated.',
-                      );
-                    } catch (e) {
-                      _message('Error: $e');
-                    }
-                  },
-                  child: Text(goal == null ? 'Create' : 'Update'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13), isDense: true);
+
+    await showModalBottomSheet(context: context, isScrollControlled: true, useSafeArea: true,
+      backgroundColor: Colors.transparent, elevation: 0,
+      builder: (sheetContext) => StatefulBuilder(builder: (context, setSheetState) {
+        final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+        final screenHeight = MediaQuery.sizeOf(context).height;
+        final maxHeight = keyboardHeight > 0 ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * .95 : screenHeight * .72;
+        return AnimatedPadding(duration: const Duration(milliseconds: 220), curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Container(decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+              child: Form(key: formKey, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+                  const SizedBox(height: 12),
+                  Row(children: [Expanded(child: Text(goal == null ? 'New Goal' : 'Edit Goal', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
+                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
+                  const SizedBox(height: 10),
+                  TextFormField(controller: nameController, decoration: decoration('Goal Name', Icons.flag_outlined),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Enter goal name' : null),
+                  const SizedBox(height: 12),
+                  TextFormField(controller: targetController, keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: decoration('Target Amount', Icons.savings_outlined),
+                    validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid target amount' : null; }),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(value: walletId, isExpanded: true, decoration: decoration('Linked Account', Icons.account_balance_wallet_outlined),
+                    items: _accountItems(), onChanged: (v) => setSheetState(() => walletId = v)),
+                  ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
+                    title: const Text('Target Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(targetDate)), trailing: const Icon(Icons.edit_calendar),
+                    onTap: () async { final v = await showDatePicker(context: context, initialDate: targetDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (v != null) setSheetState(() => targetDate = v); }),
+                  const SizedBox(height: 12),
+                  TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
+                  const SizedBox(height: 16),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                    Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
+                      onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
+                        try {
+                          final model = GoalsModel(id: goal?.id, name: nameController.text.trim(), targetAmount: double.parse(targetController.text),
+                            savedAmount: goal?.savedAmount ?? 0, targetDate: targetDate, walletId: walletId, notes: notesController.text.trim(),
+                            isCompleted: goal?.isCompleted ?? false, createdAt: goal?.createdAt ?? DateTime.now());
+                          if (goal == null) await GoalsService.addGoal(model); else await GoalsService.updateGoal(model);
+                          if (!sheetContext.mounted) return;
+                          Navigator.pop(sheetContext); await _loadData();
+                          _message(goal == null ? 'Savings goal created.' : 'Savings goal updated.');
+                        } catch (e) { _message('Error: $e'); }
+                      }))]),
+                ]))),
+          ));
+      }),
     );
-    nameController.dispose();
-    targetController.dispose();
-    notesController.dispose();
+    nameController.dispose(); targetController.dispose(); notesController.dispose();
   }
   Future<void> _showContributionDialog(
     GoalsModel goal,

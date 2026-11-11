@@ -343,10 +343,10 @@ class BackupService {
             .whereType<String>()
             .toSet();
 
-        if (!tableNames.contains('accounts') ||
+        if (!tableNames.contains('wallets') ||
             !tableNames.contains('transactions')) {
           throw Exception(
-            'Backup does not contain the required finance tables.',
+            'Backup does not contain the required wallets and transactions tables.',
           );
         }
       } finally {

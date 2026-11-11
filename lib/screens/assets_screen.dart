@@ -27,6 +27,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   bool _loading = true;
   bool _showSold = true;
+  String? _selectedCategory;
 
   final NumberFormat _numberFormat =
       NumberFormat('#,##0.00');
@@ -108,6 +109,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
     return matches.first['currency']?.toString() ?? 'PKR';
   }
+
+  List<AssetsModel> get _visibleAssets => _selectedCategory == null
+      ? _assets
+      : _assets.where((asset) => asset.category.trim().toLowerCase() == _selectedCategory!.toLowerCase()).toList();
 
   List<String> get _availableCurrencies {
     final currencies = <String>{
@@ -1013,9 +1018,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       final item = categoryItems[index];
                       return InkWell(
                         borderRadius: BorderRadius.circular(14),
-                        onTap: () => _showAssetDialog(initialCategory: item['name'] as String),
+                        onTap: () => setState(() => _selectedCategory = _selectedCategory == item['name'] ? null : item['name'] as String),
                         child: Container(
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE7EEEA))),
+                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? const Color(0xFF147D59) : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 25),
                             const SizedBox(height: 6),
@@ -1028,8 +1033,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      const Expanded(child: Text('My Assets', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
-                      Text('${_assets.where((a) => !a.isSold).length} Active',
+                      Expanded(child: Text(_selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
+                      Text('${_visibleAssets.where((a) => !a.isSold).length} Active',
                         style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -1044,20 +1049,20 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       _loadData();
                     },
                   ),
-                  if (_assets.isEmpty)
+                  if (_visibleAssets.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
                       child: const Column(children: [
                         Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
                         SizedBox(height: 10),
-                        Text('No assets added yet', style: TextStyle(fontWeight: FontWeight.w700)),
+                        Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: TextStyle(fontWeight: FontWeight.w700)),
                         SizedBox(height: 4),
-                        Text('Add your first asset to start tracking its value.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12)),
                       ]),
                     )
                   else
-                    ..._assets.map(_assetCard),
+                    ..._visibleAssets.map(_assetCard),
                 ],
               ),
             ),

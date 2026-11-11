@@ -406,6 +406,36 @@ class FinanceDB {
           AND type = 'Transfer'
         ''', [factor, id]);
 
+        // Source wallet ki currency change hone par linked transfer fees bhi convert.
+        final feeTransactions = await txn.query(
+          'transactions',
+          columns: ['id'],
+          where: "wallet_id = ? AND type = 'Transfer'",
+          whereArgs: [id],
+        );
+        for (final transaction in feeTransactions) {
+          final transactionId = transaction['id'] as int;
+          final feeRows = await txn.query(
+            'app_settings',
+            columns: ['setting_value'],
+            where: 'setting_key = ?',
+            whereArgs: ['transaction_transfer_fee_$transactionId'],
+            limit: 1,
+          );
+          if (feeRows.isNotEmpty) {
+            final oldFee = double.tryParse(
+                  feeRows.first['setting_value']?.toString() ?? '',
+                ) ??
+                0;
+            await txn.update(
+              'app_settings',
+              {'setting_value': (oldFee * factor).toString()},
+              where: 'setting_key = ?',
+              whereArgs: ['transaction_transfer_fee_$transactionId'],
+            );
+          }
+        }
+
         // Transfer destination amounts convert.
         await txn.rawUpdate('''
           UPDATE transactions

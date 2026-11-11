@@ -4,7 +4,7 @@ class LoanModel {
   final String? borrowerPhone;
   final double amount;
   final double remainingAmount;
-  final int accountId;
+  final int walletId;
   final String lendingDate;
   final String? dueDate;
   final String notes;
@@ -17,7 +17,7 @@ class LoanModel {
     this.borrowerPhone,
     required this.amount,
     required this.remainingAmount,
-    required this.accountId,
+    required this.walletId,
     required this.lendingDate,
     this.dueDate,
     this.notes = '',
@@ -50,7 +50,7 @@ class LoanModel {
       'borrower_phone': borrowerPhone,
       'amount': amount,
       'remaining_amount': remainingAmount,
-      'account_id': accountId,
+      'wallet_id': walletId,
       'lending_date': lendingDate,
       'due_date': dueDate,
       'notes': notes,
@@ -66,7 +66,7 @@ class LoanModel {
       borrowerPhone: map['borrower_phone'] as String?,
       amount: (map['amount'] as num).toDouble(),
       remainingAmount: (map['remaining_amount'] as num).toDouble(),
-      accountId: map['account_id'] as int,
+      walletId: map['wallet_id'] as int,
       lendingDate: map['lending_date'] as String,
       dueDate: map['due_date'] as String?,
       notes: map['notes'] as String? ?? '',
@@ -81,7 +81,7 @@ class LoanModel {
     String? borrowerPhone,
     double? amount,
     double? remainingAmount,
-    int? accountId,
+    int? walletId,
     String? lendingDate,
     String? dueDate,
     String? notes,
@@ -94,7 +94,7 @@ class LoanModel {
       borrowerPhone: borrowerPhone ?? this.borrowerPhone,
       amount: amount ?? this.amount,
       remainingAmount: remainingAmount ?? this.remainingAmount,
-      accountId: accountId ?? this.accountId,
+      walletId: walletId ?? this.walletId,
       lendingDate: lendingDate ?? this.lendingDate,
       dueDate: dueDate ?? this.dueDate,
       notes: notes ?? this.notes,

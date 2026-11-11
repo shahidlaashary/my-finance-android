@@ -51,6 +51,19 @@ jobs:
           }
           EOF
           cat "$MAIN_ACTIVITY"
+      - name: Inspect generated Android launcher configuration
+        run: |
+          echo "===== MAIN MANIFEST ====="
+          cat android/app/src/main/AndroidManifest.xml
+          echo "===== APP GRADLE ====="
+          cat android/app/build.gradle.kts
+          echo "===== MAIN ACTIVITY ====="
+          find android/app/src/main -name MainActivity.kt -exec cat {} \\;
+          echo "===== THEME STYLES ====="
+          cat android/app/src/main/res/values/styles.xml
+          echo "===== NIGHT THEME STYLES ====="
+          cat android/app/src/main/res/values-night/styles.xml
+
       - name: Configure Gradle download
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties

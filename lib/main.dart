@@ -738,7 +738,7 @@ class _WalletsPageState extends State<WalletsPage> {
       appBar: AppBar(
         title: const Text(
           'My Wallets',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -1902,7 +1902,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text(
           'My Finance',
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildSharedAppBarActions(context),
       ),
@@ -3719,7 +3719,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
       appBar: AppBar(
         title: const Text(
           'Transactions',
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: _sharedAppBarActions(context),
       ),

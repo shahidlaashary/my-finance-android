@@ -61,12 +61,18 @@ controlled change, then verify each platform's native configuration. Keep the
 Android APK workflow Android-only; add separate workflows for iOS, Windows and
 macOS when the matching runners and signing requirements are ready.
 
-## Data safety and migration policy
+## Development data and migration policy
 
-The current database schema, database version, stored finance records and
-existing key-value settings must remain unchanged during architecture work.
-Any future schema migration or data conversion requires explicit approval,
-a backup/restore plan and regression tests.
+During the active development and testing phase, entered records are disposable
+test data. Database schema changes, table additions and version updates may be
+made when a feature or platform implementation technically requires them.
+Explain significant changes and test them before merging.
+
+The production-data protection phase begins only when the product owner
+explicitly declares the app complete and in regular use. From that point onward,
+every update that can affect stored records must include a reviewed migration,
+a backup/restore plan and regression tests. Existing user records must be
+preserved unless the product owner explicitly requests otherwise.
 
 ## Delivery sequence
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/finance_category.dart';
 
@@ -21,7 +22,7 @@ class CategoryService {
 
   static Future<Database> _openDatabase() async {
     final path = await getDatabasesPath();
-    return openDatabase('$path/my_finance.db');
+    return openDatabase(p.join(path, 'my_finance.db'));
   }
 
   static Future<void> closeDatabase() async {

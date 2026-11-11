@@ -1,38 +1,24 @@
-
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 class TransactionService {
-  static const int _databaseVersion = 3;
-
   static Database? _database;
   static Future<Database>? _databaseFuture;
 
   static String _normalizeType(String type) {
     switch (type.trim().toLowerCase()) {
-      case 'income':
-        return 'income';
-      case 'expense':
-        return 'expense';
-      case 'transfer':
-        return 'transfer';
-      default:
-        throw Exception('Unknown transaction type: $type');
+      case 'income': return 'Income';
+      case 'expense': return 'Expense';
+      case 'transfer': return 'Transfer';
+      default: throw Exception('Unknown transaction type: $type');
     }
   }
 
   static Future<Database> get database async {
-    if (_database != null && _database!.isOpen) {
-      return _database!;
-    }
-
-    if (_databaseFuture != null) {
-      return _databaseFuture!;
-    }
-
+    if (_database != null && _database!.isOpen) return _database!;
+    if (_databaseFuture != null) return _databaseFuture!;
     final future = _openDatabase();
     _databaseFuture = future;
-
     try {
       _database = await future;
       return _database!;
@@ -41,211 +27,82 @@ class TransactionService {
     }
   }
 
+  static Future<Database> _openDatabase() async {
+    final path = await getDatabasesPath();
+    return openDatabase(p.join(path, 'my_finance.db'));
+  }
+
   static Future<void> closeDatabase() async {
     final pending = _databaseFuture;
-
     if (pending != null) {
-      try {
-        await pending;
-      } catch (_) {}
+      try { await pending; } catch (_) {}
     }
-
     final db = _database;
     _database = null;
     _databaseFuture = null;
-
-    if (db != null && db.isOpen) {
-      await db.close();
-    }
+    if (db != null && db.isOpen) await db.close();
   }
 
-  static Future<Database> _openDatabase() async {
-    final dbPath = await getDatabasesPath();
-
-    final db = await openDatabase(
-      p.join(dbPath, 'my_finance.db'),
-    );
-
-    return db;
-  }
-
-  static Future<void> _ensureCategorySchema(
-    DatabaseExecutor db,
-  ) async {
-    final tables = await db.rawQuery('''
-      SELECT name
-      FROM sqlite_master
-      WHERE type = 'table'
-      AND name IN ('wallets', 'transactions')
-    ''');
-
-    final existingTables = tables
-        .map((row) => row['name'] as String)
-        .toSet();
-
-    if (!existingTables.contains('wallets')) {
-      throw Exception(
-        'Accounts table is missing. Initialize FinanceDB first.',
-      );
-    }
-
-    if (!existingTables.contains('transactions')) {
-      throw Exception(
-        'Transactions table is missing. Initialize FinanceDB first.',
-      );
-    }
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS finance_categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        icon TEXT NOT NULL DEFAULT 'category',
-        parent_id INTEGER,
-        is_deleted INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-
-    final columns = await db.rawQuery(
-      'PRAGMA table_info(transactions)',
-    );
-
-    final hasCategoryColumn = columns.any(
-      (column) => column['name'] == 'category_id',
-    );
-
-    if (!hasCategoryColumn) {
-      await db.execute(
-        'ALTER TABLE transactions ADD COLUMN category_id INTEGER',
-      );
-    }
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_transactions_category_id
-      ON transactions(category_id)
-    ''');
-  }
-
-  static Future<void> _changeBalance(
-    Transaction txn,
-    int walletId,
-    double change,
-  ) async {
-    final result = await txn.rawUpdate(
+  static Future<void> _changeBalance(Transaction txn, int walletId, double change) async {
+    final changed = await txn.rawUpdate(
       'UPDATE wallets SET balance = balance + ? WHERE id = ?',
       [change, walletId],
     );
-
-    if (result == 0) {
-      throw Exception('Account not found: $walletId');
-    }
+    if (changed == 0) throw Exception('Wallet not found: $walletId');
   }
 
-  static Future<void> _reverseTransaction(
-    Transaction txn,
-    Map<String, dynamic> item,
-  ) async {
-    final type = _normalizeType(item['type'] as String);
-    final amount = (item['amount'] as num).toDouble();
-    final walletId = item['wallet_id'] as int;
-    final toWalletId = item['to_wallet_id'] as int?;
-
-    if (type == 'income') {
+  static Future<void> _reverse(Transaction txn, Map<String, dynamic> row) async {
+    final type = _normalizeType(row['type'].toString());
+    final amount = (row['amount'] as num).toDouble();
+    final walletId = (row['wallet_id'] as num).toInt();
+    final toWalletId = (row['to_wallet_id'] as num?)?.toInt();
+    if (type == 'Income') {
       await _changeBalance(txn, walletId, -amount);
-    } else if (type == 'expense') {
+    } else if (type == 'Expense') {
       await _changeBalance(txn, walletId, amount);
-    } else if (type == 'transfer') {
-      if (toWalletId == null) {
-        throw Exception('Transfer destination is missing.');
-      }
-
+    } else if (type == 'Transfer') {
+      if (toWalletId == null) throw Exception('Transfer destination is missing.');
+      final destinationAmount = (row['to_amount'] as num?)?.toDouble() ?? amount;
       await _changeBalance(txn, walletId, amount);
-      await _changeBalance(txn, toWalletId, -amount);
+      await _changeBalance(txn, toWalletId, -destinationAmount);
     }
   }
 
-  static Future<void> _applyTransaction(
+  static Future<void> _apply(
     Transaction txn, {
     required String type,
     required double amount,
     required int walletId,
     int? toWalletId,
+    double? toAmount,
   }) async {
-    final normalizedType = _normalizeType(type);
-
-    if (!amount.isFinite || amount <= 0) {
-      throw Exception('Amount must be greater than zero.');
-    }
-
-    if (normalizedType == 'income') {
+    if (!amount.isFinite || amount <= 0) throw Exception('Amount must be greater than zero.');
+    final wallets = await txn.query(
+      'wallets',
+      where: 'id = ? OR id = ?',
+      whereArgs: [walletId, toWalletId ?? -1],
+    );
+    final sourceRows = wallets.where((w) => w['id'] == walletId).toList();
+    if (sourceRows.isEmpty) throw Exception('Selected wallet was not found.');
+    final source = sourceRows.first;
+    if (type == 'Income') {
       await _changeBalance(txn, walletId, amount);
       return;
     }
-
-    if (normalizedType == 'expense') {
+    if (type == 'Expense') {
+      if ((source['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance.');
       await _changeBalance(txn, walletId, -amount);
       return;
     }
-
-    if (toWalletId == null || toWalletId == walletId) {
-      throw Exception('Select a different destination account.');
-    }
-
-    final wallets = await txn.query(
-      'wallets',
-      columns: ['id', 'currency', 'balance'],
-      where: 'id IN (?, ?)',
-      whereArgs: [walletId, toWalletId],
-    );
-
-    if (wallets.length != 2) {
-      throw Exception('Transfer account not found.');
-    }
-
-    final source = wallets.firstWhere(
-      (account) => account['id'] == walletId,
-    );
-
-    final destination = wallets.firstWhere(
-      (account) => account['id'] == toWalletId,
-    );
-
-    if (source['currency'] != destination['currency']) {
-      throw Exception(
-        'Different currency transfers will be available '
-        'after exchange rate support is added.',
-      );
-    }
-
-    final balance = (source['balance'] as num).toDouble();
-
-    if (balance < amount) {
-      throw Exception('Insufficient account balance.');
-    }
-
+    if (toWalletId == null || toWalletId == walletId) throw Exception('Select a different destination wallet.');
+    final destRows = wallets.where((w) => w['id'] == toWalletId).toList();
+    if (destRows.isEmpty) throw Exception('Destination wallet was not found.');
+    final destination = destRows.first;
+    final received = toAmount ?? amount;
+    if (!received.isFinite || received <= 0) throw Exception('Enter a valid destination amount.');
+    if ((source['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance.');
     await _changeBalance(txn, walletId, -amount);
-    await _changeBalance(txn, toWalletId, amount);
-  }
-
-  static Future<void> _validateCategory(
-    Transaction txn,
-    int? categoryId,
-    String type,
-  ) async {
-    if (categoryId == null) return;
-
-    final normalizedType = _normalizeType(type);
-
-    final rows = await txn.query(
-      'finance_categories',
-      where: 'id = ? AND LOWER(type) = ? AND is_deleted = 0',
-      whereArgs: [categoryId, normalizedType],
-      limit: 1,
-    );
-
-    if (rows.isEmpty) {
-      throw Exception('Selected category is not available.');
-    }
+    await _changeBalance(txn, toWalletId, received);
   }
 
   static Future<int> addTransaction({
@@ -253,42 +110,30 @@ class TransactionService {
     required double amount,
     required int walletId,
     int? toWalletId,
-    int? categoryId,
+    double? toAmount,
+    double? exchangeRate,
+    String? category,
     required String note,
     required String date,
   }) async {
     final db = await database;
-    final normalizedType = _normalizeType(type);
-
-    if (!amount.isFinite || amount <= 0) {
-      throw Exception('Enter a valid amount greater than zero.');
-    }
-
+    final normalized = _normalizeType(type);
     return db.transaction((txn) async {
-      await _validateCategory(
-        txn,
-        normalizedType == 'transfer' ? null : categoryId,
-        normalizedType,
-      );
-
-      await _applyTransaction(
-        txn,
-        type: normalizedType,
-        amount: amount,
-        walletId: walletId,
-        toWalletId: toWalletId,
-      );
-
+      await _apply(txn, type: normalized, amount: amount, walletId: walletId,
+        toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount);
+      final now = DateTime.now().toIso8601String();
       return txn.insert('transactions', {
-        'type': normalizedType,
+        'type': normalized,
         'amount': amount,
         'wallet_id': walletId,
-        'to_wallet_id':
-            normalizedType == 'transfer' ? toWalletId : null,
-        'category_id':
-            normalizedType == 'transfer' ? null : categoryId,
+        'to_wallet_id': normalized == 'Transfer' ? toWalletId : null,
+        'to_amount': normalized == 'Transfer' ? (toAmount ?? amount) : null,
+        'exchange_rate': normalized == 'Transfer' ? (exchangeRate ?? ((toAmount ?? amount) / amount)) : null,
+        'balance_delta': null,
+        'category': normalized == 'Transfer' ? '' : (category ?? ''),
         'note': note,
         'date': date,
+        'created_at': now,
       });
     });
   }
@@ -299,145 +144,58 @@ class TransactionService {
     required double amount,
     required int walletId,
     int? toWalletId,
-    int? categoryId,
+    double? toAmount,
+    double? exchangeRate,
+    String? category,
     required String note,
     required String date,
   }) async {
     final db = await database;
-    final normalizedType = _normalizeType(type);
-
-    if (!amount.isFinite || amount <= 0) {
-      throw Exception('Enter a valid amount greater than zero.');
-    }
-
+    final normalized = _normalizeType(type);
     await db.transaction((txn) async {
-      final existing = await txn.query(
-        'transactions',
-        where: 'id = ?',
-        whereArgs: [id],
-        limit: 1,
-      );
-
-      if (existing.isEmpty) {
-        throw Exception('Transaction not found.');
-      }
-
-      await _reverseTransaction(txn, existing.first);
-
-      await _validateCategory(
-        txn,
-        normalizedType == 'transfer' ? null : categoryId,
-        normalizedType,
-      );
-
-      await _applyTransaction(
-        txn,
-        type: normalizedType,
-        amount: amount,
-        walletId: walletId,
-        toWalletId: toWalletId,
-      );
-
-      await txn.update(
-        'transactions',
-        {
-          'type': normalizedType,
-          'amount': amount,
-          'wallet_id': walletId,
-          'to_wallet_id':
-              normalizedType == 'transfer' ? toWalletId : null,
-          'category_id':
-              normalizedType == 'transfer' ? null : categoryId,
-          'note': note,
-          'date': date,
-        },
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
+      if (rows.isEmpty) throw Exception('Transaction not found.');
+      await _reverse(txn, rows.first);
+      await _apply(txn, type: normalized, amount: amount, walletId: walletId,
+        toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount);
+      await txn.update('transactions', {
+        'type': normalized,
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': normalized == 'Transfer' ? toWalletId : null,
+        'to_amount': normalized == 'Transfer' ? (toAmount ?? amount) : null,
+        'exchange_rate': normalized == 'Transfer' ? (exchangeRate ?? ((toAmount ?? amount) / amount)) : null,
+        'category': normalized == 'Transfer' ? '' : (category ?? ''),
+        'note': note,
+        'date': date,
+      }, where: 'id = ?', whereArgs: [id]);
     });
   }
 
   static Future<void> deleteTransaction(int id) async {
     final db = await database;
-
     await db.transaction((txn) async {
-      final rows = await txn.query(
-        'transactions',
-        where: 'id = ?',
-        whereArgs: [id],
-        limit: 1,
-      );
-
-      if (rows.isEmpty) {
-        throw Exception('Transaction not found.');
-      }
-
-      await _reverseTransaction(txn, rows.first);
-
-      await txn.delete(
-        'transactions',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
+      if (rows.isEmpty) throw Exception('Transaction not found.');
+      await _reverse(txn, rows.first);
+      await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
     });
   }
 
-  static Future<void> setCategory({
-    required int transactionId,
-    required int? categoryId,
-  }) async {
+  static Future<void> setCategory({required int transactionId, required String? category}) async {
     final db = await database;
-
-    await db.transaction((txn) async {
-      final rows = await txn.query(
-        'transactions',
-        columns: ['type'],
-        where: 'id = ?',
-        whereArgs: [transactionId],
-        limit: 1,
-      );
-
-      if (rows.isEmpty) {
-        throw Exception('Transaction not found.');
-      }
-
-      final type = _normalizeType(
-        rows.first['type'] as String,
-      );
-
-      await _validateCategory(txn, categoryId, type);
-
-      await txn.update(
-        'transactions',
-        {'category_id': categoryId},
-        where: 'id = ?',
-        whereArgs: [transactionId],
-      );
-    });
+    await db.update('transactions', {'category': category ?? ''},
+      where: "id = ? AND type IN ('Income', 'Expense')", whereArgs: [transactionId]);
   }
 
   static Future<List<Map<String, dynamic>>> getTransactions() async {
     final db = await database;
-
-    return db.rawQuery('''
-      SELECT
-        t.*,
-        c.name AS category_name,
-        c.icon AS category_icon
-      FROM transactions t
-      LEFT JOIN finance_categories c
-        ON t.category_id = c.id
-      ORDER BY t.id DESC
-    ''');
+    return db.rawQuery("SELECT t.*, t.category AS category_name FROM transactions t ORDER BY t.date DESC, t.id DESC");
   }
 
   static Future<List<Map<String, dynamic>>> getAccounts() async {
     final db = await database;
-
-    return db.query(
-      'wallets',
-      columns: ['id', 'name', 'currency', 'balance'],
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
+    return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
+      orderBy: 'name COLLATE NOCASE ASC');
   }
 }

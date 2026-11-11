@@ -3055,7 +3055,7 @@ extension FinanceTransactionOperations on FinanceDB {
     final transactionDate = date ?? DateTime.now();
     final now = DateTime.now().toIso8601String();
 
-    return db.transaction((txn) async {
+    final transactionId = await db.transaction((txn) async {
       final sourceRows = await txn.query(
         'wallets',
         where: 'id = ?',
@@ -3177,6 +3177,8 @@ extension FinanceTransactionOperations on FinanceDB {
 
       return transactionId;
     });
+    AppRefreshController.notifyChanged();
+    return transactionId;
   }
 
   // Transactions ki history hasil karna.
@@ -3311,6 +3313,7 @@ extension FinanceTransactionOperations on FinanceDB {
         whereArgs: ['transaction_transfer_fee_$id'],
       );
     });
+    AppRefreshController.notifyChanged();
   }
 }
 

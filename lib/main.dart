@@ -3181,7 +3181,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   Widget _buildDateTimeRecurringBox() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).dividerColor),
@@ -3190,12 +3190,11 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       child: Row(
         children: [
           Expanded(
-            flex: 4,
             child: InkWell(
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -3219,14 +3218,13 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               ),
             ),
           ),
-          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
+          Container(width: 1, height: 30, color: Theme.of(context).dividerColor),
           Expanded(
-            flex: 3,
             child: InkWell(
               onTap: _pickTime,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -3257,7 +3255,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               onTap: _showRecurringOptions,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.only(left: 9, top: 5, bottom: 5),
+                padding: const EdgeInsets.only(left: 6, top: 4, bottom: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

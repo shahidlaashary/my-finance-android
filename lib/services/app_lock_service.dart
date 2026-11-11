@@ -12,8 +12,8 @@ import '../main.dart';
 class AppLockService {
   AppLockService._();
 
-  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  static const LocalAuthentication _localAuth = LocalAuthentication();
+  static final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  static final LocalAuthentication _localAuth = LocalAuthentication();
 
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 

@@ -64,10 +64,6 @@ class TransactionService {
 
     final db = await openDatabase(
       p.join(dbPath, 'my_finance.db'),
-      version: _databaseVersion,
-      onOpen: (database) async {
-        await _ensureCategorySchema(database);
-      },
     );
 
     return db;

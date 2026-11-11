@@ -426,26 +426,6 @@ class GoalsService {
         row['currency'].toString(): (row['total'] as num).toDouble(),
     };
   }
-  /// Legacy total across all currencies.
-  /// Prefer getTotalSavedByCurrency() for currency-safe summaries.
-  static Future<double> getTotalSaved() async {
-    final db = await _database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(saved_amount), 0) AS total
-      FROM goals
-    ''');
-    return (result.first['total'] as num).toDouble();
-  }
-  /// Legacy total across all currencies.
-  /// Prefer getTotalTargetByCurrency() for currency-safe summaries.
-  static Future<double> getTotalTarget() async {
-    final db = await _database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(target_amount), 0) AS total
-      FROM goals
-    ''');
-    return (result.first['total'] as num).toDouble();
-  }
   /// Returns goals that have passed their target date.
   static Future<List<GoalsModel>> getOverdueGoals() async {
     final db = await _database;

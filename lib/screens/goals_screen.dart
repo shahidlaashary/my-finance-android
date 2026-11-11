@@ -5,12 +5,12 @@ import 'package:sqflite/sqflite.dart';
 import '../models/goals_model.dart';
 import '../services/goals_service.dart';
 import '../widgets/attachment_section.dart';
-class SavingsScreen extends StatefulWidget {
-  const SavingsScreen({super.key});
+class GoalsScreen extends StatefulWidget {
+  const GoalsScreen({super.key});
   @override
-  State<SavingsScreen> createState() => _SavingsScreenState();
+  State<GoalsScreen> createState() => _GoalsScreenState();
 }
-class _SavingsScreenState extends State<SavingsScreen> {
+class _GoalsScreenState extends State<GoalsScreen> {
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
   List<SavingsGoalModel> _goals = [];
   List<Map<String, dynamic>> _wallets = [];

@@ -4,7 +4,7 @@ class SavingsGoalModel {
   final double targetAmount;
   final double savedAmount;
   final DateTime? targetDate;
-  final int? accountId;
+  final int? walletId;
   final String notes;
   final bool isCompleted;
   final DateTime? createdAt;
@@ -15,7 +15,7 @@ class SavingsGoalModel {
     required this.targetAmount,
     this.savedAmount = 0,
     this.targetDate,
-    this.accountId,
+    this.walletId,
     this.notes = '',
     this.isCompleted = false,
     this.createdAt,
@@ -53,7 +53,7 @@ class SavingsGoalModel {
       targetDate: map['target_date'] == null
           ? null
           : DateTime.tryParse(map['target_date'].toString()),
-      accountId: (map['account_id'] as num?)?.toInt(),
+      walletId: (map['wallet_id'] as num?)?.toInt(),
       notes: (map['notes'] ?? '').toString(),
       isCompleted: (map['is_completed'] as num?)?.toInt() == 1,
       createdAt: map['created_at'] == null
@@ -69,7 +69,7 @@ class SavingsGoalModel {
       'target_amount': targetAmount,
       'saved_amount': savedAmount,
       'target_date': targetDate?.toIso8601String(),
-      'account_id': accountId,
+      'wallet_id': walletId,
       'notes': notes,
       'is_completed': isCompleted ? 1 : 0,
       'created_at': createdAt?.toIso8601String(),
@@ -82,7 +82,7 @@ class SavingsGoalModel {
     double? targetAmount,
     double? savedAmount,
     DateTime? targetDate,
-    int? accountId,
+    int? walletId,
     String? notes,
     bool? isCompleted,
     DateTime? createdAt,
@@ -93,7 +93,7 @@ class SavingsGoalModel {
       targetAmount: targetAmount ?? this.targetAmount,
       savedAmount: savedAmount ?? this.savedAmount,
       targetDate: targetDate ?? this.targetDate,
-      accountId: accountId ?? this.accountId,
+      walletId: walletId ?? this.walletId,
       notes: notes ?? this.notes,
       isCompleted: isCompleted ?? this.isCompleted,
       createdAt: createdAt ?? this.createdAt,

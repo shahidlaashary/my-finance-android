@@ -6,6 +6,16 @@ import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
 
 class LoansService {
+
+  // Restore se pehle is service ka database connection band karta hai.
+  static Future<void> closeDatabase() async {
+    final currentDatabase = _databaseInstance;
+    _databaseInstance = null;
+    _databaseFuture = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+  }
   static const String _databaseName = 'my_finance.db';
 
   static Database? _databaseInstance;

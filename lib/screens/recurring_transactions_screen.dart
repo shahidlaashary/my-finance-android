@@ -40,21 +40,13 @@ class _RecurringTransactionsScreenState
         orderBy: 'name ASC',
       );
 
-      List<Map<String, dynamic>> categories = [];
-
-      final categoryTable = await db.rawQuery(
-        "SELECT name FROM sqlite_master "
-        "WHERE type = 'table' AND name = 'finance_categories'",
-      );
-
-      if (categoryTable.isNotEmpty) {
-        categories = await db.query(
-          'finance_categories',
-          where: 'is_deleted = ?',
-          whereArgs: [0],
-          orderBy: 'name ASC',
-        );
-      }
+      final categoryItems = [
+        ...await CategoryService.getCategories('income'),
+        ...await CategoryService.getCategories('expense'),
+      ];
+      final categories = categoryItems
+          .map((item) => {'name': item.name, 'type': item.type})
+          .toList();
 
       final items = await _service.getRecurringTransactions();
 
@@ -897,11 +889,11 @@ class _RecurringTransactionDialogState
                 ],
                 if (!_isTransfer && categories.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
+                  DropdownButtonFormField<String>(
                     value: categories.any(
-                      (c) => c['id'] == _categoryId,
+                      (c) => c['name'] == _category,
                     )
-                        ? _categoryId
+                        ? _category
                         : null,
                     isExpanded: true,
                     decoration: const InputDecoration(
@@ -909,8 +901,8 @@ class _RecurringTransactionDialogState
                       border: OutlineInputBorder(),
                     ),
                     items: categories.map((category) {
-                      return DropdownMenuItem<int>(
-                        value: category['id'] as int,
+                      return DropdownMenuItem<String>(
+                        value: category['name'].toString(),
                         child: Text(category['name'].toString()),
                       );
                     }).toList(),

@@ -263,6 +263,7 @@ class FinanceDB {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    AppRefreshController.notifyChanged();
   }
 
   Future<Map<String, dynamic>?> getWallet(int id) async {
@@ -285,8 +286,8 @@ class FinanceDB {
     String? walletNumber,
     required int iconCode,
     required bool excludeTotal,
-  }) {
-    return db.insert('wallets', {
+  }) async {
+    final id = await db.insert('wallets', {
       'name': name.trim(),
       'type': type,
       'custom_type': customType,
@@ -298,6 +299,8 @@ class FinanceDB {
       'exclude_total': excludeTotal ? 1 : 0,
       'created_at': DateTime.now().toIso8601String(),
     });
+    AppRefreshController.notifyChanged();
+    return id;
   }
 
   // ----------------------------------------------------------
@@ -338,6 +341,7 @@ class FinanceDB {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    AppRefreshController.notifyChanged();
   }
 
   // ----------------------------------------------------------
@@ -508,6 +512,7 @@ class FinanceDB {
         });
       }
     });
+    AppRefreshController.notifyChanged();
   }
 
   Future<double?> _getRateInTransaction(
@@ -555,6 +560,7 @@ class FinanceDB {
       where: 'id = ?',
       whereArgs: [id],
     );
+    AppRefreshController.notifyChanged();
   }
 
   // ----------------------------------------------------------

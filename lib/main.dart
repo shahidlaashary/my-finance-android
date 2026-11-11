@@ -736,6 +736,11 @@ class _WalletsPageState extends State<WalletsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+        titleSpacing: 16,
+        toolbarHeight: 56,
         title: const Text(
           'My Wallets',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),

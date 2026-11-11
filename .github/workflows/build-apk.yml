@@ -29,6 +29,10 @@ jobs:
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
           cat android/gradle/wrapper/gradle-wrapper.properties
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
       - name: Install dependencies
         run: flutter pub get
       - name: Build APK

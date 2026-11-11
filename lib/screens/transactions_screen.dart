@@ -406,7 +406,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transactions'),
+        backgroundColor: Colors.white,
+        title: const Text('Transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+        titleSpacing: 16,
+        toolbarHeight: 56,
+        elevation: 0,
         actions: buildSharedAppBarActions(context),
       ),
       body: loading

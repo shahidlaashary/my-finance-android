@@ -11,12 +11,12 @@ import 'package:path_provider/path_provider.dart';
 
 import '../main.dart';
 import '../services/backup_service.dart';
-import '../services/transaction_service.dart';
-import '../services/budget_service.dart';
-import '../services/savings_service.dart';
+import '../services/transactions_service.dart';
+import '../services/budgets_service.dart';
+import '../services/goals_service.dart';
 import '../services/recurring_transaction_service.dart';
 import '../services/category_service.dart';
-import '../services/loan_service.dart';
+import '../services/loans_service.dart';
 import '../services/attachment_service.dart';
 
 class BackupRestoreScreen extends StatefulWidget {

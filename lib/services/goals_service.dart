@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/goals_model.dart';
+import 'app_refresh_service.dart';
 class GoalsService {
 
   // Restore se pehle is service ka database connection band karta hai.
@@ -112,6 +113,7 @@ class GoalsService {
       ''',
       [amount, walletId],
     );
+    AppRefreshController.notifyChanged();
   }
   static void _validateGoal(GoalsModel goal) {
     if (goal.name.trim().isEmpty) {
@@ -138,7 +140,7 @@ class GoalsService {
         'Create the goal first, then add contributions.',
       );
     }
-    return db.transaction((txn) async {
+    final goalId = await db.transaction((txn) async {
       if (goal.walletId != null) {
         await _getAccount(txn, goal.walletId!);
       }
@@ -154,6 +156,8 @@ class GoalsService {
           ..remove('id'),
       );
     });
+    AppRefreshController.notifyChanged();
+    return goalId;
   }
   /// Tamam savings goals hasil karta hai.
   static Future<List<GoalsModel>> getGoals({
@@ -392,6 +396,7 @@ class GoalsService {
         whereArgs: [updatedGoal.id],
       );
     });
+    AppRefreshController.notifyChanged();
   }
   /// Goal delete karta hai aur contributions ya withdrawals ke balance changes wapas karta hai.
   static Future<void> deleteGoal(int goalId) async {
@@ -431,6 +436,7 @@ class GoalsService {
         whereArgs: [goalId],
       );
     });
+    AppRefreshController.notifyChanged();
   }
   /// Account currency ke mutabiq jama shuda raqam ka total deta hai.
   /// Jin goals ke sath account link nahi, unhein Unassigned mein rakhta hai.

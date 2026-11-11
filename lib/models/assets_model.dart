@@ -1,5 +1,5 @@
 
-class AssetModel {
+class AssetsModel {
   final int? id;
   final String name;
   final String category;
@@ -14,7 +14,7 @@ class AssetModel {
   final int? saleWalletId;
   final DateTime? createdAt;
 
-  const AssetModel({
+  const AssetsModel({
     this.id,
     required this.name,
     this.category = 'Other',
@@ -35,8 +35,8 @@ class AssetModel {
     return salePrice! - purchasePrice;
   }
 
-  factory AssetModel.fromMap(Map<String, dynamic> map) {
-    return AssetModel(
+  factory AssetsModel.fromMap(Map<String, dynamic> map) {
+    return AssetsModel(
       id: (map['id'] as num?)?.toInt(),
       name: (map['name'] ?? '').toString(),
       category: (map['category'] ?? 'Other').toString(),
@@ -78,7 +78,7 @@ class AssetModel {
     };
   }
 
-  AssetModel copyWith({
+  AssetsModel copyWith({
     int? id,
     String? name,
     String? category,
@@ -93,7 +93,7 @@ class AssetModel {
     Object? saleWalletId = _unset,
     Object? createdAt = _unset,
   }) {
-    return AssetModel(
+    return AssetsModel(
       id: id ?? this.id,
       name: name ?? this.name,
       category: category ?? this.category,

@@ -1,4 +1,4 @@
-class BudgetModel {
+class BudgetsModel {
   final int? id;
   final String name;
   final String? category;
@@ -11,7 +11,7 @@ class BudgetModel {
   final bool isActive;
   final DateTime? createdAt;
 
-  const BudgetModel({
+  const BudgetsModel({
     this.id,
     required this.name,
     this.category,
@@ -46,8 +46,8 @@ class BudgetModel {
     return !today.isBefore(start) && !today.isAfter(end);
   }
 
-  factory BudgetModel.fromMap(Map<String, dynamic> map) {
-    return BudgetModel(
+  factory BudgetsModel.fromMap(Map<String, dynamic> map) {
+    return BudgetsModel(
       id: map['id'] as int?,
       name: (map['name'] ?? '').toString(),
       category: map['category']?.toString(),
@@ -86,7 +86,7 @@ class BudgetModel {
     };
   }
 
-  BudgetModel copyWith({
+  BudgetsModel copyWith({
     int? id,
     String? name,
     String? category,
@@ -99,7 +99,7 @@ class BudgetModel {
     bool? isActive,
     DateTime? createdAt,
   }) {
-    return BudgetModel(
+    return BudgetsModel(
       id: id ?? this.id,
       name: name ?? this.name,
       category: category ?? this.category,

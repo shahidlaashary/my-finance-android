@@ -82,6 +82,20 @@ class FinanceDB {
     return _database!;
   }
 
+  // Database band karke restore ke baad dobara kholne ke liye.
+  Future<void> close() async {
+    final currentDatabase = _database;
+    _database = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+  }
+
+  // Restore ke baad naya database connection shuru karta hai.
+  Future<void> reopen() async {
+    await init();
+  }
+
   Future<void> _createDatabase(Database db, int version) async {
     // Wallets ka table.
     await db.execute('''

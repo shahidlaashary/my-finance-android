@@ -8,6 +8,7 @@ import 'goals_screen.dart';
 import 'budgets_screen.dart';
 import 'recurring_transactions_screen.dart';
 import 'reports_screen.dart';
+import 'backup_restore_screen.dart';
 
 class MoreFeaturesScreen extends StatelessWidget {
   const MoreFeaturesScreen({super.key});
@@ -288,6 +289,15 @@ class AppSettingsScreen extends StatelessWidget {
             icon: Icons.tune_rounded,
             title: 'App Settings',
             subtitle: 'General application preferences',
+          ),
+          _SettingsInfoTile(
+            icon: Icons.backup_rounded,
+            title: 'Backup & Restore',
+            subtitle: 'Create a manual backup or restore your finance data',
+            onTap: () => _openScreen(
+              context,
+              const BackupRestoreScreen(),
+            ),
           ),
           const _SettingsInfoTile(
             icon: Icons.currency_exchange_rounded,

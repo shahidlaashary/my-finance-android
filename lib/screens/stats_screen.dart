@@ -180,7 +180,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final maxValue = _trend.fold<double>(0, (maxValue, row) {
       final income = (row['income'] as num?)?.toDouble() ?? 0;
       final expense = (row['expense'] as num?)?.toDouble() ?? 0;
-      return math.max(maxValue, math.max(income, expense));
+      return math.max(maxValue, math.max(income, expense)).toDouble();
     });
     return Column(
       children: _trend.map((row) {
@@ -229,7 +229,7 @@ class _StatsScreenState extends State<StatsScreen> {
     }
     final maxValue = _categories.fold<double>(
       0,
-      (value, row) => math.max(value, (row['total'] as num?)?.toDouble() ?? 0),
+      (value, row) => math.max(value, (row['total'] as num?)?.toDouble() ?? 0).toDouble(),
     );
     return Column(
       children: _categories.take(8).map((row) {

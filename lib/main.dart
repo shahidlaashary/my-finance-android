@@ -3260,7 +3260,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                             'Category',
                             icon: Icons.category_outlined,
                           ),
-                          hint: const Text('Select'),
+                          hint: const Text('Select Category'),
                           items: transactionCategories.map((category) {
                             final iconCode = category['icon'] as int;
                             return DropdownMenuItem<String>(
@@ -3269,10 +3269,10 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                                 children: [
                                   Icon(
                                     IconData(iconCode, fontFamily: 'MaterialIcons'),
-                                    size: 17,
+                                    size: 19,
                                     color: AppColors.primary,
                                   ),
-                                  const SizedBox(width: 5),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
                                       category['name'] as String,

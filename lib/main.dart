@@ -24,6 +24,7 @@ import 'screens/goals_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
+import 'screens/more_features_screen.dart' show AppSettingsScreen;
 import 'widgets/shared_app_bar_actions.dart';
 import 'widgets/app_lock_gate.dart';
 
@@ -2649,11 +2650,17 @@ class MoreFeaturesPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => feature['title'] == 'Categories'
-                        ? const CategoriesPage()
-                        : SimpleFeaturePage(
-                            title: feature['title'] as String,
-                          ),
+                    builder: (_) {
+                      if (feature['title'] == 'Categories') {
+                        return const CategoriesPage();
+                      }
+                      if (feature['title'] == 'Settings') {
+                        return const AppSettingsScreen();
+                      }
+                      return SimpleFeaturePage(
+                        title: feature['title'] as String,
+                      );
+                    },
                   ),
                 );
               },

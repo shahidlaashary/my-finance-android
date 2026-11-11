@@ -53,7 +53,7 @@ class BudgetService {
       CREATE TABLE IF NOT EXISTS budgets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        category_id INTEGER,
+        category TEXT,
         limit_amount REAL NOT NULL,
         spent_amount REAL NOT NULL DEFAULT 0,
         period TEXT NOT NULL DEFAULT 'Monthly',
@@ -163,14 +163,14 @@ class BudgetService {
         AND UPPER(a.currency) = ?
         AND date(t.date) >= date(?)
         AND date(t.date) <= date(?)
-        AND (? IS NULL OR t.category_id = ?)
+        AND (? IS NULL OR t.category = ?)
       ''',
       [
         budget.currency.toUpperCase(),
         budget.startDate.toIso8601String(),
         budget.endDate.toIso8601String(),
-        budget.categoryId,
-        budget.categoryId,
+        budget.category,
+        budget.category,
       ],
     );
     final spent = (result.first['total'] as num).toDouble();
@@ -211,7 +211,7 @@ class BudgetService {
       'budgets',
       {
         'name': budget.name.trim(),
-        'category_id': budget.categoryId,
+        'category_id': budget.category,
         'limit_amount': budget.limitAmount,
         'period': budget.period,
         'start_date': budget.startDate.toIso8601String(),

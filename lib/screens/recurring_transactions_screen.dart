@@ -19,7 +19,7 @@ class _RecurringTransactionsScreenState
       RecurringTransactionService();
 
   List<RecurringTransactionModel> _items = [];
-  List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _wallets = [];
   List<Map<String, dynamic>> _categories = [];
 
   bool _loading = true;
@@ -35,8 +35,8 @@ class _RecurringTransactionsScreenState
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
 
-      final accounts = await db.query(
-        'accounts',
+      final wallets = await db.query(
+        'wallets',
         orderBy: 'name ASC',
       );
 
@@ -61,7 +61,7 @@ class _RecurringTransactionsScreenState
       if (!mounted) return;
 
       setState(() {
-        _accounts = accounts;
+        _wallets = wallets;
         _categories = categories;
         _items = items;
         _loading = false;
@@ -90,7 +90,7 @@ class _RecurringTransactionsScreenState
   String _accountName(int? id) {
     if (id == null) return 'Unknown account';
 
-    final matches = _accounts.where(
+    final matches = _wallets.where(
       (account) => account['id'] == id,
     );
 
@@ -102,7 +102,7 @@ class _RecurringTransactionsScreenState
   String _currency(int? id) {
     if (id == null) return '';
 
-    final matches = _accounts.where(
+    final matches = _wallets.where(
       (account) => account['id'] == id,
     );
 
@@ -193,7 +193,7 @@ class _RecurringTransactionsScreenState
   Future<void> _openForm({
     RecurringTransactionModel? existing,
   }) async {
-    if (_accounts.isEmpty) {
+    if (_wallets.isEmpty) {
       _showMessage(
         'Please create an account before adding a recurring transaction.',
         isError: true,
@@ -204,7 +204,7 @@ class _RecurringTransactionsScreenState
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => _RecurringTransactionDialog(
-        accounts: _accounts,
+        wallets: _wallets,
         categories: _categories,
         existing: existing,
       ),
@@ -306,7 +306,7 @@ class _RecurringTransactionsScreenState
                   ),
                 ),
                 Text(
-                  _money(item.amount, _currency(item.accountId)),
+                  _money(item.amount, _currency(item.walletId)),
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.bold,
@@ -319,13 +319,13 @@ class _RecurringTransactionsScreenState
             _detailRow(
               Icons.account_balance_wallet,
               'Account',
-              _accountName(item.accountId),
+              _accountName(item.walletId),
             ),
             if (isTransfer)
               _detailRow(
                 Icons.account_balance,
                 'Destination',
-                _accountName(item.toAccountId),
+                _accountName(item.toWalletId),
               ),
             _detailRow(
               Icons.repeat,
@@ -541,12 +541,12 @@ class _RecurringTransactionsScreenState
 }
 
 class _RecurringTransactionDialog extends StatefulWidget {
-  final List<Map<String, dynamic>> accounts;
+  final List<Map<String, dynamic>> wallets;
   final List<Map<String, dynamic>> categories;
   final RecurringTransactionModel? existing;
 
   const _RecurringTransactionDialog({
-    required this.accounts,
+    required this.wallets,
     required this.categories,
     this.existing,
   });
@@ -567,8 +567,8 @@ class _RecurringTransactionDialogState
   late String _type;
   late String _frequency;
 
-  int? _accountId;
-  int? _toAccountId;
+  int? _walletId;
+  int? _toWalletId;
   int? _categoryId;
 
   late DateTime _startDate;
@@ -599,26 +599,26 @@ class _RecurringTransactionDialogState
     _type = item?.type.toLowerCase() ?? 'expense';
     _frequency = item?.frequency.toLowerCase() ?? 'monthly';
 
-    _accountId = item?.accountId;
-    _toAccountId = item?.toAccountId;
+    _walletId = item?.walletId;
+    _toWalletId = item?.toWalletId;
     _categoryId = item?.categoryId;
 
     _startDate = item?.startDate ?? DateTime.now();
     _endDate = item?.endDate;
 
-    if (!_accountExists(_accountId)) {
-      _accountId = null;
+    if (!_accountExists(_walletId)) {
+      _walletId = null;
     }
 
-    if (!_accountExists(_toAccountId)) {
-      _toAccountId = null;
+    if (!_accountExists(_toWalletId)) {
+      _toWalletId = null;
     }
   }
 
   bool _accountExists(int? id) {
     if (id == null) return false;
 
-    return widget.accounts.any(
+    return widget.wallets.any(
       (account) => account['id'] == id,
     );
   }
@@ -665,32 +665,32 @@ class _RecurringTransactionDialogState
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_accountId == null) {
+    if (_walletId == null) {
       _message('Please select an account.');
       return;
     }
 
     if (_isTransfer) {
-      if (_toAccountId == null) {
+      if (_toWalletId == null) {
         _message('Please select destination account.');
         return;
       }
 
-      if (_toAccountId == _accountId) {
-        _message('Source and destination accounts must be different.');
+      if (_toWalletId == _walletId) {
+        _message('Source and destination wallets must be different.');
         return;
       }
 
-      final source = widget.accounts.firstWhere(
-        (a) => a['id'] == _accountId,
+      final source = widget.wallets.firstWhere(
+        (a) => a['id'] == _walletId,
       );
 
-      final destination = widget.accounts.firstWhere(
-        (a) => a['id'] == _toAccountId,
+      final destination = widget.wallets.firstWhere(
+        (a) => a['id'] == _toWalletId,
       );
 
       if (source['currency'] != destination['currency']) {
-        _message('Transfer accounts must have the same currency.');
+        _message('Transfer wallets must have the same currency.');
         return;
       }
     }
@@ -715,8 +715,8 @@ class _RecurringTransactionDialogState
         title: _titleController.text.trim(),
         type: _type,
         amount: amount,
-        accountId: _accountId!,
-        toAccountId: _isTransfer ? _toAccountId : null,
+        walletId: _walletId!,
+        toWalletId: _isTransfer ? _toWalletId : null,
         categoryId: _isTransfer ? null : _categoryId,
         note: _noteController.text.trim(),
         frequency: _frequency,
@@ -822,7 +822,7 @@ class _RecurringTransactionDialogState
                     setState(() {
                       _type = value;
                       _categoryId = null;
-                      _toAccountId = null;
+                      _toWalletId = null;
                     });
                   },
                 ),
@@ -847,13 +847,13 @@ class _RecurringTransactionDialogState
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: _accountId,
+                  value: _walletId,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Source Account',
                     border: OutlineInputBorder(),
                   ),
-                  items: widget.accounts.map((account) {
+                  items: widget.wallets.map((account) {
                     final id = account['id'] as int;
                     final name = account['name'].toString();
                     final currency =
@@ -865,7 +865,7 @@ class _RecurringTransactionDialogState
                     );
                   }).toList(),
                   onChanged: (value) {
-                    setState(() => _accountId = value);
+                    setState(() => _walletId = value);
                   },
                   validator: (value) =>
                       value == null ? 'Select an account.' : null,
@@ -873,13 +873,13 @@ class _RecurringTransactionDialogState
                 if (_isTransfer) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
-                    value: _toAccountId,
+                    value: _toWalletId,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Destination Account',
                       border: OutlineInputBorder(),
                     ),
-                    items: widget.accounts.map((account) {
+                    items: widget.wallets.map((account) {
                       final id = account['id'] as int;
                       final name = account['name'].toString();
                       final currency =
@@ -891,7 +891,7 @@ class _RecurringTransactionDialogState
                       );
                     }).toList(),
                     onChanged: (value) {
-                      setState(() => _toAccountId = value);
+                      setState(() => _toWalletId = value);
                     },
                   ),
                 ],

@@ -1,9 +1,10 @@
 name: Build My Finance APK
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  # Automatic build ko band rakha gaya hai; zaroorat par is block ko uncomment kar sakte hain.
+  # push:
+  #   branches:
+  #     - main
 permissions:
   contents: read
 jobs:

@@ -2992,6 +2992,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   final destinationAmountController = TextEditingController();
   final noteController = TextEditingController();
 
+  final ImagePicker _imagePicker = ImagePicker();
+
   List<Map<String, dynamic>> wallets = [];
   List<Map<String, dynamic>> transactionCategories = [];
 
@@ -2999,6 +3001,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   int? selectedDestinationWalletId;
 
   DateTime selectedDate = DateTime.now();
+  String selectedRecurring = 'None';
+  XFile? selectedNoteImage;
 
   bool saving = false;
   bool loading = true;
@@ -3037,8 +3041,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       if (wallets.isNotEmpty) {
         selectedWalletId = wallets.first['id'] as int;
         if (isTransfer && wallets.length > 1) {
-          selectedDestinationWalletId =
-              wallets[1]['id'] as int;
+          selectedDestinationWalletId = wallets[1]['id'] as int;
         }
       }
 
@@ -3060,9 +3063,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   Map<String, dynamic>? get selectedDestinationWallet {
     for (final wallet in wallets) {
-      if (wallet['id'] == selectedDestinationWalletId) {
-        return wallet;
-      }
+      if (wallet['id'] == selectedDestinationWalletId) return wallet;
     }
     return null;
   }
@@ -3074,14 +3075,345 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(13),
       ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 13),
     );
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      selectedDate = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        selectedDate.hour,
+        selectedDate.minute,
+      );
+    });
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(selectedDate),
+    );
+
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      selectedDate = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        picked.hour,
+        picked.minute,
+      );
+    });
+  }
+
+  Future<void> _showRecurringOptions() async {
+    const options = ['None', 'Daily', 'Weekly', 'Monthly', 'Yearly'];
+
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: false,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+          decoration: BoxDecoration(
+            color: Theme.of(sheetContext).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(22),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.muted.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Recurring',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...options.map(
+                (option) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(option),
+                  trailing: selectedRecurring == option
+                      ? const Icon(Icons.check_circle, color: AppColors.primary)
+                      : const Icon(Icons.circle_outlined, color: AppColors.muted),
+                  onTap: () => Navigator.pop(sheetContext, option),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected != null && mounted) {
+      setState(() => selectedRecurring = selected);
+    }
+  }
+
+  Widget _buildDateTimeRecurringBox() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 4,
+            child: InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Date', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_outlined, size: 15),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            DateFormat('dd MMM yyyy').format(selectedDate),
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
+          Expanded(
+            flex: 3,
+            child: InkWell(
+              onTap: _pickTime,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Time', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time_rounded, size: 15),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            DateFormat('h:mm a').format(selectedDate),
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
+          Expanded(
+            flex: 3,
+            child: InkWell(
+              onTap: _showRecurringOptions,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 9, top: 5, bottom: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Recurring', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(Icons.repeat_rounded, size: 15),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            selectedRecurring,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _amountField() {
+    return TextFormField(
+      controller: amountController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: decoration('Amount', icon: Icons.payments_outlined),
+      validator: (value) {
+        final amount = double.tryParse(value?.trim() ?? '');
+        if (amount == null || amount <= 0) {
+          return 'Valid amount enter karein.';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _walletField() {
+    return DropdownButtonFormField<int>(
+      value: selectedWalletId,
+      isExpanded: true,
+      decoration: decoration(
+        isTransfer ? 'From Wallet' : 'Wallet',
+        icon: Icons.account_balance_wallet_outlined,
+      ),
+      items: wallets.map((wallet) => DropdownMenuItem<int>(
+        value: wallet['id'] as int,
+        child: Text(
+          '${wallet['name']} (${wallet['currency']})',
+          overflow: TextOverflow.ellipsis,
+        ),
+      )).toList(),
+      onChanged: (value) => setState(() => selectedWalletId = value),
+    );
+  }
+
+  Widget _destinationWalletField() {
+    return DropdownButtonFormField<int>(
+      value: selectedDestinationWalletId,
+      isExpanded: true,
+      decoration: decoration(
+        'To Wallet',
+        icon: Icons.account_balance_outlined,
+      ),
+      items: wallets.where((wallet) => wallet['id'] != selectedWalletId)
+          .map((wallet) => DropdownMenuItem<int>(
+            value: wallet['id'] as int,
+            child: Text(
+              '${wallet['name']} (${wallet['currency']})',
+              overflow: TextOverflow.ellipsis,
+            ),
+          )).toList(),
+      onChanged: (value) => setState(() => selectedDestinationWalletId = value),
+    );
+  }
+
+  Widget _categoryField() {
+    return DropdownButtonFormField<String>(
+      value: transactionCategories.any(
+        (category) => category['name'] == selectedCategory,
+      ) ? selectedCategory : null,
+      isExpanded: true,
+      decoration: decoration('Category', icon: Icons.category_outlined),
+      hint: const Text('Select Category'),
+      items: transactionCategories.map((category) {
+        final iconCode = category['icon'] as int;
+        return DropdownMenuItem<String>(
+          value: category['name'] as String,
+          child: Row(
+            children: [
+              Icon(
+                IconData(iconCode, fontFamily: 'MaterialIcons'),
+                size: 19,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  category['name'] as String,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        if (value != null) setState(() => selectedCategory = value);
+      },
+    );
+  }
+
+  Widget _notesField() {
+    return TextFormField(
+      controller: noteController,
+      maxLines: 2,
+      decoration: decoration('Notes (Optional)', icon: Icons.notes_rounded).copyWith(
+        suffixIcon: IconButton(
+          tooltip: selectedNoteImage == null ? 'Attach image' : 'Change image',
+          icon: Icon(
+            selectedNoteImage == null
+                ? Icons.add_photo_alternate_outlined
+                : Icons.image_rounded,
+            color: AppColors.primary,
+          ),
+          onPressed: _pickNoteImage,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickNoteImage() async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (picked != null && mounted) {
+        setState(() => selectedNoteImage = picked);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Image select nahi ho saki: $e')),
+      );
+    }
   }
 
   Future<void> save() async {
     if (!formKey.currentState!.validate()) return;
 
     final amount = double.tryParse(amountController.text.trim());
-
     if (amount == null || amount <= 0) return;
 
     if (selectedWalletId == null) {
@@ -3097,27 +3429,19 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       if (selectedDestinationWalletId == null ||
           selectedDestinationWalletId == selectedWalletId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Different destination wallet select karein.'),
-          ),
+          const SnackBar(content: Text('Different destination wallet select karein.')),
         );
         return;
       }
 
       final sourceCurrency = selectedWallet?['currency'];
-      final destinationCurrency =
-          selectedDestinationWallet?['currency'];
+      final destinationCurrency = selectedDestinationWallet?['currency'];
 
       if (sourceCurrency != destinationCurrency) {
-        destinationAmount = double.tryParse(
-          destinationAmountController.text.trim(),
-        );
-
+        destinationAmount = double.tryParse(destinationAmountController.text.trim());
         if (destinationAmount == null || destinationAmount <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Destination amount enter karein.'),
-            ),
+            const SnackBar(content: Text('Destination amount enter karein.')),
           );
           return;
         }
@@ -3127,22 +3451,40 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     setState(() => saving = true);
 
     try {
-      await FinanceDB.instance.addTransaction(
+      final transactionId = await FinanceDB.instance.addTransaction(
         type: widget.transactionType,
         amount: amount,
         walletId: selectedWalletId!,
         toWalletId: isTransfer ? selectedDestinationWalletId : null,
         toAmount: destinationAmount,
-        category: selectedCategory,
+        category: isTransfer ? '' : selectedCategory,
         note: noteController.text.trim(),
         date: selectedDate,
       );
 
+      String? attachmentWarning;
+      if (selectedNoteImage != null) {
+        try {
+          await AttachmentService.addAttachment(
+            ownerType: AttachmentOwnerTypes.transaction,
+            ownerId: transactionId,
+            sourcePath: selectedNoteImage!.path,
+            originalFileName: selectedNoteImage!.name,
+          );
+        } catch (e) {
+          attachmentWarning = e.toString().replaceFirst('Exception: ', '');
+        }
+      }
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Transaction successfully saved.'),
+        SnackBar(
+          content: Text(
+            attachmentWarning == null
+                ? 'Transaction successfully saved.'
+                : 'Transaction saved, but image could not be attached: $attachmentWarning',
+          ),
         ),
       );
 
@@ -3152,9 +3494,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
-          ),
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
         ),
       );
 
@@ -3162,7 +3502,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     }
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     final isIncome = widget.transactionType == 'Income';
@@ -3195,107 +3534,50 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: amountController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: decoration('Amount', icon: Icons.payments_outlined),
-                    validator: (value) {
-                      final amount = double.tryParse(value?.trim() ?? '');
-                      if (amount == null || amount <= 0) {
-                        return 'Valid amount enter karein.';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: selectedWalletId,
-                    isExpanded: true,
-                    decoration: decoration(
-                      isTransfer ? 'From Wallet' : 'Wallet',
-                      icon: Icons.account_balance_wallet_outlined,
-                    ),
-                    items: wallets.map((wallet) => DropdownMenuItem<int>(
-                      value: wallet['id'] as int,
-                      child: Text(
-                        '${wallet['name']} (${wallet['currency']})',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )).toList(),
-                    onChanged: (value) => setState(() => selectedWalletId = value),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: isTransfer
-                      ? DropdownButtonFormField<int>(
-                          value: selectedDestinationWalletId,
-                          isExpanded: true,
-                          decoration: decoration(
-                            'To Wallet',
-                            icon: Icons.account_balance_outlined,
-                          ),
-                          items: wallets.where((wallet) => wallet['id'] != selectedWalletId)
-                              .map((wallet) => DropdownMenuItem<int>(
-                                value: wallet['id'] as int,
-                                child: Text(
-                                  '${wallet['name']} (${wallet['currency']})',
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              )).toList(),
-                          onChanged: (value) => setState(() => selectedDestinationWalletId = value),
-                        )
-                      : DropdownButtonFormField<String>(
-                          value: transactionCategories.any(
-                            (category) => category['name'] == selectedCategory,
-                          ) ? selectedCategory : null,
-                          isExpanded: true,
-                          decoration: decoration(
-                            'Category',
-                            icon: Icons.category_outlined,
-                          ),
-                          hint: const Text('Select Category'),
-                          items: transactionCategories.map((category) {
-                            final iconCode = category['icon'] as int;
-                            return DropdownMenuItem<String>(
-                              value: category['name'] as String,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    IconData(iconCode, fontFamily: 'MaterialIcons'),
-                                    size: 19,
-                                    color: AppColors.primary,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      category['name'] as String,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) setState(() => selectedCategory = value);
-                          },
-                        ),
-                ),
-              ],
-            ),
-
+            _buildDateTimeRecurringBox(),
+            const SizedBox(height: 14),
+            if (isTransfer) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _walletField()),
+                  const SizedBox(width: 8),
+                  Expanded(child: _destinationWalletField()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _amountField()),
+                  const SizedBox(width: 8),
+                  Expanded(child: _notesField()),
+                ],
+              ),
+            ] else ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _amountField()),
+                  const SizedBox(width: 8),
+                  Expanded(child: _walletField()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _categoryField()),
+                  const SizedBox(width: 8),
+                  Expanded(child: _notesField()),
+                ],
+              ),
+            ],
             if (isTransfer &&
                 selectedWallet != null &&
                 selectedDestinationWallet != null &&
                 selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: destinationAmountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -3305,74 +3587,30 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 ),
               ),
             ],
-
-                      const SizedBox(height: 14),
-
-                      TextFormField(
-                        controller: noteController,
-                        maxLines: 3,
-                        decoration: decoration(
-                          'Notes (Optional)',
-                          icon: Icons.notes_rounded,
-                        ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: saving ? null : save,
+              style: FilledButton.styleFrom(
+                backgroundColor: accentColor,
+                minimumSize: const Size.fromHeight(52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: saving
+                  ? const SizedBox(
+                      height: 21,
+                      width: 21,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
                       ),
-
-                      const SizedBox(height: 14),
-
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                          );
-
-                          if (picked != null) {
-                            setState(() => selectedDate = picked);
-                          }
-                        },
-                        icon: const Icon(Icons.calendar_month_outlined),
-                        label: Text(
-                          DateFormat('dd MMM yyyy').format(selectedDate),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      FilledButton(
-                        onPressed: saving ? null : save,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: accentColor,
-                          minimumSize: const Size.fromHeight(52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: saving
-                            ? const SizedBox(
-                                height: 21,
-                                width: 21,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Save Transaction',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15,
-                                ),
-                              ),
-                      ),
-                              
+                    )
+                  : const Text(
+                      'Save Transaction',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
+            ),
           ],
         ),
       ),
@@ -3380,7 +3618,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   }
 }
 
-// ============================================================
 // Transactions ki history
 // ============================================================
 

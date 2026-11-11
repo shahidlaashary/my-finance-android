@@ -378,23 +378,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     }
   }
 
-  Future<void> _changeColorTheme(String color) async {
-    try {
-      await _settings.setColorTheme(color);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$color theme applied successfully.')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save color theme: $e')),
-      );
-    }
-  }
 
   Widget _buildHeader(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -544,74 +527,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildColorOptions() {
-    const colors = {
-      'Green': Color(0xFF147D59),
-      'Blue': Color(0xFF2563EB),
-      'Purple': Color(0xFF7C3AED),
-      'Teal': Color(0xFF0F766E),
-      'Orange': Color(0xFFEA580C),
-      'Red': Color(0xFFDC2626),
-    };
-
-    return ValueListenableBuilder<String>(
-      valueListenable: _settings.colorTheme,
-      builder: (context, selectedColor, _) {
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: colors.entries.map((entry) {
-            final selected = selectedColor == entry.key;
-
-            return InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: () => _changeColorTheme(entry.key),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: selected
-                        ? entry.value
-                        : Theme.of(context).dividerColor,
-                    width: selected ? 2 : 1,
-                  ),
-                  color: entry.value.withOpacity(0.08),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 9,
-                      backgroundColor: entry.value,
-                      child: selected
-                          ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 12,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      entry.key,
-                      style: TextStyle(
-                        fontWeight:
-                            selected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
 
   Widget _buildPlannedSection({
     required BuildContext context,
@@ -702,13 +617,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             title: 'Theme Mode',
             description: 'Choose how the app should look',
             children: [_buildThemeModeOptions()],
-          ),
-          _buildActiveSection(
-            context: context,
-            icon: Icons.color_lens_rounded,
-            title: 'Color Theme',
-            description: 'Choose your preferred app color',
-            children: [_buildColorOptions()],
           ),
           _buildPlannedSection(
             context: context,

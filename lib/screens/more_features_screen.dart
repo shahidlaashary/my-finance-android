@@ -10,6 +10,7 @@ import 'recurring_transactions_screen.dart';
 import 'reports_screen.dart';
 import 'backup_restore_screen.dart';
 import 'app_lock_screen.dart';
+import 'vehicles_screen.dart';
 
 class MoreFeaturesScreen extends StatelessWidget {
   const MoreFeaturesScreen({super.key});
@@ -24,6 +25,13 @@ class MoreFeaturesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final features = [
+      _FeatureItem(
+        title: 'Vehicle Manager',
+        description: 'Track vehicles, fuel, mileage, maintenance and reminders',
+        icon: Icons.directions_car_filled_rounded,
+        color: Colors.green,
+        screen: const VehiclesScreen(),
+      ),
       _FeatureItem(
         title: 'Assets',
         description: 'Manage properties, vehicles and valuables',

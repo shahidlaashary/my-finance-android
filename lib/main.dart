@@ -1448,7 +1448,7 @@ class _MainScreenState extends State<MainScreen> {
     HomePage(),                         // 0
     AssetsPage(),                       // 1
     BudgetsScreen(),                    // 2
-    GoalsScreen(),                      // 3
+    SavingsScreen(),                      // 3
     LoansScreen(),                      // 4
     SimpleFeaturePage(title: 'Stats'),  // 5
     TransactionsScreen(),               // 6

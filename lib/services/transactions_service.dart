@@ -242,11 +242,13 @@ class TransactionsService {
     final db = await database;
     return db.rawQuery("""
       SELECT t.*, t.category AS category_name,
+        source.currency AS wallet_currency,
         COALESCE((SELECT CAST(s.setting_value AS REAL)
           FROM app_settings s
           WHERE s.setting_key = 'transaction_transfer_fee_' || t.id
           LIMIT 1), 0) AS transfer_fee
       FROM transactions t
+      LEFT JOIN wallets AS source ON source.id = t.wallet_id
       ORDER BY t.date DESC, t.id DESC
     """);
   }

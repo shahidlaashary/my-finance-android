@@ -2,7 +2,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-import '../models/loan_model.dart';
+import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
 
 class LoanService {

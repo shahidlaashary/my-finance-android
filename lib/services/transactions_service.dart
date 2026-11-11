@@ -57,6 +57,16 @@ class TransactionsService {
     final amount = (row['amount'] as num).toDouble();
     final walletId = (row['wallet_id'] as num).toInt();
     final toWalletId = (row['to_wallet_id'] as num?)?.toInt();
+    final feeRows = await txn.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: ['transaction_transfer_fee_${row['id']}'],
+      limit: 1,
+    );
+    final transferFee = feeRows.isEmpty
+        ? 0.0
+        : (double.tryParse(feeRows.first['setting_value']?.toString() ?? '') ?? 0.0);
     if (rawType == 'adjustment') {
       final delta = (row['balance_delta'] as num?)?.toDouble();
       if (delta == null) throw Exception('Adjustment balance change is missing.');
@@ -71,7 +81,7 @@ class TransactionsService {
     } else if (type == 'Transfer') {
       if (toWalletId == null) throw Exception('Transfer destination is missing.');
       final destinationAmount = (row['to_amount'] as num?)?.toDouble() ?? amount;
-      await _changeBalance(txn, walletId, amount);
+      await _changeBalance(txn, walletId, amount + transferFee);
       await _changeBalance(txn, toWalletId, -destinationAmount);
     }
   }
@@ -83,8 +93,13 @@ class TransactionsService {
     required int walletId,
     int? toWalletId,
     double? toAmount,
+    double transferFee = 0,
   }) async {
     if (!amount.isFinite || amount <= 0) throw Exception('Amount must be greater than zero.');
+    if (!transferFee.isFinite || transferFee < 0 ||
+        (type != 'Transfer' && transferFee > 0)) {
+      throw Exception('Invalid transfer fee.');
+    }
     final wallets = await txn.query(
       'wallets',
       where: 'id = ? OR id = ?',
@@ -108,8 +123,8 @@ class TransactionsService {
     final destination = destRows.first;
     final received = toAmount ?? amount;
     if (!received.isFinite || received <= 0) throw Exception('Enter a valid destination amount.');
-    if ((source['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance.');
-    await _changeBalance(txn, walletId, -amount);
+    if ((source['balance'] as num).toDouble() < amount + transferFee) throw Exception('Insufficient wallet balance.');
+    await _changeBalance(txn, walletId, -(amount + transferFee));
     await _changeBalance(txn, toWalletId, received);
   }
 
@@ -123,14 +138,16 @@ class TransactionsService {
     String? category,
     required String note,
     required String date,
+    double transferFee = 0,
   }) async {
     final db = await database;
     final normalized = _normalizeType(type);
     return db.transaction((txn) async {
       await _apply(txn, type: normalized, amount: amount, walletId: walletId,
-        toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount);
+        toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount,
+        transferFee: transferFee);
       final now = DateTime.now().toIso8601String();
-      return txn.insert('transactions', {
+      final transactionId = await txn.insert('transactions', {
         'type': normalized,
         'amount': amount,
         'wallet_id': walletId,
@@ -143,6 +160,13 @@ class TransactionsService {
         'date': date,
         'created_at': now,
       });
+      if (normalized == 'Transfer' && transferFee > 0) {
+        await txn.insert('app_settings', {
+          'setting_key': 'transaction_transfer_fee_$transactionId',
+          'setting_value': transferFee.toString(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      return transactionId;
     });
   }
 
@@ -157,15 +181,22 @@ class TransactionsService {
     String? category,
     required String note,
     required String date,
+    double? transferFee,
   }) async {
     final db = await database;
     final normalized = _normalizeType(type);
     await db.transaction((txn) async {
       final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
       if (rows.isEmpty) throw Exception('Transaction not found.');
+      final oldFeeRows = await txn.query('app_settings', columns: ['setting_value'],
+        where: 'setting_key = ?', whereArgs: ['transaction_transfer_fee_$id'], limit: 1);
+      final oldFee = oldFeeRows.isEmpty ? 0.0 :
+        (double.tryParse(oldFeeRows.first['setting_value']?.toString() ?? '') ?? 0.0);
+      final effectiveFee = normalized == 'Transfer' ? (transferFee ?? oldFee) : 0.0;
       await _reverse(txn, rows.first);
       await _apply(txn, type: normalized, amount: amount, walletId: walletId,
-        toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount);
+        toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount,
+        transferFee: effectiveFee);
       await txn.update('transactions', {
         'type': normalized,
         'amount': amount,
@@ -177,6 +208,15 @@ class TransactionsService {
         'note': note,
         'date': date,
       }, where: 'id = ?', whereArgs: [id]);
+      if (effectiveFee > 0) {
+        await txn.insert('app_settings', {
+          'setting_key': 'transaction_transfer_fee_$id',
+          'setting_value': effectiveFee.toString(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      } else {
+        await txn.delete('app_settings', where: 'setting_key = ?',
+          whereArgs: ['transaction_transfer_fee_$id']);
+      }
     });
   }
 
@@ -187,6 +227,8 @@ class TransactionsService {
       if (rows.isEmpty) throw Exception('Transaction not found.');
       await _reverse(txn, rows.first);
       await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
+      await txn.delete('app_settings', where: 'setting_key = ?',
+        whereArgs: ['transaction_transfer_fee_$id']);
     });
   }
 
@@ -198,7 +240,15 @@ class TransactionsService {
 
   static Future<List<Map<String, dynamic>>> getTransactions() async {
     final db = await database;
-    return db.rawQuery("SELECT t.*, t.category AS category_name FROM transactions t ORDER BY t.date DESC, t.id DESC");
+    return db.rawQuery("""
+      SELECT t.*, t.category AS category_name,
+        COALESCE((SELECT CAST(s.setting_value AS REAL)
+          FROM app_settings s
+          WHERE s.setting_key = 'transaction_transfer_fee_' || t.id
+          LIMIT 1), 0) AS transfer_fee
+      FROM transactions t
+      ORDER BY t.date DESC, t.id DESC
+    """);
   }
 
   static Future<List<Map<String, dynamic>>> getAccounts() async {

@@ -36,7 +36,7 @@ import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await initializeDatabasePlatform();
+  initializeDatabasePlatform();
 
   await FinanceDB.instance.init();
 

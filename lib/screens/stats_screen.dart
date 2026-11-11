@@ -4,6 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../services/reports_service.dart';
+import '../services/assets_service.dart';
+import '../services/budgets_service.dart';
+import '../services/goals_service.dart';
+import '../services/loans_service.dart';
+import '../services/transactions_service.dart';
+import '../models/assets_model.dart';
+import '../models/budgets_model.dart';
+import '../models/goals_model.dart';
+import '../models/loans_model.dart';
+import '../widgets/shared_app_bar_actions.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -26,6 +36,11 @@ class _StatsScreenState extends State<StatsScreen> {
   List<Map<String, dynamic>> _categories = [];
   Map<String, double> _totals = {'income': 0, 'expense': 0, 'net': 0};
   int _transactionCount = 0;
+  List<AssetsModel> _assets = [];
+  List<BudgetsModel> _budgets = [];
+  List<GoalsModel> _goals = [];
+  List<LoansModel> _loans = [];
+  List<Map<String, dynamic>> _wallets = [];
 
   DateTime get _startDate {
     final now = DateTime.now();
@@ -66,6 +81,11 @@ class _StatsScreenState extends State<StatsScreen> {
     }
     try {
       final currencies = await _reports.getAvailableCurrencies();
+      final assets = await AssetsService().getAssets();
+      final budgets = await BudgetsService.getBudgets();
+      final goals = await GoalsService.getGoals();
+      final loans = await LoansService.getLoans();
+      final wallets = await TransactionsService.getAccounts();
       final balances = await _reports.getBalancesByCurrency();
       final allCurrencies = <String>{
         ...currencies,
@@ -117,6 +137,11 @@ class _StatsScreenState extends State<StatsScreen> {
         _transactionCount = count;
         _trend = trend;
         _categories = categories;
+        _assets = assets;
+        _budgets = budgets;
+        _goals = goals;
+        _loans = loans;
+        _wallets = wallets;
         _loading = false;
       });
     } catch (error) {
@@ -279,14 +304,93 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
+  Widget _buildOverviewSection(String title, IconData icon, List<Widget> details) {
+    return Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [Icon(icon, color: const Color(0xFF147D59), size: 21), const SizedBox(width: 9), Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))]),
+      const SizedBox(height: 12),
+      ...details,
+    ])));
+  }
+
+  Widget _overviewLine(String label, String value) {
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(children: [
+      Expanded(child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13))),
+      const SizedBox(width: 8),
+      Text(value, textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+    ]));
+  }
+
+  List<Widget> _buildAdditionalStats() {
+    final assetRows = _assets.where((asset) => !asset.isSold).toList();
+    final assetValue = assetRows.fold<double>(0, (sum, asset) {
+      final matches = _wallets.where((w) => (w['id'] as num).toInt() == asset.walletId);
+      final currency = matches.isEmpty ? 'PKR' : (matches.first['currency']?.toString() ?? 'PKR');
+      return sum + (currency.toUpperCase() == _currency.toUpperCase() ? asset.currentValue : 0);
+    });
+    final assetPurchase = assetRows.fold<double>(0, (sum, asset) {
+      final matches = _wallets.where((w) => (w['id'] as num).toInt() == asset.walletId);
+      final currency = matches.isEmpty ? 'PKR' : (matches.first['currency']?.toString() ?? 'PKR');
+      return sum + (currency.toUpperCase() == _currency.toUpperCase() ? asset.purchasePrice : 0);
+    });
+    final currencyBudgets = _budgets.where((b) => b.currency.toUpperCase() == _currency.toUpperCase()).toList();
+    final budgetLimit = currencyBudgets.fold<double>(0, (sum, b) => sum + b.limitAmount);
+    final budgetSpent = currencyBudgets.fold<double>(0, (sum, b) => sum + b.spentAmount);
+    final currencyGoals = _goals.where((goal) {
+      if (goal.walletId == null) return _currency.toUpperCase() == 'PKR';
+      final matches = _wallets.where((w) => (w['id'] as num).toInt() == goal.walletId);
+      final currency = matches.isEmpty ? 'PKR' : (matches.first['currency']?.toString() ?? 'PKR');
+      return currency.toUpperCase() == _currency.toUpperCase();
+    }).toList();
+    final goalTarget = currencyGoals.fold<double>(0, (sum, g) => sum + g.targetAmount);
+    final goalSaved = currencyGoals.fold<double>(0, (sum, g) => sum + g.savedAmount);
+    final currencyLoans = _loans.where((loan) {
+      final matches = _wallets.where((w) => (w['id'] as num).toInt() == loan.walletId);
+      final currency = matches.isEmpty ? 'PKR' : (matches.first['currency']?.toString() ?? 'PKR');
+      return currency.toUpperCase() == _currency.toUpperCase();
+    }).toList();
+    final loanOutstanding = currencyLoans.fold<double>(0, (sum, l) => sum + l.remainingAmount);
+    final loanRepaid = currencyLoans.fold<double>(0, (sum, l) => sum + l.repaidAmount);
+    final walletCount = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == _currency.toUpperCase()).length;
+    return [
+      _buildOverviewSection('Assets', Icons.real_estate_agent_outlined, [
+        _overviewLine('Active assets', assetRows.length.toString()),
+        _overviewLine('Current asset value', '$_currency ${_money(assetValue)}'),
+        _overviewLine('Purchase value', '$_currency ${_money(assetPurchase)}'),
+      ]),
+      const SizedBox(height: 12),
+      _buildOverviewSection('Budgets', Icons.pie_chart_outline_rounded, [
+        _overviewLine('Total budgets', currencyBudgets.length.toString()),
+        _overviewLine('Budget limits', '$_currency ${_money(budgetLimit)}'),
+        _overviewLine('Spent', '$_currency ${_money(budgetSpent)}'),
+        _overviewLine('Remaining', '$_currency ${_money((budgetLimit - budgetSpent).clamp(0, double.infinity))}'),
+      ]),
+      const SizedBox(height: 12),
+      _buildOverviewSection('Goals', Icons.flag_outlined, [
+        _overviewLine('Total goals', currencyGoals.length.toString()),
+        _overviewLine('Target amount', '$_currency ${_money(goalTarget)}'),
+        _overviewLine('Saved amount', '$_currency ${_money(goalSaved)}'),
+        _overviewLine('Remaining target', '$_currency ${_money((goalTarget - goalSaved).clamp(0, double.infinity))}'),
+      ]),
+      const SizedBox(height: 12),
+      _buildOverviewSection('Loans', Icons.handshake_outlined, [
+        _overviewLine('Total loans', currencyLoans.length.toString()),
+        _overviewLine('Outstanding', '$_currency ${_money(loanOutstanding)}'),
+        _overviewLine('Repaid', '$_currency ${_money(loanRepaid)}'),
+        _overviewLine('Overdue loans', currencyLoans.where((l) => l.isOverdue).length.toString()),
+      ]),
+      const SizedBox(height: 12),
+      _buildOverviewSection('Wallets / Accounts', Icons.account_balance_wallet_outlined, [
+        _overviewLine('Accounts in $_currency', walletCount.toString()),
+        _overviewLine('Total currencies', _balances.length.toString()),
+      ]),
+    ];
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stats', style: TextStyle(fontWeight: FontWeight.w800)),
-        actions: [
-          IconButton(onPressed: _loadData, icon: const Icon(Icons.refresh_rounded), tooltip: 'Refresh'),
-        ],
+        actions: buildSharedAppBarActions(context),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -355,6 +459,8 @@ class _StatsScreenState extends State<StatsScreen> {
                         _sectionTitle('Wallet Balances'),
                         _buildBalances(),
                       ]))),
+                      const SizedBox(height: 12),
+                      ..._buildAdditionalStats(),
                     ],
                   ),
                 ),

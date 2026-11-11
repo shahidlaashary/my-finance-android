@@ -118,10 +118,14 @@ class _AppLockGateState extends State<AppLockGate>
         child: Center(child: CircularProgressIndicator()),
       );
     }
-    if (!_locked || !_enabled) return widget.child;
-
     final primary = Theme.of(context).colorScheme.primary;
-    return Material(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        if (_locked && _enabled)
+          Positioned.fill(
+            child: Material(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         child: Center(
@@ -201,6 +205,8 @@ class _AppLockGateState extends State<AppLockGate>
           ),
         ),
       ),
+    ),
+      ],
     );
   }
 }

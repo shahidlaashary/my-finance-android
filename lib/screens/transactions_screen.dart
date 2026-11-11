@@ -5,6 +5,7 @@ import '../models/finance_category.dart';
 import '../services/category_service.dart';
 import '../services/transactions_service.dart';
 import '../widgets/attachment_section.dart';
+import '../widgets/shared_app_bar_actions.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -406,18 +407,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transactions'),
-        actions: [
-          IconButton(
-            onPressed: loadTransactions,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
+        actions: buildSharedAppBarActions(context),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : transactions.isEmpty
               ? const Center(
-                  child: Text('No transactions available'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.receipt_long_outlined, size: 55, color: Color(0xFF147D59)),
+                      SizedBox(height: 12),
+                      Text('No transactions available', style: TextStyle(color: Color(0xFF7B8781))),
+                    ],
+                  ),
                 )
               : RefreshIndicator(
                   onRefresh: loadTransactions,

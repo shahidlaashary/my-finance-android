@@ -76,7 +76,7 @@ class LoanService {
         borrower_phone TEXT,
         amount REAL NOT NULL,
         remaining_amount REAL NOT NULL,
-        account_id INTEGER NOT NULL,
+        wallet_id INTEGER NOT NULL,
         lending_date TEXT NOT NULL,
         due_date TEXT,
         notes TEXT NOT NULL DEFAULT '',
@@ -90,7 +90,7 @@ class LoanService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         loan_id INTEGER NOT NULL,
         amount REAL NOT NULL,
-        account_id INTEGER NOT NULL,
+        wallet_id INTEGER NOT NULL,
         repayment_date TEXT NOT NULL,
         payment_method TEXT NOT NULL DEFAULT 'cash',
         notes TEXT NOT NULL DEFAULT '',
@@ -113,36 +113,36 @@ class LoanService {
 
   static Future<Map<String, dynamic>> _getAccount(
     Transaction txn,
-    int accountId,
+    int walletId,
   ) async {
-    final accounts = await txn.query(
-      'accounts',
+    final wallets = await txn.query(
+      'wallets',
       columns: ['id', 'balance', 'currency'],
       where: 'id = ?',
-      whereArgs: [accountId],
+      whereArgs: [walletId],
       limit: 1,
     );
 
-    if (accounts.isEmpty) {
+    if (wallets.isEmpty) {
       throw Exception('Selected account was not found.');
     }
 
-    return accounts.first;
+    return wallets.first;
   }
 
   static Future<double> _getAccountBalance(
     Transaction txn,
-    int accountId,
+    int walletId,
   ) async {
-    final account = await _getAccount(txn, accountId);
+    final account = await _getAccount(txn, walletId);
     return (account['balance'] as num).toDouble();
   }
 
   static Future<String> _getAccountCurrency(
     Transaction txn,
-    int accountId,
+    int walletId,
   ) async {
-    final account = await _getAccount(txn, accountId);
+    final account = await _getAccount(txn, walletId);
 
     return (account['currency']?.toString() ?? 'PKR')
         .trim()
@@ -151,16 +151,16 @@ class LoanService {
 
   static Future<void> _changeAccountBalance(
     Transaction txn, {
-    required int accountId,
+    required int walletId,
     required double amount,
   }) async {
     await txn.rawUpdate(
       '''
-      UPDATE accounts
+      UPDATE wallets
       SET balance = balance + ?
       WHERE id = ?
       ''',
-      [amount, accountId],
+      [amount, walletId],
     );
   }
 
@@ -179,14 +179,14 @@ class LoanService {
       );
     }
 
-    if (loan.accountId <= 0) {
+    if (loan.walletId <= 0) {
       throw Exception('Please select a valid account.');
     }
 
     return db.transaction((txn) async {
       final balance = await _getAccountBalance(
         txn,
-        loan.accountId,
+        loan.walletId,
       );
 
       if (balance < loan.amount) {
@@ -204,7 +204,7 @@ class LoanService {
 
       await _changeAccountBalance(
         txn,
-        accountId: loan.accountId,
+        walletId: loan.walletId,
         amount: -loan.amount,
       );
 
@@ -222,7 +222,7 @@ class LoanService {
       );
     }
 
-    if (repayment.accountId <= 0) {
+    if (repayment.walletId <= 0) {
       throw Exception('Please select a valid receiving account.');
     }
 
@@ -255,10 +255,10 @@ class LoanService {
       }
 
       final loanCurrency =
-          await _getAccountCurrency(txn, loan.accountId);
+          await _getAccountCurrency(txn, loan.walletId);
 
       final receivingCurrency =
-          await _getAccountCurrency(txn, repayment.accountId);
+          await _getAccountCurrency(txn, repayment.walletId);
 
       if (loanCurrency != receivingCurrency) {
         throw Exception(
@@ -288,7 +288,7 @@ class LoanService {
 
       await _changeAccountBalance(
         txn,
-        accountId: repayment.accountId,
+        walletId: repayment.walletId,
         amount: repayment.amount,
       );
 
@@ -347,13 +347,13 @@ class LoanService {
 
     final rows = await db.rawQuery('''
       SELECT
-        UPPER(TRIM(COALESCE(accounts.currency, 'PKR'))) AS currency,
+        UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))) AS currency,
         COALESCE(SUM(loans.remaining_amount), 0) AS total
       FROM loans
-      INNER JOIN accounts
-        ON accounts.id = loans.account_id
+      INNER JOIN wallets
+        ON wallets.id = loans.wallet_id
       WHERE loans.remaining_amount > 0
-      GROUP BY UPPER(TRIM(COALESCE(accounts.currency, 'PKR')))
+      GROUP BY UPPER(TRIM(COALESCE(wallets.currency, 'PKR')))
       ORDER BY currency ASC
     ''');
 
@@ -432,7 +432,7 @@ class LoanService {
 
       final loan = LoanModel.fromMap(loanRows.first);
 
-      await _getAccount(txn, repayment.accountId);
+      await _getAccount(txn, repayment.walletId);
 
       final restoredRemaining =
           (loan.remainingAmount + repayment.amount)
@@ -441,7 +441,7 @@ class LoanService {
 
       await _changeAccountBalance(
         txn,
-        accountId: repayment.accountId,
+        walletId: repayment.walletId,
         amount: -repayment.amount,
       );
 
@@ -479,7 +479,7 @@ class LoanService {
 
       final loan = LoanModel.fromMap(loanRows.first);
 
-      await _getAccount(txn, loan.accountId);
+      await _getAccount(txn, loan.walletId);
 
       final repayments = await txn.query(
         'loan_repayments',
@@ -491,11 +491,11 @@ class LoanService {
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
 
-        await _getAccount(txn, repayment.accountId);
+        await _getAccount(txn, repayment.walletId);
 
         await _changeAccountBalance(
           txn,
-          accountId: repayment.accountId,
+          walletId: repayment.walletId,
           amount: -repayment.amount,
         );
       }
@@ -503,7 +503,7 @@ class LoanService {
       // Restore the original lending amount.
       await _changeAccountBalance(
         txn,
-        accountId: loan.accountId,
+        walletId: loan.walletId,
         amount: loan.amount,
       );
 

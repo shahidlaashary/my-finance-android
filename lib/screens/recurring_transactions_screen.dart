@@ -3,7 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../models/recurring_transaction_model.dart';
-import '../services/recurring_transaction_service.dart';
+import '../services/recurring_transaction_service.dart';\nimport '../services/category_service.dart';
 
 class RecurringTransactionsScreen extends StatefulWidget {
   const RecurringTransactionsScreen({super.key});
@@ -569,7 +569,7 @@ class _RecurringTransactionDialogState
 
   int? _walletId;
   int? _toWalletId;
-  int? _categoryId;
+  String? _category;
 
   late DateTime _startDate;
   DateTime? _endDate;
@@ -601,7 +601,7 @@ class _RecurringTransactionDialogState
 
     _walletId = item?.walletId;
     _toWalletId = item?.toWalletId;
-    _categoryId = item?.categoryId;
+    _category = item?.category;
 
     _startDate = item?.startDate ?? DateTime.now();
     _endDate = item?.endDate;
@@ -717,7 +717,7 @@ class _RecurringTransactionDialogState
         amount: amount,
         walletId: _walletId!,
         toWalletId: _isTransfer ? _toWalletId : null,
-        categoryId: _isTransfer ? null : _categoryId,
+        category: _isTransfer ? null : _category,
         note: _noteController.text.trim(),
         frequency: _frequency,
         startDate: _startDate,
@@ -821,7 +821,7 @@ class _RecurringTransactionDialogState
 
                     setState(() {
                       _type = value;
-                      _categoryId = null;
+                      _category = null;
                       _toWalletId = null;
                     });
                   },

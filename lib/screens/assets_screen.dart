@@ -896,7 +896,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4, crossAxisSpacing: 7, mainAxisSpacing: 7, childAspectRatio: 0.98),
+                      crossAxisCount: 4, crossAxisSpacing: 7, mainAxisSpacing: 7, childAspectRatio: 1.85),
                     itemBuilder: (context, index) {
                       final item = categoryItems[index];
                       return InkWell(
@@ -905,8 +905,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         child: Container(
                           decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? const Color(0xFF147D59) : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 21),
-                            const SizedBox(height: 4),
+                            Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 19),
+                            const SizedBox(height: 2),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 2),
                               child: Text(item['name'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700)),

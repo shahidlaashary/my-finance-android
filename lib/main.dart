@@ -19,6 +19,7 @@ import 'screens/goals_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
+import 'widgets/shared_app_bar_actions.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam
@@ -1438,6 +1439,9 @@ class MyFinanceApp extends StatelessWidget {
           ),
         ),
       ),
+      routes: {
+        '/settings': (_) => const MoreFeaturesPage(),
+      },
       home: const MainScreen(),
     );
   }
@@ -1900,34 +1904,7 @@ class _HomePageState extends State<HomePage> {
           'My Finance',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
-        actions: [
-          // Notification bell filhal khaali state ka saada paigham dikhata hai.
-          IconButton(
-            tooltip: 'Notifications',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('No new notifications'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          // Settings ka mojooda route bilkul waisa hi rakha gaya hai.
-          IconButton(
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const MoreFeaturesPage(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
+        actions: _sharedAppBarActions(context),,
       ),
       body: RefreshIndicator(
         onRefresh: loadDashboard,
@@ -3218,149 +3195,72 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-                                Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.09),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isIncome
-                                  ? Icons.south_west_rounded
-                                  : isTransfer
-                                      ? Icons.swap_horiz_rounded
-                                      : Icons.north_east_rounded,
-                              color: accentColor,
-                              size: 27,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '${widget.transactionType} Transaction',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: accentColor,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: decoration('Amount', icon: Icons.payments_outlined),
+                    validator: (value) {
+                      final amount = double.tryParse(value?.trim() ?? '');
+                      if (amount == null || amount <= 0) {
+                        return 'Valid amount enter karein.';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    value: selectedWalletId,
+                    isExpanded: true,
+                    decoration: decoration(
+                      isTransfer ? 'From Wallet' : 'Wallet',
+                      icon: Icons.account_balance_wallet_outlined,
+                    ),
+                    items: wallets.map((wallet) => DropdownMenuItem<int>(
+                      value: wallet['id'] as int,
+                      child: Text(
+                        '${wallet['name']} (${wallet['currency']})',
+                        overflow: TextOverflow.ellipsis,
                       ),
-
-                      const SizedBox(height: 20),
-
-                      TextFormField(
-                        controller: amountController,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: decoration(
-                          'Amount',
-                          icon: Icons.payments_outlined,
-                        ),
-                        validator: (value) {
-                          final amount =
-                              double.tryParse(value?.trim() ?? '');
-
-                          if (amount == null || amount <= 0) {
-                            return 'Valid amount enter karein.';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      DropdownButtonFormField<int>(
-                        value: selectedWalletId,
-                        isExpanded: true,
-                        decoration: decoration(
-                          isTransfer ? 'From Wallet' : 'Wallet',
-                          icon: Icons.account_balance_wallet_outlined,
-                        ),
-                        items: wallets.map((wallet) {
-                          return DropdownMenuItem<int>(
-                            value: wallet['id'] as int,
-                            child: Text(
-                              '${wallet['name']} (${wallet['currency']})',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() => selectedWalletId = value);
-                        },
-                      ),
-
-                      if (isTransfer) ...[
-                        const SizedBox(height: 14),
-
-                        DropdownButtonFormField<int>(
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedWalletId = value),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: isTransfer
+                      ? DropdownButtonFormField<int>(
                           value: selectedDestinationWalletId,
                           isExpanded: true,
                           decoration: decoration(
                             'To Wallet',
                             icon: Icons.account_balance_outlined,
                           ),
-                          items: wallets
-                              .where(
-                                (wallet) =>
-                                    wallet['id'] != selectedWalletId,
-                              )
-                              .map((wallet) {
-                            return DropdownMenuItem<int>(
-                              value: wallet['id'] as int,
-                              child: Text(
-                                '${wallet['name']} (${wallet['currency']})',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(
-                              () => selectedDestinationWalletId = value,
-                            );
-                          },
-                        ),
-
-                        if (selectedWallet != null &&
-                            selectedDestinationWallet != null &&
-                            selectedWallet!['currency'] !=
-                                selectedDestinationWallet!['currency']) ...[
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: destinationAmountController,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: decoration(
-                              'Destination Amount '
-                              '(${selectedDestinationWallet!['currency']})',
-                              icon: Icons.currency_exchange_rounded,
-                            ),
-                          ),
-                        ],
-                      ],
-
-                      const SizedBox(height: 14),
-
-                      if (!isTransfer) ...[
-                        DropdownButtonFormField<String>(
+                          items: wallets.where((wallet) => wallet['id'] != selectedWalletId)
+                              .map((wallet) => DropdownMenuItem<int>(
+                                value: wallet['id'] as int,
+                                child: Text(
+                                  '${wallet['name']} (${wallet['currency']})',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )).toList(),
+                          onChanged: (value) => setState(() => selectedDestinationWalletId = value),
+                        )
+                      : DropdownButtonFormField<String>(
                           value: transactionCategories.any(
-                            (category) =>
-                                category['name'] == selectedCategory,
-                          )
-                              ? selectedCategory
-                              : null,
+                            (category) => category['name'] == selectedCategory,
+                          ) ? selectedCategory : null,
                           isExpanded: true,
                           decoration: decoration(
                             'Category',
                             icon: Icons.category_outlined,
                           ),
-                          hint: const Text('Select Category'),
+                          hint: const Text('Select'),
                           items: transactionCategories.map((category) {
                             final iconCode = category['icon'] as int;
                             return DropdownMenuItem<String>(
@@ -3368,14 +3268,11 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                               child: Row(
                                 children: [
                                   Icon(
-                                    IconData(
-                                      iconCode,
-                                      fontFamily: 'MaterialIcons',
-                                    ),
-                                    size: 19,
+                                    IconData(iconCode, fontFamily: 'MaterialIcons'),
+                                    size: 17,
                                     color: AppColors.primary,
                                   ),
-                                  const SizedBox(width: 10),
+                                  const SizedBox(width: 5),
                                   Expanded(
                                     child: Text(
                                       category['name'] as String,
@@ -3387,12 +3284,27 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                             );
                           }).toList(),
                           onChanged: (value) {
-                            if (value != null) {
-                              setState(() => selectedCategory = value);
-                            }
+                            if (value != null) setState(() => selectedCategory = value);
                           },
                         ),
-                      ],
+                ),
+              ],
+            ),
+
+            if (isTransfer &&
+                selectedWallet != null &&
+                selectedDestinationWallet != null &&
+                selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: destinationAmountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: decoration(
+                  'Destination Amount (${selectedDestinationWallet!['currency']})',
+                  icon: Icons.currency_exchange_rounded,
+                ),
+              ),
+            ],
 
                       const SizedBox(height: 14),
 

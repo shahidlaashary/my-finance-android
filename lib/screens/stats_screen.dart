@@ -560,7 +560,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F7F6),
+        backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF202A26),
         elevation: 0,
         titleSpacing: 16,

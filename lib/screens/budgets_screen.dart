@@ -115,7 +115,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     onTap: () async { final v = await showDatePicker(context: context, initialDate: startDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (v != null) setSheetState(() => startDate = v); }),
                   ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.event, color: Color(0xFF147D59)),
                     title: const Text('End Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(endDate)), trailing: const Icon(Icons.edit_calendar),
-                    onTap: () async { final v = await showDatePicker(context: context, initialDate: endDate, firstDate: startDate, lastDate: DateTime(2100); if (v != null) setSheetState(() => endDate = v); }),
+                    onTap: () async { final v = await showDatePicker(context: context, initialDate: endDate, firstDate: startDate, lastDate: DateTime(2100)); if (v != null) setSheetState(() => endDate = v); }),
                   const SizedBox(height: 12),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),

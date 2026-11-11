@@ -13,6 +13,7 @@ import 'package:open_filex/open_filex.dart';
 
 import 'services/attachment_service.dart';
 import 'models/attachment_model.dart';
+import 'screens/assets_screen.dart';
 
 // ============================================================
 // Fresh Database + Wallet Management
@@ -2083,7 +2084,7 @@ class AssetsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SimpleFeaturePage(title: 'Assets');
+    return const AssetsScreen();
   }
 }
 

@@ -19,7 +19,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   final AssetService _service = AssetService();
 
   List<AssetModel> _assets = [];
-  List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _wallets = [];
 
   Map<String, double> _currentValues = {};
   Map<String, double> _purchaseValues = {};
@@ -64,8 +64,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
       final Database db = await TransactionService.database;
 
-      final accounts = await db.query(
-        'accounts',
+      final wallets = await db.query(
+        'wallets',
         orderBy: 'name ASC',
       );
 
@@ -73,7 +73,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
       setState(() {
         _assets = assets;
-        _accounts = accounts;
+        _wallets = wallets;
         _currentValues = current;
         _purchaseValues = purchase;
         _realizedProfitLoss = realized;
@@ -87,10 +87,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
     }
   }
 
-  String _accountName(int accountId) {
-    final matches = _accounts.where(
+  String _accountName(int walletId) {
+    final matches = _wallets.where(
       (account) =>
-          (account['id'] as num).toInt() == accountId,
+          (account['id'] as num).toInt() == walletId,
     );
 
     if (matches.isEmpty) return 'Unknown account';
@@ -98,10 +98,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return matches.first['name'].toString();
   }
 
-  String _currency(int accountId) {
-    final matches = _accounts.where(
+  String _currency(int walletId) {
+    final matches = _wallets.where(
       (account) =>
-          (account['id'] as num).toInt() == accountId,
+          (account['id'] as num).toInt() == walletId,
     );
 
     if (matches.isEmpty) return 'PKR';
@@ -114,7 +114,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       ..._currentValues.keys,
       ..._purchaseValues.keys,
       ..._realizedProfitLoss.keys,
-      ..._assets.map((asset) => _currency(asset.accountId)),
+      ..._assets.map((asset) => _currency(asset.walletId)),
     };
 
     final result = currencies.toList()..sort();
@@ -151,7 +151,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       text: asset?.notes ?? '',
     );
 
-    int? selectedAccount = asset?.accountId;
+    int? selectedAccount = asset?.walletId;
 
     DateTime purchaseDate =
         asset?.purchaseDate ?? DateTime.now();
@@ -246,7 +246,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Payment Account',
                           ),
-                          items: _accounts.map((account) {
+                          items: _wallets.map((account) {
                             return DropdownMenuItem<int>(
                               value:
                                   (account['id'] as num).toInt(),
@@ -334,7 +334,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         purchasePrice: purchasePrice,
                         currentValue: currentValue,
                         purchaseDate: purchaseDate,
-                        accountId: selectedAccount!,
+                        walletId: selectedAccount!,
                         notes: notesController.text.trim(),
                         isSold: asset?.isSold ?? false,
                         saleDate: asset?.saleDate,
@@ -622,7 +622,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   }
 
   Widget _assetCard(AssetModel asset) {
-    final currency = _currency(asset.accountId);
+    final currency = _currency(asset.walletId);
 
     final profitLoss = asset.isSold && asset.salePrice != null
         ? asset.salePrice! - asset.purchasePrice
@@ -745,7 +745,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             const SizedBox(height: 7),
             _detailRow(
               'Account',
-              _accountName(asset.accountId),
+              _accountName(asset.walletId),
             ),
             const SizedBox(height: 7),
             _detailRow(

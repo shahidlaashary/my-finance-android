@@ -3558,45 +3558,34 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
             _buildDateTimeRecurringBox(),
             const SizedBox(height: 14),
             if (isTransfer) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _walletField()),
-                  const SizedBox(width: 8),
-                  Expanded(child: _destinationWalletField()),
-                ],
-              ),
-              const SizedBox(height: 12),
               _amountField(),
+              const SizedBox(height: 12),
+              _walletField(),
+              const SizedBox(height: 12),
+              _destinationWalletField(),
+              if (selectedWallet != null &&
+                  selectedDestinationWallet != null &&
+                  selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: destinationAmountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: decoration(
+                    'Destination Amount (${selectedDestinationWallet!['currency']})',
+                    icon: Icons.currency_exchange_rounded,
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               _notesField(),
             ] else ...[
               _amountField(),
               const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _walletField()),
-                  const SizedBox(width: 8),
-                  Expanded(child: _categoryField()),
-                ],
-              ),
+              _walletField(),
+              const SizedBox(height: 12),
+              _categoryField(),
               const SizedBox(height: 12),
               _notesField(),
-            ],
-            if (isTransfer &&
-                selectedWallet != null &&
-                selectedDestinationWallet != null &&
-                selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: destinationAmountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: decoration(
-                  'Destination Amount (${selectedDestinationWallet!['currency']})',
-                  icon: Icons.currency_exchange_rounded,
-                ),
-              ),
             ],
             const SizedBox(height: 20),
             FilledButton(

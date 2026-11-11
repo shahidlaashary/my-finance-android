@@ -33,8 +33,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
     if (!mounted) return;
     setState(() {
       _enabled = values[0] as bool;
-      _biometric = values[1] as bool;
       _biometricAvailable = values[2] as bool;
+      _biometric = (values[0] as bool) &&
+          (values[1] as bool) && _biometricAvailable;
       final savedTimeout = values[3] as int;
       _timeout = [0, 30, 60, 300].contains(savedTimeout) ? savedTimeout : 0;
       _loading = false;

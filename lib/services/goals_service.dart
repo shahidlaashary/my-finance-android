@@ -102,7 +102,7 @@ class GoalsService {
       throw Exception('Saved amount cannot be negative.');
     }
   }
-  /// Creates a new savings goal.
+  /// Naya savings goal banata hai.
   static Future<int> addGoal(GoalsModel goal) async {
     final db = await _database;
     _validateGoal(goal);
@@ -128,7 +128,7 @@ class GoalsService {
       );
     });
   }
-  /// Returns all savings goals.
+  /// Tamam savings goals hasil karta hai.
   static Future<List<GoalsModel>> getGoals({
     bool includeCompleted = true,
   }) async {
@@ -140,7 +140,7 @@ class GoalsService {
     );
     return rows.map(GoalsModel.fromMap).toList();
   }
-  /// Returns one savings goal by ID.
+  /// ID ki madad se aik savings goal hasil karta hai.
   static Future<GoalsModel?> getGoalById(int goalId) async {
     final db = await _database;
     final rows = await db.query(
@@ -152,7 +152,7 @@ class GoalsService {
     if (rows.isEmpty) return null;
     return GoalsModel.fromMap(rows.first);
   }
-  /// Adds money to a savings goal and deducts it from the account.
+  /// Savings goal mein raqam jama karta hai aur selected account se minus karta hai.
   static Future<int> addContribution({
     required int goalId,
     required int walletId,
@@ -222,7 +222,7 @@ class GoalsService {
       return contributionId;
     });
   }
-  /// Withdraws money from a savings goal and credits the account.
+  /// Savings goal se raqam nikal kar account mein jama karta hai.
   static Future<int> withdraw({
     required int goalId,
     required double amount,
@@ -287,7 +287,7 @@ class GoalsService {
       return withdrawalId;
     });
   }
-  /// Returns contribution and withdrawal history for a goal.
+  /// Goal ki contributions aur withdrawals ki history deta hai.
   static Future<List<Map<String, dynamic>>> getHistory(
     int goalId,
   ) async {
@@ -299,7 +299,7 @@ class GoalsService {
       orderBy: 'date DESC, id DESC',
     );
   }
-  /// Updates goal details without changing its saved amount.
+  /// Jama shuda raqam ko badle baghair goal ki details update karta hai.
   static Future<void> updateGoal(
     GoalsModel updatedGoal,
   ) async {
@@ -349,7 +349,7 @@ class GoalsService {
       );
     });
   }
-  /// Deletes a goal and reverses its contribution/withdrawal balance changes.
+  /// Goal delete karta hai aur contributions ya withdrawals ke balance changes wapas karta hai.
   static Future<void> deleteGoal(int goalId) async {
     final db = await _database;
     await db.transaction((txn) async {
@@ -388,8 +388,8 @@ class GoalsService {
       );
     });
   }
-  /// Returns saved amounts grouped by account currency.
-  /// Goals without a linked account are grouped as Unassigned.
+  /// Account currency ke mutabiq jama shuda raqam ka total deta hai.
+  /// Jin goals ke sath account link nahi, unhein Unassigned mein rakhta hai.
   static Future<Map<String, double>> getTotalSavedByCurrency() async {
     final db = await _database;
     final rows = await db.rawQuery('''
@@ -407,8 +407,8 @@ class GoalsService {
         row['currency'].toString(): (row['total'] as num).toDouble(),
     };
   }
-  /// Returns target amounts grouped by account currency.
-  /// Goals without a linked account are grouped as Unassigned.
+  /// Account currency ke mutabiq target amounts ka total deta hai.
+  /// Jin goals ke sath account link nahi, unhein Unassigned mein rakhta hai.
   static Future<Map<String, double>> getTotalTargetByCurrency() async {
     final db = await _database;
     final rows = await db.rawQuery('''
@@ -426,7 +426,7 @@ class GoalsService {
         row['currency'].toString(): (row['total'] as num).toDouble(),
     };
   }
-  /// Returns goals that have passed their target date.
+  /// Un goals ki list deta hai jin ki target date guzar chuki ho.
   static Future<List<GoalsModel>> getOverdueGoals() async {
     final db = await _database;
     final today = DateTime.now();

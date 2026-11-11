@@ -55,7 +55,7 @@ class SavingsService {
         target_amount REAL NOT NULL,
         saved_amount REAL NOT NULL DEFAULT 0,
         target_date TEXT,
-        account_id INTEGER,
+        wallet_id INTEGER,
         notes TEXT NOT NULL DEFAULT '',
         is_completed INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
@@ -65,7 +65,7 @@ class SavingsService {
       CREATE TABLE IF NOT EXISTS savings_contributions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         goal_id INTEGER NOT NULL,
-        account_id INTEGER NOT NULL,
+        wallet_id INTEGER NOT NULL,
         amount REAL NOT NULL,
         type TEXT NOT NULL DEFAULT 'contribution',
         date TEXT NOT NULL,
@@ -80,13 +80,13 @@ class SavingsService {
   }
   static Future<Map<String, dynamic>> _getAccount(
     Transaction txn,
-    int accountId,
+    int walletId,
   ) async {
     final rows = await txn.query(
-      'accounts',
+      'wallets',
       columns: ['id', 'balance', 'currency'],
       where: 'id = ?',
-      whereArgs: [accountId],
+      whereArgs: [walletId],
       limit: 1,
     );
     if (rows.isEmpty) {
@@ -96,16 +96,16 @@ class SavingsService {
   }
   static Future<void> _changeBalance(
     Transaction txn, {
-    required int accountId,
+    required int walletId,
     required double amount,
   }) async {
     await txn.rawUpdate(
       '''
-      UPDATE accounts
+      UPDATE wallets
       SET balance = balance + ?
       WHERE id = ?
       ''',
-      [amount, accountId],
+      [amount, walletId],
     );
   }
   static void _validateGoal(SavingsGoalModel goal) {
@@ -129,8 +129,8 @@ class SavingsService {
       );
     }
     return db.transaction((txn) async {
-      if (goal.accountId != null) {
-        await _getAccount(txn, goal.accountId!);
+      if (goal.walletId != null) {
+        await _getAccount(txn, goal.walletId!);
       }
       final now = DateTime.now();
       return txn.insert(
@@ -172,7 +172,7 @@ class SavingsService {
   /// Adds money to a savings goal and deducts it from the account.
   static Future<int> addContribution({
     required int goalId,
-    required int accountId,
+    required int walletId,
     required double amount,
     DateTime? date,
     String note = '',
@@ -195,9 +195,9 @@ class SavingsService {
       if (goal.isCompleted) {
         throw Exception('This savings goal is already completed.');
       }
-      final account = await _getAccount(txn, accountId);
-      if (goal.accountId != null &&
-          goal.accountId != accountId) {
+      final account = await _getAccount(txn, walletId);
+      if (goal.walletId != null &&
+          goal.walletId != walletId) {
         throw Exception(
           'Please use the account linked to this savings goal.',
         );
@@ -213,7 +213,7 @@ class SavingsService {
         'savings_contributions',
         {
           'goal_id': goalId,
-          'account_id': accountId,
+          'wallet_id': walletId,
           'amount': amount,
           'type': 'contribution',
           'date': contributionDate.toIso8601String(),
@@ -223,14 +223,14 @@ class SavingsService {
       );
       await _changeBalance(
         txn,
-        accountId: accountId,
+        walletId: walletId,
         amount: -amount,
       );
       await txn.update(
         'savings_goals',
         {
           'saved_amount': newSavedAmount,
-          'account_id': goal.accountId ?? accountId,
+          'wallet_id': goal.walletId ?? walletId,
           'is_completed': newSavedAmount >= goal.targetAmount ? 1 : 0,
         },
         where: 'id = ?',
@@ -266,12 +266,12 @@ class SavingsService {
           'Withdrawal cannot exceed the saved amount.',
         );
       }
-      if (goal.accountId == null) {
+      if (goal.walletId == null) {
         throw Exception(
           'No account is linked to this savings goal.',
         );
       }
-      await _getAccount(txn, goal.accountId!);
+      await _getAccount(txn, goal.walletId!);
       final newSavedAmount =
           (goal.savedAmount - amount).clamp(0.0, goal.targetAmount).toDouble();
       final now = DateTime.now();
@@ -279,7 +279,7 @@ class SavingsService {
         'savings_contributions',
         {
           'goal_id': goalId,
-          'account_id': goal.accountId,
+          'wallet_id': goal.walletId,
           'amount': amount,
           'type': 'withdrawal',
           'date': (date ?? now).toIso8601String(),
@@ -289,7 +289,7 @@ class SavingsService {
       );
       await _changeBalance(
         txn,
-        accountId: goal.accountId!,
+        walletId: goal.walletId!,
         amount: amount,
       );
       await txn.update(
@@ -341,7 +341,7 @@ class SavingsService {
           'Target amount cannot be less than the saved amount.',
         );
       }
-      if (updatedGoal.accountId != oldGoal.accountId) {
+      if (updatedGoal.walletId != oldGoal.walletId) {
         throw Exception(
           'The linked account cannot be changed after contributions.',
         );
@@ -383,13 +383,13 @@ class SavingsService {
         whereArgs: [goalId],
       );
       for (final row in history) {
-        final accountId = (row['account_id'] as num).toInt();
+        final walletId = (row['wallet_id'] as num).toInt();
         final amount = (row['amount'] as num).toDouble();
         final type = row['type']?.toString();
-        await _getAccount(txn, accountId);
+        await _getAccount(txn, walletId);
         await _changeBalance(
           txn,
-          accountId: accountId,
+          walletId: walletId,
           amount: type == 'withdrawal' ? -amount : amount,
         );
       }
@@ -411,11 +411,11 @@ class SavingsService {
     final db = await _database;
     final rows = await db.rawQuery('''
       SELECT
-        COALESCE(NULLIF(TRIM(accounts.currency), ''), 'Unassigned') AS currency,
+        COALESCE(NULLIF(TRIM(wallets.currency), ''), 'Unassigned') AS currency,
         COALESCE(SUM(savings_goals.saved_amount), 0) AS total
       FROM savings_goals
-      LEFT JOIN accounts
-        ON accounts.id = savings_goals.account_id
+      LEFT JOIN wallets
+        ON wallets.id = savings_goals.wallet_id
       GROUP BY currency
       ORDER BY currency ASC
     ''');
@@ -430,11 +430,11 @@ class SavingsService {
     final db = await _database;
     final rows = await db.rawQuery('''
       SELECT
-        COALESCE(NULLIF(TRIM(accounts.currency), ''), 'Unassigned') AS currency,
+        COALESCE(NULLIF(TRIM(wallets.currency), ''), 'Unassigned') AS currency,
         COALESCE(SUM(savings_goals.target_amount), 0) AS total
       FROM savings_goals
-      LEFT JOIN accounts
-        ON accounts.id = savings_goals.account_id
+      LEFT JOIN wallets
+        ON wallets.id = savings_goals.wallet_id
       GROUP BY currency
       ORDER BY currency ASC
     ''');

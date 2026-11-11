@@ -13,6 +13,7 @@ import 'package:open_filex/open_filex.dart';
 
 import 'services/attachment_service.dart';
 import 'services/app_refresh_service.dart';
+import 'services/appearance_settings_service.dart';
 import 'services/budgets_service.dart';
 import 'services/assets_service.dart';
 import 'services/loans_service.dart';
@@ -24,6 +25,7 @@ import 'screens/goals_screen.dart';
 import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
+import 'screens/vehicles_screen.dart';
 import 'screens/more_features_screen.dart' show AppSettingsScreen;
 import 'widgets/shared_app_bar_actions.dart';
 import 'widgets/app_lock_gate.dart';
@@ -42,6 +44,30 @@ Future<void> main() async {
   }
 
   await FinanceDB.instance.init();
+
+  // Appearance settings use the existing app_settings key-value table.
+  // No schema change or database migration is performed.
+  final appearance = AppearanceSettingsService.instance;
+  appearance.configure(
+    readSetting: (key) async {
+      final rows = await FinanceDB.instance.db.query(
+        'app_settings',
+        columns: ['setting_value'],
+        where: 'setting_key = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      return rows.isEmpty ? null : rows.first['setting_value']?.toString();
+    },
+    writeSetting: (key, value) async {
+      await FinanceDB.instance.db.insert(
+        'app_settings',
+        {'setting_key': key, 'setting_value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    },
+  );
+  await appearance.load();
 
   runApp(const MyFinanceApp());
 }
@@ -1459,44 +1485,78 @@ class MyFinanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'My Finance',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          surface: Colors.white,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: AppColors.text,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppearanceSettingsService.instance.themeMode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'My Finance',
+          debugShowCheckedModeBanner: false,
+          themeMode: mode,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              primary: AppColors.primary,
+              surface: Colors.white,
+            ),
+            scaffoldBackgroundColor: AppColors.background,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.text,
+              elevation: 0,
+              centerTitle: false,
+            ),
+            cardTheme: CardThemeData(
+              color: Colors.white,
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFFF8FAF9),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF8FAF9),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Brightness.dark,
+            ),
+            scaffoldBackgroundColor: const Color(0xFF101713),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF17211B),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              centerTitle: false,
+            ),
+            cardTheme: CardThemeData(
+              color: const Color(0xFF1B2720),
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF25332B),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
-        ),
-      ),
-      routes: {
-        '/settings': (_) => const MoreFeaturesPage(),
+          routes: {
+            '/settings': (_) => const MoreFeaturesPage(),
+          },
+          builder: (context, child) =>
+              AppLockGate(child: child ?? const SizedBox.shrink()),
+          home: const MainScreen(),
+        );
       },
-      builder: (context, child) =>
-          AppLockGate(child: child ?? const SizedBox.shrink()),
-      home: const MainScreen(),
     );
   }
 }
@@ -2596,6 +2656,10 @@ class MoreFeaturesPage extends StatelessWidget {
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
       {
+        'title': 'Vehicle Manager',
+        'icon': Icons.directions_car_filled_rounded,
+      },
+      {
         'title': 'Categories',
         'icon': Icons.category_outlined,
       },
@@ -2651,6 +2715,9 @@ class MoreFeaturesPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) {
+                      if (feature['title'] == 'Vehicle Manager') {
+                        return const VehiclesScreen();
+                      }
                       if (feature['title'] == 'Categories') {
                         return const CategoriesPage();
                       }

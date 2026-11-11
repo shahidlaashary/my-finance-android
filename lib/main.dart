@@ -25,6 +25,7 @@ import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'widgets/shared_app_bar_actions.dart';
+import 'widgets/app_lock_gate.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam
@@ -1492,6 +1493,8 @@ class MyFinanceApp extends StatelessWidget {
       routes: {
         '/settings': (_) => const MoreFeaturesPage(),
       },
+      builder: (context, child) =>
+          AppLockGate(child: child ?? const SizedBox.shrink()),
       home: const MainScreen(),
     );
   }

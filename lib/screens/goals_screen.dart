@@ -629,7 +629,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             if (goal.id != null) ...[
               const Divider(height: 24),
               AttachmentSection(
-                ownerType: 'savings_goal',
+                ownerType: 'goal',
                 ownerId: goal.id!,
               ),
             ],

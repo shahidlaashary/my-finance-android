@@ -493,6 +493,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   }
 
   Future<void> _export(bool excel) async {
+    final reportFuel = _rangeRows(_fuel);
+    final reportExpenses = _rangeRows(_expenses);
+    final reportReminders = _rangeRows(_reminders);
     try {
       final file = excel
         ? await VehicleExportService.exportExcel(vehicles: _vehicles, fuel: reportFuel, expenses: reportExpenses, reminders: reportReminders)

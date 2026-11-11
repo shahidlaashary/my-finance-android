@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/shared_app_bar_actions.dart';
 import '../services/transactions_service.dart';
 import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
@@ -575,13 +576,7 @@ class _LoansScreenState extends State<LoansScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Loans & Lending'),
-        actions: [
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-          ),
-        ],
+        actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addLoan,
@@ -663,9 +658,13 @@ class _LoansScreenState extends State<LoansScreen> {
                     const Padding(
                       padding: EdgeInsets.all(30),
                       child: Center(
-                        child: Text(
-                          'No loans added yet.',
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.handshake_outlined, size: 55, color: Color(0xFF147D59)),
+                            SizedBox(height: 12),
+                            Text('No loans added yet.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF7B8781))),
+                          ],
                         ),
                       ),
                     )

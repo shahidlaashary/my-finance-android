@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import '../models/savings_goal_model.dart';
-import '../services/savings_service.dart';
+import '../models/goals_model.dart';
+import '../services/goals_service.dart';
 import '../widgets/attachment_section.dart';
 class SavingsScreen extends StatefulWidget {
   const SavingsScreen({super.key});

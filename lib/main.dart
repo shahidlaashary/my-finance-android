@@ -2033,9 +2033,11 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => SimpleFeaturePage(
-              title: destinationTitle,
-            ),
+            builder: (_) => destinationTitle == 'Assets'
+                ? const AssetsScreen()
+                : SimpleFeaturePage(
+                    title: destinationTitle,
+                  ),
           ),
         );
       },

@@ -3,8 +3,6 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../main.dart';
@@ -160,14 +158,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     }
   }
 
-  Future<Directory> _getBackupDirectory() async {
-    final documents = await getApplicationDocumentsDirectory();
-    final directory = Directory(p.join(documents.path, 'My Finance Backups'));
-    await directory.create(recursive: true);
-    return directory;
-  }
-
-  // Existing ZIP backup service is reused; only its destination is changed.
+  // Reuse the existing Android save-location picker so users can choose
+  // a visible folder in the phone's internal storage.
   Future<void> _createBackup() async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
@@ -175,77 +167,24 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       final backupBytes = await BackupService.createBackup(
         database: FinanceDB.instance.db,
       );
-      final directory = await _getBackupDirectory();
-      final now = DateTime.now();
-      final fileName =
-          'My_Finance_Backup_${now.year}${_two(now.month)}${_two(now.day)}_${_two(now.hour)}${_two(now.minute)}.zip';
-      final backupFile = File(p.join(directory.path, fileName));
-      await backupFile.writeAsBytes(backupBytes, flush: true);
-
-      if (mounted) {
-        _showMessage('Backup saved in phone storage: ${backupFile.path}');
-      }
+      if (!mounted) return;
+      final savedPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save My Finance Backup to Phone Storage',
+        fileName: 'My_Finance_Backup.zip',
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+        bytes: backupBytes,
+      );
+      if (!mounted) return;
+      _showMessage(
+        savedPath == null
+            ? 'Backup save cancelled.'
+            : 'Backup saved successfully to phone storage.',
+      );
     } catch (error) {
       if (mounted) _showMessage('Backup failed: $error', isError: true);
     } finally {
       if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  String _two(int value) => value.toString().padLeft(2, '0');
-
-  Future<void> _restoreLocalBackup() async {
-    if (_isProcessing) return;
-    try {
-      final directory = await _getBackupDirectory();
-      final files = await directory
-          .list()
-          .where((entry) => entry is File && entry.path.toLowerCase().endsWith('.zip'))
-          .cast<File>()
-          .toList();
-      files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-
-      if (!mounted) return;
-      if (files.isEmpty) {
-        _showMessage('No internal backup found. Create a backup first.', isError: true);
-        return;
-      }
-
-      final selected = await showDialog<File>(
-        context: context,
-        builder: (dialogContext) => SimpleDialog(
-          title: const Text('Select Internal Backup'),
-          children: [
-            SizedBox(
-              width: double.maxFinite,
-              height: 280,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: files.length,
-                itemBuilder: (context, index) {
-                  final file = files[index];
-                  return ListTile(
-                    leading: const Icon(Icons.archive_outlined),
-                    title: Text(p.basename(file.path),
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(file.lastModifiedSync().toString()),
-                    onTap: () => Navigator.pop(dialogContext, file),
-                  );
-                },
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-          ],
-        ),
-      );
-      if (selected == null) return;
-      final bytes = await selected.readAsBytes();
-      await _restoreBackupBytes(bytes);
-    } catch (error) {
-      if (mounted) _showMessage('Unable to read internal backup: $error', isError: true);
     }
   }
 

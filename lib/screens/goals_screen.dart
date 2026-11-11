@@ -77,7 +77,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final nameController = TextEditingController(text: goal?.name ?? '');
     final targetController = TextEditingController(text: goal?.targetAmount.toString() ?? '');
     final notesController = TextEditingController(text: goal?.notes ?? '');
+    DateTime startDate = goal?.startDate ?? goal?.createdAt ?? DateTime.now();
     DateTime targetDate = goal?.targetDate ?? DateTime.now().add(const Duration(days: 30));
+    if (startDate.isAfter(targetDate)) {
+      startDate = targetDate;
+    }
     int? walletId = goal?.walletId;
     InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -120,10 +124,44 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       items: _accountItems(), onChanged: (v) => setSheetState(() => walletId = v),
                     )),
                   ]),
-                  const SizedBox(height: 8),
-                  ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
-                    title: const Text('Target Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(targetDate)), trailing: const Icon(Icons.edit_calendar),
-                    onTap: () async { final v = await showDatePicker(context: context, initialDate: targetDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (v != null) setSheetState(() => targetDate = v); }),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final v = await showDatePicker(
+                          context: context,
+                          initialDate: startDate,
+                          firstDate: DateTime(2000),
+                          lastDate: targetDate,
+                        );
+                        if (v != null) setSheetState(() => startDate = v);
+                      },
+                      child: InputDecorator(
+                        decoration: decoration('Start Date', Icons.calendar_today_outlined),
+                        child: Text(DateFormat('dd MMM yyyy').format(startDate),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      ),
+                    )),
+                    const SizedBox(width: 10),
+                    Expanded(child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final v = await showDatePicker(
+                          context: context,
+                          initialDate: targetDate,
+                          firstDate: startDate,
+                          lastDate: DateTime(2100),
+                        );
+                        if (v != null) setSheetState(() => targetDate = v);
+                      },
+                      child: InputDecorator(
+                        decoration: decoration('Target Date', Icons.event_outlined),
+                        child: Text(DateFormat('dd MMM yyyy').format(targetDate),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      ),
+                    )),
+                  ]),
                   const SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
                   const SizedBox(height: 16),
@@ -132,9 +170,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
+                        if (startDate.isAfter(targetDate)) {
+                          _message('Start date cannot be after target date.');
+                          return;
+                        }
                         try {
                           final model = GoalsModel(id: goal?.id, name: nameController.text.trim(), targetAmount: double.parse(targetController.text),
-                            savedAmount: goal?.savedAmount ?? 0, targetDate: targetDate, walletId: walletId, notes: notesController.text.trim(),
+                            savedAmount: goal?.savedAmount ?? 0, startDate: startDate, targetDate: targetDate, walletId: walletId, notes: notesController.text.trim(),
                             isCompleted: goal?.isCompleted ?? false, createdAt: goal?.createdAt ?? DateTime.now());
                           if (goal == null) await GoalsService.addGoal(model); else await GoalsService.updateGoal(model);
                           if (!sheetContext.mounted) return;
@@ -436,7 +478,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         ),
                       ),
                       Text(
-                        'Target: ${DateFormat('dd MMM yyyy').format(targetDate)}',
+                        '${DateFormat('dd MMM yyyy').format(goal.startDate ?? goal.createdAt ?? targetDate)}  →  ${DateFormat('dd MMM yyyy').format(targetDate)}',
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,

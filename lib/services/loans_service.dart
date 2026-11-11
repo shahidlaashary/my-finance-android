@@ -147,7 +147,7 @@ class LoansService {
     );
   }
 
-  /// Creates a loan and deducts the lending amount from the source account.
+  /// Loan banata hai aur di jane wali raqam source account se minus karta hai.
   static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;
     final borrower = loan.borrowerName.trim();
@@ -195,7 +195,7 @@ class LoansService {
     });
   }
 
-  /// Records a repayment in an account with the same currency as the loan.
+  /// Loan ki currency wale account mein repayment ka record banata hai.
   static Future<int> addRepayment(RepaymentModel repayment) async {
     final db = await _database;
 
@@ -279,7 +279,7 @@ class LoansService {
     });
   }
 
-  /// Returns all loans, newest first.
+  /// Tamam loans naye se purane order mein deta hai.
   static Future<List<LoansModel>> getLoans() async {
     final db = await _database;
 
@@ -291,7 +291,7 @@ class LoansService {
     return rows.map(LoansModel.fromMap).toList();
   }
 
-  /// Returns one loan by its ID.
+  /// ID ki madad se aik loan hasil karta hai.
   static Future<LoansModel?> getLoanById(int loanId) async {
     final db = await _database;
 
@@ -307,7 +307,7 @@ class LoansService {
     return LoansModel.fromMap(rows.first);
   }
 
-  /// Returns repayments belonging to a loan.
+  /// Kisi loan ki tamam repayments deta hai.
   static Future<List<RepaymentModel>> getRepayments(
     int loanId,
   ) async {
@@ -323,7 +323,7 @@ class LoansService {
     return rows.map(RepaymentModel.fromMap).toList();
   }
 
-  /// Returns outstanding loan amounts grouped by source account currency.
+  /// Source account ki currency ke mutabiq baqi loan amounts deta hai.
   static Future<Map<String, double>>
       getTotalOutstandingByCurrency() async {
     final db = await _database;
@@ -346,7 +346,7 @@ class LoansService {
     };
   }
 
-  /// Returns loans whose due date has passed and balance is outstanding.
+  /// Un loans ki list deta hai jin ki due date guzar chuki aur raqam baqi hai.
   static Future<List<LoansModel>> getOverdueLoans() async {
     final db = await _database;
 
@@ -372,7 +372,7 @@ class LoansService {
     return rows.map(LoansModel.fromMap).toList();
   }
 
-  /// Deletes a repayment and reverses its account and loan balances.
+  /// Repayment delete karta hai aur account aur loan balances ko pehli halat mein lata hai.
   static Future<void> deleteRepayment(int repaymentId) async {
     final db = await _database;
 
@@ -432,7 +432,7 @@ class LoansService {
     });
   }
 
-  /// Deletes a loan and reverses all related account balance changes.
+  /// Loan delete karta hai aur us se mutaliq account balance changes wapas karta hai.
   static Future<void> deleteLoan(int loanId) async {
     final db = await _database;
 
@@ -456,7 +456,7 @@ class LoansService {
         whereArgs: [loanId],
       );
 
-      // Reverse every repayment credit first.
+      // Sab se pehle har repayment ka jama hua amount wapas minus karta hai.
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
 
@@ -469,7 +469,7 @@ class LoansService {
         );
       }
 
-      // Restore the original lending amount.
+      // Di gayi asal loan raqam account mein wapas jama karta hai.
       await _changeAccountBalance(
         txn,
         walletId: loan.walletId,

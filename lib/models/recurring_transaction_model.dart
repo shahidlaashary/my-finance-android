@@ -5,7 +5,7 @@ class RecurringTransactionModel {
   final double amount;
   final int walletId;
   final int? toWalletId;
-  final int? categoryId;
+  final String? category;
   final String note;
   final String frequency;
   final DateTime startDate;
@@ -21,7 +21,7 @@ class RecurringTransactionModel {
     required this.amount,
     required this.walletId,
     this.toWalletId,
-    this.categoryId,
+    this.category,
     this.note = '',
     required this.frequency,
     required this.startDate,
@@ -52,7 +52,7 @@ class RecurringTransactionModel {
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       walletId: (map['wallet_id'] as num?)?.toInt() ?? 0,
       toWalletId: (map['to_wallet_id'] as num?)?.toInt(),
-      categoryId: (map['category_id'] as num?)?.toInt(),
+      category: map['category']?.toString(),
       note: (map['note'] ?? '').toString(),
       frequency: (map['frequency'] ?? 'Monthly').toString(),
       startDate: DateTime.tryParse(
@@ -80,7 +80,7 @@ class RecurringTransactionModel {
       'amount': amount,
       'wallet_id': walletId,
       'to_wallet_id': toWalletId,
-      'category_id': categoryId,
+      'category': category,
       'note': note,
       'frequency': frequency,
       'start_date': startDate.toIso8601String(),
@@ -98,7 +98,7 @@ class RecurringTransactionModel {
     double? amount,
     int? walletId,
     int? toWalletId,
-    int? categoryId,
+    String? category,
     String? note,
     String? frequency,
     DateTime? startDate,
@@ -114,7 +114,7 @@ class RecurringTransactionModel {
       amount: amount ?? this.amount,
       walletId: walletId ?? this.walletId,
       toWalletId: toWalletId ?? this.toWalletId,
-      categoryId: categoryId ?? this.categoryId,
+      category: category ?? this.category,
       note: note ?? this.note,
       frequency: frequency ?? this.frequency,
       startDate: startDate ?? this.startDate,

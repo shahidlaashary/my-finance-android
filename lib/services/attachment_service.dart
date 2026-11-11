@@ -26,6 +26,16 @@ class AttachmentOwnerTypes {
 }
 
 class AttachmentService {
+
+  // Restore se pehle is service ka database connection band karta hai.
+  static Future<void> closeDatabase() async {
+    final currentDatabase = _databaseInstance;
+    _databaseInstance = null;
+    _databaseFuture = null;
+    if (currentDatabase != null && currentDatabase.isOpen) {
+      await currentDatabase.close();
+    }
+  }
   static const String _databaseName = 'my_finance.db';
   static const String _tableName = 'finance_attachments';
 

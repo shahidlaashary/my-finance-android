@@ -12,7 +12,7 @@ class LoansScreen extends StatefulWidget {
   State<LoansScreen> createState() => _LoansScreenState();
 }
 class _LoansScreenState extends State<LoansScreen> {
-  List<LoanModel> _loans = [];
+  List<LoansModel> _loans = [];
   List<Map<String, dynamic>> _wallets = [];
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
@@ -67,9 +67,9 @@ class _LoansScreenState extends State<LoansScreen> {
     try {
       final db = await _database;
       final wallets = await db.query('wallets', orderBy: 'name ASC');
-      final loans = await LoanService.getLoans();
+      final loans = await LoansService.getLoans();
       final outstandingByCurrency =
-          await LoanService.getTotalOutstandingByCurrency();
+          await LoansService.getTotalOutstandingByCurrency();
       if (!mounted) return;
       setState(() {
         _wallets = wallets;
@@ -208,7 +208,7 @@ class _LoansScreenState extends State<LoansScreen> {
       return;
     }
     try {
-      final loan = LoanModel(
+      final loan = LoansModel(
         borrowerName: name,
         borrowerPhone: _phoneController.text.trim().isEmpty
             ? null
@@ -221,7 +221,7 @@ class _LoansScreenState extends State<LoansScreen> {
         notes: _notesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
-      await LoanService.addLoan(loan);
+      await LoansService.addLoan(loan);
       _selectedAccountId = walletId;
       await _loadData();
       _showMessage('Loan saved successfully.');
@@ -229,7 +229,7 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Could not save loan: $error');
     }
   }
-  Future<void> _addRepayment(LoanModel loan) async {
+  Future<void> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return;
     if (_wallets.isEmpty) {
       _showMessage('Please create an account first.');
@@ -337,7 +337,7 @@ class _LoansScreenState extends State<LoansScreen> {
         notes: _repaymentNotesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
-      await LoanService.addRepayment(repayment);
+      await LoansService.addRepayment(repayment);
       _selectedRepaymentAccountId = walletId;
       await _loadData();
       _showMessage('Repayment saved successfully.');
@@ -345,7 +345,7 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Could not save repayment: $error');
     }
   }
-  Future<void> _showLoanDetails(LoanModel loan) async {
+  Future<void> _showLoanDetails(LoansModel loan) async {
     if (loan.id == null) return;
     final currency = _currencyForAccount(loan.walletId);
     await showDialog<void>(
@@ -399,7 +399,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   FutureBuilder<List<RepaymentModel>>(
-                    future: LoanService.getRepayments(loan.id!),
+                    future: LoansService.getRepayments(loan.id!),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Padding(
@@ -465,7 +465,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         );
                                         if (confirm == true && repayment.id != null) {
                                           try {
-                                            await LoanService.deleteRepayment(repayment.id!);
+                                            await LoansService.deleteRepayment(repayment.id!);
                                             await AttachmentService.deleteOwnerAttachments(
                                               ownerType: AttachmentOwnerTypes.repayment,
                                               ownerId: repayment.id!,
@@ -518,7 +518,7 @@ class _LoansScreenState extends State<LoansScreen> {
       ),
     );
   }
-  Future<void> _deleteLoan(LoanModel loan) async {
+  Future<void> _deleteLoan(LoansModel loan) async {
     if (loan.id == null) return;
     final confirm = await showDialog<bool>(
       context: context,
@@ -542,8 +542,8 @@ class _LoansScreenState extends State<LoansScreen> {
     );
     if (confirm != true) return;
     try {
-      final repayments = await LoanService.getRepayments(loan.id!);
-      await LoanService.deleteLoan(loan.id!);
+      final repayments = await LoansService.getRepayments(loan.id!);
+      await LoansService.deleteLoan(loan.id!);
       await AttachmentService.deleteOwnerAttachments(
         ownerType: AttachmentOwnerTypes.loan,
         ownerId: loan.id!,

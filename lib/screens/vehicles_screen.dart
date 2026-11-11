@@ -196,9 +196,15 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   }
 
   double _latestOdometer(int vehicleId) {
-    final rows = _fuel.where((e) => e['vehicle_id'] == vehicleId).toList();
-    rows.sort((a,b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
-    return rows.isEmpty ? 0 : (rows.first['odometer'] as num?)?.toDouble() ?? 0;
+    final rows = <Map<String, dynamic>>[
+      ..._fuel.where((e) => e['vehicle_id'] == vehicleId),
+      ..._expenses.where((e) => e['vehicle_id'] == vehicleId),
+    ];
+    if (rows.isEmpty) return 0;
+    return rows.fold<double>(0, (maxValue, row) {
+      final reading = (row['odometer'] as num?)?.toDouble() ?? 0;
+      return reading > maxValue ? reading : maxValue;
+    });
   }
 
   List<Map<String, dynamic>> _dueReminders() {
@@ -593,6 +599,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
               _smallStat('Mileage', avg == null ? '—' : '${_amount(avg)} ${_mileageUnit(id)}'),
               _smallStat('Cost / KM', _costPerKm(id)),
               _smallStat('Fuel fills', '${fuel.length}'),
+              _smallStat('Fuel used', '${_amount(fuel.fold<double>(0, (s, f) => s + ((f['quantity'] as num?)?.toDouble() ?? 0)))} ${v['fuel_type'] == 'Electric' ? 'kWh' : 'L'}'),
               _smallStat('Service costs', '${expenses.length}'),
             ]),
             if ((v['notes'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(v['notes'].toString(), style: const TextStyle(color: _muted, fontSize: 12))),

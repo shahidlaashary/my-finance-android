@@ -1,4 +1,4 @@
-class SavingsGoalModel {
+class GoalsModel {
   final int? id;
   final String name;
   final double targetAmount;
@@ -9,7 +9,7 @@ class SavingsGoalModel {
   final bool isCompleted;
   final DateTime? createdAt;
 
-  const SavingsGoalModel({
+  const GoalsModel({
     this.id,
     required this.name,
     required this.targetAmount,
@@ -44,8 +44,8 @@ class SavingsGoalModel {
     return targetOnly.isBefore(dateOnly);
   }
 
-  factory SavingsGoalModel.fromMap(Map<String, dynamic> map) {
-    return SavingsGoalModel(
+  factory GoalsModel.fromMap(Map<String, dynamic> map) {
+    return GoalsModel(
       id: map['id'] as int?,
       name: (map['name'] ?? '').toString(),
       targetAmount: (map['target_amount'] as num?)?.toDouble() ?? 0,
@@ -76,7 +76,7 @@ class SavingsGoalModel {
     };
   }
 
-  SavingsGoalModel copyWith({
+  GoalsModel copyWith({
     int? id,
     String? name,
     double? targetAmount,
@@ -87,7 +87,7 @@ class SavingsGoalModel {
     bool? isCompleted,
     DateTime? createdAt,
   }) {
-    return SavingsGoalModel(
+    return GoalsModel(
       id: id ?? this.id,
       name: name ?? this.name,
       targetAmount: targetAmount ?? this.targetAmount,

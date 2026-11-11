@@ -858,7 +858,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),

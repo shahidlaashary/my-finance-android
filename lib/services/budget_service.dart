@@ -211,7 +211,7 @@ class BudgetService {
       'budgets',
       {
         'name': budget.name.trim(),
-        'category_id': budget.category,
+        'category': budget.category,
         'limit_amount': budget.limitAmount,
         'period': budget.period,
         'start_date': budget.startDate.toIso8601String(),
@@ -299,13 +299,13 @@ class BudgetService {
   }
   /// Returns budgets for a particular category.
   static Future<List<BudgetModel>> getBudgetsByCategory(
-    int categoryId,
+    String category,
   ) async {
     final db = await _database;
     final rows = await db.query(
       'budgets',
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
+      where: 'category = ?',
+      whereArgs: [category],
       orderBy: 'start_date DESC',
     );
     final result = <BudgetModel>[];

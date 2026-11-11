@@ -29,18 +29,28 @@ jobs:
         run: |
           sed -i '/<manifest/a\\    <uses-permission android:name="android.permission.USE_BIOMETRIC" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<manifest/a\\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
-      - name: Diagnostic - use stock FlutterActivity and theme
+      - name: Diagnostic - launch native Android screen without Flutter
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main -name MainActivity.kt | head -n 1)
           PACKAGE_LINE=$(grep '^package ' "$MAIN_ACTIVITY")
           cat > "$MAIN_ACTIVITY" <<EOF
           $PACKAGE_LINE
-          import io.flutter.embedding.android.FlutterActivity
+          import android.app.Activity
+          import android.os.Bundle
+          import android.widget.TextView
 
-          class MainActivity : FlutterActivity()
+          class MainActivity : Activity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  val text = TextView(this)
+                  text.text = "My Finance - Native Android Launch Test\\n\\nAndroid Activity is working.\\nFlutter engine is not started in this test."
+                  text.textSize = 20f
+                  text.gravity = android.view.Gravity.CENTER
+                  setContentView(text)
+              }
+          }
           EOF
           cat "$MAIN_ACTIVITY"
-          # Keep Flutter's generated Android theme and dependencies unchanged.
       - name: Configure Gradle download
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties

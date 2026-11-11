@@ -13,6 +13,7 @@ import 'package:open_filex/open_filex.dart';
 
 import 'services/attachment_service.dart';
 import 'services/app_refresh_service.dart';
+import 'services/appearance_settings_service.dart';
 import 'services/budgets_service.dart';
 import 'services/assets_service.dart';
 import 'services/loans_service.dart';
@@ -42,6 +43,30 @@ Future<void> main() async {
   }
 
   await FinanceDB.instance.init();
+
+  // Appearance preferences are stored in the existing app_settings table.
+  // This does not create or alter any database tables.
+  final appearance = AppearanceSettingsService.instance;
+  appearance.configure(
+    readSetting: (key) async {
+      final rows = await FinanceDB.instance.db.query(
+        'app_settings',
+        columns: ['setting_value'],
+        where: 'setting_key = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      return rows.isEmpty ? null : rows.first['setting_value']?.toString();
+    },
+    writeSetting: (key, value) async {
+      await FinanceDB.instance.db.insert(
+        'app_settings',
+        {'setting_key': key, 'setting_value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    },
+  );
+  await appearance.load();
 
   runApp(const MyFinanceApp());
 }
@@ -1454,49 +1479,181 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 // My Finance app
 // ============================================================
 
+class _AppThemePalette {
+  final Color primary;
+  final Color background;
+  final Color surface;
+  final Color text;
+  final Color input;
+  final Color onPrimary;
+  final Brightness brightness;
+
+  const _AppThemePalette({
+    required this.primary,
+    required this.background,
+    required this.surface,
+    required this.text,
+    required this.input,
+    required this.onPrimary,
+    required this.brightness,
+  });
+}
+
+_AppThemePalette _paletteFor(AppThemePreset preset) {
+  return switch (preset) {
+    AppThemePreset.emeraldGreen => const _AppThemePalette(
+        primary: Color(0xFF13845D),
+        background: Color(0xFFF1F7F3),
+        surface: Color(0xFFFFFFFF),
+        text: Color(0xFF1D3027),
+        input: Color(0xFFF5FAF7),
+        onPrimary: Colors.white,
+        brightness: Brightness.light,
+      ),
+    AppThemePreset.lightMode => const _AppThemePalette(
+        primary: Color(0xFF3568C8),
+        background: Color(0xFFF4F6FA),
+        surface: Color(0xFFFFFFFF),
+        text: Color(0xFF202938),
+        input: Color(0xFFF7F8FB),
+        onPrimary: Colors.white,
+        brightness: Brightness.light,
+      ),
+    AppThemePreset.darkMode => const _AppThemePalette(
+        primary: Color(0xFF8AB4F8),
+        background: Color(0xFF121519),
+        surface: Color(0xFF1D232A),
+        text: Color(0xFFF1F3F5),
+        input: Color(0xFF272E36),
+        onPrimary: Color(0xFF10243D),
+        brightness: Brightness.dark,
+      ),
+    AppThemePreset.midnightGold => const _AppThemePalette(
+        primary: Color(0xFFD6B45A),
+        background: Color(0xFF0D1420),
+        surface: Color(0xFF172131),
+        text: Color(0xFFF5F0E2),
+        input: Color(0xFF222D3E),
+        onPrimary: Color(0xFF17130A),
+        brightness: Brightness.dark,
+      ),
+    AppThemePreset.oceanBlue => const _AppThemePalette(
+        primary: Color(0xFF1676B8),
+        background: Color(0xFFEEF5FA),
+        surface: Color(0xFFFFFFFF),
+        text: Color(0xFF183247),
+        input: Color(0xFFF3F8FC),
+        onPrimary: Colors.white,
+        brightness: Brightness.light,
+      ),
+    AppThemePreset.carbonBlack => const _AppThemePalette(
+        primary: Color(0xFFFFA34D),
+        background: Color(0xFF101010),
+        surface: Color(0xFF1D1D1D),
+        text: Color(0xFFF2F2F2),
+        input: Color(0xFF292929),
+        onPrimary: Color(0xFF201307),
+        brightness: Brightness.dark,
+      ),
+  };
+}
+
+ThemeData _buildAppTheme(AppThemePreset preset) {
+  final palette = _paletteFor(preset);
+  final scheme = ColorScheme.fromSeed(
+    seedColor: palette.primary,
+    brightness: palette.brightness,
+  ).copyWith(
+    primary: palette.primary,
+    onPrimary: palette.onPrimary,
+    surface: palette.surface,
+    onSurface: palette.text,
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: scheme,
+    brightness: palette.brightness,
+    scaffoldBackgroundColor: palette.background,
+    canvasColor: palette.surface,
+    cardColor: palette.surface,
+    dividerColor: palette.text.withOpacity(0.10),
+    hintColor: palette.text.withOpacity(0.58),
+    appBarTheme: AppBarTheme(
+      backgroundColor: palette.surface,
+      foregroundColor: palette.text,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: false,
+    ),
+    cardTheme: CardThemeData(
+      color: palette.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: palette.input,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: palette.text.withOpacity(0.12)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: palette.primary, width: 1.5),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: palette.surface,
+      modalBackgroundColor: palette.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: palette.surface,
+      surfaceTintColor: Colors.transparent,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: palette.primary,
+        foregroundColor: palette.onPrimary,
+      ),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: palette.primary,
+      foregroundColor: palette.onPrimary,
+    ),
+  );
+}
+
 class MyFinanceApp extends StatelessWidget {
   const MyFinanceApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'My Finance',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          surface: Colors.white,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: AppColors.text,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF8FAF9),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-      routes: {
-        '/settings': (_) => const MoreFeaturesPage(),
+    return ValueListenableBuilder<AppThemePreset>(
+      valueListenable: AppearanceSettingsService.instance.themePreset,
+      builder: (context, preset, _) {
+        return MaterialApp(
+          title: 'My Finance',
+          debugShowCheckedModeBanner: false,
+          theme: _buildAppTheme(preset),
+          routes: {
+            '/settings': (_) => const MoreFeaturesPage(),
+          },
+          builder: (context, child) =>
+              AppLockGate(child: child ?? const SizedBox.shrink()),
+          home: const MainScreen(),
+        );
       },
-      builder: (context, child) =>
-          AppLockGate(child: child ?? const SizedBox.shrink()),
-      home: const MainScreen(),
     );
   }
 }

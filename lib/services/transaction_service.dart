@@ -80,14 +80,14 @@ class TransactionService {
       SELECT name
       FROM sqlite_master
       WHERE type = 'table'
-      AND name IN ('accounts', 'transactions')
+      AND name IN ('wallets', 'transactions')
     ''');
 
     final existingTables = tables
         .map((row) => row['name'] as String)
         .toSet();
 
-    if (!existingTables.contains('accounts')) {
+    if (!existingTables.contains('wallets')) {
       throw Exception(
         'Accounts table is missing. Initialize FinanceDB first.',
       );
@@ -132,16 +132,16 @@ class TransactionService {
 
   static Future<void> _changeBalance(
     Transaction txn,
-    int accountId,
+    int walletId,
     double change,
   ) async {
     final result = await txn.rawUpdate(
-      'UPDATE accounts SET balance = balance + ? WHERE id = ?',
-      [change, accountId],
+      'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+      [change, walletId],
     );
 
     if (result == 0) {
-      throw Exception('Account not found: $accountId');
+      throw Exception('Account not found: $walletId');
     }
   }
 
@@ -151,20 +151,20 @@ class TransactionService {
   ) async {
     final type = _normalizeType(item['type'] as String);
     final amount = (item['amount'] as num).toDouble();
-    final accountId = item['account_id'] as int;
-    final toAccountId = item['to_account_id'] as int?;
+    final walletId = item['wallet_id'] as int;
+    final toWalletId = item['to_wallet_id'] as int?;
 
     if (type == 'income') {
-      await _changeBalance(txn, accountId, -amount);
+      await _changeBalance(txn, walletId, -amount);
     } else if (type == 'expense') {
-      await _changeBalance(txn, accountId, amount);
+      await _changeBalance(txn, walletId, amount);
     } else if (type == 'transfer') {
-      if (toAccountId == null) {
+      if (toWalletId == null) {
         throw Exception('Transfer destination is missing.');
       }
 
-      await _changeBalance(txn, accountId, amount);
-      await _changeBalance(txn, toAccountId, -amount);
+      await _changeBalance(txn, walletId, amount);
+      await _changeBalance(txn, toWalletId, -amount);
     }
   }
 
@@ -172,8 +172,8 @@ class TransactionService {
     Transaction txn, {
     required String type,
     required double amount,
-    required int accountId,
-    int? toAccountId,
+    required int walletId,
+    int? toWalletId,
   }) async {
     final normalizedType = _normalizeType(type);
 
@@ -182,36 +182,36 @@ class TransactionService {
     }
 
     if (normalizedType == 'income') {
-      await _changeBalance(txn, accountId, amount);
+      await _changeBalance(txn, walletId, amount);
       return;
     }
 
     if (normalizedType == 'expense') {
-      await _changeBalance(txn, accountId, -amount);
+      await _changeBalance(txn, walletId, -amount);
       return;
     }
 
-    if (toAccountId == null || toAccountId == accountId) {
+    if (toWalletId == null || toWalletId == walletId) {
       throw Exception('Select a different destination account.');
     }
 
-    final accounts = await txn.query(
-      'accounts',
+    final wallets = await txn.query(
+      'wallets',
       columns: ['id', 'currency', 'balance'],
       where: 'id IN (?, ?)',
-      whereArgs: [accountId, toAccountId],
+      whereArgs: [walletId, toWalletId],
     );
 
-    if (accounts.length != 2) {
+    if (wallets.length != 2) {
       throw Exception('Transfer account not found.');
     }
 
-    final source = accounts.firstWhere(
-      (account) => account['id'] == accountId,
+    final source = wallets.firstWhere(
+      (account) => account['id'] == walletId,
     );
 
-    final destination = accounts.firstWhere(
-      (account) => account['id'] == toAccountId,
+    final destination = wallets.firstWhere(
+      (account) => account['id'] == toWalletId,
     );
 
     if (source['currency'] != destination['currency']) {
@@ -227,8 +227,8 @@ class TransactionService {
       throw Exception('Insufficient account balance.');
     }
 
-    await _changeBalance(txn, accountId, -amount);
-    await _changeBalance(txn, toAccountId, amount);
+    await _changeBalance(txn, walletId, -amount);
+    await _changeBalance(txn, toWalletId, amount);
   }
 
   static Future<void> _validateCategory(
@@ -255,8 +255,8 @@ class TransactionService {
   static Future<int> addTransaction({
     required String type,
     required double amount,
-    required int accountId,
-    int? toAccountId,
+    required int walletId,
+    int? toWalletId,
     int? categoryId,
     required String note,
     required String date,
@@ -279,16 +279,16 @@ class TransactionService {
         txn,
         type: normalizedType,
         amount: amount,
-        accountId: accountId,
-        toAccountId: toAccountId,
+        walletId: walletId,
+        toWalletId: toWalletId,
       );
 
       return txn.insert('transactions', {
         'type': normalizedType,
         'amount': amount,
-        'account_id': accountId,
-        'to_account_id':
-            normalizedType == 'transfer' ? toAccountId : null,
+        'wallet_id': walletId,
+        'to_wallet_id':
+            normalizedType == 'transfer' ? toWalletId : null,
         'category_id':
             normalizedType == 'transfer' ? null : categoryId,
         'note': note,
@@ -301,8 +301,8 @@ class TransactionService {
     required int id,
     required String type,
     required double amount,
-    required int accountId,
-    int? toAccountId,
+    required int walletId,
+    int? toWalletId,
     int? categoryId,
     required String note,
     required String date,
@@ -338,8 +338,8 @@ class TransactionService {
         txn,
         type: normalizedType,
         amount: amount,
-        accountId: accountId,
-        toAccountId: toAccountId,
+        walletId: walletId,
+        toWalletId: toWalletId,
       );
 
       await txn.update(
@@ -347,9 +347,9 @@ class TransactionService {
         {
           'type': normalizedType,
           'amount': amount,
-          'account_id': accountId,
-          'to_account_id':
-              normalizedType == 'transfer' ? toAccountId : null,
+          'wallet_id': walletId,
+          'to_wallet_id':
+              normalizedType == 'transfer' ? toWalletId : null,
           'category_id':
               normalizedType == 'transfer' ? null : categoryId,
           'note': note,
@@ -439,7 +439,7 @@ class TransactionService {
     final db = await database;
 
     return db.query(
-      'accounts',
+      'wallets',
       columns: ['id', 'name', 'currency', 'balance'],
       orderBy: 'name COLLATE NOCASE ASC',
     );

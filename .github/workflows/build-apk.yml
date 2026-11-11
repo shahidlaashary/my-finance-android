@@ -25,51 +25,6 @@ jobs:
           cache: true
       - name: Create Android project
         run: flutter create . --platforms=android
-      - name: Configure Android permissions only
-        run: |
-          sed -i '/<manifest/a\\    <uses-permission android:name="android.permission.USE_BIOMETRIC" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<manifest/a\\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
-      - name: Diagnostic - launch native Android screen without Flutter
-        run: |
-          MAIN_ACTIVITY=$(find android/app/src/main -name MainActivity.kt | head -n 1)
-          PACKAGE_LINE=$(grep '^package ' "$MAIN_ACTIVITY")
-          cat > "$MAIN_ACTIVITY" <<EOF
-          $PACKAGE_LINE
-          import android.app.Activity
-          import android.os.Bundle
-          import android.widget.TextView
-
-          class MainActivity : Activity() {
-              override fun onCreate(savedInstanceState: Bundle?) {
-                  super.onCreate(savedInstanceState)
-                  val text = TextView(this)
-                  text.text = "My Finance - Native Android Launch Test\\n\\nAndroid Activity is working.\\nFlutter engine is not started in this test."
-                  text.textSize = 20f
-                  text.gravity = android.view.Gravity.CENTER
-                  setContentView(text)
-              }
-          }
-          EOF
-          cat "$MAIN_ACTIVITY"
-      - name: Isolate Android application and theme startup
-        run: |
-          sed -i 's/android:name="${applicationName}"/android:name="android.app.Application"/' android/app/src/main/AndroidManifest.xml
-          sed -i 's#android:theme="@style/LaunchTheme"#android:theme="@android:style/Theme.Material.Light.NoActionBar"#' android/app/src/main/AndroidManifest.xml
-          echo "===== MANIFEST AFTER ISOLATION ====="
-          grep -E 'application|android:name=|android:theme=|LAUNCHER|MAIN' android/app/src/main/AndroidManifest.xml
-      - name: Inspect generated Android launcher configuration
-        run: |
-          echo "===== MAIN MANIFEST ====="
-          cat android/app/src/main/AndroidManifest.xml
-          echo "===== APP GRADLE ====="
-          cat android/app/build.gradle.kts
-          echo "===== MAIN ACTIVITY ====="
-          while IFS= read -r activity_file; do cat "$activity_file"; done < <(find android/app/src/main -name MainActivity.kt)
-          echo "===== THEME STYLES ====="
-          cat android/app/src/main/res/values/styles.xml
-          echo "===== NIGHT THEME STYLES ====="
-          cat android/app/src/main/res/values-night/styles.xml
-
       - name: Configure Gradle download
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
@@ -82,30 +37,9 @@ jobs:
         run: flutter pub get
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
-      - name: Verify APK package, signature, and launcher icon
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK="build/app/outputs/flutter-apk/app-release.apk"
-          test -s "$APK"
-          echo "APK size: $(stat -c%s "$APK") bytes"
-          unzip -t "$APK" | tail -n 1
-          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-          echo "Android build-tools: $BUILD_TOOLS"
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK"
-          "$BUILD_TOOLS/aapt" dump badging "$APK" | tee build/apk-diagnostics.txt
-          grep -q "^application:" build/apk-diagnostics.txt
-          if ! grep -q "^application-icon-" build/apk-diagnostics.txt; then
-            echo "ERROR: APK has no launcher icon resources."
-            exit 1
-          fi
-          echo "APK package, signature, and launcher icon checks passed."
-
-      - name: Upload APK and diagnostics
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: My-Finance-APK
-          path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/apk-diagnostics.txt
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error

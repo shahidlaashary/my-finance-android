@@ -44,6 +44,12 @@ jobs:
               sed -i '/dependencies {/a\    implementation "androidx.appcompat:appcompat:1.7.0"' "$APP_GRADLE"
             fi
           fi
+      - name: Diagnostic - skip native plugin registration
+        run: |
+          MAIN_ACTIVITY=$(find android/app/src/main -name MainActivity.kt | head -n 1)
+          PACKAGE_LINE=$(grep '^package ' "$MAIN_ACTIVITY")
+          printf '%s\nimport io.flutter.embedding.android.FlutterFragmentActivity\nimport io.flutter.embedding.engine.FlutterEngine\n\nclass MainActivity : FlutterFragmentActivity() {\n    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {\n        // Diagnostic only: intentionally skip automatic plugin registration.\n    }\n}\n' "$PACKAGE_LINE" > "$MAIN_ACTIVITY"
+          cat "$MAIN_ACTIVITY"
       - name: Configure Gradle download
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties

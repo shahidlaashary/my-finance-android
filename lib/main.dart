@@ -1701,7 +1701,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = keyboardHeight > 0
         ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
-        : screenHeight * 0.82;
+        : screenHeight * 0.70;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 220),

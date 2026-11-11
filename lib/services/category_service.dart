@@ -1,27 +1,16 @@
-
-import 'package:path/path.dart' as p;
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
-
 import '../models/finance_category.dart';
 
 class CategoryService {
-  static const int _databaseVersion = 3;
-
   static Database? _database;
   static Future<Database>? _databaseFuture;
 
   static Future<Database> get database async {
-    if (_database != null && _database!.isOpen) {
-      return _database!;
-    }
-
-    if (_databaseFuture != null) {
-      return _databaseFuture!;
-    }
-
+    if (_database != null && _database!.isOpen) return _database!;
+    if (_databaseFuture != null) return _databaseFuture!;
     final future = _openDatabase();
     _databaseFuture = future;
-
     try {
       _database = await future;
       return _database!;
@@ -31,129 +20,76 @@ class CategoryService {
   }
 
   static Future<Database> _openDatabase() async {
-    final dbPath = await getDatabasesPath();
-
-    return openDatabase(
-      p.join(dbPath, 'my_finance.db'),
-    );
-  }
-
-  static Future<void> _ensureCategoryTable(
-    DatabaseExecutor db,
-  ) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS finance_categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        icon TEXT NOT NULL DEFAULT 'category',
-        parent_id INTEGER,
-        is_deleted INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-
-    final tables = await db.rawQuery('''
-      SELECT name
-      FROM sqlite_master
-      WHERE type = 'table'
-      AND name = 'transactions'
-    ''');
-
-    if (tables.isNotEmpty) {
-      final columns = await db.rawQuery(
-        'PRAGMA table_info(transactions)',
-      );
-
-      final hasCategoryColumn = columns.any(
-        (column) => column['name'] == 'category_id',
-      );
-
-      if (!hasCategoryColumn) {
-        await db.execute(
-          'ALTER TABLE transactions ADD COLUMN category_id INTEGER',
-        );
-      }
-
-      await db.execute('''
-        CREATE INDEX IF NOT EXISTS idx_transactions_category_id
-        ON transactions(category_id)
-      ''');
-    }
+    final path = await getDatabasesPath();
+    return openDatabase('$path/my_finance.db');
   }
 
   static Future<void> closeDatabase() async {
     final pending = _databaseFuture;
-
-    if (pending != null) {
-      try {
-        await pending;
-      } catch (_) {}
-    }
-
+    if (pending != null) { try { await pending; } catch (_) {} }
     final db = _database;
     _database = null;
     _databaseFuture = null;
+    if (db != null && db.isOpen) await db.close();
+  }
 
-    if (db != null && db.isOpen) {
-      await db.close();
+  static String _key(String type) =>
+      type.trim().toLowerCase() == 'income' ? 'income_categories' : 'expense_categories';
+
+  static Future<List<FinanceCategory>> getCategories(String type, {int? parentId}) async {
+    if (parentId != null) return [];
+    final db = await database;
+    final rows = await db.query('app_settings', columns: ['setting_value'],
+      where: 'setting_key = ?', whereArgs: [_key(type)], limit: 1);
+    if (rows.isEmpty) return [];
+    try {
+      final decoded = jsonDecode((rows.first['setting_value'] ?? '[]').toString());
+      if (decoded is! List) return [];
+      return decoded.whereType<Map>().map((item) {
+        final map = Map<String, dynamic>.from(item);
+        return FinanceCategory(
+          name: (map['name'] ?? '').toString(),
+          type: type.trim().toLowerCase(),
+          icon: (map['icon'] ?? 'category').toString(),
+        );
+      }).where((item) => item.name.isNotEmpty).toList();
+    } catch (_) {
+      return [];
     }
   }
 
-  static Future<int> addCategory(FinanceCategory category) async {
+  static Future<void> _save(String type, List<FinanceCategory> categories) async {
     final db = await database;
-
-    final data = category.toMap()..remove('id');
-
-    data['type'] = (data['type'] as String).trim().toLowerCase();
-
-    return db.insert('finance_categories', data);
+    final values = categories.map((item) => {
+      'name': item.name,
+      'icon': int.tryParse(item.icon) ?? 0,
+    }).toList();
+    await db.insert('app_settings', {
+      'setting_key': _key(type),
+      'setting_value': jsonEncode(values),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  static Future<List<FinanceCategory>> getCategories(
-    String type, {
-    int? parentId,
-  }) async {
-    final db = await database;
-
-    final normalizedType = type.trim().toLowerCase();
-
-    final rows = await db.query(
-      'finance_categories',
-      where: parentId == null
-          ? 'LOWER(type) = ? AND parent_id IS NULL AND is_deleted = 0'
-          : 'LOWER(type) = ? AND parent_id = ? AND is_deleted = 0',
-      whereArgs: parentId == null
-          ? [normalizedType]
-          : [normalizedType, parentId],
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
-
-    return rows.map(FinanceCategory.fromMap).toList();
+  static Future<int> addCategory(FinanceCategory category) async {
+    final items = await getCategories(category.type);
+    if (items.any((item) => item.name.toLowerCase() == category.name.toLowerCase())) {
+      throw Exception('Category already exists.');
+    }
+    items.add(category);
+    await _save(category.type, items);
+    return items.length;
   }
 
   static Future<int> updateCategory(FinanceCategory category) async {
-    final db = await database;
-
-    final data = category.toMap()..remove('id');
-
-    data['type'] = (data['type'] as String).trim().toLowerCase();
-
-    return db.update(
-      'finance_categories',
-      data,
-      where: 'id = ?',
-      whereArgs: [category.id],
-    );
+    final items = await getCategories(category.type);
+    final index = items.indexWhere((item) => item.name == category.name);
+    if (index < 0) throw Exception('Category not found.');
+    items[index] = category;
+    await _save(category.type, items);
+    return 1;
   }
 
   static Future<int> deleteCategory(int id) async {
-    final db = await database;
-
-    return db.update(
-      'finance_categories',
-      {'is_deleted': 1},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    throw UnsupportedError('Categories are stored by name in app_settings; delete by category name instead.');
   }
 }

@@ -805,13 +805,13 @@ class _WalletsPageState extends State<WalletsPage> {
                         child: Stack(
                           children: [
                             Positioned(
-                              left: 0, right: 0, bottom: 0, height: 17,
+                              left: 0, right: 0, bottom: 0, height: 27,
                               child: CustomPaint(
                                 painter: _WalletWavePainter(AppColors.primary),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 6, 6, 15),
+                              padding: const EdgeInsets.fromLTRB(8, 6, 4, 7),
                               child: Column(
                                 children: [
                                   Row(
@@ -843,11 +843,13 @@ class _WalletsPageState extends State<WalletsPage> {
                                           ],
                                         ),
                                       ),
-                                      PopupMenuButton<String>(
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(minWidth: 145),
-                                        icon: const Icon(Icons.more_vert_rounded),
-                                        iconSize: 17,
+                                      SizedBox(
+                                        width: 22,
+                                        child: PopupMenuButton<String>(
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 145),
+                                          icon: const Icon(Icons.more_vert_rounded),
+                                          iconSize: 17,
                                         onSelected: (value) {
                                           if (value == 'edit') openWalletForm(wallet);
                                           else if (value == 'delete') deleteWallet(wallet);
@@ -858,28 +860,33 @@ class _WalletsPageState extends State<WalletsPage> {
                                           PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
                                             SizedBox(width: 9), Text('Delete Wallet')])),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
                                   const Spacer(),
                                   Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      const Text('BALANCE', style: TextStyle(fontSize: 8,
-                                        fontWeight: FontWeight.w700, color: AppColors.muted)),
-                                      const SizedBox(width: 4),
+                                      const SizedBox(
+                                        width: 47,
+                                        child: Text('BALANCE', textAlign: TextAlign.left,
+                                          style: TextStyle(fontSize: 8,
+                                            fontWeight: FontWeight.w800, color: Colors.white)),
+                                      ),
                                       Expanded(
                                         child: Text(formatMoney(balance, currency),
                                           maxLines: 1, textAlign: TextAlign.end,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(fontSize: 12,
-                                            fontWeight: FontWeight.w900, color: AppColors.primary,
+                                            fontWeight: FontWeight.w900, color: Colors.white,
                                             letterSpacing: -0.3)),
                                       ),
                                       if (excluded) ...[
                                         const SizedBox(width: 3),
                                         const Icon(Icons.visibility_off_outlined,
-                                          size: 11, color: AppColors.muted),
+                                          size: 11, color: Colors.white),
                                       ],
                                     ],
                                   ),

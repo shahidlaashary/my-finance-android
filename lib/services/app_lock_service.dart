@@ -41,13 +41,16 @@ class AppLockService {
   }
 
   static Future<bool> isEnabled() async =>
-      (await _getSetting('app_lock_enabled')) == '1';
+      (await _getSetting('app_lock_enabled')) == '1' && await hasPin();
 
   static Future<void> setEnabled(bool enabled) =>
       _saveSetting('app_lock_enabled', enabled ? '1' : '0');
 
-  static Future<bool> hasPin() async =>
-      (await _secureStorage.read(key: _pinHashKey)) != null;
+  static Future<bool> hasPin() async {
+    final hash = await _secureStorage.read(key: _pinHashKey);
+    final salt = await _secureStorage.read(key: _pinSaltKey);
+    return hash != null && salt != null;
+  }
 
   static Future<void> setPin(String pin) async {
     if (!RegExp(r'^\d{4,8}$').hasMatch(pin)) {

@@ -824,14 +824,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
     final purchaseTotal = _purchaseValues[primaryCurrency] ?? 0;
     final unrealized = currentTotal - purchaseTotal;
     final categoryItems = <Map<String, dynamic>>[
+      {'name': 'Business', 'icon': Icons.storefront_outlined},
+      {'name': 'Electronics', 'icon': Icons.devices_other_outlined},
+      {'name': 'Gold', 'icon': Icons.diamond_outlined},
+      {'name': 'Investments', 'icon': Icons.trending_up_rounded},
+      {'name': 'Jewellery', 'icon': Icons.watch_outlined},
+      {'name': 'Livestock', 'icon': Icons.pets_outlined},
       {'name': 'Property', 'icon': Icons.home_work_outlined},
       {'name': 'Vehicles', 'icon': Icons.directions_car_outlined},
-      {'name': 'Gold', 'icon': Icons.diamond_outlined},
-      {'name': 'Jewellery', 'icon': Icons.watch_outlined},
-      {'name': 'Electronics', 'icon': Icons.devices_other_outlined},
-      {'name': 'Investments', 'icon': Icons.trending_up_rounded},
-      {'name': 'Livestock', 'icon': Icons.pets_outlined},
-      {'name': 'Business', 'icon': Icons.storefront_outlined},
     ];
 
     return Scaffold(

@@ -1763,14 +1763,23 @@ class PlusActionSheet extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
+        final navigator = Navigator.of(context);
+        final parentContext = navigator.context;
         Navigator.pop(context);
-                Navigator.of(context).push(
-          MaterialPageRoute(
+        Future<void>.delayed(Duration.zero, () {
+          showModalBottomSheet<bool>(
+            context: parentContext,
+            isScrollControlled: true,
+            useSafeArea: true,
+            isDismissible: true,
+            enableDrag: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             builder: (_) => TransactionEntryForm(
               transactionType: type,
             ),
-          ),
-        );
+          );
+        });
       },
       child: Container(
         padding: const EdgeInsets.all(15),
@@ -3177,26 +3186,83 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
             ? AppColors.primary
             : AppColors.expense;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Add ${widget.transactionType}',
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : wallets.isEmpty
-              ? const Center(
-                  child: Text('Pehle ek wallet add karein.'),
-                )
-              : Form(
-                  key: formKey,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Container(
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardIsOpen = keyboardHeight > 0;
+    final maxSheetHeight = keyboardIsOpen
+        ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
+        : screenHeight * 0.78;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxSheetHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : wallets.isEmpty
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text('Pehle ek wallet add karein.'),
+                          ),
+                        )
+                      : Form(
+                          key: formKey,
+                          child: SingleChildScrollView(
+                            primary: false,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            physics: const ClampingScrollPhysics(),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Center(
+                                  child: Container(
+                                    width: 38,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFD9E0DC),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Add ${widget.transactionType}',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.text,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: saving
+                                          ? null
+                                          : () => Navigator.pop(context, false),
+                                      icon: const Icon(Icons.close_rounded),
+                                      color: AppColors.muted,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.09),
@@ -3438,9 +3504,14 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                                 ),
                               ),
                       ),
-                    ],
-                  ),
-                ),
+                              ],
+                            ),
+                          ),
+                        ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -158,7 +158,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
         return;
       }
 
-      // Pehle nayi file save hogi.
+      // Sab se pehle nayi file save hogi.
       final newAttachment = await AttachmentService.addAttachment(
         ownerType: widget.ownerType,
         ownerId: widget.ownerId,
@@ -166,7 +166,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
         originalFileName: file.name,
       );
 
-      // Nayi file save hone ke baad purani file delete hogi.
+      // Nayi file save ho jane ke baad purani file delete hogi.
       if (oldAttachment.id != null) {
         await AttachmentService.deleteAttachment(
           oldAttachment.id!,

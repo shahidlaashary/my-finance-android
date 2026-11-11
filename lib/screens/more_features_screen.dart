@@ -63,7 +63,7 @@ class MoreFeaturesScreen extends StatelessWidget {
         description: 'Track savings targets and contributions',
         icon: Icons.savings_rounded,
         color: Colors.green,
-        screen: SavingsScreen(),
+        screen: GoalsScreen(),
       ),
       _FeatureItem(
         title: 'Settings',

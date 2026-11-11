@@ -25,14 +25,7 @@ class CategoryService {
     return openDatabase(p.join(path, 'my_finance.db'));
   }
 
-  static Future<void> closeDatabase() async {
-    final pending = _databaseFuture;
-    if (pending != null) { try { await pending; } catch (_) {} }
-    final db = _database;
-    _database = null;
-    _databaseFuture = null;
-    if (db != null && db.isOpen) await db.close();
-  }
+
 
   static String _key(String type) =>
       type.trim().toLowerCase() == 'income' ? 'income_categories' : 'expense_categories';

@@ -176,7 +176,10 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   double _distanceFor(int vehicleId) {
     final rows = _fuel.where((e) => e['vehicle_id'] == vehicleId).toList()
-      ..sort((a,b) => (a['date'] ?? '').toString().compareTo((b['date'] ?? '').toString()));
+      ..sort((a,b) {
+        final byDate = (a['date'] ?? '').toString().compareTo((b['date'] ?? '').toString());
+        return byDate != 0 ? byDate : ((a['id'] as num?)?.toInt() ?? 0).compareTo((b['id'] as num?)?.toInt() ?? 0);
+      });
     if (rows.length < 2) return 0;
     final first = (rows.first['odometer'] as num?)?.toDouble() ?? 0;
     final last = (rows.last['odometer'] as num?)?.toDouble() ?? 0;
@@ -184,25 +187,24 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   }
 
   double? _averageMileage(int vehicleId) {
-    final rows = _fuel.where((e) => e['vehicle_id'] == vehicleId && e['full_tank'] == true).toList()
-      ..sort((a,b) => (a['date'] ?? '').toString().compareTo((b['date'] ?? '').toString()));
-    if (rows.length < 2) return null;
-    double totalLitres = 0;
+    final all = _fuel.where((e) => e['vehicle_id'] == vehicleId).toList()
+      ..sort((a,b) {
+        final byDate = (a['date'] ?? '').toString().compareTo((b['date'] ?? '').toString());
+        return byDate != 0 ? byDate : ((a['id'] as num?)?.toInt() ?? 0).compareTo((b['id'] as num?)?.toInt() ?? 0);
+      });
+    final fullTanks = all.where((e) => e['full_tank'] == true).toList();
+    if (fullTanks.length < 2) return null;
     double? result;
-    for (var i = 1; i < rows.length; i++) {
-      final start = (rows[i - 1]['odometer'] as num?)?.toDouble() ?? 0;
-      final end = (rows[i]['odometer'] as num?)?.toDouble() ?? 0;
-      for (final f in _fuel) {
-        if (f['vehicle_id'] != vehicleId) continue;
-        final d = DateTime.tryParse(f['date']?.toString() ?? '');
-        final from = DateTime.tryParse(rows[i - 1]['date'].toString());
-        final to = DateTime.tryParse(rows[i]['date'].toString());
-        if (d != null && from != null && to != null && d.isAfter(from) && !d.isAfter(to)) {
-          totalLitres += (f['quantity'] as num?)?.toDouble() ?? 0;
-        }
-      }
-      if (end > start && totalLitres > 0) result = (end - start) / totalLitres;
-      totalLitres = 0;
+    for (var i = 1; i < fullTanks.length; i++) {
+      final previousId = (fullTanks[i - 1]['id'] as num).toInt();
+      final currentId = (fullTanks[i]['id'] as num).toInt();
+      final start = (fullTanks[i - 1]['odometer'] as num?)?.toDouble() ?? 0;
+      final end = (fullTanks[i]['odometer'] as num?)?.toDouble() ?? 0;
+      final consumed = all.where((f) {
+        final id = (f['id'] as num).toInt();
+        return id > previousId && id <= currentId;
+      }).fold<double>(0, (sum, f) => sum + ((f['quantity'] as num?)?.toDouble() ?? 0));
+      if (end > start && consumed > 0) result = (end - start) / consumed;
     }
     return result;
   }

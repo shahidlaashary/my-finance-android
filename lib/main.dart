@@ -2745,9 +2745,14 @@ extension FinanceTransactionOperations on FinanceDB {
     String category = '',
     String note = '',
     DateTime? date,
+    double transferFee = 0,
   }) async {
     if (amount <= 0) {
       throw Exception('Amount zero se zyada hona chahiye.');
+    }
+    if (!transferFee.isFinite || transferFee < 0 ||
+        (type != 'Transfer' && transferFee > 0)) {
+      throw Exception('Transfer fee durust nahi hai.');
     }
 
     final transactionDate = date ?? DateTime.now();
@@ -2768,8 +2773,9 @@ extension FinanceTransactionOperations on FinanceDB {
       final source = sourceRows.first;
       final sourceBalance = (source['balance'] as num).toDouble();
 
+      final totalSourceDeduction = amount + (type == 'Transfer' ? transferFee : 0);
       if (type == 'Expense' || type == 'Transfer') {
-        if (sourceBalance < amount) {
+        if (sourceBalance < totalSourceDeduction) {
           throw Exception('Wallet mein itna balance available nahi hai.');
         }
       }
@@ -2818,7 +2824,7 @@ extension FinanceTransactionOperations on FinanceDB {
         // Dono wallets ke balances aik hi database transaction mein update hote hain.
         await txn.update(
           'wallets',
-          {'balance': sourceBalance - amount},
+          {'balance': sourceBalance - totalSourceDeduction},
           where: 'id = ?',
           whereArgs: [walletId],
         );
@@ -2847,7 +2853,7 @@ extension FinanceTransactionOperations on FinanceDB {
         throw Exception('Transaction type valid nahi hai.');
       }
 
-      return txn.insert('transactions', {
+      final transactionId = await txn.insert('transactions', {
         'type': type,
         'amount': amount,
         'wallet_id': walletId,
@@ -2860,6 +2866,19 @@ extension FinanceTransactionOperations on FinanceDB {
         'date': transactionDate.toIso8601String(),
         'created_at': now,
       });
+
+      if (type == 'Transfer' && transferFee > 0) {
+        await txn.insert(
+          'app_settings',
+          {
+            'setting_key': 'transaction_transfer_fee_$transactionId',
+            'setting_value': transferFee.toString(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+
+      return transactionId;
     });
   }
 
@@ -2871,7 +2890,13 @@ extension FinanceTransactionOperations on FinanceDB {
         source.name AS wallet_name,
         source.currency AS wallet_currency,
         destination.name AS to_wallet_name,
-        destination.currency AS to_wallet_currency
+        destination.currency AS to_wallet_currency,
+        COALESCE((
+          SELECT CAST(settings.setting_value AS REAL)
+          FROM app_settings AS settings
+          WHERE settings.setting_key = 'transaction_transfer_fee_' || transactions.id
+          LIMIT 1
+        ), 0) AS transfer_fee
       FROM transactions
       LEFT JOIN wallets AS source
               ON transactions.wallet_id = source.id
@@ -2895,6 +2920,16 @@ extension FinanceTransactionOperations on FinanceDB {
 
       final item = rows.first;
       final type = item['type'] as String;
+      final feeRows = await txn.query(
+        'app_settings',
+        columns: ['setting_value'],
+        where: 'setting_key = ?',
+        whereArgs: ['transaction_transfer_fee_$id'],
+        limit: 1,
+      );
+      final transferFee = feeRows.isEmpty
+          ? 0.0
+          : (double.tryParse(feeRows.first['setting_value']?.toString() ?? '') ?? 0.0);
       final amount = (item['amount'] as num).toDouble();
       final walletId = item['wallet_id'] as int;
 
@@ -2926,7 +2961,7 @@ extension FinanceTransactionOperations on FinanceDB {
         } else if (type == 'Transfer') {
           await txn.update(
             'wallets',
-            {'balance': sourceBalance + amount},
+            {'balance': sourceBalance + amount + transferFee},
             where: 'id = ?',
             whereArgs: [walletId],
           );
@@ -2973,6 +3008,11 @@ extension FinanceTransactionOperations on FinanceDB {
         where: 'id = ?',
         whereArgs: [id],
       );
+      await txn.delete(
+        'app_settings',
+        where: 'setting_key = ?',
+        whereArgs: ['transaction_transfer_fee_$id'],
+      );
     });
   }
 }
@@ -2999,6 +3039,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   final amountController = TextEditingController();
   final destinationAmountController = TextEditingController();
+  final transferFeeController = TextEditingController();
   final noteController = TextEditingController();
 
   final ImagePicker _imagePicker = ImagePicker();
@@ -3015,6 +3056,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   bool saving = false;
   bool loading = true;
+  bool transferFeeEnabled = false;
 
   String selectedCategory = '';
 
@@ -3030,6 +3072,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   void dispose() {
     amountController.dispose();
     destinationAmountController.dispose();
+    transferFeeController.dispose();
     noteController.dispose();
     super.dispose();
   }
@@ -3436,8 +3479,18 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     }
 
     double? destinationAmount;
+    double transferFee = 0;
 
     if (isTransfer) {
+      if (transferFeeEnabled) {
+        transferFee = double.tryParse(transferFeeController.text.trim()) ?? 0;
+        if (!transferFee.isFinite || transferFee <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Valid transfer fee enter karein.')),
+          );
+          return;
+        }
+      }
       if (selectedDestinationWalletId == null ||
           selectedDestinationWalletId == selectedWalletId) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3469,6 +3522,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         walletId: selectedWalletId!,
         toWalletId: isTransfer ? selectedDestinationWalletId : null,
         toAmount: destinationAmount,
+        transferFee: transferFee,
         category: isTransfer ? '' : selectedCategory,
         note: noteController.text.trim(),
         date: selectedDate,
@@ -3575,6 +3629,45 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                     icon: Icons.currency_exchange_rounded,
                   ),
                 ),
+              ],
+              const SizedBox(height: 12),
+              if (isTransfer) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAF9),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(color: const Color(0xFFE2E9E5)),
+                  ),
+                  child: SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Transfer Fee',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    subtitle: const Text(
+                      'Add an optional fee to this transfer',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    value: transferFeeEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) => setState(() {
+                      transferFeeEnabled = value;
+                      if (!value) transferFeeController.clear();
+                    }),
+                  ),
+                ),
+                if (transferFeeEnabled) ...[
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: transferFeeController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: decoration(
+                      'Fee Amount (${selectedWallet?['currency'] ?? ''})',
+                      icon: Icons.payments_outlined,
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 12),
               _notesField(),
@@ -3819,6 +3912,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                     color: AppColors.muted,
                                   ),
                                 ),
+                              if (isTransfer &&
+                                  (item['transfer_fee'] as num? ?? 0).toDouble() > 0)
+                                Text(
+                                  'Transfer Fee: $currency ${NumberFormat('#,##0.##').format((item['transfer_fee'] as num).toDouble())}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
                               if ((item['note'] ?? '')
                                   .toString()
                                   .isNotEmpty)
@@ -3838,7 +3940,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                             children: [
                               Text(
                                 isTransfer
-                                    ? '$currency ${NumberFormat('#,##0.##').format(amount)}'
+                                    ? '$currency ${NumberFormat('#,##0.##').format(amount + ((item['transfer_fee'] as num?)?.toDouble() ?? 0))}'
                                     : '${isIncome ? '+' : isExpense ? '-' : ''}$currency ${NumberFormat('#,##0.##').format(amount)}',
                                 style: TextStyle(
                                   color: color,

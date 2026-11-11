@@ -1502,7 +1502,9 @@ class MyFinanceApp extends StatelessWidget {
       routes: {
         '/settings': (_) => const MoreFeaturesPage(),
       },
-      home: const AppLockGate(child: MainScreen()),
+      builder: (context, child) =>
+          AppLockGate(child: child ?? const SizedBox.shrink()),
+      home: const MainScreen(),
     );
   }
 }

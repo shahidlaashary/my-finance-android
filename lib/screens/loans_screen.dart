@@ -71,8 +71,17 @@ class _LoansScreenState extends State<LoansScreen> {
         _outstandingByCurrency = outstandingByCurrency;
         _loading = false;
         if (_wallets.isNotEmpty) {
-          _selectedAccountId ??= _wallets.first['id'] as int;
-          _selectedRepaymentAccountId ??= _wallets.first['id'] as int;
+          final walletIds = _wallets
+              .map((wallet) => (wallet['id'] as num).toInt())
+              .toSet();
+          final firstWalletId = (_wallets.first['id'] as num).toInt();
+          if (_selectedAccountId == null || !walletIds.contains(_selectedAccountId)) {
+            _selectedAccountId = firstWalletId;
+          }
+          if (_selectedRepaymentAccountId == null ||
+              !walletIds.contains(_selectedRepaymentAccountId)) {
+            _selectedRepaymentAccountId = firstWalletId;
+          }
         }
       });
     } catch (error) {

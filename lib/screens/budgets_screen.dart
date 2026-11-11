@@ -42,8 +42,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         whereArgs: [0],
         orderBy: 'name ASC',
       );
-      final accounts = await db.query('accounts');
-      final currencies = accounts
+      final wallets = await db.query('wallets');
+      final currencies = wallets
           .map((e) => e['currency']?.toString() ?? 'PKR')
           .toSet()
           .toList();

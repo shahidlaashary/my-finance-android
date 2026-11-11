@@ -7,6 +7,7 @@ import '../models/assets_model.dart';
 import '../services/assets_service.dart';
 import '../services/transactions_service.dart';
 import '../widgets/attachment_section.dart';
+import '../widgets/shared_app_bar_actions.dart';
 
 class AssetsScreen extends StatefulWidget {
   const AssetsScreen({super.key});
@@ -139,7 +140,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     int? selectedAccount = asset?.walletId;
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
-    const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments'];
+    const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments', 'Livestock', 'Business'];
 
     InputDecoration fieldDecoration(String label, IconData icon) => InputDecoration(
       labelText: label,
@@ -829,20 +830,16 @@ class _AssetsScreenState extends State<AssetsScreen> {
       {'name': 'Jewellery', 'icon': Icons.watch_outlined},
       {'name': 'Electronics', 'icon': Icons.devices_other_outlined},
       {'name': 'Investments', 'icon': Icons.trending_up_rounded},
+      {'name': 'Livestock', 'icon': Icons.pets_outlined},
+      {'name': 'Business', 'icon': Icons.storefront_outlined},
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
-        title: const Text('Assets', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('My Assets', style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: const Color(0xFFF5F7F6),
-        actions: [
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh',
-          ),
-        ],
+        actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAssetDialog,
@@ -859,7 +856,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(18),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF147D59), Color(0xFF0B6245)],
@@ -873,35 +870,33 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       children: [
                         Text('TOTAL ASSET VALUE  •  $primaryCurrency',
                           style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 5),
                         Text('$primaryCurrency ${_money(currentTotal)}',
                           style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             Expanded(child: _heroMetric('Purchase Value', '$primaryCurrency ${_money(purchaseTotal)}')),
-                            Container(width: 1, height: 34, color: Colors.white24),
+                            Container(width: 1, height: 28, color: Colors.white24),
                             const SizedBox(width: 14),
                             Expanded(child: _heroMetric('Unrealized P/L', '$primaryCurrency ${_money(unrealized)}', valueColor: unrealized >= 0 ? const Color(0xFFB9F6D3) : const Color(0xFFFFC5C5))),
                           ],
                         ),
                         if (currencies.length > 1) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 7),
                           const Text('Totals shown for this currency; other currencies below.',
                             style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
                         ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text('Asset Categories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   GridView.builder(
                     itemCount: categoryItems.length,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, crossAxisSpacing: 9, mainAxisSpacing: 9, childAspectRatio: 1.18),
+                      crossAxisCount: 4, crossAxisSpacing: 7, mainAxisSpacing: 7, childAspectRatio: 0.98),
                     itemBuilder: (context, index) {
                       final item = categoryItems[index];
                       return InkWell(
@@ -910,15 +905,18 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         child: Container(
                           decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? const Color(0xFF147D59) : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 25),
-                            const SizedBox(height: 6),
-                            Text(item['name'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 21),
+                            const SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              child: Text(item['name'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700)),
+                            ),
                           ]),
                         ),
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(child: Text(_selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),

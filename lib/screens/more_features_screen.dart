@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/appearance_settings_service.dart';
 import 'categories_screen.dart';
 import 'assets_screen.dart';
-import 'savings_screen.dart';
+import 'goals_screen.dart';
 import 'budgets_screen.dart';
 import 'recurring_transactions_screen.dart';
 import 'reports_screen.dart';

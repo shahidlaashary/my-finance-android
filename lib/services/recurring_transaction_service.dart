@@ -60,7 +60,7 @@ class RecurringTransactionService {
         amount REAL NOT NULL,
         wallet_id INTEGER NOT NULL,
         to_wallet_id INTEGER,
-        category_id INTEGER,
+        category TEXT,
         note TEXT,
         frequency TEXT NOT NULL,
         start_date TEXT NOT NULL,
@@ -70,16 +70,7 @@ class RecurringTransactionService {
         created_at TEXT NOT NULL
       )
     ''');
-    final transactionColumns =
-        await db.rawQuery('PRAGMA table_info(transactions)');
-    final hasCategoryId = transactionColumns.any(
-      (column) => column['name'] == 'category_id',
-    );
-    if (transactionColumns.isNotEmpty && !hasCategoryId) {
-      await db.execute(
-        'ALTER TABLE transactions ADD COLUMN category_id INTEGER',
-      );
-    }
+
   }
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);
@@ -216,7 +207,7 @@ class RecurringTransactionService {
       'amount': model.amount,
       'wallet_id': model.walletId,
       'to_wallet_id': model.toWalletId,
-      'category_id': model.categoryId,
+      'category': model.category,
       'note': model.note,
       'frequency': model.frequency.toLowerCase(),
       'start_date': _date(model.startDate),
@@ -381,13 +372,13 @@ class RecurringTransactionService {
       );
     }
     await txn.insert('transactions', {
-      'type': type,
+      'type': type == 'income' ? 'Income' : type == 'expense' ? 'Expense' : 'Transfer',
       'amount': amount,
       'wallet_id': walletId,
       'to_wallet_id': toWalletId,
-      'category_id': recurring['category_id'],
+      'to_amount': type == 'transfer' ? amount : null,\n      'exchange_rate': type == 'transfer' ? 1.0 : null,\n      'balance_delta': null,\n      'category': type == 'transfer' ? '' : (recurring['category'] ?? ''),
       'note': recurring['note'] ?? recurring['title'],
-      'date': _date(transactionDate),
+      'date': _date(transactionDate),\n      'created_at': DateTime.now().toIso8601String(),
     });
   }
   /// Processes all due recurring transactions.

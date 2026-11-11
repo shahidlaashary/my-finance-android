@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/loans_model.dart';
 import '../models/repayment_model.dart';
+import 'app_refresh_service.dart';
 
 class LoansService {
 
@@ -157,6 +158,7 @@ class LoansService {
       ''',
       [amount, walletId],
     );
+    AppRefreshController.notifyChanged();
   }
 
   /// Loan banata hai aur di jane wali raqam source account se minus karta hai.

@@ -6,7 +6,7 @@ class AssetModel {
   final double purchasePrice;
   final double currentValue;
   final DateTime purchaseDate;
-  final int accountId;
+  final int walletId;
   final String notes;
   final bool isSold;
   final DateTime? saleDate;
@@ -20,7 +20,7 @@ class AssetModel {
     required this.purchasePrice,
     required this.currentValue,
     required this.purchaseDate,
-    required this.accountId,
+    required this.walletId,
     this.notes = '',
     this.isSold = false,
     this.saleDate,
@@ -44,7 +44,7 @@ class AssetModel {
             (map['purchase_date'] ?? '').toString(),
           ) ??
           DateTime.now(),
-      accountId: (map['account_id'] as num?)?.toInt() ?? 0,
+      walletId: (map['wallet_id'] as num?)?.toInt() ?? 0,
       notes: (map['notes'] ?? '').toString(),
       isSold: (map['is_sold'] as num?)?.toInt() == 1,
       saleDate: map['sale_date'] == null
@@ -65,7 +65,7 @@ class AssetModel {
       'purchase_price': purchasePrice,
       'current_value': currentValue,
       'purchase_date': purchaseDate.toIso8601String(),
-      'account_id': accountId,
+      'wallet_id': walletId,
       'notes': notes,
       'is_sold': isSold ? 1 : 0,
       'sale_date': saleDate?.toIso8601String(),
@@ -81,7 +81,7 @@ class AssetModel {
     double? purchasePrice,
     double? currentValue,
     DateTime? purchaseDate,
-    int? accountId,
+    int? walletId,
     String? notes,
     bool? isSold,
     Object? saleDate = _unset,
@@ -95,7 +95,7 @@ class AssetModel {
       purchasePrice: purchasePrice ?? this.purchasePrice,
       currentValue: currentValue ?? this.currentValue,
       purchaseDate: purchaseDate ?? this.purchaseDate,
-      accountId: accountId ?? this.accountId,
+      walletId: walletId ?? this.walletId,
       notes: notes ?? this.notes,
       isSold: isSold ?? this.isSold,
       saleDate: identical(saleDate, _unset)

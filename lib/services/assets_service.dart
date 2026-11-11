@@ -33,11 +33,6 @@ class AssetsService {
   }
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
-    final columns = await db.rawQuery('PRAGMA table_info(assets)');
-    final hasSaleWallet = columns.any((column) => column['name'] == 'sale_wallet_id');
-    if (!hasSaleWallet) {
-      await db.execute('ALTER TABLE assets ADD COLUMN sale_wallet_id INTEGER');
-    }
   }
   Future<Map<String, dynamic>> _getAccount(
     Transaction txn,

@@ -25,6 +25,7 @@ import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/more_features_screen.dart' show AppSettingsScreen;
+import 'screens/my_documents_screen.dart';
 import 'widgets/shared_app_bar_actions.dart';
 import 'widgets/app_lock_gate.dart';
 
@@ -2615,6 +2616,10 @@ class MoreFeaturesPage extends StatelessWidget {
         'title': 'Backup & Restore',
         'icon': Icons.backup_outlined,
       },
+      {
+        'title': 'My Documents',
+        'icon': Icons.folder_copy_outlined,
+      },
     ];
 
     return Scaffold(
@@ -2656,6 +2661,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Settings') {
                         return const AppSettingsScreen();
+                      }
+                      if (feature['title'] == 'My Documents') {
+                        return const MyDocumentsScreen();
                       }
                       return SimpleFeaturePage(
                         title: feature['title'] as String,

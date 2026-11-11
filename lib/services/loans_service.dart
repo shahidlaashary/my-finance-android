@@ -346,20 +346,6 @@ class LoansService {
     };
   }
 
-  /// Legacy total across all currencies.
-  /// Prefer getTotalOutstandingByCurrency() for safe summaries.
-  static Future<double> getTotalOutstanding() async {
-    final db = await _database;
-
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(remaining_amount), 0) AS total
-      FROM loans
-      WHERE remaining_amount > 0
-    ''');
-
-    return (result.first['total'] as num).toDouble();
-  }
-
   /// Returns loans whose due date has passed and balance is outstanding.
   static Future<List<LoansModel>> getOverdueLoans() async {
     final db = await _database;

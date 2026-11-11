@@ -41,7 +41,7 @@ class AppStartupService {
     // Process recurring transactions that are due.
     // Any processing error is logged so it can be investigated.
     try {
-      final recurringService = RecurringTransactionsService();
+      final recurringService = RecurringTransactionService();
 
       final processedCount =
           await recurringService.processDueTransactions();

@@ -157,8 +157,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      elevation: 2,
-        shadowColor: const Color(0x18000000),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
@@ -838,7 +836,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         foregroundColor: AppColors.text,
         elevation: 0,
         titleSpacing: 16,

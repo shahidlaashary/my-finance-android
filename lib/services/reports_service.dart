@@ -290,8 +290,7 @@ class ReportsService {
     final rows = await db.rawQuery(
       '''
       SELECT
-        COALESCE(c.id, 0) AS category_id,
-        COALESCE(c.name, 'Uncategorized') AS category_name,
+        COALESCE(NULLIF(t.category, ''), 'Uncategorized') AS category_name,
         COALESCE(a.currency, 'PKR') AS currency,
 
         SUM(t.amount) AS total,
@@ -299,8 +298,6 @@ class ReportsService {
 
       FROM transactions t
 
-      LEFT JOIN finance_categories c
-        ON c.id = t.category_id
 
       LEFT JOIN wallets a
         ON a.id = t.wallet_id
@@ -308,8 +305,7 @@ class ReportsService {
       WHERE ${conditions.join(' AND ')}
 
       GROUP BY
-        COALESCE(c.id, 0),
-        COALESCE(c.name, 'Uncategorized'),
+        COALESCE(NULLIF(t.category, ''), 'Uncategorized'),
         COALESCE(a.currency, 'PKR')
 
       ORDER BY total DESC
@@ -319,7 +315,6 @@ class ReportsService {
 
     return rows.map((row) {
       return {
-        'category_id': row['category_id'],
         'category_name': row['category_name'],
         'currency': row['currency'],
         'total': _number(row['total']),

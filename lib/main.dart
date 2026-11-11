@@ -72,13 +72,8 @@ class FinanceDB {
     // Fresh database: koi migration ya old-data conversion nahi.
     _database = await openDatabase(
       fullPath,
-      version: 2,
+      version: 1,
       onCreate: _createDatabase,
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await _createBudgetsTable(db);
-        }
-      },
     );
   }
 
@@ -141,9 +136,6 @@ class FinanceDB {
       )
     ''');
 
-    // Budgets table ko main database ke saath initialize/migrate karta hai.
-    await _createBudgetsTable(db);
-
     // Har currency ke aik unit ki PKR mein qeemat.
     await db.execute('''
       CREATE TABLE exchange_rates (
@@ -173,32 +165,6 @@ class FinanceDB {
       'setting_key': 'main_currency',
       'setting_value': 'PKR',
     });
-  }
-
-  Future<void> _createBudgetsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS budgets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT,
-        limit_amount REAL NOT NULL,
-        spent_amount REAL NOT NULL DEFAULT 0,
-        period TEXT NOT NULL DEFAULT 'Monthly',
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL,
-        currency TEXT NOT NULL DEFAULT 'PKR',
-        is_active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_budgets_active
-      ON budgets(is_active)
-    ''');
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_budgets_dates
-      ON budgets(start_date, end_date)
-    ''');
   }
 
   // ----------------------------------------------------------

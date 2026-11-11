@@ -42,21 +42,30 @@ class _AppLockGateState extends State<AppLockGate>
   Future<void> _reloadSettings() => _loadSettings();
 
   Future<void> _loadSettings({bool initial = false}) async {
-    final enabled = await AppLockService.isEnabled();
-    final hasPin = await AppLockService.hasPin();
-    final biometric = await AppLockService.biometricEnabled();
-    if (!mounted) return;
+    try {
+      final enabled = await AppLockService.isEnabled();
+      final hasPin = await AppLockService.hasPin();
+      final biometric = await AppLockService.biometricEnabled();
+      if (!mounted) return;
 
-    setState(() {
-      _enabled = enabled && hasPin;
-      _biometricEnabled = biometric;
-      if (!_enabled) {
+      setState(() {
+        _enabled = enabled && hasPin;
+        _biometricEnabled = biometric;
+        if (!_enabled) {
+          _locked = false;
+        } else if (initial || !_loading && !_enabled) {
+          _locked = true;
+        }
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _enabled = false;
         _locked = false;
-      } else if (initial || !_loading && !_enabled) {
-        _locked = true;
-      }
-      _loading = false;
-    });
+        _loading = false;
+      });
+    }
   }
 
   @override

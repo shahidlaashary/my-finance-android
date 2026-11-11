@@ -484,8 +484,6 @@ class ReportsService {
       LEFT JOIN wallets destination
         ON destination.id = t.to_wallet_id
 
-      LEFT JOIN finance_categories c
-        ON c.id = t.category_id
 
       WHERE ${conditions.join(' AND ')}
 

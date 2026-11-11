@@ -595,15 +595,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.text,
+        backgroundColor: const Color(0xFFF5F7F6),
+        foregroundColor: const Color(0xFF202A26),
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Goals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
-        backgroundColor: AppColors.background,
+        title: const Text('My Goals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(

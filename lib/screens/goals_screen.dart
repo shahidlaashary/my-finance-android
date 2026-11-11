@@ -597,7 +597,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
-        title: const Text('Savings Goals'),
+        title: const Text('My Goals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
         backgroundColor: Colors.white,
         actions: buildSharedAppBarActions(context),
       ),

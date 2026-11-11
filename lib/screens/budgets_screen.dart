@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import '../models/budget_model.dart';
-import '../services/budget_service.dart';
+import '../models/budgets_model.dart';
+import '../services/budgets_service.dart';
 import '../services/category_service.dart';
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});

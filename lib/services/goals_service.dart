@@ -1,6 +1,6 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import '../models/savings_goal_model.dart';
+import '../models/goals_model.dart';
 class SavingsService {
   static const String _databaseName = 'my_finance.db';
   static Database? _databaseInstance;

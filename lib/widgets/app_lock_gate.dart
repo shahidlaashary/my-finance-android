@@ -85,29 +85,32 @@ class _AppLockGateState extends State<AppLockGate>
     } else if (state == AppLifecycleState.resumed && _enabled) {
       final pausedAt = _pausedAt;
       _pausedAt = null;
-      if (pausedAt == null) return;
+      if (pausedAt != null) _checkAutoLock(pausedAt);
+    }
+  }
 
-      AppLockService.autoLockSeconds().then((seconds) {
-        if (!mounted || !_enabled) return;
-        if (seconds == 0 ||
-            DateTime.now().difference(pausedAt).inSeconds >= seconds) {
-          setState(() {
-            _locked = true;
-            _showPin = false;
-            _pinController.clear();
-            _error = null;
-          });
-        }
-      }).catchError((Object error, StackTrace stackTrace) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: error,
-            stack: stackTrace,
-            library: 'app lock lifecycle',
-            context: ErrorDescription('while checking auto-lock timeout'),
-          ),
-        );
-      });
+  Future<void> _checkAutoLock(DateTime pausedAt) async {
+    try {
+      final seconds = await AppLockService.autoLockSeconds();
+      if (!mounted || !_enabled) return;
+      if (seconds == 0 ||
+          DateTime.now().difference(pausedAt).inSeconds >= seconds) {
+        setState(() {
+          _locked = true;
+          _showPin = false;
+          _pinController.clear();
+          _error = null;
+        });
+      }
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'app lock lifecycle',
+          context: ErrorDescription('while checking auto-lock timeout'),
+        ),
+      );
     }
   }
 

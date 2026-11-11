@@ -1,7 +1,7 @@
 
 import 'package:flutter/foundation.dart';
 
-import 'transaction_service.dart';
+import 'transactions_service.dart';
 import 'recurring_transaction_service.dart';
 
 class AppStartupService {

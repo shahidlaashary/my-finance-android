@@ -45,14 +45,14 @@ class GoogleDriveBackupService {
 
     final body = BytesBuilder();
     body.add(utf8.encode(
-      '--$boundary\\r\\n'
-      'Content-Type: application/json; charset=UTF-8\\r\\n\\r\\n'
-      '$metadata\\r\\n'
-      '--$boundary\\r\\n'
-      'Content-Type: application/zip\\r\\n\\r\\n',
+      '--$boundary\r\n'
+      'Content-Type: application/json; charset=UTF-8\r\n\r\n'
+      '$metadata\r\n'
+      '--$boundary\r\n'
+      'Content-Type: application/zip\r\n\r\n',
     ));
     body.add(bytes);
-    body.add(utf8.encode('\\r\\n--$boundary--'));
+    body.add(utf8.encode('\r\n--$boundary--'));
 
     final response = await http.post(
       Uri.parse(

@@ -77,11 +77,12 @@ void autoBackupCallbackDispatcher() {
     WidgetsFlutterBinding.ensureInitialized();
     if (task != AutoBackupService.taskName) return true;
 
-    Database? database;
+    Database? databaseToClose;
     try {
-      database = await openDatabase(
+      final database = await openDatabase(
         p.join(await getDatabasesPath(), 'my_finance.db'),
       );
+      databaseToClose = database;
 
       final settings = await database.query(
         'app_settings',
@@ -120,7 +121,7 @@ void autoBackupCallbackDispatcher() {
     } catch (_) {
       return false;
     } finally {
-      await database?.close();
+      await databaseToClose?.close();
     }
   });
 }

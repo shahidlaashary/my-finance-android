@@ -18,7 +18,10 @@ class PlatformCapabilities {
   const PlatformCapabilities._(this.platform);
 
   factory PlatformCapabilities.current() {
-    return PlatformCapabilities._(_fromTargetPlatform(defaultTargetPlatform));
+    final platform = kIsWeb
+        ? AppPlatform.web
+        : _fromTargetPlatform(defaultTargetPlatform);
+    return PlatformCapabilities._(platform);
   }
 
   final AppPlatform platform;

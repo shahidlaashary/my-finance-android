@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/attachment_model.dart';
 
-/// Standard owner types for all My Finance modules.
+/// My Finance ke tamam modules ke liye attachment owner types.
 class AttachmentOwnerTypes {
   static const String transaction = 'transaction';
   static const String asset = 'asset';
@@ -123,7 +123,7 @@ class AttachmentService {
     return 'file';
   }
 
-  /// Saves a photo, PDF or supported document against any finance record.
+  /// Kisi bhi finance record ke sath photo, PDF ya supported document save karta hai.
   static Future<AttachmentModel> addAttachment({
     required String ownerType,
     required int ownerId,
@@ -197,7 +197,7 @@ class AttachmentService {
     }
   }
 
-  /// Gets attachments for a specific record.
+  /// Kisi khaas record ki attachments hasil karta hai.
   static Future<List<AttachmentModel>> getAttachments({
     required String ownerType,
     required int ownerId,
@@ -215,7 +215,7 @@ class AttachmentService {
     return result.map(AttachmentModel.fromMap).toList();
   }
 
-  /// Convenience methods for each finance module.
+  /// Har finance module ke liye asaan helper methods.
   static Future<List<AttachmentModel>> getTransactionAttachments(
     int transactionId,
   ) {
@@ -261,7 +261,7 @@ class AttachmentService {
     );
   }
 
-  /// Deletes one attachment record and its local file.
+  /// Attachment ka record aur uski local file delete karta hai.
   static Future<void> deleteAttachment(int id) async {
     final db = await _database;
 
@@ -293,7 +293,7 @@ class AttachmentService {
     }
   }
 
-  /// Deletes all attachments linked to a record.
+  /// Kisi record ke sath linked tamam attachments delete karta hai.
   static Future<void> deleteOwnerAttachments({
     required String ownerType,
     required int ownerId,

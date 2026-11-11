@@ -11,24 +11,24 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
-import 'services/attachment_service.dart';
-import 'services/app_refresh_service.dart';
-import 'services/budgets_service.dart';
-import 'services/assets_service.dart';
-import 'services/loans_service.dart';
-import 'models/budgets_model.dart';
-import 'models/attachment_model.dart';
-import 'screens/assets_screen.dart';
-import 'screens/budgets_screen.dart';
-import 'screens/goals_screen.dart';
-import 'screens/loans_screen.dart';
-import 'screens/stats_screen.dart';
-import 'screens/transactions_screen.dart';
-import 'screens/more_features_screen.dart' show AppSettingsScreen;
-import 'screens/my_documents_screen.dart';
-import 'screens/vehicles_screen.dart';
-import 'widgets/shared_app_bar_actions.dart';
-import 'widgets/app_lock_gate.dart';
+import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/finance/services/budgets_service.dart';
+import 'package:my_finance/features/finance/services/assets_service.dart';
+import 'package:my_finance/features/finance/services/loans_service.dart';
+import 'package:my_finance/features/finance/models/budgets_model.dart';
+import 'package:my_finance/core/models/attachment_model.dart';
+import 'package:my_finance/features/finance/screens/assets_screen.dart';
+import 'package:my_finance/features/finance/screens/budgets_screen.dart';
+import 'package:my_finance/features/finance/screens/goals_screen.dart';
+import 'package:my_finance/features/finance/screens/loans_screen.dart';
+import 'package:my_finance/features/finance/screens/stats_screen.dart';
+import 'package:my_finance/features/finance/screens/transactions_screen.dart';
+import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
+import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
+import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
+import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
+import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam

@@ -385,7 +385,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F6),
       appBar: AppBar(
-        title: const Text('Budgets'),
+        title: const Text('My Budgets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
         backgroundColor: Colors.white,
         actions: buildSharedAppBarActions(context),
       ),

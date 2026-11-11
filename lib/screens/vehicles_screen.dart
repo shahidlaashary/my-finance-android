@@ -528,11 +528,11 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   Future<void> _deleteRecord(Future<void> Function() action, String label) async {
     final yes = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-      title: Text('Delete $label?'), content: const Text('This will also reverse its linked wallet transaction.'),
+      title: Text('Delete $label?'), content: const Text('This record and any linked financial transaction will be removed. This cannot be undone.'),
       actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
         FilledButton(onPressed: () => Navigator.pop(c, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Delete'))]));
     if (yes != true) return;
-    try { await action(); await _load(); _message('$label deleted and wallet balance updated.'); }
+    try { await action(); await _load(); _message('$label deleted.'); }
     catch (e) { _message('Unable to delete $label: $e'); }
   }
 
@@ -671,7 +671,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _fuel.map((f) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: const CircleAvatar(backgroundColor: Color(0xFFFFF2DE), child: Icon(Icons.local_gas_station_outlined, color: Colors.orange)),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_amount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_amount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showFuelForm(record: f);
@@ -695,7 +695,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _expenses.map((e) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: const CircleAvatar(backgroundColor: Color(0xFFFCEBEA), child: Icon(Icons.build_outlined, color: Colors.red)),
-        title: Text('${e['category']} • ${_amount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_amount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showExpenseForm(record: e);
@@ -717,7 +717,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     ? _empty('No service reminders', 'Create reminders for oil changes, servicing, tyres, insurance and documents.', Icons.notifications_none_rounded)
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _reminders.map((r) {
       final due = DateTime.tryParse(r['due_date']?.toString() ?? '');
-      final overdue = due != null && due.isBefore(DateTime.now());
+      final dueByDate = due != null && !due.isAfter(DateTime.now());
+      final dueKm = (r['due_odometer'] as num?)?.toDouble();
+      final overdue = dueByDate || (dueKm != null && dueKm > 0 && _latestOdometer((r['vehicle_id'] as num).toInt()) >= dueKm);
       return Card(margin: const EdgeInsets.only(bottom: 9), child: ListTile(
         leading: Icon(Icons.notifications_active_outlined, color: overdue ? Colors.red : _green),
         title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),

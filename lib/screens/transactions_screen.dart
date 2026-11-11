@@ -89,13 +89,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> editTransaction(
     Map<String, dynamic> item,
   ) async {
-    final accounts = await TransactionService.getAccounts();
+    final wallets = await TransactionService.getAccounts();
 
     if (!mounted) return;
 
-    if (accounts.isEmpty) {
+    if (wallets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No accounts available.')),
+        const SnackBar(content: Text('No wallets available.')),
       );
       return;
     }
@@ -123,21 +123,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       text: item['note']?.toString() ?? '',
     );
 
-    int? accountId = item['account_id'] as int?;
-    int? toAccountId = item['to_account_id'] as int?;
+    int? walletId = item['wallet_id'] as int?;
+    int? toWalletId = item['to_wallet_id'] as int?;
     int? categoryId = item['category_id'] as int?;
 
     DateTime selectedDate =
         DateTime.tryParse(item['date']?.toString() ?? '') ??
             DateTime.now();
 
-    if (!accounts.any((a) => a['id'] == accountId)) {
-      accountId = accounts.first['id'] as int;
+    if (!wallets.any((a) => a['id'] == walletId)) {
+      walletId = wallets.first['id'] as int;
     }
 
     if (type == 'transfer' &&
-        !accounts.any((a) => a['id'] == toAccountId)) {
-      toAccountId = null;
+        !wallets.any((a) => a['id'] == toWalletId)) {
+      toWalletId = null;
     }
 
     final result = await showDialog<bool>(
@@ -145,8 +145,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, updateDialog) {
-            final availableDestinations = accounts
-                .where((a) => a['id'] != accountId)
+            final availableDestinations = wallets
+                .where((a) => a['id'] != walletId)
                 .toList();
 
             return AlertDialog(
@@ -168,13 +168,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<int>(
-                      value: accountId,
+                      value: walletId,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Account',
                         border: OutlineInputBorder(),
                       ),
-                      items: accounts.map((account) {
+                      items: wallets.map((account) {
                         return DropdownMenuItem<int>(
                           value: account['id'] as int,
                           child: Text(
@@ -184,9 +184,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       }).toList(),
                       onChanged: (value) {
                         updateDialog(() {
-                          accountId = value;
-                          if (toAccountId == accountId) {
-                            toAccountId = null;
+                          walletId = value;
+                          if (toWalletId == walletId) {
+                            toWalletId = null;
                           }
                         });
                       },
@@ -194,7 +194,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (type == 'transfer') ...[
                       const SizedBox(height: 14),
                       DropdownButtonFormField<int>(
-                        value: toAccountId,
+                        value: toWalletId,
                         isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Destination Account',
@@ -210,7 +210,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         }).toList(),
                         onChanged: (value) {
                           updateDialog(() {
-                            toAccountId = value;
+                            toWalletId = value;
                           });
                         },
                       ),
@@ -307,9 +307,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       return;
                     }
 
-                    if (accountId == null) return;
+                    if (walletId == null) return;
 
-                    if (type == 'transfer' && toAccountId == null) {
+                    if (type == 'transfer' && toWalletId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Select a destination account.'),
@@ -323,9 +323,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         id: item['id'] as int,
                         type: type,
                         amount: amount,
-                        accountId: accountId!,
-                        toAccountId:
-                            type == 'transfer' ? toAccountId : null,
+                        walletId: walletId!,
+                        toWalletId:
+                            type == 'transfer' ? toWalletId : null,
                         categoryId:
                             type == 'transfer' ? null : categoryId,
                         note: noteController.text.trim(),

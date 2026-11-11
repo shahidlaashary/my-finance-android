@@ -11,6 +11,7 @@ class AssetModel {
   final bool isSold;
   final DateTime? saleDate;
   final double? salePrice;
+  final int? saleWalletId;
   final DateTime? createdAt;
 
   const AssetModel({
@@ -25,6 +26,7 @@ class AssetModel {
     this.isSold = false,
     this.saleDate,
     this.salePrice,
+    this.saleWalletId,
     this.createdAt,
   });
 
@@ -51,6 +53,7 @@ class AssetModel {
           ? null
           : DateTime.tryParse(map['sale_date'].toString()),
       salePrice: (map['sale_price'] as num?)?.toDouble(),
+      saleWalletId: (map['sale_wallet_id'] as num?)?.toInt(),
       createdAt: map['created_at'] == null
           ? null
           : DateTime.tryParse(map['created_at'].toString()),
@@ -70,6 +73,7 @@ class AssetModel {
       'is_sold': isSold ? 1 : 0,
       'sale_date': saleDate?.toIso8601String(),
       'sale_price': salePrice,
+      'sale_wallet_id': saleWalletId,
       'created_at': createdAt?.toIso8601String(),
     };
   }
@@ -86,6 +90,7 @@ class AssetModel {
     bool? isSold,
     Object? saleDate = _unset,
     Object? salePrice = _unset,
+    Object? saleWalletId = _unset,
     Object? createdAt = _unset,
   }) {
     return AssetModel(
@@ -104,6 +109,9 @@ class AssetModel {
       salePrice: identical(salePrice, _unset)
           ? this.salePrice
           : salePrice as double?,
+      saleWalletId: identical(saleWalletId, _unset)
+          ? this.saleWalletId
+          : saleWalletId as int?,
       createdAt: identical(createdAt, _unset)
           ? this.createdAt
           : createdAt as DateTime?,

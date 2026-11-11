@@ -56,259 +56,88 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     }
   }
   String _categoryName(String? name) => name == null || name.isEmpty ? 'All Categories' : name;
-  Future<void> _showBudgetDialog({
-    BudgetsModel? budget,
-  }) async {
+  Future<void> _showBudgetDialog({BudgetsModel? budget}) async {
     final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController(
-      text: budget?.name ?? '',
-    );
-    final amountController = TextEditingController(
-      text: budget == null ? '' : budget.limitAmount.toString(),
-    );
+    final nameController = TextEditingController(text: budget?.name ?? '');
+    final amountController = TextEditingController(text: budget?.limitAmount.toString() ?? '');
     String? category = budget?.category;
     String currency = budget?.currency ?? _currencies.first;
     String period = budget?.period ?? 'Monthly';
-    DateTime startDate = budget == null
-        ? DateTime(DateTime.now().year, DateTime.now().month, 1)
-        : budget.startDate;
-    DateTime endDate = budget == null
-        ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0)
-        : budget.endDate;
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                budget == null ? 'Create Budget' : 'Edit Budget',
-              ),
-              content: SizedBox(
-                width: 450,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Budget Name',
-                            prefixIcon: Icon(Icons.account_balance_wallet),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Enter budget name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: amountController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'Budget Limit',
-                          ),
-                          validator: (value) {
-                            final amount = double.tryParse(value ?? '');
-                            if (amount == null ||
-                                !amount.isFinite ||
-                                amount <= 0) {
-                              return 'Enter a valid budget amount';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String?>(
-                          value: category,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Category',
-                          ),
-                          items: [
-                            const DropdownMenuItem<String?>(
-                              value: null,
-                              child: Text('All Categories'),
-                            ),
-                            ..._categories.map((category) {
-                              return DropdownMenuItem<String?>(
-                                value: category['name'].toString(),
-                                child: Text(
-                                  category['name'].toString(),
-                                ),
-                              );
-                            }),
-                          ],
-                          onChanged: (value) {
-                            setDialogState(() {
-                              category = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: period,
-                          decoration: const InputDecoration(
-                            labelText: 'Budget Period',
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Daily',
-                              child: Text('Daily'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Weekly',
-                              child: Text('Weekly'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Monthly',
-                              child: Text('Monthly'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Yearly',
-                              child: Text('Yearly'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Custom',
-                              child: Text('Custom'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setDialogState(() {
-                              period = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: currency,
-                          decoration: const InputDecoration(
-                            labelText: 'Currency',
-                          ),
-                          items: _currencies.map((value) {
-                            return DropdownMenuItem(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setDialogState(() {
-                              currency = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Start Date'),
-                          subtitle: Text(
-                            DateFormat('dd MMM yyyy').format(startDate),
-                          ),
-                          trailing: const Icon(Icons.calendar_month),
-                          onTap: () async {
-                            final selected = await showDatePicker(
-                              context: context,
-                              initialDate: startDate,
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                            );
-                            if (selected != null) {
-                              setDialogState(() {
-                                startDate = selected;
-                              });
-                            }
-                          },
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('End Date'),
-                          subtitle: Text(
-                            DateFormat('dd MMM yyyy').format(endDate),
-                          ),
-                          trailing: const Icon(Icons.calendar_month),
-                          onTap: () async {
-                            final selected = await showDatePicker(
-                              context: context,
-                              initialDate: endDate,
-                              firstDate: startDate,
-                              lastDate: DateTime(2100),
-                            );
-                            if (selected != null) {
-                              setDialogState(() {
-                                endDate = selected;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    if (endDate.isBefore(startDate)) {
-                      _message('End date cannot be before start date.');
-                      return;
-                    }
-                    try {
-                      final model = BudgetsModel(
-                        id: budget?.id,
-                        name: nameController.text.trim(),
-                        category: category,
-                        limitAmount: double.parse(amountController.text),
-                        spentAmount: budget?.spentAmount ?? 0,
-                        period: period,
-                        startDate: startDate,
-                        endDate: endDate,
-                        currency: currency,
-                        isActive: budget?.isActive ?? true,
-                        createdAt: budget?.createdAt ?? DateTime.now(),
-                      );
-                      if (budget == null) {
-                        await BudgetsService.addBudget(model);
-                      } else {
-                        await BudgetsService.updateBudget(model);
-                      }
-                      if (!dialogContext.mounted) return;
-                      Navigator.pop(dialogContext);
-                      await _loadData();
-                      _message(
-                        budget == null
-                            ? 'Budget created successfully.'
-                            : 'Budget updated successfully.',
-                      );
-                    } catch (e) {
-                      _message('Error: $e');
-                    }
-                  },
-                  child: Text(
-                    budget == null ? 'Create Budget' : 'Update Budget',
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    DateTime startDate = budget == null ? DateTime(DateTime.now().year, DateTime.now().month, 1) : budget.startDate;
+    DateTime endDate = budget == null ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0) : budget.endDate;
+    InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13), isDense: true);
+
+    await showModalBottomSheet(
+      context: context, isScrollControlled: true, useSafeArea: true,
+      backgroundColor: Colors.transparent, elevation: 0,
+      builder: (sheetContext) => StatefulBuilder(builder: (context, setSheetState) {
+        final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+        final screenHeight = MediaQuery.sizeOf(context).height;
+        final maxHeight = keyboardHeight > 0 ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * .95 : screenHeight * .72;
+        return AnimatedPadding(duration: const Duration(milliseconds: 220), curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Container(decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+              child: Form(key: formKey, child: SingleChildScrollView(primary: false,
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+                  const SizedBox(height: 12),
+                  Row(children: [Expanded(child: Text(budget == null ? 'Create Budget' : 'Edit Budget', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
+                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
+                  const SizedBox(height: 10),
+                  TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Enter budget name' : null),
+                  const SizedBox(height: 12),
+                  TextFormField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: decoration('Budget Limit', Icons.currency_exchange),
+                    validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid budget amount' : null; }),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String?>(value: category, isExpanded: true, decoration: decoration('Category', Icons.category_outlined),
+                    items: [const DropdownMenuItem<String?>(value: null, child: Text('All Categories')),
+                      ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString())))],
+                    onChanged: (v) => setSheetState(() => category = v)),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(value: period, isExpanded: true, decoration: decoration('Budget Period', Icons.calendar_view_month),
+                    items: const ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                    onChanged: (v) { if (v != null) setSheetState(() => period = v); }),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(value: currency, isExpanded: true, decoration: decoration('Currency', Icons.payments_outlined),
+                    items: _currencies.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                    onChanged: (v) { if (v != null) setSheetState(() => currency = v); }),
+                  ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
+                    title: const Text('Start Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(startDate)), trailing: const Icon(Icons.edit_calendar),
+                    onTap: () async { final v = await showDatePicker(context: context, initialDate: startDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (v != null) setSheetState(() => startDate = v); }),
+                  ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.event, color: Color(0xFF147D59)),
+                    title: const Text('End Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(endDate)), trailing: const Icon(Icons.edit_calendar),
+                    onTap: () async { final v = await showDatePicker(context: context, initialDate: endDate, firstDate: startDate, lastDate: DateTime(2100); if (v != null) setSheetState(() => endDate = v); }),
+                  const SizedBox(height: 12),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                    Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
+                      onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
+                        if (endDate.isBefore(startDate)) { _message('End date cannot be before start date.'); return; }
+                        try {
+                          final model = BudgetsModel(id: budget?.id, name: nameController.text.trim(), category: category,
+                            limitAmount: double.parse(amountController.text), spentAmount: budget?.spentAmount ?? 0, period: period,
+                            startDate: startDate, endDate: endDate, currency: currency, isActive: budget?.isActive ?? true, createdAt: budget?.createdAt ?? DateTime.now());
+                          if (budget == null) await BudgetsService.addBudget(model); else await BudgetsService.updateBudget(model);
+                          if (!sheetContext.mounted) return;
+                          Navigator.pop(sheetContext); await _loadData();
+                          _message(budget == null ? 'Budget created successfully.' : 'Budget updated successfully.');
+                        } catch (e) { _message('Error: $e'); }
+                      }))]),
+                ]))),
+          ));
+      }),
     );
-    nameController.dispose();
-    amountController.dispose();
+    nameController.dispose(); amountController.dispose();
   }
   Future<void> _toggleBudget(BudgetsModel budget) async {
     if (budget.id == null) return;

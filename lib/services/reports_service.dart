@@ -1,7 +1,7 @@
 
 import 'package:sqflite/sqflite.dart';
 
-import 'transaction_service.dart';
+import 'transactions_service.dart';
 
 class ReportsService {
   Future<Database> get _database => TransactionService.database;

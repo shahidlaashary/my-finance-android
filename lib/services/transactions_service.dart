@@ -32,16 +32,7 @@ class TransactionsService {
     return openDatabase(p.join(path, 'my_finance.db'));
   }
 
-  static Future<void> closeDatabase() async {
-    final pending = _databaseFuture;
-    if (pending != null) {
-      try { await pending; } catch (_) {}
-    }
-    final db = _database;
-    _database = null;
-    _databaseFuture = null;
-    if (db != null && db.isOpen) await db.close();
-  }
+
 
   static Future<void> _changeBalance(Transaction txn, int walletId, double change) async {
     final changed = await txn.rawUpdate(

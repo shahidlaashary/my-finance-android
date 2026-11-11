@@ -14,7 +14,7 @@ class AssetService {
         purchase_price REAL NOT NULL,
         current_value REAL NOT NULL,
         purchase_date TEXT NOT NULL,
-        account_id INTEGER NOT NULL,
+        wallet_id INTEGER NOT NULL,
         notes TEXT NOT NULL DEFAULT '',
         is_sold INTEGER NOT NULL DEFAULT 0,
         sale_date TEXT,
@@ -24,7 +24,7 @@ class AssetService {
     ''');
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_assets_account
-      ON assets(account_id)
+      ON assets(wallet_id)
     ''');
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_assets_sold
@@ -36,13 +36,13 @@ class AssetService {
   }
   Future<Map<String, dynamic>> _getAccount(
     Transaction txn,
-    int accountId,
+    int walletId,
   ) async {
     final rows = await txn.query(
-      'accounts',
+      'wallets',
       columns: ['id', 'balance', 'currency'],
       where: 'id = ?',
-      whereArgs: [accountId],
+      whereArgs: [walletId],
       limit: 1,
     );
     if (rows.isEmpty) {
@@ -52,30 +52,30 @@ class AssetService {
   }
   Future<double> _getBalance(
     Transaction txn,
-    int accountId,
+    int walletId,
   ) async {
-    final account = await _getAccount(txn, accountId);
+    final account = await _getAccount(txn, walletId);
     return (account['balance'] as num).toDouble();
   }
   Future<void> _changeBalance(
     Transaction txn, {
-    required int accountId,
+    required int walletId,
     required double amount,
   }) async {
     await txn.rawUpdate(
       '''
-      UPDATE accounts
+      UPDATE wallets
       SET balance = balance + ?
       WHERE id = ?
       ''',
-      [amount, accountId],
+      [amount, walletId],
     );
   }
   void _validateAsset(AssetModel asset) {
     if (asset.name.trim().isEmpty) {
       throw Exception('Asset name is required.');
     }
-    if (asset.accountId <= 0) {
+    if (asset.walletId <= 0) {
       throw Exception('Please select a valid account.');
     }
     if (!asset.purchasePrice.isFinite ||
@@ -114,7 +114,7 @@ class AssetService {
     return db.transaction((txn) async {
       final account = await _getAccount(
         txn,
-        asset.accountId,
+        asset.walletId,
       );
       final balance = (account['balance'] as num).toDouble();
       if (balance < asset.purchasePrice) {
@@ -132,7 +132,7 @@ class AssetService {
       final assetId = await txn.insert('assets', map);
       await _changeBalance(
         txn,
-        accountId: asset.accountId,
+        walletId: asset.walletId,
         amount: -asset.purchasePrice,
       );
       return assetId;
@@ -210,7 +210,7 @@ class AssetService {
           'Sale date cannot be before purchase date.',
         );
       }
-      await _getAccount(txn, asset.accountId);
+      await _getAccount(txn, asset.walletId);
       await txn.update(
         'assets',
         {
@@ -223,7 +223,7 @@ class AssetService {
       );
       await _changeBalance(
         txn,
-        accountId: asset.accountId,
+        walletId: asset.walletId,
         amount: salePrice,
       );
     });
@@ -254,23 +254,23 @@ class AssetService {
       if (oldAsset.isSold) {
         throw Exception('Sold assets cannot be edited.');
       }
-      await _getAccount(txn, oldAsset.accountId);
-      await _getAccount(txn, updatedAsset.accountId);
+      await _getAccount(txn, oldAsset.walletId);
+      await _getAccount(txn, updatedAsset.walletId);
       await _changeBalance(
         txn,
-        accountId: oldAsset.accountId,
+        walletId: oldAsset.walletId,
         amount: oldAsset.purchasePrice,
       );
       final newBalance = await _getBalance(
         txn,
-        updatedAsset.accountId,
+        updatedAsset.walletId,
       );
       if (newBalance < updatedAsset.purchasePrice) {
         throw Exception('Insufficient account balance.');
       }
       await _changeBalance(
         txn,
-        accountId: updatedAsset.accountId,
+        walletId: updatedAsset.walletId,
         amount: -updatedAsset.purchasePrice,
       );
       final map = updatedAsset.copyWith(
@@ -301,17 +301,17 @@ class AssetService {
       );
       if (rows.isEmpty) return;
       final asset = AssetModel.fromMap(rows.first);
-      await _getAccount(txn, asset.accountId);
+      await _getAccount(txn, asset.walletId);
       if (asset.isSold && asset.salePrice != null) {
         await _changeBalance(
           txn,
-          accountId: asset.accountId,
+          walletId: asset.walletId,
           amount: -asset.salePrice!,
         );
       }
       await _changeBalance(
         txn,
-        accountId: asset.accountId,
+        walletId: asset.walletId,
         amount: asset.purchasePrice,
       );
       await txn.delete(
@@ -328,7 +328,7 @@ class AssetService {
       SELECT a.currency AS currency,
              COALESCE(SUM(s.current_value), 0) AS total
       FROM assets s
-      INNER JOIN accounts a ON a.id = s.account_id
+      INNER JOIN wallets a ON a.id = s.wallet_id
       WHERE s.is_sold = 0
       GROUP BY a.currency
     ''');
@@ -345,7 +345,7 @@ class AssetService {
       SELECT a.currency AS currency,
              COALESCE(SUM(s.purchase_price), 0) AS total
       FROM assets s
-      INNER JOIN accounts a ON a.id = s.account_id
+      INNER JOIN wallets a ON a.id = s.wallet_id
       WHERE s.is_sold = 0
       GROUP BY a.currency
     ''');
@@ -364,7 +364,7 @@ class AssetService {
                SUM(s.sale_price - s.purchase_price), 0
              ) AS total
       FROM assets s
-      INNER JOIN accounts a ON a.id = s.account_id
+      INNER JOIN wallets a ON a.id = s.wallet_id
       WHERE s.is_sold = 1
       GROUP BY a.currency
     ''');
@@ -397,14 +397,14 @@ class AssetService {
     );
   }
   Future<List<AssetModel>> getAssetsByAccount(
-    int accountId,
+    int walletId,
   ) async {
     final db = await _database;
     await _ensureTables(db);
     final rows = await db.query(
       'assets',
-      where: 'account_id = ?',
-      whereArgs: [accountId],
+      where: 'wallet_id = ?',
+      whereArgs: [walletId],
       orderBy: 'purchase_date DESC',
     );
     return rows.map(AssetModel.fromMap).toList();

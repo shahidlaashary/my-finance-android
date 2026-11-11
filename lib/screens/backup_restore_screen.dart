@@ -426,7 +426,7 @@ class _BackupRestoreScreenState
         await GoalsService.closeDatabase();
         await RecurringTransactionService.closeDatabase();
         await CategoryService.closeDatabase();
-        await LoanService.closeDatabase();
+        await LoansService.closeDatabase();
         await AttachmentService.closeDatabase();
 
         // Close the main database connection.

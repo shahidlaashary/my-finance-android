@@ -1,7 +1,7 @@
 class BudgetModel {
   final int? id;
   final String name;
-  final int? categoryId;
+  final String? category;
   final double limitAmount;
   final double spentAmount;
   final String period;
@@ -14,7 +14,7 @@ class BudgetModel {
   const BudgetModel({
     this.id,
     required this.name,
-    this.categoryId,
+    this.category,
     required this.limitAmount,
     this.spentAmount = 0,
     this.period = 'Monthly',
@@ -50,7 +50,7 @@ class BudgetModel {
     return BudgetModel(
       id: map['id'] as int?,
       name: (map['name'] ?? '').toString(),
-      categoryId: (map['category_id'] as num?)?.toInt(),
+      category: map['category']?.toString(),
       limitAmount: (map['limit_amount'] as num?)?.toDouble() ?? 0,
       spentAmount: (map['spent_amount'] as num?)?.toDouble() ?? 0,
       period: (map['period'] ?? 'Monthly').toString(),
@@ -74,7 +74,7 @@ class BudgetModel {
     return {
       if (id != null) 'id': id,
       'name': name,
-      'category_id': categoryId,
+      'category': category,
       'limit_amount': limitAmount,
       'spent_amount': spentAmount,
       'period': period,
@@ -89,7 +89,7 @@ class BudgetModel {
   BudgetModel copyWith({
     int? id,
     String? name,
-    int? categoryId,
+    String? category,
     double? limitAmount,
     double? spentAmount,
     String? period,
@@ -102,7 +102,7 @@ class BudgetModel {
     return BudgetModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      categoryId: categoryId ?? this.categoryId,
+      categoryId: categoryId ?? this.category,
       limitAmount: limitAmount ?? this.limitAmount,
       spentAmount: spentAmount ?? this.spentAmount,
       period: period ?? this.period,

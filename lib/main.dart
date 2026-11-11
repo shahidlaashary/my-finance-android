@@ -12,6 +12,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
 import 'services/attachment_service.dart';
+import 'services/app_refresh_service.dart';
+import 'services/budgets_service.dart';
+import 'models/budgets_model.dart';
 import 'models/attachment_model.dart';
 import 'screens/assets_screen.dart';
 import 'screens/budgets_screen.dart';
@@ -1500,18 +1503,35 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   // Plus button alag page nahi, is liye pages mein sirf 8 screens hain.
   int selectedIndex = 0;
+  int _refreshVersion = 0;
 
-  // Navigation ka bilkul theek order.
-  final List<Widget> pages = const [
-    HomePage(),                         // 0
-    AssetsPage(),                       // 1
-    BudgetsScreen(),                    // 2
-    GoalsScreen(),                      // 3
-    LoansScreen(),                      // 4
-    StatsScreen(),                      // 5
-    TransactionsScreen(),               // 6
-    WalletsPage(),                      // 7
+  List<Widget> get pages => [
+    KeyedSubtree(key: ValueKey('home-$_refreshVersion'), child: const HomePage()),
+    KeyedSubtree(key: ValueKey('assets-$_refreshVersion'), child: const AssetsPage()),
+    KeyedSubtree(key: ValueKey('budgets-$_refreshVersion'), child: const BudgetsScreen()),
+    KeyedSubtree(key: ValueKey('goals-$_refreshVersion'), child: const GoalsScreen()),
+    KeyedSubtree(key: ValueKey('loans-$_refreshVersion'), child: const LoansScreen()),
+    KeyedSubtree(key: ValueKey('stats-$_refreshVersion'), child: const StatsScreen()),
+    KeyedSubtree(key: ValueKey('transactions-$_refreshVersion'), child: const TransactionsScreen()),
+    KeyedSubtree(key: ValueKey('wallets-$_refreshVersion'), child: const WalletsPage()),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    AppRefreshController.revision.addListener(_handleDataChanged);
+  }
+
+  @override
+  void dispose() {
+    AppRefreshController.revision.removeListener(_handleDataChanged);
+    super.dispose();
+  }
+
+  void _handleDataChanged() {
+    if (!mounted) return;
+    setState(() => _refreshVersion++);
+  }
 
   void selectPage(int index) {
     if (index < 0 || index >= pages.length) return;
@@ -1906,6 +1926,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   double totalBalance = 0;
+  double monthlyIncome = 0;
+  double monthlyExpense = 0;
+  List<BudgetsModel> budgetAlerts = [];
   bool loading = true;
 
   @override
@@ -1915,24 +1938,75 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> loadDashboard() async {
+    if (mounted) setState(() => loading = true);
     try {
+      final db = FinanceDB.instance.db;
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+      final nextMonth = DateTime(now.year, now.month + 1, 1);
+      final totals = await db.rawQuery('''
+        SELECT UPPER(t.type) AS type,
+          COALESCE(SUM(
+            t.amount * COALESCE(
+              er.rate,
+              CASE WHEN UPPER(w.currency) = 'PKR' THEN 1.0 ELSE 0.0 END
+            )
+          ), 0) AS total
+        FROM transactions t
+        INNER JOIN wallets w ON w.id = t.wallet_id
+        LEFT JOIN exchange_rates er
+          ON UPPER(er.currency) = UPPER(w.currency)
+        WHERE UPPER(t.type) IN ('INCOME', 'EXPENSE')
+          AND date(t.date) >= date(?)
+          AND date(t.date) < date(?)
+        GROUP BY UPPER(t.type)
+      ''', [monthStart.toIso8601String(), nextMonth.toIso8601String()]);
+
+      double income = 0;
+      double expense = 0;
+      for (final row in totals) {
+        final value = (row['total'] as num?)?.toDouble() ?? 0;
+        if (row['type'] == 'INCOME') income = value;
+        if (row['type'] == 'EXPENSE') expense = value;
+      }
+
       final balance = await FinanceDB.instance.getTotalBalancePKR();
+      final budgets = await BudgetsService.getBudgets(activeOnly: true);
+      final alerts = budgets
+          .where((budget) =>
+              budget.isCurrentlyActive &&
+              budget.limitAmount > 0 &&
+              budget.spentAmount / budget.limitAmount >= 0.5)
+          .toList()
+        ..sort((a, b) =>
+            (b.spentAmount / b.limitAmount)
+                .compareTo(a.spentAmount / a.limitAmount));
 
       if (!mounted) return;
-
       setState(() {
         totalBalance = balance;
+        monthlyIncome = income;
+        monthlyExpense = expense;
+        budgetAlerts = alerts;
         loading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() => loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Dashboard update failed: $error')),
+      );
     }
   }
 
-  String money(double amount) {
-    return 'PKR ${NumberFormat('#,##0.00').format(amount)}';
-  }
+  String money(double amount) =>
+      'PKR ${NumberFormat('#,##0.00').format(amount)}';
+
+  double get monthlySavings => monthlyIncome - monthlyExpense;
+
+  double get savingsRate => monthlyIncome <= 0
+      ? 0
+      : ((monthlySavings / monthlyIncome) * 100);
 
   @override
   Widget build(BuildContext context) {
@@ -1941,7 +2015,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text(
           'My Finance',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildSharedAppBarActions(context),
       ),
@@ -1950,15 +2024,12 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           children: [
-            // Bunyadi balance card.
+            // Primary wallet balance.
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF147D59),
-                    Color(0xFF0B6245),
-                  ],
+                  colors: [Color(0xFF147D59), Color(0xFF0B6245)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1974,22 +2045,15 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Total Balance',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
+                  const Text('Total Wallet Balance',
+                      style: TextStyle(color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 8),
                   loading
                       ? const SizedBox(
-                          height: 34,
-                          width: 34,
+                          height: 30,
+                          width: 30,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
+                              color: Colors.white, strokeWidth: 2),
                         )
                       : Text(
                           money(totalBalance),
@@ -1999,22 +2063,136 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
+                  const SizedBox(height: 7),
+                  const Text('Consolidated in PKR',
+                      style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'Overview',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.text,
+            const SizedBox(height: 18),
+            const Text('This Month',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
+                    color: AppColors.text)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _metricCard(
+                    title: 'Income',
+                    value: monthlyIncome,
+                    icon: Icons.south_west_rounded,
+                    color: AppColors.income,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _metricCard(
+                    title: 'Expenses',
+                    value: monthlyExpense,
+                    icon: Icons.north_east_rounded,
+                    color: AppColors.expense,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: const Color(0xFFEDF1EE)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF147D59).withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: const Icon(Icons.savings_outlined,
+                        color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Net Monthly Savings',
+                            style: TextStyle(fontSize: 12,
+                                color: AppColors.muted,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 3),
+                        Text(money(monthlySavings),
+                            style: TextStyle(fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: monthlySavings >= 0
+                                    ? AppColors.income
+                                    : AppColors.expense)),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${savingsRate.toStringAsFixed(1)}%',
+                    style: const TextStyle(fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Budget Alerts',
+                      style: TextStyle(fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.text)),
+                ),
+                if (budgetAlerts.isNotEmpty)
+                  TextButton(
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const BudgetsScreen())),
+                    child: const Text('View Budgets'),
+                  ),
+              ],
+            ),
+            if (loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else if (budgetAlerts.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFEDF1EE)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.check_circle_outline_rounded,
+                        color: AppColors.income),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text('No budget alerts. Your active budgets are below 50%.',
+                          style: TextStyle(fontSize: 12,
+                              color: AppColors.muted)),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...budgetAlerts.take(4).map(_budgetAlertCard),
+            const SizedBox(height: 22),
+            const Text('Overview',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
+                    color: AppColors.text)),
             const SizedBox(height: 12),
-
             _overviewCard(
               icon: Icons.real_estate_agent_outlined,
               title: 'Assets Overview',
@@ -2056,6 +2234,104 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _metricCard({
+    required String title,
+    required double value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: const Color(0xFFEDF1EE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 7),
+            Text(title, style: const TextStyle(fontSize: 12,
+                color: AppColors.muted, fontWeight: FontWeight.w600)),
+          ]),
+          const SizedBox(height: 9),
+          loading
+              ? const SizedBox(height: 18, width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(money(value),
+                      style: TextStyle(fontSize: 16,
+                          fontWeight: FontWeight.w800, color: color)),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _budgetAlertCard(BudgetsModel budget) {
+    final ratio = budget.spentAmount / budget.limitAmount;
+    final percent = ratio * 100;
+    final exceeded = ratio >= 1;
+    final color = exceeded
+        ? AppColors.expense
+        : ratio >= 0.9
+            ? const Color(0xFFE18A35)
+            : ratio >= 0.75
+                ? const Color(0xFFCC9A35)
+                : AppColors.primary;
+    final status = exceeded
+        ? 'Budget limit reached'
+        : ratio >= 0.9
+            ? 'Almost exceeded'
+            : ratio >= 0.75
+                ? '75% used'
+                : '50% used';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Expanded(
+              child: Text(budget.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800,
+                      fontSize: 13, color: AppColors.text)),
+            ),
+            Text('${percent.toStringAsFixed(0)}%',
+                style: TextStyle(fontSize: 13,
+                    fontWeight: FontWeight.w800, color: color)),
+          ]),
+          const SizedBox(height: 5),
+          Text(status, style: TextStyle(fontSize: 11,
+              fontWeight: FontWeight.w600, color: color)),
+          const SizedBox(height: 9),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: ratio.clamp(0.0, 1.0).toDouble(),
+              minHeight: 7,
+              backgroundColor: const Color(0xFFEDF1EE),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text('${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
+              style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+        ],
+      ),
+    );
+  }
+
   Widget _overviewCard({
     required IconData icon,
     required String title,
@@ -2070,9 +2346,7 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(
             builder: (_) => destinationTitle == 'Assets'
                 ? const AssetsScreen()
-                : SimpleFeaturePage(
-                    title: destinationTitle,
-                  ),
+                : SimpleFeaturePage(title: destinationTitle),
           ),
         );
       },
@@ -2101,28 +2375,15 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
-                  ),
+                  Text(title, style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 14)),
                   const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 11,
-                    ),
-                  ),
+                  Text(subtitle, style: const TextStyle(
+                      color: AppColors.muted, fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.muted,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
           ],
         ),
       ),

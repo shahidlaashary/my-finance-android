@@ -735,7 +735,7 @@ class _WalletsPageState extends State<WalletsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         foregroundColor: AppColors.text,
         elevation: 0,
         titleSpacing: 16,
@@ -3714,6 +3714,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 16,
+        toolbarHeight: 56,
         title: const Text(
           'Transactions',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),

@@ -379,6 +379,13 @@ class _StatsScreenState extends State<StatsScreen> {
         _overviewLine('Overdue loans', currencyLoans.where((l) => l.isOverdue).length.toString()),
       ]),
       const SizedBox(height: 12),
+      _buildOverviewSection('Transactions', Icons.receipt_long_outlined, [
+        _overviewLine('Transactions in period', _transactionCount.toString()),
+        _overviewLine('Income', '$_currency ${_money(_totals['income'])}'),
+        _overviewLine('Expenses', '$_currency ${_money(_totals['expense'])}'),
+        _overviewLine('Net savings', '$_currency ${_money(_totals['net'])}'),
+      ]),
+      const SizedBox(height: 12),
       _buildOverviewSection('Wallets / Accounts', Icons.account_balance_wallet_outlined, [
         _overviewLine('Accounts in $_currency', walletCount.toString()),
         _overviewLine('Total currencies', _balances.length.toString()),

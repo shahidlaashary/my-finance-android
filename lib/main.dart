@@ -25,6 +25,8 @@ import 'screens/loans_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'widgets/shared_app_bar_actions.dart';
+import 'widgets/app_lock_gate.dart';
+import 'services/auto_backup_service.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam
@@ -40,6 +42,14 @@ Future<void> main() async {
   }
 
   await FinanceDB.instance.init();
+
+  if (Platform.isAndroid) {
+    try {
+      await AutoBackupService.initialize();
+    } catch (_) {
+      // The app remains usable if background scheduling is unavailable.
+    }
+  }
 
   runApp(const MyFinanceApp());
 }
@@ -1492,7 +1502,7 @@ class MyFinanceApp extends StatelessWidget {
       routes: {
         '/settings': (_) => const MoreFeaturesPage(),
       },
-      home: const MainScreen(),
+      home: const AppLockGate(child: MainScreen()),
     );
   }
 }

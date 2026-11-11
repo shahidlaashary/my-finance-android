@@ -31,7 +31,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   List<Map<String, dynamic>> _summary = [];
   List<Map<String, dynamic>> _trend = [];
   List<Map<String, dynamic>> _categories = [];
-  List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _wallets = [];
   List<Map<String, dynamic>> _balances = [];
   List<Map<String, dynamic>> _history = [];
 
@@ -86,7 +86,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _summary = results[1] as List<Map<String, dynamic>>;
         _trend = results[2] as List<Map<String, dynamic>>;
         _categories = results[3] as List<Map<String, dynamic>>;
-        _accounts = results[4] as List<Map<String, dynamic>>;
+        _wallets = results[4] as List<Map<String, dynamic>>;
         _balances = results[5] as List<Map<String, dynamic>>;
         _history = results[6] as List<Map<String, dynamic>>;
 
@@ -510,7 +510,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               title: Text(currency),
               subtitle: Text(
-                '${item['account_count']} accounts',
+                '${item['account_count']} wallets',
               ),
               trailing: Text(
                 _money(
@@ -761,8 +761,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Widget _buildAccountSection() {
     final items = _selectedCurrency == null
-        ? _accounts
-        : _accounts
+        ? _wallets
+        : _wallets
             .where(
               (item) =>
                   item['currency'] == _selectedCurrency,
@@ -796,7 +796,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['account_name']?.toString() ??
+                    item['wallet_name']?.toString() ??
                         'Account',
                     style: const TextStyle(
                       fontSize: 16,
@@ -931,7 +931,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               item['category_name']?.toString() ?? '';
 
           final account =
-              item['account_name']?.toString() ?? '';
+              item['wallet_name']?.toString() ?? '';
 
           return Card(
             child: ListTile(

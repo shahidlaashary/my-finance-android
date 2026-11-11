@@ -20,7 +20,7 @@ import 'screens/loans_screen.dart';
 import 'screens/transactions_screen.dart';
 
 // ============================================================
-// Fresh Database + Wallet Management
+// Naya database aur wallet ka intizam
 // ============================================================
 
 Future<void> main() async {
@@ -38,7 +38,7 @@ Future<void> main() async {
 }
 
 // ============================================================
-// APP COLORS
+// App ke rang
 // ============================================================
 
 class AppColors {
@@ -51,7 +51,7 @@ class AppColors {
 }
 
 // ============================================================
-// DATABASE
+// Database ka nizam
 // ============================================================
 
 class FinanceDB {
@@ -83,7 +83,7 @@ class FinanceDB {
   }
 
   Future<void> _createDatabase(Database db, int version) async {
-    // Wallets table.
+    // Wallets ka table.
     await db.execute('''
       CREATE TABLE wallets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,7 +100,7 @@ class FinanceDB {
       )
     ''');
 
-    // Transactions table.
+    // Transactions ka table.
     // to_amount aur exchange_rate cross-currency transfers ke liye hain.
     // balance_delta manual balance adjustment ke liye hai.
     await db.execute('''
@@ -120,7 +120,7 @@ class FinanceDB {
       )
     ''');
 
-    // Exchange rates: 1 unit currency ki PKR value.
+    // Har currency ke aik unit ki PKR mein qeemat.
     await db.execute('''
       CREATE TABLE exchange_rates (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -137,14 +137,14 @@ class FinanceDB {
       )
     ''');
 
-    // PKR app ki main currency hai.
+    // PKR app ki bunyadi currency hai.
     await db.insert('exchange_rates', {
       'currency': 'PKR',
       'rate': 1.0,
       'updated_at': DateTime.now().toIso8601String(),
     });
 
-    // App ki main currency setting.
+    // App ki bunyadi currency ki setting.
     await db.insert('app_settings', {
       'setting_key': 'main_currency',
       'setting_value': 'PKR',
@@ -152,7 +152,7 @@ class FinanceDB {
   }
 
   // ----------------------------------------------------------
-  // WALLET DATABASE FUNCTIONS
+  // Wallet database ke functions
   // ----------------------------------------------------------
 
   Future<List<Map<String, dynamic>>> getWallets() {
@@ -163,7 +163,7 @@ class FinanceDB {
   }
 
   // ----------------------------------------------------------
-  // CATEGORY FUNCTIONS
+  // Categories ke functions
   // ----------------------------------------------------------
 
   List<Map<String, dynamic>> _defaultCategories(String type) {
@@ -282,7 +282,7 @@ class FinanceDB {
   }
 
   // ----------------------------------------------------------
-  // EXCHANGE RATE FUNCTIONS
+  // Currency rate ke functions
   // ----------------------------------------------------------
 
   Future<double?> getExchangeRate(String currency) async {
@@ -322,7 +322,7 @@ class FinanceDB {
   }
 
   // ----------------------------------------------------------
-  // WALLET UPDATE
+  // Wallet update karna
   // ----------------------------------------------------------
 
   Future<void> updateWallet({
@@ -482,7 +482,7 @@ class FinanceDB {
   }
 
   // ----------------------------------------------------------
-  // WALLET DELETE
+  // Wallet delete karna
   // ----------------------------------------------------------
 
   Future<void> deleteWallet(int id) async {
@@ -509,7 +509,7 @@ class FinanceDB {
   }
 
   // ----------------------------------------------------------
-  // CONSOLIDATED TOTAL BALANCE
+  // Tamam wallets ka majmoi balance
   // ----------------------------------------------------------
 
   Future<double> getTotalBalancePKR() async {
@@ -551,7 +551,7 @@ class FinanceDB {
 }
 
 // ============================================================
-// WALLET OPTIONS
+// Wallet ke options
 // ============================================================
 
 const List<String> walletTypes = [
@@ -597,7 +597,7 @@ const List<IconData> walletIcons = [
 ];
 
 // ============================================================
-// WALLETS PAGE
+// Wallets ka safha
 // ============================================================
 
 class _WalletWavePainter extends CustomPainter {
@@ -659,7 +659,7 @@ class _WalletsPageState extends State<WalletsPage> {
   Future<void> openWalletForm([
     Map<String, dynamic>? wallet,
   ]) async {
-    // Wallet form ko premium bottom sheet ke taur par kholna.
+    // Wallet ka form aik behtar bottom sheet mein kholta hai.
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -879,7 +879,7 @@ class _WalletsPageState extends State<WalletsPage> {
 }
 
 // ============================================================
-// ADD / EDIT WALLET FORM
+// Wallet add ya edit karne ka form
 // ============================================================
 
 class WalletFormDialog extends StatefulWidget {
@@ -1039,7 +1039,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
   Widget _buildIconPicker() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 16 icons ko 8 columns mein rakh kar bilkul 2 rows banate hain.
+        // 16 icons ko 8 columns mein rakh kar 2 rows banata hai.
         const spacing = 6.0;
         final itemWidth = (constraints.maxWidth - spacing * 7) / 8;
 
@@ -1090,8 +1090,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
         ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
         : screenHeight * 0.72;
 
-    // Modal bottom sheet keyboard ke viewInsets ke sath smoothly upar move hoti hai.
-    // Keyboard band hone par route sheet ko original position par le aata hai.
+    // Keyboard khulne par bottom sheet uski jagah ke mutabiq narmi se upar jati hai.
+    // Keyboard band hone par sheet apni pehli jagah par wapas aa jati hai.
     return AnimatedPadding(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
@@ -1109,7 +1109,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
               padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
               child: Form(
                 key: formKey,
-                // Sheet ko scroll karne ke bajaye keyboard par upar move karna.
+                // Sheet ko scroll karne ke bajaye keyboard khulne par upar le jana.
                 child: SingleChildScrollView(
                   primary: false,
                   keyboardDismissBehavior:
@@ -1119,7 +1119,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Sheet ka chhota drag handle.
+                      // Sheet ko kheenchne ke liye chhota handle.
                       Center(
                         child: Container(
                           width: 38,
@@ -1155,7 +1155,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Pehli row: Wallet Name aur Wallet Type.
+                      // Pehli row mein wallet ka naam aur qisam.
                       Row(
                         children: [
                           Expanded(
@@ -1230,7 +1230,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
                       const SizedBox(height: 8),
 
-                      // Currency aur amount ek hi row mein.
+                      // Currency aur amount aik hi row mein.
                       Row(
                         children: [
                           Expanded(
@@ -1294,7 +1294,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       ),
 
                       const SizedBox(height: 3),
-                      // Label aur standard toggle ek hi horizontal line par.
+                      // Label aur standard toggle aik hi seedhi line mein.
                       Row(
                         children: [
                           const Expanded(
@@ -1383,7 +1383,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 }
 
 // ============================================================
-// MY FINANCE APP
+// My Finance app
 // ============================================================
 
 class MyFinanceApp extends StatelessWidget {
@@ -1429,7 +1429,7 @@ class MyFinanceApp extends StatelessWidget {
 }
 
 // ============================================================
-// MAIN SCREEN - 9 POSITION BOTTOM NAVIGATION
+// Main screen aur 9 jagah wali bottom navigation
 // ============================================================
 
 class MainScreen extends StatefulWidget {
@@ -1440,10 +1440,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Plus button page nahi hai. Is liye pages mein sirf 8 screens hain.
+  // Plus button alag page nahi, is liye pages mein sirf 8 screens hain.
   int selectedIndex = 0;
 
-  // Navigation ka exact order.
+  // Navigation ka bilkul theek order.
   final List<Widget> pages = const [
     HomePage(),                         // 0
     AssetsPage(),                       // 1
@@ -1481,7 +1481,7 @@ class _MainScreenState extends State<MainScreen> {
         children: pages,
       ),
 
-      // Nine positions: eight navigation tabs + center Plus.
+      // Nau jagah: aath navigation tabs aur darmiyan mein Plus.
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1524,7 +1524,7 @@ class _MainScreenState extends State<MainScreen> {
                   label: 'Goals',
                 ),
 
-                // Center Plus: sirf icon, koi text label nahi.
+                // Darmiyan ka Plus: sirf icon, koi text label nahi.
                 Expanded(
                   flex: 1,
                   child: InkWell(
@@ -1587,8 +1587,8 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // Har navigation item ko barabar width milti hai.
-  // FittedBox labels ko ek line mein fit karne mein madad karta hai.
+  // Har navigation item ko aik jaisi width milti hai.
+  // FittedBox labels ko aik hi line mein rakhne mein madad karta hai.
   Widget _navItem({
     required int index,
     required IconData icon,
@@ -1661,7 +1661,7 @@ class _MainScreenState extends State<MainScreen> {
 }
 
 // ============================================================
-// PLUS ACTION SHEET
+// Plus button ke options ka panel
 // ============================================================
 
 class PlusActionSheet extends StatelessWidget {
@@ -1818,7 +1818,7 @@ class PlusActionSheet extends StatelessWidget {
 }
 
 // ============================================================
-// HOME DASHBOARD
+// Home ka khulasa
 // ============================================================
 
 class HomePage extends StatefulWidget {
@@ -1868,7 +1868,7 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
-          // Notification bell: abhi basic empty-state feedback deta hai.
+          // Notification bell filhal khaali state ka saada paigham dikhata hai.
           IconButton(
             tooltip: 'Notifications',
             onPressed: () {
@@ -1881,7 +1881,7 @@ class _HomePageState extends State<HomePage> {
             },
             icon: const Icon(Icons.notifications_none_rounded),
           ),
-          // Existing Settings route ko bilkul waise hi rakha gaya hai.
+          // Settings ka mojooda route bilkul waisa hi rakha gaya hai.
           IconButton(
             tooltip: 'Settings',
             onPressed: () {
@@ -1901,7 +1901,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           children: [
-            // Main balance card.
+            // Bunyadi balance card.
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -2080,7 +2080,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 // ============================================================
-// ASSETS PAGE
+// Assets ka safha
 // ============================================================
 
 class AssetsPage extends StatelessWidget {
@@ -2093,7 +2093,7 @@ class AssetsPage extends StatelessWidget {
 }
 
 // ============================================================
-// LOANS PAGE
+// Loans ka safha
 // ============================================================
 
 class LoansPage extends StatelessWidget {
@@ -2106,7 +2106,7 @@ class LoansPage extends StatelessWidget {
 }
 
 // ============================================================
-// MORE FEATURES
+// Mazeed sahuliyat
 // ============================================================
 
 class MoreFeaturesPage extends StatelessWidget {
@@ -2114,8 +2114,8 @@ class MoreFeaturesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Budgets, Goals aur Stats ab bottom navigation mein hain.
-    // Is liye yahan unki duplicate entries nahi hain.
+    // Budgets, Goals aur Stats ab bottom navigation mein mojood hain.
+    // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
       {
         'title': 'Categories',
@@ -2188,7 +2188,7 @@ class MoreFeaturesPage extends StatelessWidget {
   }
 }
 
-// Shared actions for all bottom navigation tabs.
+// Bottom navigation ke tamam tabs ke mushtarka actions.
 List<Widget> _sharedAppBarActions(BuildContext context) {
   return [
     IconButton(
@@ -2219,7 +2219,7 @@ List<Widget> _sharedAppBarActions(BuildContext context) {
 }
 
 // ============================================================
-// CATEGORY MANAGEMENT
+// Categories ka intizam
 // ============================================================
 
 class CategoriesPage extends StatefulWidget {
@@ -2628,7 +2628,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
 }
 
 // ============================================================
-// SIMPLE FEATURE PAGE
+// Feature ka sada safha
 // ============================================================
 
 class SimpleFeaturePage extends StatelessWidget {
@@ -2709,11 +2709,11 @@ class SimpleFeaturePage extends StatelessWidget {
 }
 
 // ============================================================
-// TRANSACTION DATABASE OPERATIONS
+// Transactions database ke operations
 // ============================================================
 
 extension FinanceTransactionOperations on FinanceDB {
-  // Transaction save karna aur linked wallet balance update karna.
+  // Transaction save karna aur linked wallet ka balance update karna.
   Future<int> addTransaction({
     required String type,
     required double amount,
@@ -2794,7 +2794,7 @@ extension FinanceTransactionOperations on FinanceDB {
         final destinationBalance =
             (destination['balance'] as num).toDouble();
 
-        // Dono wallets ki balances ek hi database transaction mein update.
+        // Dono wallets ke balances aik hi database transaction mein update hote hain.
         await txn.update(
           'wallets',
           {'balance': sourceBalance - amount},
@@ -2842,7 +2842,7 @@ extension FinanceTransactionOperations on FinanceDB {
     });
   }
 
-  // Transaction history hasil karna.
+  // Transactions ki history hasil karna.
   Future<List<Map<String, dynamic>>> getTransactions() async {
     return db.rawQuery('''
       SELECT
@@ -2860,7 +2860,7 @@ extension FinanceTransactionOperations on FinanceDB {
     ''');
   }
 
-  // Transaction delete karne par wallet balances reverse karna.
+  // Transaction delete hone par wallet balances ko pehli halat mein lana.
   Future<void> deleteTransaction(int id) async {
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -2957,7 +2957,7 @@ extension FinanceTransactionOperations on FinanceDB {
 }
 
 // ============================================================
-// ADD TRANSACTION FORM
+// Transaction add karne ka form
 // ============================================================
 
 class TransactionEntryForm extends StatefulWidget {
@@ -3429,7 +3429,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 }
 
 // ============================================================
-// TRANSACTIONS HISTORY
+// Transactions ki history
 // ============================================================
 
 class TransactionsPage extends StatefulWidget {

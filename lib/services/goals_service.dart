@@ -1,7 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/goals_model.dart';
-class SavingsService {
+class GoalsService {
   static const String _databaseName = 'my_finance.db';
   static Database? _databaseInstance;
   static Future<Database>? _databaseFuture;
@@ -49,7 +49,7 @@ class SavingsService {
   }
   static Future<void> _createTables(Database db) async {
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS savings_goals (
+      CREATE TABLE IF NOT EXISTS goals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         target_amount REAL NOT NULL,
@@ -62,7 +62,7 @@ class SavingsService {
       )
     ''');
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS savings_contributions (
+      CREATE TABLE IF NOT EXISTS goal_contributions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         goal_id INTEGER NOT NULL,
         wallet_id INTEGER NOT NULL,
@@ -74,8 +74,8 @@ class SavingsService {
       )
     ''');
     await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_savings_contributions_goal
-      ON savings_contributions(goal_id)
+      CREATE INDEX IF NOT EXISTS idx_goal_contributions_goal
+      ON goal_contributions(goal_id)
     ''');
   }
   static Future<Map<String, dynamic>> _getAccount(
@@ -108,7 +108,7 @@ class SavingsService {
       [amount, walletId],
     );
   }
-  static void _validateGoal(SavingsGoalModel goal) {
+  static void _validateGoal(GoalsModel goal) {
     if (goal.name.trim().isEmpty) {
       throw Exception('Savings goal name is required.');
     }
@@ -120,7 +120,7 @@ class SavingsService {
     }
   }
   /// Creates a new savings goal.
-  static Future<int> addGoal(SavingsGoalModel goal) async {
+  static Future<int> addGoal(GoalsModel goal) async {
     final db = await _database;
     _validateGoal(goal);
     if (goal.savedAmount > 0) {
@@ -134,7 +134,7 @@ class SavingsService {
       }
       final now = DateTime.now();
       return txn.insert(
-        'savings_goals',
+        'goals',
         goal.copyWith(
           name: goal.name.trim(),
           savedAmount: 0,
@@ -146,28 +146,28 @@ class SavingsService {
     });
   }
   /// Returns all savings goals.
-  static Future<List<SavingsGoalModel>> getGoals({
+  static Future<List<GoalsModel>> getGoals({
     bool includeCompleted = true,
   }) async {
     final db = await _database;
     final rows = await db.query(
-      'savings_goals',
+      'goals',
       where: includeCompleted ? null : 'is_completed = 0',
       orderBy: 'created_at DESC, id DESC',
     );
-    return rows.map(SavingsGoalModel.fromMap).toList();
+    return rows.map(GoalsModel.fromMap).toList();
   }
   /// Returns one savings goal by ID.
-  static Future<SavingsGoalModel?> getGoalById(int goalId) async {
+  static Future<GoalsModel?> getGoalById(int goalId) async {
     final db = await _database;
     final rows = await db.query(
-      'savings_goals',
+      'goals',
       where: 'id = ?',
       whereArgs: [goalId],
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    return SavingsGoalModel.fromMap(rows.first);
+    return GoalsModel.fromMap(rows.first);
   }
   /// Adds money to a savings goal and deducts it from the account.
   static Future<int> addContribution({
@@ -183,7 +183,7 @@ class SavingsService {
     final db = await _database;
     return db.transaction((txn) async {
       final goalRows = await txn.query(
-        'savings_goals',
+        'goals',
         where: 'id = ?',
         whereArgs: [goalId],
         limit: 1,
@@ -191,7 +191,7 @@ class SavingsService {
       if (goalRows.isEmpty) {
         throw Exception('Savings goal was not found.');
       }
-      final goal = SavingsGoalModel.fromMap(goalRows.first);
+      final goal = GoalsModel.fromMap(goalRows.first);
       if (goal.isCompleted) {
         throw Exception('This savings goal is already completed.');
       }
@@ -210,7 +210,7 @@ class SavingsService {
       final now = DateTime.now();
       final contributionDate = date ?? now;
       final contributionId = await txn.insert(
-        'savings_contributions',
+        'goal_contributions',
         {
           'goal_id': goalId,
           'wallet_id': walletId,
@@ -227,7 +227,7 @@ class SavingsService {
         amount: -amount,
       );
       await txn.update(
-        'savings_goals',
+        'goals',
         {
           'saved_amount': newSavedAmount,
           'wallet_id': goal.walletId ?? walletId,
@@ -252,7 +252,7 @@ class SavingsService {
     final db = await _database;
     return db.transaction((txn) async {
       final goalRows = await txn.query(
-        'savings_goals',
+        'goals',
         where: 'id = ?',
         whereArgs: [goalId],
         limit: 1,
@@ -260,7 +260,7 @@ class SavingsService {
       if (goalRows.isEmpty) {
         throw Exception('Savings goal was not found.');
       }
-      final goal = SavingsGoalModel.fromMap(goalRows.first);
+      final goal = GoalsModel.fromMap(goalRows.first);
       if (amount > goal.savedAmount + 0.000001) {
         throw Exception(
           'Withdrawal cannot exceed the saved amount.',
@@ -276,7 +276,7 @@ class SavingsService {
           (goal.savedAmount - amount).clamp(0.0, goal.targetAmount).toDouble();
       final now = DateTime.now();
       final withdrawalId = await txn.insert(
-        'savings_contributions',
+        'goal_contributions',
         {
           'goal_id': goalId,
           'wallet_id': goal.walletId,
@@ -293,7 +293,7 @@ class SavingsService {
         amount: amount,
       );
       await txn.update(
-        'savings_goals',
+        'goals',
         {
           'saved_amount': newSavedAmount,
           'is_completed': newSavedAmount >= goal.targetAmount ? 1 : 0,
@@ -310,7 +310,7 @@ class SavingsService {
   ) async {
     final db = await _database;
     return db.query(
-      'savings_contributions',
+      'goal_contributions',
       where: 'goal_id = ?',
       whereArgs: [goalId],
       orderBy: 'date DESC, id DESC',
@@ -318,7 +318,7 @@ class SavingsService {
   }
   /// Updates goal details without changing its saved amount.
   static Future<void> updateGoal(
-    SavingsGoalModel updatedGoal,
+    GoalsModel updatedGoal,
   ) async {
     if (updatedGoal.id == null) {
       throw Exception('Goal ID is required.');
@@ -327,7 +327,7 @@ class SavingsService {
     final db = await _database;
     await db.transaction((txn) async {
       final rows = await txn.query(
-        'savings_goals',
+        'goals',
         where: 'id = ?',
         whereArgs: [updatedGoal.id],
         limit: 1,
@@ -335,7 +335,7 @@ class SavingsService {
       if (rows.isEmpty) {
         throw Exception('Savings goal was not found.');
       }
-      final oldGoal = SavingsGoalModel.fromMap(rows.first);
+      final oldGoal = GoalsModel.fromMap(rows.first);
       if (updatedGoal.targetAmount < oldGoal.savedAmount) {
         throw Exception(
           'Target amount cannot be less than the saved amount.',
@@ -352,7 +352,7 @@ class SavingsService {
         );
       }
       await txn.update(
-        'savings_goals',
+        'goals',
         {
           'name': updatedGoal.name.trim(),
           'target_amount': updatedGoal.targetAmount,
@@ -371,14 +371,14 @@ class SavingsService {
     final db = await _database;
     await db.transaction((txn) async {
       final goalRows = await txn.query(
-        'savings_goals',
+        'goals',
         where: 'id = ?',
         whereArgs: [goalId],
         limit: 1,
       );
       if (goalRows.isEmpty) return;
       final history = await txn.query(
-        'savings_contributions',
+        'goal_contributions',
         where: 'goal_id = ?',
         whereArgs: [goalId],
       );
@@ -394,12 +394,12 @@ class SavingsService {
         );
       }
       await txn.delete(
-        'savings_contributions',
+        'goal_contributions',
         where: 'goal_id = ?',
         whereArgs: [goalId],
       );
       await txn.delete(
-        'savings_goals',
+        'goals',
         where: 'id = ?',
         whereArgs: [goalId],
       );
@@ -412,10 +412,10 @@ class SavingsService {
     final rows = await db.rawQuery('''
       SELECT
         COALESCE(NULLIF(TRIM(wallets.currency), ''), 'Unassigned') AS currency,
-        COALESCE(SUM(savings_goals.saved_amount), 0) AS total
-      FROM savings_goals
+        COALESCE(SUM(goals.saved_amount), 0) AS total
+      FROM goals
       LEFT JOIN wallets
-        ON wallets.id = savings_goals.wallet_id
+        ON wallets.id = goals.wallet_id
       GROUP BY currency
       ORDER BY currency ASC
     ''');
@@ -431,10 +431,10 @@ class SavingsService {
     final rows = await db.rawQuery('''
       SELECT
         COALESCE(NULLIF(TRIM(wallets.currency), ''), 'Unassigned') AS currency,
-        COALESCE(SUM(savings_goals.target_amount), 0) AS total
-      FROM savings_goals
+        COALESCE(SUM(goals.target_amount), 0) AS total
+      FROM goals
       LEFT JOIN wallets
-        ON wallets.id = savings_goals.wallet_id
+        ON wallets.id = goals.wallet_id
       GROUP BY currency
       ORDER BY currency ASC
     ''');
@@ -449,7 +449,7 @@ class SavingsService {
     final db = await _database;
     final result = await db.rawQuery('''
       SELECT COALESCE(SUM(saved_amount), 0) AS total
-      FROM savings_goals
+      FROM goals
     ''');
     return (result.first['total'] as num).toDouble();
   }
@@ -459,12 +459,12 @@ class SavingsService {
     final db = await _database;
     final result = await db.rawQuery('''
       SELECT COALESCE(SUM(target_amount), 0) AS total
-      FROM savings_goals
+      FROM goals
     ''');
     return (result.first['total'] as num).toDouble();
   }
   /// Returns goals that have passed their target date.
-  static Future<List<SavingsGoalModel>> getOverdueGoals() async {
+  static Future<List<GoalsModel>> getOverdueGoals() async {
     final db = await _database;
     final today = DateTime.now();
     final todayString =
@@ -472,7 +472,7 @@ class SavingsService {
         '${today.month.toString().padLeft(2, '0')}-'
         '${today.day.toString().padLeft(2, '0')}';
     final rows = await db.query(
-      'savings_goals',
+      'goals',
       where: '''
         is_completed = 0
         AND target_date IS NOT NULL
@@ -481,6 +481,6 @@ class SavingsService {
       whereArgs: [todayString],
       orderBy: 'target_date ASC',
     );
-    return rows.map(SavingsGoalModel.fromMap).toList();
+    return rows.map(GoalsModel.fromMap).toList();
   }
 }

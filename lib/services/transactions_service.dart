@@ -1,5 +1,6 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'app_refresh_service.dart';
 
 class TransactionsService {
 
@@ -50,6 +51,7 @@ class TransactionsService {
       [change, walletId],
     );
     if (changed == 0) throw Exception('Wallet not found: $walletId');
+    AppRefreshController.notifyChanged();
   }
 
   static Future<void> _reverse(Transaction txn, Map<String, dynamic> row) async {
@@ -236,6 +238,7 @@ class TransactionsService {
     final db = await database;
     await db.update('transactions', {'category': category ?? ''},
       where: "id = ? AND type IN ('Income', 'Expense')", whereArgs: [transactionId]);
+    AppRefreshController.notifyChanged();
   }
 
   static Future<List<Map<String, dynamic>>> getTransactions() async {

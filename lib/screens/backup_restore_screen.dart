@@ -75,7 +75,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       setState(() {
         _autoEnabled = enabled == '1';
         _frequency = frequency == 'weekly' ? 'weekly' : 'daily';
-        _googleEmail = connectedEmail ?? email;
+        _googleEmail = connectedEmail;
         _lastSuccess = last;
         _loadingCloud = false;
       });

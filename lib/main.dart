@@ -735,7 +735,7 @@ class _WalletsPageState extends State<WalletsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.text,
         elevation: 0,
         titleSpacing: 16,
@@ -744,8 +744,6 @@ class _WalletsPageState extends State<WalletsPage> {
           'My Wallets',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
-        backgroundColor: AppColors.background,
-        elevation: 0,
         actions: _sharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -2476,7 +2474,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: const Text(
           'Categories',

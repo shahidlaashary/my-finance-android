@@ -25,31 +25,17 @@ jobs:
           cache: true
       - name: Create Android project
         run: flutter create . --platforms=android
-      - name: Configure Android biometric activity and permission
+      - name: Configure Android permissions only
         run: |
-          MAIN_ACTIVITY=$(find android/app/src/main -name MainActivity.kt -o -name MainActivity.java | head -n 1)
-          if [ -n "$MAIN_ACTIVITY" ]; then
-            sed -i 's/FlutterActivity/FlutterFragmentActivity/g' "$MAIN_ACTIVITY"
-          fi
-          sed -i '/<manifest/a\    <uses-permission android:name="android.permission.USE_BIOMETRIC" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<manifest/a\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
-          if [ -f android/app/src/main/res/values/styles.xml ]; then
-            sed -i 's#parent="@android:style/Theme.Light.NoTitleBar"#parent="Theme.AppCompat.DayNight"#' android/app/src/main/res/values/styles.xml
-          fi
-          APP_GRADLE=$(find android/app -maxdepth 1 \( -name 'build.gradle' -o -name 'build.gradle.kts' \) | head -n 1)
-          if [ -n "$APP_GRADLE" ]; then
-            if [[ "$APP_GRADLE" == *.kts ]]; then
-              sed -i '/dependencies {/a\    implementation("androidx.appcompat:appcompat:1.7.0")' "$APP_GRADLE"
-            else
-              sed -i '/dependencies {/a\    implementation "androidx.appcompat:appcompat:1.7.0"' "$APP_GRADLE"
-            fi
-          fi
-      - name: Diagnostic - skip native plugin registration
+          sed -i '/<manifest/a\\    <uses-permission android:name="android.permission.USE_BIOMETRIC" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a\\    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+      - name: Diagnostic - use stock FlutterActivity and theme
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main -name MainActivity.kt | head -n 1)
           PACKAGE_LINE=$(grep '^package ' "$MAIN_ACTIVITY")
-          printf '%s\nimport io.flutter.embedding.android.FlutterFragmentActivity\nimport io.flutter.embedding.engine.FlutterEngine\n\nclass MainActivity : FlutterFragmentActivity() {\n    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {\n        // Diagnostic only: intentionally skip automatic plugin registration.\n    }\n}\n' "$PACKAGE_LINE" > "$MAIN_ACTIVITY"
+          printf '%s\\nimport io.flutter.embedding.android.FlutterActivity\\n\\nclass MainActivity : FlutterActivity()\\n' "$PACKAGE_LINE" > "$MAIN_ACTIVITY"
           cat "$MAIN_ACTIVITY"
+          # Keep Flutter's generated Android theme and dependencies unchanged.
       - name: Configure Gradle download
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties

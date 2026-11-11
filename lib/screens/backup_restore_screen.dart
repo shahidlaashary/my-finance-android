@@ -188,6 +188,75 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     }
   }
 
+  Future<void> _restoreFromDrive() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    try {
+      if (_googleEmail == null) {
+        final connected = await _connectDrive();
+        if (!connected) return;
+      }
+      final account = await GoogleDriveBackupService.signInSilently();
+      if (account == null) {
+        throw Exception('Connect your Google Drive account first.');
+      }
+      final backups =
+          await GoogleDriveBackupService.listBackups(account: account);
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+
+      if (backups.isEmpty) {
+        _showMessage('No My Finance automatic backups were found in Google Drive.');
+        return;
+      }
+
+      final selected = await showDialog<GoogleDriveBackupFile>(
+        context: context,
+        builder: (dialogContext) => SimpleDialog(
+          title: const Text('Restore from Google Drive'),
+          children: [
+            SizedBox(
+              width: double.maxFinite,
+              height: 300,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: backups.length,
+                itemBuilder: (context, index) {
+                  final backup = backups[index];
+                  return ListTile(
+                    leading: const Icon(Icons.cloud_download_outlined),
+                    title: Text(backup.name,
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(backup.createdTime ?? 'Backup file'),
+                    onTap: () => Navigator.pop(dialogContext, backup),
+                  );
+                },
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      );
+      if (selected == null || !mounted) return;
+
+      setState(() => _isProcessing = true);
+      final bytes = await GoogleDriveBackupService.downloadBackup(
+        account: account,
+        fileId: selected.id,
+      );
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      await _restoreBackupBytes(bytes);
+    } catch (error) {
+      _showMessage('Google Drive restore failed: $error', isError: true);
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
   Future<void> _importBackupFile() async {
     if (_isProcessing) return;
     try {
@@ -481,6 +550,15 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 buttonText: 'Select Backup ZIP',
                 color: Colors.teal,
                 onPressed: _importBackupFile,
+              ),
+              const SizedBox(height: 12),
+              _buildActionCard(
+                icon: Icons.cloud_download_rounded,
+                title: 'Restore from Google Drive',
+                description: 'View your saved automatic cloud backups and restore one to this device.',
+                buttonText: 'Browse Drive Backups',
+                color: Colors.blue,
+                onPressed: _restoreFromDrive,
               ),
               const SizedBox(height: 16),
               Container(

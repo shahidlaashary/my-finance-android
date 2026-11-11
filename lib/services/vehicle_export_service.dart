@@ -126,34 +126,44 @@ class VehicleExportService {
       'REMINDERS',
       ...reminders.map((v) => '${v['title']} | Due ${v['due_date']} | Odo ${v['due_odometer']}'),
     ];
-    final safeLines = lines.take(48).map((line) => line
-      .replaceAll(RegExp(r'[^\x20-\x7E]'), '?')
-      .replaceAll('\\', '\\\\').replaceAll('(', '\\(').replaceAll(')', '\\)')).toList();
-    final stream = StringBuffer('BT /F1 9 Tf 42 800 Td 12 TL ');
-    for (var i = 0; i < safeLines.length; i++) {
-      if (i > 0) stream.write('T* ');
-      stream.write('(${safeLines[i]}) Tj ');
-    }
-    stream.write('ET');
+    final safeLines = lines.map((line) => line
+      .replaceAll(RegExp(r'[^\\x20-\\x7E]'), '?')
+      .replaceAll('\\\\', '\\\\\\\\').replaceAll('(', '\\\\(').replaceAll(')', '\\\\)')).toList();
+    const linesPerPage = 52;
+    final pageCount = (safeLines.length / linesPerPage).ceil().clamp(1, 1000);
     final objects = <String>[
       '<< /Type /Catalog /Pages 2 0 R >>',
-      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+      '',
       '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-      '<< /Length ${latin1.encode(stream.toString()).length} >>\nstream\n${stream.toString()}\nendstream',
     ];
-    final pdf = StringBuffer('%PDF-1.4\n');
+    final pageRefs = <String>[];
+    for (var page = 0; page < pageCount; page++) {
+      final pageObject = 4 + page * 2;
+      final contentObject = pageObject + 1;
+      pageRefs.add('$pageObject 0 R');
+      final pageLines = safeLines.skip(page * linesPerPage).take(linesPerPage).toList();
+      final stream = StringBuffer('BT /F1 9 Tf 42 800 Td 12 TL ');
+      for (var i = 0; i < pageLines.length; i++) {
+        if (i > 0) stream.write('T* ');
+        stream.write('(${pageLines[i]}) Tj ');
+      }
+      stream.write('ET');
+      objects.add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents $contentObject 0 R >>');
+      objects.add('<< /Length ${latin1.encode(stream.toString()).length} >>\\nstream\\n${stream.toString()}\\nendstream');
+    }
+    objects[1] = '<< /Type /Pages /Kids [${pageRefs.join(' ')}] /Count $pageCount >>';
+    final pdf = StringBuffer('%PDF-1.4\\n');
     final offsets = <int>[0];
     for (var i = 0; i < objects.length; i++) {
       offsets.add(latin1.encode(pdf.toString()).length);
-      pdf.write('${i + 1} 0 obj\n${objects[i]}\nendobj\n');
+      pdf.write('${i + 1} 0 obj\\n${objects[i]}\\nendobj\\n');
     }
     final xref = latin1.encode(pdf.toString()).length;
-    pdf.write('xref\n0 ${objects.length + 1}\n0000000000 65535 f \n');
+    pdf.write('xref\\n0 ${objects.length + 1}\\n0000000000 65535 f \\n');
     for (var i = 1; i < offsets.length; i++) {
-      pdf.write('${offsets[i].toString().padLeft(10, '0')} 00000 n \n');
+      pdf.write('${offsets[i].toString().padLeft(10, '0')} 00000 n \\n');
     }
-    pdf.write('trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF');
+    pdf.write('trailer\\n<< /Size ${objects.length + 1} /Root 1 0 R >>\\nstartxref\\n$xref\\n%%EOF');
     return _save('vehicle_report_${DateTime.now().millisecondsSinceEpoch}.pdf', latin1.encode(pdf.toString()));
   }
 }

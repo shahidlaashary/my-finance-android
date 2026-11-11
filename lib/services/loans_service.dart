@@ -49,24 +49,7 @@ class LoansService {
     return db;
   }
 
-  static Future<void> closeDatabase() async {
-    final pendingFuture = _databaseFuture;
 
-    if (pendingFuture != null) {
-      try {
-        await pendingFuture;
-      } catch (_) {}
-    }
-
-    final currentDatabase = _databaseInstance;
-    _databaseInstance = null;
-
-    if (currentDatabase != null && currentDatabase.isOpen) {
-      await currentDatabase.close();
-    }
-
-    _databaseFuture = null;
-  }
 
   static Future<void> _createTables(Database db) async {
     await db.execute('''

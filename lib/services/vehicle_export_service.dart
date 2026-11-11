@@ -158,21 +158,21 @@ class VehicleExportService {
       }
       stream.write('ET');
       objects.add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents $contentObject 0 R >>');
-      objects.add('<< /Length ${latin1.encode(stream.toString()).length} >>\\nstream\\n${stream.toString()}\\nendstream');
+      objects.add('<< /Length ${latin1.encode(stream.toString()).length} >>\nstream\n${stream.toString()}\nendstream');
     }
     objects[1] = '<< /Type /Pages /Kids [${pageRefs.join(' ')}] /Count $pageCount >>';
-    final pdf = StringBuffer('%PDF-1.4\\n');
+    final pdf = StringBuffer('%PDF-1.4\n');
     final offsets = <int>[0];
     for (var i = 0; i < objects.length; i++) {
       offsets.add(latin1.encode(pdf.toString()).length);
-      pdf.write('${i + 1} 0 obj\\n${objects[i]}\\nendobj\\n');
+      pdf.write('${i + 1} 0 obj\n${objects[i]}\nendobj\n');
     }
     final xref = latin1.encode(pdf.toString()).length;
-    pdf.write('xref\\n0 ${objects.length + 1}\\n0000000000 65535 f \\n');
+    pdf.write('xref\n0 ${objects.length + 1}\n0000000000 65535 f \n');
     for (var i = 1; i < offsets.length; i++) {
-      pdf.write('${offsets[i].toString().padLeft(10, '0')} 00000 n \\n');
+      pdf.write('${offsets[i].toString().padLeft(10, '0')} 00000 n \n');
     }
-    pdf.write('trailer\\n<< /Size ${objects.length + 1} /Root 1 0 R >>\\nstartxref\\n$xref\\n%%EOF');
+    pdf.write('trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n$xref\n%%EOF');
     return _save('vehicle_report_${DateTime.now().millisecondsSinceEpoch}.pdf', latin1.encode(pdf.toString()));
   }
 }

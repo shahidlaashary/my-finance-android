@@ -100,6 +100,18 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     return v.isNotEmpty && v.first['fuel_type'] == 'Electric' ? 'km/kWh' : 'km/L';
   }
 
+  String _vehicleCost(int vehicleId, {required bool fuelOnly}) {
+    final totals = <String, double>{};
+    final rows = fuelOnly ? _fuel.where((e) => e['vehicle_id'] == vehicleId) : _expenses.where((e) => e['vehicle_id'] == vehicleId);
+    for (final r in rows) {
+      final currency = _walletCurrency(r['wallet_id']);
+      final amount = ((r[fuelOnly ? 'total' : 'amount'] as num?)?.toDouble() ?? 0);
+      totals[currency] = (totals[currency] ?? 0) + amount;
+    }
+    if (totals.isEmpty) return '0.00';
+    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join(' • ');
+  }
+
   String _costPerKm(int vehicleId) {
     final distance = _distanceFor(vehicleId);
     if (distance <= 0) return '—';
@@ -346,12 +358,12 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             Row(children: [
               Expanded(child: TextFormField(controller: quantity, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Quantity ($unit)', Icons.local_gas_station), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter quantity' : null; }, onChanged: (_) => setSheet(() {}))),
               const SizedBox(width: 10),
-              Expanded(child: TextFormField(controller: unitPrice, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Price per $unit', Icons.price_change_outlined), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter price' : null; }, onChanged: (_) => setSheet(() {}))),
+              Expanded(child: TextFormField(controller: unitPrice, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Price per $unit (${_walletCurrency(walletId)})', Icons.price_change_outlined), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter price' : null; }, onChanged: (_) => setSheet(() {}))),
             ]),
             const SizedBox(height: 8),
             Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFEAF4EF), borderRadius: BorderRadius.circular(12)),
               child: Text('Total Fuel Cost: ${_amount((double.tryParse(quantity.text) ?? 0) * (double.tryParse(unitPrice.text) ?? 0))}', style: const TextStyle(color: _green, fontWeight: FontWeight.w800))),
-            CheckboxListTile(contentPadding: EdgeInsets.zero, value: fullTank, onChanged: (v) => setSheet(() => fullTank = v ?? false), title: const Text('Full tank fill-up'), controlAffinity: ListTileControlAffinity.leading, dense: true),
+            CheckboxListTile(contentPadding: EdgeInsets.zero, value: fullTank, onChanged: (v) => setSheet(() => fullTank = v ?? false), title: Text(unit == 'kWh' ? 'Full charge' : 'Full tank fill-up'), controlAffinity: ListTileControlAffinity.leading, dense: true),
             TextFormField(controller: station, decoration: _decoration('Fuel Station (optional)', Icons.storefront_outlined)),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: _decoration('Pay from Wallet', Icons.account_balance_wallet_outlined),
@@ -715,8 +727,6 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       else ..._vehicles.map((v) {
         final id = v['id'] as int; final mileage = _averageMileage(id);
         final distance = _distanceFor(id);
-        final vehicleFuel = reportFuel.where((f) => f['vehicle_id'] == id).fold<double>(0, (s,f) => s + ((f['total'] as num?)?.toDouble() ?? 0));
-        final vehicleExpense = reportExpenses.where((e) => e['vehicle_id'] == id).fold<double>(0, (s,e) => s + ((e['amount'] as num?)?.toDouble() ?? 0));
         return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(v['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
           const SizedBox(height: 8),
@@ -724,8 +734,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             _smallStat('Distance', '${_amount(distance)} km'),
             _smallStat('Mileage', mileage == null ? '—' : '${_amount(mileage)} ${_mileageUnit(id)}'),
             _smallStat('Cost / KM', _costPerKm(id)),
-            _smallStat('Fuel cost', _amount(vehicleFuel)),
-            _smallStat('Other cost', _amount(vehicleExpense)),
+            _smallStat('Fuel cost', _vehicleCost(id, fuelOnly: true)),
+            _smallStat('Other cost', _vehicleCost(id, fuelOnly: false)),
           ]),
         ])));
       }),

@@ -683,8 +683,6 @@ class _WalletsPageState extends State<WalletsPage> {
       isDismissible: true,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      elevation: 2,
-        shadowColor: const Color(0x18000000),
       builder: (_) => WalletFormDialog(wallet: wallet),
     );
 
@@ -737,7 +735,7 @@ class _WalletsPageState extends State<WalletsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         foregroundColor: AppColors.text,
         elevation: 0,
         titleSpacing: 16,
@@ -1425,7 +1423,7 @@ class MyFinanceApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.white,
           foregroundColor: AppColors.text,
           elevation: 0,
           centerTitle: false,
@@ -2478,7 +2476,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Categories',

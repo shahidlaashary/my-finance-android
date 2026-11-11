@@ -8,8 +8,6 @@ class AttachmentModel {
   final String fileType;
   final int fileSize;
   final DateTime createdAt;
-  final String? remoteUrl;
-  final bool isSynced;
 
   const AttachmentModel({
     this.id,
@@ -20,8 +18,6 @@ class AttachmentModel {
     required this.fileType,
     required this.fileSize,
     required this.createdAt,
-    this.remoteUrl,
-    this.isSynced = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -34,8 +30,6 @@ class AttachmentModel {
       'file_type': fileType,
       'file_size': fileSize,
       'created_at': createdAt.toIso8601String(),
-      'remote_url': remoteUrl,
-      'is_synced': isSynced ? 1 : 0,
     };
   }
 
@@ -49,16 +43,12 @@ class AttachmentModel {
       fileType: map['file_type'] as String,
       fileSize: map['file_size'] as int,
       createdAt: DateTime.parse(map['created_at'] as String),
-      remoteUrl: map['remote_url'] as String?,
-      isSynced: (map['is_synced'] as int? ?? 0) == 1,
     );
   }
 
   AttachmentModel copyWith({
     int? id,
     String? filePath,
-    String? remoteUrl,
-    bool? isSynced,
   }) {
     return AttachmentModel(
       id: id ?? this.id,
@@ -69,8 +59,6 @@ class AttachmentModel {
       fileType: fileType,
       fileSize: fileSize,
       createdAt: createdAt,
-      remoteUrl: remoteUrl ?? this.remoteUrl,
-      isSynced: isSynced ?? this.isSynced,
     );
   }
 }

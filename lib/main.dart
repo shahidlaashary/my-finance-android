@@ -1751,18 +1751,21 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     children: [
                       _transactionTab(
                         title: 'Income',
+                        subtitle: 'Money received',
                         icon: Icons.south_west_rounded,
                         color: AppColors.income,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
                         title: 'Expense',
+                        subtitle: 'Money spent',
                         icon: Icons.north_east_rounded,
                         color: AppColors.expense,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
                         title: 'Transfer',
+                        subtitle: 'Money between wallets',
                         icon: Icons.swap_horiz_rounded,
                         color: AppColors.primary,
                       ),
@@ -1786,6 +1789,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
 
   Widget _transactionTab({
     required String title,
+    required String subtitle,
     required IconData icon,
     required Color color,
   }) {
@@ -1822,6 +1826,19 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: selected ? color : AppColors.muted,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 9,
+                  height: 1.15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted,
                 ),
               ),
             ],

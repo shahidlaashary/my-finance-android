@@ -376,9 +376,13 @@ class RecurringTransactionService {
       'amount': amount,
       'wallet_id': walletId,
       'to_wallet_id': toWalletId,
-      'to_amount': type == 'transfer' ? amount : null,\n      'exchange_rate': type == 'transfer' ? 1.0 : null,\n      'balance_delta': null,\n      'category': type == 'transfer' ? '' : (recurring['category'] ?? ''),
+      'to_amount': type == 'transfer' ? amount : null,
+      'exchange_rate': type == 'transfer' ? 1.0 : null,
+      'balance_delta': null,
+      'category': type == 'transfer' ? '' : (recurring['category'] ?? ''),
       'note': recurring['note'] ?? recurring['title'],
-      'date': _date(transactionDate),\n      'created_at': DateTime.now().toIso8601String(),
+      'date': _date(transactionDate),
+      'created_at': DateTime.now().toIso8601String(),
     });
   }
   /// Processes all due recurring transactions.

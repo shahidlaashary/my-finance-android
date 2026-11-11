@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import 'package:my_finance/main.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/backup_restore/services/backup_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';

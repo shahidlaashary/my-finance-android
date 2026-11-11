@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
@@ -31,8 +32,33 @@ import 'widgets/app_lock_gate.dart';
 // Naya database aur wallet ka intizam
 // ============================================================
 
+class _StartupDiagnostics {
+  static final ValueNotifier<String?> message = ValueNotifier<String?>(null);
+
+  static void report(String details) {
+    message.value = details;
+  }
+
+  static void clear() {
+    message.value = null;
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    _StartupDiagnostics.report(
+      'Flutter error: ${details.exceptionAsString()}\\n${details.stack ?? ''}',
+    );
+  };
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    _StartupDiagnostics.report(
+      'Uncaught async error: $error\\n$stackTrace',
+    );
+    return true;
+  };
 
   // Desktop platforms ke liye SQLite initialize karna.
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -1578,8 +1604,54 @@ class MyFinanceApp extends StatelessWidget {
       routes: {
         '/settings': (_) => const MoreFeaturesPage(),
       },
-      builder: (context, child) =>
+      builder: (context, child) => Stack(
+        fit: StackFit.expand,
+        children: [
           AppLockGate(child: child ?? const SizedBox.shrink()),
+          ValueListenableBuilder<String?>(
+            valueListenable: _StartupDiagnostics.message,
+            builder: (context, message, _) {
+              if (message == null) return const SizedBox.shrink();
+              return Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: SafeArea(
+                  child: Material(
+                    color: const Color(0xFF7A241E),
+                    borderRadius: BorderRadius.circular(12),
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.white),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: SelectableText(
+                              message,
+                              maxLines: 5,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Dismiss error',
+                            onPressed: _StartupDiagnostics.clear,
+                            icon: const Icon(Icons.close, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       home: const MainScreen(),
     );
   }

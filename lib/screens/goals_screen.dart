@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -598,12 +599,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       appBar: AppBar(
         title: const Text('Savings Goals'),
         backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
+        actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showGoalDialog(),
@@ -628,12 +624,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           Icon(
                             Icons.savings_outlined,
                             size: 55,
-                            color: Colors.grey,
+                            color: const Color(0xFF147D59),
                           ),
                           SizedBox(height: 12),
                           Text(
                             'No savings goals yet.',
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(color: Color(0xFF7B8781)),
                           ),
                         ],
                       ),

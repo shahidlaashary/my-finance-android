@@ -1678,162 +1678,154 @@ class _MainScreenState extends State<MainScreen> {
 // Plus button ke options ka panel
 // ============================================================
 
-class PlusActionSheet extends StatelessWidget {
+class PlusActionSheet extends StatefulWidget {
   const PlusActionSheet({super.key});
 
   @override
+  State<PlusActionSheet> createState() => _PlusActionSheetState();
+}
+
+class _PlusActionSheetState extends State<PlusActionSheet> {
+  String selectedType = 'Income';
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(26),
-        ),
-      ),
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final maxSheetHeight = keyboardHeight > 0
+        ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
+        : screenHeight * 0.82;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: keyboardHeight),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD9E0DC),
-                borderRadius: BorderRadius.circular(10),
-              ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxSheetHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
             ),
-            const SizedBox(height: 18),
-            const Text(
-              'Add New Transaction',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
-                color: AppColors.text,
-              ),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD9E0DC),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Add New Transaction',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.text,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                        color: AppColors.muted,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _transactionTab(
+                        title: 'Income',
+                        icon: Icons.south_west_rounded,
+                        color: AppColors.income,
+                      ),
+                      const SizedBox(width: 8),
+                      _transactionTab(
+                        title: 'Expense',
+                        icon: Icons.north_east_rounded,
+                        color: AppColors.expense,
+                      ),
+                      const SizedBox(width: 8),
+                      _transactionTab(
+                        title: 'Transfer',
+                        icon: Icons.swap_horiz_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: TransactionEntryForm(
+                    key: ValueKey(selectedType),
+                    transactionType: selectedType,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 18),
-
-            _actionTile(
-              context,
-              icon: Icons.south_west_rounded,
-              title: 'Income',
-              subtitle: 'Add money received',
-              color: AppColors.income,
-              type: 'Income',
-            ),
-
-            const SizedBox(height: 10),
-
-            _actionTile(
-              context,
-              icon: Icons.north_east_rounded,
-              title: 'Expense',
-              subtitle: 'Record money spent',
-              color: AppColors.expense,
-              type: 'Expense',
-            ),
-
-            const SizedBox(height: 10),
-
-            _actionTile(
-              context,
-              icon: Icons.swap_horiz_rounded,
-              title: 'Transfer',
-              subtitle: 'Move money between wallets',
-              color: AppColors.primary,
-              type: 'Transfer',
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _actionTile(
-    BuildContext context, {
-    required IconData icon,
+  Widget _transactionTab({
     required String title,
-    required String subtitle,
+    required IconData icon,
     required Color color,
-    required String type,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        final navigator = Navigator.of(context);
-        final parentContext = navigator.context;
-        Navigator.pop(context);
-        Future<void>.delayed(Duration.zero, () {
-          showModalBottomSheet<bool>(
-            context: parentContext,
-            isScrollControlled: true,
-            useSafeArea: true,
-            isDismissible: true,
-            enableDrag: true,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            builder: (_) => TransactionEntryForm(
-              transactionType: type,
+    final selected = selectedType == title;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          if (selectedType != title) {
+            setState(() => selectedType = title);
+          }
+        },
+        borderRadius: BorderRadius.circular(13),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.11) : const Color(0xFFF5F7F6),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(
+              color: selected ? color : const Color(0xFFE8EEEA),
+              width: selected ? 1.4 : 1,
             ),
-          );
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAF9),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFFEDF1EE),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 45,
-              height: 45,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.11),
-                borderRadius: BorderRadius.circular(14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: selected ? color : AppColors.muted),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: selected ? color : AppColors.muted,
+                ),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 23,
-              ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 15,
-              color: AppColors.muted,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -3176,57 +3168,38 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final isIncome = widget.transactionType == 'Income';
-
     final accentColor = isIncome
         ? AppColors.income
         : isTransfer
             ? AppColors.primary
             : AppColors.expense;
 
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
-    final keyboardIsOpen = keyboardHeight > 0;
-    final maxSheetHeight = keyboardHeight > 0
-        ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
-        : screenHeight * 0.78;
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (wallets.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text('Pehle ek wallet add karein.'),
+        ),
+      );
+    }
 
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: keyboardHeight),
-      child: SafeArea(
-        top: false,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxSheetHeight),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
-              child: loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : wallets.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Text('Pehle ek wallet add karein.'),
-                          ),
-                        )
-                      : Form(
-                          key: formKey,
-                          child: SingleChildScrollView(
-                            primary: false,
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            physics: const ClampingScrollPhysics(),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
+    return Form(
+      key: formKey,
+      child: SingleChildScrollView(
+        primary: false,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
                                 Center(
                                   child: Container(
                                     width: 38,
@@ -3503,16 +3476,13 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                                 ),
                               ),
                       ),
-                              ],
-                            ),
-                          ),
-                        ),
-            ),
-          ),
+                              
+          ],
         ),
       ),
     );
   }
+}
 }
 
 // ============================================================

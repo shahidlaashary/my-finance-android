@@ -35,10 +35,6 @@ class CategoryService {
 
     return openDatabase(
       p.join(dbPath, 'my_finance.db'),
-      version: _databaseVersion,
-      onOpen: (db) async {
-        await _ensureCategoryTable(db);
-      },
     );
   }
 

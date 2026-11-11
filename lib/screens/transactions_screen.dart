@@ -438,6 +438,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       final type = normalizeType(
                         item['type'] as String,
                       );
+                      final transferFee =
+                          (item['transfer_fee'] as num?)?.toDouble() ?? 0.0;
+                      final transferAmount =
+                          (item['amount'] as num?)?.toDouble() ?? 0.0;
+                      final walletCurrency =
+                          item['wallet_currency']?.toString() ?? '';
 
                       final isIncome = type == 'income';
                       final isExpense = type == 'expense';
@@ -474,6 +480,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             [
                               item['category']?.toString() ??
                                   'No category',
+                              if (isTransfer && transferFee > 0)
+                                'Transfer Amount: ${walletCurrency} ${transferAmount.toStringAsFixed(2)}',
+                              if (isTransfer && transferFee > 0)
+                                'Transfer Fee: ${walletCurrency} ${transferFee.toStringAsFixed(2)}',
+                              if (isTransfer && transferFee > 0)
+                                'Total Deducted: ${walletCurrency} ${(transferAmount + transferFee).toStringAsFixed(2)}',
                               item['note']?.toString() ?? '',
                               item['date']?.toString() ?? '',
                             ].where((s) => s.isNotEmpty).join(' • '),

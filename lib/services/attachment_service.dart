@@ -13,14 +13,14 @@ class AttachmentOwnerTypes {
   static const String transaction = 'transaction';
   static const String asset = 'asset';
   static const String loan = 'loan';
-  static const String savingsGoal = 'savings_goal';
+  static const String goal = 'goal';
   static const String repayment = 'repayment';
 
   static const List<String> all = [
     transaction,
     asset,
     loan,
-    savingsGoal,
+    goal,
     repayment,
   ];
 }
@@ -268,11 +268,11 @@ class AttachmentService {
   }
 
   static Future<List<AttachmentModel>> getSavingsAttachments(
-    int savingsGoalId,
+    int goalId,
   ) {
     return getAttachments(
-      ownerType: AttachmentOwnerTypes.savingsGoal,
-      ownerId: savingsGoalId,
+      ownerType: AttachmentOwnerTypes.goal,
+      ownerId: goalId,
     );
   }
 

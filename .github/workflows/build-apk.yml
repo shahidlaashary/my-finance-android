@@ -51,6 +51,12 @@ jobs:
           }
           EOF
           cat "$MAIN_ACTIVITY"
+      - name: Isolate Android application and theme startup
+        run: |
+          sed -i 's/android:name="${applicationName}"/android:name="android.app.Application"/' android/app/src/main/AndroidManifest.xml
+          sed -i 's#android:theme="@style/LaunchTheme"#android:theme="@android:style/Theme.Material.Light.NoActionBar"#' android/app/src/main/AndroidManifest.xml
+          echo "===== MANIFEST AFTER ISOLATION ====="
+          grep -E 'application|android:name=|android:theme=|LAUNCHER|MAIN' android/app/src/main/AndroidManifest.xml
       - name: Inspect generated Android launcher configuration
         run: |
           echo "===== MAIN MANIFEST ====="

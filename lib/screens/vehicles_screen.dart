@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 
 import '../services/vehicle_service.dart';
+import '../services/attachment_service.dart';
 import '../services/vehicle_export_service.dart';
 import '../widgets/attachment_section.dart';
 import '../widgets/shared_app_bar_actions.dart';
@@ -88,6 +87,53 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       if (v['id'] == id) return (v['name'] ?? 'Vehicle').toString();
     }
     return 'Vehicle';
+  }
+
+  String _walletCurrency(dynamic id) {
+    for (final w in _wallets) { if (w['id'] == id) return (w['currency'] ?? 'PKR').toString(); }
+    return 'PKR';
+  }
+
+  String _mileageUnit(int vehicleId) {
+    final v = _vehicles.where((e) => e['id'] == vehicleId).toList();
+    return v.isNotEmpty && v.first['fuel_type'] == 'Electric' ? 'km/kWh' : 'km/L';
+  }
+
+  String _costPerKm(int vehicleId) {
+    final distance = _distanceFor(vehicleId);
+    if (distance <= 0) return '—';
+    final totals = <String, double>{};
+    for (final r in _fuel.where((e) => e['vehicle_id'] == vehicleId)) {
+      final currency = _walletCurrency(r['wallet_id']);
+      totals[currency] = (totals[currency] ?? 0) + ((r['total'] as num?)?.toDouble() ?? 0);
+    }
+    for (final r in _expenses.where((e) => e['vehicle_id'] == vehicleId)) {
+      final currency = _walletCurrency(r['wallet_id']);
+      totals[currency] = (totals[currency] ?? 0) + ((r['amount'] as num?)?.toDouble() ?? 0);
+    }
+    if (totals.isEmpty) return '—';
+    return totals.entries.map((e) => '${e.key} ${_amount(e.value / distance)}/km').join(' • ');
+  }
+
+  String _monthlySpend() {
+    final now = DateTime.now();
+    final totals = <String, double>{};
+    for (final r in _fuel) {
+      final d = DateTime.tryParse(r['date']?.toString() ?? '');
+      if (d != null && d.year == now.year && d.month == now.month) {
+        final currency = _walletCurrency(r['wallet_id']);
+        totals[currency] = (totals[currency] ?? 0) + ((r['total'] as num?)?.toDouble() ?? 0);
+      }
+    }
+    for (final r in _expenses) {
+      final d = DateTime.tryParse(r['date']?.toString() ?? '');
+      if (d != null && d.year == now.year && d.month == now.month) {
+        final currency = _walletCurrency(r['wallet_id']);
+        totals[currency] = (totals[currency] ?? 0) + ((r['amount'] as num?)?.toDouble() ?? 0);
+      }
+    }
+    if (totals.isEmpty) return '0.00';
+    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join(' • ');
   }
 
   String _walletName(dynamic id) {
@@ -499,6 +545,11 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         _metric('Fuel spending', _moneyByCurrency(_fuel, 'total'), Icons.local_gas_station_outlined, Colors.orange),
         const SizedBox(width: 10), _metric('Other expenses', _moneyByCurrency(_expenses, 'amount'), Icons.build_outlined, Colors.red),
       ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        _metric('This month', _monthlySpend(), Icons.calendar_month_outlined, Colors.purple),
+        const SizedBox(width: 10), _metric('Due alerts', '${due.length}', Icons.notifications_active_outlined, due.isEmpty ? _green : Colors.red),
+      ]),
       const SizedBox(height: 16),
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         const Text('Reminders & Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
@@ -535,14 +586,15 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             Wrap(spacing: 8, runSpacing: 8, children: [
               _smallStat('Odometer', '${_amount(_latestOdometer(id))} km'),
               _smallStat('Distance', '${_amount(_distanceFor(id))} km'),
-              _smallStat('Mileage', avg == null ? '—' : '${_amount(avg)} km/L'),
+              _smallStat('Mileage', avg == null ? '—' : '${_amount(avg)} ${_mileageUnit(id)}'),
+              _smallStat('Cost / KM', _costPerKm(id)),
               _smallStat('Fuel fills', '${fuel.length}'),
               _smallStat('Service costs', '${expenses.length}'),
             ]),
             if ((v['notes'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(v['notes'].toString(), style: const TextStyle(color: _muted, fontSize: 12))),
             Row(children: [
               TextButton.icon(onPressed: () => _showVehicleForm(vehicle: v), icon: const Icon(Icons.edit_outlined), label: const Text('Edit')),
-              TextButton.icon(onPressed: () => _deleteRecord(() => VehicleService.deleteVehicle(id), 'vehicle'), icon: const Icon(Icons.delete_outline, color: Colors.red), label: const Text('Delete', style: TextStyle(color: Colors.red))),
+              TextButton.icon(onPressed: () => _deleteRecord(() async { await VehicleService.deleteVehicle(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle', ownerId: id); }, 'vehicle'), icon: const Icon(Icons.delete_outline, color: Colors.red), label: const Text('Delete', style: TextStyle(color: Colors.red))),
             ]),
             AttachmentSection(ownerType: 'vehicle', ownerId: id),
           ])),
@@ -572,7 +624,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         leading: const CircleAvatar(backgroundColor: Color(0xFFFFF2DE), child: Icon(Icons.local_gas_station_outlined, color: Colors.orange)),
         title: Text('${_vehicleName(f['vehicle_id'])} • ${_amount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
-        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() => VehicleService.deleteFuel(f['id'] as int), 'fuel entry'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry'))]),
+        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry'))]),
         children: [
           ListTile(dense: true, title: const Text('Price per unit'), trailing: Text(_amount(f['unit_price']))),
           ListTile(dense: true, title: const Text('Fuel station'), trailing: Text((f['station'] ?? '—').toString())),
@@ -590,7 +642,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         leading: const CircleAvatar(backgroundColor: Color(0xFFFCEBEA), child: Icon(Icons.build_outlined, color: Colors.red)),
         title: Text('${e['category']} • ${_amount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
-        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() => VehicleService.deleteExpense(e['id'] as int), 'vehicle expense'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Expense'))]),
+        trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'delete') _deleteRecord(() async { final id = e['id'] as int; await VehicleService.deleteExpense(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_expense', ownerId: id); }, 'vehicle expense'); }, itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Delete Expense'))]),
         children: [
           ListTile(dense: true, title: const Text('Paid from'), trailing: Text(_walletName(e['wallet_id']))),
           ListTile(dense: true, title: const Text('Workshop / Vendor'), trailing: Text((e['vendor'] ?? '—').toString())),
@@ -629,7 +681,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           const SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: [
             _smallStat('Distance', '${_amount(distance)} km'),
-            _smallStat('Mileage', mileage == null ? '—' : '${_amount(mileage)} km/L'),
+            _smallStat('Mileage', mileage == null ? '—' : '${_amount(mileage)} ${_mileageUnit(id)}'),
+            _smallStat('Cost / KM', _costPerKm(id)),
             _smallStat('Fuel cost', _amount(vehicleFuel)),
             _smallStat('Other cost', _amount(vehicleExpense)),
           ]),
@@ -641,7 +694,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       if (sortedFuel.isEmpty) const Card(child: ListTile(title: Text('No fuel price history yet.')))
       else ...sortedFuel.take(30).map((f) => Card(child: ListTile(
         dense: true, leading: const Icon(Icons.price_change_outlined, color: Colors.orange),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_amount(f['unit_price'])} / ${f['unit']}'),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_amount(f['unit_price'])} / ${f['unit']}'),
         subtitle: Text('${_date(f['date'])} • ${f['station'] ?? 'Station not entered'}'),
         trailing: Text('${_amount(f['quantity'])} ${f['unit']}'),
       ))),

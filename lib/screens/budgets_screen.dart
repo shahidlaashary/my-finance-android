@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/budget_model.dart';
-import '../services/budget_service.dart';\nimport '../services/category_service.dart';
+import '../services/budget_service.dart';
+import '../services/category_service.dart';
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
   @override
@@ -50,14 +51,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       _message('Error loading budgets: $e');
     }
   }
-  String _categoryName(int? id) {
-    if (id == null) return 'All Categories';
-    final matches = _categories.where(
-      (category) => category['id'] == id,
-    );
-    if (matches.isEmpty) return 'Unknown Category';
-    return matches.first['name'].toString();
-  }
+  String _categoryName(String? name) => name == null || name.isEmpty ? 'All Categories' : name;
   Future<void> _showBudgetDialog({
     BudgetModel? budget,
   }) async {

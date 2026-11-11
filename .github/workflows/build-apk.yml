@@ -58,7 +58,7 @@ jobs:
           echo "===== APP GRADLE ====="
           cat android/app/build.gradle.kts
           echo "===== MAIN ACTIVITY ====="
-          find android/app/src/main -name MainActivity.kt -exec cat {} \\;
+          while IFS= read -r activity_file; do cat "$activity_file"; done < <(find android/app/src/main -name MainActivity.kt)
           echo "===== THEME STYLES ====="
           cat android/app/src/main/res/values/styles.xml
           echo "===== NIGHT THEME STYLES ====="

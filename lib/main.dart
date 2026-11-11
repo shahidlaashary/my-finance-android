@@ -17,6 +17,7 @@ import 'screens/assets_screen.dart';
 import 'screens/budgets_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/loans_screen.dart';
+import 'screens/stats_screen.dart';
 import 'screens/transactions_screen.dart';
 
 // ============================================================
@@ -1464,7 +1465,7 @@ class _MainScreenState extends State<MainScreen> {
     BudgetsScreen(),                    // 2
     GoalsScreen(),                      // 3
     LoansScreen(),                      // 4
-    SimpleFeaturePage(title: 'Stats'),  // 5
+    StatsScreen(),                      // 5
     TransactionsScreen(),               // 6
     WalletsPage(),                      // 7
   ];

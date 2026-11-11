@@ -125,7 +125,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     int? walletId = item['wallet_id'] as int?;
     int? toWalletId = item['to_wallet_id'] as int?;
-    int? categoryId = item['category_id'] as int?;
+    String? category = item['category']?.toString();
 
     DateTime selectedDate =
         DateTime.tryParse(item['date']?.toString() ?? '') ??
@@ -217,11 +217,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ],
                     if (type != 'transfer') ...[
                       const SizedBox(height: 14),
-                      DropdownButtonFormField<int?>(
+                      DropdownButtonFormField<String?>(
                         value: categories.any(
-                          (c) => c.id == categoryId,
+                          (c) => c.name == category,
                         )
-                            ? categoryId
+                            ? category
                             : null,
                         isExpanded: true,
                         decoration: const InputDecoration(
@@ -229,13 +229,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           border: OutlineInputBorder(),
                         ),
                         items: [
-                          const DropdownMenuItem<int?>(
+                          const DropdownMenuItem<String?>(
                             value: null,
                             child: Text('No category'),
                           ),
                           ...categories.map((category) {
-                            return DropdownMenuItem<int?>(
-                              value: category.id,
+                            return DropdownMenuItem<String?>(
+                              value: category.name,
                               child: Text(
                                 '${category.icon} ${category.name}',
                               ),
@@ -244,7 +244,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         ],
                         onChanged: (value) {
                           updateDialog(() {
-                            categoryId = value;
+                            category = value;
                           });
                         },
                       ),
@@ -326,8 +326,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         walletId: walletId!,
                         toWalletId:
                             type == 'transfer' ? toWalletId : null,
-                        categoryId:
-                            type == 'transfer' ? null : categoryId,
+                        category:
+                            type == 'transfer' ? null : category,
                         note: noteController.text.trim(),
                         date: selectedDate.toIso8601String(),
                       );
@@ -464,7 +464,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           title: Text(title),
                           subtitle: Text(
                             [
-                              item['category_name']?.toString() ??
+                              item['category']?.toString() ??
                                   'No category',
                               item['note']?.toString() ?? '',
                               item['date']?.toString() ?? '',

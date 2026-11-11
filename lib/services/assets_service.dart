@@ -1,9 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/assets_model.dart';
 import 'transactions_service.dart';
-class AssetService {
+class AssetsService {
   Future<Database> get _database async {
-    return TransactionService.database;
+    return TransactionsService.database;
   }
   Future<void> _createTables(Database db) async {
     await db.execute('''
@@ -76,7 +76,7 @@ class AssetService {
       [amount, walletId],
     );
   }
-  void _validateAsset(AssetModel asset) {
+  void _validateAsset(AssetsModel asset) {
     if (asset.name.trim().isEmpty) {
       throw Exception('Asset name is required.');
     }
@@ -107,7 +107,7 @@ class AssetService {
       }
     }
   }
-  Future<int> addAsset(AssetModel asset) async {
+  Future<int> addAsset(AssetsModel asset) async {
     _validateAsset(asset);
     if (asset.isSold) {
       throw Exception(
@@ -143,7 +143,7 @@ class AssetService {
       return assetId;
     });
   }
-  Future<List<AssetModel>> getAssets({
+  Future<List<AssetsModel>> getAssets({
     bool includeSold = true,
   }) async {
     final db = await _database;
@@ -153,9 +153,9 @@ class AssetService {
       where: includeSold ? null : 'is_sold = 0',
       orderBy: 'purchase_date DESC, id DESC',
     );
-    return rows.map(AssetModel.fromMap).toList();
+    return rows.map(AssetsModel.fromMap).toList();
   }
-  Future<AssetModel?> getAssetById(int assetId) async {
+  Future<AssetsModel?> getAssetById(int assetId) async {
     final db = await _database;
     await _ensureTables(db);
     final rows = await db.query(
@@ -165,7 +165,7 @@ class AssetService {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    return AssetModel.fromMap(rows.first);
+    return AssetsModel.fromMap(rows.first);
   }
   Future<void> updateCurrentValue(
     int assetId,
@@ -207,7 +207,7 @@ class AssetService {
       if (rows.isEmpty) {
         throw Exception('Asset was not found.');
       }
-      final asset = AssetModel.fromMap(rows.first);
+      final asset = AssetsModel.fromMap(rows.first);
       if (asset.isSold) {
         throw Exception('This asset has already been sold.');
       }
@@ -235,7 +235,7 @@ class AssetService {
       );
     });
   }
-  Future<void> updateAsset(AssetModel updatedAsset) async {
+  Future<void> updateAsset(AssetsModel updatedAsset) async {
     if (updatedAsset.id == null) {
       throw Exception('Asset ID is required for updating.');
     }
@@ -257,7 +257,7 @@ class AssetService {
       if (rows.isEmpty) {
         throw Exception('Asset was not found.');
       }
-      final oldAsset = AssetModel.fromMap(rows.first);
+      final oldAsset = AssetsModel.fromMap(rows.first);
       if (oldAsset.isSold) {
         throw Exception('Sold assets cannot be edited.');
       }
@@ -307,7 +307,7 @@ class AssetService {
         limit: 1,
       );
       if (rows.isEmpty) return;
-      final asset = AssetModel.fromMap(rows.first);
+      final asset = AssetsModel.fromMap(rows.first);
       await _getAccount(txn, asset.walletId);
       if (asset.isSold && asset.salePrice != null) {
         final saleWalletId = asset.saleWalletId ?? asset.walletId;
@@ -405,7 +405,7 @@ class AssetService {
       (double total, double value) => total + value,
     );
   }
-  Future<List<AssetModel>> getAssetsByAccount(
+  Future<List<AssetsModel>> getAssetsByAccount(
     int walletId,
   ) async {
     final db = await _database;
@@ -416,6 +416,6 @@ class AssetService {
       whereArgs: [walletId],
       orderBy: 'purchase_date DESC',
     );
-    return rows.map(AssetModel.fromMap).toList();
+    return rows.map(AssetsModel.fromMap).toList();
   }
 }

@@ -1904,7 +1904,7 @@ class _HomePageState extends State<HomePage> {
           'My Finance',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
-        actions: _sharedAppBarActions(context),,
+        actions: buildSharedAppBarActions(context),
       ),
       body: RefreshIndicator(
         onRefresh: loadDashboard,

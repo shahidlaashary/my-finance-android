@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
-import '../models/asset_model.dart';
-import 'transaction_service.dart';
+import '../models/assets_model.dart';
+import 'transactions_service.dart';
 class AssetService {
   Future<Database> get _database async {
     return TransactionService.database;

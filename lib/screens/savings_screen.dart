@@ -13,7 +13,7 @@ class SavingsScreen extends StatefulWidget {
 class _SavingsScreenState extends State<SavingsScreen> {
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
   List<SavingsGoalModel> _goals = [];
-  List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _wallets = [];
   Map<String, double> _savedByCurrency = {};
   Map<String, double> _targetByCurrency = {};
   bool _loading = true;
@@ -34,8 +34,8 @@ class _SavingsScreenState extends State<SavingsScreen> {
     try {
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
-      final accounts = await db.query(
-        'accounts',
+      final wallets = await db.query(
+        'wallets',
         orderBy: 'name ASC',
       );
       final goals = await SavingsService.getGoals();
@@ -43,7 +43,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
       final target = await SavingsService.getTotalTargetByCurrency();
       if (!mounted) return;
       setState(() {
-        _accounts = accounts;
+        _wallets = wallets;
         _goals = goals;
         _savedByCurrency = saved;
         _targetByCurrency = target;
@@ -61,7 +61,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
         value: null,
         child: Text('No linked account'),
       ),
-      ..._accounts.map((account) {
+      ..._wallets.map((account) {
         final id = account['id'] as int;
         final name = account['name'].toString();
         final currency = account['currency']?.toString() ?? 'PKR';
@@ -87,7 +87,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     );
     DateTime targetDate = goal?.targetDate ??
         DateTime.now().add(const Duration(days: 30));
-    int? accountId = goal?.accountId;
+    int? walletId = goal?.walletId;
     await showDialog(
       context: context,
       builder: (dialogContext) {
@@ -141,7 +141,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<int?>(
-                          value: accountId,
+                          value: walletId,
                           isExpanded: true,
                           decoration: const InputDecoration(
                             labelText: 'Linked Account',
@@ -149,7 +149,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                           items: _accountItems(),
                           onChanged: (value) {
                             setDialogState(() {
-                              accountId = value;
+                              walletId = value;
                             });
                           },
                         ),
@@ -203,7 +203,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                         targetAmount: double.parse(targetController.text),
                         savedAmount: goal?.savedAmount ?? 0,
                         targetDate: targetDate,
-                        accountId: accountId,
+                        walletId: walletId,
                         notes: notesController.text.trim(),
                         isCompleted: goal?.isCompleted ?? false,
                         createdAt: goal?.createdAt ?? DateTime.now(),
@@ -241,7 +241,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     SavingsGoalModel goal,
   ) async {
     if (goal.id == null) return;
-    if (goal.accountId == null) {
+    if (goal.walletId == null) {
       _message('Please edit this goal and select a linked account first.');
       return;
     }
@@ -282,7 +282,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
     try {
       await SavingsService.addContribution(
         goalId: goal.id!,
-        accountId: goal.accountId!,
+        walletId: goal.walletId!,
         amount: amount,
       );
       await _loadData();
@@ -483,8 +483,8 @@ class _SavingsScreenState extends State<SavingsScreen> {
         (goal.targetAmount - goal.savedAmount).clamp(0.0, double.infinity);
     final completed = goal.savedAmount >= goal.targetAmount;
     final targetDate = goal.targetDate ?? DateTime.now();
-    final linkedAccount = _accounts.where(
-      (account) => account['id'] == goal.accountId,
+    final linkedAccount = _wallets.where(
+      (account) => account['id'] == goal.walletId,
     );
     final accountLabel = linkedAccount.isEmpty
         ? 'No linked account'

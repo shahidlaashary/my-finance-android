@@ -1,7 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../models/budgets_model.dart';
-class BudgetService {
+class BudgetsService {
   static const String _databaseName = 'my_finance.db';
   static Database? _databaseInstance;
   static Future<Database>? _databaseFuture;
@@ -73,7 +73,7 @@ class BudgetService {
       ON budgets(start_date, end_date)
     ''');
   }
-  static void _validateBudget(BudgetModel budget) {
+  static void _validateBudget(BudgetsModel budget) {
     if (budget.name.trim().isEmpty) {
       throw Exception('Budget name is required.');
     }
@@ -102,7 +102,7 @@ class BudgetService {
     }
   }
   /// Creates a new budget.
-  static Future<int> addBudget(BudgetModel budget) async {
+  static Future<int> addBudget(BudgetsModel budget) async {
     final db = await _database;
     _validateBudget(budget);
     final now = DateTime.now();
@@ -118,7 +118,7 @@ class BudgetService {
     );
   }
   /// Returns all budgets.
-  static Future<List<BudgetModel>> getBudgets({
+  static Future<List<BudgetsModel>> getBudgets({
     bool activeOnly = false,
   }) async {
     final db = await _database;
@@ -127,15 +127,15 @@ class BudgetService {
       where: activeOnly ? 'is_active = 1' : null,
       orderBy: 'start_date DESC, id DESC',
     );
-    final budgets = rows.map(BudgetModel.fromMap).toList();
-    final result = <BudgetModel>[];
+    final budgets = rows.map(BudgetsModel.fromMap).toList();
+    final result = <BudgetsModel>[];
     for (final budget in budgets) {
       result.add(await _refreshBudget(db, budget));
     }
     return result;
   }
   /// Returns a single budget by ID.
-  static Future<BudgetModel?> getBudgetById(int budgetId) async {
+  static Future<BudgetsModel?> getBudgetById(int budgetId) async {
     final db = await _database;
     final rows = await db.query(
       'budgets',
@@ -146,13 +146,13 @@ class BudgetService {
     if (rows.isEmpty) return null;
     return _refreshBudget(
       db,
-      BudgetModel.fromMap(rows.first),
+      BudgetsModel.fromMap(rows.first),
     );
   }
   /// Recalculates actual expenses for a budget.
-  static Future<BudgetModel> _refreshBudget(
+  static Future<BudgetsModel> _refreshBudget(
     DatabaseExecutor db,
-    BudgetModel budget,
+    BudgetsModel budget,
   ) async {
     final result = await db.rawQuery(
       '''
@@ -183,7 +183,7 @@ class BudgetService {
     return budget.copyWith(spentAmount: spent);
   }
   /// Manually refreshes one budget's spending.
-  static Future<BudgetModel> refreshBudget(int budgetId) async {
+  static Future<BudgetsModel> refreshBudget(int budgetId) async {
     final budget = await getBudgetById(budgetId);
     if (budget == null) {
       throw Exception('Budget was not found.');
@@ -191,7 +191,7 @@ class BudgetService {
     return budget;
   }
   /// Updates budget details.
-  static Future<void> updateBudget(BudgetModel budget) async {
+  static Future<void> updateBudget(BudgetsModel budget) async {
     if (budget.id == null) {
       throw Exception('Budget ID is required.');
     }
@@ -206,7 +206,7 @@ class BudgetService {
     if (existing.isEmpty) {
       throw Exception('Budget was not found.');
     }
-    final oldBudget = BudgetModel.fromMap(existing.first);
+    final oldBudget = BudgetsModel.fromMap(existing.first);
     await db.update(
       'budgets',
       {
@@ -250,14 +250,14 @@ class BudgetService {
     );
   }
   /// Returns budgets that have exceeded their limits.
-  static Future<List<BudgetModel>> getExceededBudgets() async {
+  static Future<List<BudgetsModel>> getExceededBudgets() async {
     final budgets = await getBudgets(activeOnly: true);
     return budgets.where((budget) {
       return budget.spentAmount > budget.limitAmount;
     }).toList();
   }
   /// Returns budgets that have reached at least 80% of their limit.
-  static Future<List<BudgetModel>> getNearLimitBudgets({
+  static Future<List<BudgetsModel>> getNearLimitBudgets({
     double threshold = 0.8,
   }) async {
     if (threshold <= 0 || threshold > 1) {
@@ -298,7 +298,7 @@ class BudgetService {
     return totals;
   }
   /// Returns budgets for a particular category.
-  static Future<List<BudgetModel>> getBudgetsByCategory(
+  static Future<List<BudgetsModel>> getBudgetsByCategory(
     String category,
   ) async {
     final db = await _database;
@@ -308,12 +308,12 @@ class BudgetService {
       whereArgs: [category],
       orderBy: 'start_date DESC',
     );
-    final result = <BudgetModel>[];
+    final result = <BudgetsModel>[];
     for (final row in rows) {
       result.add(
         await _refreshBudget(
           db,
-          BudgetModel.fromMap(row),
+          BudgetsModel.fromMap(row),
         ),
       );
     }

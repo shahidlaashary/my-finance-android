@@ -94,7 +94,18 @@ class _WalletsPageState extends State<WalletsPage> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     loadWallets();
+  }
+
+  void _onPreferencesChanged() {
+    if (mounted) loadWallets();
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
   }
 
   Future<void> loadWallets() async {

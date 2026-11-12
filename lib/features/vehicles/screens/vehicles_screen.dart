@@ -159,7 +159,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       }
     }
     if (totals.isEmpty) return '0.00';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join(' • ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value)}').join(' • ');
   }
 
   String _walletName(dynamic id) {

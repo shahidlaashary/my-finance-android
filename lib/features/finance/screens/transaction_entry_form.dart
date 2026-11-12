@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -47,6 +49,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   bool transferFeeEnabled = false;
 
   String selectedCategory = '';
+  String _dateFormat = 'dd/MM/yyyy';
 
   bool get isTransfer => widget.transactionType == 'Transfer';
 
@@ -66,6 +69,10 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   }
 
   Future<void> loadWallets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberWallet = await GeneralPreferences.instance.rememberWallet;
+    final defaultDate = await GeneralPreferences.instance.defaultDate;
+    final savedDate = prefs.getString('general_last_transaction_date');
     final result = await FinanceDB.instance.getWallets();
     final categories = isTransfer
         ? <Map<String, dynamic>>[]
@@ -78,8 +85,14 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       transactionCategories = categories;
       loading = false;
 
+      _dateFormat = prefs.getString('general_date_format') ?? 'dd/MM/yyyy';
+      if (defaultDate == 'Last Selected Date' && savedDate != null) {
+        selectedDate = DateTime.tryParse(savedDate) ?? DateTime.now();
+      }
       if (wallets.isNotEmpty) {
-        selectedWalletId = wallets.first['id'] as int;
+        final savedWalletId = rememberWallet ? prefs.getInt('general_last_wallet_id') : null;
+        selectedWalletId = wallets.any((w) => w['id'] == savedWalletId)
+            ? savedWalletId : wallets.first['id'] as int;
         if (isTransfer && wallets.length > 1) {
           selectedDestinationWalletId = wallets[1]['id'] as int;
         }
@@ -245,7 +258,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                         const SizedBox(width: 5),
                         Flexible(
                           child: Text(
-                            DateFormat('dd MMM yyyy').format(selectedDate),
+                            DateFormat(_dateFormat).format(selectedDate),
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                           ),
@@ -504,6 +517,14 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     setState(() => saving = true);
 
     try {
+      final preferences = await SharedPreferences.getInstance();
+      if (await GeneralPreferences.instance.rememberWallet) {
+        await preferences.setInt('general_last_wallet_id', selectedWalletId!);
+      }
+      await preferences.setString('general_last_transaction_date', selectedDate.toIso8601String());
+      if (await GeneralPreferences.instance.hapticFeedback) {
+        await HapticFeedback.selectionClick();
+      }
       final transactionId = await FinanceDB.instance.addTransaction(
         type: widget.transactionType,
         amount: amount,

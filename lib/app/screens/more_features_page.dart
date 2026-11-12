@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
@@ -45,8 +46,7 @@ class MoreFeaturesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'More Features',
+        title: Text(AppStrings.translate(context, 'More Features'),
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
@@ -80,8 +80,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'MY FINANCE',
+                  Text(AppStrings.translate(context, 'MY FINANCE'),
                     style: TextStyle(
                       color: colors.onSurface,
                       fontSize: 15,
@@ -90,8 +89,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    'Your Money. Your Control.',
+                  Text(AppStrings.translate(context, 'Your Money. Your Control.'),
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       fontSize: 13,
@@ -99,16 +97,14 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Smart • Simple • Secure',
+                  Text(AppStrings.translate(context, 'Smart • Simple • Secure'),
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'Created by Shahid Laashary',
+                  Text(AppStrings.translate(context, 'Created by Shahid Laashary'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: colors.onSurface,
@@ -117,8 +113,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    '© ${DateTime.now().year} My Finance. All rights reserved.',
+                  Text(AppStrings.translate(context, '© ${DateTime.now().year} My Finance. All rights reserved.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
@@ -126,8 +121,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Made with care for better financial management.',
+                  Text(AppStrings.translate(context, 'Made with care for better financial management.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: colors.onSurfaceVariant,

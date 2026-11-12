@@ -37,7 +37,18 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     loadDashboard();
+  }
+
+  void _onPreferencesChanged() {
+    if (mounted) loadDashboard();
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
   }
 
   Future<void> loadDashboard() async {

@@ -22,6 +22,10 @@ class AppLockService {
   static const String _timeoutKey = 'app_lock_pin_timeout_v1';
   static const String _pinHashKey = 'my_finance_app_lock_pin_hash_v1';
   static const String _pinSaltKey = 'my_finance_app_lock_pin_salt_v1';
+  static const String _failedAttemptsKey = 'app_lock_failed_attempts_v1';
+  static const String _lockUntilKey = 'app_lock_lock_until_v1';
+  static const int _maxFailedAttempts = 5;
+  static const int _lockoutSeconds = 30;
 
   static Future<String?> _getSetting(String key) async {
     final rows = await FinanceDB.instance.db.query(

@@ -14,6 +14,11 @@ class BackupService {
   static const String _attachmentFolder = 'my_finance_attachments';
   static const String _backupDatabasePath = 'database/my_finance.db';
   static const String _manifestPath = 'manifest.json';
+  static const int _maxBackupBytes = 512 * 1024 * 1024;
+  static const int _maxExpandedBytes = 1024 * 1024 * 1024;
+  static const int _maxEntryBytes = 256 * 1024 * 1024;
+  static const int _maxArchiveEntries = 20000;
+  static const int _maxManifestBytes = 64 * 1024;
 
   /// Creates a ZIP backup containing a consistent database snapshot
   /// and all available attachment files.

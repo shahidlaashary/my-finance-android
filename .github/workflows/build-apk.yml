@@ -40,7 +40,9 @@ jobs:
               "import io.flutter.embedding.android.FlutterActivity",
               "import io.flutter.embedding.android.FlutterFragmentActivity",
           )
-          content = re.sub(r":\s*FlutterActivity\s*\(", ": FlutterFragmentActivity(", content)
+          content = re.sub(r":\s*FlutterActivity\b", ": FlutterFragmentActivity", content)
+          if not re.search(r"class\s+MainActivity[^\\n]*:\\s*FlutterFragmentActivity", content):
+              raise SystemExit("MainActivity must extend FlutterFragmentActivity for local_auth")
           for gradle_file in [Path("android/app/build.gradle.kts"), Path("android/app/build.gradle")]:
               if gradle_file.exists():
                   gradle = gradle_file.read_text()

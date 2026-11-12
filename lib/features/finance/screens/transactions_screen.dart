@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/features/finance/models/finance_category.dart';
@@ -74,8 +73,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
-  String money(dynamic amount) {
-    if (hideBalances) return '••••••';
+  String money(dynamic amount, {bool conceal = true}) {
+    if (conceal && hideBalances) return '••••••';
     final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
     return NumberFormat('#,##0.00', locale).format((amount as num).toDouble());
   }
@@ -150,7 +149,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     if (!mounted) return;
 
     final amountController = TextEditingController(
-      text: money(item['amount']),
+      text: money(item['amount'], conceal: false),
     );
 
     final noteController = TextEditingController(
@@ -426,7 +425,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         await TransactionsService.deleteTransaction(
           item['id'] as int,
         );
-
+        if (await GeneralPreferences.instance.hapticFeedback) {
+          await HapticFeedback.selectionClick();
+        }
         await loadTransactions();
       } catch (e) {
         if (!mounted) return;

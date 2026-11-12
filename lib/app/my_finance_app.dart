@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
-import 'package:my_finance/app/screens/more_features_screen.dart'
-    show MoreFeaturesPage;
 import 'package:my_finance/app/theme/app_theme.dart';
 import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
 
 /// Root Material application configuration.
 ///
-/// The home screen is injected by the entrypoint to keep app composition
-/// separate from feature and navigation implementation details.
+/// Feature routes and the home screen are injected by the entrypoint so this
+/// app layer does not depend on screen implementations in main.dart.
 class MyFinanceApp extends StatelessWidget {
-  const MyFinanceApp({super.key, required this.home});
+  const MyFinanceApp({
+    super.key,
+    required this.home,
+    required this.routes,
+  });
 
   final Widget home;
+  final Map<String, WidgetBuilder> routes;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +23,7 @@ class MyFinanceApp extends StatelessWidget {
       title: 'My Finance',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      routes: {
-        '/settings': (_) => const MoreFeaturesPage(),
-      },
+      routes: routes,
       builder: (context, child) =>
           AppLockGate(child: child ?? const SizedBox.shrink()),
       home: home,

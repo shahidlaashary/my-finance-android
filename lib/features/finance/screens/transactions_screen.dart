@@ -29,7 +29,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     loadTransactions();
+  }
+
+  void _onPreferencesChanged() {
+    if (mounted) loadTransactions();
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
   }
 
   Future<void> loadTransactions() async {

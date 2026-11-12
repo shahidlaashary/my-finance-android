@@ -425,7 +425,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                           _deleteAttachment(attachment);
                         }
                       },
-                      itemBuilder: (context) => const [
+                      itemBuilder: (context) => [
                         PopupMenuItem(
                           value: 'open',
                           child: Text(AppStrings.translate(context, 'Open / Preview')),

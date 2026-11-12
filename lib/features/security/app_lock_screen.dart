@@ -190,9 +190,13 @@ class _AppLockScreenState extends State<AppLockScreen> {
       if (value) {
         await _enableLock();
       } else {
+        await AppLockService.setBiometricEnabled(false);
         await AppLockService.setEnabled(false);
         if (mounted) {
-          setState(() => _enabled = false);
+          setState(() {
+            _enabled = false;
+            _biometricEnabled = false;
+          });
           _message('App Lock disabled.');
         }
       }

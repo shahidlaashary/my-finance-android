@@ -4,6 +4,8 @@ import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/security/app_lock_screen.dart';
 import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
+import 'package:my_finance/features/settings/base_currency_screen.dart';
+import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -95,25 +97,22 @@ class AppSettingsScreen extends StatelessWidget {
               const AppLockScreen(),
             ),
           ),
-          const _SettingsInfoTile(
+          _SettingsInfoTile(
             icon: Icons.currency_exchange_rounded,
             title: 'Base Currency',
-            subtitle: 'Default currency: PKR',
+            subtitle: 'Choose the currency for consolidated totals',
+            onTap: () => _openScreen(context, const BaseCurrencyScreen()),
           ),
           const _SettingsInfoTile(
             icon: Icons.language_rounded,
             title: 'Language',
-            subtitle: 'English, Urdu and other languages',
+            subtitle: 'English and Urdu language settings',
           ),
-          const _SettingsInfoTile(
+          _SettingsInfoTile(
             icon: Icons.price_change_rounded,
             title: 'Manual Exchange Rates',
             subtitle: 'Manage buy and sell exchange rates',
-          ),
-          const SizedBox(height: 16),
-          _ComingSoonNotice(
-            message:
-                'Other settings will be made functional in upcoming updates.',
+            onTap: () => _openScreen(context, const ExchangeRatesScreen()),
           ),
         ],
       ),

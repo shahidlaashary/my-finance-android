@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/app/screens/simple_feature_page.dart' show SimpleFeaturePage;
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
+import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
+import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -91,9 +92,13 @@ class MoreFeaturesPage extends StatelessWidget {
                       if (feature['title'] == 'My Documents') {
                         return const MyDocumentsScreen();
                       }
-                      return SimpleFeaturePage(
-                        title: feature['title'] as String,
-                      );
+                      if (feature['title'] == 'Recurring Transactions') {
+                        return const RecurringTransactionsScreen();
+                      }
+                      if (feature['title'] == 'Exchange Rates') {
+                        return const ExchangeRatesScreen();
+                      }
+                      return const MyDocumentsScreen();
                     },
                   ),
                 );

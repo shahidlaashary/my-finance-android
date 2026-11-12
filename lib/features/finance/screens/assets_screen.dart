@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -27,6 +28,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   Map<String, double> _realizedProfitLoss = {};
 
   bool _loading = true;
+  bool _hideBalances = false;
   bool _showSold = true;
   String? _selectedCategory;
 
@@ -34,7 +36,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       NumberFormat('#,##0.00');
 
   String _money(double value) {
-    return _numberFormat.format(value);
+    return _hideBalances ? '••••••' : _numberFormat.format(value);
   }
 
   void _message(String message) {
@@ -45,12 +47,26 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     if (mounted) {
       setState(() => _loading = true);
     }
 
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final assets = await _service.getAssets(
         includeSold: _showSold,
       );
@@ -74,6 +90,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       if (!mounted) return;
 
       setState(() {
+        _hideBalances = hideBalances;
         _assets = assets;
         _wallets = wallets;
         _currentValues = current;
@@ -809,6 +826,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
   }
 

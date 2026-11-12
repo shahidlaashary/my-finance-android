@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -17,11 +18,13 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   List<Map<String, dynamic>> _categories = [];
   List<String> _currencies = ['PKR'];
   bool _loading = true;
+  bool _hideBalances = false;
   String _filter = 'All';
-  String _money(double amount) => _format.format(amount);
+  String _money(double amount) => _hideBalances ? '••••••' : _format.format(amount);
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
   }
   void _message(String message) {
@@ -30,9 +33,23 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       SnackBar(content: Text(message)),
     );
   }
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final budgets = await BudgetsService.getBudgets();
       final categoryItems = await CategoryService.getCategories('expense');
       final categories = categoryItems.map((item) => {'name': item.name}).toList();
@@ -45,6 +62,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           .toList();
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _budgets = budgets;
         _categories = categories;
         _currencies = currencies.isEmpty ? ['PKR'] : currencies;

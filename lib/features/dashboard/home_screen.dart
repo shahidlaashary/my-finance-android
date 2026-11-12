@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   double monthlyExpense = 0;
   double currentAssetsPKR = 0;
   double loansReceivablePKR = 0;
+  String baseCurrency = 'PKR';
   List<BudgetsModel> budgetAlerts = [];
   bool loading = true;
   bool hideBalances = false;
@@ -57,6 +58,8 @@ class _HomePageState extends State<HomePage> {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
       final db = FinanceDB.instance.db;
+      final selectedBaseCurrency = await FinanceDB.instance.getBaseCurrency();
+      final baseRate = await FinanceDB.instance.getExchangeRate(selectedBaseCurrency) ?? 1.0;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
@@ -66,7 +69,7 @@ class _HomePageState extends State<HomePage> {
             t.amount * COALESCE(
               er.rate,
               CASE WHEN UPPER(w.currency) = 'PKR' THEN 1.0 ELSE 0.0 END
-            )
+            ) / ?
           ), 0) AS total
         FROM transactions t
         INNER JOIN wallets w ON w.id = t.wallet_id
@@ -76,7 +79,7 @@ class _HomePageState extends State<HomePage> {
           AND date(t.date) >= date(?)
           AND date(t.date) < date(?)
         GROUP BY UPPER(t.type)
-      ''', [monthStart.toIso8601String(), nextMonth.toIso8601String()]);
+      ''', [monthStart.toIso8601String(), nextMonth.toIso8601String(), baseRate]);
 
       double income = 0;
       double expense = 0;
@@ -86,13 +89,13 @@ class _HomePageState extends State<HomePage> {
         if (row['type'] == 'EXPENSE') expense = value;
       }
 
-      final balance = await FinanceDB.instance.getTotalBalancePKR();
+      final balance = await FinanceDB.instance.getTotalBalanceInBaseCurrency();
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
       final loansByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
-      final assetsValue = await _convertValuesToPKR(assetsByCurrency);
-      final loansValue = await _convertValuesToPKR(loansByCurrency);
+      final assetsValue = await _convertValuesToPKR(assetsByCurrency, baseRate);
+      final loansValue = await _convertValuesToPKR(loansByCurrency, baseRate);
       final budgets = await BudgetsService.getBudgets(activeOnly: true);
       final newBudgetNotifications = await _checkBudgetThresholds(budgets);
       final alerts = budgets
@@ -109,6 +112,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         hideBalances = hide;
         numberFormat = format;
+        baseCurrency = selectedBaseCurrency;
         totalBalance = balance;
         monthlyIncome = income;
         monthlyExpense = expense;
@@ -198,13 +202,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<double> _convertValuesToPKR(
     Map<String, double> values,
+    double baseRate,
   ) async {
     double total = 0;
     for (final entry in values.entries) {
       final rate = await FinanceDB.instance.getExchangeRate(
         entry.key.toUpperCase(),
       );
-      if (rate != null) total += entry.value * rate;
+      if (rate != null) total += entry.value * rate / baseRate;
     }
     return total;
   }
@@ -213,9 +218,9 @@ class _HomePageState extends State<HomePage> {
       totalBalance + currentAssetsPKR + loansReceivablePKR;
 
   String money(double amount) {
-    if (hideBalances) return 'PKR ••••••';
+    if (hideBalances) return '[0m$baseCurrency ••••••';
     final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
-    return 'PKR ${NumberFormat('#,##0.00', locale).format(amount)}';
+    return '$baseCurrency ${NumberFormat('#,##0.00', locale).format(amount)}';
   }
 
   double get monthlySavings => monthlyIncome - monthlyExpense;
@@ -284,7 +289,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                   const SizedBox(height: 7),
-                  const Text('Consolidated in PKR',
+                  Text('Consolidated in $baseCurrency',
                       style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),

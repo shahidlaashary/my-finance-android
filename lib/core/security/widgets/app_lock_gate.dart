@@ -71,8 +71,12 @@ class _AppLockGateState extends State<AppLockGate>
       );
       if (!mounted) return;
       setState(() {
-        _enabled = false;
-        _locked = false;
+        // Fail closed: if the security state cannot be read, never expose
+        // the finance screens without successful PIN verification.
+        _enabled = true;
+        _locked = true;
+        _pinController.clear();
+        _error = 'Security check could not be completed. The app remains locked. Please try your PIN again.';
         _loading = false;
       });
     }

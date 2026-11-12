@@ -44,10 +44,10 @@ class AppLockService {
   }
 
   static Future<bool> isEnabled() async {
-    // Important: do not access Android secure storage on normal startup
-    // unless the user has explicitly enabled this version of App Lock.
-    if (await _getSetting(_enabledKey) != '1') return false;
-    return hasPin();
+    // Do not access secure storage during normal startup unless App Lock
+    // has explicitly been enabled. Once enabled, keep the gate active even
+    // if the PIN is temporarily unavailable: security checks must fail closed.
+    return await _getSetting(_enabledKey) == '1';
   }
 
   static Future<void> setEnabled(bool enabled) =>

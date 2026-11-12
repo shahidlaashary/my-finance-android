@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+enum AppThemePreset {
+  emeraldGreen,
+  lightMode,
+  darkMode,
+  midnightGold,
+  oceanBlue,
+  carbonBlack,
+}
+
 class AppearanceSettingsService {
   AppearanceSettingsService._();
 
@@ -9,9 +18,8 @@ class AppearanceSettingsService {
   Future<String?> Function(String key)? _readSetting;
   Future<void> Function(String key, String value)? _writeSetting;
 
-  /// Theme ke modes: System, Light aur Dark.
-  final ValueNotifier<ThemeMode> themeMode =
-      ValueNotifier<ThemeMode>(ThemeMode.system);
+  final ValueNotifier<AppThemePreset> themePreset =
+      ValueNotifier<AppThemePreset>(AppThemePreset.emeraldGreen);
 
   void configure({
     required Future<String?> Function(String key) readSetting,
@@ -21,42 +29,45 @@ class AppearanceSettingsService {
     _writeSetting = writeSetting;
   }
 
-  /// App ke liye select kiya gaya theme mode load karta hai.
   Future<void> load() async {
     final read = _readSetting;
     if (read == null) return;
 
-    final savedMode = await read('theme_mode');
-
-    switch (savedMode) {
-      case 'light':
-        themeMode.value = ThemeMode.light;
-        break;
-
-      case 'dark':
-        themeMode.value = ThemeMode.dark;
-        break;
-
-      case 'system':
-      default:
-        themeMode.value = ThemeMode.system;
-        break;
+    final savedPreset = await read('app_theme_preset');
+    if (savedPreset != null) {
+      themePreset.value = switch (savedPreset) {
+        'lightMode' => AppThemePreset.lightMode,
+        'darkMode' => AppThemePreset.darkMode,
+        'midnightGold' => AppThemePreset.midnightGold,
+        'oceanBlue' => AppThemePreset.oceanBlue,
+        'carbonBlack' => AppThemePreset.carbonBlack,
+        'emeraldGreen' => AppThemePreset.emeraldGreen,
+        _ => AppThemePreset.emeraldGreen,
+      };
+      return;
     }
+
+    // Preserve the user's previously saved Light/Dark preference on upgrade.
+    final oldMode = await read('theme_mode');
+    themePreset.value = switch (oldMode) {
+      'light' => AppThemePreset.lightMode,
+      'dark' => AppThemePreset.darkMode,
+      _ => AppThemePreset.emeraldGreen,
+    };
   }
 
-  /// Select kiya gaya theme mode save karta hai.
-  Future<void> setThemeMode(ThemeMode mode) async {
-    themeMode.value = mode;
+  Future<void> setThemePreset(AppThemePreset preset) async {
+    final previous = themePreset.value;
+    themePreset.value = preset;
 
     final write = _writeSetting;
     if (write == null) return;
 
-    final value = switch (mode) {
-      ThemeMode.light => 'light',
-      ThemeMode.dark => 'dark',
-      ThemeMode.system => 'system',
-    };
-
-    await write('theme_mode', value);
+    try {
+      await write('app_theme_preset', preset.name);
+    } catch (_) {
+      themePreset.value = previous;
+      rethrow;
+    }
   }
 }

@@ -184,7 +184,7 @@ void _showBudgetAlerts(BuildContext context) {
                           FutureBuilder<bool>(
                             future: GeneralPreferences.instance.hideBalances,
                             builder: (context, snapshot) {
-                              final hidden = snapshot.data ?? false;
+                              final hidden = snapshot.connectionState != ConnectionState.done || (snapshot.data ?? false);
                               return Text(
                                 hidden
                                     ? '${budget.currency} •••••• / ••••••'

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -112,7 +111,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Text(AppStrings.translate(context, 'Choose Icon'),
+                  const Text(
+                    'Choose Icon',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 10),
@@ -155,7 +155,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text(AppStrings.translate(context, 'Cancel')),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () {
@@ -187,7 +187,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     if (duplicate) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.translate(context, 'This category already exists.'))),
+        const SnackBar(content: Text('This category already exists.')),
       );
       return;
     }
@@ -207,17 +207,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(AppStrings.translate(context, 'Delete Category?')),
+        title: const Text('Delete Category?'),
         content: Text('Kya aap "$name" category delete karna chahte hain?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(AppStrings.translate(context, 'Cancel')),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
-            child: Text(AppStrings.translate(context, 'Delete')),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -243,7 +243,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text(AppStrings.translate(context, 'Categories'),
+        title: const Text(
+          'Categories',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
@@ -278,7 +279,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : categories.isEmpty
                     ? const Center(
-                        child: Text(AppStrings.translate(context, 'No categories yet. Tap + to add one.'),
+                        child: Text(
+                          'No categories yet. Tap + to add one.',
                           style: TextStyle(color: AppColors.muted),
                         ),
                       )

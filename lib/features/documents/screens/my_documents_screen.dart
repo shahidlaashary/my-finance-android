@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
@@ -338,12 +337,12 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             value: reminderDays,
                             isExpanded: true,
                             decoration: decoration('Expiry Alert Window', Icons.notifications_active_outlined),
-                            items: [
-                              DropdownMenuItem(value: 7, child: Text(AppStrings.translate(context, '7 days before'))),
-                              DropdownMenuItem(value: 15, child: Text(AppStrings.translate(context, '15 days before'))),
-                              DropdownMenuItem(value: 30, child: Text(AppStrings.translate(context, '30 days before'))),
-                              DropdownMenuItem(value: 60, child: Text(AppStrings.translate(context, '60 days before'))),
-                              DropdownMenuItem(value: 90, child: Text(AppStrings.translate(context, '90 days before'))),
+                            items: const [
+                              DropdownMenuItem(value: 7, child: Text('7 days before')),
+                              DropdownMenuItem(value: 15, child: Text('15 days before')),
+                              DropdownMenuItem(value: 30, child: Text('30 days before')),
+                              DropdownMenuItem(value: 60, child: Text('60 days before')),
+                              DropdownMenuItem(value: 90, child: Text('90 days before')),
                             ],
                             onChanged: (value) {
                               if (value != null) setSheetState(() => reminderDays = value);
@@ -358,7 +357,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             decoration: decoration('Notes (Optional)', Icons.notes_rounded),
                           ),
                           const SizedBox(height: 14),
-                          Text(AppStrings.translate(context, 'Attach Files'), style: TextStyle(fontWeight: FontWeight.w700)),
+                          const Text('Attach Files', style: TextStyle(fontWeight: FontWeight.w700)),
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 8, runSpacing: 8,
@@ -366,12 +365,12 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               OutlinedButton.icon(
                                 onPressed: chooseFiles,
                                 icon: const Icon(Icons.attach_file_rounded),
-                                label: Text(AppStrings.translate(context, 'Browse Files')),
+                                label: const Text('Browse Files'),
                               ),
                               OutlinedButton.icon(
                                 onPressed: takePhoto,
                                 icon: const Icon(Icons.camera_alt_outlined),
-                                label: Text(AppStrings.translate(context, 'Scan / Camera')),
+                                label: const Text('Scan / Camera'),
                               ),
                             ],
                           ),
@@ -394,7 +393,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               Expanded(
                                 child: OutlinedButton(
                                   onPressed: () => Navigator.pop(sheetContext),
-                                  child: Text(AppStrings.translate(context, 'Cancel')),
+                                  child: const Text('Cancel'),
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -489,17 +488,17 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(AppStrings.translate(context, 'Delete Document?')),
+        title: const Text('Delete Document?'),
         content: Text('Delete "${document.title}" and its attached files?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(AppStrings.translate(context, 'Cancel')),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(AppStrings.translate(context, 'Delete')),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -556,7 +555,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppStrings.translate(context, '$value'), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                  Text('$value', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                   Text(label, style: const TextStyle(fontSize: 10, color: AppColorsForDocuments.muted)),
                 ],
               ),
@@ -604,10 +603,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             if (value == 'delete') _deleteDocument(document);
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'open', child: Text(AppStrings.translate(context, 'View Details'))),
-            const PopupMenuItem(value: 'edit', child: Text(AppStrings.translate(context, 'Edit'))),
+            const PopupMenuItem(value: 'open', child: Text('View Details')),
+            const PopupMenuItem(value: 'edit', child: Text('Edit')),
             PopupMenuItem(value: 'favorite', child: Text(document.isFavorite ? 'Remove Favorite' : 'Add to Favorites')),
-            const PopupMenuItem(value: 'delete', child: Text(AppStrings.translate(context, 'Delete'))),
+            const PopupMenuItem(value: 'delete', child: Text('Delete')),
           ],
           child: Icon(
             document.isFavorite ? Icons.star_rounded : Icons.more_vert_rounded,
@@ -626,7 +625,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       appBar: AppBar(
         backgroundColor: AppColorsForDocuments.background,
         elevation: 0,
-        title: Text(AppStrings.translate(context, 'My Documents'), style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('My Documents', style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
             tooltip: 'Add Document',
@@ -641,7 +640,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         backgroundColor: AppColorsForDocuments.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: Text(AppStrings.translate(context, 'Add Document')),
+        label: const Text('Add Document'),
       ),
       body: Column(
         children: [
@@ -727,9 +726,9 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             children: [
                               Icon(Icons.folder_open_rounded, size: 54, color: Colors.grey.shade400),
                               const SizedBox(height: 12),
-                              Text(AppStrings.translate(context, 'No documents found'), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              const Text('No documents found', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                               const SizedBox(height: 5),
-                              Text(AppStrings.translate(context, 'Add your first document to keep important files in one place.'),
+                              const Text('Add your first document to keep important files in one place.',
                                 textAlign: TextAlign.center, style: TextStyle(color: AppColorsForDocuments.muted, fontSize: 12)),
                             ],
                           ),
@@ -779,7 +778,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
       backgroundColor: AppColorsForDocuments.background,
       appBar: AppBar(
         backgroundColor: AppColorsForDocuments.background,
-        title: Text(AppStrings.translate(context, 'Document Details'), style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Document Details', style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined))],
       ),
       body: ListView(

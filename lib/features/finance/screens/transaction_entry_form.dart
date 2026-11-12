@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sqflite/sqflite.dart';
@@ -208,7 +207,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               const SizedBox(height: 15),
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text(AppStrings.translate(context, 'Recurring'),
+                child: Text(
+                  'Recurring',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -254,7 +254,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppStrings.translate(context, 'Date'), style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const Text('Date', style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     const SizedBox(height: 3),
                     Row(
                       children: [
@@ -285,7 +285,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(AppStrings.translate(context, 'Time'), style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const Text('Time', style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     const SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -317,7 +317,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(AppStrings.translate(context, 'Recurring'), style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    const Text('Recurring', style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     const SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -369,7 +369,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       ),
       items: wallets.map((wallet) => DropdownMenuItem<int>(
         value: wallet['id'] as int,
-        child: Text(AppStrings.translate(context, '${wallet[')name']} (${wallet['currency']})',
+        child: Text(
+          '${wallet['name']} (${wallet['currency']})',
           overflow: TextOverflow.ellipsis,
         ),
       )).toList(),
@@ -388,7 +389,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       items: wallets.where((wallet) => wallet['id'] != selectedWalletId)
           .map((wallet) => DropdownMenuItem<int>(
             value: wallet['id'] as int,
-            child: Text(AppStrings.translate(context, '${wallet[')name']} (${wallet['currency']})',
+            child: Text(
+              '${wallet['name']} (${wallet['currency']})',
               overflow: TextOverflow.ellipsis,
             ),
           )).toList(),
@@ -403,7 +405,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       ) ? selectedCategory : null,
       isExpanded: true,
       decoration: decoration('Category', icon: Icons.category_outlined),
-      hint: Text(AppStrings.translate(context, 'Select Category')),
+      hint: const Text('Select Category'),
       items: transactionCategories.map((category) {
         final iconCode = category['icon'] as int;
         return DropdownMenuItem<String>(
@@ -463,7 +465,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.translate(context, 'Image select nahi ho saki: $e'))),
+        SnackBar(content: Text('Image select nahi ho saki: $e')),
       );
     }
   }
@@ -476,7 +478,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
     if (selectedWalletId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.translate(context, 'Wallet select karein.'))),
+        const SnackBar(content: Text('Wallet select karein.')),
       );
       return;
     }
@@ -489,7 +491,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         transferFee = double.tryParse(transferFeeController.text.trim()) ?? 0;
         if (!transferFee.isFinite || transferFee <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.translate(context, 'Valid transfer fee enter karein.'))),
+            const SnackBar(content: Text('Valid transfer fee enter karein.')),
           );
           return;
         }
@@ -497,7 +499,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       if (selectedDestinationWalletId == null ||
           selectedDestinationWalletId == selectedWalletId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.translate(context, 'Different destination wallet select karein.'))),
+          const SnackBar(content: Text('Different destination wallet select karein.')),
         );
         return;
       }
@@ -509,7 +511,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         destinationAmount = double.tryParse(destinationAmountController.text.trim());
         if (destinationAmount == null || destinationAmount <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(AppStrings.translate(context, 'Destination amount enter karein.'))),
+            const SnackBar(content: Text('Destination amount enter karein.')),
           );
           return;
         }
@@ -604,7 +606,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text(AppStrings.translate(context, 'Pehle ek wallet add karein.')),
+          child: Text('Pehle ek wallet add karein.'),
         ),
       );
     }
@@ -665,10 +667,12 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   ),
                   child: SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(AppStrings.translate(context, 'Transfer Fee'),
+                    title: const Text(
+                      'Transfer Fee',
                       style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
-                    subtitle: Text(AppStrings.translate(context, 'Add an optional fee to this transfer'),
+                    subtitle: const Text(
+                      'Add an optional fee to this transfer',
                       style: TextStyle(fontSize: 11),
                     ),
                     value: transferFeeEnabled,
@@ -727,7 +731,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                         strokeWidth: 2,
                       ),
                     )
-                  : Text(AppStrings.translate(context, 'Save Transaction'),
+                  : const Text(
+                      'Save Transaction',
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                     ),
             ),

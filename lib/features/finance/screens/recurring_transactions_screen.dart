@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -173,20 +172,21 @@ class _RecurringTransactionsScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppStrings.translate(context, 'Delete Schedule')),
-        content: Text(AppStrings.translate(context, 'Are you sure you want to delete this recurring schedule?'),
+        title: const Text('Delete Schedule'),
+        content: const Text(
+          'Are you sure you want to delete this recurring schedule?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppStrings.translate(context, 'Cancel')),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: Text(AppStrings.translate(context, 'Delete')),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -249,21 +249,23 @@ class _RecurringTransactionsScreenState
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: 15),
-            Text(AppStrings.translate(context, 'No recurring transactions yet'),
+            const Text(
+              'No recurring transactions yet',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            Text(AppStrings.translate(context, 'Create a schedule for regular income, expenses or transfers.'),
+            const Text(
+              'Create a schedule for regular income, expenses or transfers.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: () => _openForm(),
               icon: const Icon(Icons.add),
-              label: Text(AppStrings.translate(context, 'Add Schedule')),
+              label: const Text('Add Schedule'),
             ),
           ],
         ),
@@ -440,7 +442,8 @@ class _RecurringTransactionsScreenState
         children: [
           Icon(icon, size: 17, color: Colors.grey),
           const SizedBox(width: 9),
-          Text(AppStrings.translate(context, '$label: '),
+          Text(
+            '$label: ',
             style: const TextStyle(color: Colors.grey),
           ),
           Expanded(
@@ -467,7 +470,7 @@ class _RecurringTransactionsScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.translate(context, 'Recurring Transactions')),
+        title: const Text('Recurring Transactions'),
         actions: [
           IconButton(
             tooltip: 'Process Due Transactions',
@@ -479,7 +482,7 @@ class _RecurringTransactionsScreenState
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add),
-        label: Text(AppStrings.translate(context, 'Add Schedule')),
+        label: const Text('Add Schedule'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -513,27 +516,31 @@ class _RecurringTransactionsScreenState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(AppStrings.translate(context, 'Recurring Schedules'),
+                                      const Text(
+                                        'Recurring Schedules',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(AppStrings.translate(context, '${_items.length} total schedules'),
+                                      Text(
+                                        '${_items.length} total schedules',
                                       ),
                                     ],
                                   ),
                                 ),
                                 Column(
                                   children: [
-                                    Text(AppStrings.translate(context, '$activeCount'),
+                                    Text(
+                                      '$activeCount',
                                       style: const TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green,
                                       ),
                                     ),
-                                    Text(AppStrings.translate(context, 'Active'),
+                                    const Text(
+                                      'Active',
                                       style: TextStyle(fontSize: 11),
                                     ),
                                   ],
@@ -543,7 +550,8 @@ class _RecurringTransactionsScreenState
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Text(AppStrings.translate(context, 'Your Schedules'),
+                        const Text(
+                          'Your Schedules',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -797,7 +805,7 @@ class _RecurringTransactionDialogState
         Padding(padding: const EdgeInsets.fromLTRB(18, 12, 18, 8), child: Row(children: [Expanded(child: Text(widget.existing == null ? 'Add Schedule' : 'Edit Schedule', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: _saving ? null : () => Navigator.pop(context, false), icon: const Icon(Icons.close))])),
         Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
         Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 18, 18, 20), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          SegmentedButton<String>(segments: [ButtonSegment(value: 'income', label: Text(AppStrings.translate(context, 'Income'))), ButtonSegment(value: 'expense', label: Text(AppStrings.translate(context, 'Expense'))), ButtonSegment(value: 'transfer', label: Text(AppStrings.translate(context, 'Transfer')))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
+          SegmentedButton<String>(segments: const [ButtonSegment(value: 'income', label: Text('Income')), ButtonSegment(value: 'expense', label: Text('Expense')), ButtonSegment(value: 'transfer', label: Text('Transfer'))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
           const SizedBox(height: 14),
           TextFormField(controller: _titleController, decoration: _decoration('Schedule Title', icon: Icons.title), validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title.' : null),
           const SizedBox(height: 12),
@@ -805,26 +813,26 @@ class _RecurringTransactionDialogState
             Row(children: [
               Expanded(child: TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; })),
               const SizedBox(width: 8),
-              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('From Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text(AppStrings.translate(context, '${account[')name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() { _walletId = value; if (_toWalletId == value) _toWalletId = null; }), validator: (value) => value == null ? 'Select wallet' : null)),
+              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('From Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() { _walletId = value; if (_toWalletId == value) _toWalletId = null; }), validator: (value) => value == null ? 'Select wallet' : null)),
               const SizedBox(width: 8),
-              Expanded(child: DropdownButtonFormField<int>(value: _toWalletId, isExpanded: true, decoration: _decoration('To Wallet', icon: Icons.account_balance_outlined), items: widget.wallets.where((a) => a['id'] != _walletId).map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text(AppStrings.translate(context, '${account[')name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _toWalletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
+              Expanded(child: DropdownButtonFormField<int>(value: _toWalletId, isExpanded: true, decoration: _decoration('To Wallet', icon: Icons.account_balance_outlined), items: widget.wallets.where((a) => a['id'] != _walletId).map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _toWalletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
             ]),
           ] else ...[
             Row(children: [
               Expanded(child: TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; })),
               const SizedBox(width: 10),
-              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text(AppStrings.translate(context, '${account[')name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _walletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
+              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _walletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
             ]),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: DropdownButtonFormField<String>(value: categories.any((item) => item['name'] == _category) ? _category : null, isExpanded: true, decoration: _decoration('Category', icon: Icons.category_outlined), hint: Text(AppStrings.translate(context, 'Optional')), items: categories.map((item) => DropdownMenuItem<String>(value: item['name'].toString(), child: Text(item['name'].toString(), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _category = value))),
+              Expanded(child: DropdownButtonFormField<String>(value: categories.any((item) => item['name'] == _category) ? _category : null, isExpanded: true, decoration: _decoration('Category', icon: Icons.category_outlined), hint: const Text('Optional'), items: categories.map((item) => DropdownMenuItem<String>(value: item['name'].toString(), child: Text(item['name'].toString(), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _category = value))),
               const SizedBox(width: 10),
               Expanded(child: TextFormField(controller: _noteController, decoration: _decoration('Notes (Optional)', icon: Icons.notes_rounded))),
             ]),
           ],
           if (_isTransfer) ...[const SizedBox(height: 12), TextFormField(controller: _noteController, maxLines: 2, decoration: _decoration('Notes (Optional)', icon: Icons.notes_rounded))],
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(value: _frequency, isExpanded: true, decoration: _decoration('Repeat Schedule', icon: Icons.repeat_rounded), items: [DropdownMenuItem(value: 'daily', child: Text(AppStrings.translate(context, 'Daily'))), DropdownMenuItem(value: 'weekly', child: Text(AppStrings.translate(context, 'Weekly'))), DropdownMenuItem(value: 'monthly', child: Text(AppStrings.translate(context, 'Monthly'))), DropdownMenuItem(value: 'yearly', child: Text(AppStrings.translate(context, 'Yearly')))], onChanged: (value) { if (value != null) setState(() => _frequency = value); }),
+          DropdownButtonFormField<String>(value: _frequency, isExpanded: true, decoration: _decoration('Repeat Schedule', icon: Icons.repeat_rounded), items: const [DropdownMenuItem(value: 'daily', child: Text('Daily')), DropdownMenuItem(value: 'weekly', child: Text('Weekly')), DropdownMenuItem(value: 'monthly', child: Text('Monthly')), DropdownMenuItem(value: 'yearly', child: Text('Yearly'))], onChanged: (value) { if (value != null) setState(() => _frequency = value); }),
           const SizedBox(height: 12),
           Row(children: [
             Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: false), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('Start Date', icon: Icons.calendar_month_outlined), child: Text(_formatDate(_startDate))))),
@@ -833,7 +841,7 @@ class _RecurringTransactionDialogState
           ]),
         ]))),
         Padding(padding: EdgeInsets.fromLTRB(18, 10, 18, 14 + MediaQuery.of(context).padding.bottom), child: Row(children: [
-          Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context, false), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: Text(AppStrings.translate(context, 'Cancel')))),
+          Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context, false), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: const Text('Cancel'))),
           const SizedBox(width: 12),
           Expanded(child: FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(widget.existing == null ? 'Save Schedule' : 'Update Schedule'))),
         ])),

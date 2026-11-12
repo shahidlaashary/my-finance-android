@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
@@ -69,7 +68,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       setState(() => loading = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.translate(context, 'Error: $e'))),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -129,7 +128,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (wallets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.translate(context, 'No wallets available.'))),
+        const SnackBar(content: Text('No wallets available.')),
       );
       return;
     }
@@ -138,7 +137,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (!['income', 'expense', 'transfer'].contains(type)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.translate(context, 'Unknown transaction type.'))),
+        const SnackBar(content: Text('Unknown transaction type.')),
       );
       return;
     }
@@ -184,7 +183,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 .toList();
 
             return AlertDialog(
-              title: Text(AppStrings.translate(context, 'Edit Transaction')),
+              title: const Text('Edit Transaction'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -211,7 +210,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       items: wallets.map((account) {
                         return DropdownMenuItem<int>(
                           value: account['id'] as int,
-                          child: Text(AppStrings.translate(context, '${account[')name']} (${account['currency']})',
+                          child: Text(
+                            '${account['name']} (${account['currency']})',
                           ),
                         );
                       }).toList(),
@@ -236,7 +236,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         items: availableDestinations.map((account) {
                           return DropdownMenuItem<int>(
                             value: account['id'] as int,
-                            child: Text(AppStrings.translate(context, '${account[')name']} (${account['currency']})',
+                            child: Text(
+                              '${account['name']} (${account['currency']})',
                             ),
                           );
                         }).toList(),
@@ -263,12 +264,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text(AppStrings.translate(context, 'No category')),
+                            child: Text('No category'),
                           ),
                           ...categories.map((category) {
                             return DropdownMenuItem<String?>(
                               value: category.name,
-                              child: Text(AppStrings.translate(context, '${category.icon} ${category.name}'),
+                              child: Text(
+                                '${category.icon} ${category.name}',
                               ),
                             );
                           }),
@@ -291,7 +293,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     const SizedBox(height: 14),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(AppStrings.translate(context, 'Transaction Date')),
+                      title: const Text('Transaction Date'),
                       subtitle: Text(
                         DateFormat(dateFormat).format(selectedDate),
                       ),
@@ -320,7 +322,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   onPressed: () {
                     Navigator.pop(dialogContext, false);
                   },
-                  child: Text(AppStrings.translate(context, 'Cancel')),
+                  child: const Text('Cancel'),
                 ),
                 FilledButton(
                   onPressed: () async {
@@ -331,7 +333,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (amount == null || amount <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(AppStrings.translate(context, 'Enter a valid amount.')),
+                          content: Text('Enter a valid amount.'),
                         ),
                       );
                       return;
@@ -342,7 +344,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (type == 'transfer' && toWalletId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(AppStrings.translate(context, 'Select a destination account.')),
+                          content: Text('Select a destination account.'),
                         ),
                       );
                       return;
@@ -371,12 +373,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     } catch (e) {
                       if (dialogContext.mounted) {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          SnackBar(content: Text(AppStrings.translate(context, '$e'))),
+                          SnackBar(content: Text('$e')),
                         );
                       }
                     }
                   },
-                  child: Text(AppStrings.translate(context, 'Save Changes')),
+                  child: const Text('Save Changes'),
                 ),
               ],
             );
@@ -400,18 +402,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppStrings.translate(context, 'Delete Transaction?')),
-        content: Text(AppStrings.translate(context, 'This transaction will be deleted and its effect on ')
+        title: const Text('Delete Transaction?'),
+        content: const Text(
+          'This transaction will be deleted and its effect on '
           'account balances will be reversed.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppStrings.translate(context, 'Cancel')),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(AppStrings.translate(context, 'Delete')),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -430,7 +433,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.translate(context, '$e'))),
+          SnackBar(content: Text('$e')),
         );
       }
     }
@@ -445,7 +448,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(AppStrings.translate(context, 'Transactions'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: const Text('Transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       body: loading
@@ -457,7 +460,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     children: [
                       Icon(Icons.receipt_long_outlined, size: 55, color: Color(0xFF147D59)),
                       SizedBox(height: 12),
-                      Text(AppStrings.translate(context, 'No transactions available'), style: TextStyle(color: Color(0xFF7B8781))),
+                      Text('No transactions available', style: TextStyle(color: Color(0xFF7B8781))),
                     ],
                   ),
                 )
@@ -542,17 +545,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   children: [
                                     Icon(Icons.attach_file),
                                     SizedBox(width: 10),
-                                    Text(AppStrings.translate(context, 'Attachments')),
+                                    Text('Attachments'),
                                   ],
                                 ),
                               ),
                               PopupMenuItem(
                                 value: 'edit',
-                                child: Text(AppStrings.translate(context, 'Edit')),
+                                child: Text('Edit'),
                               ),
                               PopupMenuItem(
                                 value: 'delete',
-                                child: Text(AppStrings.translate(context, 'Delete')),
+                                child: Text('Delete'),
                               ),
                             ],
                           ),

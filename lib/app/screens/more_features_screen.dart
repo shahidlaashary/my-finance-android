@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
@@ -23,7 +22,8 @@ class AppSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.translate(context, 'Settings'),
+        title: const Text(
+          'Settings',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -51,14 +51,16 @@ class AppSettingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppStrings.translate(context, 'App Settings'),
+                      Text(
+                        'App Settings',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 5),
-                      Text(AppStrings.translate(context, 'Manage your My Finance preferences.'),
+                      Text(
+                        'Manage your My Finance preferences.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -141,7 +143,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.translate(context, 'Unable to save theme: $e'))),
+        SnackBar(content: Text('Unable to save theme: $e')),
       );
     }
   }
@@ -174,7 +176,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppStrings.translate(context, 'Personalize Your App'),
+                Text(
+                  'Personalize Your App',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -182,7 +185,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   ),
                 ),
                 SizedBox(height: 5),
-                Text(AppStrings.translate(context, 'Customize the look and feel of My Finance.'),
+                Text(
+                  'Customize the look and feel of My Finance.',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -297,7 +301,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.translate(context, 'Appearance'),
+        title: const Text(
+          'Appearance',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -155,18 +154,18 @@ class _WalletsPageState extends State<WalletsPage> {
     final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(AppStrings.translate(context, 'Delete Wallet?')),
+        title: const Text('Delete Wallet?'),
         content: Text(
           'Kya aap "${wallet['name']}" wallet delete karna chahte hain?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(AppStrings.translate(context, 'Cancel')),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(AppStrings.translate(context, 'Delete')),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -203,7 +202,8 @@ class _WalletsPageState extends State<WalletsPage> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(AppStrings.translate(context, 'My Wallets'),
+        title: const Text(
+          'My Wallets',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildMainSectionAppBarActions(context),
@@ -213,7 +213,7 @@ class _WalletsPageState extends State<WalletsPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: Text(AppStrings.translate(context, 'Add Wallet')),
+        label: const Text('Add Wallet'),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
@@ -228,7 +228,8 @@ class _WalletsPageState extends State<WalletsPage> {
                         color: AppColors.primary,
                       ),
                       SizedBox(height: 12),
-                      Text(AppStrings.translate(context, 'No wallets added yet'),
+                      Text(
+                        'No wallets added yet',
                         style: TextStyle(color: AppColors.muted),
                       ),
                     ],
@@ -317,10 +318,10 @@ class _WalletsPageState extends State<WalletsPage> {
                                         },
                                         itemBuilder: (_) => const [
                                           PopupMenuItem(value: 'edit', child: Row(children: [
-                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text(AppStrings.translate(context, 'Edit Wallet'))])),
+                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text('Edit Wallet')])),
                                           PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9), Text(AppStrings.translate(context, 'Delete Wallet'))])),
+                                            SizedBox(width: 9), Text('Delete Wallet')])),
                                           ],
                                         ),
                                       ),
@@ -332,7 +333,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                     children: [
                                       const SizedBox(
                                         width: 47,
-                                        child: Text(AppStrings.translate(context, 'BALANCE'), textAlign: TextAlign.left,
+                                        child: Text('BALANCE', textAlign: TextAlign.left,
                                           style: TextStyle(fontSize: 8,
                                             fontWeight: FontWeight.w800, color: Colors.white)),
                                       ),
@@ -706,7 +707,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       ],
 
                       const SizedBox(height: 8),
-                      Text(AppStrings.translate(context, 'Wallet Icon'),
+                      const Text(
+                        'Wallet Icon',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -786,7 +788,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       Row(
                         children: [
                           const Expanded(
-                            child: Text(AppStrings.translate(context, 'Exclude from Total Balance'),
+                            child: Text(
+                              'Exclude from Total Balance',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -822,7 +825,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                   borderRadius: BorderRadius.circular(13),
                                 ),
                               ),
-                              child: Text(AppStrings.translate(context, 'Cancel')),
+                              child: const Text('Cancel'),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -845,7 +848,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : Text(AppStrings.translate(context, 'Save Wallet'),
+                                  : const Text(
+                                      'Save Wallet',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,

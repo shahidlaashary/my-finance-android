@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
@@ -225,7 +224,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             Expanded(child: DropdownButtonFormField<int>(
                               value: selectedAccount, isExpanded: true,
                               decoration: fieldDecoration('Payment Account', Icons.account_balance_wallet_outlined),
-                              items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text(AppStrings.translate(context, '${w[')name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(),
+                              items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(),
                               onChanged: (v) => setSheetState(() => selectedAccount = v),
                               validator: (v) => v == null ? 'Select account' : null,
                             )),
@@ -248,7 +247,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           ]),
                           const SizedBox(height: 8),
                           ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
-                            title: Text(AppStrings.translate(context, 'Purchase Date')), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
+                            title: const Text('Purchase Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
                             trailing: const Icon(Icons.edit_calendar), onTap: () async {
                               final picked = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime.now());
                               if (picked != null) setSheetState(() => purchaseDate = picked);
@@ -256,7 +255,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           TextFormField(controller: notesController, maxLines: 2, decoration: fieldDecoration('Notes (optional)', Icons.notes_outlined)),
                           const SizedBox(height: 16),
                           Row(children: [
-                            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate(context, 'Cancel')))),
+                            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))),
                             const SizedBox(width: 10),
                             Expanded(child: ElevatedButton.icon(
                               icon: const Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
@@ -305,7 +304,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppStrings.translate(context, 'Update Current Value')),
+          title: const Text('Update Current Value'),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -320,7 +319,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppStrings.translate(context, 'Cancel')),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -335,7 +334,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
                 Navigator.pop(context, value);
               },
-              child: Text(AppStrings.translate(context, 'Update')),
+              child: const Text('Update'),
             ),
           ],
         );
@@ -369,7 +368,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text(AppStrings.translate(context, 'Sell Asset')),
+              title: const Text('Sell Asset'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -394,7 +393,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     items: _wallets.map((wallet) {
                       return DropdownMenuItem<int>(
                         value: (wallet['id'] as num).toInt(),
-                        child: Text(AppStrings.translate(context, '${wallet[')name']} (${wallet['currency'] ?? 'PKR'})'),
+                        child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})'),
                       );
                     }).toList(),
                     onChanged: (value) => setDialogState(() => selectedSaleWallet = value),
@@ -402,7 +401,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(AppStrings.translate(context, 'Sale Date')),
+                    title: const Text('Sale Date'),
                     subtitle: Text(
                       DateFormat('dd MMM yyyy')
                           .format(saleDate),
@@ -429,7 +428,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(AppStrings.translate(context, 'Cancel')),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -449,7 +448,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       'walletId': selectedSaleWallet,
                     });
                   },
-                  child: Text(AppStrings.translate(context, 'Confirm Sale')),
+                  child: const Text('Confirm Sale'),
                 ),
               ],
             );
@@ -482,7 +481,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppStrings.translate(context, 'Delete Asset')),
+          title: const Text('Delete Asset'),
           content: Text(
             'Are you sure you want to delete "${asset.name}"?',
           ),
@@ -490,7 +489,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             TextButton(
               onPressed: () =>
                   Navigator.pop(context, false),
-              child: Text(AppStrings.translate(context, 'Cancel')),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () =>
@@ -498,7 +497,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: Text(AppStrings.translate(context, 'Delete')),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -551,7 +550,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
               ),
             ),
             const SizedBox(height: 5),
-            Text(AppStrings.translate(context, '$currency ${_money(amount)}'),
+            Text(
+              '$currency ${_money(amount)}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -618,7 +618,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 ),
                 if (asset.isSold)
                   const Chip(
-                    label: Text(AppStrings.translate(context, 'Sold')),
+                    label: Text('Sold'),
                     backgroundColor: Color(0xFFFFE9E9),
                   ),
                 PopupMenuButton<String>(
@@ -639,21 +639,21 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'edit',
-                        child: Text(AppStrings.translate(context, 'Edit Asset')),
+                        child: Text('Edit Asset'),
                       ),
                     if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'valuation',
-                        child: Text(AppStrings.translate(context, 'Update Valuation')),
+                        child: Text('Update Valuation'),
                       ),
                     if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'sell',
-                        child: Text(AppStrings.translate(context, 'Sell Asset')),
+                        child: Text('Sell Asset'),
                       ),
                     const PopupMenuItem(
                       value: 'delete',
-                      child: Text(AppStrings.translate(context, 'Delete Asset')),
+                      child: Text('Delete Asset'),
                     ),
                   ],
                 ),
@@ -859,7 +859,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(AppStrings.translate(context, 'My Assets'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: const Text('My Assets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -871,7 +871,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: Text(AppStrings.translate(context, 'Add Asset')),
+        label: const Text('Add Asset'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -893,10 +893,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.translate(context, 'TOTAL ASSET VALUE  •  $primaryCurrency'),
+                        Text('TOTAL ASSET VALUE  •  $primaryCurrency',
                           style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
                         const SizedBox(height: 5),
-                        Text(AppStrings.translate(context, '$primaryCurrency ${_money(currentTotal)}'),
+                        Text('$primaryCurrency ${_money(currentTotal)}',
                           style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 10),
                         Row(
@@ -909,7 +909,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         ),
                         if (currencies.length > 1) ...[
                           const SizedBox(height: 7),
-                          Text(AppStrings.translate(context, 'Totals shown for this currency; other currencies below.'),
+                          const Text('Totals shown for this currency; other currencies below.',
                             style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
                         ],
                       ],
@@ -945,7 +945,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   Row(
                     children: [
                       Expanded(child: Text(_selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
-                      Text(AppStrings.translate(context, '${_visibleAssets.where((a) => !a.isSold).length} Active'),
+                      Text('${_visibleAssets.where((a) => !a.isSold).length} Active',
                         style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -953,7 +953,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     ...currencies.where((c) => c != primaryCurrency).map(_currencySummary),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(AppStrings.translate(context, 'Show Sold Assets'), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    title: const Text('Show Sold Assets', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     value: _showSold,
                     onChanged: (value) {
                       setState(() => _showSold = value);

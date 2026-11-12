@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 
 class LanguageSettingsScreen extends StatelessWidget {
@@ -20,7 +19,7 @@ class LanguageSettingsScreen extends StatelessWidget {
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.translate(context, 'Unable to save language: $error'))),
+        SnackBar(content: Text('Unable to save language: $error')),
       );
     }
   }
@@ -42,9 +41,9 @@ class LanguageSettingsScreen extends StatelessWidget {
                 child: RadioListTile<String>(
                   value: 'en',
                   groupValue: selectedLocale.languageCode,
-                  secondary: Text(AppStrings.translate(context, '🇬🇧'), style: TextStyle(fontSize: 24)),
-                  title: Text(AppStrings.translate(context, 'English')),
-                  subtitle: Text(AppStrings.translate(context, 'Left to right (LTR)')),
+                  secondary: const Text('🇬🇧', style: TextStyle(fontSize: 24)),
+                  title: const Text('English'),
+                  subtitle: const Text('Left to right (LTR)'),
                   onChanged: (_) => _select(context, 'en'),
                 ),
               ),
@@ -52,9 +51,9 @@ class LanguageSettingsScreen extends StatelessWidget {
                 child: RadioListTile<String>(
                   value: 'ur',
                   groupValue: selectedLocale.languageCode,
-                  secondary: Text(AppStrings.translate(context, '🇵🇰'), style: TextStyle(fontSize: 24)),
-                  title: Text(AppStrings.translate(context, 'اردو')),
-                  subtitle: Text(AppStrings.translate(context, 'دائیں سے بائیں (RTL)')),
+                  secondary: const Text('🇵🇰', style: TextStyle(fontSize: 24)),
+                  title: const Text('اردو'),
+                  subtitle: const Text('دائیں سے بائیں (RTL)'),
                   onChanged: (_) => _select(context, 'ur'),
                 ),
               ),

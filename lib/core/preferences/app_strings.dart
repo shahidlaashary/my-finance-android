@@ -289,6 +289,17 @@ class AppStrings {
     'Camera': 'کیمرہ',
     'Remove': 'ہٹائیں',
     'Delete File': 'فائل حذف کریں',
+    'Left to right (LTR)': 'بائیں سے دائیں (LTR)',
+    'Right to left (RTL)': 'دائیں سے بائیں (RTL)',
+    'Daily': 'روزانہ',
+    'Weekly': 'ہفتہ وار',
+    'Quarterly': 'سہ ماہی',
+    'Immediately': 'فوراً',
+    '7 days before': '7 دن پہلے',
+    '30 days before': '30 دن پہلے',
+    'Edit Fuel Entry': 'ایندھن کے اندراج میں ترمیم',
+    'Edit Expense': 'اخراجات میں ترمیم',
+    'Edit Reminder': 'یاد دہانی میں ترمیم',
   };
 
   static String translate(BuildContext context, String value) {

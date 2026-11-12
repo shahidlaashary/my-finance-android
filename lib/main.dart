@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/app/my_finance_app.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +39,7 @@ Future<void> main() async {
 
   await FinanceDB.instance.init();
 
-  runApp(const MyFinanceApp());
+  runApp(const MyFinanceApp(home: MainScreen()));
 }
 
 // ============================================================

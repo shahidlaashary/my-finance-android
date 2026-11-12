@@ -213,6 +213,10 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildSharedAppBarActions(context),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE7EEEA)),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: loadDashboard,

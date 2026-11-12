@@ -459,6 +459,12 @@ class _RecurringTransactionsScreenState
   }
 
   @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final activeCount = _items.where((e) => e.isActive).length;
 
@@ -778,7 +784,6 @@ class _RecurringTransactionDialogState
 
   @override
   void dispose() {
-    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
     _titleController.dispose();
     _amountController.dispose();
     _noteController.dispose();

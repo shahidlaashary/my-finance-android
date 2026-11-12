@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
@@ -15,11 +16,13 @@ class AppLockService {
       FlutterSecureStorage();
 
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
+  static final LocalAuthentication _localAuth = LocalAuthentication();
 
   // Versioned keys prevent old, previously tested settings from unexpectedly
   // locking the app after this feature is re-enabled.
   static const String _enabledKey = 'app_lock_pin_enabled_v1';
   static const String _timeoutKey = 'app_lock_pin_timeout_v1';
+  static const String _biometricEnabledKey = 'app_lock_biometric_enabled_v1';
   static const String _pinHashKey = 'my_finance_app_lock_pin_hash_v1';
   static const String _pinSaltKey = 'my_finance_app_lock_pin_salt_v1';
   static const String _failedAttemptsKey = 'app_lock_failed_attempts_v1';
@@ -56,6 +59,35 @@ class AppLockService {
 
   static Future<void> setEnabled(bool enabled) =>
       _saveSetting(_enabledKey, enabled ? '1' : '0');
+
+  static Future<bool> isBiometricEnabled() async =>
+      await _getSetting(_biometricEnabledKey) == '1';
+
+  static Future<void> setBiometricEnabled(bool enabled) =>
+      _saveSetting(_biometricEnabledKey, enabled ? '1' : '0');
+
+  static Future<List<BiometricType>> availableBiometrics() async {
+    try {
+      if (!await _localAuth.isDeviceSupported()) return [];
+      return await _localAuth.getAvailableBiometrics();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<bool> authenticateBiometric() async {
+    try {
+      return await _localAuth.authenticate(
+        localizedReason: 'Authenticate to unlock My Finance',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
 
   static Future<bool> hasPin() async {
     final hash = await _secureStorage.read(key: _pinHashKey);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
@@ -133,7 +134,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     Expanded(child: DropdownButtonFormField<String?>(
                       value: category, isExpanded: true,
                       decoration: decoration('Category', Icons.category_outlined),
-                      items: [const DropdownMenuItem<String?>(value: null, child: Text('All Categories')),
+                      items: [const DropdownMenuItem<String?>(value: null, child: Text(AppStrings.translate(context, 'All Categories'))),
                         ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis)))],
                       onChanged: (v) => setSheetState(() => category = v),
                     )),
@@ -154,7 +155,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        const Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(AppStrings.translate(context, 'Start Date'), style: TextStyle(fontWeight: FontWeight.w600))]),
                         const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
@@ -166,13 +167,13 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() => endDate = v);
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        const Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(AppStrings.translate(context, 'End Date'), style: TextStyle(fontWeight: FontWeight.w600))]),
                         const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
                   ]),
                   const SizedBox(height: 12),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate(context, 'Cancel')))), const SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -215,21 +216,21 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Budget'),
+          title: Text(AppStrings.translate(context, 'Delete Budget')),
           content: Text(
             'Are you sure you want to delete "${budget.name}"?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.translate(context, 'Cancel')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: Text(AppStrings.translate(context, 'Delete')),
             ),
           ],
         );
@@ -288,8 +289,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
-                        '${budget.period} • ${_categoryName(budget.category)}',
+                      Text(AppStrings.translate(context, '${budget.period} • ${_categoryName(budget.category)}'),
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
@@ -311,7 +311,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'edit',
-                      child: Text('Edit Budget'),
+                      child: Text(AppStrings.translate(context, 'Edit Budget')),
                     ),
                     PopupMenuItem(
                       value: 'toggle',
@@ -321,7 +321,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     ),
                     const PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete Budget'),
+                      child: Text(AppStrings.translate(context, 'Delete Budget')),
                     ),
                   ],
                 ),
@@ -331,12 +331,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Spent: ${budget.currency} ${_money(spent)}',
+                Text(AppStrings.translate(context, 'Spent: ${budget.currency} ${_money(spent)}'),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                Text(
-                  'Limit: ${budget.currency} ${_money(limit)}',
+                Text(AppStrings.translate(context, 'Limit: ${budget.currency} ${_money(limit)}'),
                 ),
               ],
             ),
@@ -354,8 +352,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${(progress * 100).toStringAsFixed(1)}% used',
+                Text(AppStrings.translate(context, '${(progress * 100).toStringAsFixed(1)}% used'),
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.bold,
@@ -373,8 +370,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            Text(
-              '${DateFormat('dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
+            Text(AppStrings.translate(context, '${DateFormat(')dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.grey,
@@ -384,7 +380,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               const Padding(
                 padding: EdgeInsets.only(top: 8),
                 child: Chip(
-                  label: Text('Paused'),
+                  label: Text(AppStrings.translate(context, 'Paused')),
                   backgroundColor: Color(0xFFFFF0D9),
                 ),
               ),
@@ -408,7 +404,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Budgets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(AppStrings.translate(context, 'My Budgets'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -416,7 +412,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Budget'),
+        label: Text(AppStrings.translate(context, 'New Budget')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -431,15 +427,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       segments: const [
                         ButtonSegment(
                           value: 'All',
-                          label: Text('All'),
+                          label: Text(AppStrings.translate(context, 'All')),
                         ),
                         ButtonSegment(
                           value: 'Active',
-                          label: Text('Active'),
+                          label: Text(AppStrings.translate(context, 'Active')),
                         ),
                         ButtonSegment(
                           value: 'Paused',
-                          label: Text('Paused'),
+                          label: Text(AppStrings.translate(context, 'Paused')),
                         ),
                       ],
                       selected: {_filter},
@@ -461,8 +457,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                             color: const Color(0xFF147D59),
                           ),
                           SizedBox(height: 12),
-                          Text(
-                            'No budgets found.',
+                          Text(AppStrings.translate(context, 'No budgets found.'),
                             style: TextStyle(color: Color(0xFF7B8781)),
                           ),
                         ],

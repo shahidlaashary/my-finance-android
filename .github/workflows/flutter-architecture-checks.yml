@@ -1,0 +1,39 @@
+name: Flutter Architecture Checks
+
+on:
+  pull_request:
+    branches:
+      - refactor/feature-first-lib-structure
+  push:
+    branches:
+      - architecture/cross-platform-foundation
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze Dart and Flutter code
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Run unit and widget tests
+        run: flutter test

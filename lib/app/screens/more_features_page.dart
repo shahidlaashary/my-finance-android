@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
-import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
@@ -36,10 +35,6 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'Settings',
         'icon': Icons.settings_outlined,
-      },
-      {
-        'title': 'Backup & Restore',
-        'icon': Icons.backup_outlined,
       },
       {
         'title': 'My Documents',
@@ -174,9 +169,6 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Vehicle Manager') {
                         return const VehiclesScreen();
-                      }
-                      if (feature['title'] == 'Backup & Restore') {
-                        return const BackupRestoreScreen();
                       }
                       if (feature['title'] == 'My Documents') {
                         return const MyDocumentsScreen();

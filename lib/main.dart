@@ -44,19 +44,6 @@ Future<void> main() async {
 // Main screen aur 9 jagah wali bottom navigation
 // ============================================================
 
-class AssetsPage extends StatelessWidget {
-  const AssetsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const AssetsScreen();
-  }
-}
-
-// ============================================================
-// Loans ka safha
-// ============================================================
-
 class LoansPage extends StatelessWidget {
   const LoansPage({super.key});
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:my_finance/core/security/app_lock_service.dart';
@@ -124,7 +125,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
+                child: Text(AppStrings.translate(context, 'Cancel')),
               ),
               FilledButton(
                 onPressed: () async {
@@ -141,7 +142,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     Navigator.pop(dialogContext, first.text);
                   }
                 },
-                child: const Text('Save PIN'),
+                child: Text(AppStrings.translate(context, 'Save PIN')),
               ),
             ],
           ),
@@ -241,15 +242,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('App Lock & Security')),
+        appBar: AppBar(title: Text(AppStrings.translate(context, 'App Lock & Security'))),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'App Lock & Security',
+        title: Text(AppStrings.translate(context, 'App Lock & Security'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -270,16 +270,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Protect Your Finance Data',
+                      Text(AppStrings.translate(context, 'Protect Your Finance Data'),
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 5),
-                      Text(
-                        'Use your PIN, Face Unlock or Fingerprint to protect the app.',
+                      Text(AppStrings.translate(context, 'Use your PIN, Face Unlock or Fingerprint to protect the app.'),
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -292,9 +290,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.lock_outline_rounded),
-              title: const Text('App Lock'),
-              subtitle: const Text(
-                'Require your PIN or enabled biometrics when opening My Finance',
+              title: Text(AppStrings.translate(context, 'App Lock')),
+              subtitle: Text(AppStrings.translate(context, 'Require your PIN or enabled biometrics when opening My Finance'),
               ),
               value: _enabled,
               onChanged: _saving ? null : _setEnabled,
@@ -303,7 +300,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.fingerprint_rounded),
-              title: const Text('Face / Fingerprint Unlock'),
+              title: Text(AppStrings.translate(context, 'Face / Fingerprint Unlock')),
               subtitle: Text(
                 _biometricMethods == 'No enrolled biometrics detected'
                     ? 'Set up Face Unlock or Fingerprint on this device first.'
@@ -316,8 +313,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.password_rounded),
-              title: const Text('Change PIN'),
-              subtitle: const Text('Update your secure app PIN'),
+              title: Text(AppStrings.translate(context, 'Change PIN')),
+              subtitle: Text(AppStrings.translate(context, 'Update your secure app PIN')),
               trailing: const Icon(Icons.chevron_right_rounded),
               enabled: _hasPin && !_saving,
               onTap: _changePin,
@@ -326,24 +323,23 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.timer_outlined),
-              title: const Text('Auto-lock timeout'),
-              subtitle: const Text('Lock again after leaving the app'),
+              title: Text(AppStrings.translate(context, 'Auto-lock timeout')),
+              subtitle: Text(AppStrings.translate(context, 'Lock again after leaving the app')),
               trailing: DropdownButton<int>(
                 value: _timeout,
                 underline: const SizedBox.shrink(),
                 items: const [
-                  DropdownMenuItem(value: 0, child: Text('Immediately')),
-                  DropdownMenuItem(value: 30, child: Text('30 seconds')),
-                  DropdownMenuItem(value: 60, child: Text('1 minute')),
-                  DropdownMenuItem(value: 300, child: Text('5 minutes')),
+                  DropdownMenuItem(value: 0, child: Text(AppStrings.translate(context, 'Immediately'))),
+                  DropdownMenuItem(value: 30, child: Text(AppStrings.translate(context, '30 seconds'))),
+                  DropdownMenuItem(value: 60, child: Text(AppStrings.translate(context, '1 minute'))),
+                  DropdownMenuItem(value: 300, child: Text(AppStrings.translate(context, '5 minutes'))),
                 ],
                 onChanged: _enabled && !_saving ? _setTimeout : null,
               ),
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            'Your PIN is stored as a salted hash in secure device storage. '
+          Text(AppStrings.translate(context, 'Your PIN is stored as a salted hash in secure device storage. ')
             'Biometric unlock uses the security system built into your device; '
             'your PIN remains available as a backup.',
             style: TextStyle(

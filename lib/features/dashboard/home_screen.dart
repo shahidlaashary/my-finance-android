@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -30,6 +31,8 @@ class _HomePageState extends State<HomePage> {
   double loansReceivablePKR = 0;
   List<BudgetsModel> budgetAlerts = [];
   bool loading = true;
+  bool hideBalances = false;
+  String numberFormat = '1,234.56';
 
   @override
   void initState() {
@@ -40,6 +43,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> loadDashboard() async {
     if (mounted) setState(() => loading = true);
     try {
+      final hide = await GeneralPreferences.instance.hideBalances;
+      final format = await GeneralPreferences.instance.numberFormat;
       final db = FinanceDB.instance.db;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
@@ -91,6 +96,8 @@ class _HomePageState extends State<HomePage> {
 
       if (!mounted) return;
       setState(() {
+        hideBalances = hide;
+        numberFormat = format;
         totalBalance = balance;
         monthlyIncome = income;
         monthlyExpense = expense;
@@ -194,8 +201,11 @@ class _HomePageState extends State<HomePage> {
   double get estimatedNetWorth =>
       totalBalance + currentAssetsPKR + loansReceivablePKR;
 
-  String money(double amount) =>
-      'PKR ${NumberFormat('#,##0.00').format(amount)}';
+  String money(double amount) {
+    if (hideBalances) return 'PKR ••••••';
+    final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
+    return 'PKR ${NumberFormat('#,##0.00', locale).format(amount)}';
+  }
 
   double get monthlySavings => monthlyIncome - monthlyExpense;
 

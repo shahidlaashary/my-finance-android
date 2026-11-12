@@ -18,33 +18,6 @@ import 'package:my_finance/features/finance/screens/stats_screen.dart';
 import 'package:my_finance/features/finance/screens/transaction_entry_form.dart' show TransactionEntryForm;
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/wallets_screen.dart' show WalletsPage;
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:open_filex/open_filex.dart';
-
-import 'package:my_finance/core/startup/app_bootstrap_service.dart';
-import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
-import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/finance/services/budgets_service.dart';
-import 'package:my_finance/features/finance/services/assets_service.dart';
-import 'package:my_finance/features/finance/services/loans_service.dart';
-import 'package:my_finance/features/finance/models/budgets_model.dart';
-import 'package:my_finance/core/models/attachment_model.dart';
-import 'package:my_finance/features/finance/screens/assets_screen.dart';
-import 'package:my_finance/features/finance/screens/budgets_screen.dart';
-import 'package:my_finance/features/finance/screens/goals_screen.dart';
-import 'package:my_finance/features/finance/screens/loans_screen.dart';
-import 'package:my_finance/features/finance/screens/stats_screen.dart';
-import 'package:my_finance/features/finance/screens/transactions_screen.dart';
-import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
-import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
-import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
-import 'package:my_finance/features/finance/screens/wallets_screen.dart' show WalletsPage;
-import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
-import 'package:my_finance/features/finance/screens/transaction_entry_form.dart' show TransactionEntryForm;
-import 'package:my_finance/app/screens/simple_feature_page.dart' show SimpleFeaturePage;
-import 'package:my_finance/app/screens/more_features_page.dart' show MoreFeaturesPage;
 
 // ============================================================
 // Naya database aur wallet ka intizam

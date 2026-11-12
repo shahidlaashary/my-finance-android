@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
           AND date(t.date) >= date(?)
           AND date(t.date) < date(?)
         GROUP BY UPPER(t.type)
-      ''', [monthStart.toIso8601String(), nextMonth.toIso8601String(), baseRate]);
+      ''', [baseRate, monthStart.toIso8601String(), nextMonth.toIso8601String()]);
 
       double income = 0;
       double expense = 0;

@@ -821,7 +821,7 @@ class _RecurringTransactionDialogState
             const SizedBox(width: 10),
             Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: true), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('End Date (Optional)', icon: Icons.event_outlined).copyWith(suffixIcon: _endDate == null ? null : IconButton(onPressed: () => setState(() => _endDate = null), icon: const Icon(Icons.close))), child: Text(_endDate == null ? 'No end date' : _formatDate(_endDate!))))),
           ]),
-        ]))),
+        ])))),
         Padding(padding: EdgeInsets.fromLTRB(18, 10, 18, 14 + MediaQuery.of(context).padding.bottom), child: Row(children: [
           Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context, false), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: const Text('Cancel'))),
           const SizedBox(width: 12),

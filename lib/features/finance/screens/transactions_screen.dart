@@ -36,7 +36,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     if (mounted) setState(() => loading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
       final hide = await GeneralPreferences.instance.hideBalances;
       final number = await GeneralPreferences.instance.numberFormat;
       final date = await GeneralPreferences.instance.dateFormat;

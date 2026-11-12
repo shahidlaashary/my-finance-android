@@ -9,7 +9,7 @@ only when their native toolchains and plugin support are verified.
 
 ## Current architectural layers
 
-- `lib/app/`: application composition, navigation and responsive layout. The current entry point still contains legacy database and screen code; extraction is planned incrementally.
+- `lib/app/`: application composition, navigation and responsive layout. The entry point is now a thin bootstrap that initializes startup services and composes the root app; navigation and feature screens live in their respective app and feature modules.
 - `lib/core/`: infrastructure shared by multiple features (database,
   platform capabilities, files, security, notifications, startup and theme).
 - `lib/features/`: feature-owned screens, models and services.

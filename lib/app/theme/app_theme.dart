@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
+import 'package:my_finance/core/theme/app_colors.dart';
 
 /// Shared Material theme configuration for the application.
 class AppTheme {

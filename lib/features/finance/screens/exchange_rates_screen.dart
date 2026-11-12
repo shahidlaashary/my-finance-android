@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
@@ -144,7 +145,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     final value = await showDialog<double>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('1 $currency ki PKR value'),
+        title: Text(AppStrings.translate(context, '1 $currency ki PKR value')),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -157,7 +158,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(AppStrings.translate(context, 'Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -165,7 +166,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
               if (parsed == null || !parsed.isFinite || parsed <= 0) return;
               Navigator.pop(dialogContext, parsed);
             },
-            child: const Text('Save'),
+            child: Text(AppStrings.translate(context, 'Save')),
           ),
         ],
       ),
@@ -200,7 +201,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Exchange Rates',
+        title: Text(AppStrings.translate(context, 'Exchange Rates'),
             style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
@@ -229,10 +230,10 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Base Currency: PKR',
+                          Text(AppStrings.translate(context, 'Base Currency: PKR'),
                               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                           const SizedBox(height: 6),
-                          const Text('Har rate 1 foreign currency unit ki PKR value hai.'),
+                          Text(AppStrings.translate(context, 'Har rate 1 foreign currency unit ki PKR value hai.')),
                           const SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
@@ -243,8 +244,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Text(
-                            'Rates open.er-api.com se milte hain. Screen khulne par 24 ghantay se puranay rates auto-refresh hotay hain.',
+                          Text(AppStrings.translate(context, 'Rates open.er-api.com se milte hain. Screen khulne par 24 ghantay se puranay rates auto-refresh hotay hain.'),
                             style: TextStyle(fontSize: 11, color: AppColors.muted),
                           ),
                         ],
@@ -268,18 +268,18 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     ),
                   ],
                   const SizedBox(height: 18),
-                  const Text('Current Rates',
+                  Text(AppStrings.translate(context, 'Current Rates'),
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
                   Card(
                     child: Column(
                       children: [
                         ListTile(
-                          leading: const CircleAvatar(child: Text('PKR')),
-                          title: const Text('Pakistani Rupee',
+                          leading: const CircleAvatar(child: Text(AppStrings.translate(context, 'PKR'))),
+                          title: Text(AppStrings.translate(context, 'Pakistani Rupee'),
                               style: TextStyle(fontWeight: FontWeight.w700)),
-                          subtitle: const Text('Base currency'),
-                          trailing: const Text('1.0000 PKR',
+                          subtitle: Text(AppStrings.translate(context, 'Base currency')),
+                          trailing: Text(AppStrings.translate(context, '1.0000 PKR'),
                               style: TextStyle(fontWeight: FontWeight.w800)),
                         ),
                         const Divider(height: 1),
@@ -292,7 +292,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                   child: Text(currency,
                                       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
                                 ),
-                                title: Text('1 $currency',
+                                title: Text(AppStrings.translate(context, '1 $currency'),
                                     style: const TextStyle(fontWeight: FontWeight.w700)),
                                 subtitle: Text(_rateFor(currency) == null
                                     ? 'Rate not set'
@@ -321,14 +321,14 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const Text('Rate History',
+                  Text(AppStrings.translate(context, 'Rate History'),
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
                   if (_history.isEmpty)
                     const Card(
                       child: Padding(
                         padding: EdgeInsets.all(18),
-                        child: Text('Abhi rate history available nahi. Rate save ya online update karein.'),
+                        child: Text(AppStrings.translate(context, 'Abhi rate history available nahi. Rate save ya online update karein.')),
                       ),
                     )
                   else
@@ -338,12 +338,10 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           for (var i = 0; i < _history.length; i++) ...[
                             ListTile(
                               dense: true,
-                              title: Text(
-                                '1 ${_history[i]['currency']} = PKR ${_numberFormat.format((_history[i]['rate'] as num).toDouble())}',
+                              title: Text(AppStrings.translate(context, '1 ${_history[i][')currency']} = PKR ${_numberFormat.format((_history[i]['rate'] as num).toDouble())}',
                                 style: const TextStyle(fontWeight: FontWeight.w700),
                               ),
-                              subtitle: Text(
-                                '${_dateLabel(_history[i]['recorded_at'])} • ${_history[i]['source'] == 'automatic' ? 'Online update' : _history[i]['source'] == 'migration' ? 'Existing rate' : 'Manual update'}',
+                              subtitle: Text(AppStrings.translate(context, '${_dateLabel(_history[i][')recorded_at'])} • ${_history[i]['source'] == 'automatic' ? 'Online update' : _history[i]['source'] == 'migration' ? 'Existing rate' : 'Manual update'}',
                               ),
                             ),
                             if (i != _history.length - 1) const Divider(height: 1),

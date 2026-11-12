@@ -234,7 +234,9 @@ class _AppLockGateState extends State<AppLockGate>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Enter your private PIN to access your financial data.',
+                    _biometricEnabled
+                        ? 'Unlock with Face / Fingerprint or enter your private PIN.'
+                        : 'Enter your private PIN to access your financial data.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Theme.of(context).hintColor),
                   ),

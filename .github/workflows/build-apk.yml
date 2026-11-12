@@ -32,6 +32,17 @@ jobs:
           cache: true
       - name: Create Android project
         run: flutter create . --platforms=android
+      - name: Enable Android internet access for online exchange rates
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          content = manifest.read_text()
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />\\n'
+          if "android.permission.INTERNET" not in content:
+              content = content.replace("<application", permission + "    <application", 1)
+              manifest.write_text(content)
+          PY
       - name: Configure Gradle download
         run: |
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties

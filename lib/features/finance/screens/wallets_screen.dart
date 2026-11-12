@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
@@ -86,6 +88,8 @@ class WalletsPage extends StatefulWidget {
 class _WalletsPageState extends State<WalletsPage> {
   List<Map<String, dynamic>> wallets = [];
   bool loading = true;
+  bool hideBalances = false;
+  String numberFormat = '1,234.56';
 
   @override
   void initState() {
@@ -96,18 +100,25 @@ class _WalletsPageState extends State<WalletsPage> {
   Future<void> loadWallets() async {
     setState(() => loading = true);
 
+    final prefs = await SharedPreferences.getInstance();
+    final hide = await GeneralPreferences.instance.hideBalances;
+    final format = await GeneralPreferences.instance.numberFormat;
     final result = await FinanceDB.instance.getWallets();
 
     if (!mounted) return;
 
     setState(() {
       wallets = result;
+      hideBalances = hide;
+      numberFormat = format;
       loading = false;
     });
   }
 
   String formatMoney(double amount, String currency) {
-    return '$currency ${NumberFormat('#,##0.00').format(amount)}';
+    if (hideBalances) return '$currency ••••••';
+    final pattern = numberFormat == '1.234,56' ? '#.##0,00' : '#,##0.00';
+    return '$currency ${NumberFormat(pattern).format(amount)}';
   }
 
   Future<void> openWalletForm([
@@ -130,7 +141,8 @@ class _WalletsPageState extends State<WalletsPage> {
   }
 
   Future<void> deleteWallet(Map<String, dynamic> wallet) async {
-    final confirmed = await showDialog<bool>(
+    final requireConfirmation = await GeneralPreferences.instance.deleteConfirmation;
+    final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Wallet?'),
@@ -148,7 +160,7 @@ class _WalletsPageState extends State<WalletsPage> {
           ),
         ],
       ),
-    );
+    ) : true;
 
     if (confirmed != true) return;
 

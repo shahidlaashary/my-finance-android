@@ -49,6 +49,9 @@ class AppStartupService {
       debugPrint(
         'Recurring transactions processed: $processedCount',
       );
+      for (final error in recurringService.lastProcessingErrors) {
+        debugPrint('Recurring schedule paused: $error');
+      }
     } catch (error, stackTrace) {
       debugPrint(
         'Recurring transaction processing error: $error',

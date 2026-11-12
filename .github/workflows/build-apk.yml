@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - refactor/feature-first-lib-structure
+      - main
   push:
     branches:
       - architecture/cross-platform-foundation

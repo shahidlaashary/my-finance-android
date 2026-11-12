@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/features/finance/services/reports_service.dart';
@@ -25,6 +26,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String? _selectedCurrency;
 
   bool _loading = true;
+  bool _hideBalances = false;
   String? _error;
 
   List<String> _currencies = [];
@@ -38,7 +40,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadReports();
+  }
+
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
   }
 
   Future<void> _loadReports() async {
@@ -50,6 +66,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
 
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final results = await Future.wait([
         _service.getAvailableCurrencies(),
         _service.getSummary(
@@ -82,6 +99,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (!mounted) return;
 
       setState(() {
+        _hideBalances = hideBalances;
         _currencies = results[0] as List<String>;
         _summary = results[1] as List<Map<String, dynamic>>;
         _trend = results[2] as List<Map<String, dynamic>>;
@@ -107,11 +125,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   String _money(dynamic amount, [String? currency]) {
-    final value = NumberFormat('#,##0.00').format(
-      _number(amount),
-    );
-
-    return '${currency ?? _selectedCurrency ?? 'PKR'} $value';
+    final value = NumberFormat('#,##0.00').format(_number(amount));
+    final display = _hideBalances ? '••••••' : value;
+    return '${currency ?? _selectedCurrency ?? 'PKR'} $display';
   }
 
   String _dateFormat(DateTime date) {

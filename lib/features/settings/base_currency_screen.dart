@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 
@@ -49,7 +50,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
       if (!mounted) return;
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Base currency load nahi ho saki: $error')),
+        SnackBar(content: Text(AppStrings.translate(context, 'Base currency load nahi ho saki: $error'))),
       );
     }
   }
@@ -60,13 +61,13 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
       await _database.setBaseCurrency(_selected);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Base currency $_selected set ho gayi.')),
+        SnackBar(content: Text(AppStrings.translate(context, 'Base currency $_selected set ho gayi.'))),
       );
       Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Currency save nahi ho saki: $error')),
+        SnackBar(content: Text(AppStrings.translate(context, 'Currency save nahi ho saki: $error'))),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -77,7 +78,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Base Currency',
+        title: Text(AppStrings.translate(context, 'Base Currency'),
             style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: _loading
@@ -91,16 +92,15 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Choose your main currency',
+                        Text(AppStrings.translate(context, 'Choose your main currency'),
                             style: TextStyle(fontWeight: FontWeight.bold,
                                 fontSize: 16)),
                         const SizedBox(height: 6),
-                        const Text(
-                          'Dashboard totals and consolidated wallet values will be shown in this currency. Existing wallet currencies and records will not be changed.',
+                        Text(AppStrings.translate(context, 'Dashboard totals and consolidated wallet values will be shown in this currency. Existing wallet currencies and records will not be changed.'),
                           style: TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 8),
-                        Text('Selected: $_selected',
+                        Text(AppStrings.translate(context, 'Selected: $_selected'),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w700,
@@ -145,8 +145,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                 if (_available.length == 1)
                   const Padding(
                     padding: EdgeInsets.only(top: 12),
-                    child: Text(
-                      'More currencies will appear after exchange rates are added or updated.',
+                    child: Text(AppStrings.translate(context, 'More currencies will appear after exchange rates are added or updated.'),
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12),
                     ),

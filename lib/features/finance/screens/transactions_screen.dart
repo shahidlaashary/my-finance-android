@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/features/finance/models/finance_category.dart';
@@ -19,6 +21,10 @@ class TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<TransactionsScreen> {
   List<Map<String, dynamic>> transactions = [];
   bool loading = true;
+  bool hideBalances = false;
+  String numberFormat = '1,234.56';
+  String dateFormat = 'dd/MM/yyyy';
+  String weekStart = 'Monday';
 
   @override
   void initState() {
@@ -30,12 +36,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     if (mounted) setState(() => loading = true);
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final hide = await GeneralPreferences.instance.hideBalances;
+      final number = await GeneralPreferences.instance.numberFormat;
+      final date = await GeneralPreferences.instance.dateFormat;
+      final week = await GeneralPreferences.instance.weekStart;
       final result = await TransactionsService.getTransactions();
 
       if (!mounted) return;
 
       setState(() {
         transactions = result;
+        hideBalances = hide;
+        numberFormat = number;
+        dateFormat = date;
+        weekStart = week;
         loading = false;
       });
     } catch (e) {
@@ -50,7 +65,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   String money(dynamic amount) {
-    return (amount as num).toStringAsFixed(2);
+    if (hideBalances) return '••••••';
+    final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
+    return NumberFormat('#,##0.00', locale).format((amount as num).toDouble());
+  }
+
+  String displayDate(dynamic value) {
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    return parsed == null ? (value?.toString() ?? '') : DateFormat(dateFormat).format(parsed);
   }
 
   String normalizeType(String type) {
@@ -264,15 +286,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Transaction Date'),
                       subtitle: Text(
-                        '${selectedDate.year}-'
-                        '${selectedDate.month.toString().padLeft(2, '0')}-'
-                        '${selectedDate.day.toString().padLeft(2, '0')}',
+                        DateFormat(dateFormat).format(selectedDate),
                       ),
                       trailing: const Icon(Icons.calendar_month),
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
                           initialDate: selectedDate,
+                          locale: weekStart == 'Sunday' ? const Locale('en', 'US') : const Locale('en', 'GB'),
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2100),
                         );
@@ -333,6 +354,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         note: noteController.text.trim(),
                         date: selectedDate.toIso8601String(),
                       );
+                      if (await GeneralPreferences.instance.hapticFeedback) {
+                        await HapticFeedback.selectionClick();
+                      }
 
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext, true);
@@ -484,13 +508,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               item['category']?.toString() ??
                                   'No category',
                               if (isTransfer && transferFee > 0)
-                                'Transfer Amount: ${walletCurrency} ${transferAmount.toStringAsFixed(2)}',
+                                'Transfer Amount: ${walletCurrency} ${money(transferAmount)}',
                               if (isTransfer && transferFee > 0)
-                                'Transfer Fee: ${walletCurrency} ${transferFee.toStringAsFixed(2)}',
+                                'Transfer Fee: ${walletCurrency} ${money(transferFee)}',
                               if (isTransfer && transferFee > 0)
-                                'Total Deducted: ${walletCurrency} ${(transferAmount + transferFee).toStringAsFixed(2)}',
+                                'Total Deducted: ${walletCurrency} ${money(transferAmount + transferFee)}',
                               item['note']?.toString() ?? '',
-                              item['date']?.toString() ?? '',
+                              displayDate(item['date']),
                             ].where((s) => s.isNotEmpty).join(' • '),
                           ),
                           trailing: PopupMenuButton<String>(

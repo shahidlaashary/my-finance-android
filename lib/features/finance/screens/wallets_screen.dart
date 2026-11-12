@@ -166,6 +166,9 @@ class _WalletsPageState extends State<WalletsPage> {
 
     try {
       await FinanceDB.instance.deleteWallet(wallet['id'] as int);
+      if (await GeneralPreferences.instance.hapticFeedback) {
+        await HapticFeedback.selectionClick();
+      }
       await loadWallets();
     } catch (e) {
       if (!mounted) return;
@@ -474,6 +477,9 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
         );
       }
 
+      if (await GeneralPreferences.instance.hapticFeedback) {
+        await HapticFeedback.selectionClick();
+      }
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {

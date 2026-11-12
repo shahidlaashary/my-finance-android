@@ -72,11 +72,6 @@ class AppSettingsScreen extends StatelessWidget {
               const AppearanceScreen(),
             ),
           ),
-          const _SettingsInfoTile(
-            icon: Icons.tune_rounded,
-            title: 'App Settings',
-            subtitle: 'General application preferences',
-          ),
           _SettingsInfoTile(
             icon: Icons.backup_rounded,
             title: 'Backup & Restore',

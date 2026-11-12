@@ -117,8 +117,8 @@ class _WalletsPageState extends State<WalletsPage> {
 
   String formatMoney(double amount, String currency) {
     if (hideBalances) return '$currency ••••••';
-    final pattern = numberFormat == '1.234,56' ? '#.##0,00' : '#,##0.00';
-    return '$currency ${NumberFormat(pattern).format(amount)}';
+    final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
+    return '$currency ${NumberFormat('#,##0.00', locale).format(amount)}';
   }
 
   Future<void> openWalletForm([

@@ -275,7 +275,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        'Secure your app with a private 4–8 digit PIN.',
+                        'Use your PIN, Face Unlock or Fingerprint to protect the app.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],

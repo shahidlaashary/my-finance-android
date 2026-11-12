@@ -306,9 +306,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     : 'Use $_biometricMethods to unlock. PIN remains available as backup.',
               ),
               value: _biometricEnabled,
-              onChanged: _enabled && _availableBiometrics.isNotEmpty && !_saving
-                  ? _setBiometricEnabled
-                  : null,
+              onChanged: _enabled && !_saving ? _setBiometricEnabled : null,
             ),
           ),
           Card(

@@ -513,7 +513,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       _deleteGoal(goal);
                     }
                   },
-                  itemBuilder: (context) => const [
+                  itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'edit',
                       child: Text(AppStrings.translate(context, 'Edit Goal')),

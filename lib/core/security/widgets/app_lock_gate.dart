@@ -258,7 +258,7 @@ class _AppLockGateState extends State<AppLockGate>
                   ],
                   TextField(
                     controller: _pinController,
-                    autofocus: true,
+                    autofocus: !_biometricEnabled,
                     obscureText: true,
                     keyboardType: TextInputType.number,
                     maxLength: 8,

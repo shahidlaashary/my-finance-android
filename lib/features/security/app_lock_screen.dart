@@ -294,7 +294,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               secondary: const Icon(Icons.lock_outline_rounded),
               title: const Text('App Lock'),
               subtitle: const Text(
-                'Require your PIN when opening My Finance',
+                'Require your PIN or enabled biometrics when opening My Finance',
               ),
               value: _enabled,
               onChanged: _saving ? null : _setEnabled,

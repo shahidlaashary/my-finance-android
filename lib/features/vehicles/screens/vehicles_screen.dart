@@ -799,6 +799,62 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     ]);
   }
 
+  Widget _vehicleNavItem(
+    int index,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+  ) {
+    final selected = _tabs.index == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _tabs.animateTo(index),
+        child: SizedBox(
+          height: 66,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Center(
+                  child: Icon(
+                    selected ? activeIcon : icon,
+                    size: 21,
+                    color: selected ? _green : _muted,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              SizedBox(
+                height: 14,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: selected ? _green : _muted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _fabLabel() => switch (_tabs.index) {
     1 => 'Add Vehicle', 2 => 'Add Fuel', 3 => 'Add Expense', 4 => 'Add Reminder', _ => 'Add Vehicle',
   };
@@ -816,25 +872,31 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         title: const Text('Vehicle Manager', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink)),
         actions: buildSharedAppBarActions(context),
       ),
-      bottomNavigationBar: Material(
-        color: Colors.white,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.055),
+              blurRadius: 14,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
         child: SafeArea(
           top: false,
-          child: TabBar(
-            controller: _tabs,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelColor: _green,
-            unselectedLabelColor: _muted,
-            indicatorColor: _green,
-            tabs: const [
-              Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined, size: 18)),
-              Tab(text: 'Vehicles', icon: Icon(Icons.directions_car_outlined, size: 18)),
-              Tab(text: 'Fuel Log', icon: Icon(Icons.local_gas_station_outlined, size: 18)),
-              Tab(text: 'Expenses', icon: Icon(Icons.build_outlined, size: 18)),
-              Tab(text: 'Reminders', icon: Icon(Icons.notifications_none, size: 18)),
-              Tab(text: 'Reports', icon: Icon(Icons.analytics_outlined, size: 18)),
-            ],
+          child: SizedBox(
+            height: 66,
+            child: Row(
+              children: [
+                _vehicleNavItem(0, Icons.dashboard_outlined, Icons.dashboard_rounded, 'Overview'),
+                _vehicleNavItem(1, Icons.directions_car_outlined, Icons.directions_car_rounded, 'Vehicles'),
+                _vehicleNavItem(2, Icons.local_gas_station_outlined, Icons.local_gas_station_rounded, 'Fuel'),
+                _vehicleNavItem(3, Icons.build_outlined, Icons.build_rounded, 'Expenses'),
+                _vehicleNavItem(4, Icons.notifications_none, Icons.notifications_rounded, 'Reminders'),
+                _vehicleNavItem(5, Icons.analytics_outlined, Icons.analytics_rounded, 'Reports'),
+              ],
+            ),
           ),
         ),
       ),
@@ -842,9 +904,20 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         onPressed: _fabAction(), backgroundColor: _green, foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded), label: Text(_fabLabel()),
       ),
-      body: _loading ? const Center(child: CircularProgressIndicator()) : TabBarView(controller: _tabs, children: [
-        _dashboard(), _vehiclesTab(), _fuelTab(), _expensesTab(), _remindersTab(), _reportsTab(),
-      ]),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabs,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _dashboard(),
+                _vehiclesTab(),
+                _fuelTab(),
+                _expensesTab(),
+                _remindersTab(),
+                _reportsTab(),
+              ],
+            ),
     );
   }
 }

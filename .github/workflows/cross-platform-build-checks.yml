@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build Windows
-        run: flutter build windows --release
+        run: flutter build windows --release --no-tree-shake-icons
 
   apple:
     name: iOS and macOS build

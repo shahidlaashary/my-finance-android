@@ -50,6 +50,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   String selectedCategory = '';
   String _dateFormat = 'dd/MM/yyyy';
+  String _weekStart = 'Monday';
 
   bool get isTransfer => widget.transactionType == 'Transfer';
 
@@ -72,6 +73,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     final prefs = await SharedPreferences.getInstance();
     final rememberWallet = await GeneralPreferences.instance.rememberWallet;
     final defaultDate = await GeneralPreferences.instance.defaultDate;
+    final weekStart = await GeneralPreferences.instance.weekStart;
     final savedDate = prefs.getString('general_last_transaction_date');
     final result = await FinanceDB.instance.getWallets();
     final categories = isTransfer
@@ -86,6 +88,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       loading = false;
 
       _dateFormat = prefs.getString('general_date_format') ?? 'dd/MM/yyyy';
+      _weekStart = weekStart;
       if (defaultDate == 'Last Selected Date' && savedDate != null) {
         selectedDate = DateTime.tryParse(savedDate) ?? DateTime.now();
       }
@@ -136,6 +139,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
+      locale: _weekStart == 'Sunday' ? const Locale('en', 'US') : const Locale('en', 'GB'),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );

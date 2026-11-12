@@ -75,16 +75,35 @@ class AppLockService {
 
     await _secureStorage.write(key: _pinSaltKey, value: salt);
     await _secureStorage.write(key: _pinHashKey, value: hash);
+    await _clearPinFailures();
     revision.value++;
   }
 
   static Future<bool> verifyPin(String pin) async {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final lockUntil = int.tryParse(await _secureStorage.read(key: _lockUntilKey) ?? '0') ?? 0;
+    if (now < lockUntil) return false;
     final salt = await _secureStorage.read(key: _pinSaltKey);
     final storedHash = await _secureStorage.read(key: _pinHashKey);
     if (salt == null || storedHash == null) return false;
-
     final candidate = sha256.convert(utf8.encode('$salt:$pin')).toString();
-    return candidate == storedHash;
+    if (candidate == storedHash) {
+      await _clearPinFailures();
+      return true;
+    }
+    final attempts = (int.tryParse(await _secureStorage.read(key: _failedAttemptsKey) ?? '0') ?? 0) + 1;
+    if (attempts >= _maxFailedAttempts) {
+      await _secureStorage.write(key: _lockUntilKey, value: (now + _lockoutSeconds).toString());
+      await _secureStorage.write(key: _failedAttemptsKey, value: '0');
+    } else {
+      await _secureStorage.write(key: _failedAttemptsKey, value: attempts.toString());
+    }
+    return false;
+  }
+
+  static Future<void> _clearPinFailures() async {
+    await _secureStorage.delete(key: _failedAttemptsKey);
+    await _secureStorage.delete(key: _lockUntilKey);
   }
 
   static Future<int> autoLockSeconds() async {

@@ -205,7 +205,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
   Future<void> _setBiometricEnabled(bool value) async {
     if (_saving) return;
-    if (value && !_enabled) {
+    if (value && (!_enabled || !_hasPin)) {
       _message('Enable App Lock and create a PIN first.');
       return;
     }

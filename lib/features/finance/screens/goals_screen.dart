@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -18,10 +19,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
   Map<String, double> _savedByCurrency = {};
   Map<String, double> _targetByCurrency = {};
   bool _loading = true;
-  String _money(double amount) => _numberFormat.format(amount);
+  bool _hideBalances = false;
+  String _money(double amount) => _hideBalances ? '••••••' : _numberFormat.format(amount);
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
   }
   void _message(String message) {
@@ -30,9 +33,23 @@ class _GoalsScreenState extends State<GoalsScreen> {
       SnackBar(content: Text(message)),
     );
   }
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     if (mounted) setState(() => _loading = true);
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
       final wallets = await db.query(
@@ -44,6 +61,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       final target = await GoalsService.getTotalTargetByCurrency();
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _wallets = wallets;
         _goals = goals;
         _savedByCurrency = saved;

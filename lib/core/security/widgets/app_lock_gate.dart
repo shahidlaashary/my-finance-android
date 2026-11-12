@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 
 import 'package:my_finance/core/security/app_lock_service.dart';
 
@@ -17,6 +18,8 @@ class _AppLockGateState extends State<AppLockGate>
   bool _enabled = false;
   bool _locked = false;
   bool _checkingPin = false;
+  bool _checkingBiometric = false;
+  bool _biometricEnabled = false;
   bool _showPin = false;
   String? _error;
   DateTime? _pausedAt;
@@ -43,11 +46,13 @@ class _AppLockGateState extends State<AppLockGate>
   Future<void> _loadSettings({bool initial = false}) async {
     try {
       final enabled = await AppLockService.isEnabled();
+      final biometricEnabled = enabled && await AppLockService.isBiometricEnabled();
       if (!mounted) return;
 
       setState(() {
         final wasEnabled = _enabled;
         _enabled = enabled;
+        _biometricEnabled = biometricEnabled;
         if (!enabled) {
           _locked = false;
           _pinController.clear();
@@ -60,6 +65,11 @@ class _AppLockGateState extends State<AppLockGate>
         }
         _loading = false;
       });
+      if (enabled && biometricEnabled && (initial || !_locked)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _unlockWithBiometric();
+        });
+      }
     } catch (error, stackTrace) {
       FlutterError.reportError(
         FlutterErrorDetails(
@@ -74,6 +84,7 @@ class _AppLockGateState extends State<AppLockGate>
         // Fail closed: if the security state cannot be read, never expose
         // the finance screens without successful PIN verification.
         _enabled = true;
+        _biometricEnabled = false;
         _locked = true;
         _pinController.clear();
         _error = 'Security check could not be completed. The app remains locked. Please try your PIN again.';
@@ -105,6 +116,7 @@ class _AppLockGateState extends State<AppLockGate>
           _pinController.clear();
           _error = null;
         });
+        if (_biometricEnabled) await _unlockWithBiometric();
       }
     } catch (error, stackTrace) {
       FlutterError.reportError(
@@ -123,6 +135,26 @@ class _AppLockGateState extends State<AppLockGate>
         _error = 'Auto-lock security check failed. The app remains locked; retry your PIN.';
       });
     }
+  }
+
+  Future<void> _unlockWithBiometric() async {
+    if (!_locked || !_enabled || !_biometricEnabled || _checkingBiometric) return;
+    setState(() {
+      _checkingBiometric = true;
+      _error = null;
+    });
+    final success = await AppLockService.authenticateBiometric();
+    if (!mounted) return;
+    setState(() {
+      _checkingBiometric = false;
+      if (success) {
+        _locked = false;
+        _pinController.clear();
+        _error = null;
+      } else {
+        _error = 'Biometric authentication was not completed. Enter your PIN.';
+      }
+    });
   }
 
   Future<void> _unlockWithPin() async {
@@ -207,6 +239,23 @@ class _AppLockGateState extends State<AppLockGate>
                     style: TextStyle(color: Theme.of(context).hintColor),
                   ),
                   const SizedBox(height: 26),
+                  if (_biometricEnabled) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _checkingBiometric ? null : _unlockWithBiometric,
+                        icon: _checkingBiometric
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.fingerprint_rounded),
+                        label: const Text('Unlock with Face / Fingerprint'),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   TextField(
                     controller: _pinController,
                     autofocus: true,

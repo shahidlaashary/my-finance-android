@@ -27,8 +27,18 @@ class FinanceDB {
     // Fresh database: koi migration ya old-data conversion nahi.
     _database = await openDatabase(
       fullPath,
-      version: 1,
+      version: 2,
       onCreate: _createDatabase,
+      onUpgrade: (database, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await _createExchangeRateHistoryTable(database);
+          await database.execute('''
+            INSERT INTO exchange_rate_history (currency, rate, recorded_at, source)
+            SELECT currency, rate, updated_at, 'migration'
+            FROM exchange_rates
+          ''');
+        }
+      },
     );
   }
 
@@ -101,6 +111,8 @@ class FinanceDB {
       )
     ''');
 
+    await _createExchangeRateHistoryTable(db);
+
     await db.execute('''
       CREATE TABLE app_settings (
         setting_key TEXT PRIMARY KEY,
@@ -120,6 +132,22 @@ class FinanceDB {
       'setting_key': 'main_currency',
       'setting_value': 'PKR',
     });
+  }
+
+  Future<void> _createExchangeRateHistoryTable(DatabaseExecutor database) async {
+    await database.execute('''
+      CREATE TABLE IF NOT EXISTS exchange_rate_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        currency TEXT NOT NULL,
+        rate REAL NOT NULL,
+        recorded_at TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'manual'
+      )
+    ''');
+    await database.execute('''
+      CREATE INDEX IF NOT EXISTS idx_exchange_rate_history_currency_date
+      ON exchange_rate_history(currency, recorded_at DESC)
+    ''');
   }
 
   // ----------------------------------------------------------
@@ -260,39 +288,65 @@ class FinanceDB {
   // ----------------------------------------------------------
 
   Future<double?> getExchangeRate(String currency) async {
-    if (currency == 'PKR') return 1.0;
-
+    final normalized = currency.trim().toUpperCase();
+    if (normalized == 'PKR') return 1.0;
     final rows = await db.query(
       'exchange_rates',
       columns: ['rate'],
-      where: 'currency = ?',
-      whereArgs: [currency],
+      where: 'UPPER(currency) = ?',
+      whereArgs: [normalized],
       limit: 1,
     );
-
     if (rows.isEmpty) return null;
-
     final rate = (rows.first['rate'] as num).toDouble();
-    return rate > 0 ? rate : null;
+    return rate.isFinite && rate > 0 ? rate : null;
+  }
+
+  Future<List<Map<String, dynamic>>> getExchangeRates() {
+    return db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
+  }
+
+  Future<List<Map<String, dynamic>>> getExchangeRateHistory({
+    String? currency,
+    int limit = 100,
+  }) {
+    return db.query(
+      'exchange_rate_history',
+      where: currency == null ? null : 'UPPER(currency) = ?',
+      whereArgs: currency == null ? null : [currency.toUpperCase()],
+      orderBy: 'recorded_at DESC, id DESC',
+      limit: limit,
+    );
   }
 
   Future<void> saveExchangeRate(
     String currency,
-    double rate,
-  ) async {
-    if (currency == 'PKR' || rate <= 0) {
+    double rate, {
+    String source = 'manual',
+  }) async {
+    final normalized = currency.trim().toUpperCase();
+    if (normalized == 'PKR' || normalized.isEmpty ||
+        !rate.isFinite || rate <= 0) {
       throw Exception('Exchange rate durust nahi hai.');
     }
-
-    await db.insert(
-      'exchange_rates',
-      {
-        'currency': currency,
+    final now = DateTime.now().toIso8601String();
+    await db.transaction((txn) async {
+      await txn.insert(
+        'exchange_rates',
+        {
+          'currency': normalized,
+          'rate': rate,
+          'updated_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await txn.insert('exchange_rate_history', {
+        'currency': normalized,
         'rate': rate,
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+        'recorded_at': now,
+        'source': source,
+      });
+    });
     AppRefreshController.notifyChanged();
   }
 

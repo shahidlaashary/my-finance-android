@@ -89,7 +89,7 @@ class AppSettingsScreen extends StatelessWidget {
           _SettingsInfoTile(
             icon: Icons.security_rounded,
             title: 'App Lock & Security',
-            subtitle: 'Protect the app with a private PIN',
+            subtitle: 'Protect with PIN, Face Unlock or Fingerprint',
             onTap: () => _openScreen(
               context,
               const AppLockScreen(),

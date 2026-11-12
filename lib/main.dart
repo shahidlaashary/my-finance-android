@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:my_finance/app/theme/app_theme.dart';
+import 'package:my_finance/app/my_finance_app.dart';
+import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
@@ -24,11 +25,9 @@ import 'package:my_finance/features/finance/screens/goals_screen.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
 import 'package:my_finance/features/finance/screens/stats_screen.dart';
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
-import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
-import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
 
 // ============================================================
 // Naya database aur wallet ka intizam
@@ -41,31 +40,18 @@ Future<void> main() async {
 
   await FinanceDB.instance.init();
 
-  runApp(const MyFinanceApp());
+  runApp(MyFinanceApp(
+    home: const MainScreen(),
+    routes: {'/settings': (_) => const MoreFeaturesPage()},
+  ));
 }
 
 // ============================================================
 // Database ka nizam
 // ============================================================
 
-class MyFinanceApp extends StatelessWidget {
-  const MyFinanceApp({super.key});
+// App composition is maintained in lib/app/my_finance_app.dart.
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'My Finance',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      routes: {
-        '/settings': (_) => const MoreFeaturesPage(),
-      },
-      builder: (context, child) =>
-          AppLockGate(child: child ?? const SizedBox.shrink()),
-      home: const MainScreen(),
-    );
-  }
-}
 
 // ============================================================
 // Main screen aur 9 jagah wali bottom navigation

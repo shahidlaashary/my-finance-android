@@ -2350,42 +2350,6 @@ class _TransactionsPageState extends State<TransactionsPage> {
 }
 
 // ============================================================
-// Wallet ke options
+// My Finance app
 // ============================================================
 
-const List<String> walletTypes = [
-  'Cash',
-  'Bank',
-  'Savings',
-  'Current',
-  'Credit Card',
-  'Debit Card',
-  'Digital Wallet',
-  'Investment',
-  'Other',
-  'Custom',
-];
-
-const List<String> walletCurrencies = [
-  'PKR',
-  'USD',
-  'GBP',
-  'EUR',
-  'AED',
-  'SAR',
-  'INR',
-];
-
-const List<IconData> walletIcons = [
-  Icons.account_balance_wallet_outlined,
-  Icons.account_balance_outlined,
-  Icons.savings_outlined,
-  Icons.credit_card_outlined,
-  Icons.money_outlined,
-  Icons.phone_android_outlined,
-  Icons.trending_up_outlined,
-  Icons.attach_money,
-  Icons.payments_outlined,
-  Icons.wallet_outlined,
-  Icons.business_center_outlined,
-  Icons.shopping_bag_outline

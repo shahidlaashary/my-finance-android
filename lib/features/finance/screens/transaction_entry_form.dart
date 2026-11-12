@@ -600,11 +600,24 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
             _buildDateTimeRecurringBox(),
             const SizedBox(height: 14),
             if (isTransfer) ...[
-              _amountField(),
+              Row(
+                children: [
+                  Expanded(child: _walletField()),
+                  const SizedBox(width: 10),
+                  Expanded(child: _destinationWalletField()),
+                ],
+              ),
               const SizedBox(height: 12),
-              _walletField(),
-              const SizedBox(height: 12),
-              _destinationWalletField(),
+              Row(
+                children: [
+                  Expanded(child: _amountField()),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _notesField(),
+                  ),
+                ],
+              ),
+              
               if (selectedWallet != null &&
                   selectedDestinationWallet != null &&
                   selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
@@ -657,16 +670,22 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   ),
                 ],
               ],
-              const SizedBox(height: 12),
-              _notesField(),
             ] else ...[
-              _amountField(),
+              Row(
+                children: [
+                  Expanded(child: _amountField()),
+                  const SizedBox(width: 10),
+                  Expanded(child: _walletField()),
+                ],
+              ),
               const SizedBox(height: 12),
-              _walletField(),
-              const SizedBox(height: 12),
-              _categoryField(),
-              const SizedBox(height: 12),
-              _notesField(),
+              Row(
+                children: [
+                  Expanded(child: _categoryField()),
+                  const SizedBox(width: 10),
+                  Expanded(child: _notesField()),
+                ],
+              ),
             ],
             const SizedBox(height: 20),
             FilledButton(

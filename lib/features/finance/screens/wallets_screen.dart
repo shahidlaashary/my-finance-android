@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -111,7 +110,6 @@ class _WalletsPageState extends State<WalletsPage> {
   Future<void> loadWallets() async {
     setState(() => loading = true);
 
-    final prefs = await SharedPreferences.getInstance();
     final hide = await GeneralPreferences.instance.hideBalances;
     final format = await GeneralPreferences.instance.numberFormat;
     final result = await FinanceDB.instance.getWallets();

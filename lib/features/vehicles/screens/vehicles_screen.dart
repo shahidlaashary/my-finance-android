@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 
@@ -18,6 +19,7 @@ class VehiclesScreen extends StatefulWidget {
 class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProviderStateMixin {
   late final TabController _tabs;
   bool _loading = true;
+  bool _hideBalances = false;
   bool _saving = false;
   String _reportRange = 'All Time';
   List<Map<String, dynamic>> _vehicles = [];
@@ -41,11 +43,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   void initState() {
     super.initState();
     _tabs = TabController(length: 6, vsync: this)..addListener(_tabChanged);
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _load();
   }
 
   @override
   void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
     _tabs.removeListener(_tabChanged);
     _tabs.dispose();
     super.dispose();
@@ -55,8 +59,16 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     if (mounted) setState(() {});
   }
 
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
   Future<void> _load() async {
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final values = await Future.wait([
         VehicleService.getVehicles(), VehicleService.getFuelLogs(),
         VehicleService.getExpenses(), VehicleService.getReminders(),
@@ -64,6 +76,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       ]);
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _vehicles = values[0] as List<Map<String, dynamic>>;
         _fuel = values[1] as List<Map<String, dynamic>>;
         _expenses = values[2] as List<Map<String, dynamic>>;
@@ -109,7 +122,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       totals[currency] = (totals[currency] ?? 0) + amount;
     }
     if (totals.isEmpty) return '0.00';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join(' • ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value)}').join(' • ');
   }
 
   String _costPerKm(int vehicleId) {
@@ -125,7 +138,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       totals[currency] = (totals[currency] ?? 0) + ((r['amount'] as num?)?.toDouble() ?? 0);
     }
     if (totals.isEmpty) return '—';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value / distance)}/km').join(' • ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value / distance)}/km').join(' • ');
   }
 
   String _monthlySpend() {
@@ -163,6 +176,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   String _amount(dynamic value) => NumberFormat('#,##0.00').format((value as num?)?.toDouble() ?? 0);
 
+  String _moneyAmount(dynamic value) => _hideBalances ? '••••••' : _amount(value);
+
   String _moneyByCurrency(List<Map<String, dynamic>> records, String amountKey) {
     final totals = <String, double>{};
     for (final r in records) {
@@ -171,7 +186,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       totals[currency] = (totals[currency] ?? 0) + ((r[amountKey] as num?)?.toDouble() ?? 0);
     }
     if (totals.isEmpty) return '0.00';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join('  •  ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value)}').join('  •  ');
   }
 
   double _distanceFor(int vehicleId) {
@@ -671,7 +686,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _fuel.map((f) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: const CircleAvatar(backgroundColor: Color(0xFFFFF2DE), child: Icon(Icons.local_gas_station_outlined, color: Colors.orange)),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_amount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showFuelForm(record: f);
@@ -681,7 +696,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry')),
         ]),
         children: [
-          ListTile(dense: true, title: const Text('Price per unit'), trailing: Text(_amount(f['unit_price']))),
+          ListTile(dense: true, title: const Text('Price per unit'), trailing: Text(_moneyAmount(f['unit_price']))),
           ListTile(dense: true, title: const Text('Fuel station'), trailing: Text((f['station'] ?? '—').toString())),
           ListTile(dense: true, title: const Text('Tank fill'), trailing: Text(f['full_tank'] == true ? 'Full tank' : 'Partial')),
           if ((f['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: const Text('Notes'), subtitle: Text(f['notes'].toString())),
@@ -695,7 +710,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _expenses.map((e) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: const CircleAvatar(backgroundColor: Color(0xFFFCEBEA), child: Icon(Icons.build_outlined, color: Colors.red)),
-        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_amount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_moneyAmount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showExpenseForm(record: e);
@@ -782,7 +797,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       if (sortedFuel.isEmpty) const Card(child: ListTile(title: Text('No fuel price history yet.')))
       else ...sortedFuel.take(30).map((f) => Card(child: ListTile(
         dense: true, leading: const Icon(Icons.price_change_outlined, color: Colors.orange),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_amount(f['unit_price'])} / ${f['unit']}'),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['unit_price'])} / ${f['unit']}'),
         subtitle: Text('${_date(f['date'])} • ${f['station'] ?? 'Station not entered'}'),
         trailing: Text('${_amount(f['quantity'])} ${f['unit']}'),
       ))),

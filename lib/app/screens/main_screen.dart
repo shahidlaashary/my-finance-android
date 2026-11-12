@@ -118,13 +118,13 @@ class _MainScreenState extends State<MainScreen> {
                   index: 2,
                   icon: Icons.account_balance_wallet_outlined,
                   activeIcon: Icons.account_balance_wallet_rounded,
-                  label: 'Budgets',
+                  label: 'My Budgets',
                 ),
                 _navItem(
                   index: 3,
                   icon: Icons.flag_outlined,
                   activeIcon: Icons.flag_rounded,
-                  label: 'Goals',
+                  label: 'My Goals',
                 ),
 
                 // Darmiyan ka Plus: sirf icon, koi text label nahi.
@@ -162,19 +162,19 @@ class _MainScreenState extends State<MainScreen> {
                   index: 4,
                   icon: Icons.handshake_outlined,
                   activeIcon: Icons.handshake_rounded,
-                  label: 'Loans',
+                  label: 'Loans & Repayments',
                 ),
                 _navItem(
                   index: 5,
                   icon: Icons.bar_chart_outlined,
                   activeIcon: Icons.bar_chart_rounded,
-                  label: 'Stats',
+                  label: 'Reports and Analytics',
                 ),
                 _navItem(
                   index: 6,
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long_rounded,
-                  label: 'Txns',
+                  label: 'Transactions',
                 ),
                 _navItem(
                   index: 7,

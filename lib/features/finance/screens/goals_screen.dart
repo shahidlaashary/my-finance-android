@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
@@ -78,7 +79,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return [
       const DropdownMenuItem<int?>(
         value: null,
-        child: Text('No linked account'),
+        child: Text(AppStrings.translate(context, 'No linked account')),
       ),
       ..._wallets.map((account) {
         final id = account['id'] as int;
@@ -86,7 +87,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         final currency = account['currency']?.toString() ?? 'PKR';
         return DropdownMenuItem<int?>(
           value: id,
-          child: Text('$name ($currency)'),
+          child: Text(AppStrings.translate(context, '$name ($currency)')),
         );
       }),
     ];
@@ -184,7 +185,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   const SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
                   const SizedBox(height: 16),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate(context, 'Cancel')))), const SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -222,7 +223,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add Savings'),
+          title: Text(AppStrings.translate(context, 'Add Savings')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -235,7 +236,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.translate(context, 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -243,7 +244,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (value == null || !value.isFinite || value <= 0) return;
                 Navigator.pop(context, value);
               },
-              child: const Text('Continue'),
+              child: Text(AppStrings.translate(context, 'Continue')),
             ),
           ],
         );
@@ -270,7 +271,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Withdraw Savings'),
+          title: Text(AppStrings.translate(context, 'Withdraw Savings')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -283,7 +284,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.translate(context, 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -291,7 +292,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (value == null || !value.isFinite || value <= 0) return;
                 Navigator.pop(context, value);
               },
-              child: const Text('Withdraw'),
+              child: Text(AppStrings.translate(context, 'Withdraw')),
             ),
           ],
         );
@@ -316,21 +317,21 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Savings Goal'),
+          title: Text(AppStrings.translate(context, 'Delete Savings Goal')),
           content: Text(
             'Delete "${goal.name}" and its savings history?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(AppStrings.translate(context, 'Cancel')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: Text(AppStrings.translate(context, 'Delete')),
             ),
           ],
         );
@@ -394,8 +395,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       children: [
         const Padding(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(
-            'Savings Summary by Currency',
+          child: Text(AppStrings.translate(context, 'Savings Summary by Currency'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -496,8 +496,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      Text(
-                        '${DateFormat('dd MMM yyyy').format(goal.startDate ?? goal.createdAt ?? targetDate)}  →  ${DateFormat('dd MMM yyyy').format(targetDate)}',
+                      Text(AppStrings.translate(context, '${DateFormat(')dd MMM yyyy').format(goal.startDate ?? goal.createdAt ?? targetDate)}  →  ${DateFormat('dd MMM yyyy').format(targetDate)}',
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,
@@ -517,19 +516,18 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   itemBuilder: (context) => const [
                     PopupMenuItem(
                       value: 'edit',
-                      child: Text('Edit Goal'),
+                      child: Text(AppStrings.translate(context, 'Edit Goal')),
                     ),
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete Goal'),
+                      child: Text(AppStrings.translate(context, 'Delete Goal')),
                     ),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            Text(
-              'Account: $accountLabel',
+            Text(AppStrings.translate(context, 'Account: $accountLabel'),
               style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 12,
@@ -539,9 +537,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saved Amount'),
-                Text(
-                  '${_money(goal.savedAmount)} $currency',
+                Text(AppStrings.translate(context, 'Saved Amount')),
+                Text(AppStrings.translate(context, '${_money(goal.savedAmount)} $currency'),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -560,8 +557,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${(progress * 100).toStringAsFixed(1)}% completed'),
-                Text('Target: ${_money(goal.targetAmount)} $currency'),
+                Text(AppStrings.translate(context, '${(progress * 100).toStringAsFixed(1)}% completed')),
+                Text(AppStrings.translate(context, 'Target: ${_money(goal.targetAmount)} $currency')),
               ],
             ),
             const SizedBox(height: 10),
@@ -589,12 +586,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 FilledButton.tonalIcon(
                   onPressed: () => _showContributionDialog(goal),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Savings'),
+                  label: Text(AppStrings.translate(context, 'Add Savings')),
                 ),
                 OutlinedButton.icon(
                   onPressed: () => _withdraw(goal),
                   icon: const Icon(Icons.remove),
-                  label: const Text('Withdraw'),
+                  label: Text(AppStrings.translate(context, 'Withdraw')),
                 ),
               ],
             ),
@@ -620,7 +617,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Goals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(AppStrings.translate(context, 'My Goals'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -628,7 +625,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Goal'),
+        label: Text(AppStrings.translate(context, 'New Goal')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -649,8 +646,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             color: const Color(0xFF147D59),
                           ),
                           SizedBox(height: 12),
-                          Text(
-                            'No savings goals yet.',
+                          Text(AppStrings.translate(context, 'No savings goals yet.'),
                             style: TextStyle(color: Color(0xFF7B8781)),
                           ),
                         ],

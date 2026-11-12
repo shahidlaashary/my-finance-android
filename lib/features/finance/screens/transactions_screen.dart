@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/features/finance/models/finance_category.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
@@ -364,7 +365,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> deleteTransaction(
     Map<String, dynamic> item,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final requireConfirmation = await GeneralPreferences.instance.deleteConfirmation;
+    final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Transaction?'),
@@ -383,7 +385,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
         ],
       ),
-    );
+    ) : true;
 
     if (confirmed == true) {
       try {

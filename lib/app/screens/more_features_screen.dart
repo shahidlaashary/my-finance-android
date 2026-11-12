@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/security/app_lock_screen.dart';
+import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -26,7 +27,10 @@ class AppSettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Container(
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _openScreen(context, const GeneralAppPreferencesScreen()),
+            child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
@@ -35,7 +39,7 @@ class AppSettingsScreen extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.settings_rounded,
+                  Icons.tune_rounded,
                   color: Theme.of(context).colorScheme.primary,
                   size: 32,
                 ),
@@ -61,6 +65,7 @@ class AppSettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
           const SizedBox(height: 20),
           _SettingsInfoTile(

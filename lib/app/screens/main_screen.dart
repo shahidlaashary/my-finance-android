@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
-import 'package:my_finance/features/dashboard/screens/home_screen.dart' show HomePage;
+import 'package:my_finance/features/dashboard/home_screen.dart' show HomePage;
 import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
 import 'package:my_finance/features/finance/screens/goals_screen.dart';

@@ -3,11 +3,10 @@ name: Flutter Architecture Checks
 on:
   pull_request:
     branches:
-      - refactor/feature-first-lib-structure
+      - main
   push:
     branches:
       - architecture/cross-platform-foundation
-
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

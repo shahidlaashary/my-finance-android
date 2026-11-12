@@ -40,7 +40,13 @@ jobs:
               "import io.flutter.embedding.android.FlutterActivity",
               "import io.flutter.embedding.android.FlutterFragmentActivity",
           )
-          content = re.sub(r":\\s*FlutterActivity\\s*\\(", ": FlutterFragmentActivity(", content)
+          content = re.sub(r":\s*FlutterActivity\s*\(", ": FlutterFragmentActivity(", content)
+          for gradle_file in [Path("android/app/build.gradle.kts"), Path("android/app/build.gradle")]:
+              if gradle_file.exists():
+                  gradle = gradle_file.read_text()
+                  gradle = gradle.replace("minSdk = flutter.minSdkVersion", "minSdk = 23")
+                  gradle = gradle.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 23")
+                  gradle_file.write_text(gradle)
           if "FlutterFragmentActivity" not in content:
               raise SystemExit("Could not configure FlutterFragmentActivity for local_auth")
           activity.write_text(content)

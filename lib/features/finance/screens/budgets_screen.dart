@@ -142,7 +142,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     Expanded(child: DropdownButtonFormField<String>(
                       value: period, isExpanded: true,
                       decoration: decoration('Budget Period', Icons.calendar_view_month),
-                      items: const ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      items: ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                       onChanged: (v) { if (v != null) setSheetState(() => period = v); },
                     )),
                   ]),
@@ -155,7 +155,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(AppStrings.translate(context, 'Start Date'), style: TextStyle(fontWeight: FontWeight.w600))]),
+                        Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(AppStrings.translate(context, 'Start Date'), style: TextStyle(fontWeight: FontWeight.w600))]),
                         const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
@@ -167,7 +167,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() => endDate = v);
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(AppStrings.translate(context, 'End Date'), style: TextStyle(fontWeight: FontWeight.w600))]),
+                        Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(AppStrings.translate(context, 'End Date'), style: TextStyle(fontWeight: FontWeight.w600))]),
                         const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
@@ -424,7 +424,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: SegmentedButton<String>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                           value: 'All',
                           label: Text(AppStrings.translate(context, 'All')),

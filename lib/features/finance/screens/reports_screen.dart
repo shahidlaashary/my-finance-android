@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -208,7 +209,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports & Analytics'),
+        title: Text(AppStrings.translate(context, 'Reports & Analytics')),
         actions: [
           IconButton(
             onPressed: _loadReports,
@@ -261,8 +262,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               color: Colors.red,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Unable to load reports',
+            Text(AppStrings.translate(context, 'Unable to load reports'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -277,7 +277,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ElevatedButton.icon(
               onPressed: _loadReports,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(AppStrings.translate(context, 'Try Again')),
             ),
           ],
         ),
@@ -292,8 +292,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Report Filters',
+            Text(AppStrings.translate(context, 'Report Filters'),
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
@@ -311,7 +310,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               items: [
                 const DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('All Currencies'),
+                  child: Text(AppStrings.translate(context, 'All Currencies')),
                 ),
                 ..._currencies.map(
                   (currency) => DropdownMenuItem<String?>(
@@ -386,8 +385,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Financial Summary',
+        Text(AppStrings.translate(context, 'Financial Summary'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -415,8 +413,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   top: 8,
                   bottom: 8,
                 ),
-                child: Text(
-                  'Currency: $currency',
+                child: Text(AppStrings.translate(context, 'Currency: $currency'),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -504,8 +501,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Current Account Balances',
+        Text(AppStrings.translate(context, 'Current Account Balances'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -525,8 +521,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 child: Icon(Icons.account_balance),
               ),
               title: Text(currency),
-              subtitle: Text(
-                '${item['account_count']} wallets',
+              subtitle: Text(AppStrings.translate(context, '${item[')account_count']} wallets',
               ),
               trailing: Text(
                 _money(
@@ -558,8 +553,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Monthly Income & Expense Trend',
+        Text(AppStrings.translate(context, 'Monthly Income & Expense Trend'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -734,8 +728,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Expense by Category',
+        Text(AppStrings.translate(context, 'Expense by Category'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -759,8 +752,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 item['category_name']?.toString() ??
                     'Uncategorized',
               ),
-              subtitle: Text(
-                '${item['transaction_count']} transactions',
+              subtitle: Text(AppStrings.translate(context, '${item[')transaction_count']} transactions',
               ),
               trailing: Text(
                 _money(item['total'], currency),
@@ -788,8 +780,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Account-wise Summary',
+        Text(AppStrings.translate(context, 'Account-wise Summary'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -853,8 +844,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                   const SizedBox(height: 4),
 
-                  Text(
-                    '${item['transaction_count']} transactions',
+                  Text(AppStrings.translate(context, '${item[')transaction_count']} transactions',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -898,8 +888,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Transaction History',
+        Text(AppStrings.translate(context, 'Transaction History'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

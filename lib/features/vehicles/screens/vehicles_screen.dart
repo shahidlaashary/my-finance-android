@@ -692,7 +692,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showFuelForm(record: f);
           if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry');
-        }, itemBuilder: (_) => const [
+        }, itemBuilder: (_) => [
           PopupMenuItem(value: 'edit', child: Text(AppStrings.translate(context, 'Edit Fuel Entry'))),
           PopupMenuItem(value: 'delete', child: Text(AppStrings.translate(context, 'Delete Fuel Entry'))),
         ]),
@@ -716,7 +716,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showExpenseForm(record: e);
           if (v == 'delete') _deleteRecord(() async { final id = e['id'] as int; await VehicleService.deleteExpense(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_expense', ownerId: id); }, 'vehicle expense');
-        }, itemBuilder: (_) => const [
+        }, itemBuilder: (_) => [
           PopupMenuItem(value: 'edit', child: Text(AppStrings.translate(context, 'Edit Expense'))),
           PopupMenuItem(value: 'delete', child: Text(AppStrings.translate(context, 'Delete Expense'))),
         ]),
@@ -743,7 +743,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showReminderForm(reminder: r);
           if (v == 'delete') _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder');
-        }, itemBuilder: (_) => const [
+        }, itemBuilder: (_) => [
           PopupMenuItem(value: 'edit', child: Text(AppStrings.translate(context, 'Edit Reminder'))),
           PopupMenuItem(value: 'delete', child: Text(AppStrings.translate(context, 'Delete Reminder'))),
         ]),
@@ -771,7 +771,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     final sortedFuel = [...reportFuel]..sort((a,b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
     return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: [
       DropdownButtonFormField<String>(value: _reportRange, decoration: _decoration('Report Period', Icons.date_range_outlined),
-        items: const ['Daily', 'Weekly', 'Monthly', 'Yearly', 'All Time'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+        items: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'All Time'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
         onChanged: (v) => setState(() => _reportRange = v ?? 'All Time')),
       const SizedBox(height: 12),
       Text(AppStrings.translate(context, 'Vehicle Comparison'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),

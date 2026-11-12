@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
@@ -187,20 +188,19 @@ class _AttachmentSectionState extends State<AttachmentSection> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Attachment'),
-        content: const Text(
-          'Kya aap is attachment ko delete karna chahte hain?',
+        title: Text(AppStrings.translate(context, 'Delete Attachment')),
+        content: Text(AppStrings.translate(context, 'Kya aap is attachment ko delete karna chahte hain?'),
         ),
         actions: [
           TextButton(
             onPressed: () =>
                 Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(AppStrings.translate(context, 'Cancel')),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(dialogContext, true),
-            child: const Text('Delete'),
+            child: Text(AppStrings.translate(context, 'Delete')),
           ),
         ],
       ),
@@ -286,7 +286,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                   errorBuilder: (_, __, ___) =>
                       const Padding(
                     padding: EdgeInsets.all(24),
-                    child: Text('Image preview available nahi.'),
+                    child: Text(AppStrings.translate(context, 'Image preview available nahi.')),
                   ),
                 ),
               ),
@@ -333,15 +333,14 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                 const Icon(Icons.attach_file),
                 const SizedBox(width: 8),
                 const Expanded(
-                  child: Text(
-                    'Attachments',
+                  child: Text(AppStrings.translate(context, 'Attachments'),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                Text('${_attachments.length}'),
+                Text(AppStrings.translate(context, '${_attachments.length}')),
               ],
             ),
             const SizedBox(height: 12),
@@ -380,7 +379,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(
-                  child: Text('No attachments added yet.'),
+                  child: Text(AppStrings.translate(context, 'No attachments added yet.')),
                 ),
               )
             else
@@ -412,8 +411,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text(
-                      '${attachment.fileType.toUpperCase()} • '
+                    subtitle: Text(AppStrings.translate(context, '${attachment.fileType.toUpperCase()} • ')
                       '${_formatSize(attachment.fileSize)}',
                     ),
                     onTap: () => _openAttachment(attachment),
@@ -430,15 +428,15 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                       itemBuilder: (context) => const [
                         PopupMenuItem(
                           value: 'open',
-                          child: Text('Open / Preview'),
+                          child: Text(AppStrings.translate(context, 'Open / Preview')),
                         ),
                         PopupMenuItem(
                           value: 'replace',
-                          child: Text('Replace'),
+                          child: Text(AppStrings.translate(context, 'Replace')),
                         ),
                         PopupMenuItem(
                           value: 'delete',
-                          child: Text('Delete'),
+                          child: Text(AppStrings.translate(context, 'Delete')),
                         ),
                       ],
                     ),

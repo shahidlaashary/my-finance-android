@@ -302,6 +302,49 @@ class FinanceDB {
     return rate.isFinite && rate > 0 ? rate : null;
   }
 
+  Future<String> getBaseCurrency() async {
+    final rows = await db.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: ['main_currency'],
+      limit: 1,
+    );
+    return (rows.isEmpty ? 'PKR' : rows.first['setting_value']?.toString() ?? 'PKR')
+        .toUpperCase();
+  }
+
+  Future<void> setBaseCurrency(String currency) async {
+    final normalized = currency.trim().toUpperCase();
+    if (normalized.isEmpty) throw Exception('Base currency select karein.');
+    if (normalized != 'PKR' && await getExchangeRate(normalized) == null) {
+      throw Exception('Is currency ka exchange rate pehle set karein.');
+    }
+    await db.insert(
+      'app_settings',
+      {'setting_key': 'main_currency', 'setting_value': normalized},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    AppRefreshController.notifyChanged();
+  }
+
+  Future<double> getTotalBalanceInBaseCurrency() async {
+    final baseCurrency = await getBaseCurrency();
+    final baseRate = await getExchangeRate(baseCurrency);
+    if (baseRate == null || baseRate <= 0) {
+      throw Exception('Base currency ka exchange rate available nahi.');
+    }
+    final wallets = await db.query('wallets', where: 'exclude_total = 0');
+    double total = 0;
+    for (final wallet in wallets) {
+      final currency = (wallet['currency'] as String).toUpperCase();
+      final balance = (wallet['balance'] as num).toDouble();
+      final rate = await getExchangeRate(currency);
+      if (rate != null) total += balance * rate / baseRate;
+    }
+    return total;
+  }
+
   Future<List<Map<String, dynamic>>> getExchangeRates() {
     return db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
   }

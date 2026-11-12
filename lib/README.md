@@ -12,7 +12,6 @@ Feature-first Flutter structure for one shared Android, iOS, Windows and macOS c
 
 - `app/my_finance_app.dart`: root Material application, routes, theme and app-lock gate.
 - `app/screens/main_screen.dart`: bottom navigation shell and the central add-transaction action sheet.
-- `app/screens/home_screen.dart` is not used; the dashboard belongs to `features/dashboard/screens/home_screen.dart`.
 - `app/screens/more_features_page.dart`: More Features navigation page.
 - `app/screens/more_features_screen.dart`: settings and appearance screens.
 - `app/screens/simple_feature_page.dart`: shared placeholder destination for unfinished feature entries.

@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:my_finance/main.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 
 class AppLockService {
   AppLockService._();

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
@@ -349,11 +350,13 @@ class _AttachmentSectionState extends State<AttachmentSection> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildAddButton(
-                  icon: Icons.camera_alt,
-                  label: 'Camera',
-                  onPressed: _takePhoto,
-                ),
+                if (defaultTargetPlatform == TargetPlatform.android ||
+                    defaultTargetPlatform == TargetPlatform.iOS)
+                  _buildAddButton(
+                    icon: Icons.camera_alt,
+                    label: 'Camera',
+                    onPressed: _takePhoto,
+                  ),
                 _buildAddButton(
                   icon: Icons.photo_library,
                   label: 'Gallery',

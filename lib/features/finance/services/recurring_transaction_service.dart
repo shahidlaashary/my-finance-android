@@ -17,6 +17,7 @@ class RecurringTransactionService {
   static const String _tableName = 'recurring_transactions';
   static Database? _databaseInstance;
   static Future<Database>? _databaseFuture;
+  final List<String> lastProcessingErrors = [];
   Future<Database> get _database async {
     if (_databaseInstance != null && _databaseInstance!.isOpen) {
       return _databaseInstance!;
@@ -395,68 +396,90 @@ class RecurringTransactionService {
   }) async {
     final db = await _database;
     final referenceDate = throughDate ?? DateTime.now();
-    final today = DateTime(
-      referenceDate.year,
-      referenceDate.month,
-      referenceDate.day,
+    final today = DateTime(referenceDate.year, referenceDate.month, referenceDate.day);
+    lastProcessingErrors.clear();
+
+    final dueRows = await db.query(
+      _tableName,
+      where: 'is_active = ? AND next_run_date <= ?',
+      whereArgs: [1, _date(today)],
+      orderBy: 'next_run_date ASC',
     );
-    final processedCount = await db.transaction((txn) async {
-      final recurringRows = await txn.query(
-        _tableName,
-        where: 'is_active = ? AND next_run_date <= ?',
-        whereArgs: [1, _date(today)],
-        orderBy: 'next_run_date ASC',
-      );
-      int processedCount = 0;
-      for (final recurring in recurringRows) {
-        final id = recurring['id'] as int;
-        final frequency = recurring['frequency'].toString();
-        final endDate = recurring['end_date'] as String?;
-        var nextDate = DateTime.parse(
-          recurring['next_run_date'].toString(),
-        );
-        while (!nextDate.isAfter(today)) {
-          if (endDate != null &&
-              nextDate.isAfter(DateTime.parse(endDate))) {
-            await txn.update(
-              _tableName,
-              {'is_active': 0},
-              where: 'id = ?',
-              whereArgs: [id],
-            );
-            break;
-          }
-          await _applyTransaction(
-            txn,
-            recurring,
-            nextDate,
-          );
-          processedCount++;
-          nextDate = _nextDate(nextDate, frequency);
-          if (endDate != null &&
-              nextDate.isAfter(DateTime.parse(endDate))) {
-            await txn.update(
-              _tableName,
-              {
-                'next_run_date': _date(nextDate),
-                'is_active': 0,
-              },
-              where: 'id = ?',
-              whereArgs: [id],
-            );
-            break;
-          }
-          await txn.update(
+
+    var processedCount = 0;
+    for (final recurring in dueRows) {
+      final id = recurring['id'] as int;
+      try {
+        final count = await db.transaction((txn) async {
+          final currentRows = await txn.query(
             _tableName,
-            {'next_run_date': _date(nextDate)},
-            where: 'id = ?',
-            whereArgs: [id],
+            where: 'id = ? AND is_active = ?',
+            whereArgs: [id, 1],
+            limit: 1,
           );
-        }
+          if (currentRows.isEmpty) return 0;
+
+          final current = currentRows.first;
+          final frequency = current['frequency'].toString();
+          final endDate = current['end_date'] as String?;
+          var nextDate = DateTime.parse(current['next_run_date'].toString());
+          var scheduleCount = 0;
+
+          while (!nextDate.isAfter(today)) {
+            if (endDate != null && nextDate.isAfter(DateTime.parse(endDate))) {
+              await txn.update(
+                _tableName,
+                {'is_active': 0},
+                where: 'id = ?',
+                whereArgs: [id],
+              );
+              break;
+            }
+
+            await _applyTransaction(txn, current, nextDate);
+            scheduleCount++;
+            nextDate = _nextDate(nextDate, frequency);
+
+            if (endDate != null && nextDate.isAfter(DateTime.parse(endDate))) {
+              await txn.update(
+                _tableName,
+                {'next_run_date': _date(nextDate), 'is_active': 0},
+                where: 'id = ?',
+                whereArgs: [id],
+              );
+              break;
+            }
+
+            await txn.update(
+              _tableName,
+              {'next_run_date': _date(nextDate)},
+              where: 'id = ?',
+              whereArgs: [id],
+            );
+          }
+          return scheduleCount;
+        });
+        processedCount += count;
+      } catch (error) {
+        final title = recurring['title']?.toString() ?? 'Schedule #$id';
+        final message = '$title: $error';
+        lastProcessingErrors.add(message);
+
+        // Ek schedule fail ho to doosre schedules rollback na hon.
+        // Failed schedule pause hota hai taake har app launch par duplicate
+        // retries/continuous errors na hon; user usay edit karke resume kar sakta hai.
+        await db.update(
+          _tableName,
+          {'is_active': 0},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
       }
-      return processedCount;
-    });
-    if (processedCount > 0) AppRefreshController.notifyChanged();
+    }
+
+    if (processedCount > 0 || lastProcessingErrors.isNotEmpty) {
+      AppRefreshController.notifyChanged();
+    }
     return processedCount;
   }
 }

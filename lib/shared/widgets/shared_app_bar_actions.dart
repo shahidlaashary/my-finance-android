@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
@@ -56,7 +57,7 @@ void _showBudgetAlerts(BuildContext context) {
               Icon(Icons.notifications_active_outlined,
                   color: Color(0xFF147D59)),
               SizedBox(width: 9),
-              Text('Budget Notifications',
+              Text(AppStrings.translate(context, 'Budget Notifications'),
                   style: TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.w800,
@@ -78,7 +79,7 @@ void _showBudgetAlerts(BuildContext context) {
                 }
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text('Unable to load budget alerts: ${snapshot.error}'),
+                    child: Text(AppStrings.translate(context, 'Unable to load budget alerts: ${snapshot.error}')),
                   );
                 }
                 final alerts = (snapshot.data ?? [])
@@ -100,12 +101,12 @@ void _showBudgetAlerts(BuildContext context) {
                           Icon(Icons.check_circle_outline_rounded,
                               size: 38, color: Color(0xFF16865B)),
                           SizedBox(height: 10),
-                          Text('You are all caught up',
+                          Text(AppStrings.translate(context, 'You are all caught up'),
                               style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF202A26))),
                           SizedBox(height: 4),
-                          Text('No active budget has reached 50% usage.',
+                          Text(AppStrings.translate(context, 'No active budget has reached 50% usage.'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   fontSize: 12, color: Color(0xFF7B8781))),
@@ -157,7 +158,7 @@ void _showBudgetAlerts(BuildContext context) {
                                         fontWeight: FontWeight.w800,
                                         color: Color(0xFF202A26))),
                               ),
-                              Text('${percent.toStringAsFixed(0)}%',
+                              Text(AppStrings.translate(context, '${percent.toStringAsFixed(0)}%'),
                                   style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       color: color)),
@@ -218,7 +219,7 @@ List<Widget> buildMainSectionAppBarActions(BuildContext context) {
       onPressed: () {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No new notifications'),
+            content: Text(AppStrings.translate(context, 'No new notifications')),
             behavior: SnackBarBehavior.floating,
           ),
         );

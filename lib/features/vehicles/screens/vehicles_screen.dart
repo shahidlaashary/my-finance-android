@@ -815,16 +815,28 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         titleSpacing: 16, toolbarHeight: 56,
         title: const Text('Vehicle Manager', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink)),
         actions: buildSharedAppBarActions(context),
-        bottom: TabBar(controller: _tabs, isScrollable: true, tabAlignment: TabAlignment.start,
-          labelColor: _green, unselectedLabelColor: _muted, indicatorColor: _green,
-          tabs: const [
-            Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined, size: 18)),
-            Tab(text: 'Vehicles', icon: Icon(Icons.directions_car_outlined, size: 18)),
-            Tab(text: 'Fuel Log', icon: Icon(Icons.local_gas_station_outlined, size: 18)),
-            Tab(text: 'Expenses', icon: Icon(Icons.build_outlined, size: 18)),
-            Tab(text: 'Reminders', icon: Icon(Icons.notifications_none, size: 18)),
-            Tab(text: 'Reports', icon: Icon(Icons.analytics_outlined, size: 18)),
-          ]),
+      ),
+      bottomNavigationBar: Material(
+        color: Colors.white,
+        child: SafeArea(
+          top: false,
+          child: TabBar(
+            controller: _tabs,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelColor: _green,
+            unselectedLabelColor: _muted,
+            indicatorColor: _green,
+            tabs: const [
+              Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined, size: 18)),
+              Tab(text: 'Vehicles', icon: Icon(Icons.directions_car_outlined, size: 18)),
+              Tab(text: 'Fuel Log', icon: Icon(Icons.local_gas_station_outlined, size: 18)),
+              Tab(text: 'Expenses', icon: Icon(Icons.build_outlined, size: 18)),
+              Tab(text: 'Reminders', icon: Icon(Icons.notifications_none, size: 18)),
+              Tab(text: 'Reports', icon: Icon(Icons.analytics_outlined, size: 18)),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _fabAction(), backgroundColor: _green, foregroundColor: Colors.white,

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/features/finance/services/reports_service.dart';
@@ -27,6 +28,7 @@ class _StatsScreenState extends State<StatsScreen> {
   final NumberFormat _numberFormat = NumberFormat('#,##0.00');
 
   bool _loading = true;
+  bool _hideBalances = false;
   String? _error;
   String _period = 'This Month';
   String _currency = 'PKR';
@@ -76,7 +78,21 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
+  }
+
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -87,6 +103,7 @@ class _StatsScreenState extends State<StatsScreen> {
       });
     }
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final currencies = await _reports.getAvailableCurrencies();
       final assets = await AssetsService().getAssets();
       final budgets = await BudgetsService.getBudgets();
@@ -137,6 +154,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _currencies = allCurrencies;
         _currency = selected;
         _balances = balances;
@@ -160,7 +178,7 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
-  String _money(Object? value) => _numberFormat.format((value as num?)?.toDouble() ?? 0);
+  String _money(Object? value) => _hideBalances ? '••••••' : _numberFormat.format((value as num?)?.toDouble() ?? 0);
 
   Widget _metricCard({
     required String title,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
@@ -16,6 +17,7 @@ class _LoansScreenState extends State<LoansScreen> {
   List<Map<String, dynamic>> _wallets = [];
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
+  bool _hideBalances = false;
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
@@ -29,10 +31,12 @@ class _LoansScreenState extends State<LoansScreen> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
   }
   @override
   void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
@@ -46,7 +50,7 @@ class _LoansScreenState extends State<LoansScreen> {
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
   }
-  String _money(double amount) => amount.toStringAsFixed(2);
+  String _money(double amount) => _hideBalances ? '••••••' : amount.toStringAsFixed(2);
   String _currencyForAccount(int walletId) {
     final account = _wallets.cast<Map<String, dynamic>?>().firstWhere(
       (item) => item?['id'] == walletId,
@@ -59,14 +63,23 @@ class _LoansScreenState extends State<LoansScreen> {
   String _moneyWithCurrency(double amount, int walletId) {
     return '${_currencyForAccount(walletId)} ${_money(amount)}';
   }
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
   Future<void> _loadData() async {
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final wallets = await TransactionsService.getAccounts();
       final loans = await LoansService.getLoans();
       final outstandingByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _wallets = wallets;
         _loans = loans;
         _outstandingByCurrency = outstandingByCurrency;

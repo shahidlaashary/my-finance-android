@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -24,15 +25,25 @@ class _RecurringTransactionsScreenState
   List<Map<String, dynamic>> _categories = [];
 
   bool _loading = true;
+  bool _hideBalances = false;
 
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
+  }
+
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
   }
 
   Future<void> _loadData() async {
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
 
@@ -54,6 +65,7 @@ class _RecurringTransactionsScreenState
       if (!mounted) return;
 
       setState(() {
+        _hideBalances = hideBalances;
         _wallets = wallets;
         _categories = categories;
         _items = items;
@@ -69,7 +81,7 @@ class _RecurringTransactionsScreenState
   }
 
   String _money(double amount, String currency) {
-    return '$currency ${amount.toStringAsFixed(2)}';
+    return '$currency ${_hideBalances ? '••••••' : amount.toStringAsFixed(2)}';
   }
 
   String _date(DateTime? value) {
@@ -766,6 +778,7 @@ class _RecurringTransactionDialogState
 
   @override
   void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
     _titleController.dispose();
     _amountController.dispose();
     _noteController.dispose();

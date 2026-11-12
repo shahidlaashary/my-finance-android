@@ -22,6 +22,10 @@ class AppLockService {
   static const String _timeoutKey = 'app_lock_pin_timeout_v1';
   static const String _pinHashKey = 'my_finance_app_lock_pin_hash_v1';
   static const String _pinSaltKey = 'my_finance_app_lock_pin_salt_v1';
+  static const String _failedAttemptsKey = 'app_lock_failed_attempts_v1';
+  static const String _lockUntilKey = 'app_lock_lock_until_v1';
+  static const int _maxFailedAttempts = 5;
+  static const int _lockoutSeconds = 30;
 
   static Future<String?> _getSetting(String key) async {
     final rows = await FinanceDB.instance.db.query(
@@ -71,16 +75,35 @@ class AppLockService {
 
     await _secureStorage.write(key: _pinSaltKey, value: salt);
     await _secureStorage.write(key: _pinHashKey, value: hash);
+    await _clearPinFailures();
     revision.value++;
   }
 
   static Future<bool> verifyPin(String pin) async {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final lockUntil = int.tryParse(await _secureStorage.read(key: _lockUntilKey) ?? '0') ?? 0;
+    if (now < lockUntil) return false;
     final salt = await _secureStorage.read(key: _pinSaltKey);
     final storedHash = await _secureStorage.read(key: _pinHashKey);
     if (salt == null || storedHash == null) return false;
-
     final candidate = sha256.convert(utf8.encode('$salt:$pin')).toString();
-    return candidate == storedHash;
+    if (candidate == storedHash) {
+      await _clearPinFailures();
+      return true;
+    }
+    final attempts = (int.tryParse(await _secureStorage.read(key: _failedAttemptsKey) ?? '0') ?? 0) + 1;
+    if (attempts >= _maxFailedAttempts) {
+      await _secureStorage.write(key: _lockUntilKey, value: (now + _lockoutSeconds).toString());
+      await _secureStorage.write(key: _failedAttemptsKey, value: '0');
+    } else {
+      await _secureStorage.write(key: _failedAttemptsKey, value: attempts.toString());
+    }
+    return false;
+  }
+
+  static Future<void> _clearPinFailures() async {
+    await _secureStorage.delete(key: _failedAttemptsKey);
+    await _secureStorage.delete(key: _lockUntilKey);
   }
 
   static Future<int> autoLockSeconds() async {

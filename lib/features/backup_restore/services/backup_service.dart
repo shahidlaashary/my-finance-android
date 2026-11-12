@@ -14,6 +14,11 @@ class BackupService {
   static const String _attachmentFolder = 'my_finance_attachments';
   static const String _backupDatabasePath = 'database/my_finance.db';
   static const String _manifestPath = 'manifest.json';
+  static const int _maxBackupBytes = 512 * 1024 * 1024;
+  static const int _maxExpandedBytes = 1024 * 1024 * 1024;
+  static const int _maxEntryBytes = 256 * 1024 * 1024;
+  static const int _maxArchiveEntries = 20000;
+  static const int _maxManifestBytes = 64 * 1024;
 
   /// Creates a ZIP backup containing a consistent database snapshot
   /// and all available attachment files.
@@ -152,7 +157,9 @@ class BackupService {
       );
 
       final zipBytes = ZipEncoder().encode(archive);
-
+      if (zipBytes.length > _maxBackupBytes) {
+        throw Exception('Backup is too large (maximum 512 MB).');
+      }
       return Uint8List.fromList(zipBytes);
     } finally {
       if (await snapshotFile.exists()) {
@@ -173,8 +180,23 @@ class BackupService {
       throw Exception('Backup file is empty.');
     }
 
+    if (backupBytes.length > _maxBackupBytes) {
+      throw Exception('Backup exceeds the 512 MB import limit.');
+    }
     final archive = ZipDecoder().decodeBytes(backupBytes);
-
+    if (archive.files.length > _maxArchiveEntries) {
+      throw Exception('Backup contains too many files.');
+    }
+    var expandedBytes = 0;
+    for (final entry in archive.files) {
+      if (entry.size < 0 || entry.size > _maxEntryBytes) {
+        throw Exception('Backup contains an oversized file.');
+      }
+      expandedBytes += entry.size;
+      if (expandedBytes > _maxExpandedBytes) {
+        throw Exception('Backup expands beyond the 1 GB safety limit.');
+      }
+    }
     final files = <String, ArchiveFile>{};
 
     for (final entry in archive.files) {
@@ -202,6 +224,9 @@ class BackupService {
       );
     }
 
+    if (manifestFile.size > _maxManifestBytes) {
+      throw Exception('Backup manifest is too large.');
+    }
     final manifestBytes = manifestFile.content as List<int>;
 
     final decodedManifest = jsonDecode(
@@ -232,6 +257,9 @@ class BackupService {
 
     if (databaseBytes.isEmpty) {
       throw Exception('Backup database file is empty.');
+    }
+    if (databaseBytes.length > _maxEntryBytes) {
+      throw Exception('Backup database exceeds the 256 MB safety limit.');
     }
 
     // Validate attachment count.

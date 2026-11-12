@@ -115,6 +115,13 @@ class _AppLockGateState extends State<AppLockGate>
           context: ErrorDescription('while checking auto-lock timeout'),
         ),
       );
+      if (!mounted) return;
+      setState(() {
+        _locked = true;
+        _showPin = false;
+        _pinController.clear();
+        _error = 'Auto-lock security check failed. The app remains locked; retry your PIN.';
+      });
     }
   }
 

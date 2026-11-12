@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/app/theme/app_theme.dart';
+import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
 
@@ -43,19 +45,6 @@ Future<void> main() async {
 }
 
 // ============================================================
-// App ke rang
-// ============================================================
-
-class AppColors {
-  static const Color primary = Color(0xFF147D59);
-  static const Color background = Color(0xFFF5F7F6);
-  static const Color income = Color(0xFF16865B);
-  static const Color expense = Color(0xFFD9534F);
-  static const Color text = Color(0xFF202A26);
-  static const Color muted = Color(0xFF7B8781);
-}
-
-// ============================================================
 // Database ka nizam
 // ============================================================
 
@@ -67,35 +56,7 @@ class MyFinanceApp extends StatelessWidget {
     return MaterialApp(
       title: 'My Finance',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          surface: Colors.white,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: AppColors.text,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF8FAF9),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
+      theme: AppTheme.light,
       routes: {
         '/settings': (_) => const MoreFeaturesPage(),
       },

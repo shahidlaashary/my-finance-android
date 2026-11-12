@@ -1,9 +1,13 @@
 name: Flutter Architecture Checks
 
 on:
+  pull_request:
+    branches:
+      - refactor/feature-first-lib-structure
   push:
     branches:
       - architecture/cross-platform-foundation
+      - 'refactor/**'
 
 permissions:
   contents: read

@@ -136,26 +136,16 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   final AppearanceSettingsService _settings =
       AppearanceSettingsService.instance;
 
-  Future<void> _changeThemeMode(ThemeMode mode) async {
+  Future<void> _changeThemePreset(AppThemePreset preset) async {
     try {
-      await _settings.setThemeMode(mode);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Theme mode updated successfully.'),
-        ),
-      );
+      await _settings.setThemePreset(preset);
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save theme mode: $e')),
+        SnackBar(content: Text('Unable to save theme: $e')),
       );
     }
   }
-
 
   Widget _buildHeader(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -274,29 +264,30 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildThemeModeOptions() {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: _settings.themeMode,
-      builder: (context, selectedMode, _) {
+  Widget _buildThemeOptions() {
+    return ValueListenableBuilder<AppThemePreset>(
+      valueListenable: _settings.themePreset,
+      builder: (context, selectedPreset, _) {
         final options = [
-          (ThemeMode.light, 'Light', Icons.light_mode_outlined),
-          (ThemeMode.dark, 'Dark', Icons.dark_mode_outlined),
-          (ThemeMode.system, 'System Default', Icons.settings_brightness),
+          (AppThemePreset.emeraldGreen, 'Emerald Green', Icons.eco_outlined),
+          (AppThemePreset.lightMode, 'Light Mode', Icons.light_mode_outlined),
+          (AppThemePreset.darkMode, 'Dark Mode', Icons.dark_mode_outlined),
+          (AppThemePreset.midnightGold, 'Midnight Gold', Icons.nights_stay_outlined),
+          (AppThemePreset.oceanBlue, 'Ocean Blue', Icons.water_outlined),
+          (AppThemePreset.carbonBlack, 'Carbon Black', Icons.contrast_rounded),
         ];
 
         return Column(
           children: options.map((option) {
-            return RadioListTile<ThemeMode>(
+            return RadioListTile<AppThemePreset>(
               value: option.$1,
-              groupValue: selectedMode,
+              groupValue: selectedPreset,
               contentPadding: EdgeInsets.zero,
               dense: true,
               title: Text(option.$2),
               secondary: Icon(option.$3),
               onChanged: (value) {
-                if (value != null) {
-                  _changeThemeMode(value);
-                }
+                if (value != null) _changeThemePreset(value);
               },
             );
           }).toList(),
@@ -304,7 +295,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
       },
     );
   }
-
 
   Widget _buildPlannedSection({
     required BuildContext context,
@@ -392,9 +382,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           _buildActiveSection(
             context: context,
             icon: Icons.dark_mode_rounded,
-            title: 'Theme Mode',
-            description: 'Choose how the app should look',
-            children: [_buildThemeModeOptions()],
+            title: 'App Theme',
+            description: 'Choose a color theme for the entire app',
+            children: [_buildThemeOptions()],
           ),
           _buildPlannedSection(
             context: context,

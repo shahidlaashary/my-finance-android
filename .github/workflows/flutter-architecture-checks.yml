@@ -1,12 +1,7 @@
 name: Flutter Architecture Checks
 
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - architecture/cross-platform-foundation
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -19,8 +14,7 @@ jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2

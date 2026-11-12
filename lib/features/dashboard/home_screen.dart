@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -137,7 +138,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       setState(() => loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Dashboard update failed: $error')),
+        SnackBar(content: Text(AppStrings.translate(context, 'Dashboard update failed: $error'))),
       );
     }
   }
@@ -234,8 +235,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'My Finance',
+        title: Text(AppStrings.translate(context, 'My Finance'),
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildSharedAppBarActions(context),
@@ -270,7 +270,7 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total Wallet Balance',
+                  Text(AppStrings.translate(context, 'Total Wallet Balance'),
                       style: TextStyle(color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 8),
                   loading
@@ -289,13 +289,13 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                   const SizedBox(height: 7),
-                  Text('Consolidated in $baseCurrency',
+                  Text(AppStrings.translate(context, 'Consolidated in $baseCurrency'),
                       style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
             const SizedBox(height: 18),
-            const Text('Financial Snapshot',
+            Text(AppStrings.translate(context, 'Financial Snapshot'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
             const SizedBox(height: 10),
@@ -334,7 +334,7 @@ class _HomePageState extends State<HomePage> {
                       color: AppColors.primary, size: 25),
                   const SizedBox(width: 12),
                   const Expanded(
-                    child: Text('Estimated Net Worth',
+                    child: Text(AppStrings.translate(context, 'Estimated Net Worth'),
                         style: TextStyle(fontWeight: FontWeight.w700,
                             color: AppColors.text, fontSize: 13)),
                   ),
@@ -352,7 +352,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 18),
-            const Text('This Month',
+            Text(AppStrings.translate(context, 'This Month'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
             const SizedBox(height: 10),
@@ -402,7 +402,7 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Net Monthly Savings',
+                        Text(AppStrings.translate(context, 'Net Monthly Savings'),
                             style: TextStyle(fontSize: 12,
                                 color: AppColors.muted,
                                 fontWeight: FontWeight.w600)),
@@ -416,8 +416,7 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  Text(
-                    '${savingsRate.toStringAsFixed(1)}%',
+                  Text(AppStrings.translate(context, '${savingsRate.toStringAsFixed(1)}%'),
                     style: const TextStyle(fontSize: 17,
                         fontWeight: FontWeight.w800,
                         color: AppColors.primary),
@@ -429,7 +428,7 @@ class _HomePageState extends State<HomePage> {
             Row(
               children: [
                 const Expanded(
-                  child: Text('Budget Alerts',
+                  child: Text(AppStrings.translate(context, 'Budget Alerts'),
                       style: TextStyle(fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: AppColors.text)),
@@ -438,7 +437,7 @@ class _HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const BudgetsScreen())),
-                    child: const Text('View Budgets'),
+                    child: Text(AppStrings.translate(context, 'View Budgets')),
                   ),
               ],
             ),
@@ -461,7 +460,7 @@ class _HomePageState extends State<HomePage> {
                         color: AppColors.income),
                     SizedBox(width: 10),
                     Expanded(
-                      child: Text('No budget alerts. Your active budgets are below 50%.',
+                      child: Text(AppStrings.translate(context, 'No budget alerts. Your active budgets are below 50%.'),
                           style: TextStyle(fontSize: 12,
                               color: AppColors.muted)),
                     ),
@@ -471,7 +470,7 @@ class _HomePageState extends State<HomePage> {
             else
               ...budgetAlerts.take(4).map(_budgetAlertCard),
             const SizedBox(height: 22),
-            const Text('Overview',
+            Text(AppStrings.translate(context, 'Overview'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
             const SizedBox(height: 12),
@@ -589,7 +588,7 @@ class _HomePageState extends State<HomePage> {
                   style: const TextStyle(fontWeight: FontWeight.w800,
                       fontSize: 13, color: AppColors.text)),
             ),
-            Text('${percent.toStringAsFixed(0)}%',
+            Text(AppStrings.translate(context, '${percent.toStringAsFixed(0)}%'),
                 style: TextStyle(fontSize: 13,
                     fontWeight: FontWeight.w800, color: color)),
           ]),
@@ -607,7 +606,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 7),
-          Text('${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
+          Text(AppStrings.translate(context, '${budget.currency} ${NumberFormat(')#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
               style: const TextStyle(fontSize: 10, color: AppColors.muted)),
         ],
       ),

@@ -843,6 +843,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
         toolbarHeight: 56,
         title: const Text('My Assets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE7EEEA)),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAssetDialog,

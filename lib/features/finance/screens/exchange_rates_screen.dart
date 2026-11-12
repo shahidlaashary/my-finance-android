@@ -42,15 +42,18 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       });
 
       if (autoUpdateIfStale) {
-        DateTime? latest;
-        for (final row in rates) {
-          final parsed = DateTime.tryParse(row['updated_at']?.toString() ?? '');
-          if (parsed != null && (latest == null || parsed.isAfter(latest))) {
-            latest = parsed;
-          }
-        }
-        final isStale = latest == null ||
-            DateTime.now().difference(latest) >= const Duration(hours: 24);
+        final now = DateTime.now();
+        final isStale = _currencies.any((currency) {
+          final matching = rates.where(
+            (row) => row['currency'].toString().toUpperCase() == currency,
+          );
+          if (matching.isEmpty) return true;
+          final updatedAt = DateTime.tryParse(
+            matching.first['updated_at']?.toString() ?? '',
+          );
+          return updatedAt == null ||
+              now.difference(updatedAt) >= const Duration(hours: 24);
+        });
         if (isStale) await _refreshRates(showSuccess: false);
       }
     } catch (error) {

@@ -208,7 +208,9 @@ class _RecurringTransactionsScreenState
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => FractionallySizedBox(
-        heightFactor: 0.94,
+        // Fill the available sheet height while the keyboard is visible.
+        // The modal route moves the sheet above the keyboard automatically.
+        heightFactor: MediaQuery.of(context).viewInsets.bottom > 0 ? 1.0 : 0.94,
         child: _RecurringTransactionDialog(
           wallets: _wallets,
           categories: _categories,
@@ -777,7 +779,6 @@ class _RecurringTransactionDialogState
   @override
   Widget build(BuildContext context) {
     final categories = _availableCategories;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Material(
       color: Theme.of(context).colorScheme.surface,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -785,7 +786,7 @@ class _RecurringTransactionDialogState
       child: Column(children: [
         Padding(padding: const EdgeInsets.fromLTRB(18, 12, 18, 8), child: Row(children: [Expanded(child: Text(widget.existing == null ? 'Add Schedule' : 'Edit Schedule', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: _saving ? null : () => Navigator.pop(context, false), icon: const Icon(Icons.close))])),
         Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
-        Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: EdgeInsets.fromLTRB(18, 18, 18, 20 + bottomInset), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 18, 18, 20), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           SegmentedButton<String>(segments: const [ButtonSegment(value: 'income', label: Text('Income')), ButtonSegment(value: 'expense', label: Text('Expense')), ButtonSegment(value: 'transfer', label: Text('Transfer'))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
           const SizedBox(height: 14),
           TextFormField(controller: _titleController, decoration: _decoration('Schedule Title', icon: Icons.title), validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title.' : null),

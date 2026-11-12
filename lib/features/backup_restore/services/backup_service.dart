@@ -413,7 +413,7 @@ class BackupService {
             }
 
             final normalizedStoredPath =
-                storedPath.replaceAll('\\\\', '/');
+                storedPath.replaceAll('\\', '/');
             final markerIndex =
                 normalizedStoredPath.lastIndexOf(attachmentMarker);
 

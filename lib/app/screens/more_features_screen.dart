@@ -296,75 +296,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildPlannedSection({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String description,
-    required List<String> options,
-  }) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 13),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Theme.of(context).hintColor),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const Text(
-                  'Coming soon',
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).hintColor,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: options.map((option) {
-                return Chip(
-                  label: Text(
-                    option,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  visualDensity: VisualDensity.compact,
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -385,42 +316,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             title: 'App Theme',
             description: 'Choose a color theme for the entire app',
             children: [_buildThemeOptions()],
-          ),
-          _buildPlannedSection(
-            context: context,
-            icon: Icons.dashboard_rounded,
-            title: 'Dashboard Layout',
-            description: 'Choose how dashboard information is arranged',
-            options: [
-              'Classic Layout',
-              'Compact Layout',
-              'Card Layout',
-              'Detailed Layout',
-            ],
-          ),
-          _buildPlannedSection(
-            context: context,
-            icon: Icons.display_settings_rounded,
-            title: 'Display Preferences',
-            description: 'Customize the way information is displayed',
-            options: [
-              'Compact View',
-              'Comfortable View',
-              'Animations On',
-              'Animations Off',
-            ],
-          ),
-          _buildPlannedSection(
-            context: context,
-            icon: Icons.phone_android_rounded,
-            title: 'App Icon',
-            description: 'Choose an icon for My Finance',
-            options: [
-              'Default Icon',
-              'Green Icon',
-              'Blue Icon',
-              'Dark Icon',
-            ],
           ),
           const SizedBox(height: 8),
         ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/dashboard/screens/home_screen.dart' show HomePage;
+import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
 import 'package:my_finance/features/finance/screens/goals_screen.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
@@ -31,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
         featurePageBuilder: (title) => SimpleFeaturePage(title: title),
       ),
     ),
-    KeyedSubtree(key: ValueKey('assets-$_refreshVersion'), child: const AssetsPage()),
+    KeyedSubtree(key: ValueKey('assets-$_refreshVersion'), child: const AssetsScreen()),
     KeyedSubtree(key: ValueKey('budgets-$_refreshVersion'), child: const BudgetsScreen()),
     KeyedSubtree(key: ValueKey('goals-$_refreshVersion'), child: const GoalsScreen()),
     KeyedSubtree(key: ValueKey('loans-$_refreshVersion'), child: const LoansScreen()),

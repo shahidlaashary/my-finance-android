@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -225,7 +226,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildTrend() {
     if (_trend.isEmpty) {
-      return const Text('No income or expense trend available yet.', style: TextStyle(color: Colors.black54));
+      return Text(AppStrings.translate(context, 'No income or expense trend available yet.'), style: TextStyle(color: Colors.black54));
     }
     final maxValue = _trend.fold<double>(0, (maxValue, row) {
       final income = (row['income'] as num?)?.toDouble() ?? 0;
@@ -360,7 +361,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildCategories() {
     if (_categories.isEmpty) {
-      return const Text('No expense categories recorded for this period.', style: TextStyle(color: Colors.black54));
+      return Text(AppStrings.translate(context, 'No expense categories recorded for this period.'), style: TextStyle(color: Colors.black54));
     }
     final visibleCategories = _showAllCategories ? _categories : _categories.take(5).toList();
     final total = visibleCategories.fold<double>(
@@ -403,7 +404,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Total', style: TextStyle(fontSize: 10, color: Colors.black54)),
+                      Text(AppStrings.translate(context, 'Total'), style: TextStyle(fontSize: 10, color: Colors.black54)),
                       const SizedBox(height: 3),
                       Text(
                         _money(total),
@@ -439,7 +440,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           ),
                         ),
                         const SizedBox(width: 3),
-                        Text('${percent.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700)),
+                        Text(AppStrings.translate(context, '${percent.toStringAsFixed(0)}%'), style: const TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   );
@@ -456,7 +457,7 @@ class _StatsScreenState extends State<StatsScreen> {
             child: Row(
               children: [
                 Expanded(child: Text(row['category_name'].toString(), style: const TextStyle(fontSize: 11, color: Colors.black54))),
-                Text('$_currency ${_money(values[index])}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                Text(AppStrings.translate(context, '$_currency ${_money(values[index])}'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               ],
             ),
           );
@@ -467,7 +468,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildBalances() {
     if (_balances.isEmpty) {
-      return const Text('Create a wallet to see account balances here.', style: TextStyle(color: Colors.black54));
+      return Text(AppStrings.translate(context, 'Create a wallet to see account balances here.'), style: TextStyle(color: Colors.black54));
     }
     return Wrap(
       spacing: 9,
@@ -484,7 +485,7 @@ class _StatsScreenState extends State<StatsScreen> {
             Text(row['currency'].toString(), style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 5),
             Text(_money(row['total_balance']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            Text('${row['account_count']} account(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+            Text(AppStrings.translate(context, '${row[')account_count']} account(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
           ]),
         );
       }).toList(),
@@ -583,7 +584,7 @@ class _StatsScreenState extends State<StatsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('Reports and Analytics', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(AppStrings.translate(context, 'Reports and Analytics'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       body: _loading
@@ -594,9 +595,9 @@ class _StatsScreenState extends State<StatsScreen> {
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     const Icon(Icons.error_outline, size: 42, color: Colors.redAccent),
                     const SizedBox(height: 10),
-                    Text('Could not load stats: $_error', textAlign: TextAlign.center),
+                    Text(AppStrings.translate(context, 'Could not load stats: $_error'), textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    ElevatedButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh), label: const Text('Try Again')),
+                    ElevatedButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh), label: Text(AppStrings.translate(context, 'Try Again'))),
                   ]),
                 ))
               : RefreshIndicator(
@@ -625,7 +626,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         )),
                       ]),
                       const SizedBox(height: 14),
-                      Text('$_currency overview', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                      Text(AppStrings.translate(context, '$_currency overview'), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 9),
                       Row(children: [
                         _metricCard(title: 'Income', amount: _money(_totals['income']), icon: Icons.trending_up_rounded, color: const Color(0xFF16865B)),

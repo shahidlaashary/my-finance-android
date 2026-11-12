@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/app_strings.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
 class GeneralAppPreferencesScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   Future<void> _save(Future<void> Function() action) async {
     await action();
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Preference saved')),
+      const SnackBar(content: Text(AppStrings.translate(context, 'Preference saved'))),
     );
   }
 
@@ -79,7 +80,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('General App Preferences')),
+      appBar: AppBar(title: Text(AppStrings.translate(context, 'General App Preferences'))),
       body: _loading ? const Center(child: CircularProgressIndicator()) : ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -102,10 +103,9 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () async { await _preferences.reset(); await _load(); },
-            icon: const Icon(Icons.restart_alt), label: const Text('Reset Preferences'),
+            icon: const Icon(Icons.restart_alt), label: Text(AppStrings.translate(context, 'Reset Preferences')),
           ),
-          const Padding(padding: EdgeInsets.only(top: 8), child: Text(
-            'Resetting preferences does not delete wallets, transactions, or other financial records.',
+          const Padding(padding: EdgeInsets.only(top: 8), child: Text(AppStrings.translate(context, 'Resetting preferences does not delete wallets, transactions, or other financial records.'),
             textAlign: TextAlign.center, style: TextStyle(fontSize: 12),
           )),
         ],

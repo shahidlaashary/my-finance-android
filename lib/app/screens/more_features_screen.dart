@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
-import 'package:my_finance/features/security/screens/app_lock_screen.dart';
+import 'package:my_finance/features/security/app_lock_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});

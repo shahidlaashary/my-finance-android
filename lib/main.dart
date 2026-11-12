@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
-import 'package:my_finance/core/database/database_platform.dart';
+import 'package:my_finance/core/startup/app_bootstrap_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -34,11 +34,7 @@ import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 // ============================================================
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await initializeDatabasePlatform();
-
-  await FinanceDB.instance.init();
+  await AppBootstrapService.initialize();
 
   runApp(MyFinanceApp(
     home: const MainScreen(),

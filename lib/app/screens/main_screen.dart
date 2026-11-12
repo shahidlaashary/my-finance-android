@@ -78,6 +78,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     return Scaffold(
       body: IndexedStack(
         index: selectedIndex,
@@ -106,25 +107,25 @@ class _MainScreenState extends State<MainScreen> {
                   index: 0,
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
-                  label: 'Home',
+                  label: isUrdu ? 'ہوم' : 'Home',
                 ),
                 _navItem(
                   index: 1,
                   icon: Icons.real_estate_agent_outlined,
                   activeIcon: Icons.real_estate_agent_rounded,
-                  label: 'Assets',
+                  label: isUrdu ? 'اثاثے' : 'Assets',
                 ),
                 _navItem(
                   index: 2,
                   icon: Icons.account_balance_wallet_outlined,
                   activeIcon: Icons.account_balance_wallet_rounded,
-                  label: 'Budgets',
+                  label: isUrdu ? 'بجٹ' : 'Budgets',
                 ),
                 _navItem(
                   index: 3,
                   icon: Icons.flag_outlined,
                   activeIcon: Icons.flag_rounded,
-                  label: 'Goals',
+                  label: isUrdu ? 'اہداف' : 'Goals',
                 ),
 
                 // Darmiyan ka Plus: sirf icon, koi text label nahi.
@@ -162,25 +163,25 @@ class _MainScreenState extends State<MainScreen> {
                   index: 4,
                   icon: Icons.handshake_outlined,
                   activeIcon: Icons.handshake_rounded,
-                  label: 'Loans',
+                  label: isUrdu ? 'قرضے' : 'Loans',
                 ),
                 _navItem(
                   index: 5,
                   icon: Icons.bar_chart_outlined,
                   activeIcon: Icons.bar_chart_rounded,
-                  label: 'Stats',
+                  label: isUrdu ? 'اعدادوشمار' : 'Stats',
                 ),
                 _navItem(
                   index: 6,
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long_rounded,
-                  label: 'Txns',
+                  label: isUrdu ? 'لین دین' : 'Txns',
                 ),
                 _navItem(
                   index: 7,
                   icon: Icons.account_balance_outlined,
                   activeIcon: Icons.account_balance_rounded,
-                  label: 'Wallets',
+                  label: isUrdu ? 'والٹس' : 'Wallets',
                 ),
               ],
             ),

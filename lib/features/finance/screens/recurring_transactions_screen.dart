@@ -202,12 +202,18 @@ class _RecurringTransactionsScreenState
       return;
     }
 
-    final result = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => _RecurringTransactionDialog(
-        wallets: _wallets,
-        categories: _categories,
-        existing: existing,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.94,
+        child: _RecurringTransactionDialog(
+          wallets: _wallets,
+          categories: _categories,
+          existing: existing,
+        ),
       ),
     );
 
@@ -764,257 +770,62 @@ class _RecurringTransactionDialogState
     super.dispose();
   }
 
+  InputDecoration _decoration(String label, {IconData? icon}) {
+    return InputDecoration(labelText: label, prefixIcon: icon == null ? null : Icon(icon), border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)), contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 13));
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = _availableCategories;
-
-    return AlertDialog(
-      title: Text(
-        widget.existing == null
-            ? 'Add Recurring Transaction'
-            : 'Edit Recurring Transaction',
-      ),
-      content: SizedBox(
-        width: 450,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    prefixIcon: Icon(Icons.title),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a title.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _type,
-                  decoration: const InputDecoration(
-                    labelText: 'Transaction Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'income',
-                      child: Text('Income'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'expense',
-                      child: Text('Expense'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'transfer',
-                      child: Text('Transfer'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-
-                    setState(() {
-                      _type = value;
-                      _category = null;
-                      _toWalletId = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    prefixIcon: Icon(Icons.payments_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    final amount = double.tryParse(value ?? '');
-                    if (amount == null || amount <= 0) {
-                      return 'Enter a valid amount.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: _walletId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Source Account',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: widget.wallets.map((account) {
-                    final id = account['id'] as int;
-                    final name = account['name'].toString();
-                    final currency =
-                        (account['currency'] ?? 'PKR').toString();
-
-                    return DropdownMenuItem<int>(
-                      value: id,
-                      child: Text('$name ($currency)'),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _walletId = value);
-                  },
-                  validator: (value) =>
-                      value == null ? 'Select an account.' : null,
-                ),
-                if (_isTransfer) ...[
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: _toWalletId,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Destination Account',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: widget.wallets.map((account) {
-                      final id = account['id'] as int;
-                      final name = account['name'].toString();
-                      final currency =
-                          (account['currency'] ?? 'PKR').toString();
-
-                      return DropdownMenuItem<int>(
-                        value: id,
-                        child: Text('$name ($currency)'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _toWalletId = value);
-                    },
-                  ),
-                ],
-                if (!_isTransfer && categories.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: categories.any(
-                      (c) => c['name'] == _category,
-                    )
-                        ? _category
-                        : null,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Category (Optional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: categories.map((category) {
-                      return DropdownMenuItem<String>(
-                        value: category['name'].toString(),
-                        child: Text(category['name'].toString()),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _category = value);
-                    },
-                  ),
-                ],
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _frequency,
-                  decoration: const InputDecoration(
-                    labelText: 'Frequency',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'daily',
-                      child: Text('Daily'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'weekly',
-                      child: Text('Weekly'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'monthly',
-                      child: Text('Monthly'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'yearly',
-                      child: Text('Yearly'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _frequency = value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today),
-                  title: const Text('Start Date'),
-                  subtitle: Text(_formatDate(_startDate)),
-                  trailing: const Icon(Icons.edit_calendar),
-                  onTap: () => _pickDate(isEndDate: false),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event),
-                  title: const Text('End Date (Optional)'),
-                  subtitle: Text(
-                    _endDate == null
-                        ? 'No end date'
-                        : _formatDate(_endDate!),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_endDate != null)
-                        IconButton(
-                          onPressed: () {
-                            setState(() => _endDate = null);
-                          },
-                          icon: const Icon(Icons.clear),
-                        ),
-                      const Icon(Icons.edit_calendar),
-                    ],
-                  ),
-                  onTap: () => _pickDate(isEndDate: true),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _noteController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Note (Optional)',
-                    prefixIcon: Icon(Icons.notes),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _saving ? null : _save,
-          child: _saving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Save'),
-        ),
-      ],
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: [
+        Padding(padding: const EdgeInsets.fromLTRB(18, 12, 18, 8), child: Row(children: [Expanded(child: Text(widget.existing == null ? 'Add Schedule' : 'Edit Schedule', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: _saving ? null : () => Navigator.pop(context, false), icon: const Icon(Icons.close))])),
+        Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
+        Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: EdgeInsets.fromLTRB(18, 18, 18, 20 + bottomInset), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          TextFormField(controller: _titleController, decoration: _decoration('Schedule Title', icon: Icons.title), validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title.' : null),
+          const SizedBox(height: 14),
+          SegmentedButton<String>(segments: const [ButtonSegment(value: 'income', label: Text('Income')), ButtonSegment(value: 'expense', label: Text('Expense')), ButtonSegment(value: 'transfer', label: Text('Transfer'))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
+          const SizedBox(height: 14),
+          if (_isTransfer) ...[
+            Row(children: [
+              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('From Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() { _walletId = value; if (_toWalletId == value) _toWalletId = null; }), validator: (value) => value == null ? 'Select wallet' : null)),
+              const SizedBox(width: 10),
+              Expanded(child: DropdownButtonFormField<int>(value: _toWalletId, isExpanded: true, decoration: _decoration('To Wallet', icon: Icons.account_balance_outlined), items: widget.wallets.where((a) => a['id'] != _walletId).map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _toWalletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
+            ]),
+            const SizedBox(height: 12),
+            TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; }),
+          ] else ...[
+            Row(children: [
+              Expanded(child: TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; })),
+              const SizedBox(width: 10),
+              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _walletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: DropdownButtonFormField<String>(value: categories.any((item) => item['name'] == _category) ? _category : null, isExpanded: true, decoration: _decoration('Category', icon: Icons.category_outlined), hint: const Text('Optional'), items: categories.map((item) => DropdownMenuItem<String>(value: item['name'].toString(), child: Text(item['name'].toString(), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _category = value))),
+              const SizedBox(width: 10),
+              Expanded(child: TextFormField(controller: _noteController, decoration: _decoration('Notes (Optional)', icon: Icons.notes_rounded))),
+            ]),
+          ],
+          if (_isTransfer) ...[const SizedBox(height: 12), TextFormField(controller: _noteController, maxLines: 2, decoration: _decoration('Notes (Optional)', icon: Icons.notes_rounded))],
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(value: _frequency, isExpanded: true, decoration: _decoration('Repeat Schedule', icon: Icons.repeat_rounded), items: const [DropdownMenuItem(value: 'daily', child: Text('Daily')), DropdownMenuItem(value: 'weekly', child: Text('Weekly')), DropdownMenuItem(value: 'monthly', child: Text('Monthly')), DropdownMenuItem(value: 'yearly', child: Text('Yearly'))], onChanged: (value) { if (value != null) setState(() => _frequency = value); }),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: false), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('Start Date', icon: Icons.calendar_month_outlined), child: Text(_formatDate(_startDate))))),
+            const SizedBox(width: 10),
+            Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: true), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('End Date (Optional)', icon: Icons.event_outlined).copyWith(suffixIcon: _endDate == null ? null : IconButton(onPressed: () => setState(() => _endDate = null), icon: const Icon(Icons.close))), child: Text(_endDate == null ? 'No end date' : _formatDate(_endDate!))))),
+          ]),
+        ]))),
+        Padding(padding: EdgeInsets.fromLTRB(18, 10, 18, 14 + MediaQuery.of(context).padding.bottom), child: Row(children: [
+          Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context, false), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: const Text('Cancel'))),
+          const SizedBox(width: 12),
+          Expanded(child: FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(widget.existing == null ? 'Save Schedule' : 'Update Schedule'))),
+        ])),
+      ]),
     );
-  }
-}
+  }}

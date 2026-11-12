@@ -6,6 +6,7 @@ import 'package:my_finance/features/security/app_lock_screen.dart';
 import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
 import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
+import 'package:my_finance/features/settings/language_settings_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -103,10 +104,11 @@ class AppSettingsScreen extends StatelessWidget {
             subtitle: 'Choose the currency for consolidated totals',
             onTap: () => _openScreen(context, const BaseCurrencyScreen()),
           ),
-          const _SettingsInfoTile(
+          _SettingsInfoTile(
             icon: Icons.language_rounded,
             title: 'Language',
             subtitle: 'English and Urdu language settings',
+            onTap: () => _openScreen(context, const LanguageSettingsScreen()),
           ),
           _SettingsInfoTile(
             icon: Icons.price_change_rounded,

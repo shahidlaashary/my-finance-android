@@ -234,6 +234,21 @@ void main() {
     expect((await StaffService.getStaff()).single['name'], 'Replacement Staff');
   });
 
+  test('editing a staff member that no longer exists is rejected', () async {
+    await expectLater(
+      StaffService.saveStaff(
+        id: 99999,
+        name: 'Missing Staff',
+        phone: '',
+        role: '',
+        salary: 0,
+        joinedAt: DateTime(2026, 1, 1),
+        notes: '',
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
   test('attendance rejects a staff ID that does not exist', () async {
     await expectLater(
       StaffService.saveAttendance(

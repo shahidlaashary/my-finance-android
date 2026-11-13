@@ -156,8 +156,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(appText(context, 'Restore Backup?', 'بیک اپ بحال کریں؟')),
-        content: const Text(
-          'Restore karne se mojooda finance database aur attachments '
+        content: Text(appText(context, "Restore karne se mojooda finance database aur attachments ", "Restore karne se mojooda finance database aur attachments ")
           'backup wali files se replace ho jayengi. Is ke baad ki '
           'tabdeeliyan zaya ho sakti hain. Kya aap jari rakhna chahte hain?',
         ),
@@ -213,13 +212,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     SizedBox(height: 12),
-                    const Text(
-                      'Protect Your Finance Data',
+                    Text(appText(context, "Protect Your Finance Data", "Protect Your Finance Data"),
                       style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
-                    const Text(
-                      'Apne finance data aur attachments ka manual backup banayein '
+                    Text(appText(context, "Apne finance data aur attachments ka manual backup banayein ", "Apne finance data aur attachments ka manual backup banayein ")
                       'ya pehle banaya gaya backup restore karein.',
                       textAlign: TextAlign.center,
                     ),
@@ -228,14 +225,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               ),
               SizedBox(height: 20),
               Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [const Icon(Icons.autorenew_rounded), const SizedBox(width: 10), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Automatic Local Backup', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text('Daily backup on this device')])), Switch.adaptive(value: _automaticEnabled, onChanged: _isProcessing ? null : _toggleAutomaticBackup)]),
+                Row(children: [const Icon(Icons.autorenew_rounded), const SizedBox(width: 10), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(appText(context, "Automatic Local Backup", "Automatic Local Backup"), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(appText(context, "Daily backup on this device", "Daily backup on this device"))])), Switch.adaptive(value: _automaticEnabled, onChanged: _isProcessing ? null : _toggleAutomaticBackup)]),
                 const Divider(),
-                Text('Last successful backup: ' + (_lastAutomaticBackup == null ? 'Not yet' : DateFormat('d MMM yyyy, h:mm a').format(_lastAutomaticBackup!))),
-                if (_automaticStatus == 'failed') const Text('Last backup failed. Try again.', style: TextStyle(color: Colors.red)),
+                Text(appText(context, "Last successful backup: ", "Last successful backup: ") + (_lastAutomaticBackup == null ? 'Not yet' : DateFormat('d MMM yyyy, h:mm a').format(_lastAutomaticBackup!))),
+                if (_automaticStatus == 'failed') Text(appText(context, "Last backup failed. Try again.", "Last backup failed. Try again."), style: TextStyle(color: Colors.red)),
                 const SizedBox(height: 10),
                 SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: _isProcessing ? null : _createAutomaticBackupNow, icon: const Icon(Icons.backup_rounded), label: Text(appText(context, 'Back Up Now', 'ابھی بیک اپ لیں')))),
                 const SizedBox(height: 6),
-                const Text('7 newest backups are kept privately on this device. A due backup is created when the app starts; it does not run while the app is fully closed.', style: TextStyle(fontSize: 12)),
+                Text(appText(context, "7 newest backups are kept privately on this device. A due backup is created when the app starts; it does not run while the app is fully closed.", "7 newest backups are kept privately on this device. A due backup is created when the app starts; it does not run while the app is fully closed."), style: TextStyle(fontSize: 12)),
               ]))),
               SizedBox(height: 16),
               _buildActionCard(
@@ -262,8 +259,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   color: Colors.orange.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Zaroori: Backup restore karne se current database aur '
+                child: Text(appText(context, "Zaroori: Backup restore karne se current database aur ", "Zaroori: Backup restore karne se current database aur ")
                   'attachments replace ho jayenge. Restore se pehle confirm '
                   'kar lein ke selected ZIP file sahi hai.',
                   style: TextStyle(height: 1.45),

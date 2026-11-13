@@ -350,7 +350,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               trailing: DropdownButton<int>(
                 value: _timeout,
                 underline: const SizedBox.shrink(),
-                items: const [
+                items: [
                   DropdownMenuItem(value: 0, child: Text(appText(context, 'Immediately', 'فوراً'))),
                   DropdownMenuItem(value: 30, child: Text(appText(context, '30 seconds', '30 سیکنڈ'))),
                   DropdownMenuItem(value: 60, child: Text(appText(context, '1 minute', '1 منٹ'))),

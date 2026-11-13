@@ -1,6 +1,7 @@
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class StaffService {
   static Future<void> ensureTables() async {
@@ -59,15 +60,19 @@ class StaffService {
   static Future<void> deleteStaff(int id) async {
     await ensureTables();
     final db = FinanceDB.instance.db;
+    final staffRows = await db.query('staff', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (staffRows.isEmpty) return;
     final salaryHistory = await db.query('staff_salaries', where: 'staff_id = ?', whereArgs: [id], limit: 1);
-    if (salaryHistory.isNotEmpty) throw Exception('This staff member has salary history. Recycle Bin support for staff records is being added; do not delete this record yet.');
+    if (salaryHistory.isNotEmpty) throw Exception('This staff member has salary history and cannot be deleted yet.');
+    final attendance = await db.query('staff_attendance', where: 'staff_id = ?', whereArgs: [id]);
+    await RecycleBinService.archive(type: 'Staff', title: staffRows.first['name']?.toString() ?? 'Staff',
+      table: 'staff', id: id, record: staffRows.first, related: attendance);
     await db.transaction((txn) async {
       await txn.delete('staff_attendance', where: 'staff_id = ?', whereArgs: [id]);
       await txn.delete('staff', where: 'id = ?', whereArgs: [id]);
     });
     AppRefreshController.notifyChanged();
   }
-
   static Future<int> paySalary({required int staffId, required double amount,
     required int walletId, required DateTime date, required String note}) async {
     await ensureTables();

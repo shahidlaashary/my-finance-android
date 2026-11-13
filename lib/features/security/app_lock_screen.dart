@@ -287,7 +287,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(Icons.shield_moon_rounded, size: 34),
                 SizedBox(width: 14),

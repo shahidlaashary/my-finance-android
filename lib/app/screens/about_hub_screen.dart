@@ -10,7 +10,7 @@ class AboutHubScreen extends StatelessWidget {
     final sections=[
       _AboutEntry('App Details','Version, developer and application information',Icons.info_outline,()=>_open(context,const _AppDetailsPage())),
       _AboutEntry("What's New",'Latest changes and release notes',Icons.new_releases_outlined,()=>_open(context,const _WhatsNewPage())),
-      _AboutEntry('Quick Tour','A short guide to the main app features',Icons.tour_outlined,()=>_open(context,const _QuickTourPage())),
+      _AboutEntry('Quick Tour','A short guide to the main app features',Icons.explore_outlined,()=>_open(context,const _QuickTourPage())),
       _AboutEntry('Privacy Policy','How your information is stored and handled',Icons.privacy_tip_outlined,()=>_open(context,const _PrivacyPage())),
       _AboutEntry('Terms of Use','Important terms for using My Finance',Icons.gavel_outlined,()=>_open(context,const _TermsPage())),
       _AboutEntry('Open Source Licenses','Licenses for third-party packages',Icons.article_outlined,()=>showLicensePage(context:context,applicationName:'My Finance',applicationVersion:'1.0.0',applicationLegalese:'© ${DateTime.now().year} Shahid Laashary')),
@@ -60,7 +60,7 @@ class _QuickTourPageState extends State<_QuickTourPage>{
     (Icons.account_balance_wallet_outlined,'Accounts & Wallets','Create accounts in different currencies and track their balances.'),
     (Icons.swap_horiz_rounded,'Transactions','Record income, expenses and transfers, and review your transaction history.'),
     (Icons.pie_chart_outline,'Budgets & Goals','Set spending limits and track progress towards savings targets.'),
-    (Icons.handshake_outlined,'Loans & Debt','Track money lent to others separately from debts you need to repay.'),
+    (Icons.handshake,'Loans & Debt','Track money lent to others separately from debts you need to repay.'),
     (Icons.inventory_2_outlined,'More Features','Explore stock management, documents, vehicles, exchange rates and other tools.'),
     (Icons.shield_outlined,'Keep your data safe','Review storage information and create backups regularly using the available backup tools.'),
   ];
@@ -101,7 +101,7 @@ class _StoragePageState extends State<_StoragePage>{
   @override void initState(){super.initState();_load();}
   Future<int> _folderSize(Directory dir)async{if(!await dir.exists())return 0;var total=0;await for(final e in dir.list(recursive:true,followLinks:false)){if(e is File){try{total+=await e.length();_attachmentFiles++;}catch(_){}}}return total;}
   String _size(int n){if(n<1024)return '$n B';if(n<1024*1024)return '${(n/1024).toStringAsFixed(1)} KB';if(n<1024*1024*1024)return '${(n/1024/1024).toStringAsFixed(2)} MB';return '${(n/1024/1024/1024).toStringAsFixed(2)} GB';}
-  Future<void> _refresh()async{setState(()=>_loading=true);await _load();}
+  Future<void> _refresh()async{setState(()=>{_loading=true;_dbBytes=0;_attachmentBytes=0;_attachmentFiles=0;_error=null;});await _load();}
   Future<void> _load()async{try{final dbDir=await getDatabasesPath();final dbPath=p.join(dbDir,'my_finance.db');final dbFile=File(dbPath);final docs=await getApplicationDocumentsDirectory();final attach=Directory(p.join(docs.path,'my_finance_attachments'));final bytes=await _folderSize(attach);if(mounted)setState(()=>_dbPath=dbPath);if(mounted)setState(()=>_attachmentPath=attach.path);if(await dbFile.exists())_dbBytes=await dbFile.length();_attachmentBytes=bytes;}catch(e){_error=e.toString();}finally{if(mounted)setState(()=>_loading=false);}}
   @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Storage Information'),actions:[IconButton(onPressed:_refresh,icon:const Icon(Icons.refresh))]),body:_loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
     if(_error!=null)Text('Could not read storage information: $_error'),

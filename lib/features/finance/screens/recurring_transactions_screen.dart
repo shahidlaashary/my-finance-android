@@ -173,9 +173,8 @@ class _RecurringTransactionsScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Schedule'),
-        content: const Text(
-          'Are you sure you want to delete this recurring schedule?',
+        title: Text(appText(context, "Delete Schedule", "Delete Schedule")),
+        content: Text(appText(context, "Are you sure you want to delete this recurring schedule?", "Are you sure you want to delete this recurring schedule?"),
         ),
         actions: [
           TextButton(
@@ -187,7 +186,7 @@ class _RecurringTransactionsScreenState
               backgroundColor: Colors.red,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(appText(context, "Delete", "Delete")),
           ),
         ],
       ),
@@ -250,16 +249,14 @@ class _RecurringTransactionsScreenState
               color: Colors.grey.shade400,
             ),
             SizedBox(height: 15),
-            const Text(
-              'No recurring transactions yet',
+            Text(appText(context, "No recurring transactions yet", "No recurring transactions yet"),
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 8),
-            const Text(
-              'Create a schedule for regular income, expenses or transfers.',
+            Text(appText(context, "Create a schedule for regular income, expenses or transfers.", "Create a schedule for regular income, expenses or transfers."),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 18),
@@ -517,8 +514,7 @@ class _RecurringTransactionsScreenState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Recurring Schedules',
+                                      Text(appText(context, "Recurring Schedules", "Recurring Schedules"),
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -540,8 +536,7 @@ class _RecurringTransactionsScreenState
                                         color: Colors.green,
                                       ),
                                     ),
-                                    const Text(
-                                      'Active',
+                                    Text(appText(context, "Active", "Active"),
                                       style: TextStyle(fontSize: 11),
                                     ),
                                   ],
@@ -551,8 +546,7 @@ class _RecurringTransactionsScreenState
                           ),
                         ),
                         SizedBox(height: 16),
-                        const Text(
-                          'Your Schedules',
+                        Text(appText(context, "Your Schedules", "Your Schedules"),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -806,7 +800,7 @@ class _RecurringTransactionDialogState
         Padding(padding: const EdgeInsets.fromLTRB(18, 12, 18, 8), child: Row(children: [Expanded(child: Text(widget.existing == null ? 'Add Schedule' : 'Edit Schedule', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: _saving ? null : () => Navigator.pop(context, false), icon: const Icon(Icons.close))])),
         Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
         Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 18, 18, 20), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          SegmentedButton<String>(segments: const [ButtonSegment(value: 'income', label: Text('Income')), ButtonSegment(value: 'expense', label: Text('Expense')), ButtonSegment(value: 'transfer', label: Text('Transfer'))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
+          SegmentedButton<String>(segments: const [ButtonSegment(value: 'income', label: Text(appText(context, "Income", "Income"))), ButtonSegment(value: 'expense', label: Text(appText(context, "Expense", "Expense"))), ButtonSegment(value: 'transfer', label: Text(appText(context, "Transfer", "Transfer")))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
           SizedBox(height: 14),
           TextFormField(controller: _titleController, decoration: _decoration('Schedule Title', icon: Icons.title), validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title.' : null),
           SizedBox(height: 12),

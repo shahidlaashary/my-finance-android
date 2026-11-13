@@ -74,16 +74,16 @@ class AssetDepreciationService {
     final days = ((asOf ?? DateTime.now()).difference(purchaseDate).inDays)
         .clamp(0, 365250);
     final years = days / 365.25;
-    final depreciable = (purchasePrice - salvage).clamp(0, double.infinity);
+    final depreciable = (purchasePrice - salvage).clamp(0, double.infinity).toDouble();
     double bookValue;
     if (method == 'declining_balance') {
       bookValue = purchasePrice * math.pow(1 - rate, years).toDouble();
-      bookValue = bookValue.clamp(salvage, purchasePrice);
+      bookValue = bookValue.clamp(salvage, purchasePrice).toDouble();
     } else {
       final annual = depreciable / life;
-      bookValue = (purchasePrice - annual * years).clamp(salvage, purchasePrice);
+      bookValue = (purchasePrice - annual * years).clamp(salvage, purchasePrice).toDouble();
     }
-    final accumulated = (purchasePrice - bookValue).clamp(0, purchasePrice);
+    final accumulated = (purchasePrice - bookValue).clamp(0, purchasePrice).toDouble();
     return {
       'book_value': bookValue,
       'accumulated_depreciation': accumulated,

@@ -302,13 +302,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
             DropdownButtonFormField<String?>(
               value: _selectedCurrency,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: appText(context, 'Currency', 'کرنسی'),
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.currency_exchange),
               ),
               items: [
-                const DropdownMenuItem<String?>(
+                DropdownMenuItem<String?>(
                   value: null,
                   child: Text(appText(context, 'All Currencies', 'تمام کرنسیاں')),
                 ),

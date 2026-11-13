@@ -128,7 +128,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
                   SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Goal Name', Icons.flag_outlined),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Enter goal name' : null),
+                    validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter goal name', 'ہدف کا نام درج کریں') : null),
                   SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(

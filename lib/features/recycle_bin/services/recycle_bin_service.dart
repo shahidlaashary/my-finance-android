@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -12,8 +13,17 @@ class RecycleBinService {
       entity_type TEXT NOT NULL, entity_title TEXT NOT NULL,
       source_table TEXT NOT NULL, source_id TEXT NOT NULL,
       payload TEXT NOT NULL, related_payload TEXT,
-      deleted_at TEXT NOT NULL)''');
+      deleted_at TEXT NOT NULL, expires_at TEXT)''');
+    final columns = await FinanceDB.instance.db.rawQuery('PRAGMA table_info(recycle_bin)');
+    if (!columns.any((column) => column['name'] == 'expires_at')) {
+      await FinanceDB.instance.db.execute('ALTER TABLE recycle_bin ADD COLUMN expires_at TEXT');
+    }
+    await FinanceDB.instance.db.rawUpdate(
+      "UPDATE recycle_bin SET expires_at = datetime(deleted_at, '+30 days') WHERE expires_at IS NULL",
+    );
   }
+
+  static const int retentionDays = 30;
 
   static Future<int> archive({
     required String type, required String title, required String table,
@@ -26,12 +36,18 @@ class RecycleBinService {
       'source_id': id.toString(), 'payload': jsonEncode(record),
       'related_payload': related.isEmpty ? null : jsonEncode(related),
       'deleted_at': DateTime.now().toIso8601String(),
+      'expires_at': DateTime.now().add(const Duration(days: retentionDays)).toIso8601String(),
     });
   }
 
   static Future<List<Map<String, dynamic>>> getItems() async {
     await ensureTable();
-    return FinanceDB.instance.db.query('recycle_bin', orderBy: 'deleted_at DESC, id DESC');
+    final db = FinanceDB.instance.db;
+    final expired = await db.query('recycle_bin', where: 'expires_at IS NOT NULL AND expires_at <= ?', whereArgs: [DateTime.now().toIso8601String()], columns: ['id']);
+    for (final row in expired) {
+      await permanentlyDelete((row['id'] as num).toInt());
+    }
+    return db.query('recycle_bin', orderBy: 'deleted_at DESC, id DESC');
   }
 
   static Future<void> restore(int recycleId) async {

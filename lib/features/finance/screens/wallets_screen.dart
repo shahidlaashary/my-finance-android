@@ -163,11 +163,11 @@ class _WalletsPageState extends State<WalletsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')), 
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete'),
+            child: Text(appText(context, 'Delete', 'حذف کریں')), 
           ),
         ],
       ),
@@ -204,8 +204,8 @@ class _WalletsPageState extends State<WalletsPage> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text(
-          'My Wallets',
+        title: Text(
+          appText(context, 'My Wallets', 'میرے والٹس'),
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildMainSectionAppBarActions(context),
@@ -231,7 +231,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'No wallets added yet',
+                        appText(context, 'No wallets added yet', 'ابھی کوئی والٹ شامل نہیں کیا گیا'),
                         style: TextStyle(color: AppColors.muted),
                       ),
                     ],
@@ -335,7 +335,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                     children: [
                                       SizedBox(
                                         width: 47,
-                                        child: Text('BALANCE', textAlign: TextAlign.left,
+                                        child: Text(appText(context, 'BALANCE', 'بیلنس'), textAlign: TextAlign.left,
                                           style: TextStyle(fontSize: 8,
                                             fontWeight: FontWeight.w800, color: Colors.white)),
                                       ),
@@ -827,7 +827,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                   borderRadius: BorderRadius.circular(13),
                                 ),
                               ),
-                              child: const Text('Cancel'),
+                              child: Text(appText(context, 'Cancel', 'منسوخ کریں')), 
                             ),
                           ),
                           SizedBox(width: 10),

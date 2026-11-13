@@ -372,14 +372,13 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton.icon(
+                  child: FilledButton(
                     onPressed: _saving || (_selected != 'PKR' && !_rates.containsKey(_selected)) ? null : _save,
-                    icon: _saving
+                    child: _saving
                         ? const SizedBox(
                             width: 18, height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.check_rounded),
-                    label: Text(_saving ? appText(context, 'Saving...', 'محفوظ ہو رہا ہے...') : appText(context, 'Save Base Currency', 'بنیادی کرنسی محفوظ کریں')),
+                        : Text(appText(context, 'Save Base Currency', 'بنیادی کرنسی محفوظ کریں')),
                   ),
                 ),
                 if (_rates.length < _available.length)

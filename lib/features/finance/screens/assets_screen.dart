@@ -204,15 +204,15 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
                             IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey),
                           ]),
-                          const SizedBox(height: 10),
+                          SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
                             validator: (v) => v == null || v.trim().isEmpty ? 'Enter asset name' : null),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: DropdownButtonFormField<String>(
                               value: categories.contains(selectedCategory) ? selectedCategory : categories.first,
@@ -221,7 +221,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, overflow: TextOverflow.ellipsis))).toList(),
                               onChanged: (v) { if (v != null) setSheetState(() => selectedCategory = v); },
                             )),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Expanded(child: DropdownButtonFormField<int>(
                               value: selectedAccount, isExpanded: true,
                               decoration: fieldDecoration('Payment Account', Icons.account_balance_wallet_outlined),
@@ -230,7 +230,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               validator: (v) => v == null ? 'Select account' : null,
                             )),
                           ]),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: TextFormField(
                               controller: purchaseController,
@@ -238,7 +238,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               decoration: fieldDecoration('Purchase Price', Icons.shopping_bag_outlined),
                               validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid purchase price' : null; },
                             )),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Expanded(child: TextFormField(
                               controller: currentController,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -246,7 +246,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter a valid current value' : null; },
                             )),
                           ]),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
                             title: Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ')), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
                             trailing: const Icon(Icons.edit_calendar), onTap: () async {
@@ -254,10 +254,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               if (picked != null) setSheetState(() => purchaseDate = picked);
                             }),
                           TextFormField(controller: notesController, maxLines: 2, decoration: fieldDecoration('Notes (optional)', Icons.notes_outlined)),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           Row(children: [
                             Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Expanded(child: ElevatedButton.icon(
                               icon: const Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
                               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
@@ -383,7 +383,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       labelText: 'Sale Price',
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     value: selectedSaleWallet,
                     isExpanded: true,
@@ -399,7 +399,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     }).toList(),
                     onChanged: (value) => setDialogState(() => selectedSaleWallet = value),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(appText(context, 'Sale Date', 'فروخت کی تاریخ')),
@@ -521,7 +521,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
-        const SizedBox(height: 5),
+        SizedBox(height: 5),
         Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
           style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.w800)),
       ],
@@ -542,7 +542,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: color, size: 25),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               title,
               style: const TextStyle(
@@ -550,7 +550,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 fontSize: 12,
               ),
             ),
-            const SizedBox(height: 5),
+            SizedBox(height: 5),
             Text(
               '$currency ${_money(amount)}',
               style: TextStyle(
@@ -593,7 +593,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     color: Color(0xFF147D59),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
@@ -665,7 +665,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               'Purchase Price',
               '$purchaseCurrency ${_money(asset.purchasePrice)}',
             ),
-            const SizedBox(height: 7),
+            SizedBox(height: 7),
             if (!asset.isSold)
               _detailRow(
                 'Current Value',
@@ -678,7 +678,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 '$saleCurrency ${_money(asset.salePrice!)}',
                 bold: true,
               ),
-            const SizedBox(height: 7),
+            SizedBox(height: 7),
             _detailRow(
               asset.isSold
                   ? 'Realized Profit/Loss'
@@ -688,7 +688,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   profitLoss >= 0 ? Colors.green : Colors.red,
               bold: true,
             ),
-            const SizedBox(height: 7),
+            SizedBox(height: 7),
             _detailRow(
               'Purchase Account',
               _accountName(asset.walletId),
@@ -698,14 +698,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 'Sale Account',
                 _accountName(asset.saleWalletId ?? asset.walletId),
               ),
-            const SizedBox(height: 7),
+            SizedBox(height: 7),
             _detailRow(
               'Purchase Date',
               DateFormat('dd MMM yyyy')
                   .format(asset.purchaseDate),
             ),
             if (asset.isSold && asset.saleDate != null) ...[
-              const SizedBox(height: 7),
+              SizedBox(height: 7),
               _detailRow(
                 'Sale Date',
                 DateFormat('dd MMM yyyy')
@@ -713,7 +713,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               ),
             ],
             if (asset.notes.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 asset.notes,
                 style: const TextStyle(color: Colors.grey),
@@ -742,7 +742,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Flexible(child: Text(title)),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Flexible(
           child: Text(
             value,
@@ -875,7 +875,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         label: Text(appText(context, 'Add Asset', 'اثاثہ شامل کریں')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -896,27 +896,27 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       children: [
                         Text('TOTAL ASSET VALUE  •  $primaryCurrency',
                           style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
-                        const SizedBox(height: 5),
+                        SizedBox(height: 5),
                         Text('$primaryCurrency ${_money(currentTotal)}',
                           style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         Row(
                           children: [
                             Expanded(child: _heroMetric('Purchase Value', '$primaryCurrency ${_money(purchaseTotal)}')),
                             Container(width: 1, height: 28, color: Colors.white24),
-                            const SizedBox(width: 14),
+                            SizedBox(width: 14),
                             Expanded(child: _heroMetric('Unrealized P/L', '$primaryCurrency ${_money(unrealized)}', valueColor: unrealized >= 0 ? const Color(0xFFB9F6D3) : const Color(0xFFFFC5C5))),
                           ],
                         ),
                         if (currencies.length > 1) ...[
-                          const SizedBox(height: 7),
+                          SizedBox(height: 7),
                           const Text('Totals shown for this currency; other currencies below.',
                             style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
                         ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   GridView.builder(
                     itemCount: categoryItems.length,
                     shrinkWrap: true,
@@ -932,7 +932,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? const Color(0xFF147D59) : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 19),
-                            const SizedBox(height: 2),
+                            SizedBox(height: 2),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 2),
                               child: Text(item['name'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700)),
@@ -942,7 +942,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(child: Text(_selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
@@ -967,9 +967,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
                       child: Column(children: [
                         const Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: const TextStyle(fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                       ]),
                     )

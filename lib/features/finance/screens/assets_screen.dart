@@ -638,7 +638,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   },
                   itemBuilder: (context) => [
                     if (!asset.isSold)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: Text(appText(context, 'Edit Asset', 'اثاثے میں ترمیم کریں')),
                       ),

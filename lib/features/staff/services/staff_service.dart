@@ -55,6 +55,7 @@ class StaffService {
     final db = FinanceDB.instance.db;
     final result = id == null ? await db.insert('staff', values)
       : await db.update('staff', values, where: 'id = ?', whereArgs: [id]);
+    if (id != null && result == 0) throw Exception('Staff member not found.');
     AppRefreshController.notifyChanged();
     return id ?? result;
   }

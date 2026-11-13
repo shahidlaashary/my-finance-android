@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -155,7 +156,7 @@ class _WalletsPageState extends State<WalletsPage> {
     final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Wallet?'),
+        title: Text(appText(context, 'Delete Wallet?', 'والٹ حذف کریں؟')),
         content: Text(
           'Kya aap "${wallet['name']}" wallet delete karna chahte hain?',
         ),
@@ -214,12 +215,12 @@ class _WalletsPageState extends State<WalletsPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Add Wallet'),
+        label: Text(appText(context, 'Add Wallet', 'والٹ شامل کریں')),
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : wallets.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -288,7 +289,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                         child: Icon(IconData(iconCode, fontFamily: 'MaterialIcons'),
                                             color: AppColors.primary, size: 17),
                                       ),
-                                      const SizedBox(width: 5),
+                                      SizedBox(width: 5),
                                       Expanded(
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
@@ -298,7 +299,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                               maxLines: 1, overflow: TextOverflow.ellipsis,
                                               style: const TextStyle(fontSize: 10.5,
                                                 fontWeight: FontWeight.w800, color: AppColors.text)),
-                                            const SizedBox(height: 2),
+                                            SizedBox(height: 2),
                                             Text(walletType, maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: const TextStyle(fontSize: 9,
@@ -317,12 +318,12 @@ class _WalletsPageState extends State<WalletsPage> {
                                           if (value == 'edit') openWalletForm(wallet);
                                           else if (value == 'delete') deleteWallet(wallet);
                                         },
-                                        itemBuilder: (_) => const [
+                                        itemBuilder: (_) => [
                                           PopupMenuItem(value: 'edit', child: Row(children: [
-                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text('Edit Wallet')])),
+                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
                                           PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9), Text('Delete Wallet')])),
+                                            SizedBox(width: 9), Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
                                           ],
                                         ),
                                       ),
@@ -332,7 +333,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      const SizedBox(
+                                      SizedBox(
                                         width: 47,
                                         child: Text('BALANCE', textAlign: TextAlign.left,
                                           style: TextStyle(fontSize: 8,
@@ -347,7 +348,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                             letterSpacing: -0.3)),
                                       ),
                                       if (excluded) ...[
-                                        const SizedBox(width: 3),
+                                        SizedBox(width: 3),
                                         const Icon(Icons.visibility_off_outlined,
                                           size: 11, color: Colors.white),
                                       ],
@@ -621,7 +622,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -644,7 +645,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
 
                       // Pehli row mein wallet ka naam aur qisam.
                       Row(
@@ -665,7 +666,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             flex: 3,
                             child: DropdownButtonFormField<String>(
@@ -693,7 +694,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       ),
 
                       if (selectedType == 'Custom') ...[
-                        const SizedBox(height: 9),
+                        SizedBox(height: 9),
                         TextFormField(
                           controller: customTypeController,
                           decoration: _fieldDecoration('Custom Wallet Type'),
@@ -707,7 +708,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         ),
                       ],
 
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       const Text(
                         'Wallet Icon',
                         style: TextStyle(
@@ -716,10 +717,10 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           color: AppColors.text,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      SizedBox(height: 5),
                       _buildIconPicker(),
 
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
 
                       // Currency aur amount aik hi row mein.
                       Row(
@@ -746,7 +747,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             flex: 5,
                             child: TextFormField(
@@ -775,7 +776,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         ],
                       ),
 
-                      const SizedBox(height: 7),
+                      SizedBox(height: 7),
                       TextFormField(
                         controller: numberController,
                         decoration: _fieldDecoration(
@@ -784,11 +785,11 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         ),
                       ),
 
-                      const SizedBox(height: 3),
+                      SizedBox(height: 3),
                       // Label aur standard toggle aik hi seedhi line mein.
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'Exclude from Total Balance',
                               style: TextStyle(
@@ -808,7 +809,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         ],
                       ),
 
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(
@@ -829,7 +830,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               child: const Text('Cancel'),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             flex: 2,
                             child: FilledButton(
@@ -842,7 +843,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                 ),
                               ),
                               child: saving
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
@@ -860,7 +861,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                     ],
                   ),
                 ),

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
+import 'package:my_finance/features/finance/screens/debt_payoff_screen.dart';
+import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
+import 'package:my_finance/app/screens/about_hub_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -17,28 +19,36 @@ class MoreFeaturesPage extends StatelessWidget {
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
       {
-        'title': 'Vehicle Manager',
-        'icon': Icons.directions_car_filled_rounded,
+        'title': 'About',
+        'icon': Icons.info_outline_rounded,
       },
       {
-        'title': 'Categories',
-        'icon': Icons.category_outlined,
-      },
-      {
-        'title': 'Recurring Transactions',
-        'icon': Icons.repeat_rounded,
+        'title': 'Debt Payoff Planner',
+        'icon': Icons.trending_down_rounded,
       },
       {
         'title': 'Exchange Rates',
         'icon': Icons.currency_exchange_rounded,
       },
       {
+        'title': 'My Documents',
+        'icon': Icons.folder_copy_outlined,
+      },
+      {
+        'title': 'Recurring Transactions',
+        'icon': Icons.repeat_rounded,
+      },
+      {
         'title': 'Settings',
         'icon': Icons.settings_outlined,
       },
       {
-        'title': 'My Documents',
-        'icon': Icons.folder_copy_outlined,
+        'title': 'Stock Manager',
+        'icon': Icons.inventory_2_outlined,
+      },
+      {
+        'title': 'Vehicle Manager',
+        'icon': Icons.directions_car_filled_rounded,
       },
     ];
 
@@ -161,9 +171,6 @@ class MoreFeaturesPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) {
-                      if (feature['title'] == 'Categories') {
-                        return const CategoriesPage();
-                      }
                       if (feature['title'] == 'Settings') {
                         return const AppSettingsScreen();
                       }
@@ -178,6 +185,15 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Exchange Rates') {
                         return const ExchangeRatesScreen();
+                      }
+                      if (feature['title'] == 'Debt Payoff Planner') {
+                        return const DebtPayoffScreen();
+                      }
+                      if (feature['title'] == 'Stock Manager') {
+                        return const StockManagerScreen();
+                      }
+                      if (feature['title'] == 'About') {
+                        return const AboutHubScreen();
                       }
                       return const MyDocumentsScreen();
                     },

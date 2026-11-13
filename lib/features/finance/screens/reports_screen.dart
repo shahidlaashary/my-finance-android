@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/services/reports_service.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String? _selectedCurrency;
 
   bool _loading = true;
+  bool _hideBalances = false;
   String? _error;
 
   List<String> _currencies = [];
@@ -38,7 +41,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadReports();
+  }
+
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
   }
 
   Future<void> _loadReports() async {
@@ -50,6 +67,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
 
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final results = await Future.wait([
         _service.getAvailableCurrencies(),
         _service.getSummary(
@@ -82,6 +100,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (!mounted) return;
 
       setState(() {
+        _hideBalances = hideBalances;
         _currencies = results[0] as List<String>;
         _summary = results[1] as List<Map<String, dynamic>>;
         _trend = results[2] as List<Map<String, dynamic>>;
@@ -107,11 +126,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   String _money(dynamic amount, [String? currency]) {
-    final value = NumberFormat('#,##0.00').format(
-      _number(amount),
-    );
-
-    return '${currency ?? _selectedCurrency ?? 'PKR'} $value';
+    final value = NumberFormat('#,##0.00').format(_number(amount));
+    final display = _hideBalances ? '••••••' : value;
+    return '${currency ?? _selectedCurrency ?? 'PKR'} $display';
   }
 
   String _dateFormat(DateTime date) {
@@ -192,7 +209,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports & Analytics'),
+        title: Text(appText(context, 'Reports & Analytics', 'رپورٹس اور تجزیات')),
         actions: [
           IconButton(
             onPressed: _loadReports,
@@ -202,7 +219,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(),
             )
           : _error != null
@@ -213,19 +230,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       _buildFilters(),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       _buildSummaryCards(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildBalanceSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildMonthlyTrend(theme),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildCategorySection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildAccountSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildTransactionHistory(),
-                      const SizedBox(height: 30),
+                      SizedBox(height: 30),
                     ],
                   ),
                 ),
@@ -244,7 +261,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               size: 48,
               color: Colors.red,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             const Text(
               'Unable to load reports',
               style: TextStyle(
@@ -252,16 +269,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               _error!,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _loadReports,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(appText(context, 'Try Again', 'دوبارہ کوشش کریں')),
             ),
           ],
         ),
@@ -283,19 +300,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             DropdownButtonFormField<String?>(
               value: _selectedCurrency,
               decoration: const InputDecoration(
-                labelText: 'Currency',
+                labelText: appText(context, 'Currency', 'کرنسی'),
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.currency_exchange),
               ),
               items: [
                 const DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('All Currencies'),
+                  child: Text(appText(context, 'All Currencies', 'تمام کرنسیاں')),
                 ),
                 ..._currencies.map(
                   (currency) => DropdownMenuItem<String?>(
@@ -312,7 +329,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               },
             ),
 
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             Row(
               children: [
@@ -326,7 +343,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _pickEndDate,
@@ -340,7 +357,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ],
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             Wrap(
               spacing: 8,
@@ -377,7 +394,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
 
         if (currencies.isEmpty)
           _emptyMessage('No financial summary available'),
@@ -409,7 +426,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Total Income',
+                title: appText(context, 'Total Income', 'کل آمدنی'),
                 amount: income,
                 currency: currency,
                 color: Colors.green,
@@ -417,7 +434,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Total Expenses',
+                title: appText(context, 'Total Expenses', 'کل اخراجات'),
                 amount: expense,
                 currency: currency,
                 color: Colors.red,
@@ -425,7 +442,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Net Balance',
+                title: appText(context, 'Net Balance', 'خالص بیلنس'),
                 amount: net,
                 currency: currency,
                 color: net >= 0
@@ -435,7 +452,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Transfers',
+                title: appText(context, 'Transfers', 'منتقلی'),
                 amount: transfers,
                 currency: currency,
                 color: Colors.purple,
@@ -495,7 +512,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (items.isEmpty)
           _emptyMessage('No account balances available'),
@@ -549,7 +566,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         Card(
           child: Padding(
@@ -559,11 +576,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Row(
                   children: [
                     _legend('Income', Colors.green),
-                    const SizedBox(width: 20),
+                    SizedBox(width: 20),
                     _legend('Expense', Colors.red),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 if (data.isEmpty)
                   _emptyMessage('No monthly data available')
@@ -622,7 +639,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
 
                                 _trendBar(
                                   label: 'Income',
@@ -631,7 +648,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   color: Colors.green,
                                 ),
 
-                                const SizedBox(height: 6),
+                                SizedBox(height: 6),
 
                                 _trendBar(
                                   label: 'Expense',
@@ -666,7 +683,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             borderRadius: BorderRadius.circular(3),
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(label),
       ],
     );
@@ -702,7 +719,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Text(
           NumberFormat.compact().format(amount),
           style: const TextStyle(
@@ -725,7 +742,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (_categories.isEmpty)
           _emptyMessage('No category expenses found'),
@@ -779,7 +796,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (items.isEmpty)
           _emptyMessage('No account activity found'),
@@ -803,7 +820,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   _accountValue(
                     'Income',
@@ -835,7 +852,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     Colors.blue,
                   ),
 
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
 
                   Text(
                     '${item['transaction_count']} transactions',
@@ -889,7 +906,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (_history.isEmpty)
           _emptyMessage('No transactions found'),

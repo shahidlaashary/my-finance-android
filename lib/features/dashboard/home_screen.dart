@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   double monthlyExpense = 0;
   double currentAssetsPKR = 0;
   double loansReceivablePKR = 0;
+  String baseCurrency = 'PKR';
   List<BudgetsModel> budgetAlerts = [];
   bool loading = true;
   bool hideBalances = false;
@@ -57,6 +59,8 @@ class _HomePageState extends State<HomePage> {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
       final db = FinanceDB.instance.db;
+      final selectedBaseCurrency = await FinanceDB.instance.getBaseCurrency();
+      final baseRate = await FinanceDB.instance.getExchangeRate(selectedBaseCurrency) ?? 1.0;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
@@ -66,7 +70,7 @@ class _HomePageState extends State<HomePage> {
             t.amount * COALESCE(
               er.rate,
               CASE WHEN UPPER(w.currency) = 'PKR' THEN 1.0 ELSE 0.0 END
-            )
+            ) / ?
           ), 0) AS total
         FROM transactions t
         INNER JOIN wallets w ON w.id = t.wallet_id
@@ -76,7 +80,7 @@ class _HomePageState extends State<HomePage> {
           AND date(t.date) >= date(?)
           AND date(t.date) < date(?)
         GROUP BY UPPER(t.type)
-      ''', [monthStart.toIso8601String(), nextMonth.toIso8601String()]);
+      ''', [baseRate, monthStart.toIso8601String(), nextMonth.toIso8601String()]);
 
       double income = 0;
       double expense = 0;
@@ -86,13 +90,13 @@ class _HomePageState extends State<HomePage> {
         if (row['type'] == 'EXPENSE') expense = value;
       }
 
-      final balance = await FinanceDB.instance.getTotalBalancePKR();
+      final balance = await FinanceDB.instance.getTotalBalanceInBaseCurrency();
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
       final loansByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
-      final assetsValue = await _convertValuesToPKR(assetsByCurrency);
-      final loansValue = await _convertValuesToPKR(loansByCurrency);
+      final assetsValue = await _convertValuesToPKR(assetsByCurrency, baseRate);
+      final loansValue = await _convertValuesToPKR(loansByCurrency, baseRate);
       final budgets = await BudgetsService.getBudgets(activeOnly: true);
       final newBudgetNotifications = await _checkBudgetThresholds(budgets);
       final alerts = budgets
@@ -109,6 +113,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         hideBalances = hide;
         numberFormat = format;
+        baseCurrency = selectedBaseCurrency;
         totalBalance = balance;
         monthlyIncome = income;
         monthlyExpense = expense;
@@ -198,13 +203,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<double> _convertValuesToPKR(
     Map<String, double> values,
+    double baseRate,
   ) async {
     double total = 0;
     for (final entry in values.entries) {
       final rate = await FinanceDB.instance.getExchangeRate(
         entry.key.toUpperCase(),
       );
-      if (rate != null) total += entry.value * rate;
+      if (rate != null) total += entry.value * rate / baseRate;
     }
     return total;
   }
@@ -213,9 +219,9 @@ class _HomePageState extends State<HomePage> {
       totalBalance + currentAssetsPKR + loansReceivablePKR;
 
   String money(double amount) {
-    if (hideBalances) return 'PKR ••••••';
+    if (hideBalances) return '[0m$baseCurrency ••••••';
     final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
-    return 'PKR ${NumberFormat('#,##0.00', locale).format(amount)}';
+    return '$baseCurrency ${NumberFormat('#,##0.00', locale).format(amount)}';
   }
 
   double get monthlySavings => monthlyIncome - monthlyExpense;
@@ -265,11 +271,11 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total Wallet Balance',
+                  Text(appText(context, 'Total Wallet Balance', 'کل والٹ بیلنس'),
                       style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   loading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 30,
                           width: 30,
                           child: CircularProgressIndicator(
@@ -283,31 +289,31 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                  const SizedBox(height: 7),
-                  const Text('Consolidated in PKR',
+                  SizedBox(height: 7),
+                  Text('Consolidated in $baseCurrency',
                       style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            const Text('Financial Snapshot',
+            SizedBox(height: 18),
+            Text(appText(context, 'Financial Snapshot', 'مالیاتی جائزہ'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: _metricCard(
-                    title: 'Assets',
+                    title: appText(context, 'Assets', 'اثاثے'),
                     value: currentAssetsPKR,
                     icon: Icons.real_estate_agent_outlined,
                     color: const Color(0xFF3978C5),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: _metricCard(
-                    title: 'Loans Receivable',
+                    title: appText(context, 'Loans Receivable', 'وصول طلب قرضے'),
                     value: loansReceivablePKR,
                     icon: Icons.handshake_outlined,
                     color: const Color(0xFF9A65C7),
@@ -315,7 +321,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -327,9 +333,9 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Icon(Icons.account_balance_wallet_outlined,
                       color: AppColors.primary, size: 25),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('Estimated Net Worth',
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(appText(context, 'Estimated Net Worth', 'تخمینی خالص مالیت'),
                         style: TextStyle(fontWeight: FontWeight.w700,
                             color: AppColors.text, fontSize: 13)),
                   ),
@@ -346,25 +352,25 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            const Text('This Month',
+            SizedBox(height: 18),
+            Text(appText(context, 'This Month', 'اس ماہ'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: _metricCard(
-                    title: 'Income',
+                    title: appText(context, 'Income', 'آمدنی'),
                     value: monthlyIncome,
                     icon: Icons.south_west_rounded,
                     color: AppColors.income,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: _metricCard(
-                    title: 'Expenses',
+                    title: appText(context, 'Expenses', 'اخراجات'),
                     value: monthlyExpense,
                     icon: Icons.north_east_rounded,
                     color: AppColors.expense,
@@ -372,7 +378,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -392,16 +398,16 @@ class _HomePageState extends State<HomePage> {
                     child: const Icon(Icons.savings_outlined,
                         color: AppColors.primary),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Net Monthly Savings',
+                        Text(appText(context, 'Net Monthly Savings', 'ماہانہ خالص بچت'),
                             style: TextStyle(fontSize: 12,
                                 color: AppColors.muted,
                                 fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 3),
+                        SizedBox(height: 3),
                         Text(money(monthlySavings),
                             style: TextStyle(fontSize: 17,
                                 fontWeight: FontWeight.w800,
@@ -420,11 +426,11 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 22),
+            SizedBox(height: 22),
             Row(
               children: [
-                const Expanded(
-                  child: Text('Budget Alerts',
+                Expanded(
+                  child: Text(appText(context, 'Budget Alerts', 'بجٹ الرٹس'),
                       style: TextStyle(fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: AppColors.text)),
@@ -433,12 +439,12 @@ class _HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const BudgetsScreen())),
-                    child: const Text('View Budgets'),
+                    child: Text(appText(context, 'View Budgets', 'بجٹ دیکھیں')),
                   ),
               ],
             ),
             if (loading)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               )
@@ -450,7 +456,7 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFEDF1EE)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.check_circle_outline_rounded,
                         color: AppColors.income),
@@ -465,43 +471,43 @@ class _HomePageState extends State<HomePage> {
               )
             else
               ...budgetAlerts.take(4).map(_budgetAlertCard),
-            const SizedBox(height: 22),
-            const Text('Overview',
+            SizedBox(height: 22),
+            Text(appText(context, 'Overview', 'جائزہ'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _overviewCard(
               icon: Icons.real_estate_agent_outlined,
-              title: 'Assets Overview',
-              subtitle: 'View and manage your assets',
+              title: appText(context, 'Assets Overview', 'اثاثوں کا جائزہ'),
+              subtitle: appText(context, 'View and manage your assets', 'اپنے اثاثے دیکھیں اور منظم کریں'),
               color: const Color(0xFF3978C5),
               destinationTitle: 'Assets',
             ),
             _overviewCard(
               icon: Icons.handshake_outlined,
-              title: 'Loans Overview',
-              subtitle: 'Manage borrowed and lent money',
+              title: appText(context, 'Loans Overview', 'قرضوں کا جائزہ'),
+              subtitle: appText(context, 'Manage borrowed and lent money', 'لیے اور دیے گئے قرضوں کا انتظام کریں'),
               color: const Color(0xFF9A65C7),
               destinationTitle: 'Loans',
             ),
             _overviewCard(
               icon: Icons.account_balance_wallet_outlined,
-              title: 'Budgets Overview',
-              subtitle: 'Track your budgets',
+              title: appText(context, 'Budgets Overview', 'بجٹ کا جائزہ'),
+              subtitle: appText(context, 'Track your budgets', 'اپنے بجٹ پر نظر رکھیں'),
               color: const Color(0xFFDB9840),
               destinationTitle: 'Budgets',
             ),
             _overviewCard(
               icon: Icons.flag_outlined,
-              title: 'Goals Overview',
-              subtitle: 'Track your saving goals',
+              title: appText(context, 'Goals Overview', 'اہداف کا جائزہ'),
+              subtitle: appText(context, 'Track your saving goals', 'اپنے بچت کے اہداف پر نظر رکھیں'),
               color: const Color(0xFF279C83),
               destinationTitle: 'Goals',
             ),
             _overviewCard(
               icon: Icons.repeat_rounded,
-              title: 'Recurring Txns',
-              subtitle: 'Manage scheduled transactions',
+              title: appText(context, 'Recurring Txns', 'مقررہ لین دین'),
+              subtitle: appText(context, 'Manage scheduled transactions', 'شیڈول شدہ لین دین کا انتظام کریں'),
               color: const Color(0xFF6C78C7),
               destinationTitle: 'Recurring Transactions',
             ),
@@ -529,13 +535,13 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(children: [
             Icon(icon, color: color, size: 18),
-            const SizedBox(width: 7),
+            SizedBox(width: 7),
             Text(title, style: const TextStyle(fontSize: 12,
                 color: AppColors.muted, fontWeight: FontWeight.w600)),
           ]),
-          const SizedBox(height: 9),
+          SizedBox(height: 9),
           loading
-              ? const SizedBox(height: 18, width: 18,
+              ? SizedBox(height: 18, width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : FittedBox(
                   fit: BoxFit.scaleDown,
@@ -588,10 +594,10 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 13,
                     fontWeight: FontWeight.w800, color: color)),
           ]),
-          const SizedBox(height: 5),
+          SizedBox(height: 5),
           Text(status, style: TextStyle(fontSize: 11,
               fontWeight: FontWeight.w600, color: color)),
-          const SizedBox(height: 9),
+          SizedBox(height: 9),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
@@ -601,7 +607,7 @@ class _HomePageState extends State<HomePage> {
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Text('${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
               style: const TextStyle(fontSize: 10, color: AppColors.muted)),
         ],
@@ -647,14 +653,14 @@ class _HomePageState extends State<HomePage> {
               ),
               child: Icon(icon, color: color, size: 23),
             ),
-            const SizedBox(width: 13),
+            SizedBox(width: 13),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(
                       fontWeight: FontWeight.w800, fontSize: 14)),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(subtitle, style: const TextStyle(
                       color: AppColors.muted, fontSize: 11)),
                 ],

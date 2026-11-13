@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/vehicles/services/vehicle_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/vehicles/services/vehicle_export_service.dart';
@@ -18,6 +20,7 @@ class VehiclesScreen extends StatefulWidget {
 class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProviderStateMixin {
   late final TabController _tabs;
   bool _loading = true;
+  bool _hideBalances = false;
   bool _saving = false;
   String _reportRange = 'All Time';
   List<Map<String, dynamic>> _vehicles = [];
@@ -41,11 +44,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   void initState() {
     super.initState();
     _tabs = TabController(length: 6, vsync: this)..addListener(_tabChanged);
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _load();
   }
 
   @override
   void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
     _tabs.removeListener(_tabChanged);
     _tabs.dispose();
     super.dispose();
@@ -55,8 +60,16 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     if (mounted) setState(() {});
   }
 
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
   Future<void> _load() async {
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final values = await Future.wait([
         VehicleService.getVehicles(), VehicleService.getFuelLogs(),
         VehicleService.getExpenses(), VehicleService.getReminders(),
@@ -64,6 +77,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       ]);
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _vehicles = values[0] as List<Map<String, dynamic>>;
         _fuel = values[1] as List<Map<String, dynamic>>;
         _expenses = values[2] as List<Map<String, dynamic>>;
@@ -109,7 +123,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       totals[currency] = (totals[currency] ?? 0) + amount;
     }
     if (totals.isEmpty) return '0.00';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join(' • ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value)}').join(' • ');
   }
 
   String _costPerKm(int vehicleId) {
@@ -125,7 +139,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       totals[currency] = (totals[currency] ?? 0) + ((r['amount'] as num?)?.toDouble() ?? 0);
     }
     if (totals.isEmpty) return '—';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value / distance)}/km').join(' • ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value / distance)}/km').join(' • ');
   }
 
   String _monthlySpend() {
@@ -146,7 +160,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       }
     }
     if (totals.isEmpty) return '0.00';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join(' • ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value)}').join(' • ');
   }
 
   String _walletName(dynamic id) {
@@ -163,6 +177,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   String _amount(dynamic value) => NumberFormat('#,##0.00').format((value as num?)?.toDouble() ?? 0);
 
+  String _moneyAmount(dynamic value) => _hideBalances ? '••••••' : _amount(value);
+
   String _moneyByCurrency(List<Map<String, dynamic>> records, String amountKey) {
     final totals = <String, double>{};
     for (final r in records) {
@@ -171,7 +187,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       totals[currency] = (totals[currency] ?? 0) + ((r[amountKey] as num?)?.toDouble() ?? 0);
     }
     if (totals.isEmpty) return '0.00';
-    return totals.entries.map((e) => '${e.key} ${_amount(e.value)}').join('  •  ');
+    return totals.entries.map((e) => '${e.key} ${_moneyAmount(e.value)}').join('  •  ');
   }
 
   double _distanceFor(int vehicleId) {
@@ -260,12 +276,12 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   Widget _sheetHeader(String title, BuildContext context) => Column(children: [
     Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
-    const SizedBox(height: 12),
+    SizedBox(height: 12),
     Row(children: [
       Expanded(child: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink))),
       IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded), color: Colors.grey),
     ]),
-    const SizedBox(height: 8),
+    SizedBox(height: 8),
   ]);
 
   Future<void> _showVehicleForm({Map<String, dynamic>? vehicle}) async {
@@ -286,28 +302,28 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             _sheetHeader(vehicle == null ? 'Add Vehicle' : 'Edit Vehicle', sheet),
             TextFormField(controller: name, decoration: _decoration('Vehicle Name', Icons.directions_car_outlined), validator: (v) => v == null || v.trim().isEmpty ? 'Enter vehicle name' : null),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: DropdownButtonFormField<String>(value: type, isExpanded: true, decoration: _decoration('Vehicle Type', Icons.category_outlined), items: _vehicleTypes.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) { if (v != null) setSheet(() => type = v); })),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: DropdownButtonFormField<String>(value: fuelType, isExpanded: true, decoration: _decoration('Fuel Type', Icons.local_gas_station_outlined), items: _fuelTypes.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) { if (v != null) setSheet(() => fuelType = v); })),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: model, decoration: _decoration('Company / Model', Icons.directions_car_filled_outlined)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: registration, textCapitalization: TextCapitalization.characters, decoration: _decoration('Registration Number', Icons.confirmation_number_outlined)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: TextFormField(controller: price, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Purchase Price (optional)', Icons.payments_outlined), validator: (v) { if ((v ?? '').trim().isEmpty) return null; final n = double.tryParse(v!); return n == null || !n.isFinite || n < 0 ? 'Enter a valid price' : null; })),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: InkWell(borderRadius: BorderRadius.circular(12), onTap: () async { final d = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime(2100)); if (d != null) setSheet(() => purchaseDate = d); }, child: InputDecorator(decoration: _decoration('Purchase Date', Icons.calendar_month_outlined), child: Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 13))))),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes', Icons.notes_rounded)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(children: [
               Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
                 setSheet(() => _saving = true);
@@ -354,33 +370,33 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             DropdownButtonFormField<int>(value: vehicleId, isExpanded: true, decoration: _decoration('Vehicle', Icons.directions_car_outlined),
               items: _vehicles.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name'].toString()))).toList(),
               onChanged: (v) { if (v != null) setSheet(() { vehicleId = v; final selected = _vehicles.firstWhere((e) => e['id'] == v); unit = selected['fuel_type'] == 'Electric' ? 'kWh' : 'L'; }); }),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: TextFormField(controller: odo, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Odometer (KM)', Icons.speed_rounded), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter KM reading' : null; })),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => date = d); }, child: InputDecorator(decoration: _decoration('Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(date), style: const TextStyle(fontSize: 13))))),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: TextFormField(controller: quantity, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Quantity ($unit)', Icons.local_gas_station), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter quantity' : null; }, onChanged: (_) => setSheet(() {}))),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: TextFormField(controller: unitPrice, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Price per $unit (${_walletCurrency(walletId)})', Icons.price_change_outlined), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter price' : null; }, onChanged: (_) => setSheet(() {}))),
             ]),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFEAF4EF), borderRadius: BorderRadius.circular(12)),
               child: Text('Total Fuel Cost: ${_amount((double.tryParse(quantity.text) ?? 0) * (double.tryParse(unitPrice.text) ?? 0))}', style: const TextStyle(color: _green, fontWeight: FontWeight.w800))),
             CheckboxListTile(contentPadding: EdgeInsets.zero, value: fullTank, onChanged: (v) => setSheet(() => fullTank = v ?? false), title: Text(unit == 'kWh' ? 'Full charge' : 'Full tank fill-up'), controlAffinity: ListTileControlAffinity.leading, dense: true),
             TextFormField(controller: station, decoration: _decoration('Fuel Station (optional)', Icons.storefront_outlined)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: _decoration('Pay from Wallet', Icons.account_balance_wallet_outlined),
               items: _wallets.map((w) => DropdownMenuItem(value: w['id'] as int, child: Text('${w['name']} • ${w['currency']}'))).toList(),
               onChanged: (v) { if (v != null) setSheet(() => walletId = v); }),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes / Memo', Icons.notes_rounded)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(children: [
               Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
                 setSheet(() => _saving = true);
@@ -426,30 +442,30 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             _sheetHeader(record == null ? 'Add Vehicle Expense' : 'Edit Vehicle Expense', sheet),
             DropdownButtonFormField<int>(value: vehicleId, isExpanded: true, decoration: _decoration('Vehicle', Icons.directions_car_outlined),
               items: _vehicles.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name'].toString()))).toList(), onChanged: (v) { if (v != null) setSheet(() => vehicleId = v); }),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: TextFormField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', Icons.currency_exchange), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter amount' : null; })),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: DropdownButtonFormField<String>(value: category, isExpanded: true, decoration: _decoration('Category', Icons.category_outlined),
                 items: _expenseCategories.map((v) => DropdownMenuItem(value: v, child: Text(v, overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) { if (v != null) setSheet(() => category = v); })),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: TextFormField(controller: odo, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Odometer (KM)', Icons.speed_rounded), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter KM' : null; })),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => date = d); }, child: InputDecorator(decoration: _decoration('Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(date), style: const TextStyle(fontSize: 13))))),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: vendor, decoration: _decoration('Workshop / Vendor', Icons.storefront_outlined)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: _decoration('Pay from Wallet', Icons.account_balance_wallet_outlined),
               items: _wallets.map((w) => DropdownMenuItem(value: w['id'] as int, child: Text('${w['name']} • ${w['currency']}'))).toList(), onChanged: (v) { if (v != null) setSheet(() => walletId = v); }),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes / Memo', Icons.notes_rounded)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(children: [
               Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
                 setSheet(() => _saving = true);
@@ -492,20 +508,20 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             _sheetHeader(reminder == null ? 'Add Service Reminder' : 'Edit Service Reminder', sheet),
             DropdownButtonFormField<int>(value: vehicleId, isExpanded: true, decoration: _decoration('Vehicle', Icons.directions_car_outlined),
               items: _vehicles.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name'].toString()))).toList(), onChanged: (v) { if (v != null) setSheet(() => vehicleId = v); }),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: title, decoration: _decoration('Reminder Title', Icons.notifications_active_outlined), validator: (v) => v == null || v.trim().isEmpty ? 'Enter reminder title' : null),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(children: [
               Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: dueDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => dueDate = d); }, child: InputDecorator(decoration: _decoration('Due Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(dueDate), style: const TextStyle(fontSize: 13))))),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: TextFormField(controller: dueOdo, keyboardType: TextInputType.number, decoration: _decoration('Due at KM (optional)', Icons.speed_rounded), validator: (v) { if ((v ?? '').trim().isEmpty) return null; final n = double.tryParse(v!); return n == null || !n.isFinite || n <= 0 ? 'Enter valid KM' : null; })),
             ]),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes', Icons.notes_rounded)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(children: [
               Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
                 setSheet(() => _saving = true);
@@ -553,18 +569,18 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   Widget _metric(String title, String value, IconData icon, Color color, {String? subtitle}) => Expanded(child: Container(
     padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFE8EEEA))),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(icon, color: color, size: 21), const SizedBox(height: 8),
+      Icon(icon, color: color, size: 21), SizedBox(height: 8),
       Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink), maxLines: 2, overflow: TextOverflow.ellipsis),
-      const SizedBox(height: 3), Text(title, style: const TextStyle(fontSize: 11, color: _muted)),
+      SizedBox(height: 3), Text(title, style: const TextStyle(fontSize: 11, color: _muted)),
       if (subtitle != null) Text(subtitle, style: const TextStyle(fontSize: 10, color: _muted)),
     ]),
   ));
 
   Widget _empty(String title, String detail, IconData icon) => Center(child: Padding(
     padding: const EdgeInsets.all(30), child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 48, color: _green.withOpacity(.65)), const SizedBox(height: 12),
+      Icon(icon, size: 48, color: _green.withOpacity(.65)), SizedBox(height: 12),
       Text(title, style: const TextStyle(fontWeight: FontWeight.w700, color: _ink)),
-      const SizedBox(height: 5), Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: _muted, fontSize: 12)),
+      SizedBox(height: 5), Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: _muted, fontSize: 12)),
     ]),
   ));
 
@@ -576,44 +592,44 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         gradient: const LinearGradient(colors: [_green, Color(0xFF2B9B72)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(18)),
         child: Row(children: [
-          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Vehicle Overview', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
             SizedBox(height: 5), Text('Fuel, mileage and running costs in one place', style: TextStyle(color: Colors.white70, fontSize: 12)),
           ])),
           CircleAvatar(radius: 25, backgroundColor: Colors.white24, child: Icon(Icons.directions_car_filled_rounded, color: Colors.white, size: 27)),
         ]),
       ),
-      const SizedBox(height: 13),
+      SizedBox(height: 13),
       Row(children: [
         _metric('Vehicles', '${_vehicles.length}', Icons.directions_car_outlined, _green),
-        const SizedBox(width: 10), _metric('Distance tracked', '${_amount(distance)} km', Icons.speed_rounded, Colors.blue),
+        SizedBox(width: 10), _metric('Distance tracked', '${_amount(distance)} km', Icons.speed_rounded, Colors.blue),
       ]),
-      const SizedBox(height: 10),
+      SizedBox(height: 10),
       Row(children: [
         _metric('Fuel spending', _moneyByCurrency(_fuel, 'total'), Icons.local_gas_station_outlined, Colors.orange),
-        const SizedBox(width: 10), _metric('Other expenses', _moneyByCurrency(_expenses, 'amount'), Icons.build_outlined, Colors.red),
+        SizedBox(width: 10), _metric('Other expenses', _moneyByCurrency(_expenses, 'amount'), Icons.build_outlined, Colors.red),
       ]),
-      const SizedBox(height: 10),
+      SizedBox(height: 10),
       Row(children: [
         _metric('This month', _monthlySpend(), Icons.calendar_month_outlined, Colors.purple),
-        const SizedBox(width: 10), _metric('Due alerts', '${due.length}', Icons.notifications_active_outlined, due.isEmpty ? _green : Colors.red),
+        SizedBox(width: 10), _metric('Due alerts', '${due.length}', Icons.notifications_active_outlined, due.isEmpty ? _green : Colors.red),
       ]),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         const Text('Reminders & Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
         Text('${due.length} due', style: TextStyle(color: due.isEmpty ? _muted : Colors.red, fontWeight: FontWeight.w700, fontSize: 12)),
       ]),
-      const SizedBox(height: 8),
-      if (due.isEmpty) const Card(child: ListTile(leading: Icon(Icons.check_circle_outline, color: _green), title: Text('No overdue reminders'), subtitle: Text('Your service schedule is up to date.')))
+      SizedBox(height: 8),
+      if (due.isEmpty) Card(child: ListTile(leading: Icon(Icons.check_circle_outline, color: _green), title: Text(appText(context, 'No overdue reminders', 'کوئی تاخیر شدہ یاددہانی نہیں')), subtitle: Text(appText(context, 'Your service schedule is up to date.', 'آپ کی سروس کا شیڈول اپ ڈیٹ ہے۔'))))
       else ...due.map((r) => Card(child: ListTile(
         leading: const Icon(Icons.notifications_active_outlined, color: Colors.red),
         title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text('${_vehicleName(r['vehicle_id'])} • Due ${_date(r['due_date'])}'),
         trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder')),
       ))),
-      const SizedBox(height: 14),
+      SizedBox(height: 14),
       const Text('Your Vehicles', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
-      const SizedBox(height: 8),
+      SizedBox(height: 8),
       if (_vehicles.isEmpty) _empty('No vehicles added', 'Add your car or bike to start tracking fuel and expenses.', Icons.directions_car_outlined)
       else ..._vehicles.map(_vehicleCard),
     ]));
@@ -657,7 +673,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     decoration: BoxDecoration(color: const Color(0xFFF4F7F5), borderRadius: BorderRadius.circular(10)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title, style: const TextStyle(color: _muted, fontSize: 10)),
-      const SizedBox(height: 2), Text(value, style: const TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w700)),
+      SizedBox(height: 2), Text(value, style: const TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w700)),
     ]),
   );
 
@@ -671,20 +687,20 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _fuel.map((f) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: const CircleAvatar(backgroundColor: Color(0xFFFFF2DE), child: Icon(Icons.local_gas_station_outlined, color: Colors.orange)),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_amount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showFuelForm(record: f);
           if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry');
-        }, itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit Fuel Entry')),
-          PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry')),
+        }, itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Fuel Entry', 'ایندھن کے اندراج میں ترمیم کریں'))),
+          PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Fuel Entry', 'ایندھن کا اندراج حذف کریں'))),
         ]),
         children: [
-          ListTile(dense: true, title: const Text('Price per unit'), trailing: Text(_amount(f['unit_price']))),
-          ListTile(dense: true, title: const Text('Fuel station'), trailing: Text((f['station'] ?? '—').toString())),
-          ListTile(dense: true, title: const Text('Tank fill'), trailing: Text(f['full_tank'] == true ? 'Full tank' : 'Partial')),
-          if ((f['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: const Text('Notes'), subtitle: Text(f['notes'].toString())),
+          ListTile(dense: true, title: Text(appText(context, 'Price per unit', 'فی یونٹ قیمت')), trailing: Text(_moneyAmount(f['unit_price']))),
+          ListTile(dense: true, title: Text(appText(context, 'Fuel station', 'پیٹرول پمپ')), trailing: Text((f['station'] ?? '—').toString())),
+          ListTile(dense: true, title: Text(appText(context, 'Tank fill', 'ٹینک بھرنا')), trailing: Text(f['full_tank'] == true ? 'Full tank' : 'Partial')),
+          if ((f['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: Text(appText(context, 'Notes', 'نوٹس')), subtitle: Text(f['notes'].toString())),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: AttachmentSection(ownerType: 'vehicle_fuel', ownerId: f['id'] as int)),
         ],
       ),
@@ -695,19 +711,19 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _expenses.map((e) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: const CircleAvatar(backgroundColor: Color(0xFFFCEBEA), child: Icon(Icons.build_outlined, color: Colors.red)),
-        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_amount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_moneyAmount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showExpenseForm(record: e);
           if (v == 'delete') _deleteRecord(() async { final id = e['id'] as int; await VehicleService.deleteExpense(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_expense', ownerId: id); }, 'vehicle expense');
-        }, itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit Expense')),
-          PopupMenuItem(value: 'delete', child: Text('Delete Expense')),
+        }, itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Expense', 'اخراجات میں ترمیم کریں'))),
+          PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Expense', 'اخراجات حذف کریں'))),
         ]),
         children: [
-          ListTile(dense: true, title: const Text('Paid from'), trailing: Text(_walletName(e['wallet_id']))),
-          ListTile(dense: true, title: const Text('Workshop / Vendor'), trailing: Text((e['vendor'] ?? '—').toString())),
-          if ((e['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: const Text('Notes'), subtitle: Text(e['notes'].toString())),
+          ListTile(dense: true, title: Text(appText(context, 'Paid from', 'ادائیگی کا اکاؤنٹ')), trailing: Text(_walletName(e['wallet_id']))),
+          ListTile(dense: true, title: Text(appText(context, 'Workshop / Vendor', 'ورکشاپ / فروخت کنندہ')), trailing: Text((e['vendor'] ?? '—').toString())),
+          if ((e['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: Text(appText(context, 'Notes', 'نوٹس')), subtitle: Text(e['notes'].toString())),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: AttachmentSection(ownerType: 'vehicle_expense', ownerId: e['id'] as int)),
         ],
       ),
@@ -727,9 +743,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showReminderForm(reminder: r);
           if (v == 'delete') _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder');
-        }, itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit Reminder')),
-          PopupMenuItem(value: 'delete', child: Text('Delete Reminder')),
+        }, itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Reminder', 'یاددہانی میں ترمیم کریں'))),
+          PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Reminder', 'یاددہانی حذف کریں'))),
         ]),
       ));
     }).toList()));
@@ -757,16 +773,16 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       DropdownButtonFormField<String>(value: _reportRange, decoration: _decoration('Report Period', Icons.date_range_outlined),
         items: const ['Daily', 'Weekly', 'Monthly', 'Yearly', 'All Time'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
         onChanged: (v) => setState(() => _reportRange = v ?? 'All Time')),
-      const SizedBox(height: 12),
+      SizedBox(height: 12),
       const Text('Vehicle Comparison', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
-      const SizedBox(height: 8),
+      SizedBox(height: 8),
       if (_vehicles.isEmpty) _empty('No comparison data', 'Add vehicles and fuel records to compare running costs.', Icons.compare_arrows_rounded)
       else ..._vehicles.map((v) {
         final id = v['id'] as int; final mileage = _averageMileage(id);
         final distance = _distanceFor(id);
         return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(v['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: [
             _smallStat('Distance', '${_amount(distance)} km'),
             _smallStat('Mileage', mileage == null ? '—' : '${_amount(mileage)} ${_mileageUnit(id)}'),
@@ -776,25 +792,25 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           ]),
         ])));
       }),
-      const SizedBox(height: 14),
+      SizedBox(height: 14),
       const Text('Fuel Price History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
-      const SizedBox(height: 8),
-      if (sortedFuel.isEmpty) const Card(child: ListTile(title: Text('No fuel price history yet.')))
+      SizedBox(height: 8),
+      if (sortedFuel.isEmpty) Card(child: ListTile(title: Text('No fuel price history yet.')))
       else ...sortedFuel.take(30).map((f) => Card(child: ListTile(
         dense: true, leading: const Icon(Icons.price_change_outlined, color: Colors.orange),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_amount(f['unit_price'])} / ${f['unit']}'),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['unit_price'])} / ${f['unit']}'),
         subtitle: Text('${_date(f['date'])} • ${f['station'] ?? 'Station not entered'}'),
         trailing: Text('${_amount(f['quantity'])} ${f['unit']}'),
       ))),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       const Text('Export Reports', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
-      const SizedBox(height: 8),
+      SizedBox(height: 8),
       Card(child: Column(children: [
-        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: const Text('Excel Workbook'), subtitle: const Text('Vehicles, fuel log, expenses and reminders'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
+        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: const Text('Vehicles, fuel log, expenses and reminders'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
         const Divider(height: 1),
-        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red), title: const Text('PDF Report'), subtitle: const Text('Shareable summary of all vehicle records'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
+        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: const Text('Shareable summary of all vehicle records'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
       ])),
-      const SizedBox(height: 8),
+      SizedBox(height: 8),
       const Text('Reports are saved in the app documents folder and opened with a compatible app.', style: TextStyle(color: _muted, fontSize: 11)),
     ]);
   }
@@ -826,7 +842,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                   ),
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               SizedBox(
                 height: 14,
                 child: Center(
@@ -905,7 +921,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         icon: const Icon(Icons.add_rounded), label: Text(_fabLabel()),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _tabs,
               physics: const NeverScrollableScrollPhysics(),

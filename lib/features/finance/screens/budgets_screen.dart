@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -6,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
   @override
@@ -17,11 +19,13 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   List<Map<String, dynamic>> _categories = [];
   List<String> _currencies = ['PKR'];
   bool _loading = true;
+  bool _hideBalances = false;
   String _filter = 'All';
-  String _money(double amount) => _format.format(amount);
+  String _money(double amount) => _hideBalances ? '••••••' : _format.format(amount);
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
   }
   void _message(String message) {
@@ -30,9 +34,23 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       SnackBar(content: Text(message)),
     );
   }
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final budgets = await BudgetsService.getBudgets();
       final categoryItems = await CategoryService.getCategories('expense');
       final categories = categoryItems.map((item) => {'name': item.name}).toList();
@@ -45,6 +63,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           .toList();
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _budgets = budgets;
         _categories = categories;
         _currencies = currencies.isEmpty ? ['PKR'] : currencies;
@@ -88,13 +107,13 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [Expanded(child: Text(budget == null ? 'Create Budget' : 'Edit Budget', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
                     IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
                     validator: (v) => v == null || v.trim().isEmpty ? 'Enter budget name' : null),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(
                       controller: amountController,
@@ -102,7 +121,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       decoration: decoration('Budget Limit', Icons.currency_exchange),
                       validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid budget amount' : null; },
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<String>(
                       value: currency, isExpanded: true,
                       decoration: decoration('Currency', Icons.payments_outlined),
@@ -110,16 +129,16 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       onChanged: (v) { if (v != null) setSheetState(() => currency = v); },
                     )),
                   ]),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: DropdownButtonFormField<String?>(
                       value: category, isExpanded: true,
                       decoration: decoration('Category', Icons.category_outlined),
-                      items: [const DropdownMenuItem<String?>(value: null, child: Text('All Categories')),
+                      items: [DropdownMenuItem<String?>(value: null, child: Text(appText(context, 'All Categories', 'تمام زمرے'))),
                         ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis)))],
                       onChanged: (v) => setSheetState(() => category = v),
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<String>(
                       value: period, isExpanded: true,
                       decoration: decoration('Budget Period', Icons.calendar_view_month),
@@ -127,7 +146,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       onChanged: (v) { if (v != null) setSheetState(() => period = v); },
                     )),
                   ]),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(children: [
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
@@ -136,11 +155,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
-                        const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
+                        Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () async {
@@ -148,13 +167,13 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() => endDate = v);
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
-                        const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
+                        Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
                   ]),
-                  const SizedBox(height: 12),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                  SizedBox(height: 12),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -197,14 +216,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Budget'),
+          title: Text(appText(context, 'Delete Budget', 'بجٹ حذف کریں')),
           content: Text(
             'Are you sure you want to delete "${budget.name}"?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
@@ -258,7 +277,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     color: Color(0xFF147D59),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,9 +310,9 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'edit',
-                      child: Text('Edit Budget'),
+                      child: Text(appText(context, 'Edit Budget', 'بجٹ میں ترمیم کریں')),
                     ),
                     PopupMenuItem(
                       value: 'toggle',
@@ -301,15 +320,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         budget.isActive ? 'Pause Budget' : 'Activate Budget',
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete Budget'),
+                      child: Text(appText(context, 'Delete Budget', 'بجٹ حذف کریں')),
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -322,7 +341,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 9),
+            SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
@@ -332,7 +351,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 color: color,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -354,7 +373,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               '${DateFormat('dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
               style: const TextStyle(
@@ -363,10 +382,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               ),
             ),
             if (!budget.isActive)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 8),
                 child: Chip(
-                  label: Text('Paused'),
+                  label: Text(appText(context, 'Paused', 'روکا گیا')),
                   backgroundColor: Color(0xFFFFF0D9),
                 ),
               ),
@@ -398,10 +417,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Budget'),
+        label: Text(appText(context, 'New Budget', 'نیا بجٹ')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -410,18 +429,18 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: SegmentedButton<String>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                           value: 'All',
-                          label: Text('All'),
+                          label: Text(appText(context, 'All', 'تمام')),
                         ),
                         ButtonSegment(
                           value: 'Active',
-                          label: Text('Active'),
+                          label: Text(appText(context, 'Active', 'فعال')),
                         ),
                         ButtonSegment(
                           value: 'Paused',
-                          label: Text('Paused'),
+                          label: Text(appText(context, 'Paused', 'روکا گیا')),
                         ),
                       ],
                       selected: {_filter},
@@ -433,7 +452,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     ),
                   ),
                   if (visibleBudgets.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(40),
                       child: Column(
                         children: [

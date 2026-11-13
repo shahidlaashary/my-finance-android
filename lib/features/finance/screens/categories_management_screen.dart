@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 
 class CategoriesPage extends StatefulWidget {
-  const CategoriesPage({super.key});
+  final String initialType;
+
+  const CategoriesPage({super.key, this.initialType = 'Income'});
 
   @override
   State<CategoriesPage> createState() => _CategoriesPageState();
@@ -44,6 +47,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   @override
   void initState() {
     super.initState();
+    selectedType = widget.initialType == 'Expense' ? 'Expense' : 'Income';
     loadCategories();
   }
 
@@ -110,12 +114,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   const Text(
                     'Choose Icon',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -155,7 +159,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
+                child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
               ),
               FilledButton(
                 onPressed: () {
@@ -207,12 +211,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Category?'),
+        title: Text(appText(context, 'Delete Category?', 'زمرہ حذف کریں؟')),
         content: Text('Kya aap "$name" category delete karna chahte hain?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -243,8 +247,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
-          'Categories',
+        title: Text(
+          appText(context, 'Categories', 'زمرے'),
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
@@ -253,7 +257,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             onPressed: () => showCategoryDialog(),
             icon: const Icon(Icons.add_rounded, size: 29),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
         ],
       ),
       body: Column(
@@ -276,11 +280,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
           ),
           Expanded(
             child: loading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : categories.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'No categories yet. Tap + to add one.',
+                          appText(context, 'No categories yet. Tap + to add one.', 'ابھی کوئی زمرہ نہیں۔ شامل کرنے کے لیے + دبائیں۔'),
                           style: TextStyle(color: AppColors.muted),
                         ),
                       )
@@ -308,7 +312,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                 children: [
                                   ReorderableDragStartListener(
                                     index: index,
-                                    child: const SizedBox(
+                                    child: SizedBox(
                                       width: 28,
                                       child: Icon(
                                         Icons.drag_indicator_rounded,
@@ -330,7 +334,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                       size: 25,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
+                                  SizedBox(width: 14),
                                   Expanded(
                                     child: Text(
                                       category['name'] as String,
@@ -392,7 +396,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 20, color: selected ? Colors.white : AppColors.text),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               type,
               style: TextStyle(

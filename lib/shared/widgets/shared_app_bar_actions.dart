@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
@@ -180,10 +181,20 @@ void _showBudgetAlerts(BuildContext context) {
                             ),
                           ),
                           const SizedBox(height: 7),
-                          Text(
-                            '${budget.currency} ${format.format(budget.spentAmount)} / ${format.format(budget.limitAmount)}',
-                            style: const TextStyle(
-                                fontSize: 10, color: Color(0xFF7B8781)),
+                          FutureBuilder<bool>(
+                            future: GeneralPreferences.instance.hideBalances,
+                            builder: (context, snapshot) {
+                              final hidden = snapshot.connectionState != ConnectionState.done || (snapshot.data ?? false);
+                              return Text(
+                                hidden
+                                    ? '${budget.currency} •••••• / ••••••'
+                                    : '${budget.currency} ${format.format(budget.spentAmount)} / ${format.format(budget.limitAmount)}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF7B8781),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),

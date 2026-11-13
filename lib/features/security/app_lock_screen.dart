@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 
 import 'package:my_finance/core/security/app_lock_service.dart';
 
@@ -14,7 +15,17 @@ class _AppLockScreenState extends State<AppLockScreen> {
   bool _enabled = false;
   bool _hasPin = false;
   int _timeout = 0;
+  bool _biometricEnabled = false;
+  List<BiometricType> _availableBiometrics = [];
   bool _saving = false;
+
+  String get _biometricMethods {
+    final methods = <String>[];
+    if (_availableBiometrics.contains(BiometricType.face)) methods.add('Face');
+    if (_availableBiometrics.contains(BiometricType.fingerprint)) methods.add('Fingerprint');
+    if (methods.isEmpty && _availableBiometrics.isNotEmpty) return 'Device biometrics';
+    return methods.isEmpty ? 'No enrolled biometrics detected' : methods.join(' & ');
+  }
 
   @override
   void initState() {
@@ -28,12 +39,16 @@ class _AppLockScreenState extends State<AppLockScreen> {
         AppLockService.isEnabled(),
         AppLockService.hasPin(),
         AppLockService.autoLockSeconds(),
+        AppLockService.isBiometricEnabled(),
+        AppLockService.availableBiometrics(),
       ]);
       if (!mounted) return;
       setState(() {
         _enabled = values[0] as bool;
         _hasPin = values[1] as bool;
         _timeout = values[2] as int;
+        _biometricEnabled = values[3] as bool;
+        _availableBiometrics = values[4] as List<BiometricType>;
         _loading = false;
       });
     } catch (error) {
@@ -175,9 +190,13 @@ class _AppLockScreenState extends State<AppLockScreen> {
       if (value) {
         await _enableLock();
       } else {
+        await AppLockService.setBiometricEnabled(false);
         await AppLockService.setEnabled(false);
         if (mounted) {
-          setState(() => _enabled = false);
+          setState(() {
+            _enabled = false;
+            _biometricEnabled = false;
+          });
           _message('App Lock disabled.');
         }
       }
@@ -185,6 +204,26 @@ class _AppLockScreenState extends State<AppLockScreen> {
       _message('Unable to update App Lock: $error');
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _setBiometricEnabled(bool value) async {
+    if (_saving) return;
+    if (value && (!_enabled || !_hasPin)) {
+      _message('Enable App Lock and create a PIN first.');
+      return;
+    }
+    if (value && _availableBiometrics.isEmpty) {
+      _message('Set up Face Unlock or Fingerprint in your device settings first.');
+      return;
+    }
+    try {
+      await AppLockService.setBiometricEnabled(value);
+      if (!mounted) return;
+      setState(() => _biometricEnabled = value);
+      _message(value ? 'Biometric unlock enabled.' : 'Biometric unlock disabled.');
+    } catch (error) {
+      _message('Unable to update biometric setting: $error');
     }
   }
 
@@ -240,7 +279,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        'Secure your app with a private 4–8 digit PIN.',
+                        'Use your PIN, Face Unlock or Fingerprint to protect the app.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -255,10 +294,23 @@ class _AppLockScreenState extends State<AppLockScreen> {
               secondary: const Icon(Icons.lock_outline_rounded),
               title: const Text('App Lock'),
               subtitle: const Text(
-                'Require your PIN when opening My Finance',
+                'Require your PIN or enabled biometrics when opening My Finance',
               ),
               value: _enabled,
               onChanged: _saving ? null : _setEnabled,
+            ),
+          ),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.fingerprint_rounded),
+              title: const Text('Face / Fingerprint Unlock'),
+              subtitle: Text(
+                _biometricMethods == 'No enrolled biometrics detected'
+                    ? 'Set up Face Unlock or Fingerprint on this device first.'
+                    : 'Use $_biometricMethods to unlock. PIN remains available as backup.',
+              ),
+              value: _biometricEnabled,
+              onChanged: _enabled && !_saving ? _setBiometricEnabled : null,
             ),
           ),
           Card(
@@ -292,8 +344,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
           const SizedBox(height: 10),
           Text(
             'Your PIN is stored as a salted hash in secure device storage. '
-            'Biometric unlock will be added separately after this PIN lock '
-            'is verified on your device.',
+            'Biometric unlock uses the security system built into your device; '
+            'your PIN remains available as a backup.',
             style: TextStyle(
               color: Theme.of(context).hintColor,
               fontSize: 12,

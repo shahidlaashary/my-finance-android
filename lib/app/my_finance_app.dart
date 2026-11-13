@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:my_finance/core/preferences/language_settings_service.dart';
 
 import 'package:my_finance/app/theme/app_theme.dart';
 import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
@@ -17,13 +19,23 @@ class MyFinanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<AppThemePreset>(
+    return ValueListenableBuilder<Locale>(
+      valueListenable: LanguageSettingsService.instance.locale,
+      builder: (context, locale, _) => ValueListenableBuilder<AppThemePreset>(
       valueListenable: AppearanceSettingsService.instance.themePreset,
       builder: (context, preset, _) {
         return MaterialApp(
           title: 'My Finance',
+          locale: locale,
+          supportedLocales: const [Locale('en'), Locale('ur')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.forPreset(preset),
+          theme: AppTheme.forPreset(
+            preset,
+            fontFamily: locale.languageCode == 'ur'
+                ? 'JameelNooriNastaleeq'
+                : null,
+          ),
           themeMode: ThemeMode.light,
           routes: routes,
           builder: (context, child) =>
@@ -31,6 +43,6 @@ class MyFinanceApp extends StatelessWidget {
           home: home,
         );
       },
-    );
+    ));
   }
 }

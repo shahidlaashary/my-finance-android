@@ -78,6 +78,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     return Scaffold(
       body: IndexedStack(
         index: selectedIndex,
@@ -106,25 +107,25 @@ class _MainScreenState extends State<MainScreen> {
                   index: 0,
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
-                  label: 'Home',
+                  label: isUrdu ? 'ہوم' : 'Home',
                 ),
                 _navItem(
                   index: 1,
                   icon: Icons.real_estate_agent_outlined,
                   activeIcon: Icons.real_estate_agent_rounded,
-                  label: 'Assets',
+                  label: isUrdu ? 'اثاثے' : 'Assets',
                 ),
                 _navItem(
                   index: 2,
                   icon: Icons.account_balance_wallet_outlined,
                   activeIcon: Icons.account_balance_wallet_rounded,
-                  label: 'Budgets',
+                  label: isUrdu ? 'بجٹ' : 'Budgets',
                 ),
                 _navItem(
                   index: 3,
                   icon: Icons.flag_outlined,
                   activeIcon: Icons.flag_rounded,
-                  label: 'Goals',
+                  label: isUrdu ? 'اہداف' : 'Goals',
                 ),
 
                 // Darmiyan ka Plus: sirf icon, koi text label nahi.
@@ -162,25 +163,25 @@ class _MainScreenState extends State<MainScreen> {
                   index: 4,
                   icon: Icons.handshake_outlined,
                   activeIcon: Icons.handshake_rounded,
-                  label: 'Loans',
+                  label: isUrdu ? 'قرضے' : 'Loans',
                 ),
                 _navItem(
                   index: 5,
                   icon: Icons.bar_chart_outlined,
                   activeIcon: Icons.bar_chart_rounded,
-                  label: 'Stats',
+                  label: isUrdu ? 'اعدادوشمار' : 'Stats',
                 ),
                 _navItem(
                   index: 6,
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long_rounded,
-                  label: 'Txns',
+                  label: isUrdu ? 'لین دین' : 'Txns',
                 ),
                 _navItem(
                   index: 7,
                   icon: Icons.account_balance_outlined,
                   activeIcon: Icons.account_balance_rounded,
-                  label: 'Wallets',
+                  label: isUrdu ? 'والٹس' : 'Wallets',
                 ),
               ],
             ),
@@ -279,6 +280,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     final screenHeight = MediaQuery.sizeOf(context).height;
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = keyboardHeight > 0
@@ -315,9 +317,9 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
                   child: Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Add New Transaction',
+                          isUrdu ? 'نیا لین دین شامل کریں' : 'Add New Transaction',
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -339,22 +341,22 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   child: Row(
                     children: [
                       _transactionTab(
-                        title: 'Income',
-                        subtitle: 'Money received',
+                        title: isUrdu ? 'آمدنی' : 'Income',
+                        subtitle: isUrdu ? 'وصول شدہ رقم' : 'Money received',
                         icon: Icons.south_west_rounded,
                         color: AppColors.income,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
-                        title: 'Expense',
-                        subtitle: 'Money spent',
+                        title: isUrdu ? 'اخراجات' : 'Expense',
+                        subtitle: isUrdu ? 'خرچ کی گئی رقم' : 'Money spent',
                         icon: Icons.north_east_rounded,
                         color: AppColors.expense,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
-                        title: 'Transfer',
-                        subtitle: 'Between wallets',
+                        title: isUrdu ? 'منتقلی' : 'Transfer',
+                        subtitle: isUrdu ? 'والٹس کے درمیان' : 'Between wallets',
                         icon: Icons.swap_horiz_rounded,
                         color: AppColors.primary,
                       ),
@@ -382,12 +384,19 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     required IconData icon,
     required Color color,
   }) {
-    final selected = selectedType == title;
+    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
+    final selected = selectedType == title ||
+        (isUrdu && ((title == 'آمدنی' && selectedType == 'Income') ||
+            (title == 'اخراجات' && selectedType == 'Expense') ||
+            (title == 'منتقلی' && selectedType == 'Transfer')));
     return Expanded(
       child: InkWell(
         onTap: () {
-          if (selectedType != title) {
-            setState(() => selectedType = title);
+          final value = title == 'آمدنی' ? 'Income' :
+              title == 'اخراجات' ? 'Expense' :
+              title == 'منتقلی' ? 'Transfer' : title;
+          if (selectedType != value) {
+            setState(() => selectedType = value);
           }
         },
         borderRadius: BorderRadius.circular(13),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -157,7 +158,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             onPressed: () {
@@ -165,7 +166,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
               if (parsed == null || !parsed.isFinite || parsed <= 0) return;
               Navigator.pop(dialogContext, parsed);
             },
-            child: const Text('Save'),
+            child: Text(appText(context, 'Save', 'محفوظ کریں')),
           ),
         ],
       ),
@@ -200,14 +201,14 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Exchange Rates',
+        title: Text(appText(context, 'Exchange Rates', 'زرِ مبادلہ کی شرحیں'),
             style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
             tooltip: 'Update rates',
             onPressed: _updating ? null : () => _refreshRates(),
             icon: _updating
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
@@ -217,7 +218,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () => _loadData(),
               child: ListView(
@@ -229,11 +230,11 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Base Currency: PKR',
+                          Text(appText(context, 'Base Currency: PKR', 'بنیادی کرنسی: PKR'),
                               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           const Text('Har rate 1 foreign currency unit ki PKR value hai.'),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton.icon(
@@ -242,7 +243,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               label: Text(_updating ? 'Updating rates...' : 'Update Rates Online'),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           const Text(
                             'Rates open.er-api.com se milte hain. Screen khulne par 24 ghantay se puranay rates auto-refresh hotay hain.',
                             style: TextStyle(fontSize: 11, color: AppColors.muted),
@@ -252,7 +253,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     ),
                   ),
                   if (_message != null) ...[
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Material(
                       color: _messageIsError
                           ? Colors.red.withValues(alpha: 0.08)
@@ -267,16 +268,16 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 18),
-                  const Text('Current Rates',
+                  SizedBox(height: 18),
+                  Text(appText(context, 'Current Rates', 'موجودہ شرحیں'),
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Card(
                     child: Column(
                       children: [
                         ListTile(
                           leading: const CircleAvatar(child: Text('PKR')),
-                          title: const Text('Pakistani Rupee',
+                          title: Text(appText(context, 'Pakistani Rupee', 'پاکستانی روپیہ'),
                               style: TextStyle(fontWeight: FontWeight.w700)),
                           subtitle: const Text('Base currency'),
                           trailing: const Text('1.0000 PKR',
@@ -320,12 +321,12 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  const Text('Rate History',
+                  SizedBox(height: 18),
+                  Text(appText(context, 'Rate History', 'شرحوں کی تاریخ'),
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   if (_history.isEmpty)
-                    const Card(
+                    Card(
                       child: Padding(
                         padding: EdgeInsets.all(18),
                         child: Text('Abhi rate history available nahi. Rate save ya online update karein.'),

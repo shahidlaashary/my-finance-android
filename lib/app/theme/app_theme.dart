@@ -28,7 +28,10 @@ class AppTheme {
 
   static ThemeData get light => forPreset(AppThemePreset.emeraldGreen);
 
-  static ThemeData forPreset(AppThemePreset preset) {
+  static ThemeData forPreset(
+    AppThemePreset preset, {
+    String? fontFamily,
+  }) {
     final palette = switch (preset) {
       AppThemePreset.emeraldGreen => const _AppThemePalette(
           primary: Color(0xFF13845D),
@@ -98,6 +101,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: fontFamily,
       colorScheme: scheme,
       brightness: palette.brightness,
       scaffoldBackgroundColor: palette.background,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -6,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/goals_model.dart';
 import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
   @override
@@ -18,10 +20,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
   Map<String, double> _savedByCurrency = {};
   Map<String, double> _targetByCurrency = {};
   bool _loading = true;
-  String _money(double amount) => _numberFormat.format(amount);
+  bool _hideBalances = false;
+  String _money(double amount) => _hideBalances ? '••••••' : _numberFormat.format(amount);
   @override
   void initState() {
     super.initState();
+    GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
     _loadData();
   }
   void _message(String message) {
@@ -30,9 +34,23 @@ class _GoalsScreenState extends State<GoalsScreen> {
       SnackBar(content: Text(message)),
     );
   }
+  void _onPreferencesChanged() async {
+    final hidden = await GeneralPreferences.instance.hideBalances;
+    if (mounted && hidden != _hideBalances) {
+      setState(() => _hideBalances = hidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     if (mounted) setState(() => _loading = true);
     try {
+      final hideBalances = await GeneralPreferences.instance.hideBalances;
       final dbPath = await getDatabasesPath();
       final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
       final wallets = await db.query(
@@ -44,6 +62,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       final target = await GoalsService.getTotalTargetByCurrency();
       if (!mounted) return;
       setState(() {
+        _hideBalances = hideBalances;
         _wallets = wallets;
         _goals = goals;
         _savedByCurrency = saved;
@@ -104,13 +123,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
               child: Form(key: formKey, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [Expanded(child: Text(goal == null ? 'New Goal' : 'Edit Goal', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
                     IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Goal Name', Icons.flag_outlined),
                     validator: (v) => v == null || v.trim().isEmpty ? 'Enter goal name' : null),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(
                       controller: targetController,
@@ -118,14 +137,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       decoration: decoration('Target Amount', Icons.savings_outlined),
                       validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid target amount' : null; },
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<int?>(
                       value: walletId, isExpanded: true,
                       decoration: decoration('Linked Account', Icons.account_balance_wallet_outlined),
                       items: _accountItems(), onChanged: (v) => setSheetState(() => walletId = v),
                     )),
                   ]),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
@@ -144,7 +163,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () async {
@@ -163,10 +182,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       ),
                     )),
                   ]),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
-                  const SizedBox(height: 16),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                  SizedBox(height: 16),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -204,7 +223,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add Savings'),
+          title: Text(appText(context, 'Add Savings', 'بچت شامل کریں')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -217,7 +236,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -225,7 +244,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (value == null || !value.isFinite || value <= 0) return;
                 Navigator.pop(context, value);
               },
-              child: const Text('Continue'),
+              child: Text(appText(context, 'Continue', 'جاری رکھیں')),
             ),
           ],
         );
@@ -252,7 +271,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Withdraw Savings'),
+          title: Text(appText(context, 'Withdraw Savings', 'بچت نکالیں')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -265,7 +284,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -273,7 +292,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (value == null || !value.isFinite || value <= 0) return;
                 Navigator.pop(context, value);
               },
-              child: const Text('Withdraw'),
+              child: Text(appText(context, 'Withdraw', 'نکالیں')),
             ),
           ],
         );
@@ -298,14 +317,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Savings Goal'),
+          title: Text(appText(context, 'Delete Savings Goal', 'بچت کا ہدف حذف کریں')),
           content: Text(
             'Delete "${goal.name}" and its savings history?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
@@ -340,7 +359,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: color, size: 25),
-            const SizedBox(height: 9),
+            SizedBox(height: 9),
             Text(
               title,
               style: const TextStyle(
@@ -348,7 +367,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 color: Colors.grey,
               ),
             ),
-            const SizedBox(height: 5),
+            SizedBox(height: 5),
             Text(
               _money(amount),
               style: TextStyle(
@@ -374,7 +393,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Text(
             'Savings Summary by Currency',
@@ -466,7 +485,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     color: Color(0xFF147D59),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,10 +515,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       _deleteGoal(goal);
                     }
                   },
-                  itemBuilder: (context) => const [
+                  itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'edit',
-                      child: Text('Edit Goal'),
+                      child: Text(appText(context, 'Edit Goal', 'ہدف میں ترمیم کریں')),
                     ),
                     PopupMenuItem(
                       value: 'delete',
@@ -509,7 +528,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             Text(
               'Account: $accountLabel',
               style: const TextStyle(
@@ -517,18 +536,18 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 fontSize: 12,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saved Amount'),
+                Text(appText(context, 'Saved Amount', 'محفوظ شدہ رقم')),
                 Text(
                   '${_money(goal.savedAmount)} $currency',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
@@ -538,7 +557,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 color: completed ? Colors.green : const Color(0xFF147D59),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -546,7 +565,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 Text('Target: ${_money(goal.targetAmount)} $currency'),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               completed
                   ? 'Goal completed!'
@@ -557,13 +576,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
               ),
             ),
             if (goal.notes.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 goal.notes,
                 style: const TextStyle(color: Colors.grey),
               ),
             ],
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -571,12 +590,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 FilledButton.tonalIcon(
                   onPressed: () => _showContributionDialog(goal),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Savings'),
+                  label: Text(appText(context, 'Add Savings', 'بچت شامل کریں')),
                 ),
                 OutlinedButton.icon(
                   onPressed: () => _withdraw(goal),
                   icon: const Icon(Icons.remove),
-                  label: const Text('Withdraw'),
+                  label: Text(appText(context, 'Withdraw', 'نکالیں')),
                 ),
               ],
             ),
@@ -602,7 +621,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Goals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -610,10 +629,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Goal'),
+        label: Text(appText(context, 'New Goal', 'نیا ہدف')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -621,7 +640,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 children: [
                   _currencySummary(),
                   if (_goals.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(40),
                       child: Column(
                         children: [

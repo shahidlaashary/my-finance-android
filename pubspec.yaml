@@ -3,13 +3,15 @@ name: my_finance
 description: My Finance - Personal Finance Management App
 publish_to: 'none'
 
-version: 1.0.0
+version: 1.0.1+1
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.5.3
 
@@ -36,6 +38,7 @@ dependencies:
   # PIN-based App Lock
   crypto: ^3.0.6
   flutter_secure_storage: ^9.2.4
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -45,3 +48,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: JameelNooriNastaleeq
+      fonts:
+        - asset: assets/fonts/JameelNooriNastaleeq.ttf

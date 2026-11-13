@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/localization/app_text.dart';
@@ -12,9 +14,32 @@ class RecycleBinScreen extends StatefulWidget {
 class _RecycleBinScreenState extends State<RecycleBinScreen> {
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
+  Timer? _countdownTimer;
   String tr(String s) => appText(context, s, s);
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+    _countdownTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+  @override
+  void dispose() { _countdownTimer?.cancel(); super.dispose(); }
+  String _remaining(Map<String, dynamic> item) {
+    final deletedAt = DateTime.tryParse(item['deleted_at']?.toString() ?? '');
+    final expiresAt = DateTime.tryParse(item['expires_at']?.toString() ?? '') ??
+        (deletedAt?.add(const Duration(days: RecycleBinService.retentionDays)));
+    if (expiresAt == null) return tr('Expiry unavailable');
+    final remaining = expiresAt.difference(DateTime.now());
+    if (remaining.isNegative || remaining == Duration.zero) return tr('Expires soon');
+    final days = remaining.inDays;
+    final hours = remaining.inHours % 24;
+    final minutes = remaining.inMinutes % 60;
+    if (days > 0) return '$days ${tr('days')} $hours ${tr('hours')} ${tr('remaining')}';
+    if (hours > 0) return '$hours ${tr('hours')} $minutes ${tr('minutes')} ${tr('remaining')}';
+    return '$minutes ${tr('minutes')} ${tr('remaining')}';
+  }
   Future<void> _load() async {
     try {
       final rows = await RecycleBinService.getItems();
@@ -54,9 +79,10 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
         final item = _items[i];
         final date = DateTime.tryParse(item['deleted_at']?.toString() ?? '');
         return Card(child: ListTile(
+          isThreeLine: true,
           leading: const CircleAvatar(child: Icon(Icons.delete_outline)),
           title: Text(item['entity_title']?.toString() ?? tr('Deleted item'), style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text('${tr(item['entity_type']?.toString() ?? 'Item')} • ${date == null ? '' : DateFormat.yMMMd().add_jm().format(date)}'),
+          subtitle: Text('${tr('Type')}: ${tr(item['entity_type']?.toString() ?? 'Item')}\n${tr('Deleted')}: ${date == null ? tr('Unknown date') : DateFormat.yMMMd().add_jm().format(date)}\n${tr('Auto-delete in')}: ${_remaining(item)}'),
           trailing: PopupMenuButton<String>(onSelected: (v) { if (v == 'restore') _restore(item); if (v == 'delete') _delete(item); },
             itemBuilder: (_) => [PopupMenuItem(value: 'restore', child: Text(tr('Restore'))), PopupMenuItem(value: 'delete', child: Text(tr('Delete permanently')))]),
         ));

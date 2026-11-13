@@ -77,7 +77,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
   List<DropdownMenuItem<int?>> _accountItems() {
     return [
-      const DropdownMenuItem<int?>(
+      DropdownMenuItem<int?>(
         value: null,
         child: Text(appText(context, "No linked account", "No linked account")),
       ),
@@ -229,7 +229,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             autofocus: true,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Contribution Amount',
             ),
           ),
@@ -277,7 +277,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             autofocus: true,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Withdrawal Amount',
             ),
           ),

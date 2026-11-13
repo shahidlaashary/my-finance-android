@@ -76,6 +76,26 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
     }
   }
 
+  static const Map<String, String> _currencyFlags = {
+    'PKR': '🇵🇰',
+    'USD': '🇺🇸',
+    'GBP': '🇬🇧',
+    'EUR': '🇪🇺',
+    'AED': '🇦🇪',
+    'SAR': '🇸🇦',
+    'INR': '🇮🇳',
+  };
+
+  static const Map<String, String> _currencyCountries = {
+    'PKR': 'Pakistan Rupee',
+    'USD': 'United States Dollar',
+    'GBP': 'British Pound',
+    'EUR': 'Euro',
+    'AED': 'UAE Dirham',
+    'SAR': 'Saudi Riyal',
+    'INR': 'Indian Rupee',
+  };
+
   Map<String, double> _parseRates(List<Map<String, dynamic>> rows) {
     final rates = <String, double>{'PKR': 1};
     for (final row in rows) {
@@ -187,24 +207,51 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                 ),
                 const SizedBox(height: 12),
                 Card(
-                  child: Column(
-                    children: _available.map((currency) {
-                      final rate = _rates[currency] ?? 1;
-                      return RadioListTile<String>(
-                        value: currency,
-                        groupValue: _selected,
-                        onChanged: _saving || (currency != 'PKR' && !_rates.containsKey(currency))
-                            ? null
-                            : (value) => setState(() => _selected = value!),
-                        title: Text(currency,
-                            style: const TextStyle(fontWeight: FontWeight.w700)),
-                        subtitle: Text(currency == 'PKR'
-                            ? 'Pakistani Rupee • Default'
-                            : _rates.containsKey(currency)
-                                ? '1 $currency = PKR ${NumberFormat('#,##0.0000').format(rate)}'
-                                : 'Rate unavailable • Internet se update karein'),
-                      );
-                    }).toList(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: DropdownButtonFormField<String>(
+                      value: _selected,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Base Currency',
+                        border: InputBorder.none,
+                      ),
+                      items: _available.map((currency) {
+                        final rate = _rates[currency];
+                        final flag = _currencyFlags[currency] ?? '🌐';
+                        final country = _currencyCountries[currency] ?? currency;
+                        return DropdownMenuItem<String>(
+                          value: currency,
+                          enabled: currency == 'PKR' || rate != null,
+                          child: Row(
+                            children: [
+                              Text(flag, style: const TextStyle(fontSize: 23)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  '$currency — $country',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              if (currency != 'PKR' && rate != null)
+                                Text(
+                                  'PKR ${NumberFormat('#,##0.0000').format(rate)}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: _saving
+                          ? null
+                          : (value) {
+                              if (value != null) setState(() => _selected = value);
+                            },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

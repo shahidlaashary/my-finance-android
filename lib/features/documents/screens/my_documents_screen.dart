@@ -210,6 +210,22 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             }
           }
 
+          Future<void> chooseGallery() async {
+            try {
+              final photos = await imagePicker.pickMultiImage(imageQuality: 90);
+              if (photos.isEmpty) return;
+              setSheetState(() {
+                for (final photo in photos) {
+                  if (!selectedFiles.any((item) => item['path'] == photo.path)) {
+                    selectedFiles.add({'path': photo.path, 'name': photo.name});
+                  }
+                }
+              });
+            } catch (error) {
+              _message('Gallery error: $error');
+            }
+          }
+
           Future<DateTime?> pickDate(DateTime? initial) async {
             return showDatePicker(
               context: context,
@@ -372,6 +388,11 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                                 onPressed: takePhoto,
                                 icon: const Icon(Icons.camera_alt_outlined),
                                 label: Text(appText(context, 'Scan / Camera', 'اسکین / کیمرہ')),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: chooseGallery,
+                                icon: const Icon(Icons.photo_library_outlined),
+                                label: Text(appText(context, 'Gallery', 'Gallery')),
                               ),
                             ],
                           ),
@@ -643,6 +664,65 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         icon: const Icon(Icons.add_rounded),
         label: Text(appText(context, 'Add Document', 'دستاویز شامل کریں')),
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 58,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: const Color(0xFFE5EBE7))),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: .035),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            children: [
+              ...['All', 'Favorites', 'Expiring Soon', 'Expired'].map((filter) {
+                final selected = _filter == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(filter),
+                    selected: selected,
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onSelected: (_) {
+                      setState(() => _filter = filter);
+                      _loadDocuments();
+                    },
+                  ),
+                );
+              }),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 7),
+                child: Container(width: 1, color: const Color(0xFFDDE5E0)),
+              ),
+              ...['All', ..._categories].map((category) {
+                final selected = _category == category;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: selected,
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onSelected: (_) {
+                      setState(() => _category = category);
+                      _loadDocuments();
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
       body: Column(
         children: [
           Padding(
@@ -673,48 +753,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             ),
           ),
           SizedBox(height: 10),
-          SizedBox(
-            height: 42,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: ['All', 'Favorites', 'Expiring Soon', 'Expired'].map((filter) {
-                final selected = _filter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(filter),
-                    selected: selected,
-                    onSelected: (_) {
-                      setState(() => _filter = filter);
-                      _loadDocuments();
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          SizedBox(
-            height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              children: ['All', ..._categories].map((category) {
-                final selected = _category == category;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(category),
-                    selected: selected,
-                    onSelected: (_) {
-                      setState(() => _category = category);
-                      _loadDocuments();
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+
           Expanded(
             child: _loading
                 ? Center(child: CircularProgressIndicator())

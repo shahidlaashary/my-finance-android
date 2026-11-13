@@ -81,7 +81,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(appText(context, 'General App Preferences', 'ایپ کی عمومی ترجیحات'))),
-      body: _loading ? const Center(child: CircularProgressIndicator()) : ListView(
+      body: _loading ? Center(child: CircularProgressIndicator()) : ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _choice('Date Format', 'Choose how dates appear', Icons.calendar_month, _dateFormat,
@@ -100,12 +100,12 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
             (v) { setState(() => _hideBalances=v); _save(() => _preferences.setHideBalances(v)); }),
           _toggle('Haptic Feedback', 'Vibration feedback for supported actions', Icons.vibration, _hapticFeedback,
             (v) { setState(() => _hapticFeedback=v); _save(() => _preferences.setHapticFeedback(v)); }),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () async { await _preferences.reset(); await _load(); },
             icon: const Icon(Icons.restart_alt), label: Text(appText(context, 'Reset Preferences', 'ترجیحات بحال کریں')),
           ),
-          const Padding(padding: EdgeInsets.only(top: 8), child: Text(
+          Padding(padding: EdgeInsets.only(top: 8), child: Text(
             'Resetting preferences does not delete wallets, transactions, or other financial records.',
             textAlign: TextAlign.center, style: TextStyle(fontSize: 12),
           )),

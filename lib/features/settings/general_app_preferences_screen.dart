@@ -51,7 +51,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   Future<void> _save(Future<void> Function() action) async {
     await action();
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Preference saved')),
+      SnackBar(content: Text(appText(context, "Preference saved", "Preference saved"))),
     );
   }
 
@@ -105,8 +105,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
             onPressed: () async { await _preferences.reset(); await _load(); },
             icon: const Icon(Icons.restart_alt), label: Text(appText(context, 'Reset Preferences', 'ترجیحات بحال کریں')),
           ),
-          Padding(padding: EdgeInsets.only(top: 8), child: Text(
-            'Resetting preferences does not delete wallets, transactions, or other financial records.',
+          Padding(padding: EdgeInsets.only(top: 8), child: Text(appText(context, "Resetting preferences does not delete wallets, transactions, or other financial records.", "Resetting preferences does not delete wallets, transactions, or other financial records."),
             textAlign: TextAlign.center, style: TextStyle(fontSize: 12),
           )),
         ],

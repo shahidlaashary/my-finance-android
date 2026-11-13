@@ -728,8 +728,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               Text(appText(context, "Repaid: ", "Repaid: ")
                                 '${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}',
                               ),
-                              Text(appText(context, "Remaining: ", "Remaining: ")
-                                '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
+                              Text(appText(context, "Remaining: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}", "باقی: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}"),
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               Text('Lending Date: ${loan.lendingDate}'),

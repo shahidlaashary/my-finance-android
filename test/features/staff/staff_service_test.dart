@@ -260,4 +260,102 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test('staff deletion failure removes the temporary archive and preserves staff', () async {
+    final staffId = await StaffService.saveStaff(
+      name: 'Delete Rollback Staff',
+      phone: '',
+      role: '',
+      salary: 0,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+    await FinanceDB.instance.db.execute('''
+      CREATE TRIGGER fail_staff_delete
+      BEFORE DELETE ON staff
+      BEGIN
+        SELECT RAISE(ABORT, 'forced staff delete failure');
+      END
+    ''');
+
+    await expectLater(
+      StaffService.deleteStaff(staffId),
+      throwsA(isA<Exception>()),
+    );
+
+    expect((await StaffService.getStaff()).single['id'], staffId);
+    expect(await RecycleBinService.getItems(), isEmpty);
+  });
+
+  test('staff salary rejects zero negative and non-finite amounts', () async {
+    final staffId = await StaffService.saveStaff(
+      name: 'Invalid Salary Staff',
+      phone: '',
+      role: '',
+      salary: 100,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+    for (final amount in [0.0, -1.0, double.nan, double.infinity]) {
+      await expectLater(
+        StaffService.paySalary(
+          staffId: staffId,
+          amount: amount,
+          walletId: 99999,
+          date: DateTime(2026, 11, 1),
+          note: '',
+        ),
+        throwsA(isA<Exception>()),
+      );
+    }
+    expect(await FinanceDB.instance.db.query('transactions'), isEmpty);
+  });
+
+  test('salary payment rejects a missing wallet without creating records', () async {
+    final staffId = await StaffService.saveStaff(
+      name: 'Missing Wallet Staff',
+      phone: '',
+      role: '',
+      salary: 100,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+
+    await expectLater(
+      StaffService.paySalary(
+        staffId: staffId,
+        amount: 100,
+        walletId: 99999,
+        date: DateTime(2026, 11, 1),
+        note: '',
+      ),
+      throwsA(isA<Exception>()),
+    );
+
+    expect(await FinanceDB.instance.db.query('transactions'), isEmpty);
+    expect(await StaffService.getSalaries(staffId: staffId), isEmpty);
+  });
+
+  test('attendance rejects an unsupported status', () async {
+    final staffId = await StaffService.saveStaff(
+      name: 'Invalid Attendance Staff',
+      phone: '',
+      role: '',
+      salary: 0,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+
+    await expectLater(
+      StaffService.saveAttendance(
+        staffId: staffId,
+        date: DateTime(2026, 11, 13),
+        status: 'Holiday',
+        note: '',
+      ),
+      throwsA(isA<Exception>()),
+    );
+    expect(await StaffService.getAttendance(staffId: staffId), isEmpty);
+  });
+
 }

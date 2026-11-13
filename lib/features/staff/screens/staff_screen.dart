@@ -53,7 +53,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true,
       backgroundColor: Colors.transparent, builder: (sheet) => StatefulBuilder(builder: (context, refresh) {
         return Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Container(height: MediaQuery.of(context).size.height * .88,
+          child: Container(height: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * .88,
             decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
             child: Column(children: [
               const SizedBox(height: 12), Container(width: 42, height: 4, decoration: BoxDecoration(color: AppColors.muted.withOpacity(.4), borderRadius: BorderRadius.circular(8))),
@@ -92,7 +92,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     final key = GlobalKey<FormState>();
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: Colors.transparent,
       builder: (sheet) => StatefulBuilder(builder: (context, refresh) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(height: MediaQuery.of(context).size.height * .82, padding: const EdgeInsets.all(18),
+        child: Container(height: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * .82, padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
           child: Form(key: key, child: ListView(children: [
             Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: AppColors.muted.withOpacity(.4), borderRadius: BorderRadius.circular(8)))),
@@ -115,7 +115,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     final note = TextEditingController();
     await showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: Colors.transparent,
       builder: (sheet) => StatefulBuilder(builder: (context, refresh) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(height: MediaQuery.of(context).size.height * .72, padding: const EdgeInsets.all(18),
+        child: Container(height: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * .72, padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
           child: ListView(children: [
             Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: AppColors.muted.withOpacity(.4), borderRadius: BorderRadius.circular(8)))),

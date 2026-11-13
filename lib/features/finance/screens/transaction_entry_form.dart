@@ -511,7 +511,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
     if (selectedWalletId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(appText(context, "Wallet select karein.", "Wallet select karein."))),
+        SnackBar(content: Text(appText(context, "Select a wallet.", "والٹ منتخب کریں۔"))),
       );
       return;
     }
@@ -524,7 +524,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         transferFee = double.tryParse(transferFeeController.text.trim()) ?? 0;
         if (!transferFee.isFinite || transferFee <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(appText(context, "Valid transfer fee enter karein.", "Valid transfer fee enter karein."))),
+            SnackBar(content: Text(appText(context, "Enter a valid transfer fee.", "منتقلی کی درست فیس درج کریں۔"))),
           );
           return;
         }
@@ -532,7 +532,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       if (selectedDestinationWalletId == null ||
           selectedDestinationWalletId == selectedWalletId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(appText(context, "Different destination wallet select karein.", "Different destination wallet select karein."))),
+          SnackBar(content: Text(appText(context, "Select a different destination wallet.", "منزل کے لیے دوسرا والٹ منتخب کریں۔"))),
         );
         return;
       }
@@ -544,7 +544,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         destinationAmount = double.tryParse(destinationAmountController.text.trim());
         if (destinationAmount == null || destinationAmount <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(appText(context, "Destination amount enter karein.", "Destination amount enter karein."))),
+            SnackBar(content: Text(appText(context, "Enter a destination amount.", "منزل کی رقم درج کریں۔"))),
           );
           return;
         }
@@ -639,7 +639,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       return Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text(appText(context, "Pehle ek wallet add karein.", "Pehle ek wallet add karein.")),
+          child: Text(appText(context, "Add a wallet first.", "پہلے ایک والٹ شامل کریں۔")),
         ),
       );
     }

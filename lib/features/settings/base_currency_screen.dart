@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 
 class BaseCurrencyScreen extends StatefulWidget {
   const BaseCurrencyScreen({super.key});
@@ -19,11 +20,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   bool _saving = false;
   String _selected = 'PKR';
   // International currencies supported by the live PKR-based rate provider.
-  static const List<String> _available = [
-    'AED', 'AUD', 'BHD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'HKD',
-    'IDR', 'INR', 'JPY', 'KRW', 'KWD', 'MYR', 'NZD', 'OMR', 'PKR',
-    'QAR', 'SAR', 'SGD', 'THB', 'TRY', 'USD', 'ZAR',
-  ];
+  static const List<String> _available = CurrencyCatalog.supported;
   Map<String, double> _rates = {};
 
   @override

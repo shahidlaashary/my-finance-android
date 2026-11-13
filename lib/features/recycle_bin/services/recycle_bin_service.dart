@@ -89,13 +89,13 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      const allowed = {'wallets','budgets','recurring_transactions','stock_items'};
+      const allowed = {'wallets','budgets','recurring_transactions','stock_items','staff'};
       if (!allowed.contains(table)) throw Exception('Restore for this record type is not available yet.');
       await txn.insert(table, record);
       final rawRelated = item['related_payload']?.toString();
       if (rawRelated != null && rawRelated.isNotEmpty) {
         final related = (jsonDecode(rawRelated) as List).whereType<Map>();
-        final relatedTable = table == 'stock_items' ? 'stock_movements' : null;
+        final relatedTable = table == 'stock_items' ? 'stock_movements' : table == 'staff' ? 'staff_attendance' : null;
         if (relatedTable != null) {
           for (final row in related) {
             await txn.insert(relatedTable, Map<String, dynamic>.from(row));

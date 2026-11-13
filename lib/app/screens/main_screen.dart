@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
@@ -107,25 +108,25 @@ class _MainScreenState extends State<MainScreen> {
                   index: 0,
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
-                  label: isUrdu ? 'ہوم' : 'Home',
+                  label: appText(context, 'Home', 'ہوم'),
                 ),
                 _navItem(
                   index: 1,
                   icon: Icons.real_estate_agent_outlined,
                   activeIcon: Icons.real_estate_agent_rounded,
-                  label: isUrdu ? 'اثاثے' : 'Assets',
+                  label: appText(context, 'Assets', 'اثاثے'),
                 ),
                 _navItem(
                   index: 2,
                   icon: Icons.account_balance_wallet_outlined,
                   activeIcon: Icons.account_balance_wallet_rounded,
-                  label: isUrdu ? 'بجٹ' : 'Budgets',
+                  label: appText(context, 'Budgets', 'بجٹ'),
                 ),
                 _navItem(
                   index: 3,
                   icon: Icons.flag_outlined,
                   activeIcon: Icons.flag_rounded,
-                  label: isUrdu ? 'اہداف' : 'Goals',
+                  label: appText(context, 'Goals', 'اہداف'),
                 ),
 
                 // Darmiyan ka Plus: sirf icon, koi text label nahi.
@@ -163,25 +164,25 @@ class _MainScreenState extends State<MainScreen> {
                   index: 4,
                   icon: Icons.handshake_outlined,
                   activeIcon: Icons.handshake_rounded,
-                  label: isUrdu ? 'قرضے' : 'Loans',
+                  label: appText(context, 'Loans', 'قرضے'),
                 ),
                 _navItem(
                   index: 5,
                   icon: Icons.bar_chart_outlined,
                   activeIcon: Icons.bar_chart_rounded,
-                  label: isUrdu ? 'اعدادوشمار' : 'Stats',
+                  label: appText(context, 'Stats', 'اعدادوشمار'),
                 ),
                 _navItem(
                   index: 6,
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long_rounded,
-                  label: isUrdu ? 'لین دین' : 'Txns',
+                  label: appText(context, 'Txns', 'لین دین'),
                 ),
                 _navItem(
                   index: 7,
                   icon: Icons.account_balance_outlined,
                   activeIcon: Icons.account_balance_rounded,
-                  label: isUrdu ? 'والٹس' : 'Wallets',
+                  label: appText(context, 'Wallets', 'والٹس'),
                 ),
               ],
             ),
@@ -319,7 +320,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     children: [
                       Expanded(
                         child: Text(
-                          isUrdu ? 'نیا لین دین شامل کریں' : 'Add New Transaction',
+                          appText(context, 'Add New Transaction', 'نیا لین دین شامل کریں'),
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -341,22 +342,22 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   child: Row(
                     children: [
                       _transactionTab(
-                        title: isUrdu ? 'آمدنی' : 'Income',
-                        subtitle: isUrdu ? 'وصول شدہ رقم' : 'Money received',
+                        title: appText(context, 'Income', 'آمدنی'),
+                        subtitle: appText(context, 'Money received', 'وصول شدہ رقم'),
                         icon: Icons.south_west_rounded,
                         color: AppColors.income,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
-                        title: isUrdu ? 'اخراجات' : 'Expense',
-                        subtitle: isUrdu ? 'خرچ کی گئی رقم' : 'Money spent',
+                        title: appText(context, 'Expense', 'اخراجات'),
+                        subtitle: appText(context, 'Money spent', 'خرچ کی گئی رقم'),
                         icon: Icons.north_east_rounded,
                         color: AppColors.expense,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
-                        title: isUrdu ? 'منتقلی' : 'Transfer',
-                        subtitle: isUrdu ? 'والٹس کے درمیان' : 'Between wallets',
+                        title: appText(context, 'Transfer', 'منتقلی'),
+                        subtitle: appText(context, 'Between wallets', 'والٹس کے درمیان'),
                         icon: Icons.swap_horiz_rounded,
                         color: AppColors.primary,
                       ),

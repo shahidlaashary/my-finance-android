@@ -13,6 +13,8 @@ class LanguageSettingsScreen extends StatelessWidget {
     _LanguageOption('pa', 'پنجابی', 'Punjabi (Shahmukhi)', '🇵🇰', true),
     _LanguageOption('skr', 'سرائیکی', 'Saraiki', '🇵🇰', true),
     _LanguageOption('sd', 'سنڌي', 'Sindhi', '🇵🇰', true),
+    _LanguageOption('bal', 'بلوچی', 'Balochi', '🇵🇰', true),
+    _LanguageOption('ps', 'پښتو', 'Pashto', '🇵🇰', true),
   ];
 
   Future<void> _select(BuildContext context, String code) async {
@@ -42,6 +44,8 @@ class LanguageSettingsScreen extends StatelessWidget {
       case 'pa': return 'زبان پنجابی وچ تبدیل کر دتی گئی اے';
       case 'skr': return 'ٻولي سرائيڪي ۾ تبديل ڪئي وئي';
       case 'sd': return 'ٻولي سنڌي ۾ تبديل ڪئي وئي';
+      case 'bal': return 'زبان بلوچیءَ میں تبدیل کرتگ بوت';
+      case 'ps': return 'ژبه پښتو ته بدله شوه';
       default: return 'Language changed to $name';
     }
   }
@@ -52,7 +56,7 @@ class LanguageSettingsScreen extends StatelessWidget {
       valueListenable: LanguageSettingsService.instance.locale,
       builder: (context, selectedLocale, _) {
         final isUrdu = selectedLocale.languageCode == 'ur';
-        final isRtl = const {'ur', 'ar', 'pa', 'skr', 'sd'}
+        final isRtl = const {'ur', 'ar', 'pa', 'skr', 'sd', 'bal', 'ps'}
             .contains(selectedLocale.languageCode);
         return Scaffold(
           appBar: AppBar(

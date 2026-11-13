@@ -317,7 +317,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
                   child: Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           isUrdu ? 'نیا لین دین شامل کریں' : 'Add New Transaction',
                           style: TextStyle(

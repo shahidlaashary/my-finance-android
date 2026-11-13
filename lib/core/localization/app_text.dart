@@ -47,6 +47,14 @@ const Map<String, String> _urduTranslations = {
   "Choose your main currency": "اپنی بنیادی کرنسی منتخب کریں",
   "Saving...": "محفوظ ہو رہا ہے...",
   "Save Base Currency": "بنیادی کرنسی محفوظ کریں",
+  "Debt Payoff Planner": "قرض ادائیگی منصوبہ",
+  "Exchange Rates": "زرِ مبادلہ کی شرحیں",
+  "My Documents": "میرے کاغذات",
+  "Recurring Transactions": "بار بار ہونے والے لین دین",
+  "Stock Manager": "اسٹاک مینیجر",
+  "Vehicle Manager": "گاڑیوں کا انتظام",
+  "Settings": "ترتیبات",
+  "More Features": "مزید خصوصیات",
 };
 
 const Map<String, Map<String, String>> _translations = {
@@ -313,6 +321,7 @@ const Map<String, Map<String, String>> _translations = {
     "30 seconds": "30 ثانية",
     "1 minute": "دقيقة واحدة",
     "5 minutes": "5 دقائق",
+    "Debt Payoff Planner": "مخطط سداد الديون",
   },
   'hi': {
     'Assets': 'संपत्तियाँ',
@@ -575,6 +584,7 @@ const Map<String, Map<String, String>> _translations = {
     "30 seconds": "30 सेकंड",
     "1 minute": "1 मिनट",
     "5 minutes": "5 मिनट",
+    "Debt Payoff Planner": "ऋण चुकौती योजनाकार",
   },
   'pa': {
     'Assets': 'اثاثے',
@@ -837,6 +847,7 @@ const Map<String, Map<String, String>> _translations = {
     "30 seconds": "30 سیکنڈ",
     "1 minute": "1 منٹ",
     "5 minutes": "5 منٹ",
+    "Debt Payoff Planner": "قرض مکاؤ منصوبہ",
   },
   'skr': {
     'Assets': 'اثاثے',
@@ -1099,6 +1110,7 @@ const Map<String, Map<String, String>> _translations = {
     "30 seconds": "30 سیکنڈ",
     "1 minute": "1 منٹ",
     "5 minutes": "5 منٹ",
+    "Debt Payoff Planner": "قرض مکاؤ منصوبہ",
   },
   'sd': {
     'Assets': 'اثاثا',
@@ -1361,6 +1373,7 @@ const Map<String, Map<String, String>> _translations = {
     "30 seconds": "30 سيڪنڊ",
     "1 minute": "1 منٽ",
     "5 minutes": "5 منٽ",
+    "Debt Payoff Planner": "قرض جي ادائيگي جو منصوبو",
   },
 };
 

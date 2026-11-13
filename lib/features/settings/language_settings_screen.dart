@@ -55,7 +55,7 @@ class LanguageSettingsScreen extends StatelessWidget {
             .contains(selectedLocale.languageCode);
         return Scaffold(
           appBar: AppBar(
-            title: Text(isUrdu ? 'زبانیں' : 'Languages'),
+            title: Text(appText(context, 'Languages', 'زبانیں')),
           ),
           body: ListView(
             padding: const EdgeInsets.all(16),

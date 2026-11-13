@@ -22,27 +22,36 @@ class MyFinanceApp extends StatelessWidget {
     return ValueListenableBuilder<Locale>(
       valueListenable: LanguageSettingsService.instance.locale,
       builder: (context, locale, _) => ValueListenableBuilder<AppThemePreset>(
-      valueListenable: AppearanceSettingsService.instance.themePreset,
-      builder: (context, preset, _) {
-        return MaterialApp(
-          title: 'My Finance',
-          locale: locale,
-          supportedLocales: const [Locale('en'), Locale('ur')],
-          localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.forPreset(
-            preset,
-            fontFamily: locale.languageCode == 'ur'
-                ? 'JameelNooriNastaleeq'
-                : null,
-          ),
-          themeMode: ThemeMode.light,
-          routes: routes,
-          builder: (context, child) =>
-              AppLockGate(child: child ?? const SizedBox.shrink()),
-          home: home,
-        );
-      },
-    ));
+        valueListenable: AppearanceSettingsService.instance.themePreset,
+        builder: (context, preset, _) {
+          final isUrduScript = const {'ur', 'pa', 'skr', 'sd'}
+              .contains(locale.languageCode);
+          return MaterialApp(
+            title: 'My Finance',
+            locale: locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ur'),
+              Locale('ar'),
+              Locale('hi'),
+              Locale.fromSubtags(languageCode: 'pa', scriptCode: 'Arab'),
+              Locale('skr'),
+              Locale('sd'),
+            ],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.forPreset(
+              preset,
+              fontFamily: isUrduScript ? 'JameelNooriNastaleeq' : null,
+            ),
+            themeMode: ThemeMode.light,
+            routes: routes,
+            builder: (context, child) =>
+                AppLockGate(child: child ?? const SizedBox.shrink()),
+            home: home,
+          );
+        },
+      ),
+    );
   }
 }

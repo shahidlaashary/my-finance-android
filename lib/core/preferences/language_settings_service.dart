@@ -8,12 +8,12 @@ class LanguageSettingsService {
 
   static const _key = 'app_language_code';
   static const supportedLanguageCodes = <String>{
-    'en', 'ur', 'ar', 'hi', 'pa', 'skr', 'sd',
+    'en', 'ur', 'ar', 'hi', 'pa', 'skr', 'sd', 'bal', 'ps',
   };
 
   final ValueNotifier<Locale> locale = ValueNotifier<Locale>(const Locale('en'));
 
-  bool get isRightToLeft => const {'ur', 'ar', 'pa', 'skr', 'sd'}
+  bool get isRightToLeft => const {'ur', 'ar', 'pa', 'skr', 'sd', 'bal', 'ps'}
       .contains(locale.value.languageCode);
 
   Future<void> load() async {

@@ -201,7 +201,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     DropdownButtonFormField<int>(
                       value: walletId,
                       isExpanded: true,
@@ -227,7 +227,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       },
                     ),
                     if (type == 'transfer') ...[
-                      const SizedBox(height: 14),
+                      SizedBox(height: 14),
                       DropdownButtonFormField<int>(
                         value: toWalletId,
                         isExpanded: true,
@@ -251,7 +251,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       ),
                     ],
                     if (type != 'transfer') ...[
-                      const SizedBox(height: 14),
+                      SizedBox(height: 14),
                       DropdownButtonFormField<String?>(
                         value: categories.any(
                           (c) => c.name == category,
@@ -284,7 +284,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         },
                       ),
                     ],
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     TextField(
                       controller: noteController,
                       decoration: const InputDecoration(
@@ -292,7 +292,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(appText(context, 'Transaction Date', 'لین دین کی تاریخ')),
@@ -454,9 +454,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         actions: buildSharedAppBarActions(context),
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : transactions.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

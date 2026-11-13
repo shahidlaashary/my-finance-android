@@ -12,9 +12,19 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
   void _msg(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _qty(double n)=>n==n.roundToDouble()?n.toStringAsFixed(0):n.toStringAsFixed(2);
   Future<void> _edit([StockItem? item]) async {
-    final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => StockItemFormScreen(item: item),
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.94,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(22),
+          ),
+          child: StockItemFormScreen(item: item),
+        ),
       ),
     );
     if (saved == true && mounted) {
@@ -208,6 +218,7 @@ class _StockItemFormScreenState extends State<StockItemFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
           _isEditing ? 'Edit Stock Item' : 'Add Stock Item',
@@ -217,8 +228,10 @@ class _StockItemFormScreenState extends State<StockItemFormScreen> {
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
+          primary: false,
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
+          physics: const ClampingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

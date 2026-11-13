@@ -40,6 +40,37 @@ class RecycleBinService {
       final item = rows.first;
       final table = item['source_table'].toString();
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'loans') {
+        await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, borrower_name TEXT NOT NULL,
+          borrower_phone TEXT, amount REAL NOT NULL, remaining_amount REAL NOT NULL,
+          wallet_id INTEGER NOT NULL, lending_date TEXT NOT NULL, due_date TEXT,
+          notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL)''');
+        await txn.execute('''CREATE TABLE IF NOT EXISTS loan_repayments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, loan_id INTEGER NOT NULL,
+          amount REAL NOT NULL, wallet_id INTEGER NOT NULL, repayment_date TEXT NOT NULL,
+          payment_method TEXT NOT NULL DEFAULT 'cash', notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, FOREIGN KEY(loan_id) REFERENCES loans(id) ON DELETE CASCADE)''');
+        final relatedRaw = item['related_payload']?.toString() ?? '[]';
+        final repayments = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        for (final repayment in repayments) {
+          final walletId = (repayment['wallet_id'] as num).toInt();
+          final exists = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+          if (exists.isEmpty) throw Exception('A repayment wallet no longer exists.');
+          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [(repayment['amount'] as num).toDouble(), walletId]);
+        }
+        final loanWallet = (record['wallet_id'] as num).toInt();
+        final loanAmount = (record['amount'] as num).toDouble();
+        final source = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [loanWallet], limit: 1);
+        if (source.isEmpty) throw Exception('The loan wallet no longer exists.');
+        if ((source.first['balance'] as num).toDouble() < loanAmount) throw Exception('Insufficient wallet balance to restore this loan.');
+        await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [loanAmount, loanWallet]);
+        await txn.insert('loans', record);
+        for (final repayment in repayments) { await txn.insert('loan_repayments', repayment); }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'goals') {
         await txn.execute('''CREATE TABLE IF NOT EXISTS goals (
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,

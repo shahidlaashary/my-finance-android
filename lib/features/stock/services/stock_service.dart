@@ -51,12 +51,12 @@ class StockService {
   static Future<int> saveItem(StockItem item) async {
     await _ensureTables();
     if(item.name.trim().isEmpty) throw Exception('Item name is required.');
-    if(!item.quantity.isFinite||item.quantity<0||!item.lowStockAt.isFinite||item.lowStockAt<0||item.purchasePrice<0||item.salePrice<0) throw Exception('Enter valid stock values.');
+    if(!item.quantity.isFinite||item.quantity<0||!item.lowStockAt.isFinite||item.lowStockAt<0||!item.purchasePrice.isFinite||item.purchasePrice<0||!item.salePrice.isFinite||item.salePrice<0) throw Exception('Enter valid stock values.');
     final values={'name':item.name.trim(),'sku':item.sku.trim(),'category':item.category.trim().isEmpty?'General':item.category.trim(),'unit':item.unit.trim().isEmpty?'pcs':item.unit.trim(),'quantity':item.quantity,'low_stock_at':item.lowStockAt,'purchase_price':item.purchasePrice,'sale_price':item.salePrice,'notes':item.notes.trim()};
     final db=FinanceDB.instance.db;
     int id;
     if(item.id==null){id=await db.insert('stock_items',{...values,'created_at':DateTime.now().toIso8601String()});}
-    else {await db.update('stock_items',values,where:'id=?',whereArgs:[item.id]);id=item.id!;}
+    else {final editable=Map<String,dynamic>.from(values)..remove('quantity');await db.update('stock_items',editable,where:'id=?',whereArgs:[item.id]);id=item.id!;}
     AppRefreshController.notifyChanged(); return id;
   }
   static Future<void> adjustStock({required int itemId,required String type,required double quantity,required double unitPrice,required String date,String note=''}) async {

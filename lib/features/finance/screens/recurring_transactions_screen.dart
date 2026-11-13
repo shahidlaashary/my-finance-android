@@ -3,6 +3,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
@@ -179,7 +180,7 @@ class _RecurringTransactionsScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -265,7 +266,7 @@ class _RecurringTransactionsScreenState
             FilledButton.icon(
               onPressed: () => _openForm(),
               icon: const Icon(Icons.add),
-              label: const Text('Add Schedule'),
+              label: Text(appText(context, 'Add Schedule', 'شیڈول شامل کریں')),
             ),
           ],
         ),
@@ -470,7 +471,7 @@ class _RecurringTransactionsScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recurring Transactions'),
+        title: Text(appText(context, 'Recurring Transactions', 'بار بار ہونے والے لین دین')),
         actions: [
           IconButton(
             tooltip: 'Process Due Transactions',
@@ -482,7 +483,7 @@ class _RecurringTransactionsScreenState
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add),
-        label: const Text('Add Schedule'),
+        label: Text(appText(context, 'Add Schedule', 'شیڈول شامل کریں')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -825,14 +826,14 @@ class _RecurringTransactionDialogState
             ]),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: DropdownButtonFormField<String>(value: categories.any((item) => item['name'] == _category) ? _category : null, isExpanded: true, decoration: _decoration('Category', icon: Icons.category_outlined), hint: const Text('Optional'), items: categories.map((item) => DropdownMenuItem<String>(value: item['name'].toString(), child: Text(item['name'].toString(), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _category = value))),
+              Expanded(child: DropdownButtonFormField<String>(value: categories.any((item) => item['name'] == _category) ? _category : null, isExpanded: true, decoration: _decoration('Category', icon: Icons.category_outlined), hint: Text(appText(context, 'Optional', 'اختیاری')), items: categories.map((item) => DropdownMenuItem<String>(value: item['name'].toString(), child: Text(item['name'].toString(), overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _category = value))),
               const SizedBox(width: 10),
               Expanded(child: TextFormField(controller: _noteController, decoration: _decoration('Notes (Optional)', icon: Icons.notes_rounded))),
             ]),
           ],
           if (_isTransfer) ...[const SizedBox(height: 12), TextFormField(controller: _noteController, maxLines: 2, decoration: _decoration('Notes (Optional)', icon: Icons.notes_rounded))],
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(value: _frequency, isExpanded: true, decoration: _decoration('Repeat Schedule', icon: Icons.repeat_rounded), items: const [DropdownMenuItem(value: 'daily', child: Text('Daily')), DropdownMenuItem(value: 'weekly', child: Text('Weekly')), DropdownMenuItem(value: 'monthly', child: Text('Monthly')), DropdownMenuItem(value: 'yearly', child: Text('Yearly'))], onChanged: (value) { if (value != null) setState(() => _frequency = value); }),
+          DropdownButtonFormField<String>(value: _frequency, isExpanded: true, decoration: _decoration('Repeat Schedule', icon: Icons.repeat_rounded), items: const [DropdownMenuItem(value: 'daily', child: Text(appText(context, 'Daily', 'روزانہ'))), DropdownMenuItem(value: 'weekly', child: Text(appText(context, 'Weekly', 'ہفتہ وار'))), DropdownMenuItem(value: 'monthly', child: Text(appText(context, 'Monthly', 'ماہانہ'))), DropdownMenuItem(value: 'yearly', child: Text(appText(context, 'Yearly', 'سالانہ')))], onChanged: (value) { if (value != null) setState(() => _frequency = value); }),
           const SizedBox(height: 12),
           Row(children: [
             Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: false), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('Start Date', icon: Icons.calendar_month_outlined), child: Text(_formatDate(_startDate))))),
@@ -841,7 +842,7 @@ class _RecurringTransactionDialogState
           ]),
         ])))),
         Padding(padding: EdgeInsets.fromLTRB(18, 10, 18, 14 + MediaQuery.of(context).padding.bottom), child: Row(children: [
-          Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context, false), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: const Text('Cancel'))),
+          Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context, false), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
           const SizedBox(width: 12),
           Expanded(child: FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)), child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(widget.existing == null ? 'Save Schedule' : 'Update Schedule'))),
         ])),

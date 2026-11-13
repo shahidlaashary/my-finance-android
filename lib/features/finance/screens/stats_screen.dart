@@ -466,6 +466,49 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
+  Widget _buildIncomeExpenseDonut() {
+    final income = (_totals['income'] ?? 0).clamp(0.0, double.infinity).toDouble();
+    final expense = (_totals['expense'] ?? 0).clamp(0.0, double.infinity).toDouble();
+    final total = income + expense;
+    return Row(children: [
+      SizedBox(width: 142, height: 142, child: CustomPaint(
+        painter: _DonutChartPainter(values: [income, expense], colors: const [Color(0xFF20B987), Color(0xFFE45D67)]),
+        child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(total > 0 ? '100%' : '0%', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          const Text('Total', style: TextStyle(fontSize: 11, color: Colors.black54)),
+        ])),
+      )),
+      const SizedBox(width: 18),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _chartLegend(const Color(0xFF20B987), 'Income'),
+        const SizedBox(height: 10),
+        Text('$_currency ${_money(income)}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 14),
+        _chartLegend(const Color(0xFFE45D67), 'Expenses'),
+        const SizedBox(height: 10),
+        Text('$_currency ${_money(expense)}', style: const TextStyle(fontWeight: FontWeight.w800)),
+      ])),
+    ]);
+  }
+
+  Widget _buildCashFlowWave() {
+    if (_trend.isEmpty) return const Text('Add transactions to see your cash-flow wave.');
+    final points = _trend.map((row) => (
+      (row['income'] as num?)?.toDouble() ?? 0,
+      (row['expense'] as num?)?.toDouble() ?? 0,
+    )).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(height: 150, width: double.infinity, child: CustomPaint(
+        painter: _CashFlowWavePainter(points: points),
+      )),
+      const SizedBox(height: 8),
+      Wrap(spacing: 16, children: [
+        _chartLegend(const Color(0xFF20B987), 'Income wave'),
+        _chartLegend(const Color(0xFFE45D67), 'Expense wave'),
+      ]),
+    ]);
+  }
+
   Widget _buildBalances() {
     if (_balances.isEmpty) {
       return Text(appText(context, "Create a wallet to see account balances here.", "Create a wallet to see account balances here."), style: TextStyle(color: Colors.black54));
@@ -670,6 +713,16 @@ class _StatsScreenState extends State<StatsScreen> {
                       ]))),
                       const SizedBox(height: 14),
                       Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        _sectionTitle('Income vs Expenses', subtitle: 'Circle breakdown'),
+                        _buildIncomeExpenseDonut(),
+                      ]))),
+                      const SizedBox(height: 14),
+                      Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        _sectionTitle('Cash Flow Waves', subtitle: 'Last 6 months'),
+                        _buildCashFlowWave(),
+                      ]))),
+                      const SizedBox(height: 14),
+                      Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         _sectionTitle('Expense by Category', subtitle: _period),
                         _buildCategories(),
                       ]))),
@@ -723,4 +776,43 @@ class _DonutChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
     return oldDelegate.values != values || oldDelegate.colors != colors;
   }
+}
+
+class _CashFlowWavePainter extends CustomPainter {
+  final List<(double, double)> points;
+  const _CashFlowWavePainter({required this.points});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+    final maxValue = points.fold<double>(0, (m, p) => math.max(m, math.max(p.$1, p.$2)));
+    if (maxValue <= 0) return;
+    final dx = points.length <= 1 ? size.width : size.width / (points.length - 1);
+    Path makePath(bool income) {
+      final path = Path();
+      for (var i = 0; i < points.length; i++) {
+        final value = income ? points[i].$1 : points[i].$2;
+        final y = size.height - (value / maxValue * (size.height * 0.82)) - 5;
+        final x = i * dx;
+        if (i == 0) { path.moveTo(x, y); }
+        else {
+          final previousValue = income ? points[i - 1].$1 : points[i - 1].$2;
+          final py = size.height - (previousValue / maxValue * (size.height * 0.82)) - 5;
+          final mid = (x + (i - 1) * dx) / 2;
+          path.cubicTo(mid, py, mid, y, x, y);
+        }
+      }
+      return path;
+    }
+    final grid = Paint()..color = const Color(0xFFE9EFEB)..strokeWidth = 1;
+    for (var i = 1; i <= 3; i++) {
+      final y = size.height * i / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
+    }
+    canvas.drawPath(makePath(true), Paint()..color = const Color(0xFF20B987)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+    canvas.drawPath(makePath(false), Paint()..color = const Color(0xFFE45D67)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CashFlowWavePainter oldDelegate) => oldDelegate.points != points;
 }

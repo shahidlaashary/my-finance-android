@@ -718,14 +718,14 @@ class _RecurringTransactionDialogState
     }
 
     if (_endDate != null && _endDate!.isBefore(_startDate)) {
-      _message('End date cannot be before start date.');
+      _message(appText(context, 'End date cannot be before start date.', 'اختتامی تاریخ، آغاز کی تاریخ سے پہلے نہیں ہو سکتی۔'));
       return;
     }
 
     final amount = double.tryParse(_amountController.text.trim());
 
     if (amount == null || amount <= 0) {
-      _message('Please enter a valid amount.');
+      _message(appText(context, 'Please enter a valid amount.', 'براہ کرم درست رقم درج کریں۔'));
       return;
     }
 
@@ -802,7 +802,7 @@ class _RecurringTransactionDialogState
         Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 18, 18, 20), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           SegmentedButton<String>(segments: [ButtonSegment(value: 'income', label: Text(appText(context, "Income", "Income"))), ButtonSegment(value: 'expense', label: Text(appText(context, "Expense", "Expense"))), ButtonSegment(value: 'transfer', label: Text(appText(context, "Transfer", "Transfer")))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
           SizedBox(height: 14),
-          TextFormField(controller: _titleController, decoration: _decoration('Schedule Title', icon: Icons.title), validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title.' : null),
+          TextFormField(controller: _titleController, decoration: _decoration('Schedule Title', icon: Icons.title), validator: (value) => value == null || value.trim().isEmpty ? appText(context, 'Please enter a title.', 'براہ کرم عنوان درج کریں۔') : null),
           SizedBox(height: 12),
           if (_isTransfer) ...[
             Row(children: [

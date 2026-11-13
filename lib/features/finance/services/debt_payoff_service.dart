@@ -128,9 +128,20 @@ class DebtPayoffService {
     if (!debt.originalAmount.isFinite || debt.originalAmount <= 0) throw Exception('Enter a valid debt amount.');
     if (debt.balance < 0 || debt.balance > debt.originalAmount) throw Exception('Invalid outstanding balance.');
     if (debt.annualInterestRate < 0 || debt.minimumPayment < 0) throw Exception('Interest and minimum payment cannot be negative.');
+    final wallets = await db.query('wallets', columns: ['id'], where: 'id=?', whereArgs: [debt.walletId], limit: 1);
+    if (wallets.isEmpty) throw Exception('Linked account was not found.');
+    var balance = debt.balance;
+    if (debt.id != null) {
+      final previous = await db.query('debts', where: 'id=?', whereArgs: [debt.id], limit: 1);
+      if (previous.isEmpty) throw Exception('Debt not found.');
+      final old = DebtRecord.fromMap(previous.first);
+      final alreadyPaid = old.originalAmount - old.balance;
+      if (debt.originalAmount < alreadyPaid) throw Exception('Original amount cannot be less than the amount already paid.');
+      balance = debt.originalAmount - alreadyPaid;
+    }
     final values = {
       'name': debt.name.trim(), 'lender': debt.lender.trim(), 'phone': debt.phone.trim(),
-      'original_amount': debt.originalAmount, 'balance': debt.balance,
+      'original_amount': debt.originalAmount, 'balance': balance,
       'annual_interest_rate': debt.annualInterestRate, 'minimum_payment': debt.minimumPayment,
       'wallet_id': debt.walletId, 'start_date': debt.startDate, 'due_date': debt.dueDate,
       'notes': debt.notes, 'status': debt.balance <= 0 ? 'paid' : 'active',
@@ -157,7 +168,7 @@ class DebtPayoffService {
       if (wallets.isEmpty) throw Exception('Selected account not found.');
       final debtWallets = await txn.query('wallets', columns: ['currency'], where: 'id=?', whereArgs: [debt.walletId], limit: 1);
       final paymentCurrency = (wallets.first['currency']?.toString() ?? 'PKR').toUpperCase();
-      final debtCurrency = (debtWallets.firstOrNull?['currency']?.toString() ?? 'PKR').toUpperCase();
+      final debtCurrency = (debtWallets.isEmpty ? 'PKR' : debtWallets.first['currency']?.toString() ?? 'PKR').toUpperCase();
       if (paymentCurrency != debtCurrency) throw Exception('Payment account must use $debtCurrency.');
       final cash = (wallets.first['balance'] as num).toDouble();
       if (cash < payment.amount) throw Exception('Insufficient account balance.');

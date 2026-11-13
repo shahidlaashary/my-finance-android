@@ -3,17 +3,20 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
+        with:
+          persist-credentials: true
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
@@ -24,58 +27,56 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Create Android project
-        run: flutter create . --platforms=android
-      - name: Configure Android activity for biometric authentication
+      - name: Create Android project only once
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          activities = list(Path("android/app/src/main/kotlin").rglob("MainActivity.kt"))
-          if not activities:
-              raise SystemExit("Generated MainActivity.kt was not found")
-          activity = activities[0]
-          content = activity.read_text()
-          content = content.replace(
-              "import io.flutter.embedding.android.FlutterActivity",
-              "import io.flutter.embedding.android.FlutterFragmentActivity",
-          )
-          content = re.sub(r":\s*FlutterActivity\b", ": FlutterFragmentActivity", content)
-          if not any("class MainActivity" in line and ": FlutterFragmentActivity" in line for line in content.splitlines()):
-              raise SystemExit("MainActivity must extend FlutterFragmentActivity for local_auth")
-          for gradle_file in [Path("android/app/build.gradle.kts"), Path("android/app/build.gradle")]:
-              if gradle_file.exists():
-                  gradle = gradle_file.read_text()
-                  gradle = gradle.replace("minSdk = flutter.minSdkVersion", "minSdk = 23")
-                  gradle = gradle.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 23")
-                  gradle_file.write_text(gradle)
-          if "FlutterFragmentActivity" not in content:
-              raise SystemExit("Could not configure FlutterFragmentActivity for local_auth")
-          activity.write_text(content)
-          PY
-      - name: Enable Android internet access for online exchange rates
+          if [ ! -d android ]; then
+            flutter create . --platforms=android
+          else
+            echo "Using the Android project committed in the repository."
+          fi
+      - name: Apply repository Android configuration
+        run: python3 .github/scripts/configure_android.py
+      - name: Save generated Android project to repository
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          manifest = Path("android/app/src/main/AndroidManifest.xml")
-          content = manifest.read_text()
-          permission = '    <uses-permission android:name="android.permission.INTERNET" />\n'
-          if "android.permission.INTERNET" not in content:
-              content = content.replace("<application", permission + "    <application", 1)
-              manifest.write_text(content)
-          PY
-      - name: Configure Gradle download
+          if [ -z "$(git ls-files android)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add android .gitignore
+            git commit -m "Add persistent Android project configuration"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          else
+            echo "Android project is already tracked; no generated files to commit."
+          fi
+      - name: Configure persistent Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
-          cat android/gradle/wrapper/gradle-wrapper.properties
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "Missing required GitHub Actions secret: ${name}"
+              echo "Add all four Android signing secrets in Settings > Secrets and variables > Actions, then rerun this workflow."
+              exit 1
+            fi
+          done
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          test -s android/app/upload-keystore.jks
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-provider: basic
       - name: Install dependencies
         run: flutter pub get
-      - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
+      - name: Build APK with increasing version code
+        env:
+          ANDROID_KEYSTORE_PATH: android/app/upload-keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: flutter build apk --release --no-tree-shake-icons --build-number "$GITHUB_RUN_NUMBER"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

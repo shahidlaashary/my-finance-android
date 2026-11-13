@@ -349,7 +349,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.timer_outlined),
-              title: const Text('Auto-lock timeout'),
+              title: const Text('Auto-lock'),
               trailing: DropdownButton<int>(
                 value: _timeout,
                 underline: const SizedBox.shrink(),

@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class TransactionsService {
 
@@ -227,6 +228,10 @@ class TransactionsService {
     await db.transaction((txn) async {
       final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
       if (rows.isEmpty) throw Exception('Transaction not found.');
+      final feeRows = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['transaction_transfer_fee_$id'], limit: 1);
+      final fee = feeRows.isEmpty ? 0.0 : (double.tryParse(feeRows.first['setting_value']?.toString() ?? '') ?? 0.0);
+      final archived = Map<String, dynamic>.from(rows.first)..['_transfer_fee'] = fee;
+      await RecycleBinService.archive(type: 'Transaction', title: '${rows.first['type']} • ${rows.first['amount']}', table: 'transactions', id: id, record: archived);
       await _reverse(txn, rows.first);
       await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
       await txn.delete('app_settings', where: 'setting_key = ?',

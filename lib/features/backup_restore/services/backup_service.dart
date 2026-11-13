@@ -547,7 +547,7 @@ class BackupService {
     required String attachmentsDirectory,
   }) {
     const attachmentMarker = '/my_finance_attachments/';
-    final normalizedStoredPath = storedPath.replaceAll('\\\\', '/');
+    final normalizedStoredPath = storedPath.replaceAll('\\', '/');
     final markerIndex = normalizedStoredPath.lastIndexOf(attachmentMarker);
 
     if (markerIndex < 0) return storedPath;

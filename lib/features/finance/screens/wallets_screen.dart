@@ -318,7 +318,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                           if (value == 'edit') openWalletForm(wallet);
                                           else if (value == 'delete') deleteWallet(wallet);
                                         },
-                                        itemBuilder: (_) => const [
+                                        itemBuilder: (_) => [
                                           PopupMenuItem(value: 'edit', child: Row(children: [
                                             Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
                                           PopupMenuItem(value: 'delete', child: Row(children: [

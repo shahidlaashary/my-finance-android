@@ -40,6 +40,34 @@ class RecycleBinService {
       final item = rows.first;
       final table = item['source_table'].toString();
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'debts') {
+        await txn.execute('''CREATE TABLE IF NOT EXISTS debts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, lender TEXT NOT NULL DEFAULT '',
+          phone TEXT NOT NULL DEFAULT '', original_amount REAL NOT NULL, balance REAL NOT NULL,
+          annual_interest_rate REAL NOT NULL DEFAULT 0, minimum_payment REAL NOT NULL DEFAULT 0,
+          wallet_id INTEGER NOT NULL, start_date TEXT NOT NULL, due_date TEXT,
+          notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active')''');
+        await txn.execute('''CREATE TABLE IF NOT EXISTS debt_payments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, debt_id INTEGER NOT NULL,
+          amount REAL NOT NULL, wallet_id INTEGER NOT NULL, payment_date TEXT NOT NULL,
+          notes TEXT NOT NULL DEFAULT '', FOREIGN KEY(debt_id) REFERENCES debts(id) ON DELETE CASCADE)''');
+        final relatedRaw = item['related_payload']?.toString() ?? '[]';
+        final payments = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        for (final payment in payments) {
+          final walletId = (payment['wallet_id'] as num).toInt();
+          final amount = (payment['amount'] as num).toDouble();
+          final wallet = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+          if (wallet.isEmpty) throw Exception('A debt payment wallet no longer exists.');
+          if ((wallet.first['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance to restore this debt.');
+        }
+        for (final payment in payments) {
+          await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [(payment['amount'] as num).toDouble(), (payment['wallet_id'] as num).toInt()]);
+        }
+        await txn.insert('debts', record);
+        for (final payment in payments) { await txn.insert('debt_payments', payment); }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'loans') {
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
           id INTEGER PRIMARY KEY AUTOINCREMENT, borrower_name TEXT NOT NULL,

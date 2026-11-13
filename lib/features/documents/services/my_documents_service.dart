@@ -208,14 +208,16 @@ class MyDocumentsService {
 
   Future<void> deleteDocument(int id) async {
     final db = await _db;
+    final current = await _readMaps(db);
+    final index = current.indexWhere((item) => (item['id'] as num?)?.toInt() == id);
+    if (index < 0) return;
+    final record = current[index];
+    await RecycleBinService.archive(type: 'Document',
+      title: record['title']?.toString() ?? 'Document',
+      table: 'my_documents_records', id: id, record: record);
     await db.transaction((txn) async {
       final records = await _readMaps(txn);
-      final index = records.indexWhere((item) => (item['id'] as num?)?.toInt() == id);
-      if (index < 0) return;
-      final record = records[index];
-      await RecycleBinService.archive(type: 'Document', title: record['title']?.toString() ?? 'Document', table: 'my_documents_records', id: id, record: record);
-      records.removeAt(index);
+      records.removeWhere((item) => (item['id'] as num?)?.toInt() == id);
       await _writeMaps(txn, records);
     });
-  }
-}
+  }}

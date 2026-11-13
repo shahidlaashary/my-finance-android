@@ -70,13 +70,24 @@ class StaffService {
       ...salaries.map((row) => {...row, '_related_table':'staff_salaries'}),
       ...attendance.map((row) => {...row, '_related_table':'staff_attendance'}),
     ];
-    await RecycleBinService.archive(type: 'Staff', title: staffRows.first['name']?.toString() ?? 'Staff',
-      table: 'staff', id: id, record: staffRows.first, related: related);
-    await db.transaction((txn) async {
-      await txn.delete('staff_salaries', where: 'staff_id = ?', whereArgs: [id]);
-      await txn.delete('staff_attendance', where: 'staff_id = ?', whereArgs: [id]);
-      await txn.delete('staff', where: 'id = ?', whereArgs: [id]);
-    });
+    final recycleId = await RecycleBinService.archive(
+      type: 'Staff',
+      title: staffRows.first['name']?.toString() ?? 'Staff',
+      table: 'staff',
+      id: id,
+      record: staffRows.first,
+      related: related,
+    );
+    try {
+      await db.transaction((txn) async {
+        await txn.delete('staff_salaries', where: 'staff_id = ?', whereArgs: [id]);
+        await txn.delete('staff_attendance', where: 'staff_id = ?', whereArgs: [id]);
+        await txn.delete('staff', where: 'id = ?', whereArgs: [id]);
+      });
+    } catch (_) {
+      await RecycleBinService.discardArchive(recycleId);
+      rethrow;
+    }
     AppRefreshController.notifyChanged();
   }
   static Future<int> paySalary({required int staffId, required double amount,

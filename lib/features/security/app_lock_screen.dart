@@ -213,17 +213,43 @@ class _AppLockScreenState extends State<AppLockScreen> {
       _message('Enable App Lock and create a PIN first.');
       return;
     }
-    if (value && _availableBiometrics.isEmpty) {
-      _message('Set up Face Unlock or Fingerprint in your device settings first.');
-      return;
-    }
+
+    setState(() => _saving = true);
     try {
+      if (value) {
+        // Refresh the enrolled methods in case the user changed device
+        // biometrics since this settings page was opened.
+        final available = await AppLockService.availableBiometrics();
+        if (!mounted) return;
+        setState(() => _availableBiometrics = available);
+
+        if (available.isEmpty) {
+          _message('Set up Face Unlock or Fingerprint in your device settings first.');
+          return;
+        }
+
+        // Verify that the system prompt can actually authenticate before
+        // saving the combined biometric-unlock preference.
+        final authenticated = await AppLockService.authenticateBiometric();
+        if (!mounted) return;
+        if (!authenticated) {
+          _message('Biometric verification was not completed. The setting was not enabled.');
+          return;
+        }
+      }
+
       await AppLockService.setBiometricEnabled(value);
       if (!mounted) return;
       setState(() => _biometricEnabled = value);
-      _message(value ? 'Biometric unlock enabled.' : 'Biometric unlock disabled.');
+      _message(
+        value
+            ? 'Face / Fingerprint Unlock enabled. Your PIN remains as backup.'
+            : 'Biometric unlock disabled.',
+      );
     } catch (error) {
       _message('Unable to update biometric setting: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -279,7 +305,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        'Use your PIN, Face Unlock or Fingerprint to protect the app.',
+                        'Use your PIN or your phone’s secure Face / Fingerprint authentication to protect the app.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -307,7 +333,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               subtitle: Text(
                 _biometricMethods == 'No enrolled biometrics detected'
                     ? 'Set up Face Unlock or Fingerprint on this device first.'
-                    : 'Use $_biometricMethods to unlock. PIN remains available as backup.',
+                    : 'Android will use an enrolled secure biometric ($_biometricMethods). PIN remains available as backup.',
               ),
               value: _biometricEnabled,
               onChanged: _enabled && !_saving ? _setBiometricEnabled : null,

@@ -102,11 +102,31 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     int walletId = debt?.walletId ?? (_wallets.first['id'] as num).toInt();
     DateTime start = DateTime.tryParse(debt?.startDate ?? '') ?? DateTime.now();
     DateTime? due = DateTime.tryParse(debt?.dueDate ?? '');
-    final result = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(builder: (ctx, setDialog) => AlertDialog(
-        title: Text(debt == null ? 'Add New Debt' : 'Edit Debt'),
-        content: SizedBox(width: 460, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setDialog) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.94),
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              child: Row(children: [
+                Expanded(child: Text(debt == null ? 'Add New Debt' : 'Edit Debt', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+                IconButton(onPressed: () => Navigator.pop(ctx, false), icon: const Icon(Icons.close)),
+              ]),
+            ),
+            Flexible(child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(controller: name, decoration: const InputDecoration(labelText: 'Debt Name *')),
           TextField(controller: lender, decoration: const InputDecoration(labelText: 'Lender / Party *')),
           TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone (optional)')),
@@ -123,11 +143,18 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           ListTile(contentPadding: EdgeInsets.zero, title: const Text('Start Date'), subtitle: Text(_date(start)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => start = d); }),
           ListTile(contentPadding: EdgeInsets.zero, title: const Text('Due Date'), subtitle: Text(due == null ? 'Not set' : _date(due!)), trailing: const Icon(Icons.event), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: due ?? start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => due = d); }),
           TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes')),
-        ]))),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save')),
-        ],
+              ]),
+            )),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+              child: Row(children: [
+                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel'))),
+                const SizedBox(width: 10),
+                Expanded(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save'))),
+              ]),
+            ),
+          ]),
+        ),
       )),
     );
     if (result == true) {
@@ -160,17 +187,50 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     if (matchingWallets.isEmpty) { _message('No account found for this debt currency.'); return; }
     int walletId = (matchingWallets.first['id'] as num).toInt();
     DateTime paidOn = DateTime.now();
-    final result = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setDialog) => AlertDialog(
-      title: Text('Record Payment • ${debt.name}'),
-      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setDialog) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.94),
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              child: Row(children: [
+                Expanded(child: Text('Record Payment • ${debt.name}', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+                IconButton(onPressed: () => Navigator.pop(ctx, false), icon: const Icon(Icons.close)),
+              ]),
+            ),
+            Flexible(child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text('Outstanding: ${_currency(debt.walletId)} ${_money(debt.balance)}'),
         TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Payment Amount *')),
         DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: const InputDecoration(labelText: 'Pay From Account'), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
         ListTile(contentPadding: EdgeInsets.zero, title: const Text('Payment Date'), subtitle: Text(_date(paidOn)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: paidOn, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => paidOn = d); }),
         TextField(controller: notes, decoration: const InputDecoration(labelText: 'Notes (optional)')),
-      ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save Payment'))],
-    )));
+              ]),
+            )),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+              child: Row(children: [
+                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel'))),
+                const SizedBox(width: 10),
+                Expanded(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save Payment'))),
+              ]),
+            ),
+          ]),
+        ),
+      )),
+    );
     if (result == true) {
       final value = double.tryParse(amount.text.trim());
       if (value == null || !value.isFinite || value <= 0 || value > debt.balance + 0.000001) {

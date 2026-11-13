@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/backup_restore/services/backup_service.dart';
+import 'package:my_finance/features/backup_restore/services/automatic_backup_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/goals_service.dart';
@@ -24,6 +26,36 @@ class BackupRestoreScreen extends StatefulWidget {
 
 class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   bool _isProcessing = false;
+  bool _automaticEnabled = false;
+  DateTime? _lastAutomaticBackup;
+  String? _automaticStatus;
+
+  @override
+  void initState() { super.initState(); _loadAutomaticBackupState(); }
+
+  Future<void> _loadAutomaticBackupState() async {
+    final enabled = await AutomaticBackupService.isEnabled();
+    final last = await AutomaticBackupService.lastSuccessfulBackup();
+    final status = await AutomaticBackupService.lastStatus();
+    if (!mounted) return;
+    setState(() { _automaticEnabled = enabled; _lastAutomaticBackup = last; _automaticStatus = status; });
+  }
+
+  Future<void> _toggleAutomaticBackup(bool enabled) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    try { await AutomaticBackupService.setEnabled(enabled); await _loadAutomaticBackupState(); if (mounted) _showMessage(enabled ? 'Automatic backup enabled. Pehla backup abhi bana diya gaya.' : 'Automatic backup disabled.'); }
+    catch (error) { if (mounted) _showMessage('Automatic backup failed: $error', isError: true); await _loadAutomaticBackupState(); }
+    finally { if (mounted) setState(() => _isProcessing = false); }
+  }
+
+  Future<void> _createAutomaticBackupNow() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    try { await AutomaticBackupService.createBackupNow(); await _loadAutomaticBackupState(); if (mounted) _showMessage('Automatic backup successfully created.'); }
+    catch (error) { if (mounted) _showMessage('Automatic backup failed: $error', isError: true); await _loadAutomaticBackupState(); }
+    finally { if (mounted) setState(() => _isProcessing = false); }
+  }
 
   // User ke liye manual ZIP backup banata hai.
   Future<void> _createBackup() async {
@@ -195,6 +227,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [const Icon(Icons.autorenew_rounded), const SizedBox(width: 10), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Automatic Local Backup', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text('Daily backup on this device')])), Switch.adaptive(value: _automaticEnabled, onChanged: _isProcessing ? null : _toggleAutomaticBackup)]),
+                const Divider(),
+                Text('Last successful backup: ' + (_lastAutomaticBackup == null ? 'Not yet' : DateFormat('d MMM yyyy, h:mm a').format(_lastAutomaticBackup!))),
+                if (_automaticStatus == 'failed') const Text('Last backup failed. Try again.', style: TextStyle(color: Colors.red)),
+                const SizedBox(height: 10),
+                SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: _isProcessing ? null : _createAutomaticBackupNow, icon: const Icon(Icons.backup_rounded), label: const Text('Back Up Now'))),
+                const SizedBox(height: 6),
+                const Text('7 newest backups are kept privately on this device. A due backup is created when the app starts; it does not run while the app is fully closed.', style: TextStyle(fontSize: 12)),
+              ]))),
+              SizedBox(height: 16),
               _buildActionCard(
                 icon: Icons.cloud_upload_rounded,
                 title: 'Create Manual Backup',

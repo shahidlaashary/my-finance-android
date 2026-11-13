@@ -302,6 +302,11 @@ class RecycleBinService {
     AppRefreshController.notifyChanged();
   }
 
+  static Future<void> discardArchive(int id) async {
+    await ensureTable();
+    await FinanceDB.instance.db.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
+  }
+
   static Future<void> permanentlyDelete(int id) async {
     await ensureTable();
     final db = FinanceDB.instance.db;

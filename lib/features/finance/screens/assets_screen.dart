@@ -4,6 +4,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
@@ -247,7 +248,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           ]),
                           const SizedBox(height: 8),
                           ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
-                            title: const Text('Purchase Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
+                            title: Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ')), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
                             trailing: const Icon(Icons.edit_calendar), onTap: () async {
                               final picked = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime.now());
                               if (picked != null) setSheetState(() => purchaseDate = picked);
@@ -255,7 +256,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           TextFormField(controller: notesController, maxLines: 2, decoration: fieldDecoration('Notes (optional)', Icons.notes_outlined)),
                           const SizedBox(height: 16),
                           Row(children: [
-                            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))),
+                            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
                             const SizedBox(width: 10),
                             Expanded(child: ElevatedButton.icon(
                               icon: const Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
@@ -304,7 +305,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Update Current Value'),
+          title: Text(appText(context, 'Update Current Value', 'موجودہ قیمت اپ ڈیٹ کریں')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -319,7 +320,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -334,7 +335,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
                 Navigator.pop(context, value);
               },
-              child: const Text('Update'),
+              child: Text(appText(context, 'Update', 'اپ ڈیٹ کریں')),
             ),
           ],
         );
@@ -368,7 +369,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Sell Asset'),
+              title: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -401,7 +402,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Sale Date'),
+                    title: Text(appText(context, 'Sale Date', 'فروخت کی تاریخ')),
                     subtitle: Text(
                       DateFormat('dd MMM yyyy')
                           .format(saleDate),
@@ -428,7 +429,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -448,7 +449,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       'walletId': selectedSaleWallet,
                     });
                   },
-                  child: const Text('Confirm Sale'),
+                  child: Text(appText(context, 'Confirm Sale', 'فروخت کی تصدیق کریں')),
                 ),
               ],
             );
@@ -481,7 +482,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Asset'),
+          title: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں')),
           content: Text(
             'Are you sure you want to delete "${asset.name}"?',
           ),
@@ -489,7 +490,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             TextButton(
               onPressed: () =>
                   Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             FilledButton(
               onPressed: () =>
@@ -639,12 +640,12 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'edit',
-                        child: Text('Edit Asset'),
+                        child: Text(appText(context, 'Edit Asset', 'اثاثے میں ترمیم کریں')),
                       ),
                     if (!asset.isSold)
                       const PopupMenuItem(
                         value: 'valuation',
-                        child: Text('Update Valuation'),
+                        child: Text(appText(context, 'Update Valuation', 'قیمت اپ ڈیٹ کریں')),
                       ),
                     if (!asset.isSold)
                       const PopupMenuItem(
@@ -871,7 +872,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Asset'),
+        label: Text(appText(context, 'Add Asset', 'اثاثہ شامل کریں')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

@@ -268,10 +268,17 @@ class RecycleBinService {
       final rawRelated = item['related_payload']?.toString();
       if (rawRelated != null && rawRelated.isNotEmpty) {
         final related = (jsonDecode(rawRelated) as List).whereType<Map>();
-        final relatedTable = table == 'stock_items' ? 'stock_movements' : table == 'staff' ? 'staff_attendance' : null;
+        final relatedTable = table == 'stock_items' ? 'stock_movements' : null;
         if (relatedTable != null) {
           for (final row in related) {
             await txn.insert(relatedTable, Map<String, dynamic>.from(row));
+          }
+        } else if (table == 'staff') {
+          for (final row in related) {
+            final restored = Map<String, dynamic>.from(row);
+            final relatedType = restored.remove('_related_table')?.toString() ?? 'staff_attendance';
+            if (!{'staff_salaries','staff_attendance'}.contains(relatedType)) throw Exception('Unsupported staff history record.');
+            await txn.insert(relatedType, restored);
           }
         }
       }

@@ -5,7 +5,9 @@ import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 
 class CategoriesPage extends StatefulWidget {
-  const CategoriesPage({super.key});
+  final String initialType;
+
+  const CategoriesPage({super.key, this.initialType = 'Income'});
 
   @override
   State<CategoriesPage> createState() => _CategoriesPageState();
@@ -45,6 +47,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   @override
   void initState() {
     super.initState();
+    selectedType = widget.initialType == 'Expense' ? 'Expense' : 'Income';
     loadCategories();
   }
 

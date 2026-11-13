@@ -322,7 +322,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes', Icons.notes_rounded)),
             SizedBox(height: 16),
             Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: Text(appText(context, "Cancel", "Cancel")))),
               SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
@@ -395,7 +395,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes / Memo', Icons.notes_rounded)),
             SizedBox(height: 16),
             Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: Text(appText(context, "Cancel", "Cancel")))),
               SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
@@ -464,7 +464,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes / Memo', Icons.notes_rounded)),
             SizedBox(height: 16),
             Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: Text(appText(context, "Cancel", "Cancel")))),
               SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
@@ -520,7 +520,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes', Icons.notes_rounded)),
             SizedBox(height: 16),
             Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheet), child: Text(appText(context, "Cancel", "Cancel")))),
               SizedBox(width: 10),
               Expanded(child: ElevatedButton.icon(onPressed: _saving ? null : () async {
                 if (!key.currentState!.validate()) return;
@@ -544,9 +544,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   Future<void> _deleteRecord(Future<void> Function() action, String label) async {
     final yes = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-      title: Text('Delete $label?'), content: const Text('This record and any linked financial transaction will be removed. This cannot be undone.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(c, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Delete'))]));
+      title: Text('Delete $label?'), content: Text(appText(context, "This record and any linked financial transaction will be removed. This cannot be undone.", "This record and any linked financial transaction will be removed. This cannot be undone.")),
+      actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))),
+        FilledButton(onPressed: () => Navigator.pop(c, true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: Text(appText(context, "Delete", "Delete")))]));
     if (yes != true) return;
     try { await action(); await _load(); _message('$label deleted.'); }
     catch (e) { _message('Unable to delete $label: $e'); }
@@ -593,8 +593,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         borderRadius: BorderRadius.circular(18)),
         child: Row(children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Vehicle Overview', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
-            SizedBox(height: 5), Text('Fuel, mileage and running costs in one place', style: TextStyle(color: Colors.white70, fontSize: 12)),
+            Text(appText(context, "Vehicle Overview", "Vehicle Overview"), style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
+            SizedBox(height: 5), Text(appText(context, "Fuel, mileage and running costs in one place", "Fuel, mileage and running costs in one place"), style: TextStyle(color: Colors.white70, fontSize: 12)),
           ])),
           CircleAvatar(radius: 25, backgroundColor: Colors.white24, child: Icon(Icons.directions_car_filled_rounded, color: Colors.white, size: 27)),
         ]),
@@ -616,7 +616,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       ]),
       SizedBox(height: 16),
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('Reminders & Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
+        Text(appText(context, "Reminders & Alerts", "Reminders & Alerts"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
         Text('${due.length} due', style: TextStyle(color: due.isEmpty ? _muted : Colors.red, fontWeight: FontWeight.w700, fontSize: 12)),
       ]),
       SizedBox(height: 8),
@@ -628,7 +628,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder')),
       ))),
       SizedBox(height: 14),
-      const Text('Your Vehicles', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
+      Text(appText(context, "Your Vehicles", "Your Vehicles"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       SizedBox(height: 8),
       if (_vehicles.isEmpty) _empty('No vehicles added', 'Add your car or bike to start tracking fuel and expenses.', Icons.directions_car_outlined)
       else ..._vehicles.map(_vehicleCard),
@@ -658,8 +658,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             ]),
             if ((v['notes'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(v['notes'].toString(), style: const TextStyle(color: _muted, fontSize: 12))),
             Row(children: [
-              TextButton.icon(onPressed: () => _showVehicleForm(vehicle: v), icon: const Icon(Icons.edit_outlined), label: const Text('Edit')),
-              TextButton.icon(onPressed: () => _deleteRecord(() async { await VehicleService.deleteVehicle(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle', ownerId: id); }, 'vehicle'), icon: const Icon(Icons.delete_outline, color: Colors.red), label: const Text('Delete', style: TextStyle(color: Colors.red))),
+              TextButton.icon(onPressed: () => _showVehicleForm(vehicle: v), icon: const Icon(Icons.edit_outlined), label: Text(appText(context, "Edit", "Edit"))),
+              TextButton.icon(onPressed: () => _deleteRecord(() async { await VehicleService.deleteVehicle(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle', ownerId: id); }, 'vehicle'), icon: const Icon(Icons.delete_outline, color: Colors.red), label: Text(appText(context, "Delete", "Delete"), style: TextStyle(color: Colors.red))),
             ]),
             AttachmentSection(ownerType: 'vehicle', ownerId: id),
           ])),
@@ -774,7 +774,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         items: const ['Daily', 'Weekly', 'Monthly', 'Yearly', 'All Time'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
         onChanged: (v) => setState(() => _reportRange = v ?? 'All Time')),
       SizedBox(height: 12),
-      const Text('Vehicle Comparison', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
+      Text(appText(context, "Vehicle Comparison", "Vehicle Comparison"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       SizedBox(height: 8),
       if (_vehicles.isEmpty) _empty('No comparison data', 'Add vehicles and fuel records to compare running costs.', Icons.compare_arrows_rounded)
       else ..._vehicles.map((v) {
@@ -793,9 +793,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         ])));
       }),
       SizedBox(height: 14),
-      const Text('Fuel Price History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
+      Text(appText(context, "Fuel Price History", "Fuel Price History"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       SizedBox(height: 8),
-      if (sortedFuel.isEmpty) Card(child: ListTile(title: Text('No fuel price history yet.')))
+      if (sortedFuel.isEmpty) Card(child: ListTile(title: Text(appText(context, "No fuel price history yet.", "No fuel price history yet."))))
       else ...sortedFuel.take(30).map((f) => Card(child: ListTile(
         dense: true, leading: const Icon(Icons.price_change_outlined, color: Colors.orange),
         title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['unit_price'])} / ${f['unit']}'),
@@ -803,15 +803,15 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: Text('${_amount(f['quantity'])} ${f['unit']}'),
       ))),
       SizedBox(height: 16),
-      const Text('Export Reports', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
+      Text(appText(context, "Export Reports", "Export Reports"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       SizedBox(height: 8),
       Card(child: Column(children: [
-        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: const Text('Vehicles, fuel log, expenses and reminders'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
+        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: Text(appText(context, "Vehicles, fuel log, expenses and reminders", "Vehicles, fuel log, expenses and reminders")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
         const Divider(height: 1),
-        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: const Text('Shareable summary of all vehicle records'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
+        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: Text(appText(context, "Shareable summary of all vehicle records", "Shareable summary of all vehicle records")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
       ])),
       SizedBox(height: 8),
-      const Text('Reports are saved in the app documents folder and opened with a compatible app.', style: TextStyle(color: _muted, fontSize: 11)),
+      Text(appText(context, "Reports are saved in the app documents folder and opened with a compatible app.", "Reports are saved in the app documents folder and opened with a compatible app."), style: TextStyle(color: _muted, fontSize: 11)),
     ]);
   }
 
@@ -885,7 +885,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       appBar: AppBar(
         backgroundColor: Colors.white, foregroundColor: _ink, elevation: 0,
         titleSpacing: 16, toolbarHeight: 56,
-        title: const Text('Vehicle Manager', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink)),
+        title: Text(appText(context, "Vehicle Manager", "Vehicle Manager"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink)),
         actions: buildSharedAppBarActions(context),
       ),
       bottomNavigationBar: Container(

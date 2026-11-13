@@ -30,7 +30,12 @@ class MyFinanceApp extends StatelessWidget {
           supportedLocales: const [Locale('en'), Locale('ur')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.forPreset(preset),
+          theme: AppTheme.forPreset(
+            preset,
+            fontFamily: locale.languageCode == 'ur'
+                ? 'JameelNooriNastaleeq'
+                : null,
+          ),
           themeMode: ThemeMode.light,
           routes: routes,
           builder: (context, child) =>

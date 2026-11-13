@@ -310,7 +310,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     }
                   },
                   itemBuilder: (context) => [
-                    PopupMenuItem
+                    PopupMenuItem(
                       value: 'edit',
                       child: Text(appText(context, 'Edit Budget', 'بجٹ میں ترمیم کریں')),
                     ),
@@ -320,7 +320,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         budget.isActive ? 'Pause Budget' : 'Activate Budget',
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Text(appText(context, 'Delete Budget', 'بجٹ حذف کریں')),
                     ),
@@ -429,7 +429,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: SegmentedButton<String>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                           value: 'All',
                           label: Text(appText(context, 'All', 'تمام')),

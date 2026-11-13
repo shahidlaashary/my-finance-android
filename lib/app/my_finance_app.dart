@@ -28,7 +28,9 @@ class MyFinanceApp extends StatelessWidget {
               .contains(locale.languageCode);
           return MaterialApp(
             title: 'My Finance',
-            locale: locale,
+            locale: locale.languageCode == 'pa'
+                ? const Locale.fromSubtags(languageCode: 'pa', scriptCode: 'Arab')
+                : locale,
             supportedLocales: const [
               Locale('en'),
               Locale('ur'),
@@ -46,8 +48,13 @@ class MyFinanceApp extends StatelessWidget {
             ),
             themeMode: ThemeMode.light,
             routes: routes,
-            builder: (context, child) =>
-                AppLockGate(child: child ?? const SizedBox.shrink()),
+            builder: (context, child) => Directionality(
+              textDirection: const {'ur', 'ar', 'pa', 'skr', 'sd'}
+                      .contains(locale.languageCode)
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: AppLockGate(child: child ?? const SizedBox.shrink()),
+            ),
             home: home,
           );
         },

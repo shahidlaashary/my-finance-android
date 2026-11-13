@@ -709,8 +709,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       ],
 
                       SizedBox(height: 8),
-                      const Text(
-                        'Wallet Icon',
+                      Text(appText(context, "Wallet Icon", "Wallet Icon"),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -790,8 +789,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              'Exclude from Total Balance',
+                            child: Text(appText(context, "Exclude from Total Balance", "Exclude from Total Balance"),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -850,8 +848,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text(
-                                      'Save Wallet',
+                                  : Text(appText(context, "Save Wallet", "Save Wallet"),
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,

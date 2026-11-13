@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
@@ -22,16 +23,6 @@ const List<String> walletTypes = [
   'Investment',
   'Other',
   'Custom',
-];
-
-const List<String> walletCurrencies = [
-  'PKR',
-  'USD',
-  'GBP',
-  'EUR',
-  'AED',
-  'SAR',
-  'INR',
 ];
 
 const List<IconData> walletIcons = [
@@ -424,15 +415,27 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
     selectedType = wallet?['type'] as String? ?? 'Cash';
     selectedCurrency = wallet?['currency'] as String? ?? 'PKR';
+    _loadBaseCurrencyAsDefault();
 
     if (!walletTypes.contains(selectedType)) selectedType = 'Other';
-    if (!walletCurrencies.contains(selectedCurrency)) {
+    if (!CurrencyCatalog.supported.contains(selectedCurrency) && !isEditing) {
       selectedCurrency = 'PKR';
     }
 
     selectedIcon =
         wallet?['icon_code'] as int? ?? walletIcons.first.codePoint;
     excludeTotal = (wallet?['exclude_total'] as int? ?? 0) == 1;
+  }
+
+  Future<void> _loadBaseCurrencyAsDefault() async {
+    if (isEditing) return;
+    try {
+      final baseCurrency = await FinanceDB.instance.getBaseCurrency();
+      if (!mounted || !CurrencyCatalog.supported.contains(baseCurrency)) return;
+      setState(() => selectedCurrency = baseCurrency);
+    } catch (_) {
+      // Keep PKR as a safe default if preferences cannot be read.
+    }
   }
 
   @override
@@ -730,7 +733,10 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               value: selectedCurrency,
                               isExpanded: true,
                               decoration: _fieldDecoration('Currency'),
-                              items: walletCurrencies.map((currency) {
+                              items: [
+                                ...CurrencyCatalog.supported,
+                                if (!CurrencyCatalog.supported.contains(selectedCurrency)) selectedCurrency,
+                              ].map((currency) {
                                 return DropdownMenuItem(
                                   value: currency,
                                   child: Text(

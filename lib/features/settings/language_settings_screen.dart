@@ -58,7 +58,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                   onChanged: (_) => _select(context, 'ur'),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 isUrdu
                     ? 'زبان تبدیل کرنے سے ایپ کی سمت بھی تبدیل ہو جائے گی۔'

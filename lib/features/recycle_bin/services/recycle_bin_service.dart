@@ -231,7 +231,7 @@ class RecycleBinService {
         final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
         if (current.any((e) => (e['name'] ?? '').toString().toLowerCase() == (record['name'] ?? '').toString().toLowerCase())) throw Exception('A category with this name already exists.');
         final index = (record.remove('_index') as num?)?.toInt() ?? current.length;
-        final position = index.clamp(0, current.length);
+        final position = index.clamp(0, current.length).toInt();
         current.insert(position, record);
         await txn.insert('app_settings', {'setting_key':table,'setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

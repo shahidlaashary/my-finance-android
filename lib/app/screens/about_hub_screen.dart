@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -16,16 +17,16 @@ class AboutHubScreen extends StatelessWidget {
       _AboutEntry('Open Source Licenses','Licenses for third-party packages',Icons.article_outlined,()=>showLicensePage(context:context,applicationName:'My Finance',applicationVersion:'1.0.0',applicationLegalese:'© ${DateTime.now().year} Shahid Laashary')),
       _AboutEntry('Storage Information','Local database and attachment storage details',Icons.storage_outlined,()=>_open(context,const _StoragePage())),
     ];
-    return Scaffold(appBar:AppBar(title:const Text('About My Finance',style:TextStyle(fontWeight:FontWeight.w800))),body:ListView(padding:const EdgeInsets.all(16),children:[
+    return Scaffold(appBar:AppBar(title:Text(appText(context, "About My Finance", "About My Finance"),style:TextStyle(fontWeight:FontWeight.w800))),body:ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(children:[
         Container(width:68,height:68,decoration:BoxDecoration(color:Theme.of(context).colorScheme.primaryContainer,shape:BoxShape.circle),child:Icon(Icons.account_balance_wallet_rounded,size:36,color:Theme.of(context).colorScheme.primary)),
-        const SizedBox(height:12),const Text('MY FINANCE',style:TextStyle(fontSize:20,fontWeight:FontWeight.w900,letterSpacing:1.5)),
-        const SizedBox(height:4),Text('Your Money. Your Control.',style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant)),
-        const SizedBox(height:8),const Text('Version 1.0.0',style:TextStyle(fontSize:12)),
+        const SizedBox(height:12),Text(appText(context, "MY FINANCE", "MY FINANCE"),style:TextStyle(fontSize:20,fontWeight:FontWeight.w900,letterSpacing:1.5)),
+        const SizedBox(height:4),Text(appText(context, "Your Money. Your Control.", "Your Money. Your Control."),style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant)),
+        const SizedBox(height:8),Text(appText(context, "Version 1.0.0", "Version 1.0.0"),style:TextStyle(fontSize:12)),
       ]))),
       const SizedBox(height:12),
       ...sections.map((s)=>Card(margin:const EdgeInsets.only(bottom:9),child:ListTile(leading:Icon(s.icon,color:Theme.of(context).colorScheme.primary),title:Text(s.title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text(s.subtitle),trailing:const Icon(Icons.chevron_right_rounded),onTap:s.action))),
-      const SizedBox(height:12),Center(child:Text('Created by Shahid Laashary',style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant,fontWeight:FontWeight.w600))),
+      const SizedBox(height:12),Center(child:Text(appText(context, "Created by Shahid Laashary", "Created by Shahid Laashary"),style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant,fontWeight:FontWeight.w600))),
     ]));
   }
   static void _open(BuildContext context,Widget page)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>page));
@@ -64,9 +65,9 @@ class _QuickTourPageState extends State<_QuickTourPage>{
     (Icons.inventory_2_outlined,'More Features','Explore stock management, documents, vehicles, exchange rates and other tools.'),
     (Icons.shield_outlined,'Keep your data safe','Review storage information and create backups regularly using the available backup tools.'),
   ];
-  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Quick Tour')),body:Column(children:[
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text(appText(context, "Quick Tour", "Quick Tour"))),body:Column(children:[
     Expanded(child:PageView.builder(controller:_controller,itemCount:_steps.length,onPageChanged:(v)=>setState(()=>_index=v),itemBuilder:(context,i){final s=_steps[i];return Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(s.$1,size:76,color:Theme.of(context).colorScheme.primary),const SizedBox(height:28),Text(s.$2,style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:14),Text(s.$3,textAlign:TextAlign.center,style:Theme.of(context).textTheme.bodyLarge)]));})),
-    Padding(padding:const EdgeInsets.fromLTRB(20,8,20,28),child:Row(children:[Text('${_index+1} / ${_steps.length}'),const Spacer(),TextButton(onPressed:_index==0?null:()=>_controller.previousPage(duration:const Duration(milliseconds:220),curve:Curves.easeOut),child:const Text('Back')),const SizedBox(width:8),FilledButton(onPressed:()=>_index==_steps.length-1?Navigator.pop(context):_controller.nextPage(duration:const Duration(milliseconds:220),curve:Curves.easeOut),child:Text(_index==_steps.length-1?'Finish':'Next'))])),
+    Padding(padding:const EdgeInsets.fromLTRB(20,8,20,28),child:Row(children:[Text('${_index+1} / ${_steps.length}'),const Spacer(),TextButton(onPressed:_index==0?null:()=>_controller.previousPage(duration:const Duration(milliseconds:220),curve:Curves.easeOut),child:Text(appText(context, "Back", "Back"))),const SizedBox(width:8),FilledButton(onPressed:()=>_index==_steps.length-1?Navigator.pop(context):_controller.nextPage(duration:const Duration(milliseconds:220),curve:Curves.easeOut),child:Text(_index==_steps.length-1?'Finish':'Next'))])),
   ]));
 }
 class _PrivacyPage extends StatelessWidget{
@@ -103,7 +104,7 @@ class _StoragePageState extends State<_StoragePage>{
   String _size(int n){if(n<1024)return '$n B';if(n<1024*1024)return '${(n/1024).toStringAsFixed(1)} KB';if(n<1024*1024*1024)return '${(n/1024/1024).toStringAsFixed(2)} MB';return '${(n/1024/1024/1024).toStringAsFixed(2)} GB';}
   Future<void> _refresh()async{setState((){_loading=true;_dbBytes=0;_attachmentBytes=0;_attachmentFiles=0;_error=null;});await _load();}
   Future<void> _load()async{try{final dbDir=await getDatabasesPath();final dbPath=p.join(dbDir,'my_finance.db');final dbFile=File(dbPath);final docs=await getApplicationDocumentsDirectory();final attach=Directory(p.join(docs.path,'my_finance_attachments'));final bytes=await _folderSize(attach);if(mounted)setState(()=>_dbPath=dbPath);if(mounted)setState(()=>_attachmentPath=attach.path);if(await dbFile.exists())_dbBytes=await dbFile.length();_attachmentBytes=bytes;}catch(e){_error=e.toString();}finally{if(mounted)setState(()=>_loading=false);}}
-  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Storage Information'),actions:[IconButton(onPressed:_refresh,icon:const Icon(Icons.refresh))]),body:_loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text(appText(context, "Storage Information", "Storage Information")),actions:[IconButton(onPressed:_refresh,icon:const Icon(Icons.refresh))]),body:_loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.all(18),children:[
     if(_error!=null)Text('Could not read storage information: $_error'),
     _SectionTitle('Storage Summary'),_InfoLine('Database size',_size(_dbBytes)),_InfoLine('Attachments size',_size(_attachmentBytes)),_InfoLine('Attachment files','$_attachmentFiles'),_InfoLine('Total measured size',_size(_dbBytes+_attachmentBytes)),
     const SizedBox(height:16),_SectionTitle('Database Storage'),_BodyText('Financial records are stored in the app’s local SQLite database.'),_PathCard(path:_dbPath??'Not available'),
@@ -115,4 +116,4 @@ class _PathCard extends StatelessWidget{final String path;const _PathCard({requi
 class _SectionTitle extends StatelessWidget{final String text;const _SectionTitle(this.text);@override Widget build(BuildContext context)=>Padding(padding:const EdgeInsets.only(top:14,bottom:7),child:Text(text,style:Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight:FontWeight.w800)));}
 class _BodyText extends StatelessWidget{final String text;const _BodyText(this.text);@override Widget build(BuildContext context)=>Padding(padding:const EdgeInsets.only(bottom:8),child:Text(text,style:Theme.of(context).textTheme.bodyMedium?.copyWith(height:1.5)));}
 class _InfoLine extends StatelessWidget{final String label,value;const _InfoLine(this.label,this.value);@override Widget build(BuildContext context)=>Padding(padding:const EdgeInsets.symmetric(vertical:5),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Expanded(child:Text(label,style:const TextStyle(fontWeight:FontWeight.w600))),const SizedBox(width:12),Expanded(child:Text(value,textAlign:TextAlign.end))]));}
-class _BulletList extends StatelessWidget{final List<String> items;const _BulletList(this.items);@override Widget build(BuildContext context)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:items.map((s)=>Padding(padding:const EdgeInsets.symmetric(vertical:4),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('•  '),Expanded(child:Text(s))]))).toList());}
+class _BulletList extends StatelessWidget{final List<String> items;const _BulletList(this.items);@override Widget build(BuildContext context)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:items.map((s)=>Padding(padding:const EdgeInsets.symmetric(vertical:4),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(appText(context, "•  ", "•  ")),Expanded(child:Text(s))]))).toList());}

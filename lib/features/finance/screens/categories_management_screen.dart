@@ -107,7 +107,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     autofocus: true,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      labelText: 'Category Name',
+                      labelText: appText(context, "Category Name", "Category Name"),
                       prefixIcon: const Icon(Icons.category_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(13),

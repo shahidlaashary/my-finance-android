@@ -123,13 +123,13 @@ import 'package:my_finance/core/localization/app_text.dart';
               child: Form(key: formKey, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [Expanded(child: Text(goal == null ? 'New Goal' : 'Edit Goal', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
                     IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Goal Name', Icons.flag_outlined),
                     validator: (v) => v == null || v.trim().isEmpty ? 'Enter goal name' : null),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(
                       controller: targetController,
@@ -137,14 +137,14 @@ import 'package:my_finance/core/localization/app_text.dart';
                       decoration: decoration('Target Amount', Icons.savings_outlined),
                       validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid target amount' : null; },
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<int?>(
                       value: walletId, isExpanded: true,
                       decoration: decoration('Linked Account', Icons.account_balance_wallet_outlined),
                       items: _accountItems(), onChanged: (v) => setSheetState(() => walletId = v),
                     )),
                   ]),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
@@ -163,7 +163,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () async {
@@ -182,10 +182,10 @@ import 'package:my_finance/core/localization/app_text.dart';
                       ),
                     )),
                   ]),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
-                  const SizedBox(height: 16),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), const SizedBox(width: 10),
+                  SizedBox(height: 16),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -359,7 +359,7 @@ import 'package:my_finance/core/localization/app_text.dart';
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: color, size: 25),
-            const SizedBox(height: 9),
+            SizedBox(height: 9),
             Text(
               title,
               style: const TextStyle(
@@ -367,7 +367,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 color: Colors.grey,
               ),
             ),
-            const SizedBox(height: 5),
+            SizedBox(height: 5),
             Text(
               _money(amount),
               style: TextStyle(
@@ -393,7 +393,7 @@ import 'package:my_finance/core/localization/app_text.dart';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Text(
             'Savings Summary by Currency',
@@ -485,7 +485,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     color: Color(0xFF147D59),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,7 +528,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             Text(
               'Account: $accountLabel',
               style: const TextStyle(
@@ -536,7 +536,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 fontSize: 12,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -547,7 +547,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
@@ -557,7 +557,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 color: completed ? Colors.green : const Color(0xFF147D59),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -565,7 +565,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 Text('Target: ${_money(goal.targetAmount)} $currency'),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               completed
                   ? 'Goal completed!'
@@ -576,13 +576,13 @@ import 'package:my_finance/core/localization/app_text.dart';
               ),
             ),
             if (goal.notes.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 goal.notes,
                 style: const TextStyle(color: Colors.grey),
               ),
             ],
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -621,7 +621,7 @@ import 'package:my_finance/core/localization/app_text.dart';
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Goals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -632,7 +632,7 @@ import 'package:my_finance/core/localization/app_text.dart';
         label: Text(appText(context, 'New Goal', 'نیا ہدف')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -640,7 +640,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 children: [
                   _currencySummary(),
                   if (_goals.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(40),
                       child: Column(
                         children: [

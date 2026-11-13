@@ -112,7 +112,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
                   SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Enter budget name' : null),
+                    validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter budget name', 'بجٹ کا نام درج کریں') : null),
                   SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(

@@ -648,11 +648,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         child: Text(appText(context, 'Update Valuation', 'قیمت اپ ڈیٹ کریں')),
                       ),
                     if (!asset.isSold)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'sell',
                         child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں')),
                       ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں')),
                     ),

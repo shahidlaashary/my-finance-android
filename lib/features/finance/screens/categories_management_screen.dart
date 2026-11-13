@@ -190,7 +190,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     if (duplicate) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(appText(context, "This category already exists.", "This category already exists."))),
+        SnackBar(content: Text(appText(context, "This category already exists.", "This category already exists."))),
       );
       return;
     }

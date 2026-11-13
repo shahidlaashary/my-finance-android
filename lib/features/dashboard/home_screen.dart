@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -438,7 +439,7 @@ class _HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const BudgetsScreen())),
-                    child: const Text('View Budgets'),
+                    child: Text(appText(context, 'View Budgets', 'بجٹ دیکھیں')),
                   ),
               ],
             ),

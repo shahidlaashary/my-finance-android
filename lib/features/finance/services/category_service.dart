@@ -1,5 +1,6 @@
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/finance/models/finance_category.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Category operations backed by the application's single FinanceDB connection.
 ///
@@ -119,6 +120,10 @@ class CategoryService {
 
     if (index < 0 || index >= items.length) return 0;
 
+    final removed = items[index];
+    await RecycleBinService.archive(type: 'Category', title: removed.name,
+      table: normalizedType == 'Income' ? 'income_categories' : 'expense_categories',
+      id: id, record: {'name': removed.name, 'icon': int.tryParse(removed.icon) ?? 0, '_index': index});
     items.removeAt(index);
     await _save(normalizedType, items);
     return 1;

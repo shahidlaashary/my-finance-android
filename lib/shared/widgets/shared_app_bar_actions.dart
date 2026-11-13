@@ -4,10 +4,19 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
+import 'package:my_finance/features/search/screens/global_search_screen.dart';
 
 /// Consistent notification and settings actions for every main section.
 List<Widget> buildSharedAppBarActions(BuildContext context) {
   return [
+    IconButton(
+      tooltip: 'Global Search',
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GlobalSearchScreen()),
+      ),
+      icon: const Icon(Icons.search_rounded),
+    ),
     IconButton(
       tooltip: 'Notifications',
       onPressed: () => _showBudgetAlerts(context),
@@ -213,6 +222,14 @@ void _showBudgetAlerts(BuildContext context) {
 /// App-bar actions retained for the original main navigation sections.
 List<Widget> buildMainSectionAppBarActions(BuildContext context) {
   return [
+    IconButton(
+      tooltip: 'Global Search',
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GlobalSearchScreen()),
+      ),
+      icon: const Icon(Icons.search_rounded),
+    ),
     IconButton(
       tooltip: 'Notifications',
       onPressed: () {

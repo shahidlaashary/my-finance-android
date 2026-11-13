@@ -107,13 +107,13 @@ import 'package:my_finance/core/localization/app_text.dart';
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [Expanded(child: Text(budget == null ? 'Create Budget' : 'Edit Budget', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
                     IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
                     validator: (v) => v == null || v.trim().isEmpty ? 'Enter budget name' : null),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(
                       controller: amountController,
@@ -121,7 +121,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       decoration: decoration('Budget Limit', Icons.currency_exchange),
                       validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid budget amount' : null; },
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<String>(
                       value: currency, isExpanded: true,
                       decoration: decoration('Currency', Icons.payments_outlined),
@@ -129,7 +129,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       onChanged: (v) { if (v != null) setSheetState(() => currency = v); },
                     )),
                   ]),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: DropdownButtonFormField<String?>(
                       value: category, isExpanded: true,
@@ -138,7 +138,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                         ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis)))],
                       onChanged: (v) => setSheetState(() => category = v),
                     )),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<String>(
                       value: period, isExpanded: true,
                       decoration: decoration('Budget Period', Icons.calendar_view_month),
@@ -146,7 +146,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       onChanged: (v) { if (v != null) setSheetState(() => period = v); },
                     )),
                   ]),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(children: [
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
@@ -155,11 +155,11 @@ import 'package:my_finance/core/localization/app_text.dart';
                         if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
-                        const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
+                        Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () async {
@@ -167,13 +167,13 @@ import 'package:my_finance/core/localization/app_text.dart';
                         if (v != null) setSheetState(() => endDate = v);
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
-                        const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
+                        Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
                   ]),
-                  const SizedBox(height: 12),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), const SizedBox(width: 10),
+                  SizedBox(height: 12),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -277,7 +277,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     color: Color(0xFF147D59),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,7 +328,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -341,7 +341,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 ),
               ],
             ),
-            const SizedBox(height: 9),
+            SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
@@ -351,7 +351,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 color: color,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -373,7 +373,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               '${DateFormat('dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
               style: const TextStyle(
@@ -382,7 +382,7 @@ import 'package:my_finance/core/localization/app_text.dart';
               ),
             ),
             if (!budget.isActive)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 8),
                 child: Chip(
                   label: Text(appText(context, 'Paused', 'روکا گیا')),
@@ -420,7 +420,7 @@ import 'package:my_finance/core/localization/app_text.dart';
         label: Text(appText(context, 'New Budget', 'نیا بجٹ')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -452,7 +452,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     ),
                   ),
                   if (visibleBudgets.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(40),
                       child: Column(
                         children: [

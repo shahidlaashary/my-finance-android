@@ -498,7 +498,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: Text(appText(context, "Delete", "Delete")),
             ),
           ],
         );
@@ -619,7 +619,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 ),
                 if (asset.isSold)
                   const Chip(
-                    label: Text('Sold'),
+                    label: Text(appText(context, "Sold", "Sold")),
                     backgroundColor: Color(0xFFFFE9E9),
                   ),
                 PopupMenuButton<String>(
@@ -860,7 +860,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Assets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, "My Assets", "My Assets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -910,7 +910,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         ),
                         if (currencies.length > 1) ...[
                           SizedBox(height: 7),
-                          const Text('Totals shown for this currency; other currencies below.',
+                          Text(appText(context, "Totals shown for this currency; other currencies below.", "Totals shown for this currency; other currencies below."),
                             style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
                         ],
                       ],
@@ -954,7 +954,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     ...currencies.where((c) => c != primaryCurrency).map(_currencySummary),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Show Sold Assets', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    title: Text(appText(context, "Show Sold Assets", "Show Sold Assets"), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     value: _showSold,
                     onChanged: (value) {
                       setState(() => _showSold = value);

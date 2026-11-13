@@ -155,7 +155,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('Start Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(appText(context, "Start Date", "Start Date"), style: TextStyle(fontWeight: FontWeight.w600))]),
                         SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
@@ -167,7 +167,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() => endDate = v);
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text('End Date', style: TextStyle(fontWeight: FontWeight.w600))]),
+                        Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(appText(context, "End Date", "End Date"), style: TextStyle(fontWeight: FontWeight.w600))]),
                         SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
                       ])),
                     )),
@@ -230,7 +230,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: Text(appText(context, "Delete", "Delete")),
             ),
           ],
         );
@@ -409,7 +409,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('My Budgets', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, "My Budgets", "My Budgets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -462,8 +462,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                             color: const Color(0xFF147D59),
                           ),
                           SizedBox(height: 12),
-                          Text(
-                            'No budgets found.',
+                          Text(appText(context, "No budgets found.", "No budgets found."),
                             style: TextStyle(color: Color(0xFF7B8781)),
                           ),
                         ],

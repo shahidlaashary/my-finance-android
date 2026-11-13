@@ -225,9 +225,9 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
       var budget = extra;
       for (final d in debts) {
         final bal = d['balance'] as double;
-        final pay = math.min(bal, d['minimum'] as double);
+        final pay = math.min(bal, d['minimum'] as double).toDouble();
         d['balance'] = bal - pay;
-        budget += math.max(0, (d['minimum'] as double) - pay);
+        budget += math.max(0.0, (d['minimum'] as double) - pay).toDouble();
       }
       debts.sort((a, b) => strategy == 'Snowball'
         ? (a['balance'] as double).compareTo(b['balance'] as double)
@@ -235,7 +235,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
       for (final d in debts) {
         if (budget <= 0) break;
         final bal = d['balance'] as double;
-        final pay = math.min(bal, budget);
+        final pay = math.min(bal, budget).toDouble();
         d['balance'] = bal - pay;
         budget -= pay;
       }

@@ -262,8 +262,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               color: Colors.red,
             ),
             SizedBox(height: 12),
-            const Text(
-              'Unable to load reports',
+            Text(appText(context, "Unable to load reports", "Unable to load reports"),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -293,8 +292,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Report Filters',
+            Text(appText(context, "Report Filters", "Report Filters"),
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
@@ -387,8 +385,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Financial Summary',
+        Text(appText(context, "Financial Summary", "Financial Summary"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -505,8 +502,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Current Account Balances',
+        Text(appText(context, "Current Account Balances", "Current Account Balances"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -559,8 +555,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Monthly Income & Expense Trend',
+        Text(appText(context, "Monthly Income & Expense Trend", "Monthly Income & Expense Trend"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -735,8 +730,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Expense by Category',
+        Text(appText(context, "Expense by Category", "Expense by Category"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -789,8 +783,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Account-wise Summary',
+        Text(appText(context, "Account-wise Summary", "Account-wise Summary"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -899,8 +892,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Transaction History',
+        Text(appText(context, "Transaction History", "Transaction History"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

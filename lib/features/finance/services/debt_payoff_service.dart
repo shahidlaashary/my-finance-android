@@ -130,15 +130,7 @@ class DebtPayoffService {
     if (debt.annualInterestRate < 0 || debt.minimumPayment < 0) throw Exception('Interest and minimum payment cannot be negative.');
     final wallets = await db.query('wallets', columns: ['id'], where: 'id=?', whereArgs: [debt.walletId], limit: 1);
     if (wallets.isEmpty) throw Exception('Linked account was not found.');
-    var balance = debt.balance;
-    if (debt.id != null) {
-      final previous = await db.query('debts', where: 'id=?', whereArgs: [debt.id], limit: 1);
-      if (previous.isEmpty) throw Exception('Debt not found.');
-      final old = DebtRecord.fromMap(previous.first);
-      final alreadyPaid = old.originalAmount - old.balance;
-      if (debt.originalAmount < alreadyPaid) throw Exception('Original amount cannot be less than the amount already paid.');
-      balance = debt.originalAmount - alreadyPaid;
-    }
+    final balance = debt.balance;
     final values = {
       'name': debt.name.trim(), 'lender': debt.lender.trim(), 'phone': debt.phone.trim(),
       'original_amount': debt.originalAmount, 'balance': balance,

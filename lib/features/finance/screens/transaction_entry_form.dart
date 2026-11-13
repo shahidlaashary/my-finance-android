@@ -206,7 +206,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(height: 15),
+              SizedBox(height: 15),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -214,7 +214,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               ...options.map(
                 (option) => ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -257,11 +257,11 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Date', style: TextStyle(fontSize: 10, color: AppColors.muted)),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Row(
                       children: [
                         const Icon(Icons.calendar_today_outlined, size: 15),
-                        const SizedBox(width: 5),
+                        SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             DateFormat(_dateFormat).format(selectedDate),
@@ -288,12 +288,12 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text('Time', style: TextStyle(fontSize: 10, color: AppColors.muted)),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.access_time_rounded, size: 15),
-                        const SizedBox(width: 5),
+                        SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             DateFormat('h:mm a').format(selectedDate),
@@ -320,12 +320,12 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     const Text('Recurring', style: TextStyle(fontSize: 10, color: AppColors.muted)),
-                    const SizedBox(height: 3),
+                    SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         const Icon(Icons.repeat_rounded, size: 15),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             selectedRecurring,
@@ -419,7 +419,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 size: 19,
                 color: AppColors.primary,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   category['name'] as String,
@@ -602,10 +602,10 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
             : AppColors.expense;
 
     if (loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator());
     }
     if (wallets.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text('Pehle ek wallet add karein.'),
@@ -625,20 +625,20 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildDateTimeRecurringBox(),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             if (isTransfer) ...[
               Row(
                 children: [
                   Expanded(child: _walletField()),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(child: _destinationWalletField()),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(child: _amountField()),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
                     child: _notesField(),
                   ),
@@ -648,7 +648,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               if (selectedWallet != null &&
                   selectedDestinationWallet != null &&
                   selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 TextFormField(
                   controller: destinationAmountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -658,7 +658,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               if (isTransfer) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -686,7 +686,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   ),
                 ),
                 if (transferFeeEnabled) ...[
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   TextFormField(
                     controller: transferFeeController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -701,20 +701,20 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               Row(
                 children: [
                   Expanded(child: _amountField()),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(child: _walletField()),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(child: _categoryField()),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(child: _notesField()),
                 ],
               ),
             ],
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             FilledButton(
               onPressed: saving ? null : save,
               style: FilledButton.styleFrom(
@@ -725,7 +725,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 ),
               ),
               child: saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 21,
                       width: 21,
                       child: CircularProgressIndicator(

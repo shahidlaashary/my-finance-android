@@ -6,7 +6,6 @@ import 'package:my_finance/features/backup_restore/screens/backup_restore_screen
 import 'package:my_finance/features/security/app_lock_screen.dart';
 import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
 import 'package:my_finance/features/settings/base_currency_screen.dart';
-import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
@@ -110,12 +109,6 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Language',
             subtitle: 'English and Urdu language settings',
             onTap: () => _openScreen(context, const LanguageSettingsScreen()),
-          ),
-          _SettingsInfoTile(
-            icon: Icons.price_change_rounded,
-            title: 'Manual Exchange Rates',
-            subtitle: 'Manage buy and sell exchange rates',
-            onTap: () => _openScreen(context, const ExchangeRatesScreen()),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
@@ -55,8 +56,8 @@ class MoreFeaturesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'More Features',
+        title: Text(
+          appText(context, 'More Features', 'مزید خصوصیات'),
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
@@ -159,7 +160,7 @@ class MoreFeaturesPage extends StatelessWidget {
                 color: AppColors.primary,
               ),
               title: Text(
-                feature['title'] as String,
+                appText(context, feature['title'] as String, feature['title'] as String),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               trailing: const Icon(

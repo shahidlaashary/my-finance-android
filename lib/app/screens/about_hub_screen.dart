@@ -18,15 +18,57 @@ class AboutHubScreen extends StatelessWidget {
       _AboutEntry('Storage Information','Local database and attachment storage details',Icons.storage_outlined,()=>_open(context,const _StoragePage())),
     ];
     return Scaffold(appBar:AppBar(title:Text(appText(context, "About My Finance", "About My Finance"),style:TextStyle(fontWeight:FontWeight.w800))),body:ListView(padding:const EdgeInsets.all(16),children:[
-      Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(children:[
-        Container(width:68,height:68,decoration:BoxDecoration(color:Theme.of(context).colorScheme.primaryContainer,shape:BoxShape.circle),child:Icon(Icons.account_balance_wallet_rounded,size:36,color:Theme.of(context).colorScheme.primary)),
-        const SizedBox(height:12),Text(appText(context, "MY FINANCE", "MY FINANCE"),style:TextStyle(fontSize:20,fontWeight:FontWeight.w900,letterSpacing:1.5)),
-        const SizedBox(height:4),Text(appText(context, "Your Money. Your Control.", "Your Money. Your Control."),style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant)),
-        const SizedBox(height:8),Text(appText(context, "Version 1.0.0", "Version 1.0.0"),style:TextStyle(fontSize:12)),
-      ]))),
-      const SizedBox(height:12),
+      Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.account_balance_wallet_rounded,
+                color: Theme.of(context).colorScheme.primary, size: 29),
+            ),
+            const SizedBox(height: 12),
+            Text(appText(context, "MY FINANCE", "MY FINANCE"),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1.8)),
+            const SizedBox(height: 5),
+            Text(appText(context, "Your Money. Your Control.", "Your Money. Your Control."),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(appText(context, "Smart • Simple • Secure", "Smart • Simple • Secure"),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11)),
+            const SizedBox(height: 16),
+            Text(appText(context, "Created by Shahid Laashary", "Created by Shahid Laashary"),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 12, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            Text('© ${DateTime.now().year} My Finance. All rights reserved.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 10)),
+            const SizedBox(height: 4),
+            Text(appText(context, "Made with care for better financial management.", "Made with care for better financial management."),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 10)),
+          ],
+        ),
+      ),
       ...sections.map((s)=>Card(margin:const EdgeInsets.only(bottom:9),child:ListTile(leading:Icon(s.icon,color:Theme.of(context).colorScheme.primary),title:Text(s.title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text(s.subtitle),trailing:const Icon(Icons.chevron_right_rounded),onTap:s.action))),
-      const SizedBox(height:12),Center(child:Text(appText(context, "Created by Shahid Laashary", "Created by Shahid Laashary"),style:TextStyle(color:Theme.of(context).colorScheme.onSurfaceVariant,fontWeight:FontWeight.w600))),
     ]));
   }
   static void _open(BuildContext context,Widget page)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>page));

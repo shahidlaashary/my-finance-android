@@ -8,6 +8,7 @@ import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
   @override
@@ -71,7 +72,6 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
-import 'package:my_finance/core/localization/app_text.dart';
   Future<void> _loadData() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
@@ -715,7 +715,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                                       visualDensity: VisualDensity.compact,
                                     )
                                   else if (loan.isOverdue)
-                                    const Chip(
+                                    Chip(
                                       label: Text(appText(context, 'Overdue', 'میعاد ختم')),
                                       backgroundColor: Color(0xFFFFE0E0),
                                       visualDensity: VisualDensity.compact,

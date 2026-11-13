@@ -605,7 +605,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           },
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'open', child: Text('View Details')),
-            const PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit', 'ترمیم کریں'))),
+            PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit', 'ترمیم کریں'))),
             PopupMenuItem(value: 'favorite', child: Text(document.isFavorite ? 'Remove Favorite' : 'Add to Favorites')),
             const PopupMenuItem(value: 'delete', child: Text('Delete')),
           ],

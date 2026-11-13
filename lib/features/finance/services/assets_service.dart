@@ -120,6 +120,8 @@ class AssetsService {
         txn,
         asset.walletId,
       );
+      // Asset ki purchase value us wallet ki currency mein hoti hai.
+      // Isi liye asset ko purchase karne se pehle linked currency validate karte hain.
       final balance = (account['balance'] as num).toDouble();
       if (balance < asset.purchasePrice) {
         throw Exception('Insufficient account balance.');
@@ -216,7 +218,18 @@ class AssetsService {
           'Sale date cannot be before purchase date.',
         );
       }
-      await _getAccount(txn, saleWalletId);
+      final purchaseAccount = await _getAccount(txn, asset.walletId);
+      final saleAccount = await _getAccount(txn, saleWalletId);
+
+      // Mukhtalif currencies ko seedha add karne se asset ki sale value aur profit ghalat hota.
+      final purchaseCurrency = (purchaseAccount['currency'] ?? 'PKR').toString().toUpperCase();
+      final saleCurrency = (saleAccount['currency'] ?? 'PKR').toString().toUpperCase();
+      if (purchaseCurrency != saleCurrency) {
+        throw Exception(
+          'Asset sale account must use the same currency as its purchase account.',
+        );
+      }
+
       await txn.update(
         'assets',
         {
@@ -261,8 +274,18 @@ class AssetsService {
       if (oldAsset.isSold) {
         throw Exception('Sold assets cannot be edited.');
       }
-      await _getAccount(txn, oldAsset.walletId);
-      await _getAccount(txn, updatedAsset.walletId);
+      final oldAccount = await _getAccount(txn, oldAsset.walletId);
+      final updatedAccount = await _getAccount(txn, updatedAsset.walletId);
+
+      // Asset ki purchase amount ko doosri currency mein convert kiye baghair move nahi karte.
+      final oldCurrency = (oldAccount['currency'] ?? 'PKR').toString().toUpperCase();
+      final updatedCurrency = (updatedAccount['currency'] ?? 'PKR').toString().toUpperCase();
+      if (oldCurrency != updatedCurrency) {
+        throw Exception(
+          'Asset must remain linked to an account with the same currency.',
+        );
+      }
+
       await _changeBalance(
         txn,
         walletId: oldAsset.walletId,

@@ -6,6 +6,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 import 'package:my_finance/features/backup_restore/services/automatic_backup_service.dart';
+import 'package:my_finance/core/startup/app_startup_service.dart';
 
 /// Prepares Flutter, the database platform and saved app preferences.
 class AppBootstrapService {
@@ -15,6 +16,10 @@ class AppBootstrapService {
     WidgetsFlutterBinding.ensureInitialized();
     await initializeDatabasePlatform();
     await FinanceDB.instance.init();
+
+    // Database tayyar hone ke baad due recurring transactions process karta hai.
+    // Is se app ke normal startup par scheduled income aur expenses miss nahi hote.
+    await AppStartupService.initialize();
 
     final appearance = AppearanceSettingsService.instance;
     appearance.configure(

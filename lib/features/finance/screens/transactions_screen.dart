@@ -159,6 +159,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       text: item['note']?.toString() ?? '',
     );
 
+    // Transfer ki asal received amount ko edit ke waqt bhi mehfooz rakhta hai.
+    final destinationAmountController = TextEditingController(
+      text: ((item['to_amount'] as num?)?.toDouble() ??
+              (item['amount'] as num).toDouble())
+          .toStringAsFixed(2),
+    );
+
     int? walletId = item['wallet_id'] as int?;
     int? toWalletId = item['to_wallet_id'] as int?;
     String? category = item['category']?.toString();
@@ -228,6 +235,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       },
                     ),
                     if (type == 'transfer') ...[
+                      SizedBox(height: 14),
+                      TextField(
+                        controller: destinationAmountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: appText(
+                            context,
+                            'Received Amount',
+                            'Received Amount',
+                          ),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
                       SizedBox(height: 14),
                       DropdownButtonFormField<int>(
                         value: toWalletId,
@@ -344,6 +366,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
                     if (walletId == null) return;
 
+                    final destinationAmount = type == 'transfer'
+                        ? double.tryParse(destinationAmountController.text.trim())
+                        : null;
+
+                    if (type == 'transfer' &&
+                        (destinationAmount == null ||
+                            !destinationAmount.isFinite ||
+                            destinationAmount <= 0)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(appText(
+                            context,
+                            'Enter a valid received amount.',
+                            'Enter a valid received amount.',
+                          )),
+                        ),
+                      );
+                      return;
+                    }
+
                     if (type == 'transfer' && toWalletId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -361,6 +403,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         walletId: walletId!,
                         toWalletId:
                             type == 'transfer' ? toWalletId : null,
+                        toAmount: destinationAmount,
+                        exchangeRate: type == 'transfer'
+                            ? destinationAmount! / amount
+                            : null,
                         category:
                             type == 'transfer' ? null : category,
                         note: noteController.text.trim(),
@@ -391,6 +437,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
 
     amountController.dispose();
+    destinationAmountController.dispose();
     noteController.dispose();
 
     if (result == true) {

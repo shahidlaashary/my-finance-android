@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:my_finance/core/services/attachment_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
@@ -159,6 +162,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
     const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments', 'Livestock', 'Business'];
+    final pendingFiles = <Map<String, String>>[];
+    final imagePicker = ImagePicker();
+    bool saving = false;
 
     InputDecoration fieldDecoration(String label, IconData icon) => InputDecoration(
       labelText: label,
@@ -177,6 +183,26 @@ class _AssetsScreenState extends State<AssetsScreen> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
+          Future<void> pickCamera() async {
+            try {
+              final photo = await imagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
+              if (photo != null) setSheetState(() => pendingFiles.add({'path': photo.path, 'name': photo.name}));
+            } catch (e) { _message('Camera error: $e'); }
+          }
+          Future<void> pickGallery() async {
+            try {
+              final photos = await imagePicker.pickMultiImage(imageQuality: 85);
+              for (final photo in photos) { setSheetState(() => pendingFiles.add({'path': photo.path, 'name': photo.name})); }
+            } catch (e) { _message('Gallery error: $e'); }
+          }
+          Future<void> pickPdfs() async {
+            try {
+              final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: true);
+              if (result != null) for (final file in result.files) {
+                if (file.path != null) setSheetState(() => pendingFiles.add({'path': file.path!, 'name': file.name}));
+              }
+            } catch (e) { _message('PDF select error: $e'); }
+          }
           final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
           final screenHeight = MediaQuery.sizeOf(context).height;
           final keyboardOpen = keyboardHeight > 0;
@@ -254,6 +280,41 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               if (picked != null) setSheetState(() => purchaseDate = picked);
                             }),
                           TextFormField(controller: notesController, maxLines: 2, decoration: fieldDecoration('Notes (optional)', Icons.notes_outlined)),
+                          SizedBox(height: 14),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(13),
+                            decoration: BoxDecoration(color: const Color(0xFFF4FAF6), borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFDCEBE2))),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Row(children: [
+                                const Icon(Icons.attach_file_rounded, color: Color(0xFF147D59), size: 19),
+                                const SizedBox(width: 7),
+                                const Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
+                                Text('${pendingFiles.length} selected', style: const TextStyle(color: Color(0xFF147D59), fontSize: 11, fontWeight: FontWeight.w700)),
+                              ]),
+                              const SizedBox(height: 4),
+                              const Text('Add photos or PDF documents while entering this asset.', style: TextStyle(color: Colors.black54, fontSize: 11)),
+                              const SizedBox(height: 10),
+                              Wrap(spacing: 8, runSpacing: 8, children: [
+                                _assetAttachmentButton(Icons.camera_alt_outlined, 'Camera', pickCamera, const Color(0xFF147D59)),
+                                _assetAttachmentButton(Icons.photo_library_outlined, 'Gallery', pickGallery, const Color(0xFF3978C5)),
+                                _assetAttachmentButton(Icons.picture_as_pdf_outlined, 'PDFs', pickPdfs, const Color(0xFFD34D4D)),
+                              ]),
+                              if (pendingFiles.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                ...pendingFiles.asMap().entries.map((entry) => Row(children: [
+                                  Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: const Color(0xFF147D59)),
+                                  const SizedBox(width: 7),
+                                  Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11))),
+                                  IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: const Icon(Icons.close, size: 17, color: Colors.redAccent)),
+                                ])),
+                              ],
+                              if (asset?.id != null) ...[
+                                const Divider(height: 18),
+                                AttachmentSection(ownerType: 'asset', ownerId: asset!.id!),
+                              ],
+                            ]),
+                          ),
                           SizedBox(height: 16),
                           Row(children: [
                             Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
@@ -269,12 +330,27 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                     purchaseDate: purchaseDate, walletId: selectedAccount!, notes: notesController.text.trim(),
                                     isSold: asset?.isSold ?? false, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
                                     createdAt: asset?.createdAt ?? DateTime.now());
-                                  if (asset == null) { await _service.addAsset(model); } else { await _service.updateAsset(model); }
+                                  setSheetState(() => saving = true);
+                                  final int assetId;
+                                  if (asset == null) {
+                                    assetId = await _service.addAsset(model);
+                                  } else {
+                                    await _service.updateAsset(model);
+                                    assetId = asset.id!;
+                                  }
+                                  for (final file in pendingFiles) {
+                                    await AttachmentService.addAttachment(
+                                      ownerType: 'asset',
+                                      ownerId: assetId,
+                                      sourcePath: file['path']!,
+                                      originalFileName: file['name'],
+                                    );
+                                  }
                                   if (!sheetContext.mounted) return;
                                   Navigator.pop(sheetContext);
                                   await _loadData();
                                   _message(asset == null ? 'Asset added successfully.' : 'Asset updated successfully.');
-                                } catch (e) { _message('Error: $e'); }
+                                } catch (e) { if (sheetContext.mounted) setSheetState(() => saving = false); _message('Error: $e'); }
                               },
                             )),
                           ]),
@@ -565,167 +641,82 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
+  Widget _assetAttachmentButton(IconData icon, String label, VoidCallback onPressed, Color color) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 17),
+      label: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(color: color.withValues(alpha: .35)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
   Widget _assetCard(AssetsModel asset) {
     final purchaseCurrency = _currency(asset.walletId);
     final saleCurrency = _currency(asset.saleWalletId ?? asset.walletId);
     final currency = asset.isSold ? saleCurrency : purchaseCurrency;
-
-    final profitLoss = asset.isSold && asset.salePrice != null
-        ? asset.salePrice! - asset.purchasePrice
-        : asset.currentValue - asset.purchasePrice;
-
+    final value = asset.isSold && asset.salePrice != null ? asset.salePrice! : asset.currentValue;
+    final profitLoss = asset.isSold && asset.salePrice != null ? asset.salePrice! - asset.purchasePrice : asset.currentValue - asset.purchasePrice;
+    final categoryIcon = <String, IconData>{
+      'Property': Icons.home_work_outlined, 'Vehicles': Icons.directions_car_outlined,
+      'Gold': Icons.diamond_outlined, 'Jewellery': Icons.watch_outlined,
+      'Electronics': Icons.devices_other_outlined, 'Investments': Icons.trending_up_rounded,
+      'Livestock': Icons.pets_outlined, 'Business': Icons.storefront_outlined,
+    }[asset.category] ?? Icons.inventory_2_outlined;
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: const BorderSide(color: Color(0xFFE7EEEA))),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFE8F4EE), borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 21)),
+          title: Row(children: [
+            Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
+            if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFFFE9E9), borderRadius: BorderRadius.circular(7)), child: const Text('SOLD', style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.w800))),
+          ]),
+          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
+          trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+            Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
+            const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
+          ]),
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: const Color(0xFFE2F2EB),
-                  child: const Icon(
-                    Icons.inventory_2_outlined,
-                    color: Color(0xFF147D59),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        asset.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        asset.category.isEmpty
-                            ? 'Uncategorized'
-                            : asset.category,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (asset.isSold)
-                  Chip(
-                    label: Text(appText(context, "Sold", "Sold")),
-                    backgroundColor: Color(0xFFFFE9E9),
-                  ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit' && !asset.isSold) {
-                      _showAssetDialog(asset: asset);
-                    } else if (value == 'valuation' &&
-                        !asset.isSold) {
-                      _updateValuation(asset);
-                    } else if (value == 'sell' &&
-                        !asset.isSold) {
-                      _sellAsset(asset);
-                    } else if (value == 'delete') {
-                      _deleteAsset(asset);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    if (!asset.isSold)
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Text(appText(context, 'Edit Asset', 'اثاثے میں ترمیم کریں')),
-                      ),
-                    if (!asset.isSold)
-                      PopupMenuItem(
-                        value: 'valuation',
-                        child: Text(appText(context, 'Update Valuation', 'قیمت اپ ڈیٹ کریں')),
-                      ),
-                    if (!asset.isSold)
-                      PopupMenuItem(
-                        value: 'sell',
-                        child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں')),
-                      ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں')),
-                    ),
-                  ],
-                ),
+            const Divider(height: 8),
+            _detailRow('Purchase Price', '$purchaseCurrency ${_money(asset.purchasePrice)}'),
+            const SizedBox(height: 6),
+            if (!asset.isSold) _detailRow('Current Value', '$currency ${_money(asset.currentValue)}', bold: true),
+            if (asset.isSold && asset.salePrice != null) _detailRow('Sale Price', '$saleCurrency ${_money(asset.salePrice!)}', bold: true),
+            const SizedBox(height: 6),
+            _detailRow(asset.isSold ? 'Realized Profit/Loss' : 'Unrealized Profit/Loss', '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Colors.green : Colors.red, bold: true),
+            const SizedBox(height: 6),
+            _detailRow('Purchase Account', _accountName(asset.walletId)),
+            if (asset.isSold) _detailRow('Sale Account', _accountName(asset.saleWalletId ?? asset.walletId)),
+            const SizedBox(height: 6),
+            _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
+            if (asset.isSold && asset.saleDate != null) _detailRow('Sale Date', DateFormat('dd MMM yyyy').format(asset.saleDate!)),
+            if (asset.notes.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Align(alignment: Alignment.centerLeft, child: Text(asset.notes, style: const TextStyle(color: Colors.black54, fontSize: 11)))),
+            Align(alignment: Alignment.centerRight, child: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit' && !asset.isSold) { _showAssetDialog(asset: asset); }
+                else if (value == 'valuation' && !asset.isSold) { _updateValuation(asset); }
+                else if (value == 'sell' && !asset.isSold) { _sellAsset(asset); }
+                else if (value == 'delete') { _deleteAsset(asset); }
+              },
+              itemBuilder: (context) => [
+                if (!asset.isSold) PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Asset', 'اثاثے میں ترمیم کریں'))),
+                if (!asset.isSold) PopupMenuItem(value: 'valuation', child: Text(appText(context, 'Update Valuation', 'قیمت اپ ڈیٹ کریں'))),
+                if (!asset.isSold) PopupMenuItem(value: 'sell', child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں'))),
+                PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں'))),
               ],
-            ),
-            const Divider(height: 24),
-            _detailRow(
-              'Purchase Price',
-              '$purchaseCurrency ${_money(asset.purchasePrice)}',
-            ),
-            SizedBox(height: 7),
-            if (!asset.isSold)
-              _detailRow(
-                'Current Value',
-                '$currency ${_money(asset.currentValue)}',
-                bold: true,
-              ),
-            if (asset.isSold && asset.salePrice != null)
-              _detailRow(
-                'Sale Price',
-                '$saleCurrency ${_money(asset.salePrice!)}',
-                bold: true,
-              ),
-            SizedBox(height: 7),
-            _detailRow(
-              asset.isSold
-                  ? 'Realized Profit/Loss'
-                  : 'Unrealized Profit/Loss',
-              '$currency ${_money(profitLoss)}',
-              valueColor:
-                  profitLoss >= 0 ? Colors.green : Colors.red,
-              bold: true,
-            ),
-            SizedBox(height: 7),
-            _detailRow(
-              'Purchase Account',
-              _accountName(asset.walletId),
-            ),
-            if (asset.isSold)
-              _detailRow(
-                'Sale Account',
-                _accountName(asset.saleWalletId ?? asset.walletId),
-              ),
-            SizedBox(height: 7),
-            _detailRow(
-              'Purchase Date',
-              DateFormat('dd MMM yyyy')
-                  .format(asset.purchaseDate),
-            ),
-            if (asset.isSold && asset.saleDate != null) ...[
-              SizedBox(height: 7),
-              _detailRow(
-                'Sale Date',
-                DateFormat('dd MMM yyyy')
-                    .format(asset.saleDate!),
-              ),
-            ],
-            if (asset.notes.isNotEmpty) ...[
-              SizedBox(height: 10),
-              Text(
-                asset.notes,
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ],
-            if (asset.id != null) ...[
-              const Divider(height: 24),
-              AttachmentSection(
-                ownerType: 'asset',
-                ownerId: asset.id!,
-              ),
-            ],
+              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFF1F7F3), borderRadius: BorderRadius.circular(9)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Color(0xFF147D59)), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF147D59)))])),
+            )),
           ],
         ),
       ),

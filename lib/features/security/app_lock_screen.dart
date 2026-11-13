@@ -82,7 +82,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       obscureText: true,
                       keyboardType: TextInputType.number,
                       maxLength: 8,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Current PIN',
                         counterText: '',
                       ),
@@ -95,7 +95,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     obscureText: true,
                     keyboardType: TextInputType.number,
                     maxLength: 8,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'New PIN (4–8 digits)',
                       counterText: '',
                     ),
@@ -106,7 +106,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     obscureText: true,
                     keyboardType: TextInputType.number,
                     maxLength: 8,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Confirm PIN',
                       counterText: '',
                     ),
@@ -125,7 +125,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
+                child: Text(appText(context, "Cancel", "Cancel")),
               ),
               FilledButton(
                 onPressed: () async {
@@ -142,7 +142,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     Navigator.pop(dialogContext, first.text);
                   }
                 },
-                child: const Text('Save PIN'),
+                child: Text(appText(context, "Save PIN", "Save PIN")),
               ),
             ],
           ),
@@ -274,8 +274,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'App Lock & Security',
+        title: Text(appText(context, "App Lock & Security", "App Lock & Security"),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -296,16 +295,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Protect Your Finance Data',
+                      Text(appText(context, "Protect Your Finance Data", "Protect Your Finance Data"),
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 5),
-                      Text(
-                        'Use your PIN or your phone’s secure Face / Fingerprint authentication to protect the app.',
+                      Text(appText(context, "Use your PIN or your phone’s secure Face / Fingerprint authentication to protect the app.", "Use your PIN or your phone’s secure Face / Fingerprint authentication to protect the app."),
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -319,8 +316,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             child: SwitchListTile(
               secondary: const Icon(Icons.lock_outline_rounded),
               title: Text(appText(context, 'App Lock', 'ایپ لاک')), 
-              subtitle: const Text(
-                'Require your PIN or enabled biometrics',
+              subtitle: Text(appText(context, "Require your PIN or enabled biometrics", "Require your PIN or enabled biometrics"),
               ),
               value: _enabled,
               onChanged: _saving ? null : _setEnabled,
@@ -330,8 +326,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             child: SwitchListTile(
               secondary: const Icon(Icons.fingerprint_rounded),
               title: Text(appText(context, 'Face / Fingerprint Unlock', 'فیس / فنگر پرنٹ ان لاک')), 
-              subtitle: const Text(
-                'Use Face / Fingerprint authentication. PIN remains as backup.',
+              subtitle: Text(appText(context, "Use Face / Fingerprint authentication. PIN remains as backup.", "Use Face / Fingerprint authentication. PIN remains as backup."),
               ),
               value: _biometricEnabled,
               onChanged: _enabled && !_saving ? _setBiometricEnabled : null,
@@ -366,8 +361,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            'Your PIN is stored as a salted hash in secure device storage. '
+          Text(appText(context, "Your PIN is stored as a salted hash in secure device storage. ", "Your PIN is stored as a salted hash in secure device storage. ")
             'Biometric unlock uses the security system built into your device; '
             'your PIN remains available as a backup.',
             style: TextStyle(

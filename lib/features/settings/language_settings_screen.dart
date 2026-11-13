@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 
 class LanguageSettingsScreen extends StatelessWidget {

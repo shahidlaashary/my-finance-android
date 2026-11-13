@@ -79,7 +79,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return [
       const DropdownMenuItem<int?>(
         value: null,
-        child: Text('No linked account'),
+        child: Text(appText(context, "No linked account", "No linked account")),
       ),
       ..._wallets.map((account) {
         final id = account['id'] as int;
@@ -331,7 +331,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: Text(appText(context, "Delete", "Delete")),
             ),
           ],
         );
@@ -395,8 +395,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text(
-            'Savings Summary by Currency',
+          child: Text(appText(context, "Savings Summary by Currency", "Savings Summary by Currency"),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -522,7 +521,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     ),
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete Goal'),
+                      child: Text(appText(context, "Delete Goal", "Delete Goal")),
                     ),
                   ],
                 ),
@@ -650,8 +649,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             color: const Color(0xFF147D59),
                           ),
                           SizedBox(height: 12),
-                          Text(
-                            'No savings goals yet.',
+                          Text(appText(context, "No savings goals yet.", "No savings goals yet."),
                             style: TextStyle(color: Color(0xFF7B8781)),
                           ),
                         ],

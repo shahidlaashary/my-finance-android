@@ -42,10 +42,10 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
       title:Text(type=='IN'?'Stock In • ${item.name}':'Stock Out • ${item.name}'),
       content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
         Text('Available: ${_qty(item.quantity)} ${item.unit}'),
-        TextField(controller:qty,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:'Quantity *')),
+        TextField(controller:qty,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText: appText(context, "Quantity *", "Quantity *"))),
         TextField(controller:price,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:type=='IN'?'Purchase Price per Unit':'Sale Price per Unit')),
         ListTile(contentPadding:EdgeInsets.zero,title:Text(appText(context, "Date", "Date")),subtitle:Text(fmt(date)),trailing:const Icon(Icons.calendar_month),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:date,firstDate:DateTime(2000),lastDate:DateTime(2100));if(d!=null)setD(()=>date=d);}),
-        TextField(controller:note,decoration:InputDecoration(labelText:'Note')),
+        TextField(controller:note,decoration:InputDecoration(labelText: appText(context, "Note", "Note"))),
       ])),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:Text(appText(context, "Cancel", "Cancel"))),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:Text(type=='IN'?'Add Stock':'Remove Stock'))],
     )));
@@ -67,7 +67,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
       body:_loading?const Center(child:CircularProgressIndicator()):RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.fromLTRB(14,12,14,100),children:[
         Row(children:[Expanded(child:_summary('Total Items','${_items.length}',Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:_summary('Low Stock','$lowCount',Icons.warning_amber_rounded,color:lowCount>0?Colors.orange:null))]),
         const SizedBox(height:12),
-        TextField(onChanged:(v)=>setState(()=>_search=v),decoration:InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search item, SKU or category',border:OutlineInputBorder())),
+        TextField(onChanged:(v)=>setState(()=>_search=v),decoration:InputDecoration(prefixIcon:Icon(Icons.search),hintText: appText(context, "Search item, SKU or category", "Search item, SKU or category"),border:OutlineInputBorder())),
         const SizedBox(height:10),
         SwitchListTile(contentPadding:const EdgeInsets.symmetric(horizontal:12),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),tileColor:Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha:.45),title:Text(appText(context, "Show low-stock items only", "Show low-stock items only")),value:_lowOnly,onChanged:(v)=>setState(()=>_lowOnly=v)),
         const SizedBox(height:8),

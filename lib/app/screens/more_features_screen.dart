@@ -7,6 +7,7 @@ import 'package:my_finance/features/security/app_lock_screen.dart';
 import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
 import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
+import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -103,6 +104,12 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Base Currency',
             subtitle: 'Choose the currency for consolidated totals',
             onTap: () => _openScreen(context, const BaseCurrencyScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.delete_outline_rounded,
+            title: 'Recycle Bin',
+            subtitle: 'Restore deleted records or permanently remove them',
+            onTap: () => _openScreen(context, const RecycleBinScreen()),
           ),
           _SettingsInfoTile(
             icon: Icons.language_rounded,

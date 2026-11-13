@@ -304,7 +304,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Expanded(
                   child: _metricCard(
-                    title: 'Assets',
+                    title: appText(context, 'Assets', 'اثاثے'),
                     value: currentAssetsPKR,
                     icon: Icons.real_estate_agent_outlined,
                     color: const Color(0xFF3978C5),
@@ -313,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(width: 10),
                 Expanded(
                   child: _metricCard(
-                    title: 'Loans Receivable',
+                    title: appText(context, 'Loans Receivable', 'وصول طلب قرضے'),
                     value: loansReceivablePKR,
                     icon: Icons.handshake_outlined,
                     color: const Color(0xFF9A65C7),
@@ -361,7 +361,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Expanded(
                   child: _metricCard(
-                    title: 'Income',
+                    title: appText(context, 'Income', 'آمدنی'),
                     value: monthlyIncome,
                     icon: Icons.south_west_rounded,
                     color: AppColors.income,
@@ -370,7 +370,7 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(width: 10),
                 Expanded(
                   child: _metricCard(
-                    title: 'Expenses',
+                    title: appText(context, 'Expenses', 'اخراجات'),
                     value: monthlyExpense,
                     icon: Icons.north_east_rounded,
                     color: AppColors.expense,
@@ -478,36 +478,36 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 12),
             _overviewCard(
               icon: Icons.real_estate_agent_outlined,
-              title: 'Assets Overview',
-              subtitle: 'View and manage your assets',
+              title: appText(context, 'Assets Overview', 'اثاثوں کا جائزہ'),
+              subtitle: appText(context, 'View and manage your assets', 'اپنے اثاثے دیکھیں اور منظم کریں'),
               color: const Color(0xFF3978C5),
-              destinationTitle: 'Assets',
+              destinationTitle: appText(context, 'Assets', 'اثاثے'),
             ),
             _overviewCard(
               icon: Icons.handshake_outlined,
-              title: 'Loans Overview',
-              subtitle: 'Manage borrowed and lent money',
+              title: appText(context, 'Loans Overview', 'قرضوں کا جائزہ'),
+              subtitle: appText(context, 'Manage borrowed and lent money', 'لیے اور دیے گئے قرضوں کا انتظام کریں'),
               color: const Color(0xFF9A65C7),
               destinationTitle: 'Loans',
             ),
             _overviewCard(
               icon: Icons.account_balance_wallet_outlined,
-              title: 'Budgets Overview',
-              subtitle: 'Track your budgets',
+              title: appText(context, 'Budgets Overview', 'بجٹ کا جائزہ'),
+              subtitle: appText(context, 'Track your budgets', 'اپنے بجٹ پر نظر رکھیں'),
               color: const Color(0xFFDB9840),
               destinationTitle: 'Budgets',
             ),
             _overviewCard(
               icon: Icons.flag_outlined,
-              title: 'Goals Overview',
-              subtitle: 'Track your saving goals',
+              title: appText(context, 'Goals Overview', 'اہداف کا جائزہ'),
+              subtitle: appText(context, 'Track your saving goals', 'اپنے بچت کے اہداف پر نظر رکھیں'),
               color: const Color(0xFF279C83),
               destinationTitle: 'Goals',
             ),
             _overviewCard(
               icon: Icons.repeat_rounded,
-              title: 'Recurring Txns',
-              subtitle: 'Manage scheduled transactions',
+              title: appText(context, 'Recurring Txns', 'مقررہ لین دین'),
+              subtitle: appText(context, 'Manage scheduled transactions', 'شیڈول شدہ لین دین کا انتظام کریں'),
               color: const Color(0xFF6C78C7),
               destinationTitle: 'Recurring Transactions',
             ),
@@ -627,7 +627,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => destinationTitle == 'Assets'
+            builder: (_) => destinationTitle == appText(context, 'Assets', 'اثاثے')
                 ? const AssetsScreen()
                 : widget.featurePageBuilder(destinationTitle),
           ),

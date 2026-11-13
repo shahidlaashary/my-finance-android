@@ -100,6 +100,8 @@ jobs:
           cache-provider: basic
       - name: Install dependencies
         run: flutter pub get
+      - name: Run Flutter tests
+        run: flutter test
       - name: Build APK with increasing version code
         run: flutter build apk --release --no-tree-shake-icons --build-number "$GITHUB_RUN_NUMBER"
       - name: Upload APK

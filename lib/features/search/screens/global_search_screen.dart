@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/dashboard/home_screen.dart';
@@ -60,12 +62,22 @@ class GlobalSearchScreen extends StatefulWidget {
 
 class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   final _controller = TextEditingController();
+  Timer? _searchDebounce;
   List<_RecordSearchResult> _recordResults = [];
   bool _searchingRecords = false;
   int _searchRequest = 0;
 
   bool _matches(Map<String, dynamic> row, String query) =>
       row.values.any((value) => value != null && value.toString().toLowerCase().contains(query));
+
+  // Har keypress par database ki tamam queries chalane ke bajaye thora waqfa dete hain.
+  void _scheduleRecordSearch(String query) {
+    _searchRequest++;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _searchRecords(query);
+    });
+  }
 
   Future<void> _searchRecords(String rawQuery) async {
     final query = rawQuery.trim().toLowerCase();
@@ -180,6 +192,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -203,13 +216,18 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             child: TextField(
               controller: _controller,
               autofocus: true,
-              onChanged: (value) { setState(() {}); _searchRecords(value); },
+              onChanged: (value) { setState(() {}); _scheduleRecordSearch(value); },
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: 'Search any feature or module...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _controller.text.isEmpty ? null : IconButton(
-                  onPressed: () { _controller.clear(); _searchRecords(''); setState(() {}); },
+                  onPressed: () {
+                    _searchDebounce?.cancel();
+                    _controller.clear();
+                    _searchRecords('');
+                    setState(() {});
+                  },
                   icon: const Icon(Icons.close_rounded),
                 ),
                 filled: true,

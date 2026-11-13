@@ -130,7 +130,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (wallets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No wallets available.')),
+        SnackBar(content: Text('No wallets available.')),
       );
       return;
     }

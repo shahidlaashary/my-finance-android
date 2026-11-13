@@ -660,7 +660,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search documents...',
+                hintText: appText(context, "Search documents...", "Search documents..."),
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isEmpty ? null : IconButton(
                   onPressed: () => _searchController.clear(),

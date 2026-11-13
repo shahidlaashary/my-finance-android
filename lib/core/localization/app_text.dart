@@ -12,6 +12,8 @@ const Map<String, String> _urduTranslations = {
     "Base Currency": "بنیادی کرنسی",
     "Choose the currency for consolidated totals": "مجموعی حساب کے لیے کرنسی منتخب کریں",
     "Language": "زبان",
+    "Languages": "زبانیں",
+    "Choose your preferred language from the available options": "دستیاب زبانوں میں سے اپنی پسند کی زبان منتخب کریں",
     "English and Urdu language settings": "زبان کی ترتیبات",
     "Manual Exchange Rates": "زرِ مبادلہ کی دستی شرحیں",
     "Manage buy and sell exchange rates": "خرید و فروخت کی شرحیں منظم کریں",

@@ -540,7 +540,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 showAttachments(item);
                               }
                             },
-                            itemBuilder: (context) => const [
+                            itemBuilder: (context) => [
                               PopupMenuItem(
                                 value: 'attachments',
                                 child: Row(

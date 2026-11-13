@@ -36,8 +36,8 @@ void main() {
   LoansModel loanModel(int walletId, double amount) => LoansModel(
     borrowerName: 'Test Borrower', borrowerPhone: '', amount: amount,
     remainingAmount: amount, walletId: walletId,
-    lendingDate: DateTime(2026, 11, 13), dueDate: null,
-    notes: '', status: 'active', createdAt: DateTime(2026, 11, 13),
+    lendingDate: DateTime(2026, 11, 13).toIso8601String(), dueDate: null,
+    notes: '', status: 'active', createdAt: DateTime(2026, 11, 13).toIso8601String(),
   );
 
   test('loan and repayment change balances and outstanding correctly', () async {
@@ -47,8 +47,8 @@ void main() {
 
     await LoansService.addRepayment(RepaymentModel(
       loanId: loanId, amount: 1000, walletId: walletId,
-      repaymentDate: DateTime(2026, 11, 20), paymentMethod: 'cash',
-      notes: '', createdAt: DateTime(2026, 11, 20),
+      repaymentDate: DateTime(2026, 11, 20).toIso8601String(), paymentMethod: 'cash',
+      notes: '', createdAt: DateTime(2026, 11, 20).toIso8601String(),
     ));
     final loan = await LoansService.getLoanById(loanId);
     expect(loan!.remainingAmount, 2000);
@@ -61,8 +61,8 @@ void main() {
     await expectLater(
       LoansService.addRepayment(RepaymentModel(
         loanId: loanId, amount: 1001, walletId: walletId,
-        repaymentDate: DateTime(2026, 11, 20), paymentMethod: 'cash',
-        notes: '', createdAt: DateTime(2026, 11, 20),
+        repaymentDate: DateTime(2026, 11, 20).toIso8601String(), paymentMethod: 'cash',
+        notes: '', createdAt: DateTime(2026, 11, 20).toIso8601String(),
       )),
       throwsA(isA<Exception>()),
     );
@@ -76,8 +76,8 @@ void main() {
     final loanId = await LoansService.addLoan(loanModel(walletId, 3000));
     final repaymentId = await LoansService.addRepayment(RepaymentModel(
       loanId: loanId, amount: 1000, walletId: walletId,
-      repaymentDate: DateTime(2026, 11, 20), paymentMethod: 'cash',
-      notes: '', createdAt: DateTime(2026, 11, 20),
+      repaymentDate: DateTime(2026, 11, 20).toIso8601String(), paymentMethod: 'cash',
+      notes: '', createdAt: DateTime(2026, 11, 20).toIso8601String(),
     ));
     await LoansService.deleteRepayment(repaymentId);
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 7000);
@@ -90,8 +90,8 @@ void main() {
     final loanId = await LoansService.addLoan(loanModel(walletId, 3000));
     await LoansService.addRepayment(RepaymentModel(
       loanId: loanId, amount: 1000, walletId: walletId,
-      repaymentDate: DateTime(2026, 11, 20), paymentMethod: 'cash',
-      notes: '', createdAt: DateTime(2026, 11, 20),
+      repaymentDate: DateTime(2026, 11, 20).toIso8601String(), paymentMethod: 'cash',
+      notes: '', createdAt: DateTime(2026, 11, 20).toIso8601String(),
     ));
     await LoansService.deleteLoan(loanId);
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 10000);

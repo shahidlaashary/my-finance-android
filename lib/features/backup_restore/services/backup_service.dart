@@ -440,7 +440,7 @@ class BackupService {
             }
 
             // Windows aur Unix dono tarah ke paths normalize karein.
-            final normalizedStoredPath = storedPath.replaceAll('\\\\', '/');
+            final normalizedStoredPath = storedPath.replaceAll('\\', '/');
             final markerIndex =
                 normalizedStoredPath.lastIndexOf(attachmentMarker);
 

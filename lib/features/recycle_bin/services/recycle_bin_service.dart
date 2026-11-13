@@ -201,17 +201,21 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      if (table == 'vehicle_manager_data_v1:vehicles') {
+      if (table.startsWith('vehicle_manager_data_v1:')) {
+        final arrayName = table.substring('vehicle_manager_data_v1:'.length);
+        const vehicleKeys = {'vehicles','fuel_logs','expenses','reminders'};
+        if (!vehicleKeys.contains(arrayName)) throw Exception('Unsupported vehicle record type.');
         final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['vehicle_manager_data_v1'], limit: 1);
         final data = settings.isEmpty ? <String, dynamic>{'vehicles': [], 'fuel_logs': [], 'expenses': [], 'reminders': []} : Map<String, dynamic>.from(jsonDecode(settings.first['setting_value']?.toString() ?? '{}') as Map);
-        final vehicles = (data['vehicles'] as List? ?? []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
-        if (vehicles.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A vehicle with this ID already exists.');
-        vehicles.add(record);
-        data['vehicles'] = vehicles;
+        final current = (data[arrayName] as List? ?? []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        if (current.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A record with this ID already exists.');
+        current.add(record);
+        data[arrayName] = current;
         await txn.insert('app_settings', {'setting_key':'vehicle_manager_data_v1','setting_value':jsonEncode(data)}, conflictAlgorithm: ConflictAlgorithm.replace);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
+
       if (table == 'my_documents_records') {
         final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['my_documents_records'], limit: 1);
         final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();

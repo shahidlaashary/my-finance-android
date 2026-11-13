@@ -26,12 +26,12 @@ class MoreFeaturesPage extends StatelessWidget {
         'icon': Icons.info_outline_rounded,
       },
       {
-        'title': 'Debt Payoff Planner',
-        'icon': Icons.trending_down_rounded,
-      },
-      {
         'title': 'Exchange Rates',
         'icon': Icons.currency_exchange_rounded,
+      },
+      {
+        'title': 'Debt Payoff Planner',
+        'icon': Icons.trending_down_rounded,
       },
       {
         'title': 'My Documents',
@@ -42,16 +42,8 @@ class MoreFeaturesPage extends StatelessWidget {
         'icon': Icons.repeat_rounded,
       },
       {
-        'title': 'Settings',
-        'icon': Icons.settings_outlined,
-      },
-      {
         'title': 'Staff Management',
         'icon': Icons.badge_outlined,
-      },
-      {
-        'title': 'Recycle Bin',
-        'icon': Icons.delete_outline_rounded,
       },
       {
         'title': 'Stock Manager',
@@ -61,6 +53,15 @@ class MoreFeaturesPage extends StatelessWidget {
         'title': 'Vehicle Manager',
         'icon': Icons.directions_car_filled_rounded,
       },
+      {
+        'title': 'Recycle Bin',
+        'icon': Icons.delete_outline_rounded,
+      },
+      {
+        'title': 'Settings',
+        'icon': Icons.settings_outlined,
+      },
+
     ];
 
     return Scaffold(

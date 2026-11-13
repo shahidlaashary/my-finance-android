@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/services/reports_service.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -208,7 +209,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports & Analytics'),
+        title: Text(appText(context, 'Reports & Analytics', 'رپورٹس اور تجزیات')),
         actions: [
           IconButton(
             onPressed: _loadReports,
@@ -277,7 +278,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ElevatedButton.icon(
               onPressed: _loadReports,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(appText(context, 'Try Again', 'دوبارہ کوشش کریں')),
             ),
           ],
         ),
@@ -311,7 +312,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               items: [
                 const DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('All Currencies'),
+                  child: Text(appText(context, 'All Currencies', 'تمام کرنسیاں')),
                 ),
                 ..._currencies.map(
                   (currency) => DropdownMenuItem<String?>(

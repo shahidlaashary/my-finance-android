@@ -40,6 +40,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     }
   }
 
+import 'package:my_finance/core/localization/app_text.dart';
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
@@ -184,7 +185,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   const SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
                   const SizedBox(height: 16),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), const SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -222,7 +223,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add Savings'),
+          title: Text(appText(context, 'Add Savings', 'بچت شامل کریں')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -235,7 +236,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -243,7 +244,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (value == null || !value.isFinite || value <= 0) return;
                 Navigator.pop(context, value);
               },
-              child: const Text('Continue'),
+              child: Text(appText(context, 'Continue', 'جاری رکھیں')),
             ),
           ],
         );
@@ -270,7 +271,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Withdraw Savings'),
+          title: Text(appText(context, 'Withdraw Savings', 'بچت نکالیں')),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -283,7 +284,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -291,7 +292,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 if (value == null || !value.isFinite || value <= 0) return;
                 Navigator.pop(context, value);
               },
-              child: const Text('Withdraw'),
+              child: Text(appText(context, 'Withdraw', 'نکالیں')),
             ),
           ],
         );
@@ -316,14 +317,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Savings Goal'),
+          title: Text(appText(context, 'Delete Savings Goal', 'بچت کا ہدف حذف کریں')),
           content: Text(
             'Delete "${goal.name}" and its savings history?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
@@ -517,7 +518,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   itemBuilder: (context) => const [
                     PopupMenuItem(
                       value: 'edit',
-                      child: Text('Edit Goal'),
+                      child: Text(appText(context, 'Edit Goal', 'ہدف میں ترمیم کریں')),
                     ),
                     PopupMenuItem(
                       value: 'delete',
@@ -539,7 +540,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saved Amount'),
+                Text(appText(context, 'Saved Amount', 'محفوظ شدہ رقم')),
                 Text(
                   '${_money(goal.savedAmount)} $currency',
                   style: const TextStyle(fontWeight: FontWeight.bold),
@@ -589,12 +590,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 FilledButton.tonalIcon(
                   onPressed: () => _showContributionDialog(goal),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Savings'),
+                  label: Text(appText(context, 'Add Savings', 'بچت شامل کریں')),
                 ),
                 OutlinedButton.icon(
                   onPressed: () => _withdraw(goal),
                   icon: const Icon(Icons.remove),
-                  label: const Text('Withdraw'),
+                  label: Text(appText(context, 'Withdraw', 'نکالیں')),
                 ),
               ],
             ),
@@ -628,7 +629,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Goal'),
+        label: Text(appText(context, 'New Goal', 'نیا ہدف')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

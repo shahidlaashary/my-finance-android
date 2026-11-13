@@ -211,7 +211,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           ]),
                           SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
-                            validator: (v) => v == null || v.trim().isEmpty ? 'Enter asset name' : null),
+                            validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter asset name', 'اثاثے کا نام درج کریں') : null),
                           SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: DropdownButtonFormField<String>(
@@ -227,7 +227,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               decoration: fieldDecoration('Payment Account', Icons.account_balance_wallet_outlined),
                               items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(),
                               onChanged: (v) => setSheetState(() => selectedAccount = v),
-                              validator: (v) => v == null ? 'Select account' : null,
+                              validator: (v) => v == null ? appText(context, 'Select account', 'اکاؤنٹ منتخب کریں') : null,
                             )),
                           ]),
                           SizedBox(height: 12),

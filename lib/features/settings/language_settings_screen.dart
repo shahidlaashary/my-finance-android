@@ -85,7 +85,11 @@ class LanguageSettingsScreen extends StatelessWidget {
               Text(
                 isUrdu
                     ? 'زبان تبدیل کرنے سے ایپ کی سمت بھی تبدیل ہو جائے گی۔'
-                    : 'Changing the language also changes the app text direction.',
+                    : selectedLocale.languageCode == 'bal'
+                        ? 'زبان بدلگ ءَ ایپ ءِ لکھت ءِ سمت ھم بدل بیت۔'
+                        : selectedLocale.languageCode == 'ps'
+                            ? 'د ژبې په بدلولو سره د اپ د متن لوری هم بدلېږي.'
+                            : 'Changing the language also changes the app text direction.',
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: isRtl ? TextAlign.right : TextAlign.left,
               ),

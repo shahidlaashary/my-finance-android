@@ -6,6 +6,7 @@ import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
+import 'package:my_finance/features/finance/screens/debt_payoff_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -15,6 +16,10 @@ class MoreFeaturesPage extends StatelessWidget {
     // Budgets, Goals aur Stats ab bottom navigation mein mojood hain.
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
+      {
+        'title': 'Debt Payoff Planner',
+        'icon': Icons.trending_down_rounded,
+      },
       {
         'title': 'Exchange Rates',
         'icon': Icons.currency_exchange_rounded,
@@ -170,6 +175,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Exchange Rates') {
                         return const ExchangeRatesScreen();
+                      }
+                      if (feature['title'] == 'Debt Payoff Planner') {
+                        return const DebtPayoffScreen();
                       }
                       return const MyDocumentsScreen();
                     },

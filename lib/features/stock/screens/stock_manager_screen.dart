@@ -80,7 +80,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
         const SizedBox(height:10),
         SwitchListTile(contentPadding:const EdgeInsets.symmetric(horizontal:12),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),tileColor:Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha:.45),title:const Text('Show low-stock items only'),value:_lowOnly,onChanged:(v)=>setState(()=>_lowOnly=v)),
         const SizedBox(height:8),
-        if(visible.isEmpty)Padding(padding:const EdgeInsets.all(28),child:Center(child:Text(_items.isEmpty?'No stock items yet. Add your first item.':'No low-stock items. Everything is above its alert level.'))),
+        if(visible.isEmpty)Padding(padding:const EdgeInsets.all(28),child:Center(child:Text(_items.isEmpty?'No stock items yet. Add your first item.':query.isNotEmpty?'No matching stock items.':_lowOnly?'No low-stock items. Everything is above its alert level.':'No stock items to show.'))),
         ...visible.map((i)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           Row(children:[Expanded(child:Text(i.name,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),if(i.isLowStock)const Chip(label:Text('Low Stock'),backgroundColor:Color(0xFFFFE0B2))]),
           Text('${i.category} • ${i.sku.isEmpty?'No SKU':i.sku}'),

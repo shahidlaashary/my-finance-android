@@ -575,6 +575,30 @@ class _StatsScreenState extends State<StatsScreen> {
       const SizedBox(height: 12),
     ];
   }
+  Widget _buildAdvancedInsights() {
+    final income = _totals['income'] ?? 0;
+    final net = _totals['net'] ?? 0;
+    final days = _endDate.difference(_startDate).inDays + 1;
+    final savingsRate = income > 0 ? net / income * 100 : 0.0;
+    final expenseRatio = income > 0 ? (_totals['expense'] ?? 0) / income * 100 : 0.0;
+    final averageDaily = days > 0 ? (_totals['expense'] ?? 0) / days : 0.0;
+    final topCategory = _categories.isEmpty ? 'No category data' : _categories.first['category_name'].toString();
+    final topAmount = _categories.isEmpty ? 0.0 : (_categories.first['total'] as num?)?.toDouble() ?? 0.0;
+    final budgetRows = _budgets.where((budget) => budget.currency.toUpperCase() == _currency.toUpperCase());
+    final budgetLimit = budgetRows.fold<double>(0, (sum, budget) => sum + budget.limitAmount);
+    final budgetSpent = budgetRows.fold<double>(0, (sum, budget) => sum + budget.spentAmount);
+    final budgetUse = budgetLimit > 0 ? budgetSpent / budgetLimit * 100 : 0.0;
+    return _buildOverviewSection('Advanced Financial Insights', Icons.insights_rounded, [
+      _overviewLine('Savings rate', '\${savingsRate.toStringAsFixed(1)}%'),
+      _overviewLine('Expenses as % of income', '\${expenseRatio.toStringAsFixed(1)}%'),
+      _overviewLine('Average daily spending', '$_currency \${_money(averageDaily)}'),
+      _overviewLine('Highest expense category', topCategory),
+      _overviewLine('Top category spending', '$_currency \${_money(topAmount)}'),
+      _overviewLine('Budget utilization', budgetLimit > 0 ? '\${budgetUse.toStringAsFixed(1)}%' : 'No budgets set'),
+      _overviewLine('Net cash flow', '$_currency \${_money(net)}'),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -654,6 +678,8 @@ class _StatsScreenState extends State<StatsScreen> {
                         _sectionTitle('Wallet Balances'),
                         _buildBalances(),
                       ]))),
+                      const SizedBox(height: 12),
+                      _buildAdvancedInsights(),
                       const SizedBox(height: 12),
                       ..._buildAdditionalStats(),
                     ],

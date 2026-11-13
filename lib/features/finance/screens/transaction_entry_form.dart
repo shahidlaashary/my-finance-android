@@ -12,6 +12,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/finance/services/finance_transaction_operations.dart';
+import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
 
 class TransactionEntryForm extends StatefulWidget {
   final String transactionType;
@@ -400,13 +401,44 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     );
   }
 
+  Future<void> _manageCategories() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CategoriesPage(initialType: widget.transactionType),
+      ),
+    );
+
+    if (!mounted) return;
+    final categories = await FinanceDB.instance.getCategories(
+      widget.transactionType,
+    );
+    if (!mounted) return;
+
+    setState(() {
+      transactionCategories = categories;
+      if (!categories.any(
+        (category) => category['name'] == selectedCategory,
+      )) {
+        selectedCategory = categories.isEmpty
+            ? ''
+            : categories.first['name'] as String;
+      }
+    });
+  }
+
   Widget _categoryField() {
     return DropdownButtonFormField<String>(
       value: transactionCategories.any(
         (category) => category['name'] == selectedCategory,
       ) ? selectedCategory : null,
       isExpanded: true,
-      decoration: decoration('Category', icon: Icons.category_outlined),
+      decoration: decoration('Category', icon: Icons.category_outlined).copyWith(
+        suffixIcon: IconButton(
+          tooltip: appText(context, 'Manage Categories', 'زمرے منظم کریں'),
+          icon: const Icon(Icons.tune_rounded),
+          onPressed: _manageCategories,
+        ),
+      ),
       hint: Text(appText(context, 'Select Category', 'زمرہ منتخب کریں')),
       items: transactionCategories.map((category) {
         final iconCode = category['icon'] as int;

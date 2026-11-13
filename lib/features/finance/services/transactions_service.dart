@@ -55,6 +55,7 @@ class TransactionsService {
     AppRefreshController.notifyChanged();
   }
 
+  // Edit ya delete se pehle purani transaction ka balance impact reverse karta hai.
   static Future<void> _reverse(Transaction txn, Map<String, dynamic> row) async {
     final rawType = row['type'].toString().trim().toLowerCase();
     final amount = (row['amount'] as num).toDouble();
@@ -89,6 +90,7 @@ class TransactionsService {
     }
   }
 
+  // Nayi transaction validate karke wallet balances ko database transaction mein update karta hai.
   static Future<void> _apply(
     Transaction txn, {
     required String type,
@@ -126,6 +128,15 @@ class TransactionsService {
     final destination = destRows.first;
     final received = toAmount ?? amount;
     if (!received.isFinite || received <= 0) throw Exception('Enter a valid destination amount.');
+
+    // Aik currency ke wallets mein transfer amount dono taraf barabar rehni chahiye.
+    // Mukhtalif currencies hon to user ka diya hua received amount aur exchange rate use hota hai.
+    final sourceCurrency = (source['currency'] ?? 'PKR').toString().toUpperCase();
+    final destinationCurrency = (destination['currency'] ?? 'PKR').toString().toUpperCase();
+    if (sourceCurrency == destinationCurrency && received != amount) {
+      throw Exception('Same-currency transfers must use the same sent and received amount.');
+    }
+
     if ((source['balance'] as num).toDouble() < amount + transferFee) throw Exception('Insufficient wallet balance.');
     await _changeBalance(txn, walletId, -(amount + transferFee));
     await _changeBalance(txn, toWalletId, received);

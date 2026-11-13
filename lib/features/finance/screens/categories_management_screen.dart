@@ -244,7 +244,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
+        title: Text(
           appText(context, 'Categories', 'زمرے'),
           style: TextStyle(fontWeight: FontWeight.w800),
         ),

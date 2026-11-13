@@ -269,6 +269,9 @@ class VehicleService {
     Map? record;
     for (final row in rows) { if (row['id'] == id) { record = row; break; } }
     if (record == null) return;
+    final archiveId = await RecycleBinService.archive(type: key == 'fuel_logs' ? 'Vehicle Fuel Log' : 'Vehicle Expense',
+      title: record['notes']?.toString().isNotEmpty == true ? record['notes'].toString() : (key == 'fuel_logs' ? 'Fuel Log' : 'Vehicle Expense'),
+      table: 'vehicle_manager_data_v1:$key', id: id, record: Map<String, dynamic>.from(record));
     final previous = data[key];
     data[key] = rows.where((e) => e['id'] != id).toList();
     await _write(data);
@@ -278,6 +281,7 @@ class VehicleService {
     } catch (_) {
       data[key] = previous;
       await _write(data);
+      await RecycleBinService.permanentlyDelete(archiveId);
       rethrow;
     }
   }
@@ -302,7 +306,14 @@ class VehicleService {
   }
   static Future<void> deleteReminder(int id) async {
     final data = await _read();
-    data['reminders'] = (data['reminders'] as List).where((e) => e is Map && e['id'] != id).toList();
+    final rows = (data['reminders'] as List).whereType<Map>().toList();
+    final matches = rows.where((e) => e['id'] == id).toList();
+    if (matches.isEmpty) return;
+    await RecycleBinService.archive(type: 'Vehicle Reminder',
+      title: matches.first['title']?.toString() ?? 'Vehicle Reminder',
+      table: 'vehicle_manager_data_v1:reminders', id: id,
+      record: Map<String, dynamic>.from(matches.first));
+    data['reminders'] = rows.where((e) => e['id'] != id).toList();
     await _write(data);
   }
 }

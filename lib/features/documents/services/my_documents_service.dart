@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class MyDocumentModel {
   final int? id;
@@ -209,7 +210,11 @@ class MyDocumentsService {
     final db = await _db;
     await db.transaction((txn) async {
       final records = await _readMaps(txn);
-      records.removeWhere((item) => (item['id'] as num?)?.toInt() == id);
+      final index = records.indexWhere((item) => (item['id'] as num?)?.toInt() == id);
+      if (index < 0) return;
+      final record = records[index];
+      await RecycleBinService.archive(type: 'Document', title: record['title']?.toString() ?? 'Document', table: 'my_documents_records', id: id, record: record);
+      records.removeAt(index);
       await _writeMaps(txn, records);
     });
   }

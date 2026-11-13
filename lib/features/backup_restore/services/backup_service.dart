@@ -431,7 +431,6 @@ class BackupService {
             columns: ['id', 'file_path'],
           );
 
-          const attachmentMarker = '/my_finance_attachments/';
           for (final row in attachmentRows) {
             final id = row['id'];
             final storedPath = row['file_path']?.toString();

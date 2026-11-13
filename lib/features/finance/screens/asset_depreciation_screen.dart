@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/asset_depreciation_service.dart';
+import 'package:my_finance/features/finance/screens/assets_screen.dart';
 
 class AssetDepreciationScreen extends StatefulWidget {
   const AssetDepreciationScreen({super.key});
@@ -44,6 +45,11 @@ class _AssetDepreciationScreenState extends State<AssetDepreciationScreen> {
       setState(() => _loading = false);
       _message('Depreciation data load nahi ho saka: $error');
     }
+  }
+
+  Future<void> _openAssets() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const AssetsScreen()));
+    if (mounted) await _load();
   }
 
   void _message(String value) {
@@ -158,18 +164,25 @@ class _AssetDepreciationScreenState extends State<AssetDepreciationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Asset Depreciation')),
+      appBar: AppBar(title: const Text('Asset Depreciation'), actions: [TextButton.icon(onPressed: _openAssets, icon: const Icon(Icons.add_rounded), label: const Text('My Assets'))]),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _load,
               child: _assets.isEmpty
-                  ? ListView(children: const [
-                      SizedBox(height: 100),
-                      Icon(Icons.inventory_2_outlined, size: 54, color: Colors.grey),
-                      SizedBox(height: 12),
-                      Center(child: Text('No active assets available.')),
-                    ])
+                  ? ListView(
+                      padding: const EdgeInsets.all(24),
+                      children: [
+                        const SizedBox(height: 70),
+                        Icon(Icons.inventory_2_outlined, size: 58, color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(height: 16),
+                        const Center(child: Text('No active assets available', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700))),
+                        const SizedBox(height: 8),
+                        const Text('First add an asset in My Assets. Then return here to configure its depreciation method and view its book value.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, height: 1.5)),
+                        const SizedBox(height: 22),
+                        Center(child: FilledButton.icon(onPressed: _openAssets, icon: const Icon(Icons.add_rounded), label: const Text('Open My Assets / Add Asset'))),
+                      ],
+                    )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: _assets.length,

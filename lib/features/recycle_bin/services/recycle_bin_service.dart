@@ -40,6 +40,34 @@ class RecycleBinService {
       final item = rows.first;
       final table = item['source_table'].toString();
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'goals') {
+        await txn.execute('''CREATE TABLE IF NOT EXISTS goals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+          target_amount REAL NOT NULL, saved_amount REAL NOT NULL DEFAULT 0,
+          start_date TEXT, target_date TEXT, wallet_id INTEGER,
+          notes TEXT NOT NULL DEFAULT '', is_completed INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL)''');
+        await txn.execute('''CREATE TABLE IF NOT EXISTS goal_contributions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, goal_id INTEGER NOT NULL,
+          wallet_id INTEGER NOT NULL, amount REAL NOT NULL,
+          type TEXT NOT NULL DEFAULT 'contribution', date TEXT NOT NULL,
+          note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)''');
+        final relatedRaw = item['related_payload']?.toString() ?? '[]';
+        final history = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        for (final entry in history) {
+          final walletId = (entry['wallet_id'] as num).toInt();
+          final amount = (entry['amount'] as num).toDouble();
+          final isWithdrawal = entry['type']?.toString() == 'withdrawal';
+          final wallets = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+          if (wallets.isEmpty) throw Exception('A linked wallet for this goal no longer exists.');
+          if (!isWithdrawal && (wallets.first['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance to restore this savings goal.');
+          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [isWithdrawal ? amount : -amount, walletId]);
+        }
+        await txn.insert('goals', record);
+        for (final entry in history) { await txn.insert('goal_contributions', entry); }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'assets') {
         await txn.execute('''CREATE TABLE IF NOT EXISTS assets (
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,

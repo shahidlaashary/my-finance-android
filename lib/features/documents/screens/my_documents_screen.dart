@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -365,12 +366,12 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               OutlinedButton.icon(
                                 onPressed: chooseFiles,
                                 icon: const Icon(Icons.attach_file_rounded),
-                                label: const Text('Browse Files'),
+                                label: Text(appText(context, 'Browse Files', 'فائلیں براؤز کریں')),
                               ),
                               OutlinedButton.icon(
                                 onPressed: takePhoto,
                                 icon: const Icon(Icons.camera_alt_outlined),
-                                label: const Text('Scan / Camera'),
+                                label: Text(appText(context, 'Scan / Camera', 'اسکین / کیمرہ')),
                               ),
                             ],
                           ),
@@ -393,7 +394,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               Expanded(
                                 child: OutlinedButton(
                                   onPressed: () => Navigator.pop(sheetContext),
-                                  child: const Text('Cancel'),
+                                  child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -488,12 +489,12 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Document?'),
+        title: Text(appText(context, 'Delete Document?', 'دستاویز حذف کریں؟')),
         content: Text('Delete "${document.title}" and its attached files?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -604,7 +605,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           },
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'open', child: Text('View Details')),
-            const PopupMenuItem(value: 'edit', child: Text('Edit')),
+            const PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit', 'ترمیم کریں'))),
             PopupMenuItem(value: 'favorite', child: Text(document.isFavorite ? 'Remove Favorite' : 'Add to Favorites')),
             const PopupMenuItem(value: 'delete', child: Text('Delete')),
           ],
@@ -640,7 +641,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         backgroundColor: AppColorsForDocuments.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Document'),
+        label: Text(appText(context, 'Add Document', 'دستاویز شامل کریں')),
       ),
       body: Column(
         children: [

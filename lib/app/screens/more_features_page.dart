@@ -7,6 +7,8 @@ import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/finance/screens/debt_payoff_screen.dart';
+import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
+import 'package:my_finance/app/screens/about_hub_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -16,6 +18,10 @@ class MoreFeaturesPage extends StatelessWidget {
     // Budgets, Goals aur Stats ab bottom navigation mein mojood hain.
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
+      {
+        'title': 'About',
+        'icon': Icons.info_outline_rounded,
+      },
       {
         'title': 'Debt Payoff Planner',
         'icon': Icons.trending_down_rounded,
@@ -35,6 +41,10 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'Settings',
         'icon': Icons.settings_outlined,
+      },
+      {
+        'title': 'Stock Manager',
+        'icon': Icons.inventory_2_outlined,
       },
       {
         'title': 'Vehicle Manager',
@@ -178,6 +188,12 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Debt Payoff Planner') {
                         return const DebtPayoffScreen();
+                      }
+                      if (feature['title'] == 'Stock Manager') {
+                        return const StockManagerScreen();
+                      }
+                      if (feature['title'] == 'About') {
+                        return const AboutHubScreen();
                       }
                       return const MyDocumentsScreen();
                     },

@@ -322,7 +322,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     ),
                     const PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete Budget'),
+                      child: Text(appText(context, 'Delete Budget', 'بجٹ حذف کریں')),
                     ),
                   ],
                 ),

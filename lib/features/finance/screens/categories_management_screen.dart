@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 
@@ -155,7 +156,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
+                child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
               ),
               FilledButton(
                 onPressed: () {
@@ -207,12 +208,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Category?'),
+        title: Text(appText(context, 'Delete Category?', 'زمرہ حذف کریں؟')),
         content: Text('Kya aap "$name" category delete karna chahte hain?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),

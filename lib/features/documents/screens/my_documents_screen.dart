@@ -281,7 +281,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Row(
                             children: [
                               Expanded(
@@ -300,7 +300,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          SizedBox(height: 10),
                           TextFormField(
                             controller: titleController,
                             textCapitalization: TextCapitalization.sentences,
@@ -308,7 +308,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             validator: (value) => value == null || value.trim().isEmpty
                                 ? 'Enter document name' : null,
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: category,
                             isExpanded: true,
@@ -320,20 +320,20 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               if (value != null) setSheetState(() => category = value);
                             },
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           TextFormField(
                             controller: numberController,
                             decoration: decoration('Document Number (Optional)', Icons.numbers_rounded),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Row(
                             children: [
                               dateField('Issue Date', issueDate, false),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 10),
                               dateField('Expiry Date', expiryDate, true),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           DropdownButtonFormField<int>(
                             value: reminderDays,
                             isExpanded: true,
@@ -349,7 +349,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               if (value != null) setSheetState(() => reminderDays = value);
                             },
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           TextFormField(
                             controller: notesController,
                             minLines: 2,
@@ -357,9 +357,9 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             textCapitalization: TextCapitalization.sentences,
                             decoration: decoration('Notes (Optional)', Icons.notes_rounded),
                           ),
-                          const SizedBox(height: 14),
+                          SizedBox(height: 14),
                           const Text('Attach Files', style: TextStyle(fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Wrap(
                             spacing: 8, runSpacing: 8,
                             children: [
@@ -376,7 +376,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             ],
                           ),
                           if (selectedFiles.isNotEmpty) ...[
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             ...selectedFiles.asMap().entries.map((entry) => ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
@@ -388,7 +388,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               ),
                             )),
                           ],
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           Row(
                             children: [
                               Expanded(
@@ -397,7 +397,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                                   child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 10),
                               Expanded(
                                 child: ElevatedButton.icon(
                                   icon: const Icon(Icons.check_rounded),
@@ -551,7 +551,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: 9),
+            SizedBox(width: 9),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,7 +589,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(document.category, style: const TextStyle(fontSize: 11)),
-              const SizedBox(height: 3),
+              SizedBox(height: 3),
               Text(_expiryLabel(document), style: TextStyle(
                 fontSize: 11, color: expiryColor, fontWeight: FontWeight.w600,
               )),
@@ -633,7 +633,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             onPressed: () => _showDocumentForm(),
             icon: const Icon(Icons.add_rounded, size: 29),
           ),
-          const SizedBox(width: 5),
+          SizedBox(width: 5),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -650,7 +650,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             child: Row(
               children: [
                 _summaryCard('Documents', _documents.length, Icons.folder_copy_outlined, AppColorsForDocuments.primary),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 _summaryCard('Expiring Soon', _expiringCount, Icons.event_busy_outlined, Colors.orange),
               ],
             ),
@@ -672,7 +672,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           SizedBox(
             height: 42,
             child: ListView(
@@ -717,7 +717,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           ),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : _documents.isEmpty
                     ? Center(
                         child: Padding(
@@ -726,9 +726,9 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.folder_open_rounded, size: 54, color: Colors.grey.shade400),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12),
                               const Text('No documents found', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                              const SizedBox(height: 5),
+                              SizedBox(height: 5),
                               const Text('Add your first document to keep important files in one place.',
                                 textAlign: TextAlign.center, style: TextStyle(color: AppColorsForDocuments.muted, fontSize: 12)),
                             ],
@@ -762,12 +762,12 @@ class _DocumentDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 19, color: AppColorsForDocuments.primary),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label, style: const TextStyle(fontSize: 11, color: AppColorsForDocuments.muted)),
-              const SizedBox(height: 3),
+              SizedBox(height: 3),
               Text(value.isEmpty ? 'Not provided' : value, style: const TextStyle(fontWeight: FontWeight.w600)),
             ],
           )),
@@ -792,7 +792,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(document.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 5),
+                  SizedBox(height: 5),
                   Text(document.category, style: const TextStyle(color: AppColorsForDocuments.muted)),
                   const Divider(height: 24),
                   detail('Document Number', document.documentNumber, Icons.numbers_rounded),

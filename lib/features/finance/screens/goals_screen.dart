@@ -230,7 +230,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Contribution Amount',
+              labelText: appText(context, "Contribution Amount", "Contribution Amount"),
             ),
           ),
           actions: [
@@ -278,7 +278,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Withdrawal Amount',
+              labelText: appText(context, "Withdrawal Amount", "Withdrawal Amount"),
             ),
           ),
           actions: [

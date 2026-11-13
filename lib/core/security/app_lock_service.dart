@@ -68,7 +68,10 @@ class AppLockService {
 
   static Future<List<BiometricType>> availableBiometrics() async {
     try {
+      // A device may support biometrics without having any biometric enrolled.
+      // Check both capability and enrollment before offering biometric unlock.
       if (!await _localAuth.isDeviceSupported()) return [];
+      if (!await _localAuth.canCheckBiometrics) return [];
       return await _localAuth.getAvailableBiometrics();
     } catch (_) {
       return [];

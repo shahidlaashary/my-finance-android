@@ -138,7 +138,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       setState(() => loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Dashboard update failed: $error')),
+        SnackBar(content: Text('${appText(context, 'Dashboard update failed:', 'ڈیش بورڈ اپ ڈیٹ نہیں ہو سکا:')} $error')),
       );
     }
   }
@@ -290,7 +290,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                   SizedBox(height: 7),
-                  Text('Consolidated in $baseCurrency',
+                  Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
                       style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
@@ -462,7 +462,7 @@ class _HomePageState extends State<HomePage> {
                         color: AppColors.income),
                     SizedBox(width: 10),
                     Expanded(
-                      child: Text('No budget alerts. Your active budgets are below 50%.',
+                      child: Text(appText(context, 'No budget alerts. Your active budgets are below 50%.', 'کوئی بجٹ الرٹ نہیں۔ آپ کے فعال بجٹ 50 فیصد سے کم ہیں۔'),
                           style: TextStyle(fontSize: 12,
                               color: AppColors.muted)),
                     ),

@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:my_finance/core/theme/app_colors.dart';
+import 'package:my_finance/features/dashboard/home_screen.dart';
+import 'package:my_finance/features/finance/screens/assets_screen.dart';
+import 'package:my_finance/features/finance/screens/budgets_screen.dart';
+import 'package:my_finance/features/finance/screens/goals_screen.dart';
+import 'package:my_finance/features/finance/screens/loans_screen.dart';
+import 'package:my_finance/features/finance/screens/stats_screen.dart';
+import 'package:my_finance/features/finance/screens/transactions_screen.dart';
+import 'package:my_finance/features/finance/screens/wallets_screen.dart';
+import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
+import 'package:my_finance/features/installments/screens/installments_screen.dart';
+import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
+import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
+import 'package:my_finance/features/staff/screens/staff_screen.dart';
+import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
+import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
+import 'package:my_finance/features/finance/screens/debt_payoff_screen.dart';
+import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
+import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
+import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
+import 'package:my_finance/features/security/app_lock_screen.dart';
+import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
+import 'package:my_finance/features/settings/base_currency_screen.dart';
+import 'package:my_finance/features/settings/language_settings_screen.dart';
+import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
+import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
+import 'package:my_finance/app/screens/about_hub_screen.dart';
+
+class _SearchEntry {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<String> keywords;
+  final Widget Function() page;
+
+  const _SearchEntry(this.title, this.subtitle, this.icon, this.keywords, this.page);
+}
+
+class GlobalSearchScreen extends StatefulWidget {
+  const GlobalSearchScreen({super.key});
+
+  @override
+  State<GlobalSearchScreen> createState() => _GlobalSearchScreenState();
+}
+
+class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
+  final _controller = TextEditingController();
+  late final List<_SearchEntry> _entries = [
+    _SearchEntry('Home', 'Dashboard and financial snapshot', Icons.home_outlined, ['dashboard','overview','balance','home'], () => const HomePage(featurePageBuilder: _unusedFeatureBuilder)),
+    _SearchEntry('Assets', 'Manage owned assets and depreciation', Icons.real_estate_agent_outlined, ['property','vehicle','gold','livestock','business','asset depreciation'], () => const AssetsScreen()),
+    _SearchEntry('Budgets', 'Limits, spending and budget alerts', Icons.account_balance_wallet_outlined, ['budget','limit','spending','alerts'], () => const BudgetsScreen()),
+    _SearchEntry('Goals', 'Savings targets and progress', Icons.flag_outlined, ['saving','target','goal'], () => const GoalsScreen()),
+    _SearchEntry('Loans', 'Track money lent and borrowed', Icons.handshake_outlined, ['debt','borrow','lend','receivable','payable'], () => const LoansScreen()),
+    _SearchEntry('Reports & Analytics', 'Charts, insights and financial reports', Icons.bar_chart_outlined, ['reports','analytics','graphs','charts','statistics','income expense'], () => const StatsScreen()),
+    _SearchEntry('Transactions', 'Search and manage income, expenses and transfers', Icons.receipt_long_outlined, ['income','expense','transfer','entries','payments'], () => const TransactionsScreen()),
+    _SearchEntry('Wallets', 'Accounts, balances and currencies', Icons.account_balance_outlined, ['accounts','cash','bank','currency','wallet'], () => const WalletsPage()),
+    _SearchEntry('My Documents', 'Store and find important documents', Icons.folder_copy_outlined, ['files','papers','pdf','attachments','identity','expiry'], () => const MyDocumentsScreen()),
+    _SearchEntry('Installment Manager', 'Buy or sell items on installments', Icons.payments_outlined, ['qist','qistain','installment','monthly payment','buy','sell'], () => const InstallmentsScreen()),
+    _SearchEntry('Vehicle Manager', 'Vehicle details and records', Icons.directions_car_outlined, ['car','bike','motorcycle','vehicle'], () => const VehiclesScreen()),
+    _SearchEntry('Stock Manager', 'Inventory and stock records', Icons.inventory_2_outlined, ['inventory','products','items','stock'], () => const StockManagerScreen()),
+    _SearchEntry('Staff Management', 'Manage staff and employee records', Icons.badge_outlined, ['employees','salary','team','staff'], () => const StaffScreen()),
+    _SearchEntry('Recurring Transactions', 'Scheduled income and expenses', Icons.repeat_rounded, ['recurring','repeat','schedule','automatic','monthly'], () => const RecurringTransactionsScreen()),
+    _SearchEntry('Exchange Rates', 'Currency conversion and exchange rates', Icons.currency_exchange_rounded, ['forex','convert','rate','exchange'], () => const ExchangeRatesScreen()),
+    _SearchEntry('Debt Payoff Planner', 'Plan debt repayments', Icons.trending_down_rounded, ['debt','repayment','payoff','loan plan'], () => const DebtPayoffScreen()),
+    _SearchEntry('Backup & Restore', 'Back up or restore app data', Icons.backup_outlined, ['backup','restore','export','import','data safety'], () => const BackupRestoreScreen()),
+    _SearchEntry('Recycle Bin', 'Restore or permanently delete removed records', Icons.delete_outline_rounded, ['deleted','trash','restore','bin'], () => const RecycleBinScreen()),
+    _SearchEntry('Notifications & Reminders', 'Manage reminders and alerts', Icons.notifications_active_outlined, ['notification','reminder','alarm','due date'], () => const RemindersScreen()),
+    _SearchEntry('App Lock & Security', 'PIN and biometric protection', Icons.security_outlined, ['security','pin','password','fingerprint','face unlock','lock'], () => const AppLockScreen()),
+    _SearchEntry('App Settings', 'Preferences and app configuration', Icons.tune_rounded, ['settings','preferences','customize'], () => const AppSettingsScreen()),
+    _SearchEntry('Appearance', 'Themes, colors and display mode', Icons.palette_outlined, ['theme','dark mode','light mode','color'], () => const AppearanceScreen()),
+    _SearchEntry('Base Currency', 'Choose your main currency', Icons.currency_exchange_outlined, ['pkr','default currency','main currency'], () => const BaseCurrencyScreen()),
+    _SearchEntry('Languages', 'Change the app language', Icons.language_rounded, ['translation','urdu','english','pashto','balochi'], () => const LanguageSettingsScreen()),
+    _SearchEntry('Asset Depreciation', 'Calculate asset value reduction', Icons.trending_down_rounded, ['depreciation','straight line','declining balance'], () => const AssetDepreciationScreen()),
+    _SearchEntry('About', 'App information and credits', Icons.info_outline_rounded, ['about app','version','created by'], () => const AboutHubScreen()),
+  ];
+
+  static Widget _unusedFeatureBuilder(String title) => const SizedBox.shrink();
+
+  List<_SearchEntry> get _results {
+    final query = _controller.text.trim().toLowerCase();
+    if (query.isEmpty) return _entries;
+    return _entries.where((entry) {
+      final haystack = ([entry.title, entry.subtitle, ...entry.keywords].join(' ')).toLowerCase();
+      return haystack.contains(query);
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _open(_SearchEntry entry) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => entry.page()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final results = _results;
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Global Search', style: TextStyle(fontWeight: FontWeight.w800)),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: TextField(
+              controller: _controller,
+              autofocus: true,
+              onChanged: (_) => setState(() {}),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Search any feature or module...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _controller.text.isEmpty ? null : IconButton(
+                  onPressed: () { _controller.clear(); setState(() {}); },
+                  icon: const Icon(Icons.close_rounded),
+                ),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 9),
+            child: Row(
+              children: [
+                Text(_controller.text.isEmpty ? 'ALL FEATURES' : 'SEARCH RESULTS',
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.1, color: AppColors.muted)),
+                const Spacer(),
+                Text('${results.length} found', style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: results.isEmpty
+              ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.search_off_rounded, size: 48, color: AppColors.muted.withValues(alpha: .6)),
+                  const SizedBox(height: 10),
+                  const Text('No matching feature found', style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  const Text('Try another keyword or module name.', style: TextStyle(fontSize: 12, color: AppColors.muted)),
+                ]))
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: results.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 7),
+                  itemBuilder: (context, index) {
+                    final entry = results[index];
+                    return Material(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(14),
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 3),
+                        leading: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(12)),
+                          child: Icon(entry.icon, color: AppColors.primary, size: 21),
+                        ),
+                        title: Text(entry.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                        subtitle: Text(entry.subtitle, style: const TextStyle(fontSize: 11)),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.muted),
+                        onTap: () => _open(entry),
+                      ),
+                    );
+                  },
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}

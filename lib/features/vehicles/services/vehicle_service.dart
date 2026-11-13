@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Vehicle data uses the existing app_settings key-value table.
 /// No database schema changes or migrations are required.
@@ -83,6 +84,10 @@ class VehicleService {
     if (linked('fuel_logs') || linked('expenses') || linked('reminders')) {
       throw Exception('This vehicle has records. Manage its linked records first.');
     }
+    final rows = (data['vehicles'] as List).whereType<Map>().where((e) => e['id'] == id).toList();
+    if (rows.isEmpty) return;
+    await RecycleBinService.archive(type: 'Vehicle', title: rows.first['name']?.toString() ?? 'Vehicle',
+      table: 'vehicle_manager_data_v1:vehicles', id: id, record: Map<String, dynamic>.from(rows.first));
     data['vehicles'] = (data['vehicles'] as List).where((e) => e is Map && e['id'] != id).toList();
     await _write(data);
   }

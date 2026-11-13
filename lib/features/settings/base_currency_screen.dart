@@ -17,7 +17,8 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   bool _loading = true;
   bool _saving = false;
   String _selected = 'PKR';
-  static const List<String> _available = ['PKR', 'USD', 'GBP', 'EUR', 'AED', 'SAR', 'INR'];
+  // Dropdown currencies are sorted A-Z by their displayed currency name.
+  static const List<String> _available = ['GBP', 'EUR', 'INR', 'PKR', 'SAR', 'AED', 'USD'];
   Map<String, double> _rates = {};
 
   @override

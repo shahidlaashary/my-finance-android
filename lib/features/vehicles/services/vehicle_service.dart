@@ -59,7 +59,11 @@ class VehicleService {
   static Future<List<Map<String, dynamic>>> getFuelLogs({int? vehicleId}) => _getRows('fuel_logs', vehicleId);
   static Future<List<Map<String, dynamic>>> getExpenses({int? vehicleId}) => _getRows('expenses', vehicleId);
   static Future<List<Map<String, dynamic>>> getReminders({int? vehicleId}) => _getRows('reminders', vehicleId);
-  static Future<List<Map<String, dynamic>>> getWallets() => TransactionsService.getAccounts();
+  static Future<List<Map<String, dynamic>>> getWallets() async {
+    final db = await TransactionsService.database;
+    return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
+      orderBy: 'name COLLATE NOCASE ASC');
+  }
 
   static Future<void> saveVehicle(Map<String, dynamic> vehicle) async {
     final data = await _read();

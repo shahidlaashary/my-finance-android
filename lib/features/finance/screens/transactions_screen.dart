@@ -197,7 +197,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         decimal: true,
                       ),
                       decoration: InputDecoration(
-                        labelText: 'Amount',
+                        labelText: appText(context, "Amount", "Amount"),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -206,7 +206,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       value: walletId,
                       isExpanded: true,
                       decoration: InputDecoration(
-                        labelText: 'Account',
+                        labelText: appText(context, "Account", "Account"),
                         border: OutlineInputBorder(),
                       ),
                       items: wallets.map((account) {
@@ -232,7 +232,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         value: toWalletId,
                         isExpanded: true,
                         decoration: InputDecoration(
-                          labelText: 'Destination Account',
+                          labelText: appText(context, "Destination Account", "Destination Account"),
                           border: OutlineInputBorder(),
                         ),
                         items: availableDestinations.map((account) {
@@ -260,7 +260,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             : null,
                         isExpanded: true,
                         decoration: InputDecoration(
-                          labelText: 'Category',
+                          labelText: appText(context, "Category", "Category"),
                           border: OutlineInputBorder(),
                         ),
                         items: [
@@ -288,7 +288,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     TextField(
                       controller: noteController,
                       decoration: InputDecoration(
-                        labelText: 'Description',
+                        labelText: appText(context, "Description", "Description"),
                         border: OutlineInputBorder(),
                       ),
                     ),

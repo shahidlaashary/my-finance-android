@@ -3,6 +3,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/vehicles/services/vehicle_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/vehicles/services/vehicle_export_service.dart';
@@ -619,7 +620,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         Text('${due.length} due', style: TextStyle(color: due.isEmpty ? _muted : Colors.red, fontWeight: FontWeight.w700, fontSize: 12)),
       ]),
       const SizedBox(height: 8),
-      if (due.isEmpty) const Card(child: ListTile(leading: Icon(Icons.check_circle_outline, color: _green), title: Text('No overdue reminders'), subtitle: Text('Your service schedule is up to date.')))
+      if (due.isEmpty) const Card(child: ListTile(leading: Icon(Icons.check_circle_outline, color: _green), title: Text(appText(context, 'No overdue reminders', 'کوئی تاخیر شدہ یاددہانی نہیں')), subtitle: Text(appText(context, 'Your service schedule is up to date.', 'آپ کی سروس کا شیڈول اپ ڈیٹ ہے۔'))))
       else ...due.map((r) => Card(child: ListTile(
         leading: const Icon(Icons.notifications_active_outlined, color: Colors.red),
         title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -692,14 +693,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           if (v == 'edit') _showFuelForm(record: f);
           if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry');
         }, itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit Fuel Entry')),
-          PopupMenuItem(value: 'delete', child: Text('Delete Fuel Entry')),
+          PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Fuel Entry', 'ایندھن کے اندراج میں ترمیم کریں'))),
+          PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Fuel Entry', 'ایندھن کا اندراج حذف کریں'))),
         ]),
         children: [
-          ListTile(dense: true, title: const Text('Price per unit'), trailing: Text(_moneyAmount(f['unit_price']))),
-          ListTile(dense: true, title: const Text('Fuel station'), trailing: Text((f['station'] ?? '—').toString())),
-          ListTile(dense: true, title: const Text('Tank fill'), trailing: Text(f['full_tank'] == true ? 'Full tank' : 'Partial')),
-          if ((f['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: const Text('Notes'), subtitle: Text(f['notes'].toString())),
+          ListTile(dense: true, title: Text(appText(context, 'Price per unit', 'فی یونٹ قیمت')), trailing: Text(_moneyAmount(f['unit_price']))),
+          ListTile(dense: true, title: Text(appText(context, 'Fuel station', 'پیٹرول پمپ')), trailing: Text((f['station'] ?? '—').toString())),
+          ListTile(dense: true, title: Text(appText(context, 'Tank fill', 'ٹینک بھرنا')), trailing: Text(f['full_tank'] == true ? 'Full tank' : 'Partial')),
+          if ((f['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: Text(appText(context, 'Notes', 'نوٹس')), subtitle: Text(f['notes'].toString())),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: AttachmentSection(ownerType: 'vehicle_fuel', ownerId: f['id'] as int)),
         ],
       ),
@@ -716,13 +717,13 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           if (v == 'edit') _showExpenseForm(record: e);
           if (v == 'delete') _deleteRecord(() async { final id = e['id'] as int; await VehicleService.deleteExpense(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_expense', ownerId: id); }, 'vehicle expense');
         }, itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit Expense')),
-          PopupMenuItem(value: 'delete', child: Text('Delete Expense')),
+          PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Expense', 'اخراجات میں ترمیم کریں'))),
+          PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Expense', 'اخراجات حذف کریں'))),
         ]),
         children: [
-          ListTile(dense: true, title: const Text('Paid from'), trailing: Text(_walletName(e['wallet_id']))),
-          ListTile(dense: true, title: const Text('Workshop / Vendor'), trailing: Text((e['vendor'] ?? '—').toString())),
-          if ((e['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: const Text('Notes'), subtitle: Text(e['notes'].toString())),
+          ListTile(dense: true, title: Text(appText(context, 'Paid from', 'ادائیگی کا اکاؤنٹ')), trailing: Text(_walletName(e['wallet_id']))),
+          ListTile(dense: true, title: Text(appText(context, 'Workshop / Vendor', 'ورکشاپ / فروخت کنندہ')), trailing: Text((e['vendor'] ?? '—').toString())),
+          if ((e['notes'] ?? '').toString().isNotEmpty) ListTile(dense: true, title: Text(appText(context, 'Notes', 'نوٹس')), subtitle: Text(e['notes'].toString())),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: AttachmentSection(ownerType: 'vehicle_expense', ownerId: e['id'] as int)),
         ],
       ),
@@ -743,8 +744,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           if (v == 'edit') _showReminderForm(reminder: r);
           if (v == 'delete') _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder');
         }, itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Edit Reminder')),
-          PopupMenuItem(value: 'delete', child: Text('Delete Reminder')),
+          PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Reminder', 'یاددہانی میں ترمیم کریں'))),
+          PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Reminder', 'یاددہانی حذف کریں'))),
         ]),
       ));
     }).toList()));
@@ -805,9 +806,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       const Text('Export Reports', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       const SizedBox(height: 8),
       Card(child: Column(children: [
-        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: const Text('Excel Workbook'), subtitle: const Text('Vehicles, fuel log, expenses and reminders'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
+        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: const Text('Vehicles, fuel log, expenses and reminders'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
         const Divider(height: 1),
-        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red), title: const Text('PDF Report'), subtitle: const Text('Shareable summary of all vehicle records'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
+        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: const Text('Shareable summary of all vehicle records'), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
       ])),
       const SizedBox(height: 8),
       const Text('Reports are saved in the app documents folder and opened with a compatible app.', style: TextStyle(color: _muted, fontSize: 11)),

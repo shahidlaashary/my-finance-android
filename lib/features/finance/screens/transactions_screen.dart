@@ -332,7 +332,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       amountController.text.trim(),
                     );
 
-                    if (amount == null || amount <= 0) {
+                    if (amount == null || !amount.isFinite || amount <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(appText(context, 'Enter a valid amount.', 'درست رقم درج کریں۔')),

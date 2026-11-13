@@ -208,7 +208,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 ),
               ),
               SizedBox(height: 15),
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(appText(context, "Recurring", "Recurring"),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),

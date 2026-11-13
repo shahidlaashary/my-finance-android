@@ -11,6 +11,8 @@ import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
+import 'package:my_finance/features/finance/services/goals_service.dart';
+import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
 import 'package:my_finance/features/finance/screens/goals_screen.dart';
@@ -35,6 +37,13 @@ class _HomePageState extends State<HomePage> {
   double loansReceivablePKR = 0;
   String baseCurrency = 'PKR';
   List<BudgetsModel> budgetAlerts = [];
+  int overviewAssetCount = 0;
+  int overviewLoanCount = 0;
+  int overviewOverdueLoanCount = 0;
+  int overviewGoalCount = 0;
+  int overviewCompletedGoalCount = 0;
+  int overviewRecurringCount = 0;
+  int overviewActiveRecurringCount = 0;
   bool loading = true;
   bool hideBalances = false;
   String numberFormat = '1,234.56';
@@ -101,6 +110,10 @@ class _HomePageState extends State<HomePage> {
       final assetsValue = await _convertValuesToPKR(assetsByCurrency, baseRate);
       final loansValue = await _convertValuesToPKR(loansByCurrency, baseRate);
       final budgets = await BudgetsService.getBudgets(activeOnly: true);
+      final assets = await AssetsService().getAssets(includeSold: false);
+      final loans = await LoansService.getLoans();
+      final goals = await GoalsService.getGoals();
+      final recurring = await RecurringTransactionService().getRecurringTransactions();
       final newBudgetNotifications = await _checkBudgetThresholds(budgets);
       final alerts = budgets
           .where((budget) =>
@@ -123,6 +136,13 @@ class _HomePageState extends State<HomePage> {
         currentAssetsPKR = assetsValue;
         loansReceivablePKR = loansValue;
         budgetAlerts = alerts;
+        overviewAssetCount = assets.length;
+        overviewLoanCount = loans.where((loan) => !loan.isPaid).length;
+        overviewOverdueLoanCount = loans.where((loan) => loan.isOverdue).length;
+        overviewGoalCount = goals.where((goal) => !goal.isCompleted).length;
+        overviewCompletedGoalCount = goals.where((goal) => goal.isCompleted).length;
+        overviewRecurringCount = recurring.length;
+        overviewActiveRecurringCount = recurring.where((item) => item.isActive).length;
         loading = false;
       });
       if (newBudgetNotifications.isNotEmpty && mounted) {
@@ -481,37 +501,37 @@ class _HomePageState extends State<HomePage> {
             _overviewCard(
               icon: Icons.real_estate_agent_outlined,
               title: appText(context, 'Assets Overview', 'اثاثوں کا جائزہ'),
-              subtitle: appText(context, 'View and manage your assets', 'اپنے اثاثے دیکھیں اور منظم کریں'),
+              summary: loading ? 'Loading asset summary...' : '$overviewAssetCount active asset(s)',
+              detail: 'Currently owned assets',
               color: const Color(0xFF3978C5),
-              destinationTitle: 'Assets',
             ),
             _overviewCard(
               icon: Icons.handshake_outlined,
               title: appText(context, 'Loans Overview', 'قرضوں کا جائزہ'),
-              subtitle: appText(context, 'Manage borrowed and lent money', 'لیے اور دیے گئے قرضوں کا انتظام کریں'),
+              summary: loading ? 'Loading loan summary...' : '$overviewLoanCount outstanding loan(s)',
+              detail: '$overviewOverdueLoanCount overdue',
               color: const Color(0xFF9A65C7),
-              destinationTitle: 'Loans',
             ),
             _overviewCard(
               icon: Icons.account_balance_wallet_outlined,
               title: appText(context, 'Budgets Overview', 'بجٹ کا جائزہ'),
-              subtitle: appText(context, 'Track your budgets', 'اپنے بجٹ پر نظر رکھیں'),
+              summary: loading ? 'Loading budget summary...' : '${budgetAlerts.length} active budget(s)',
+              detail: budgetAlerts.isEmpty ? 'No budget alerts' : '${budgetAlerts.length} budget(s) need attention',
               color: const Color(0xFFDB9840),
-              destinationTitle: 'Budgets',
             ),
             _overviewCard(
               icon: Icons.flag_outlined,
               title: appText(context, 'Goals Overview', 'اہداف کا جائزہ'),
-              subtitle: appText(context, 'Track your saving goals', 'اپنے بچت کے اہداف پر نظر رکھیں'),
+              summary: loading ? 'Loading goals summary...' : '$overviewGoalCount active goal(s)',
+              detail: '$overviewCompletedGoalCount completed',
               color: const Color(0xFF279C83),
-              destinationTitle: 'Goals',
             ),
             _overviewCard(
               icon: Icons.repeat_rounded,
               title: appText(context, 'Recurring Txns', 'مقررہ لین دین'),
-              subtitle: appText(context, 'Manage scheduled transactions', 'شیڈول شدہ لین دین کا انتظام کریں'),
+              summary: loading ? 'Loading schedules...' : '$overviewActiveRecurringCount active schedule(s)',
+              detail: '$overviewRecurringCount total schedule(s)',
               color: const Color(0xFF6C78C7),
-              destinationTitle: 'Recurring Transactions',
             ),
           ],
         ),
@@ -620,64 +640,46 @@ class _HomePageState extends State<HomePage> {
   Widget _overviewCard({
     required IconData icon,
     required String title,
-    required String subtitle,
+    required String summary,
+    required String detail,
     required Color color,
-    required String destinationTitle,
   }) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) {
-              switch (destinationTitle) {
-                case 'Assets': return const AssetsScreen();
-                case 'Loans': return const LoansScreen();
-                case 'Budgets': return const BudgetsScreen();
-                case 'Goals': return const GoalsScreen();
-                case 'Recurring Transactions': return const RecurringTransactionsScreen();
-                default: return widget.featurePageBuilder(destinationTitle);
-              }
-            },
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: const Color(0xFFEDF1EE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 43,
+            height: 43,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.11),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: color, size: 23),
           ),
-        );
-      },
-      borderRadius: BorderRadius.circular(17),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(17),
-          border: Border.all(color: const Color(0xFFEDF1EE)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 43,
-              height: 43,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.11),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(icon, color: color, size: 23),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(
+                    fontWeight: FontWeight.w800, fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(summary, style: TextStyle(
+                    color: color, fontSize: 12, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(detail, style: const TextStyle(
+                    color: AppColors.muted, fontSize: 11)),
+              ],
             ),
-            SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(
-                      fontWeight: FontWeight.w800, fontSize: 14)),
-                  SizedBox(height: 3),
-                  Text(subtitle, style: const TextStyle(
-                      color: AppColors.muted, fontSize: 11)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

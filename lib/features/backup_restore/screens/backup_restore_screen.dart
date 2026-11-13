@@ -225,7 +225,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               ),
               SizedBox(height: 20),
               Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [const Icon(Icons.autorenew_rounded), const SizedBox(width: 10), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(appText(context, "Automatic Local Backup", "Automatic Local Backup"), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(appText(context, "Daily backup on this device", "Daily backup on this device"))])), Switch.adaptive(value: _automaticEnabled, onChanged: _isProcessing ? null : _toggleAutomaticBackup)]),
+                Row(children: [const Icon(Icons.autorenew_rounded), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(appText(context, "Automatic Local Backup", "Automatic Local Backup"), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(appText(context, "Daily backup on this device", "Daily backup on this device"))])), Switch.adaptive(value: _automaticEnabled, onChanged: _isProcessing ? null : _toggleAutomaticBackup)]),
                 const Divider(),
                 Text(appText(context, "Last successful backup: ", "Last successful backup: ") + (_lastAutomaticBackup == null ? 'Not yet' : DateFormat('d MMM yyyy, h:mm a').format(_lastAutomaticBackup!))),
                 if (_automaticStatus == 'failed') Text(appText(context, "Last backup failed. Try again.", "Last backup failed. Try again."), style: TextStyle(color: Colors.red)),

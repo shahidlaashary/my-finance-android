@@ -158,7 +158,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'Loan Amount *'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
@@ -174,7 +174,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                   }).toList(),
                   onChanged: (value) => setDialogState(() => walletId = value),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(appText(context, 'Lending Date', 'قرض دینے کی تاریخ')),
@@ -271,7 +271,7 @@ import 'package:my_finance/core/localization/app_text.dart';
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('Borrower: ${loan.borrowerName}'),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   'Outstanding: '
                   '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
@@ -281,7 +281,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'Repayment Amount *'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
@@ -384,7 +384,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                 children: [
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Loan Details',
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -396,7 +396,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text('Borrower: ${loan.borrowerName}'),
                   Text('Phone: ${loan.borrowerPhone ?? '-'}'),
                   Text('Currency: $currency'),
@@ -424,7 +424,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     future: LoansService.getRepayments(loan.id!),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Padding(
+                        return Padding(
                           padding: EdgeInsets.all(16),
                           child: Center(child: CircularProgressIndicator()),
                         );
@@ -434,7 +434,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       }
                       final repayments = snapshot.data ?? [];
                       if (repayments.isEmpty) {
-                        return const Padding(
+                        return Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
                           child: Text('No repayments recorded yet.'),
                         );
@@ -519,7 +519,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   if (!loan.isPaid)
                     SizedBox(
                       width: double.infinity,
@@ -594,7 +594,7 @@ import 'package:my_finance/core/localization/app_text.dart';
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('Loans & Repayments', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, 'Loans & Repayments', 'قرضے اور واپسی'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -605,7 +605,7 @@ import 'package:my_finance/core/localization/app_text.dart';
         label: Text(appText(context, 'New Loan', 'نیا قرض')),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -624,7 +624,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           if (_outstandingByCurrency.isEmpty)
                             const Text(
                               'No outstanding loans.',
@@ -662,7 +662,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -672,9 +672,9 @@ import 'package:my_finance/core/localization/app_text.dart';
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   if (_loans.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(30),
                       child: Center(
                         child: Column(
@@ -682,7 +682,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                           children: [
                             Icon(Icons.handshake_outlined, size: 55, color: Color(0xFF147D59)),
                             SizedBox(height: 12),
-                            Text('No loans added yet.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF7B8781))),
+                            Text(appText(context, 'No loans added yet.', 'ابھی کوئی قرض شامل نہیں کیا گیا۔'), textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF7B8781))),
                           ],
                         ),
                       ),
@@ -728,7 +728,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                               ),
                               if (loan.borrowerPhone != null)
                                 Text(loan.borrowerPhone!),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Text('Currency: $currency'),
                               Text(
                                 'Loan Amount: '
@@ -746,7 +746,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                               Text('Lending Date: ${loan.lendingDate}'),
                               if (loan.dueDate != null)
                                 Text('Due Date: ${loan.dueDate}'),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               LinearProgressIndicator(
                                 value: loan.amount <= 0
                                     ? 0
@@ -754,7 +754,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                                         .clamp(0.0, 1.0)
                                         .toDouble(),
                               ),
-                              const SizedBox(height: 10),
+                              SizedBox(height: 10),
                               Wrap(
                                 spacing: 8,
                                 children: [

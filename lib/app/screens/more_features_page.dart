@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
@@ -19,10 +18,6 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'Vehicle Manager',
         'icon': Icons.directions_car_filled_rounded,
-      },
-      {
-        'title': 'Categories',
-        'icon': Icons.category_outlined,
       },
       {
         'title': 'Recurring Transactions',
@@ -161,9 +156,6 @@ class MoreFeaturesPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) {
-                      if (feature['title'] == 'Categories') {
-                        return const CategoriesPage();
-                      }
                       if (feature['title'] == 'Settings') {
                         return const AppSettingsScreen();
                       }

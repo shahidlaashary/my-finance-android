@@ -9,6 +9,7 @@ import 'package:my_finance/features/finance/screens/recurring_transactions_scree
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/finance/screens/debt_payoff_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
+import 'package:my_finance/features/staff/screens/staff_screen.dart';
 import 'package:my_finance/app/screens/about_hub_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
@@ -42,6 +43,10 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'Settings',
         'icon': Icons.settings_outlined,
+      },
+      {
+        'title': 'Staff Management',
+        'icon': Icons.badge_outlined,
       },
       {
         'title': 'Stock Manager',
@@ -189,6 +194,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Debt Payoff Planner') {
                         return const DebtPayoffScreen();
+                      }
+                      if (feature['title'] == 'Staff Management') {
+                        return const StaffScreen();
                       }
                       if (feature['title'] == 'Stock Manager') {
                         return const StockManagerScreen();

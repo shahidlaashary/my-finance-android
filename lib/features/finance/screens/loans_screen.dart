@@ -7,6 +7,7 @@ import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
   @override
@@ -709,7 +710,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                                     ),
                                   ),
                                   if (loan.isPaid)
-                                    const Chip(
+                                    Chip(
                                       label: Text(appText(context, 'Paid', 'ادا شدہ')),
                                       visualDensity: VisualDensity.compact,
                                     )

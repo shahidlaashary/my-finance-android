@@ -325,7 +325,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.fingerprint_rounded),
-              title: Text(appText(context, 'Face / Fingerprint Unlock', 'فیس / فنگر پرنٹ ان لاک')), 
+              title: Text(appText(context, 'Face / Finger Unlock', 'فیس / فنگر ان لاک')), 
               subtitle: Text(appText(context, "Use Face / Fingerprint authentication. PIN remains as backup.", "Use Face / Fingerprint authentication. PIN remains as backup."),
               ),
               value: _biometricEnabled,

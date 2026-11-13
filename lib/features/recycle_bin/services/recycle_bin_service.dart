@@ -40,6 +40,29 @@ class RecycleBinService {
       final item = rows.first;
       final table = item['source_table'].toString();
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'assets') {
+        await txn.execute('''CREATE TABLE IF NOT EXISTS assets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+          category TEXT NOT NULL DEFAULT 'Other', purchase_price REAL NOT NULL,
+          current_value REAL NOT NULL, purchase_date TEXT NOT NULL, wallet_id INTEGER NOT NULL,
+          notes TEXT NOT NULL DEFAULT '', is_sold INTEGER NOT NULL DEFAULT 0,
+          sale_date TEXT, sale_price REAL, sale_wallet_id INTEGER, created_at TEXT NOT NULL)''');
+        final walletId = (record['wallet_id'] as num).toInt();
+        final purchase = (record['purchase_price'] as num).toDouble();
+        final walletRows = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+        if (walletRows.isEmpty) throw Exception('The asset purchase wallet no longer exists.');
+        if ((walletRows.first['balance'] as num).toDouble() < purchase) throw Exception('Insufficient wallet balance to restore this asset.');
+        await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [purchase, walletId]);
+        if ((record['is_sold'] as num?)?.toInt() == 1 && record['sale_price'] != null) {
+          final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
+          final saleExists = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [saleWalletId], limit: 1);
+          if (saleExists.isEmpty) throw Exception('The asset sale wallet no longer exists.');
+          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [(record['sale_price'] as num).toDouble(), saleWalletId]);
+        }
+        await txn.insert('assets', record);
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'transactions') {
         final type = (record['type'] ?? '').toString().toLowerCase();
         final amount = (record['amount'] as num).toDouble();

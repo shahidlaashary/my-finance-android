@@ -216,15 +216,15 @@ void main() {
     final archived = (await RecycleBinService.getItems())
         .singleWhere((item) => item['source_table'] == 'staff');
 
-    await StaffService.saveStaff(
-      id: originalId,
-      name: 'Replacement Staff',
-      phone: '',
-      role: '',
-      salary: 0,
-      joinedAt: DateTime(2026, 2, 1),
-      notes: '',
-    );
+    await FinanceDB.instance.db.insert('staff', {
+      'id': originalId,
+      'name': 'Replacement Staff',
+      'phone': '',
+      'role': '',
+      'salary': 0,
+      'joined_at': DateTime(2026, 2, 1).toIso8601String(),
+      'notes': '',
+    });
 
     await expectLater(
       RecycleBinService.restore(archived['id'] as int),

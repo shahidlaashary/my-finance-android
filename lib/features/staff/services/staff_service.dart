@@ -112,7 +112,31 @@ class StaffService {
       AppRefreshController.notifyChanged();
       return id;
     } catch (_) {
-      await TransactionsService.deleteTransaction(txId);
+      await FinanceDB.instance.db.transaction((txn) async {
+        final transactionRows = await txn.query(
+          'transactions',
+          where: 'id = ?',
+          whereArgs: [txId],
+          limit: 1,
+        );
+        if (transactionRows.isNotEmpty) {
+          await txn.rawUpdate(
+            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+            [amount, walletId],
+          );
+          await txn.delete('transactions', where: 'id = ?', whereArgs: [txId]);
+          await txn.delete(
+            'app_settings',
+            where: 'setting_key = ?',
+            whereArgs: ['transaction_transfer_fee_$txId'],
+          );
+        }
+        await txn.delete(
+          'staff_salaries',
+          where: 'transaction_id = ?',
+          whereArgs: [txId],
+        );
+      });
       rethrow;
     }
   }

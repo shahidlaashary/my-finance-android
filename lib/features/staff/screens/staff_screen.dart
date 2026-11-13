@@ -131,7 +131,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     note.dispose();
   }
 
-  String _staffName(int id) => _staff.where((s) => s['id'] == id).map((s) => s['name'].toString()).firstOrNull ?? tr('Staff member');
+  String _staffName(int id) { final rows = _staff.where((s) => s['id'] == id).toList(); return rows.isEmpty ? tr('Staff member') : rows.first['name'].toString(); }
   Widget _empty(String label) => Center(child: Padding(padding: const EdgeInsets.all(28), child: Text(tr(label), textAlign: TextAlign.center)));
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -139,7 +139,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     floatingActionButton: FloatingActionButton.extended(onPressed: () { if (_tabs.index == 0) { _form(); } else if (_tabs.index == 1) { _salaryForm(); } else { _attendanceForm(); } }, icon: const Icon(Icons.add), label: Text(_tabs.index == 0 ? tr('Add Staff') : _tabs.index == 1 ? tr('Pay Salary') : tr('Mark Attendance'))),
     body: _loading ? const Center(child: CircularProgressIndicator()) : TabBarView(controller: _tabs, children: [
       _staff.isEmpty ? _empty('No staff added yet') : ListView.builder(padding: const EdgeInsets.only(bottom: 90), itemCount: _staff.length, itemBuilder: (context, i) { final s = _staff[i]; return Card(margin: const EdgeInsets.fromLTRB(12, 6, 12, 4), child: ListTile(leading: CircleAvatar(child: Text(s['name'].toString().isEmpty ? '?' : s['name'].toString()[0].toUpperCase())), title: Text(s['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text([s['role'], s['phone']].where((v) => v != null && v.toString().isNotEmpty).join(' • ')), trailing: PopupMenuButton<String>(onSelected: (v) async { if (v == 'edit') await _form(member: s); if (v == 'delete') { await StaffService.deleteStaff(s['id'] as int); await _load(); } }, itemBuilder: (_) => [PopupMenuItem(value: 'edit', child: Text(tr('Edit'))), PopupMenuItem(value: 'delete', child: Text(tr('Delete')))]))); }),
-      _salaries.isEmpty ? _empty('No salary payments yet') : ListView.builder(padding: const EdgeInsets.only(bottom: 90), itemCount: _salaries.length, itemBuilder: (context, i) { final s = _salaries[i]; return ListTile(leading: const CircleAvatar(child: Icon(Icons.payments_outlined)), title: Text(_staffName(s['staff_id'] as int)), subtitle: Text(DateFormat.yMMMd().format(DateTime.parse(s['paid_at'].toString()))), trailing: Text(s['amount'].toString()); }),
+      _salaries.isEmpty ? _empty('No salary payments yet') : ListView.builder(padding: const EdgeInsets.only(bottom: 90), itemCount: _salaries.length, itemBuilder: (context, i) { final s = _salaries[i]; return ListTile(leading: const CircleAvatar(child: Icon(Icons.payments_outlined)), title: Text(_staffName(s['staff_id'] as int)), subtitle: Text(DateFormat.yMMMd().format(DateTime.parse(s['paid_at'].toString()))), trailing: Text(s['amount'].toString())); }),
       _attendance.isEmpty ? _empty('No attendance records yet') : ListView.builder(padding: const EdgeInsets.only(bottom: 90), itemCount: _attendance.length, itemBuilder: (context, i) { final a = _attendance[i]; return ListTile(leading: const CircleAvatar(child: Icon(Icons.event_available_outlined)), title: Text(_staffName(a['staff_id'] as int)), subtitle: Text(DateFormat.yMMMd().format(DateTime.parse(a['attendance_date'].toString()))), trailing: Chip(label: Text(tr(a['status'].toString())))); }),
     ]),
   );

@@ -180,12 +180,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                       size: 52,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     const Text(
                       'Protect Your Finance Data',
                       style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     const Text(
                       'Apne finance data aur attachments ka manual backup banayein '
                       'ya pehle banaya gaya backup restore karein.',
@@ -194,7 +194,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               _buildActionCard(
                 icon: Icons.cloud_upload_rounded,
                 title: 'Create Manual Backup',
@@ -203,7 +203,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 color: Colors.indigo,
                 onPressed: _createBackup,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               _buildActionCard(
                 icon: Icons.settings_backup_restore_rounded,
                 title: 'Restore Backup',
@@ -212,7 +212,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 color: Colors.teal,
                 onPressed: _selectAndRestoreBackup,
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
               Container(
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
@@ -232,7 +232,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             Positioned.fill(
               child: Container(
                 color: Colors.black.withOpacity(0.3),
-                child: const Center(
+                child: Center(
                   child: Card(
                     child: Padding(
                       padding: EdgeInsets.all(24),
@@ -277,7 +277,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   backgroundColor: color.withOpacity(0.12),
                   child: Icon(icon, color: color),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     title,
@@ -286,9 +286,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(description),
-            const SizedBox(height: 15),
+            SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

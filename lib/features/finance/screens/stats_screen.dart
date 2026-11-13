@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
@@ -596,7 +597,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     const SizedBox(height: 10),
                     Text('Could not load stats: $_error', textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    ElevatedButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh), label: const Text('Try Again')),
+                    ElevatedButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh), label: Text(appText(context, 'Try Again', 'دوبارہ کوشش کریں'))),
                   ]),
                 ))
               : RefreshIndicator(

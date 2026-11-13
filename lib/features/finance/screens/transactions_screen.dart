@@ -568,7 +568,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   ? displayDate(item['date'])
                                   : DateFormat('dd MMM yyyy  •  hh:mm a').format(parsedDate);
 
-                              return Container(
+                              return InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => TransactionDetailScreen(
+                                        transaction: item,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -694,6 +706,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     ],
                                   ),
                                 ),
+                                ),
                               );
                             },
                           ),
@@ -701,6 +714,186 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+
+class TransactionDetailScreen extends StatelessWidget {
+  const TransactionDetailScreen({super.key, required this.transaction});
+
+  final Map<String, dynamic> transaction;
+
+  @override
+  Widget build(BuildContext context) {
+    final type = transaction['type']?.toString() ?? 'Transaction';
+    final normalized = type.toLowerCase();
+    final isIncome = normalized == 'income';
+    final isExpense = normalized == 'expense';
+    final isTransfer = normalized == 'transfer';
+    final color = isIncome
+        ? const Color(0xFF159B65)
+        : isExpense
+            ? const Color(0xFFE45B5B)
+            : const Color(0xFF3979C6);
+    final icon = isIncome
+        ? Icons.south_west_rounded
+        : isExpense
+            ? Icons.north_east_rounded
+            : Icons.swap_horiz_rounded;
+    final amount = (transaction['amount'] as num?)?.toDouble() ?? 0;
+    final fee = (transaction['transfer_fee'] as num?)?.toDouble() ?? 0;
+    final toAmount = (transaction['to_amount'] as num?)?.toDouble();
+    final exchangeRate = (transaction['exchange_rate'] as num?)?.toDouble();
+    final currency = transaction['wallet_currency']?.toString() ?? '';
+    final date = DateTime.tryParse(transaction['date']?.toString() ?? '');
+    final note = transaction['note']?.toString().trim() ?? '';
+    final category = transaction['category']?.toString().trim() ?? '';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(appText(context, 'Transaction Details', 'Transaction Details')),
+      ),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: TransactionsService.getAccounts(),
+        builder: (context, snapshot) {
+          final wallets = snapshot.data ?? const <Map<String, dynamic>>[];
+          String walletName(dynamic id) {
+            final match = wallets.where((wallet) => wallet['id'] == id);
+            return match.isEmpty ? 'Account #$id' : match.first['name'].toString();
+          }
+
+          final sourceId = transaction['wallet_id'];
+          final destinationId = transaction['to_wallet_id'];
+          final details = <Widget>[
+            _detailRow('Transaction ID', '#${transaction['id']}'),
+            _detailRow('Type', type),
+            _detailRow('Date & Time', date == null
+                ? (transaction['date']?.toString() ?? '—')
+                : DateFormat('dd MMM yyyy, hh:mm a').format(date)),
+            _detailRow('Account', walletName(sourceId)),
+            if (isTransfer) _detailRow('Destination Account', walletName(destinationId)),
+            if (!isTransfer) _detailRow('Category', category.isEmpty ? 'No category' : category),
+            if (isTransfer && toAmount != null)
+              _detailRow('Amount Received', '${transaction['to_currency'] ?? ''} ${toAmount.toStringAsFixed(2)}'),
+            if (isTransfer && exchangeRate != null)
+              _detailRow('Exchange Rate', exchangeRate.toStringAsFixed(6)),
+            if (isTransfer) _detailRow('Transfer Fee', '$currency ${fee.toStringAsFixed(2)}'),
+            _detailRow('Description / Note', note.isEmpty ? '—' : note),
+          ];
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withValues(alpha: 0.13), color.withValues(alpha: 0.045)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: color.withValues(alpha: 0.18)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: color, size: 26),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(type, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${isIncome ? '+' : isExpense ? '-' : ''} $currency ${amount.toStringAsFixed(2)}',
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: color),
+                    ),
+                    if (isTransfer && toAmount != null) ...[
+                      const SizedBox(height: 5),
+                      Text('Received: ${toAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF65736B))),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              _detailSection(
+                context,
+                title: 'Transaction Information',
+                icon: Icons.receipt_long_outlined,
+                children: details,
+              ),
+              const SizedBox(height: 18),
+              _detailSection(
+                context,
+                title: 'Attachments',
+                icon: Icons.attach_file_rounded,
+                children: [
+                  AttachmentSection(
+                    ownerType: 'transaction',
+                    ownerId: transaction['id'] as int,
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _detailSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: const Color(0xFFE8EEE9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, size: 19, color: const Color(0xFF147D59)),
+            const SizedBox(width: 8),
+            Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+          ]),
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF7B8781))),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 6,
+            child: Text(value, textAlign: TextAlign.end,
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 }

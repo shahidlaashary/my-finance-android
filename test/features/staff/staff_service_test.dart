@@ -183,6 +183,57 @@ void main() {
     expect(await RecycleBinService.getItems(), isEmpty);
   });
 
+  test('permanently deleting archived staff removes only the archive entry', () async {
+    final staffId = await StaffService.saveStaff(
+      name: 'Permanent Delete Test',
+      phone: '',
+      role: '',
+      salary: 0,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+
+    await StaffService.deleteStaff(staffId);
+    final archived = (await RecycleBinService.getItems())
+        .singleWhere((item) => item['source_table'] == 'staff');
+
+    await RecycleBinService.permanentlyDelete(archived['id'] as int);
+
+    expect(await RecycleBinService.getItems(), isEmpty);
+    expect(await StaffService.getStaff(), isEmpty);
+  });
+
+  test('restoring staff with a conflicting ID keeps the archive intact', () async {
+    final originalId = await StaffService.saveStaff(
+      name: 'Original Staff',
+      phone: '',
+      role: '',
+      salary: 0,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+    await StaffService.deleteStaff(originalId);
+    final archived = (await RecycleBinService.getItems())
+        .singleWhere((item) => item['source_table'] == 'staff');
+
+    await StaffService.saveStaff(
+      id: originalId,
+      name: 'Replacement Staff',
+      phone: '',
+      role: '',
+      salary: 0,
+      joinedAt: DateTime(2026, 2, 1),
+      notes: '',
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archived['id'] as int),
+      throwsA(isA<Exception>()),
+    );
+    expect(await RecycleBinService.getItems(), hasLength(1));
+    expect((await StaffService.getStaff()).single['name'], 'Replacement Staff');
+  });
+
   test('attendance rejects a staff ID that does not exist', () async {
     await expectLater(
       StaffService.saveAttendance(

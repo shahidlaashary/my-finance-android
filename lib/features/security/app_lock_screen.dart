@@ -83,7 +83,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       keyboardType: TextInputType.number,
                       maxLength: 8,
                       decoration: InputDecoration(
-                        labelText: 'Current PIN',
+                        labelText: appText(context, "Current PIN", "Current PIN"),
                         counterText: '',
                       ),
                     ),
@@ -96,7 +96,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     keyboardType: TextInputType.number,
                     maxLength: 8,
                     decoration: InputDecoration(
-                      labelText: 'New PIN (4–8 digits)',
+                      labelText: appText(context, "New PIN (4–8 digits)", "New PIN (4–8 digits)"),
                       counterText: '',
                     ),
                   ),
@@ -107,7 +107,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     keyboardType: TextInputType.number,
                     maxLength: 8,
                     decoration: InputDecoration(
-                      labelText: 'Confirm PIN',
+                      labelText: appText(context, "Confirm PIN", "Confirm PIN"),
                       counterText: '',
                     ),
                   ),

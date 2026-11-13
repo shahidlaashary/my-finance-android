@@ -2,6 +2,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class RecurringTransactionService {
 
   // Restore se pehle is service ka database connection band karta hai.
@@ -293,11 +294,10 @@ class RecurringTransactionService {
   }
   Future<int> deleteRecurringTransaction(int id) async {
     final db = await _database;
-    final count = await db.delete(
-      _tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final rows = await db.query(_tableName, where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return 0;
+    await RecycleBinService.archive(type: 'Recurring Transaction', title: rows.first['title']?.toString() ?? 'Recurring Transaction', table: _tableName, id: id, record: rows.first);
+    final count = await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
     if (count > 0) AppRefreshController.notifyChanged();
     return count;
   }

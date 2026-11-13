@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -42,8 +43,7 @@ class SimpleFeaturePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'This section is ready for its feature implementation.',
+              Text(appText(context, "This section is ready for its feature implementation.", "This section is ready for its feature implementation."),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.muted),
               ),

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/services/debt_payoff_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -140,17 +141,17 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
             items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${(w['currency'] ?? 'PKR').toString().toUpperCase()})'))).toList(),
             onChanged: (v) { if (v != null) setDialog(() => walletId = v); },
           ),
-          ListTile(contentPadding: EdgeInsets.zero, title: const Text('Start Date'), subtitle: Text(_date(start)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => start = d); }),
-          ListTile(contentPadding: EdgeInsets.zero, title: const Text('Due Date'), subtitle: Text(due == null ? 'Not set' : _date(due!)), trailing: const Icon(Icons.event), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: due ?? start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => due = d); }),
+          ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Start Date", "Start Date")), subtitle: Text(_date(start)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => start = d); }),
+          ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Due Date", "Due Date")), subtitle: Text(due == null ? 'Not set' : _date(due!)), trailing: const Icon(Icons.event), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: due ?? start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => due = d); }),
           TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes')),
               ]),
             )),
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
               child: Row(children: [
-                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel'))),
+                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(appText(context, "Cancel", "Cancel")))),
                 const SizedBox(width: 10),
-                Expanded(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save'))),
+                Expanded(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(appText(context, "Save", "Save")))),
               ]),
             ),
           ]),
@@ -215,16 +216,16 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
         Text('Outstanding: ${_currency(debt.walletId)} ${_money(debt.balance)}'),
         TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Payment Amount *')),
         DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: const InputDecoration(labelText: 'Pay From Account'), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
-        ListTile(contentPadding: EdgeInsets.zero, title: const Text('Payment Date'), subtitle: Text(_date(paidOn)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: paidOn, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => paidOn = d); }),
+        ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Payment Date", "Payment Date")), subtitle: Text(_date(paidOn)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: paidOn, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => paidOn = d); }),
         TextField(controller: notes, decoration: const InputDecoration(labelText: 'Notes (optional)')),
               ]),
             )),
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
               child: Row(children: [
-                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel'))),
+                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(appText(context, "Cancel", "Cancel")))),
                 const SizedBox(width: 10),
-                Expanded(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save Payment'))),
+                Expanded(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(appText(context, "Save Payment", "Save Payment")))),
               ]),
             ),
           ]),
@@ -258,17 +259,17 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
         Text('Interest: ${debt.annualInterestRate.toStringAsFixed(2)}% p.a. • Minimum: ${_money(debt.minimumPayment)} / month'),
         Text('Account: ${_walletName(debt.walletId)}'), Text('Start: ${debt.startDate} • Due: ${debt.dueDate ?? 'Not set'}'),
         if (debt.notes.isNotEmpty) Text('Notes: ${debt.notes}'),
-        const Divider(height: 26), const Text('Payment History', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Divider(height: 26), Text(appText(context, "Payment History", "Payment History"), style: TextStyle(fontWeight: FontWeight.bold)),
         FutureBuilder<List<DebtPayment>>(future: DebtPayoffService.getPayments(debt.id!), builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
           if (snap.hasError) return Text('Unable to load payments: ${snap.error}');
           final items = snap.data ?? [];
-          if (items.isEmpty) return const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text('No payments yet.'));
+          if (items.isEmpty) return const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text(appText(context, "No payments yet.", "No payments yet.")));
           return Column(children: items.map((p) => ListTile(
             contentPadding: EdgeInsets.zero, title: Text('${_currency(debt.walletId)} ${_money(p.amount)}'),
             subtitle: Text('${p.paymentDate} • ${p.notes.isEmpty ? 'Payment' : p.notes}'),
             trailing: IconButton(icon: const Icon(Icons.delete_outline, color: Colors.red), tooltip: 'Delete payment', onPressed: () async {
-              final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Delete payment?'), content: const Text('This will restore the amount to the account and debt balance.'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete'))]));
+              final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(appText(context, "Delete payment?", "Delete payment?")), content: Text(appText(context, "This will restore the amount to the account and debt balance.", "This will restore the amount to the account and debt balance.")), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(appText(context, "Delete", "Delete")))]));
               if (ok == true && p.id != null) { try { await DebtPayoffService.deletePayment(p.id!); if (ctx.mounted) Navigator.pop(ctx); await _load(); } catch (e) { _message('Could not delete payment: $e'); } }
             }),
           )).toList());
@@ -320,25 +321,25 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     final extra = double.tryParse(_extraController.text.trim()) ?? 0;
     final estimates = {for (final currency in currencies) currency: _estimate(active.where((d) => _currency(d.walletId) == currency).toList(), extra, _strategy)};
     return Scaffold(
-      appBar: AppBar(title: const Text('Debt Payoff Planner', style: TextStyle(fontWeight: FontWeight.w800)), actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))]),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: const Text('Add Debt')),
+      appBar: AppBar(title: Text(appText(context, "Debt Payoff Planner", "Debt Payoff Planner"), style: TextStyle(fontWeight: FontWeight.w800)), actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))]),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: Text(appText(context, "Add Debt", "Add Debt"))),
       body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
         onRefresh: _load,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 100), children: [
           Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Outstanding Debt', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            Text(appText(context, "Outstanding Debt", "Outstanding Debt"), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            if (currencies.isEmpty) const Text('No outstanding debt') else ...currencies.map((c) {
+            if (currencies.isEmpty) Text(appText(context, "No outstanding debt", "No outstanding debt")) else ...currencies.map((c) {
               final total = active.where((d) => _currency(d.walletId) == c).fold<double>(0, (s, d) => s + d.balance);
               return Padding(padding: const EdgeInsets.only(bottom: 4), child: Text('$c ${_money(total)}', style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800)));
             }),
             Text('${active.length} active • ${_debts.where((d) => d.isPaid).length} paid off', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ]))),
           const SizedBox(height: 10),
-          Row(children: [Expanded(child: Text('Your Debts', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))), TextButton.icon(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: const Text('Add'))]),
+          Row(children: [Expanded(child: Text(appText(context, "Your Debts", "Your Debts"), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))), TextButton.icon(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: Text(appText(context, "Add", "Add")))]),
           if (active.isEmpty) Card(child: Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(_debts.isEmpty ? 'No debts added yet. Tap Add Debt to get started.' : 'All debts have been paid off.')))),
           ...active.map((d) => Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))), if (_isOverdue(d)) const Chip(label: Text('Overdue', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)]),
+            Row(children: [Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))), if (_isOverdue(d)) const Chip(label: Text(appText(context, "Overdue", "Overdue"), style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)]),
             Text('Lender: ${d.lender} • ${_currency(d.walletId)}'),
             if (d.dueDate != null) Text('Due: ${d.dueDate}'),
             const SizedBox(height: 8),
@@ -348,37 +349,37 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
             const SizedBox(height: 5),
             Text('${(d.progress * 100).toStringAsFixed(1)}% paid • ${d.annualInterestRate.toStringAsFixed(2)}% interest • Min ${_money(d.minimumPayment)}/mo', style: Theme.of(context).textTheme.bodySmall),
             Wrap(spacing: 4, children: [
-              TextButton.icon(onPressed: () => _details(d), icon: const Icon(Icons.history), label: const Text('Details')),
-              TextButton.icon(onPressed: d.isPaid ? null : () => _payDebt(d), icon: const Icon(Icons.payments_outlined), label: const Text('Pay')),
+              TextButton.icon(onPressed: () => _details(d), icon: const Icon(Icons.history), label: Text(appText(context, "Details", "Details"))),
+              TextButton.icon(onPressed: d.isPaid ? null : () => _payDebt(d), icon: const Icon(Icons.payments_outlined), label: Text(appText(context, "Pay", "Pay"))),
               IconButton(tooltip: 'Edit debt', onPressed: () => _editDebt(d), icon: const Icon(Icons.edit_outlined)),
               IconButton(tooltip: 'Delete debt', onPressed: () async {
-                final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Delete this debt?'), content: const Text('Recorded payments will be reversed back into their accounts.'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete'))]));
+                final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(appText(context, "Delete this debt?", "Delete this debt?")), content: Text(appText(context, "Recorded payments will be reversed back into their accounts.", "Recorded payments will be reversed back into their accounts.")), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(appText(context, "Delete", "Delete")))]));
                 if (ok == true && d.id != null) { try { await DebtPayoffService.deleteDebt(d.id!); await _load(); } catch (e) { _message('Could not delete debt: $e'); } }
               }, icon: const Icon(Icons.delete_outline, color: Colors.red)),
             ]),
           ])))),
           const SizedBox(height: 12),
-          Text('Payoff Strategy Calculator', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+          Text(appText(context, "Payoff Strategy Calculator", "Payoff Strategy Calculator"), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
           Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Choose how to prioritize your debts. Estimates assume monthly payments and fixed interest rates.'),
+            Text(appText(context, "Choose how to prioritize your debts. Estimates assume monthly payments and fixed interest rates.", "Choose how to prioritize your debts. Estimates assume monthly payments and fixed interest rates.")),
             const SizedBox(height: 10),
-            SegmentedButton<String>(segments: const [ButtonSegment(value: 'Avalanche', label: Text('Avalanche')), ButtonSegment(value: 'Snowball', label: Text('Snowball'))], selected: {_strategy}, onSelectionChanged: (v) => setState(() => _strategy = v.first)),
+            SegmentedButton<String>(segments: const [ButtonSegment(value: 'Avalanche', label: Text(appText(context, "Avalanche", "Avalanche"))), ButtonSegment(value: 'Snowball', label: Text(appText(context, "Snowball", "Snowball")))], selected: {_strategy}, onSelectionChanged: (v) => setState(() => _strategy = v.first)),
             const SizedBox(height: 8),
             Text(_strategy == 'Avalanche' ? 'Avalanche: highest interest rate first to reduce estimated interest.' : 'Snowball: smallest outstanding balance first for faster wins.'),
             TextField(controller: _extraController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Extra monthly payment', helperText: 'Added on top of minimum payments'), onChanged: (_) => setState(() {})),
             const SizedBox(height: 12),
-            if (active.isEmpty) const Text('Add an active debt to calculate a payoff plan.') else ...estimates.entries.map((entry) {
+            if (active.isEmpty) Text(appText(context, "Add an active debt to calculate a payoff plan.", "Add an active debt to calculate a payoff plan.")) else ...estimates.entries.map((entry) {
               final result = entry.value;
               return Padding(padding: const EdgeInsets.only(top: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w800)),
-                if (result.months == 0) const Text('Increase the monthly payment; current minimums may not cover estimated interest.') else Text('Estimated payoff: ${result.months} months • Interest: ${_money(result.interest)}'),
+                if (result.months == 0) Text(appText(context, "Increase the monthly payment; current minimums may not cover estimated interest.", "Increase the monthly payment; current minimums may not cover estimated interest.")) else Text('Estimated payoff: ${result.months} months • Interest: ${_money(result.interest)}'),
               ]));
             }),
             const SizedBox(height: 4),
-            Text('Interest is included in estimates only. Payment entries reduce the current balance directly; update the outstanding balance when the lender posts interest or fees.', style: Theme.of(context).textTheme.bodySmall),
+            Text(appText(context, "Interest is included in estimates only. Payment entries reduce the current balance directly; update the outstanding balance when the lender posts interest or fees.", "Interest is included in estimates only. Payment entries reduce the current balance directly; update the outstanding balance when the lender posts interest or fees."), style: Theme.of(context).textTheme.bodySmall),
           ]))),
           const SizedBox(height: 12),
-          if (_debts.any((d) => d.isPaid)) Text('Completed Debts', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          if (_debts.any((d) => d.isPaid)) Text(appText(context, "Completed Debts", "Completed Debts"), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           ..._debts.where((d) => d.isPaid).map((d) => ListTile(leading: const Icon(Icons.check_circle, color: Colors.green), title: Text(d.name), subtitle: Text('Paid off • ${d.lender}'))),
         ]),
       ),

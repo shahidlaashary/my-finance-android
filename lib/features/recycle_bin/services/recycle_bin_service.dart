@@ -80,6 +80,17 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
+      if (table == 'income_categories' || table == 'expense_categories') {
+        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: [table], limit: 1);
+        final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        if (current.any((e) => (e['name'] ?? '').toString().toLowerCase() == (record['name'] ?? '').toString().toLowerCase())) throw Exception('A category with this name already exists.');
+        final index = (record.remove('_index') as num?)?.toInt() ?? current.length;
+        final position = index.clamp(0, current.length);
+        current.insert(position, record);
+        await txn.insert('app_settings', {'setting_key':table,'setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'vehicle_manager_data_v1:vehicles') {
         final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['vehicle_manager_data_v1'], limit: 1);
         final data = settings.isEmpty ? <String, dynamic>{'vehicles': [], 'fuel_logs': [], 'expenses': [], 'reminders': []} : Map<String, dynamic>.from(jsonDecode(settings.first['setting_value']?.toString() ?? '{}') as Map);

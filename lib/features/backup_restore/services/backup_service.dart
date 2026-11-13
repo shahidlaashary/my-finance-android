@@ -439,23 +439,11 @@ class BackupService {
               continue;
             }
 
-            // Windows aur Unix dono tarah ke paths normalize karein.
-            final normalizedStoredPath = storedPath.replaceAll('\\', '/');
-            final markerIndex =
-                normalizedStoredPath.lastIndexOf(attachmentMarker);
-
-            // External ya legacy paths ko jaisa hai waisa rehne dein.
-            if (markerIndex < 0) continue;
-
-            final relativePath = normalizedStoredPath.substring(
-              markerIndex + attachmentMarker.length,
+            final restoredPath = resolveRestoredAttachmentPath(
+              storedPath: storedPath,
+              attachmentsDirectory: currentAttachments.path,
             );
-            _validateArchivePath(relativePath);
-
-            final restoredPath = p.join(
-              currentAttachments.path,
-              p.joinAll(p.posix.split(relativePath)),
-            );
+            if (restoredPath == storedPath) continue;
 
             await stagedConnection.update(
               'finance_attachments',
@@ -550,6 +538,29 @@ class BackupService {
     } catch (_) {
       // Keep previous attachments if cleanup fails.
     }
+  }
+
+  /// Backup restore ke liye stored attachment path ko current device par map karta hai.
+  /// Legacy/external paths mein attachment folder marker na ho to original path return hota hai.
+  static String resolveRestoredAttachmentPath({
+    required String storedPath,
+    required String attachmentsDirectory,
+  }) {
+    const attachmentMarker = '/my_finance_attachments/';
+    final normalizedStoredPath = storedPath.replaceAll('\\\\', '/');
+    final markerIndex = normalizedStoredPath.lastIndexOf(attachmentMarker);
+
+    if (markerIndex < 0) return storedPath;
+
+    final relativePath = normalizedStoredPath.substring(
+      markerIndex + attachmentMarker.length,
+    );
+    _validateArchivePath(relativePath);
+
+    return p.join(
+      attachmentsDirectory,
+      p.joinAll(p.posix.split(relativePath)),
+    );
   }
 
   /// Validates archive paths to prevent directory traversal.

@@ -6,7 +6,7 @@ class StockManagerScreen extends StatefulWidget {
   @override State<StockManagerScreen> createState()=>_StockManagerScreenState();
 }
 class _StockManagerScreenState extends State<StockManagerScreen>{
-  List<StockItem> _items=[]; bool _loading=true; bool _lowOnly=false;
+  List<StockItem> _items=[]; bool _loading=true; bool _lowOnly=false; String _search='';
   @override void initState(){super.initState();_load();}
   Future<void> _load() async {try{final v=await StockService.getItems();if(mounted)setState(()=>_items=v);}catch(e){_msg('Unable to load stock: $e');}finally{if(mounted)setState(()=>_loading=false);}}
   void _msg(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
@@ -28,7 +28,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
         TextField(controller:sku,decoration:const InputDecoration(labelText:'SKU / Barcode')),
         TextField(controller:category,decoration:const InputDecoration(labelText:'Category')),
         TextField(controller:unit,decoration:const InputDecoration(labelText:'Unit (pcs, kg, litre...)')),
-        TextField(controller:quantity,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Opening Quantity')),
+        TextField(controller:quantity,enabled:item==null,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:item==null?'Opening Quantity':'Current Quantity',helperText:item==null?null:'Use Stock In / Stock Out to change quantity.')),
         TextField(controller:low,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Low Stock Alert At')),
         TextField(controller:buy,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Purchase Price per Unit')),
         TextField(controller:sell,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Sale Price per Unit')),
@@ -68,13 +68,16 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
     ])))));
   }
   @override Widget build(BuildContext context){
-    final visible=_items.where((i)=>!_lowOnly||i.isLowStock).toList();
+    final query=_search.trim().toLowerCase();
+    final visible=_items.where((i)=>(!_lowOnly||i.isLowStock)&&(query.isEmpty||i.name.toLowerCase().contains(query)||i.sku.toLowerCase().contains(query)||i.category.toLowerCase().contains(query))).toList();
     final lowCount=_items.where((i)=>i.isLowStock).length;
     return Scaffold(appBar:AppBar(title:const Text('Stock Manager',style:TextStyle(fontWeight:FontWeight.w800)),actions:[IconButton(onPressed:_load,icon:const Icon(Icons.refresh))]),
       floatingActionButton:FloatingActionButton.extended(onPressed:()=>_edit(),icon:const Icon(Icons.add),label:const Text('Add Item')),
       body:_loading?const Center(child:CircularProgressIndicator()):RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.fromLTRB(14,12,14,100),children:[
         Row(children:[Expanded(child:_summary('Total Items','${_items.length}',Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:_summary('Low Stock','$lowCount',Icons.warning_amber_rounded,color:lowCount>0?Colors.orange:null))]),
         const SizedBox(height:12),
+        TextField(onChanged:(v)=>setState(()=>_search=v),decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search item, SKU or category',border:OutlineInputBorder())),
+        const SizedBox(height:10),
         SwitchListTile(contentPadding:const EdgeInsets.symmetric(horizontal:12),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),tileColor:Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha:.45),title:const Text('Show low-stock items only'),value:_lowOnly,onChanged:(v)=>setState(()=>_lowOnly=v)),
         const SizedBox(height:8),
         if(visible.isEmpty)Padding(padding:const EdgeInsets.all(28),child:Center(child:Text(_items.isEmpty?'No stock items yet. Add your first item.':'No low-stock items. Everything is above its alert level.'))),

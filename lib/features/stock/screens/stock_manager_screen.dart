@@ -12,37 +12,17 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
   void _msg(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _qty(double n)=>n==n.roundToDouble()?n.toStringAsFixed(0):n.toStringAsFixed(2);
   Future<void> _edit([StockItem? item]) async {
-    final name=TextEditingController(text:item?.name??'');
-    final sku=TextEditingController(text:item?.sku??'');
-    final category=TextEditingController(text:item?.category??'General');
-    final unit=TextEditingController(text:item?.unit??'pcs');
-    final quantity=TextEditingController(text:item?.quantity.toString()??'0');
-    final low=TextEditingController(text:item?.lowStockAt.toString()??'0');
-    final buy=TextEditingController(text:item?.purchasePrice.toString()??'0');
-    final sell=TextEditingController(text:item?.salePrice.toString()??'0');
-    final notes=TextEditingController(text:item?.notes??'');
-    final ok=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
-      title:Text(item==null?'Add Stock Item':'Edit Stock Item'),
-      content:SizedBox(width:440,child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
-        TextField(controller:name,decoration:const InputDecoration(labelText:'Item Name *')),
-        TextField(controller:sku,decoration:const InputDecoration(labelText:'SKU / Barcode')),
-        TextField(controller:category,decoration:const InputDecoration(labelText:'Category')),
-        TextField(controller:unit,decoration:const InputDecoration(labelText:'Unit (pcs, kg, litre...)')),
-        TextField(controller:quantity,enabled:item==null,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:item==null?'Opening Quantity':'Current Quantity',helperText:item==null?null:'Use Stock In / Stock Out to change quantity.')),
-        TextField(controller:low,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Low Stock Alert At')),
-        TextField(controller:buy,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Purchase Price per Unit')),
-        TextField(controller:sell,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Sale Price per Unit')),
-        TextField(controller:notes,maxLines:2,decoration:const InputDecoration(labelText:'Notes')),
-      ]))),
-      actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
-    ));
-    if(ok==true){
-      final q=double.tryParse(quantity.text), l=double.tryParse(low.text), b=double.tryParse(buy.text), s=double.tryParse(sell.text);
-      if(name.text.trim().isEmpty||q==null||l==null||b==null||s==null||q<0||l<0||b<0||s<0){_msg('Please enter valid item details.');}
-      else{try{await StockService.saveItem(StockItem(id:item?.id,name:name.text,sku:sku.text,category:category.text,unit:unit.text,quantity:q,lowStockAt:l,purchasePrice:b,salePrice:s,notes:notes.text));await _load();_msg('Stock item saved.');}catch(e){_msg('Could not save item: $e');}}
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => StockItemFormScreen(item: item),
+      ),
+    );
+    if (saved == true && mounted) {
+      await _load();
+      _msg(item == null ? 'Stock item added.' : 'Stock item updated.');
     }
-    for(final c in [name,sku,category,unit,quantity,low,buy,sell,notes]){c.dispose();}
   }
+
   Future<void> _movement(StockItem item,String type) async {
     final qty=TextEditingController(),price=TextEditingController(text:type=='IN'?item.purchasePrice.toString():item.salePrice.toString()),note=TextEditingController();
     DateTime date=DateTime.now();
@@ -98,4 +78,261 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
       ])));
   }
   Widget _summary(String title,String value,IconData icon,{Color? color})=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(icon,color:color??Theme.of(context).colorScheme.primary),const SizedBox(height:8),Text(value,style:const TextStyle(fontSize:23,fontWeight:FontWeight.w800)),Text(title,style:Theme.of(context).textTheme.bodySmall)])));
+}
+
+class StockItemFormScreen extends StatefulWidget {
+  final StockItem? item;
+
+  const StockItemFormScreen({super.key, this.item});
+
+  @override
+  State<StockItemFormScreen> createState() => _StockItemFormScreenState();
+}
+
+class _StockItemFormScreenState extends State<StockItemFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _name;
+  late final TextEditingController _sku;
+  late final TextEditingController _category;
+  late final TextEditingController _unit;
+  late final TextEditingController _quantity;
+  late final TextEditingController _lowStock;
+  late final TextEditingController _purchasePrice;
+  late final TextEditingController _salePrice;
+  late final TextEditingController _notes;
+  bool _saving = false;
+
+  bool get _isEditing => widget.item != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final item = widget.item;
+    _name = TextEditingController(text: item?.name ?? '');
+    _sku = TextEditingController(text: item?.sku ?? '');
+    _category = TextEditingController(text: item?.category ?? 'General');
+    _unit = TextEditingController(text: item?.unit ?? 'pcs');
+    _quantity = TextEditingController(text: item?.quantity.toString() ?? '0');
+    _lowStock = TextEditingController(text: item?.lowStockAt.toString() ?? '0');
+    _purchasePrice = TextEditingController(text: item?.purchasePrice.toString() ?? '0');
+    _salePrice = TextEditingController(text: item?.salePrice.toString() ?? '0');
+    _notes = TextEditingController(text: item?.notes ?? '');
+  }
+
+  @override
+  void dispose() {
+    for (final controller in [
+      _name, _sku, _category, _unit, _quantity, _lowStock,
+      _purchasePrice, _salePrice, _notes,
+    ]) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  InputDecoration _decoration(String label, IconData icon, {String? helper}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      helperText: helper,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 13),
+    );
+  }
+
+  String? _requiredName(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Item name is required.';
+    return null;
+  }
+
+  String? _nonNegativeNumber(String? value, {bool mustBePositive = false}) {
+    final number = double.tryParse(value?.trim() ?? '');
+    if (number == null || !number.isFinite ||
+        (mustBePositive ? number <= 0 : number < 0)) {
+      return mustBePositive ? 'Enter a quantity greater than zero.' : 'Enter a valid number (0 or more).';
+    }
+    return null;
+  }
+
+  Widget _numberField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool enabled = true,
+    String? helper,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textInputAction: TextInputAction.next,
+      decoration: _decoration(label, icon, helper: helper),
+      validator: (value) => _nonNegativeNumber(value),
+    );
+  }
+
+  Future<void> _save() async {
+    if (_saving || !_formKey.currentState!.validate()) return;
+
+    setState(() => _saving = true);
+    try {
+      final original = widget.item;
+      await StockService.saveItem(
+        StockItem(
+          id: original?.id,
+          name: _name.text.trim(),
+          sku: _sku.text.trim(),
+          category: _category.text.trim(),
+          unit: _unit.text.trim(),
+          // Existing quantity is intentionally immutable here. All changes
+          // must go through Stock In / Stock Out to retain movement history.
+          quantity: original?.quantity ?? double.parse(_quantity.text.trim()),
+          lowStockAt: double.parse(_lowStock.text.trim()),
+          purchasePrice: double.parse(_purchasePrice.text.trim()),
+          salePrice: double.parse(_salePrice.text.trim()),
+          notes: _notes.text.trim(),
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save item: $error')),
+      );
+      setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _isEditing ? 'Edit Stock Item' : 'Add Stock Item',
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                _isEditing ? 'Update item details' : 'Enter the details of your inventory item',
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _name,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                decoration: _decoration('Item Name *', Icons.inventory_2_outlined),
+                validator: _requiredName,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _sku,
+                      textInputAction: TextInputAction.next,
+                      decoration: _decoration('SKU / Barcode', Icons.qr_code_2_rounded),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _category,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                      decoration: _decoration('Category', Icons.category_outlined),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _unit,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                      decoration: _decoration('Unit', Icons.straighten_rounded),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _numberField(
+                      _quantity,
+                      _isEditing ? 'Current Quantity' : 'Opening Quantity',
+                      Icons.numbers_rounded,
+                      enabled: !_isEditing,
+                      helper: _isEditing ? 'Change via Stock In / Out' : null,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _numberField(
+                      _lowStock,
+                      'Low Stock Alert At',
+                      Icons.warning_amber_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _numberField(
+                      _purchasePrice,
+                      'Purchase Price / Unit',
+                      Icons.shopping_cart_outlined,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _numberField(
+                _salePrice,
+                'Sale Price per Unit',
+                Icons.sell_outlined,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notes,
+                textCapitalization: TextCapitalization.sentences,
+                minLines: 2,
+                maxLines: 4,
+                decoration: _decoration('Notes (Optional)', Icons.notes_rounded),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: _saving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(_isEditing ? 'Save Changes' : 'Add Stock Item'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

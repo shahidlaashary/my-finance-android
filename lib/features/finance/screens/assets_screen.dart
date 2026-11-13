@@ -313,7 +313,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 const TextInputType.numberWithOptions(
               decimal: true,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'New Current Value',
             ),
           ),
@@ -379,7 +379,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Sale Price',
                     ),
                   ),
@@ -387,7 +387,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   DropdownButtonFormField<int>(
                     value: selectedSaleWallet,
                     isExpanded: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Sale Account',
                       prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                     ),
@@ -618,7 +618,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   ),
                 ),
                 if (asset.isSold)
-                  const Chip(
+                  Chip(
                     label: Text(appText(context, "Sold", "Sold")),
                     backgroundColor: Color(0xFFFFE9E9),
                   ),

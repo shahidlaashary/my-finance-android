@@ -72,7 +72,7 @@ jobs:
         run: flutter pub get
       - name: Build APK with increasing version code
         env:
-          ANDROID_KEYSTORE_PATH: android/app/upload-keystore.jks
+          ANDROID_KEYSTORE_PATH: upload-keystore.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}

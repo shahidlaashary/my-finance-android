@@ -71,6 +71,14 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     }
     return 'PKR';
   }
+  bool _isOverdue(DebtRecord debt) {
+    if (debt.isPaid || debt.dueDate == null) return false;
+    final due = DateTime.tryParse(debt.dueDate!);
+    if (due == null) return false;
+    final today = DateTime.now();
+    return due.isBefore(DateTime(today.year, today.month, today.day));
+  }
+
   String _walletName(int id) {
     for (final w in _wallets) {
       if ((w['id'] as num).toInt() == id) return w['name']?.toString() ?? 'Account';
@@ -270,8 +278,9 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           Row(children: [Expanded(child: Text('Your Debts', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))), TextButton.icon(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: const Text('Add'))]),
           if (_debts.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No debts added yet. Tap Add Debt to get started.')))),
           ..._debts.map((d) => Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))), if (d.isPaid) const Chip(label: Text('Paid off'))]),
+            Row(children: [Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))), if (d.isPaid) const Chip(label: Text('Paid off')) else if (_isOverdue(d)) const Chip(label: Text('Overdue', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)]),
             Text('Lender: ${d.lender} • ${_currency(d.walletId)}'),
+            if (d.dueDate != null) Text('Due: ${d.dueDate}'),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Remaining: ${_money(d.balance)}', style: const TextStyle(fontWeight: FontWeight.w700)), Text('Original: ${_money(d.originalAmount)}')]),
             const SizedBox(height: 6),

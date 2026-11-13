@@ -255,7 +255,7 @@ class TransactionsService {
         }
       });
     } catch (_) {
-      await RecycleBinService.permanentlyDelete(recycleId);
+      await RecycleBinService.discardArchive(recycleId);
       rethrow;
     }
   }rt 'package:path/path.dart' as p;
@@ -505,7 +505,7 @@ class TransactionsService {
           whereArgs: ['transaction_transfer_fee_$id']);
       });
     } catch (_) {
-      await RecycleBinService.permanentlyDelete(recycleId);
+      await RecycleBinService.discardArchive(recycleId);
       rethrow;
     }
   }rt 'package:path/path.dart' as p;

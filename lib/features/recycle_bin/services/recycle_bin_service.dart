@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -19,7 +18,7 @@ class RecycleBinService {
       await FinanceDB.instance.db.execute('ALTER TABLE recycle_bin ADD COLUMN expires_at TEXT');
     }
     await FinanceDB.instance.db.rawUpdate(
-      "UPDATE recycle_bin SET expires_at = datetime(deleted_at, '+30 days') WHERE expires_at IS NULL",
+      "UPDATE recycle_bin SET expires_at = strftime('%Y-%m-%dT%H:%M:%f', deleted_at, '+30 days') WHERE expires_at IS NULL",
     );
   }
 

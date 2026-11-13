@@ -147,23 +147,23 @@ class _LoansScreenState extends State<LoansScreen> {
               children: [
                 TextField(
                   controller: _nameController,
-                  decoration: InputDecoration(labelText: 'Borrower Name *'),
+                  decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
                 ),
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: 'Phone Number'),
+                  decoration: InputDecoration(labelText: appText(context, "Phone Number", "Phone Number")),
                 ),
                 TextField(
                   controller: _amountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: 'Loan Amount *'),
+                  decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
                 ),
                 SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: 'Payment Account *'),
+                  decoration: InputDecoration(labelText: appText(context, "Payment Account *", "Payment Account *")),
                   items: _wallets.map((account) {
                     return DropdownMenuItem<int>(
                       value: account['id'] as int,
@@ -199,7 +199,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 TextField(
                   controller: _notesController,
                   maxLines: 3,
-                  decoration: InputDecoration(labelText: 'Notes'),
+                  decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
                 ),
               ],
             ),
@@ -279,13 +279,13 @@ class _LoansScreenState extends State<LoansScreen> {
                 TextField(
                   controller: _repaymentAmountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: 'Repayment Amount *'),
+                  decoration: InputDecoration(labelText: appText(context, "Repayment Amount *", "Repayment Amount *")),
                 ),
                 SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: 'Receiving Account *'),
+                  decoration: InputDecoration(labelText: appText(context, "Receiving Account *", "Receiving Account *")),
                   items: _wallets.map((account) {
                     return DropdownMenuItem<int>(
                       value: account['id'] as int,
@@ -312,7 +312,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 TextField(
                   controller: _repaymentNotesController,
                   maxLines: 2,
-                  decoration: InputDecoration(labelText: 'Notes'),
+                  decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
                 ),
               ],
             ),

@@ -115,8 +115,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     ),
                   ),
                   SizedBox(height: 18),
-                  const Text(
-                    'Choose Icon',
+                  Text(appText(context, "Choose Icon", "Choose Icon"),
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   SizedBox(height: 10),
@@ -191,7 +190,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
     if (duplicate) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This category already exists.')),
+        const SnackBar(content: Text(appText(context, "This category already exists.", "This category already exists."))),
       );
       return;
     }
@@ -221,7 +220,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
-            child: const Text('Delete'),
+            child: Text(appText(context, "Delete", "Delete")),
           ),
         ],
       ),

@@ -353,7 +353,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       decoration: decoration('Amount', icon: Icons.payments_outlined),
       validator: (value) {
         final amount = double.tryParse(value?.trim() ?? '');
-        if (amount == null || amount <= 0) {
+        if (amount == null || !amount.isFinite || amount <= 0) {
           return 'Valid amount enter karein.';
         }
         return null;
@@ -507,7 +507,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     if (!formKey.currentState!.validate()) return;
 
     final amount = double.tryParse(amountController.text.trim());
-    if (amount == null || amount <= 0) return;
+    if (amount == null || !amount.isFinite || amount <= 0) return;
 
     if (selectedWalletId == null) {
       ScaffoldMessenger.of(context).showSnackBar(

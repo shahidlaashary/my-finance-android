@@ -12,6 +12,7 @@ import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
 import 'package:my_finance/features/staff/screens/staff_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/app/screens/about_hub_screen.dart';
+import 'package:my_finance/features/installments/screens/installments_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -52,6 +53,10 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'Vehicle Manager',
         'icon': Icons.directions_car_filled_rounded,
+      },
+      {
+        'title': 'Installment Manager',
+        'icon': Icons.payments_rounded,
       },
       {
         'title': 'Recycle Bin',
@@ -151,6 +156,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Staff Management') {
                         return const StaffScreen();
+                      }
+                      if (feature['title'] == 'Installment Manager') {
+                        return const InstallmentsScreen();
                       }
                       if (feature['title'] == 'Recycle Bin') {
                         return const RecycleBinScreen();

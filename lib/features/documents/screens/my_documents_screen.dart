@@ -338,7 +338,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             value: reminderDays,
                             isExpanded: true,
                             decoration: decoration('Expiry Alert Window', Icons.notifications_active_outlined),
-                            items: const [
+                            items: [
                               DropdownMenuItem(value: 7, child: Text(appText(context, "7 days before", "7 days before"))),
                               DropdownMenuItem(value: 15, child: Text(appText(context, "15 days before", "15 days before"))),
                               DropdownMenuItem(value: 30, child: Text(appText(context, "30 days before", "30 days before"))),

@@ -78,45 +78,33 @@ class MoreFeaturesPage extends StatelessWidget {
           if (index == features.length) {
             final colors = Theme.of(context).colorScheme;
             return Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              margin: const EdgeInsets.only(top: 8, bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    colors.primary.withValues(alpha: 0.14),
-                    colors.secondary.withValues(alpha: 0.08),
+                    colors.primary.withValues(alpha: 0.12),
+                    colors.secondary.withValues(alpha: 0.06),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.primary.withValues(alpha: 0.16)),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(Icons.favorite_rounded, color: colors.primary, size: 23),
+              child: Center(
+                child: Text(
+                  'Created by Shahid Laashary',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.onSurface,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.15,
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Created by', style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 3),
-                        Text('Shahid Laashary', style: TextStyle(color: colors.onSurface, fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 0.2)),
-                        const SizedBox(height: 3),
-                        Text('Made with care for better financial management', style: TextStyle(color: colors.onSurfaceVariant, fontSize: 10)),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             );
           }

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -122,7 +123,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Restore Backup?'),
+        title: Text(appText(context, 'Restore Backup?', 'بیک اپ بحال کریں؟')),
         content: const Text(
           'Restore karne se mojooda finance database aur attachments '
           'backup wali files se replace ho jayengi. Is ke baad ki '
@@ -131,7 +132,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -139,7 +140,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Restore'),
+            child: Text(appText(context, 'Restore', 'بحال کریں')),
           ),
         ],
       ),
@@ -160,7 +161,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Backup & Restore')),
+      appBar: AppBar(title: Text(appText(context, 'Backup & Restore', 'بیک اپ اور بحالی'))),
       body: Stack(
         children: [
           ListView(
@@ -240,7 +241,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         children: [
                           CircularProgressIndicator(),
                           SizedBox(height: 14),
-                          Text('Please wait...'),
+                          Text(appText(context, 'Please wait...', 'براہ کرم انتظار کریں')),
                         ],
                       ),
                     ),

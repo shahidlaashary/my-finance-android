@@ -280,6 +280,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     final screenHeight = MediaQuery.sizeOf(context).height;
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = keyboardHeight > 0
@@ -318,7 +319,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     children: [
                       const Expanded(
                         child: Text(
-                          'Add New Transaction',
+                          isUrdu ? 'نیا لین دین شامل کریں' : 'Add New Transaction',
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -340,22 +341,22 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   child: Row(
                     children: [
                       _transactionTab(
-                        title: 'Income',
-                        subtitle: 'Money received',
+                        title: isUrdu ? 'آمدنی' : 'Income',
+                        subtitle: isUrdu ? 'وصول شدہ رقم' : 'Money received',
                         icon: Icons.south_west_rounded,
                         color: AppColors.income,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
-                        title: 'Expense',
-                        subtitle: 'Money spent',
+                        title: isUrdu ? 'اخراجات' : 'Expense',
+                        subtitle: isUrdu ? 'خرچ کی گئی رقم' : 'Money spent',
                         icon: Icons.north_east_rounded,
                         color: AppColors.expense,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
-                        title: 'Transfer',
-                        subtitle: 'Between wallets',
+                        title: isUrdu ? 'منتقلی' : 'Transfer',
+                        subtitle: isUrdu ? 'والٹس کے درمیان' : 'Between wallets',
                         icon: Icons.swap_horiz_rounded,
                         color: AppColors.primary,
                       ),
@@ -383,12 +384,19 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     required IconData icon,
     required Color color,
   }) {
-    final selected = selectedType == title;
+    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
+    final selected = selectedType == title ||
+        (isUrdu && ((title == 'آمدنی' && selectedType == 'Income') ||
+            (title == 'اخراجات' && selectedType == 'Expense') ||
+            (title == 'منتقلی' && selectedType == 'Transfer')));
     return Expanded(
       child: InkWell(
         onTap: () {
-          if (selectedType != title) {
-            setState(() => selectedType = title);
+          final value = title == 'آمدنی' ? 'Income' :
+              title == 'اخراجات' ? 'Expense' :
+              title == 'منتقلی' ? 'Transfer' : title;
+          if (selectedType != value) {
+            setState(() => selectedType = value);
           }
         },
         borderRadius: BorderRadius.circular(13),

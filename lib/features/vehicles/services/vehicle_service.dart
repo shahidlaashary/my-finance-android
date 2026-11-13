@@ -281,7 +281,7 @@ class VehicleService {
     } catch (_) {
       data[key] = previous;
       await _write(data);
-      await RecycleBinService.permanentlyDelete(archiveId);
+      await RecycleBinService.discardArchive(archiveId);
       rethrow;
     }
   }

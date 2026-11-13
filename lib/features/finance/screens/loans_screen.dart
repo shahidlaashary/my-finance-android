@@ -8,7 +8,6 @@ import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/localization/app_text.dart';
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
   @override
@@ -273,7 +272,7 @@ class _LoansScreenState extends State<LoansScreen> {
               children: [
                 Text('${appText(context, 'Borrower:', 'قرض لینے والا:')} ${loan.borrowerName}'),
                 SizedBox(height: 6),
-                Text(appText(context, "Outstanding: ", "بقایا: ")
+                Text('${appText(context, "Outstanding: ", "بقایا: ")}'
                   '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
                 ),
                 TextField(
@@ -542,9 +541,7 @@ class _LoansScreenState extends State<LoansScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(appText(context, "Delete Loan?", "Delete Loan?")),
-        content: Text(appText(context, "This will delete the loan and its repayment history, and reverse the related account balance changes.", "یہ قرض اور اس کی ادائیگیوں کی تاریخ حذف کرکے متعلقہ اکاؤنٹ بیلنس کی تبدیلیاں واپس کرے گا۔")
-          'and reverse the related account balance changes.',
-        ),
+        content: Text(appText(context, "This will delete the loan and its repayment history, and reverse the related account balance changes.", "یہ قرض اور اس کی ادائیگیوں کی تاریخ حذف کرکے متعلقہ اکاؤنٹ بیلنس کی تبدیلیاں واپس کرے گا۔")),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -722,10 +719,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                 Text(loan.borrowerPhone!),
                               SizedBox(height: 8),
                               Text('Currency: $currency'),
-                              Text(appText(context, "Loan Amount: ", "قرض کی رقم: ")
+                              Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'
                                 '${_moneyWithCurrency(loan.amount, loan.walletId)}',
                               ),
-                              Text(appText(context, "Repaid: ", "ادا شدہ: ")
+                              Text('${appText(context, "Repaid: ", "ادا شدہ: ")}'
                                 '${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}',
                               ),
                               Text(appText(context, "Remaining: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}", "باقی: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}"),

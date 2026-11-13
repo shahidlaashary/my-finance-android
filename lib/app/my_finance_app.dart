@@ -24,7 +24,7 @@ class MyFinanceApp extends StatelessWidget {
       builder: (context, locale, _) => ValueListenableBuilder<AppThemePreset>(
         valueListenable: AppearanceSettingsService.instance.themePreset,
         builder: (context, preset, _) {
-          final isUrduScript = const {'ur', 'pa', 'skr', 'sd'}
+          final isUrduScript = const {'ur', 'pa', 'skr', 'sd', 'bal', 'ps'}
               .contains(locale.languageCode);
           return MaterialApp(
             title: 'My Finance',
@@ -39,6 +39,8 @@ class MyFinanceApp extends StatelessWidget {
               Locale.fromSubtags(languageCode: 'pa', scriptCode: 'Arab'),
               Locale('skr'),
               Locale('sd'),
+              Locale('bal'),
+              Locale('ps'),
             ],
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             debugShowCheckedModeBanner: false,
@@ -49,7 +51,7 @@ class MyFinanceApp extends StatelessWidget {
             themeMode: ThemeMode.light,
             routes: routes,
             builder: (context, child) => Directionality(
-              textDirection: const {'ur', 'ar', 'pa', 'skr', 'sd'}
+              textDirection: const {'ur', 'ar', 'pa', 'skr', 'sd', 'bal', 'ps'}
                       .contains(locale.languageCode)
                   ? TextDirection.rtl
                   : TextDirection.ltr,

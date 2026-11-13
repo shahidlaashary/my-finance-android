@@ -87,6 +87,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     final lender = TextEditingController(text: debt?.lender ?? '');
     final phone = TextEditingController(text: debt?.phone ?? '');
     final amount = TextEditingController(text: debt?.originalAmount.toString() ?? '');
+    final outstanding = TextEditingController(text: debt?.balance.toString() ?? '');
     final rate = TextEditingController(text: debt?.annualInterestRate.toString() ?? '0');
     final minimum = TextEditingController(text: debt?.minimumPayment.toString() ?? '0');
     final notes = TextEditingController(text: debt?.notes ?? '');
@@ -102,6 +103,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           TextField(controller: lender, decoration: const InputDecoration(labelText: 'Lender / Party *')),
           TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone (optional)')),
           TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Original Debt Amount *')),
+          TextField(controller: outstanding, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Current Outstanding Balance *', helperText: 'Update this when the lender adds interest or charges.')),
           TextField(controller: rate, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Annual Interest Rate (%)')),
           TextField(controller: minimum, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Minimum Monthly Payment')),
           const SizedBox(height: 10),
@@ -122,17 +124,16 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     );
     if (result == true) {
       final principal = double.tryParse(amount.text.trim());
+      final currentBalance = double.tryParse(outstanding.text.trim());
       final interest = double.tryParse(rate.text.trim()) ?? 0;
       final minPay = double.tryParse(minimum.text.trim()) ?? 0;
-      if (name.text.trim().isEmpty || lender.text.trim().isEmpty || principal == null || !principal.isFinite || principal <= 0 || interest < 0 || minPay < 0) {
+      if (name.text.trim().isEmpty || lender.text.trim().isEmpty || principal == null || !principal.isFinite || principal <= 0 || currentBalance == null || !currentBalance.isFinite || currentBalance < 0 || currentBalance > principal || interest < 0 || minPay < 0) {
         _message('Please enter valid debt details.'); 
-      } else if (debt != null && principal < debt.balance) {
-        _message('Original amount cannot be less than the outstanding balance.');
       } else {
         try {
           await DebtPayoffService.saveDebt(DebtRecord(
             id: debt?.id, name: name.text.trim(), lender: lender.text.trim(), phone: phone.text.trim(),
-            originalAmount: principal, balance: debt?.balance ?? principal,
+            originalAmount: principal, balance: currentBalance,
             annualInterestRate: interest, minimumPayment: minPay, walletId: walletId,
             startDate: _date(start), dueDate: due == null ? null : _date(due!), notes: notes.text.trim(),
           ));
@@ -141,7 +142,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
         } catch (e) { _message('Could not save debt: $e'); }
       }
     }
-    name.dispose(); lender.dispose(); phone.dispose(); amount.dispose(); rate.dispose(); minimum.dispose(); notes.dispose();
+    name.dispose(); lender.dispose(); phone.dispose(); amount.dispose(); outstanding.dispose(); rate.dispose(); minimum.dispose(); notes.dispose();
   }
 
   Future<void> _payDebt(DebtRecord debt) async {
@@ -305,7 +306,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               ]));
             }),
             const SizedBox(height: 4),
-            Text('Planner only: actual lender charges, fees and payment allocation may differ.', style: Theme.of(context).textTheme.bodySmall),
+            Text('Interest is included in estimates only. Payment entries reduce the current balance directly; update the outstanding balance when the lender posts interest or fees.', style: Theme.of(context).textTheme.bodySmall),
           ]))),
           const SizedBox(height: 12),
           if (_debts.any((d) => d.isPaid)) Text('Completed Debts', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),

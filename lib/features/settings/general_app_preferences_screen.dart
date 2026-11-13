@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 class GeneralAppPreferencesScreen extends StatefulWidget {
   const GeneralAppPreferencesScreen({super.key});
 
@@ -79,7 +80,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('General App Preferences')),
+      appBar: AppBar(title: Text(appText(context, 'General App Preferences', 'ایپ کی عمومی ترجیحات'))),
       body: _loading ? const Center(child: CircularProgressIndicator()) : ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -102,7 +103,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () async { await _preferences.reset(); await _load(); },
-            icon: const Icon(Icons.restart_alt), label: const Text('Reset Preferences'),
+            icon: const Icon(Icons.restart_alt), label: Text(appText(context, 'Reset Preferences', 'ترجیحات بحال کریں')),
           ),
           const Padding(padding: EdgeInsets.only(top: 8), child: Text(
             'Resetting preferences does not delete wallets, transactions, or other financial records.',

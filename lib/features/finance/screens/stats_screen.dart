@@ -622,23 +622,26 @@ class _StatsScreenState extends State<StatsScreen> {
     final income = _totals['income'] ?? 0;
     final net = _totals['net'] ?? 0;
     final days = _endDate.difference(_startDate).inDays + 1;
-    final savingsRate = income > 0 ? net / income * 100 : 0.0;
-    final expenseRatio = income > 0 ? (_totals['expense'] ?? 0) / income * 100 : 0.0;
-    final averageDaily = days > 0 ? (_totals['expense'] ?? 0) / days : 0.0;
+    final expense = (_totals['expense'] ?? 0).clamp(0.0, double.infinity).toDouble();
+    final savingsRate = income > 0 ? (net / income * 100) : 0.0;
+    final expenseRatio = income > 0 ? (expense / income * 100) : 0.0;
+    final averageDaily = days > 0 ? expense / days : 0.0;
     final topCategory = _categories.isEmpty ? 'No category data' : _categories.first['category_name'].toString();
     final topAmount = _categories.isEmpty ? 0.0 : (_categories.first['total'] as num?)?.toDouble() ?? 0.0;
     final budgetRows = _budgets.where((budget) => budget.currency.toUpperCase() == _currency.toUpperCase());
     final budgetLimit = budgetRows.fold<double>(0, (sum, budget) => sum + budget.limitAmount);
     final budgetSpent = budgetRows.fold<double>(0, (sum, budget) => sum + budget.spentAmount);
-    final budgetUse = budgetLimit > 0 ? budgetSpent / budgetLimit * 100 : 0.0;
+    final budgetUse = budgetLimit > 0
+        ? (budgetSpent / budgetLimit * 100).clamp(0.0, double.infinity).toDouble()
+        : 0.0;
     return _buildOverviewSection('Advanced Financial Insights', Icons.insights_rounded, [
-      _overviewLine('Savings rate', '\${savingsRate.toStringAsFixed(1)}%'),
-      _overviewLine('Expenses as % of income', '\${expenseRatio.toStringAsFixed(1)}%'),
-      _overviewLine('Average daily spending', '$_currency \${_money(averageDaily)}'),
+      _overviewLine('Savings rate', '${savingsRate.toStringAsFixed(1)}%'),
+      _overviewLine('Expenses as % of income', '${expenseRatio.toStringAsFixed(1)}%'),
+      _overviewLine('Average daily spending', '$_currency ${_money(averageDaily)}'),
       _overviewLine('Highest expense category', topCategory),
-      _overviewLine('Top category spending', '$_currency \${_money(topAmount)}'),
-      _overviewLine('Budget utilization', budgetLimit > 0 ? '\${budgetUse.toStringAsFixed(1)}%' : 'No budgets set'),
-      _overviewLine('Net cash flow', '$_currency \${_money(net)}'),
+      _overviewLine('Top category spending', '$_currency ${_money(topAmount)}'),
+      _overviewLine('Budget utilization', budgetLimit > 0 ? '${budgetUse.toStringAsFixed(1)}%' : 'No budgets set'),
+      _overviewLine('Net cash flow', '$_currency ${_money(net)}'),
     ]);
   }
 
@@ -651,7 +654,7 @@ class _StatsScreenState extends State<StatsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(appText(context, "Reports and Analytics", "Reports and Analytics"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, "Reports & Analytics", "Reports & Analytics"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       body: _loading

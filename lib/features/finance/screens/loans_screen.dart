@@ -273,8 +273,7 @@ class _LoansScreenState extends State<LoansScreen> {
               children: [
                 Text('Borrower: ${loan.borrowerName}'),
                 SizedBox(height: 6),
-                Text(
-                  'Outstanding: '
+                Text(appText(context, "Outstanding: ", "Outstanding: ")
                   '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
                 ),
                 TextField(
@@ -386,8 +385,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          'Loan Details',
+                        child: Text(appText(context, "Loan Details", "Loan Details"),
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -408,8 +406,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   Text('Due Date: ${loan.dueDate ?? '-'}'),
                   Text('Notes: ${loan.notes.isEmpty ? '-' : loan.notes}'),
                   const Divider(height: 28),
-                  const Text(
-                    'Loan Attachments',
+                  Text(appText(context, "Loan Attachments", "Loan Attachments"),
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   AttachmentSection(
@@ -417,8 +414,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     ownerId: loan.id!,
                   ),
                   const Divider(height: 28),
-                  const Text(
-                    'Repayment History',
+                  Text(appText(context, "Repayment History", "Repayment History"),
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   FutureBuilder<List<RepaymentModel>>(
@@ -437,7 +433,7 @@ class _LoansScreenState extends State<LoansScreen> {
                       if (repayments.isEmpty) {
                         return Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text('No repayments recorded yet.'),
+                          child: Text(appText(context, "No repayments recorded yet.", "No repayments recorded yet.")),
                         );
                       }
                       return Column(
@@ -470,9 +466,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                         final confirm = await showDialog<bool>(
                                           context: context,
                                           builder: (context) => AlertDialog(
-                                            title: const Text('Delete Repayment?'),
-                                            content: const Text(
-                                              'This will reverse the account balance and loan balance.',
+                                            title: Text(appText(context, "Delete Repayment?", "Delete Repayment?")),
+                                            content: Text(appText(context, "This will reverse the account balance and loan balance.", "This will reverse the account balance and loan balance."),
                                             ),
                                             actions: [
                                               TextButton(
@@ -481,7 +476,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                               ),
                                               TextButton(
                                                 onPressed: () => Navigator.pop(context, true),
-                                                child: const Text('Delete'),
+                                                child: Text(appText(context, "Delete", "Delete")),
                                               ),
                                             ],
                                           ),
@@ -546,9 +541,8 @@ class _LoansScreenState extends State<LoansScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Loan?'),
-        content: const Text(
-          'This will delete the loan and its repayment history, '
+        title: Text(appText(context, "Delete Loan?", "Delete Loan?")),
+        content: Text(appText(context, "This will delete the loan and its repayment history, ", "This will delete the loan and its repayment history, ")
           'and reverse the related account balance changes.',
         ),
         actions: [
@@ -558,7 +552,7 @@ class _LoansScreenState extends State<LoansScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(appText(context, "Delete", "Delete")),
           ),
         ],
       ),
@@ -618,8 +612,7 @@ class _LoansScreenState extends State<LoansScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Total Outstanding by Currency',
+                          Text(appText(context, "Total Outstanding by Currency", "Total Outstanding by Currency"),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -627,8 +620,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           ),
                           SizedBox(height: 12),
                           if (_outstandingByCurrency.isEmpty)
-                            const Text(
-                              'No outstanding loans.',
+                            Text(appText(context, "No outstanding loans.", "No outstanding loans."),
                               style: TextStyle(color: Colors.grey),
                             )
                           else
@@ -667,8 +659,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'All Loans',
+                      Text(appText(context, "All Loans", "All Loans"),
                         style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -731,16 +722,13 @@ class _LoansScreenState extends State<LoansScreen> {
                                 Text(loan.borrowerPhone!),
                               SizedBox(height: 8),
                               Text('Currency: $currency'),
-                              Text(
-                                'Loan Amount: '
+                              Text(appText(context, "Loan Amount: ", "Loan Amount: ")
                                 '${_moneyWithCurrency(loan.amount, loan.walletId)}',
                               ),
-                              Text(
-                                'Repaid: '
+                              Text(appText(context, "Repaid: ", "Repaid: ")
                                 '${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}',
                               ),
-                              Text(
-                                'Remaining: '
+                              Text(appText(context, "Remaining: ", "Remaining: ")
                                 '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),

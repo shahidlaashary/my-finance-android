@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class DebtRecord {
   final int? id;
@@ -203,6 +204,11 @@ class DebtPayoffService {
 
   static Future<void> deleteDebt(int debtId) async {
     final db = await _db;
+    final debtSnapshot = await db.query('debts', where: 'id = ?', whereArgs: [debtId], limit: 1);
+    if (debtSnapshot.isEmpty) return;
+    final paymentSnapshot = await db.query('debt_payments', where: 'debt_id = ?', whereArgs: [debtId]);
+    await RecycleBinService.archive(type: 'Debt', title: debtSnapshot.first['name']?.toString() ?? 'Debt',
+      table: 'debts', id: debtId, record: debtSnapshot.first, related: paymentSnapshot);
     await db.transaction((txn) async {
       final payments = await txn.query('debt_payments', where: 'debt_id=?', whereArgs: [debtId]);
       for (final row in payments) {

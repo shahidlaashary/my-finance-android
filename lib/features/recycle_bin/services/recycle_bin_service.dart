@@ -39,9 +39,18 @@ class RecycleBinService {
       if (rows.isEmpty) throw Exception('Recycle Bin item not found.');
       final item = rows.first;
       final table = item['source_table'].toString();
-      const allowed = {'wallets','transactions','budgets','recurring_transactions','stock_items','stock_movements'};
-      if (!allowed.contains(table)) throw Exception('Restore for this record type is not available yet.');
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'my_documents_records') {
+        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['my_documents_records'], limit: 1);
+        final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        if (current.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A document with this ID already exists.');
+        current.add(record);
+        await txn.insert('app_settings', {'setting_key':'my_documents_records','setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
+      const allowed = {'wallets','budgets','recurring_transactions','stock_items'};
+      if (!allowed.contains(table)) throw Exception('Restore for this record type is not available yet.');
       await txn.insert(table, record);
       final rawRelated = item['related_payload']?.toString();
       if (rawRelated != null && rawRelated.isNotEmpty) {

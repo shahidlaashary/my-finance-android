@@ -2,6 +2,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/goals_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class GoalsService {
 
   // Restore se pehle is service ka database connection band karta hai.
@@ -401,6 +402,11 @@ class GoalsService {
   /// Goal delete karta hai aur contributions ya withdrawals ke balance changes wapas karta hai.
   static Future<void> deleteGoal(int goalId) async {
     final db = await _database;
+    final goalSnapshot = await db.query('goals', where: 'id = ?', whereArgs: [goalId], limit: 1);
+    if (goalSnapshot.isEmpty) return;
+    final historySnapshot = await db.query('goal_contributions', where: 'goal_id = ?', whereArgs: [goalId]);
+    await RecycleBinService.archive(type: 'Savings Goal', title: goalSnapshot.first['name']?.toString() ?? 'Savings Goal',
+      table: 'goals', id: goalId, record: goalSnapshot.first, related: historySnapshot);
     await db.transaction((txn) async {
       final goalRows = await txn.query(
         'goals',

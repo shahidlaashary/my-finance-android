@@ -319,7 +319,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               secondary: const Icon(Icons.lock_outline_rounded),
               title: const Text('App Lock'),
               subtitle: const Text(
-                'Require your PIN or enabled biometrics when opening My Finance',
+                'Require your PIN or enabled biometrics',
               ),
               value: _enabled,
               onChanged: _saving ? null : _setEnabled,
@@ -329,10 +329,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
             child: SwitchListTile(
               secondary: const Icon(Icons.fingerprint_rounded),
               title: const Text('Face / Fingerprint Unlock'),
-              subtitle: Text(
-                _biometricMethods == 'Not reported by Android'
-                    ? 'Verify your phone’s secure Face Unlock or Fingerprint prompt to enable. PIN remains as backup.'
-                    : 'Use your enrolled $_biometricMethods. Android selects the secure method; PIN remains as backup.',
+              subtitle: const Text(
+                'Use Face / Fingerprint authentication. PIN remains as backup.',
               ),
               value: _biometricEnabled,
               onChanged: _enabled && !_saving ? _setBiometricEnabled : null,

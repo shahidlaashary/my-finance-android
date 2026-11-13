@@ -2,6 +2,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class BudgetsService {
 
   // Restore se pehle is service ka database connection band karta hai.
@@ -244,11 +245,10 @@ class BudgetsService {
   /// Budget delete karta hai.
   static Future<void> deleteBudget(int budgetId) async {
     final db = await _database;
-    await db.delete(
-      'budgets',
-      where: 'id = ?',
-      whereArgs: [budgetId],
-    );
+    final rows = await db.query('budgets', where: 'id = ?', whereArgs: [budgetId], limit: 1);
+    if (rows.isEmpty) return;
+    await RecycleBinService.archive(type: 'Budget', title: rows.first['name']?.toString() ?? 'Budget', table: 'budgets', id: budgetId, record: rows.first);
+    await db.delete('budgets', where: 'id = ?', whereArgs: [budgetId]);
     AppRefreshController.notifyChanged();
   }
   /// Un budgets ki list deta hai jinhon ne apni limit cross kar li ho.

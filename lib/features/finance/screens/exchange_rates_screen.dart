@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 
 class ExchangeRatesScreen extends StatefulWidget {
   const ExchangeRatesScreen({super.key});
@@ -15,11 +16,7 @@ class ExchangeRatesScreen extends StatefulWidget {
 }
 
 class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
-  static const List<String> _currencies = [
-    'AED', 'AUD', 'BHD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'HKD',
-    'IDR', 'INR', 'JPY', 'KRW', 'KWD', 'MYR', 'NZD', 'OMR', 'QAR',
-    'SAR', 'SGD', 'THB', 'TRY', 'USD', 'ZAR',
-  ];
+  static const List<String> _currencies = CurrencyCatalog.supported.where((code) => code != 'PKR').toList();
   final FinanceDB _database = FinanceDB.instance;
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];

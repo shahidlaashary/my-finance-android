@@ -83,15 +83,17 @@ class StockService {
   }
   static Future<void> deleteItem(int id) async {
     await _ensureTables();
-    final db=FinanceDB.instance.db;
+    final db = FinanceDB.instance.db;
+    final rows = await db.query('stock_items', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    final movements = await db.query('stock_movements', where: 'item_id = ?', whereArgs: [id]);
+    await RecycleBinService.archive(
+      type: 'Stock Item', title: rows.first['name']?.toString() ?? 'Stock Item',
+      table: 'stock_items', id: id, record: rows.first, related: movements,
+    );
     await db.transaction((txn) async {
-      final rows = await txn.query('stock_items', where: 'id = ?', whereArgs: [id], limit: 1);
-      if (rows.isEmpty) return;
-      final movements = await txn.query('stock_movements', where: 'item_id = ?', whereArgs: [id]);
-      await txn.insert('recycle_bin', {'entity_type':'Stock Item','entity_title':rows.first['name']?.toString() ?? 'Stock Item','source_table':'stock_items','source_id':id.toString(),'payload':__import__dummy,'related_payload':null,'deleted_at':DateTime.now().toIso8601String()});
-      await txn.delete('stock_movements',where:'item_id=?',whereArgs:[id]);
-      await txn.delete('stock_items',where:'id=?',whereArgs:[id]);
+      await txn.delete('stock_movements', where: 'item_id = ?', whereArgs: [id]);
+      await txn.delete('stock_items', where: 'id = ?', whereArgs: [id]);
     });
     AppRefreshController.notifyChanged();
-  }
-}
+  }}

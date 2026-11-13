@@ -34,8 +34,12 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
         FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(tr('Delete permanently')))],
     ));
     if (yes != true) return;
-    await RecycleBinService.permanentlyDelete(item['id'] as int);
-    await _load();
+    try {
+      await RecycleBinService.permanentlyDelete(item['id'] as int);
+      await _load();
+    } catch (e) {
+      _message(e.toString());
+    }
   }
   @override
   Widget build(BuildContext context) => Scaffold(

@@ -216,8 +216,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                       style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
-                    Text(appText(context, "Apne finance data aur attachments ka manual backup banayein ", "Apne finance data aur attachments ka manual backup banayein ")
-                      'ya pehle banaya gaya backup restore karein.',
+                    Text(appText(context, "Apne finance data aur attachments ka manual backup banayein ya pehle banaya gaya backup restore karein.", "اپنے مالی ڈیٹا اور منسلک فائلوں کا بیک اپ بنائیں یا پہلے بنایا گیا بیک اپ بحال کریں۔"),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -259,9 +258,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   color: Colors.orange.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(appText(context, "Zaroori: Backup restore karne se current database aur ", "Zaroori: Backup restore karne se current database aur ")
-                  'attachments replace ho jayenge. Restore se pehle confirm '
-                  'kar lein ke selected ZIP file sahi hai.',
+                child: Text(appText(context, "Zaroori: Backup restore karne se current database aur attachments replace ho jayenge. Restore se pehle confirm kar lein ke selected ZIP file sahi hai.", "اہم: بیک اپ بحال کرنے سے موجودہ ڈیٹابیس اور منسلک فائلیں تبدیل ہو جائیں گی۔ بحالی سے پہلے تصدیق کر لیں کہ منتخب ZIP فائل درست ہے۔"),
                   style: TextStyle(height: 1.45),
                 ),
               ),

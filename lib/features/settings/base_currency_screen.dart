@@ -326,8 +326,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                             style: TextStyle(fontWeight: FontWeight.bold,
                                 fontSize: 16)),
                         const SizedBox(height: 6),
-                        const Text(
-                          'Dashboard totals and consolidated wallet values will be shown in this currency. Existing wallet currencies and records will not be changed.',
+                        Text(appText(context, "Dashboard totals and consolidated wallet values will be shown in this currency. Existing wallet currencies and records will not be changed.", "Dashboard totals and consolidated wallet values will be shown in this currency. Existing wallet currencies and records will not be changed."),
                           style: TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 8),
@@ -384,10 +383,9 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                   ),
                 ),
                 if (_rates.length < _available.length)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 12),
-                    child: Text(
-                      'Kuch rates abhi available nahi. Internet connect karke screen dobara kholein.',
+                    child: Text(appText(context, "Kuch rates abhi available nahi. Internet connect karke screen dobara kholein.", "Kuch rates abhi available nahi. Internet connect karke screen dobara kholein."),
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12),
                     ),

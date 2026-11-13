@@ -4,6 +4,10 @@ import 'package:flutter/widgets.dart';
 /// Add new UI copy here and use [appText] wherever a screen displays it.
 const Map<String, Map<String, String>> _translations = {
   'ar': {
+    'Assets': 'الأصول',
+    'Net Monthly Savings': 'صافي المدخرات الشهرية',
+    'Left to right (LTR)': 'من اليسار إلى اليمين (LTR)',
+
     'Settings': 'الإعدادات',
     'App Settings': 'إعدادات التطبيق',
     'General App Preferences': 'تفضيلات التطبيق العامة',
@@ -37,6 +41,10 @@ const Map<String, Map<String, String>> _translations = {
     'Select Category': 'اختر فئة',
   },
   'hi': {
+    'Assets': 'संपत्तियाँ',
+    'Net Monthly Savings': 'शुद्ध मासिक बचत',
+    'Left to right (LTR)': 'बाएँ से दाएँ (LTR)',
+
     'Settings': 'सेटिंग्स',
     'App Settings': 'ऐप सेटिंग्स',
     'General App Preferences': 'ऐप की सामान्य प्राथमिकताएँ',
@@ -70,6 +78,10 @@ const Map<String, Map<String, String>> _translations = {
     'Select Category': 'श्रेणी चुनें',
   },
   'pa': {
+    'Assets': 'اثاثے',
+    'Net Monthly Savings': 'ماہانہ خالص بچت',
+    'Left to right (LTR)': 'کھبے توں سجے (LTR)',
+
     'Settings': 'ترتیباں',
     'App Settings': 'ایپ دیاں ترتیباں',
     'General App Preferences': 'ایپ دیاں عام ترجیحاں',
@@ -103,6 +115,10 @@ const Map<String, Map<String, String>> _translations = {
     'Select Category': 'قسم چنو',
   },
   'skr': {
+    'Assets': 'اثاثے',
+    'Net Monthly Savings': 'مہینے دی خالص بچت',
+    'Left to right (LTR)': 'کھبے پاسے کنوں سڄے پاسے (LTR)',
+
     'Settings': 'ترتیباں',
     'App Settings': 'ایپ دیاں ترتیباں',
     'General App Preferences': 'ایپ دیاں عام ترجیحاں',
@@ -136,6 +152,10 @@ const Map<String, Map<String, String>> _translations = {
     'Select Category': 'قسم چݨو',
   },
   'sd': {
+    'Assets': 'اثاثا',
+    'Net Monthly Savings': 'ماهوار خالص بچت',
+    'Left to right (LTR)': 'کاٻي کان ساڄي طرف (LTR)',
+
     'Settings': 'سيٽنگون',
     'App Settings': 'ايپ سيٽنگون',
     'General App Preferences': 'ايپ جون عام ترجيحون',

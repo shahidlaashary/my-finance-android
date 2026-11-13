@@ -232,7 +232,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                         final enabled = code == 'PKR' || rate != null;
                         return Material(
                           color: selected
-                              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.65)
+                              ? theme.colorScheme.primaryContainer.withOpacity(0.65)
                               : theme.colorScheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(15),
                           child: InkWell(

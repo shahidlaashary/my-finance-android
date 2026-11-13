@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/recurring_transaction_model.dart';
@@ -45,8 +44,8 @@ class _RecurringTransactionsScreenState
   Future<void> _loadData() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
-      final dbPath = await getDatabasesPath();
-      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
+      // Wallets ke liye app ka central database connection istemal karte hain.
+      final db = FinanceDB.instance.db;
 
       final wallets = await db.query(
         'wallets',

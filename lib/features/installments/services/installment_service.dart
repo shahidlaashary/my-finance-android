@@ -72,6 +72,8 @@ class InstallmentService {
     return id;
   }
 
+  // Qist record aur wallet balance aik hi transaction mein update karte hain.
+  // Agar payment save na ho to wallet ka balance bhi rollback ho jata hai.
   static Future<void> addPayment({
     required int contractId, required double amount, required String date, required String note,
   }) async {
@@ -101,6 +103,7 @@ class InstallmentService {
     AppRefreshController.notifyChanged();
   }
 
+  // Payment ke direction ke mutabiq wallet mein amount add ya deduct hoti hai.
   static Future<void> _applyPayment(Transaction txn, int id, double amount, int walletId,
       String date, String note, String direction, String now) async {
     final delta = direction == 'sell' ? amount : -amount;

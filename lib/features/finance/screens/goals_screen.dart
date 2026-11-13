@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/finance/models/goals_model.dart';
 import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
@@ -51,8 +50,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
     if (mounted) setState(() => _loading = true);
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
-      final dbPath = await getDatabasesPath();
-      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
+      // Wallet list shared FinanceDB connection se hasil karte hain.
+      final db = FinanceDB.instance.db;
       final wallets = await db.query(
         'wallets',
         orderBy: 'name ASC',

@@ -6,7 +6,6 @@ import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class LoansService {
 

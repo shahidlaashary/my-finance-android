@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
@@ -54,8 +53,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       final budgets = await BudgetsService.getBudgets();
       final categoryItems = await CategoryService.getCategories('expense');
       final categories = categoryItems.map((item) => {'name': item.name}).toList();
-      final dbPath = await getDatabasesPath();
-      final db = await openDatabase(p.join(dbPath, 'my_finance.db'));
+      // Wallet currencies central FinanceDB connection se load hoti hain.
+      final db = FinanceDB.instance.db;
       final wallets = await db.query('wallets');
       final currencies = wallets
           .map((e) => e['currency']?.toString() ?? 'PKR')

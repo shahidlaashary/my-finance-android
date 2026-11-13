@@ -130,7 +130,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (wallets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No wallets available.')),
+        SnackBar(content: Text(appText(context, "No wallets available.", "No wallets available."))),
       );
       return;
     }
@@ -139,7 +139,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     if (!['income', 'expense', 'transfer'].contains(type)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unknown transaction type.')),
+        SnackBar(content: Text(appText(context, "Unknown transaction type.", "Unknown transaction type."))),
       );
       return;
     }
@@ -196,7 +196,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Amount',
                         border: OutlineInputBorder(),
                       ),
@@ -205,7 +205,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     DropdownButtonFormField<int>(
                       value: walletId,
                       isExpanded: true,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Account',
                         border: OutlineInputBorder(),
                       ),
@@ -231,7 +231,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       DropdownButtonFormField<int>(
                         value: toWalletId,
                         isExpanded: true,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Destination Account',
                           border: OutlineInputBorder(),
                         ),
@@ -259,14 +259,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ? category
                             : null,
                         isExpanded: true,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Category',
                           border: OutlineInputBorder(),
                         ),
                         items: [
-                          const DropdownMenuItem<String?>(
+                          DropdownMenuItem<String?>(
                             value: null,
-                            child: Text('No category'),
+                            child: Text(appText(context, "No category", "No category")),
                           ),
                           ...categories.map((category) {
                             return DropdownMenuItem<String?>(
@@ -287,7 +287,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     SizedBox(height: 14),
                     TextField(
                       controller: noteController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Description',
                         border: OutlineInputBorder(),
                       ),
@@ -405,8 +405,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(appText(context, 'Delete Transaction?', 'لین دین حذف کریں؟')),
-        content: const Text(
-          'This transaction will be deleted and its effect on '
+        content: Text(appText(context, "This transaction will be deleted and its effect on ", "This transaction will be deleted and its effect on ")
           'account balances will be reversed.',
         ),
         actions: [
@@ -416,7 +415,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(appText(context, "Delete", "Delete")),
           ),
         ],
       ),
@@ -450,7 +449,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('Transactions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, "Transactions", "Transactions"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       body: loading
@@ -462,7 +461,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     children: [
                       Icon(Icons.receipt_long_outlined, size: 55, color: Color(0xFF147D59)),
                       SizedBox(height: 12),
-                      Text('No transactions available', style: TextStyle(color: Color(0xFF7B8781))),
+                      Text(appText(context, "No transactions available", "No transactions available"), style: TextStyle(color: Color(0xFF7B8781))),
                     ],
                   ),
                 )
@@ -557,7 +556,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               ),
                               PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Delete'),
+                                child: Text(appText(context, "Delete", "Delete")),
                               ),
                             ],
                           ),

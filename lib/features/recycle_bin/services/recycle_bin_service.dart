@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/core/services/attachment_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -281,7 +282,38 @@ class RecycleBinService {
 
   static Future<void> permanentlyDelete(int id) async {
     await ensureTable();
-    await FinanceDB.instance.db.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
+    final db = FinanceDB.instance.db;
+    final rows = await db.query('recycle_bin', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    final item = rows.first;
+    final table = item['source_table']?.toString() ?? '';
+    final sourceId = int.tryParse(item['source_id']?.toString() ?? '');
+    final ownerTypes = <String, String>{
+      'transactions':'transaction', 'assets':'asset', 'loans':'loan',
+      'goals':'goal', 'loan_repayments':'repayment', 'my_documents_records':'document',
+    };
+    String? ownerType = ownerTypes[table];
+    if (table.startsWith('vehicle_manager_data_v1:')) {
+      final key = table.substring('vehicle_manager_data_v1:'.length);
+      ownerType = key == 'vehicles' ? 'vehicle' : key == 'fuel_logs' ? 'vehicle_fuel' : key == 'expenses' ? 'vehicle_expense' : null;
+    }
+    if (ownerType != null && sourceId != null) {
+      await AttachmentService.deleteOwnerAttachments(ownerType: ownerType, ownerId: sourceId);
+    }
+    if (table == 'loans' || table == 'goals') {
+      final raw = item['related_payload']?.toString();
+      if (raw != null && raw.isNotEmpty) {
+        final related = (jsonDecode(raw) as List).whereType<Map>();
+        final childOwner = table == 'loans' ? 'repayment' : null;
+        if (childOwner != null) {
+          for (final child in related) {
+            final childId = (child['id'] as num?)?.toInt();
+            if (childId != null) await AttachmentService.deleteOwnerAttachments(ownerType: childOwner, ownerId: childId);
+          }
+        }
+      }
+    }
+    await db.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }
 }

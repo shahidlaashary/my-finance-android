@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 class LanguageSettingsScreen extends StatelessWidget {
   const LanguageSettingsScreen({super.key});
 
@@ -43,7 +44,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                   groupValue: selectedLocale.languageCode,
                   secondary: const Text('🇬🇧', style: TextStyle(fontSize: 24)),
                   title: const Text('English'),
-                  subtitle: const Text('Left to right (LTR)'),
+                  subtitle: Text(appText(context, 'Left to right (LTR)', 'بائیں سے دائیں (LTR)')),
                   onChanged: (_) => _select(context, 'en'),
                 ),
               ),

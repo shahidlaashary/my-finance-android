@@ -111,12 +111,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18),
                   const Text(
                     'Choose Icon',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -245,7 +245,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         title: const Text(
-          'Categories',
+          appText(context, 'Categories', 'زمرے'),
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
@@ -254,7 +254,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             onPressed: () => showCategoryDialog(),
             icon: const Icon(Icons.add_rounded, size: 29),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
         ],
       ),
       body: Column(
@@ -277,11 +277,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
           ),
           Expanded(
             child: loading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : categories.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'No categories yet. Tap + to add one.',
+                          appText(context, 'No categories yet. Tap + to add one.', 'ابھی کوئی زمرہ نہیں۔ شامل کرنے کے لیے + دبائیں۔'),
                           style: TextStyle(color: AppColors.muted),
                         ),
                       )
@@ -309,7 +309,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                 children: [
                                   ReorderableDragStartListener(
                                     index: index,
-                                    child: const SizedBox(
+                                    child: SizedBox(
                                       width: 28,
                                       child: Icon(
                                         Icons.drag_indicator_rounded,
@@ -331,7 +331,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                       size: 25,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
+                                  SizedBox(width: 14),
                                   Expanded(
                                     child: Text(
                                       category['name'] as String,
@@ -393,7 +393,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 20, color: selected ? Colors.white : AppColors.text),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               type,
               style: TextStyle(

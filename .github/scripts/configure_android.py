@@ -52,7 +52,7 @@ if wrapper.exists():
 
 ignore = Path(".gitignore")
 lines = ignore.read_text().splitlines() if ignore.exists() else []
-for item in ["build/", ".dart_tool/", ".flutter-plugins", ".flutter-plugins-dependencies", "android/.gradle/", "android/app/*.jks"]:
+for item in ["build/", ".dart_tool/", ".flutter-plugins", ".flutter-plugins-dependencies", "android/.gradle/", "android/local.properties", "android/key.properties", "android/app/*.jks"]:
     if item not in lines:
         lines.append(item)
 ignore.write_text("\n".join(lines).rstrip() + "\n")

@@ -24,7 +24,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     if (_availableBiometrics.contains(BiometricType.face)) methods.add('Face');
     if (_availableBiometrics.contains(BiometricType.fingerprint)) methods.add('Fingerprint');
     if (methods.isEmpty && _availableBiometrics.isNotEmpty) return 'Device biometrics';
-    return methods.isEmpty ? 'No enrolled biometrics detected' : methods.join(' & ');
+    return methods.isEmpty ? 'Not reported by Android' : methods.join(' & ');
   }
 
   @override
@@ -223,10 +223,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
         if (!mounted) return;
         setState(() => _availableBiometrics = available);
 
-        if (available.isEmpty) {
-          _message('Set up Face Unlock or Fingerprint in your device settings first.');
-          return;
-        }
+        // Some Android versions do not report face biometrics through the
+        // enrollment-list API. Let the secure system prompt be the final
+        // check instead of blocking those devices based on an empty list.
 
         // Verify that the system prompt can actually authenticate before
         // saving the combined biometric-unlock preference.
@@ -331,9 +330,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
               secondary: const Icon(Icons.fingerprint_rounded),
               title: const Text('Face / Fingerprint Unlock'),
               subtitle: Text(
-                _biometricMethods == 'No enrolled biometrics detected'
-                    ? 'Set up Face Unlock or Fingerprint on this device first.'
-                    : 'Android will use an enrolled secure biometric ($_biometricMethods). PIN remains available as backup.',
+                _biometricMethods == 'Not reported by Android'
+                    ? 'Verify your phone’s secure Face Unlock or Fingerprint prompt to enable. PIN remains as backup.'
+                    : 'Use your enrolled $_biometricMethods. Android selects the secure method; PIN remains as backup.',
               ),
               value: _biometricEnabled,
               onChanged: _enabled && !_saving ? _setBiometricEnabled : null,

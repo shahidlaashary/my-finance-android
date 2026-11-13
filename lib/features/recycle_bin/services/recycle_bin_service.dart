@@ -221,6 +221,21 @@ class RecycleBinService {
           throw Exception('Unknown transaction type.');
         }
         await txn.insert('transactions', record);
+        final salaryRaw = item['related_payload']?.toString();
+        if (salaryRaw != null && salaryRaw.isNotEmpty) {
+          await txn.execute('''CREATE TABLE IF NOT EXISTS staff_salaries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, staff_id INTEGER NOT NULL,
+            amount REAL NOT NULL, wallet_id INTEGER NOT NULL, paid_at TEXT NOT NULL,
+            note TEXT NOT NULL DEFAULT '', transaction_id INTEGER)''');
+          final salaryRows = (jsonDecode(salaryRaw) as List).whereType<Map>();
+          for (final row in salaryRows) {
+            final salary = Map<String, dynamic>.from(row);
+            final staffId = (salary['staff_id'] as num).toInt();
+            final staff = await txn.query('staff', columns: ['id'], where: 'id = ?', whereArgs: [staffId], limit: 1);
+            if (staff.isEmpty) throw Exception('Restore the related staff member before restoring this salary transaction.');
+            await txn.insert('staff_salaries', salary);
+          }
+        }
         if (fee > 0) {
           await txn.insert('app_settings', {'setting_key':'transaction_transfer_fee_${record['id']}','setting_value':fee.toString()}, conflictAlgorithm: ConflictAlgorithm.replace);
         }

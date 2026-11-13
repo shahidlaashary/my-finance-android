@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Central SQLite database for the My Finance application.
 ///
@@ -604,11 +605,10 @@ class FinanceDB {
       );
     }
 
-    await db.delete(
-      'wallets',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final walletRows = await db.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (walletRows.isEmpty) return;
+    await RecycleBinService.archive(type: 'Wallet', title: walletRows.first['name']?.toString() ?? 'Wallet', table: 'wallets', id: id, record: walletRows.first);
+    await db.delete('wallets', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }
 

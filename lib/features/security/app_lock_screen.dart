@@ -350,6 +350,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             child: ListTile(
               leading: const Icon(Icons.timer_outlined),
               title: const Text('Auto-lock'),
+              subtitle: const Text('Lock again after leaving the app'),
               trailing: DropdownButton<int>(
                 value: _timeout,
                 underline: const SizedBox.shrink(),

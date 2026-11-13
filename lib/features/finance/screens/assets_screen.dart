@@ -894,7 +894,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('TOTAL ASSET VALUE  •  $primaryCurrency',
+                        Text('${appText(context, 'TOTAL ASSET VALUE', 'کل اثاثوں کی مالیت')}  •  $primaryCurrency',
                           style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
                         SizedBox(height: 5),
                         Text('$primaryCurrency ${_money(currentTotal)}',
@@ -946,7 +946,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   Row(
                     children: [
                       Expanded(child: Text(_selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
-                      Text('${_visibleAssets.where((a) => !a.isSold).length} Active',
+                      Text('${_visibleAssets.where((a) => !a.isSold).length} ${appText(context, 'Active', 'فعال')}',
                         style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700)),
                     ],
                   ),

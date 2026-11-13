@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
   @override
@@ -40,7 +41,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     }
   }
 
-import 'package:my_finance/core/localization/app_text.dart';
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
@@ -134,7 +134,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     Expanded(child: DropdownButtonFormField<String?>(
                       value: category, isExpanded: true,
                       decoration: decoration('Category', Icons.category_outlined),
-                      items: [const DropdownMenuItem<String?>(value: null, child: Text(appText(context, 'All Categories', 'تمام زمرے'))),
+                      items: [DropdownMenuItem<String?>(value: null, child: Text(appText(context, 'All Categories', 'تمام زمرے'))),
                         ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis)))],
                       onChanged: (v) => setSheetState(() => category = v),
                     )),
@@ -310,7 +310,7 @@ import 'package:my_finance/core/localization/app_text.dart';
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem
                       value: 'edit',
                       child: Text(appText(context, 'Edit Budget', 'بجٹ میں ترمیم کریں')),
                     ),

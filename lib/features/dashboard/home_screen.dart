@@ -481,7 +481,7 @@ class _HomePageState extends State<HomePage> {
               title: appText(context, 'Assets Overview', 'اثاثوں کا جائزہ'),
               subtitle: appText(context, 'View and manage your assets', 'اپنے اثاثے دیکھیں اور منظم کریں'),
               color: const Color(0xFF3978C5),
-              destinationTitle: appText(context, 'Assets', 'اثاثے'),
+              destinationTitle: 'Assets',
             ),
             _overviewCard(
               icon: Icons.handshake_outlined,
@@ -627,7 +627,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => destinationTitle == appText(context, 'Assets', 'اثاثے')
+            builder: (_) => destinationTitle == 'Assets'
                 ? const AssetsScreen()
                 : widget.featurePageBuilder(destinationTitle),
           ),

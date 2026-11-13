@@ -302,8 +302,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Appearance',
+        title: Text(
+          appText(context, 'Appearance', 'ظاہری شکل'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -396,14 +396,14 @@ class _SettingsInfoTile extends StatelessWidget {
           size: 25,
         ),
         title: Text(
-          title,
+          appText(context, title, title),
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
         ),
         subtitle: Text(
-          subtitle,
+          appText(context, subtitle, subtitle),
           style: const TextStyle(fontSize: 12),
         ),
         trailing: onTap != null

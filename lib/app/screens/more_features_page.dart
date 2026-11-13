@@ -16,24 +16,24 @@ class MoreFeaturesPage extends StatelessWidget {
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
       {
-        'title': 'Vehicle Manager',
-        'icon': Icons.directions_car_filled_rounded,
+        'title': 'Exchange Rates',
+        'icon': Icons.currency_exchange_rounded,
+      },
+      {
+        'title': 'My Documents',
+        'icon': Icons.folder_copy_outlined,
       },
       {
         'title': 'Recurring Transactions',
         'icon': Icons.repeat_rounded,
       },
       {
-        'title': 'Exchange Rates',
-        'icon': Icons.currency_exchange_rounded,
-      },
-      {
         'title': 'Settings',
         'icon': Icons.settings_outlined,
       },
       {
-        'title': 'My Documents',
-        'icon': Icons.folder_copy_outlined,
+        'title': 'Vehicle Manager',
+        'icon': Icons.directions_car_filled_rounded,
       },
     ];
 

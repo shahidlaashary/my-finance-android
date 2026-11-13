@@ -692,7 +692,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showFuelForm(record: f);
           if (v == 'delete') _deleteRecord(() async { final id = f['id'] as int; await VehicleService.deleteFuel(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle_fuel', ownerId: id); }, 'fuel entry');
-        }, itemBuilder: (_) => const [
+        }, itemBuilder: (_) => [
           PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Fuel Entry', 'ایندھن کے اندراج میں ترمیم کریں'))),
           PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Fuel Entry', 'ایندھن کا اندراج حذف کریں'))),
         ]),

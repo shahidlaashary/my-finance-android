@@ -2,6 +2,35 @@ import 'package:flutter/widgets.dart';
 
 /// Shared translations for the application's commonly used UI labels.
 /// Add new UI copy here and use [appText] wherever a screen displays it.
+const Map<String, String> _urduTranslations = {
+    "Appearance": "ظاہری شکل",
+    "Customize theme mode and app colors": "تھیم اور ایپ کے رنگ تبدیل کریں",
+    "Backup & Restore": "بیک اپ اور بحالی",
+    "Create a manual backup or restore your finance data": "دستی بیک اپ بنائیں یا مالیاتی ڈیٹا بحال کریں",
+    "App Lock & Security": "ایپ لاک اور سکیورٹی",
+    "Protect with PIN, Face Unlock or Fingerprint": "پن، فیس ان لاک یا فنگر پرنٹ سے حفاظت کریں",
+    "Base Currency": "بنیادی کرنسی",
+    "Choose the currency for consolidated totals": "مجموعی حساب کے لیے کرنسی منتخب کریں",
+    "Language": "زبان",
+    "English and Urdu language settings": "زبان کی ترتیبات",
+    "Manual Exchange Rates": "زرِ مبادلہ کی دستی شرحیں",
+    "Manage buy and sell exchange rates": "خرید و فروخت کی شرحیں منظم کریں",
+    "Home": "ہوم",
+    "Budgets": "بجٹ",
+    "Goals": "اہداف",
+    "Loans": "قرضے",
+    "Stats": "اعدادوشمار",
+    "Txns": "لین دین",
+    "Money received": "وصول شدہ رقم",
+    "Expense": "اخراجات",
+    "Money spent": "خرچ کی گئی رقم",
+    "Transfer": "منتقلی",
+    "Between wallets": "والٹس کے درمیان",
+    "Personalize Your App": "اپنی ایپ کو اپنی پسند کے مطابق بنائیں",
+    "Customize the look and feel of My Finance.": "My Finance ایپ کی شکل و صورت تبدیل کریں۔",
+    "Manage your My Finance preferences.": "My Finance ایپ کی ترجیحات منظم کریں۔",
+};
+
 const Map<String, Map<String, String>> _translations = {
   'ar': {
     'Assets': 'الأصول',
@@ -1171,6 +1200,6 @@ const Map<String, Map<String, String>> _translations = {
 /// Existing English/Urdu call sites remain source-compatible.
 String appText(BuildContext context, String english, String urdu) {
   final language = Localizations.localeOf(context).languageCode;
-  if (language == 'ur') return urdu;
+  if (language == 'ur') return _urduTranslations[english] ?? urdu;
   return _translations[language]?[english] ?? english;
 }

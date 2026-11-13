@@ -22,8 +22,10 @@ if "signingConfigs {" not in text:
 """
     text = text.replace("android {\n", "android {\n" + signing, 1)
 text, n = re.subn(r'signingConfig\s*=\s*signingConfigs\.getByName\("debug"\)', 'signingConfig = signingConfigs.getByName("release")', text, count=1)
-if n == 0:
-    raise SystemExit("Could not replace generated release debug-signing configuration")
+if n == 0 and 'signingConfig = signingConfigs.getByName("release")' not in text:
+    raise SystemExit("Release build type has no supported release signing configuration")
+if 'create("release")' not in text:
+    raise SystemExit("Release signing configuration is missing")
 if f'applicationId = "{APP_ID}"' not in text or f'namespace = "{APP_ID}"' not in text:
     raise SystemExit("Could not enforce stable Android application ID")
 gradle.write_text(text)

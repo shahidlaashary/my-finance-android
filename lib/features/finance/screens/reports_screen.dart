@@ -219,7 +219,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(),
             )
           : _error != null
@@ -230,19 +230,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       _buildFilters(),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       _buildSummaryCards(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildBalanceSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildMonthlyTrend(theme),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildCategorySection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildAccountSection(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildTransactionHistory(),
-                      const SizedBox(height: 30),
+                      SizedBox(height: 30),
                     ],
                   ),
                 ),
@@ -261,7 +261,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               size: 48,
               color: Colors.red,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             const Text(
               'Unable to load reports',
               style: TextStyle(
@@ -269,12 +269,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               _error!,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _loadReports,
               icon: const Icon(Icons.refresh),
@@ -300,12 +300,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             DropdownButtonFormField<String?>(
               value: _selectedCurrency,
               decoration: const InputDecoration(
-                labelText: 'Currency',
+                labelText: appText(context, 'Currency', 'کرنسی'),
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.currency_exchange),
               ),
@@ -329,7 +329,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               },
             ),
 
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             Row(
               children: [
@@ -343,7 +343,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _pickEndDate,
@@ -357,7 +357,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ],
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             Wrap(
               spacing: 8,
@@ -394,7 +394,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
 
         if (currencies.isEmpty)
           _emptyMessage('No financial summary available'),
@@ -426,7 +426,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Total Income',
+                title: appText(context, 'Total Income', 'کل آمدنی'),
                 amount: income,
                 currency: currency,
                 color: Colors.green,
@@ -434,7 +434,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Total Expenses',
+                title: appText(context, 'Total Expenses', 'کل اخراجات'),
                 amount: expense,
                 currency: currency,
                 color: Colors.red,
@@ -442,7 +442,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Net Balance',
+                title: appText(context, 'Net Balance', 'خالص بیلنس'),
                 amount: net,
                 currency: currency,
                 color: net >= 0
@@ -452,7 +452,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
 
               _summaryCard(
-                title: 'Transfers',
+                title: appText(context, 'Transfers', 'منتقلی'),
                 amount: transfers,
                 currency: currency,
                 color: Colors.purple,
@@ -512,7 +512,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (items.isEmpty)
           _emptyMessage('No account balances available'),
@@ -566,7 +566,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         Card(
           child: Padding(
@@ -576,11 +576,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Row(
                   children: [
                     _legend('Income', Colors.green),
-                    const SizedBox(width: 20),
+                    SizedBox(width: 20),
                     _legend('Expense', Colors.red),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 if (data.isEmpty)
                   _emptyMessage('No monthly data available')
@@ -639,7 +639,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
 
                                 _trendBar(
                                   label: 'Income',
@@ -648,7 +648,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   color: Colors.green,
                                 ),
 
-                                const SizedBox(height: 6),
+                                SizedBox(height: 6),
 
                                 _trendBar(
                                   label: 'Expense',
@@ -683,7 +683,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             borderRadius: BorderRadius.circular(3),
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(label),
       ],
     );
@@ -719,7 +719,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Text(
           NumberFormat.compact().format(amount),
           style: const TextStyle(
@@ -742,7 +742,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (_categories.isEmpty)
           _emptyMessage('No category expenses found'),
@@ -796,7 +796,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (items.isEmpty)
           _emptyMessage('No account activity found'),
@@ -820,7 +820,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   _accountValue(
                     'Income',
@@ -852,7 +852,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     Colors.blue,
                   ),
 
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
 
                   Text(
                     '${item['transaction_count']} transactions',
@@ -906,7 +906,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
 
         if (_history.isEmpty)
           _emptyMessage('No transactions found'),

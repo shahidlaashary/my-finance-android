@@ -560,8 +560,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${(progress * 100).toStringAsFixed(1)}% completed'),
-                Text('Target: ${_money(goal.targetAmount)} $currency'),
+                Text('${(progress * 100).toStringAsFixed(1)}% ${appText(context, 'completed', 'مکمل')}'),
+                Text('${appText(context, 'Target:', 'ہدف:')} ${_money(goal.targetAmount)} $currency'),
               ],
             ),
             SizedBox(height: 10),

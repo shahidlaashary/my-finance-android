@@ -6,6 +6,7 @@ import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class LoansService {
 
@@ -391,6 +392,10 @@ class LoansService {
   static Future<void> deleteRepayment(int repaymentId) async {
     final db = await _database;
 
+    final repaymentSnapshot = await db.query('loan_repayments', where: 'id = ?', whereArgs: [repaymentId], limit: 1);
+    if (repaymentSnapshot.isEmpty) return;
+    await RecycleBinService.archive(type: 'Loan Repayment', title: 'Repayment • ${repaymentSnapshot.first['amount']}',
+      table: 'loan_repayments', id: repaymentId, record: repaymentSnapshot.first);
     await db.transaction((txn) async {
       final rows = await txn.query(
         'loan_repayments',

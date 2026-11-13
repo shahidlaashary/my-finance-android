@@ -26,6 +26,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String numberFormat = '1,234.56';
   String dateFormat = 'dd/MM/yyyy';
   String weekStart = 'Monday';
+  String selectedFilter = 'all';
 
   @override
   void initState() {
@@ -441,6 +442,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredTransactions = transactions.where((item) {
+      final type = normalizeType(item['type']?.toString() ?? '');
+      return selectedFilter == 'all' || type == selectedFilter;
+    }).toList();
+
+    final filters = [
+      ('all', 'All'),
+      ('income', 'Income'),
+      ('expense', 'Expense'),
+      ('transfer', 'Transfer'),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -448,123 +461,246 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(appText(context, "Transactions", "Transactions"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(
+          appText(context, "Transactions", "Transactions"),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF202A26),
+          ),
+        ),
         actions: buildSharedAppBarActions(context),
       ),
       body: loading
-          ? Center(child: CircularProgressIndicator())
-          : transactions.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.receipt_long_outlined, size: 55, color: Color(0xFF147D59)),
-                      SizedBox(height: 12),
-                      Text(appText(context, "No transactions available", "No transactions available"), style: TextStyle(color: Color(0xFF7B8781))),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: loadTransactions,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: transactions.length,
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: filters.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
-                      final item = transactions[index];
-
-                      final type = normalizeType(
-                        item['type'] as String,
-                      );
-                      final transferFee =
-                          (item['transfer_fee'] as num?)?.toDouble() ?? 0.0;
-                      final transferAmount =
-                          (item['amount'] as num?)?.toDouble() ?? 0.0;
-                      final walletCurrency =
-                          item['wallet_currency']?.toString() ?? '';
-
-                      final isIncome = type == 'income';
-                      final isExpense = type == 'expense';
-                      final isTransfer = type == 'transfer';
-
-                      final color = isIncome
-                          ? Colors.green
-                          : isExpense
-                              ? Colors.red
-                              : Colors.blue;
-
-                      final title = isIncome
-                          ? 'Income'
-                          : isExpense
-                              ? 'Expense'
-                              : 'Transfer';
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                color.withValues(alpha: 0.12),
-                            child: Icon(
-                              isIncome
-                                  ? Icons.arrow_downward
-                                  : isExpense
-                                      ? Icons.arrow_upward
-                                      : Icons.swap_horiz,
-                              color: color,
-                            ),
-                          ),
-                          title: Text(title),
-                          subtitle: Text(
-                            [
-                              item['category']?.toString() ??
-                                  'No category',
-                              if (isTransfer && transferFee > 0)
-                                'Transfer Amount: ${walletCurrency} ${money(transferAmount)}',
-                              if (isTransfer && transferFee > 0)
-                                'Transfer Fee: ${walletCurrency} ${money(transferFee)}',
-                              if (isTransfer && transferFee > 0)
-                                'Total Deducted: ${walletCurrency} ${money(transferAmount + transferFee)}',
-                              item['note']?.toString() ?? '',
-                              displayDate(item['date']),
-                            ].where((s) => s.isNotEmpty).join(' • '),
-                          ),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'edit') {
-                                editTransaction(item);
-                              } else if (value == 'delete') {
-                                deleteTransaction(item);
-                              } else if (value == 'attachments') {
-                                showAttachments(item);
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'attachments',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.attach_file),
-                                    SizedBox(width: 10),
-                                    Text(appText(context, 'Attachments', 'منسلک فائلیں')),
-                                  ],
-                                ),
-                              ),
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Text(appText(context, 'Edit', 'ترمیم کریں')),
-                              ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text(appText(context, "Delete", "Delete")),
-                              ),
-                            ],
-                          ),
-                          isThreeLine: true,
+                      final filter = filters[index];
+                      final selected = selectedFilter == filter.$1;
+                      return ChoiceChip(
+                        label: Text(filter.$2),
+                        selected: selected,
+                        showCheckmark: false,
+                        onSelected: (_) => setState(() => selectedFilter = filter.$1),
+                        backgroundColor: const Color(0xFFF2F5F3),
+                        selectedColor: const Color(0xFF147D59),
+                        labelStyle: TextStyle(
+                          color: selected ? Colors.white : const Color(0xFF52615A),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
                         ),
                       );
                     },
                   ),
                 ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: filteredTransactions.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 52,
+                                color: const Color(0xFF147D59).withValues(alpha: 0.65),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                transactions.isEmpty
+                                    ? appText(context, "No transactions available", "No transactions available")
+                                    : 'No ${selectedFilter == 'all' ? '' : selectedFilter} transactions',
+                                style: const TextStyle(
+                                  color: Color(0xFF7B8781),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: loadTransactions,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
+                            itemCount: filteredTransactions.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredTransactions[index];
+                              final type = normalizeType(item['type']?.toString() ?? '');
+                              final isIncome = type == 'income';
+                              final isExpense = type == 'expense';
+                              final isTransfer = type == 'transfer';
+                              final color = isIncome
+                                  ? const Color(0xFF159B65)
+                                  : isExpense
+                                      ? const Color(0xFFE45B5B)
+                                      : const Color(0xFF3979C6);
+                              final icon = isIncome
+                                  ? Icons.south_west_rounded
+                                  : isExpense
+                                      ? Icons.north_east_rounded
+                                      : Icons.swap_horiz_rounded;
+                              final title = (item['note']?.toString().trim().isNotEmpty ?? false)
+                                  ? item['note'].toString().trim()
+                                  : isIncome
+                                      ? 'Income'
+                                      : isExpense
+                                          ? 'Expense'
+                                          : 'Transfer';
+                              final category = item['category']?.toString().trim() ?? '';
+                              final currency = item['wallet_currency']?.toString() ?? '';
+                              final amount = (item['amount'] as num?)?.toDouble() ?? 0.0;
+                              final fee = (item['transfer_fee'] as num?)?.toDouble() ?? 0.0;
+                              final parsedDate = DateTime.tryParse(item['date']?.toString() ?? '');
+                              final dateLabel = parsedDate == null
+                                  ? displayDate(item['date'])
+                                  : DateFormat('dd MMM yyyy  •  hh:mm a').format(parsedDate);
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFE9EFEB)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF183D2D).withValues(alpha: 0.035),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(12, 12, 6, 12),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 46,
+                                        height: 46,
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.11),
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                        child: Icon(icon, color: color, size: 23),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF25332C),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              [
+                                                isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category),
+                                                if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
+                                              ].join('  •  '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                color: Color(0xFF7B8781),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              dateLabel,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 10.5,
+                                                color: Color(0xFF9AA49F),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            '${isIncome ? '+' : isExpense ? '-' : '⇄'} $currency ${money(amount)}',
+                                            maxLines: 1,
+                                            style: TextStyle(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: color,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          PopupMenuButton<String>(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(minWidth: 150),
+                                            icon: const Icon(
+                                              Icons.more_horiz,
+                                              color: Color(0xFF89958E),
+                                              size: 21,
+                                            ),
+                                            onSelected: (value) {
+                                              if (value == 'edit') {
+                                                editTransaction(item);
+                                              } else if (value == 'delete') {
+                                                deleteTransaction(item);
+                                              } else if (value == 'attachments') {
+                                                showAttachments(item);
+                                              }
+                                            },
+                                            itemBuilder: (context) => [
+                                              PopupMenuItem(
+                                                value: 'attachments',
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(Icons.attach_file, size: 19),
+                                                    const SizedBox(width: 10),
+                                                    Text(appText(context, 'Attachments', 'منسلک فائلیں')),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuItem(
+                                                value: 'edit',
+                                                child: Text(appText(context, 'Edit', 'ترمیم کریں')),
+                                              ),
+                                              PopupMenuItem(
+                                                value: 'delete',
+                                                child: Text(appText(context, 'Delete', 'Delete')),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

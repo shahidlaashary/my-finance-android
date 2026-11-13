@@ -314,7 +314,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               decimal: true,
             ),
             decoration: InputDecoration(
-              labelText: 'New Current Value',
+              labelText: appText(context, "New Current Value", "New Current Value"),
             ),
           ),
           actions: [
@@ -380,7 +380,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       decimal: true,
                     ),
                     decoration: InputDecoration(
-                      labelText: 'Sale Price',
+                      labelText: appText(context, "Sale Price", "Sale Price"),
                     ),
                   ),
                   SizedBox(height: 12),
@@ -388,7 +388,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     value: selectedSaleWallet,
                     isExpanded: true,
                     decoration: InputDecoration(
-                      labelText: 'Sale Account',
+                      labelText: appText(context, "Sale Account", "Sale Account"),
                       prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                     ),
                     items: _wallets.map((wallet) {

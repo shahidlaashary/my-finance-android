@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
@@ -406,7 +407,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       ) ? selectedCategory : null,
       isExpanded: true,
       decoration: decoration('Category', icon: Icons.category_outlined),
-      hint: const Text('Select Category'),
+      hint: Text(appText(context, 'Select Category', 'زمرہ منتخب کریں')),
       items: transactionCategories.map((category) {
         final iconCode = category['icon'] as int;
         return DropdownMenuItem<String>(

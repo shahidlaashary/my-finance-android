@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class LoansService {
 
@@ -450,6 +451,11 @@ class LoansService {
   static Future<void> deleteLoan(int loanId) async {
     final db = await _database;
 
+    final loanSnapshot = await db.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
+    if (loanSnapshot.isEmpty) return;
+    final repaymentSnapshot = await db.query('loan_repayments', where: 'loan_id = ?', whereArgs: [loanId]);
+    await RecycleBinService.archive(type: 'Loan', title: loanSnapshot.first['borrower_name']?.toString() ?? 'Loan',
+      table: 'loans', id: loanId, record: loanSnapshot.first, related: repaymentSnapshot);
     await db.transaction((txn) async {
       final loanRows = await txn.query(
         'loans',

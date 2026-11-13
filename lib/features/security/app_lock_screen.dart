@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:my_finance/core/security/app_lock_service.dart';
@@ -266,7 +267,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('App Lock & Security')),
+        appBar: AppBar(title: Text(appText(context, 'App Lock & Security', 'ایپ لاک اور سکیورٹی'))),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -317,7 +318,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.lock_outline_rounded),
-              title: const Text('App Lock'),
+              title: Text(appText(context, 'App Lock', 'ایپ لاک')), 
               subtitle: const Text(
                 'Require your PIN or enabled biometrics',
               ),
@@ -328,7 +329,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.fingerprint_rounded),
-              title: const Text('Face / Fingerprint Unlock'),
+              title: Text(appText(context, 'Face / Fingerprint Unlock', 'فیس / فنگر پرنٹ ان لاک')), 
               subtitle: const Text(
                 'Use Face / Fingerprint authentication. PIN remains as backup.',
               ),
@@ -339,8 +340,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.password_rounded),
-              title: const Text('Change PIN'),
-              subtitle: const Text('Update your secure app PIN'),
+              title: Text(appText(context, 'Change PIN', 'پن تبدیل کریں')), 
+              subtitle: Text(appText(context, 'Update your secure app PIN', 'اپنا محفوظ ایپ پن تبدیل کریں')), 
               trailing: const Icon(Icons.chevron_right_rounded),
               enabled: _hasPin && !_saving,
               onTap: _changePin,
@@ -349,16 +350,16 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.timer_outlined),
-              title: const Text('Auto-lock'),
-              subtitle: const Text('Lock again after leaving the app'),
+              title: Text(appText(context, 'Auto-lock', 'خودکار لاک')), 
+              subtitle: Text(appText(context, 'Lock again after leaving the app', 'ایپ سے باہر جانے کے بعد دوبارہ لاک کریں')), 
               trailing: DropdownButton<int>(
                 value: _timeout,
                 underline: const SizedBox.shrink(),
                 items: const [
-                  DropdownMenuItem(value: 0, child: Text('Immediately')),
-                  DropdownMenuItem(value: 30, child: Text('30 seconds')),
-                  DropdownMenuItem(value: 60, child: Text('1 minute')),
-                  DropdownMenuItem(value: 300, child: Text('5 minutes')),
+                  DropdownMenuItem(value: 0, child: Text(appText(context, 'Immediately', 'فوراً'))),
+                  DropdownMenuItem(value: 30, child: Text(appText(context, '30 seconds', '30 سیکنڈ'))),
+                  DropdownMenuItem(value: 60, child: Text(appText(context, '1 minute', '1 منٹ'))),
+                  DropdownMenuItem(value: 300, child: Text(appText(context, '5 minutes', '5 منٹ'))),
                 ],
                 onChanged: _enabled && !_saving ? _setTimeout : null,
               ),

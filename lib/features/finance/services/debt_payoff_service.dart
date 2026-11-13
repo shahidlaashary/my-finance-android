@@ -184,12 +184,13 @@ class DebtPayoffService {
     return rows.map(DebtPayment.fromMap).toList();
   }
 
-     final paymentSnapshot = await db.query('debt_payments', where: 'id = ?', whereArgs: [paymentId], limit: 1);
-    if (paymentSnapshot.isEmpty) return;
-    await RecycleBinService.archive(type: 'Debt Payment', title: 'Payment • ${paymentSnapshot.first['amount']}',
-      table: 'debt_payments', id: paymentId, record: paymentSnapshot.first);
- static Future<void> deletePayment(int paymentId) async {
+  static Future<void> deletePayment(int paymentId) async {
     final db = await _db;
+    final paymentSnapshot = await db.query('debt_payments', where: 'id = ?', whereArgs: [paymentId], limit: 1);
+    if (paymentSnapshot.isEmpty) return;
+    await RecycleBinService.archive(type: 'Debt Payment',
+      title: 'Payment • ${paymentSnapshot.first['amount']}',
+      table: 'debt_payments', id: paymentId, record: paymentSnapshot.first);
     await db.transaction((txn) async {
       final rows = await txn.query('debt_payments', where: 'id=?', whereArgs: [paymentId], limit: 1);
       if (rows.isEmpty) return;
@@ -206,7 +207,6 @@ class DebtPayoffService {
       AppRefreshController.notifyChanged();
     });
   }
-
   static Future<void> deleteDebt(int debtId) async {
     final db = await _db;
     final debtSnapshot = await db.query('debts', where: 'id = ?', whereArgs: [debtId], limit: 1);

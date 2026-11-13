@@ -416,6 +416,59 @@ class BackupService {
         );
       }
 
+      // Restore ke waqt purane device ke absolute attachment paths ko
+      // mojooda device ke documents folder ke mutabiq dobara set karein.
+      final stagedConnection = await openDatabase(stagedDatabase.path);
+      try {
+        final attachmentTables = await stagedConnection.rawQuery(
+          "SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'finance_attachments'",
+        );
+
+        if (attachmentTables.isNotEmpty) {
+          final attachmentRows = await stagedConnection.query(
+            'finance_attachments',
+            columns: ['id', 'file_path'],
+          );
+
+          const attachmentMarker = '/my_finance_attachments/';
+          for (final row in attachmentRows) {
+            final id = row['id'];
+            final storedPath = row['file_path']?.toString();
+            if (id == null || storedPath == null || storedPath.isEmpty) {
+              continue;
+            }
+
+            // Windows aur Unix dono tarah ke paths normalize karein.
+            final normalizedStoredPath = storedPath.replaceAll('\\\\', '/');
+            final markerIndex =
+                normalizedStoredPath.lastIndexOf(attachmentMarker);
+
+            // External ya legacy paths ko jaisa hai waisa rehne dein.
+            if (markerIndex < 0) continue;
+
+            final relativePath = normalizedStoredPath.substring(
+              markerIndex + attachmentMarker.length,
+            );
+            _validateArchivePath(relativePath);
+
+            final restoredPath = p.join(
+              currentAttachments.path,
+              p.joinAll(p.posix.split(relativePath)),
+            );
+
+            await stagedConnection.update(
+              'finance_attachments',
+              {'file_path': restoredPath},
+              where: 'id = ?',
+              whereArgs: [id],
+            );
+          }
+        }
+      } finally {
+        await stagedConnection.close();
+      }
+
       // Move existing database aside.
       if (await currentDatabase.exists()) {
         await currentDatabase.rename(oldDatabase.path);

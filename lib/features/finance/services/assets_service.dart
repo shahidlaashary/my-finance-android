@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class AssetsService {
   Future<Database> get _database async {
     return TransactionsService.database;
@@ -298,6 +299,9 @@ class AssetsService {
   Future<void> deleteAsset(int assetId) async {
     final db = await _database;
     await _ensureTables(db);
+    final existing = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
+    if (existing.isEmpty) return;
+    await RecycleBinService.archive(type: 'Asset', title: existing.first['name']?.toString() ?? 'Asset', table: 'assets', id: assetId, record: existing.first);
     await db.transaction((txn) async {
       final rows = await txn.query(
         'assets',

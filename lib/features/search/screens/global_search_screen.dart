@@ -160,7 +160,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     _SearchEntry('Notifications & Reminders', 'Manage reminders and alerts', Icons.notifications_active_outlined, ['notification','reminder','alarm','due date'], () => const RemindersScreen()),
     _SearchEntry('App Lock & Security', 'PIN and biometric protection', Icons.security_outlined, ['security','pin','password','fingerprint','face unlock','lock'], () => const AppLockScreen()),
     _SearchEntry('App Settings', 'Preferences and app configuration', Icons.tune_rounded, ['settings','preferences','customize'], () => const AppSettingsScreen()),
-    _SearchEntry('Appearance', 'Themes, colors and display mode', Icons.palette_outlined, ['theme','dark mode','light mode','color'], () => const AppearanceScreen()),
+    _SearchEntry('Appearance', 'Themes, colors and display mode', Icons.palette_outlined, ['theme','dark mode','light mode','color'], () => const GeneralAppPreferencesScreen()),
     _SearchEntry('Base Currency', 'Choose your main currency', Icons.currency_exchange_outlined, ['pkr','default currency','main currency'], () => const BaseCurrencyScreen()),
     _SearchEntry('Languages', 'Change the app language', Icons.language_rounded, ['translation','urdu','english','pashto','balochi'], () => const LanguageSettingsScreen()),
     _SearchEntry('Asset Depreciation', 'Calculate asset value reduction', Icons.trending_down_rounded, ['depreciation','straight line','declining balance'], () => const AssetDepreciationScreen()),

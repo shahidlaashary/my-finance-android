@@ -205,7 +205,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Row(children: [
-                Expanded(child: Text('Record Payment • ${debt.name}', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
+                Expanded(child: Text('${appText(context, 'Record Payment', 'ادائیگی درج کریں')} • ${debt.name}', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
                 IconButton(onPressed: () => Navigator.pop(ctx, false), icon: const Icon(Icons.close)),
               ]),
             ),
@@ -213,7 +213,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('Outstanding: ${_currency(debt.walletId)} ${_money(debt.balance)}'),
+        Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_currency(debt.walletId)} ${_money(debt.balance)}'),
         TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: appText(context, "Payment Amount *", "Payment Amount *"))),
         DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: InputDecoration(labelText: appText(context, "Pay From Account", "Pay From Account")), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
         ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Payment Date", "Payment Date")), subtitle: Text(_date(paidOn)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: paidOn, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => paidOn = d); }),
@@ -252,13 +252,13 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     await showDialog<void>(context: context, builder: (ctx) => Dialog(child: SizedBox(width: 520, child: Padding(
       padding: const EdgeInsets.all(18), child: SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         Row(children: [Expanded(child: Text(debt.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))), IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close))]),
-        Text('Lender: ${debt.lender}'), if (debt.phone.isNotEmpty) Text('Phone: ${debt.phone}'),
-        Text('Original: ${_currency(debt.walletId)} ${_money(debt.originalAmount)}'),
+        Text('${appText(context, 'Lender:', 'قرض دینے والا:')} ${debt.lender}'), if (debt.phone.isNotEmpty) Text('${appText(context, 'Phone:', 'فون:')} ${debt.phone}'),
+        Text('${appText(context, 'Original:', 'اصل رقم:')} ${_currency(debt.walletId)} ${_money(debt.originalAmount)}'),
         Text('Outstanding: ${_currency(debt.walletId)} ${_money(debt.balance)}'),
-        Text('Paid: ${_currency(debt.walletId)} ${_money(debt.paidAmount)}'),
+        Text('${appText(context, 'Paid:', 'ادا شدہ:')} ${_currency(debt.walletId)} ${_money(debt.paidAmount)}'),
         Text('Interest: ${debt.annualInterestRate.toStringAsFixed(2)}% p.a. • Minimum: ${_money(debt.minimumPayment)} / month'),
-        Text('Account: ${_walletName(debt.walletId)}'), Text('Start: ${debt.startDate} • Due: ${debt.dueDate ?? 'Not set'}'),
-        if (debt.notes.isNotEmpty) Text('Notes: ${debt.notes}'),
+        Text('${appText(context, 'Account:', 'اکاؤنٹ:')} ${_walletName(debt.walletId)}'), Text('Start: ${debt.startDate} • Due: ${debt.dueDate ?? 'Not set'}'),
+        if (debt.notes.isNotEmpty) Text('${appText(context, 'Notes:', 'نوٹس:')} ${debt.notes}'),
         const Divider(height: 26), Text(appText(context, "Payment History", "Payment History"), style: TextStyle(fontWeight: FontWeight.bold)),
         FutureBuilder<List<DebtPayment>>(future: DebtPayoffService.getPayments(debt.id!), builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());

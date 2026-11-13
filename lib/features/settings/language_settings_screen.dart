@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 
-import 'package:my_finance/core/localization/app_text.dart';
 class LanguageSettingsScreen extends StatelessWidget {
   const LanguageSettingsScreen({super.key});
+
+  static const _languages = <_LanguageOption>[
+    _LanguageOption('en', 'English', 'English', '🇬🇧', false),
+    _LanguageOption('ur', 'اردو', 'Urdu', '🇵🇰', true),
+    _LanguageOption('ar', 'العربية', 'Arabic', '🇸🇦', true),
+    _LanguageOption('hi', 'हिन्दी', 'Hindi', '🇮🇳', false),
+    _LanguageOption('pa', 'پنجابی', 'Punjabi (Shahmukhi)', '🇵🇰', true),
+    _LanguageOption('skr', 'سرائیکی', 'Saraiki', '🇵🇰', true),
+    _LanguageOption('sd', 'سنڌي', 'Sindhi', '🇵🇰', true),
+  ];
 
   Future<void> _select(BuildContext context, String code) async {
     try {
       await LanguageSettingsService.instance.setLanguage(code);
       if (!context.mounted) return;
+      final selected = _languages.firstWhere((item) => item.code == code);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(code == 'ur'
-              ? 'زبان اردو میں تبدیل کر دی گئی'
-              : 'Language changed to English'),
+          content: Text(_successMessage(code, selected.nativeName)),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -25,46 +33,56 @@ class LanguageSettingsScreen extends StatelessWidget {
     }
   }
 
+  String _successMessage(String code, String name) {
+    switch (code) {
+      case 'ur': return 'زبان اردو میں تبدیل کر دی گئی';
+      case 'ar': return 'تم تغيير اللغة إلى العربية';
+      case 'hi': return 'भाषा हिंदी में बदल दी गई है';
+      case 'pa': return 'زبان پنجابی وچ تبدیل کر دتی گئی اے';
+      case 'skr': return 'ٻولي سرائيڪي ۾ تبديل ڪئي وئي';
+      case 'sd': return 'ٻولي سنڌي ۾ تبديل ڪئي وئي';
+      default: return 'Language changed to $name';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Locale>(
       valueListenable: LanguageSettingsService.instance.locale,
       builder: (context, selectedLocale, _) {
         final isUrdu = selectedLocale.languageCode == 'ur';
+        final isRtl = const {'ur', 'ar', 'pa', 'skr', 'sd'}
+            .contains(selectedLocale.languageCode);
         return Scaffold(
           appBar: AppBar(
-            title: Text(isUrdu ? 'زبان' : 'Language'),
+            title: Text(isUrdu ? 'زبانیں' : 'Languages'),
           ),
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Card(
-                child: RadioListTile<String>(
-                  value: 'en',
-                  groupValue: selectedLocale.languageCode,
-                  secondary: const Text('🇬🇧', style: TextStyle(fontSize: 24)),
-                  title: const Text('English'),
-                  subtitle: Text(appText(context, 'Left to right (LTR)', 'بائیں سے دائیں (LTR)')),
-                  onChanged: (_) => _select(context, 'en'),
+              for (final language in _languages)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: RadioListTile<String>(
+                    value: language.code,
+                    groupValue: selectedLocale.languageCode,
+                    secondary: Text(language.flag,
+                        style: const TextStyle(fontSize: 24)),
+                    title: Text(language.nativeName,
+                        textDirection: language.rtl
+                            ? TextDirection.rtl
+                            : TextDirection.ltr),
+                    subtitle: Text(language.englishName),
+                    onChanged: (_) => _select(context, language.code),
+                  ),
                 ),
-              ),
-              Card(
-                child: RadioListTile<String>(
-                  value: 'ur',
-                  groupValue: selectedLocale.languageCode,
-                  secondary: const Text('🇵🇰', style: TextStyle(fontSize: 24)),
-                  title: const Text('اردو'),
-                  subtitle: const Text('دائیں سے بائیں (RTL)'),
-                  onChanged: (_) => _select(context, 'ur'),
-                ),
-              ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
                 isUrdu
                     ? 'زبان تبدیل کرنے سے ایپ کی سمت بھی تبدیل ہو جائے گی۔'
-                    : 'Changing the language also changes the app direction.',
+                    : 'Changing the language also changes the app text direction.',
                 style: Theme.of(context).textTheme.bodySmall,
-                textAlign: isUrdu ? TextAlign.right : TextAlign.left,
+                textAlign: isRtl ? TextAlign.right : TextAlign.left,
               ),
             ],
           ),
@@ -72,4 +90,20 @@ class LanguageSettingsScreen extends StatelessWidget {
       },
     );
   }
+}
+
+class _LanguageOption {
+  const _LanguageOption(
+    this.code,
+    this.nativeName,
+    this.englishName,
+    this.flag,
+    this.rtl,
+  );
+
+  final String code;
+  final String nativeName;
+  final String englishName;
+  final String flag;
+  final bool rtl;
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -155,7 +156,7 @@ class _WalletsPageState extends State<WalletsPage> {
     final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Wallet?'),
+        title: Text(appText(context, 'Delete Wallet?', 'والٹ حذف کریں؟')),
         content: Text(
           'Kya aap "${wallet['name']}" wallet delete karna chahte hain?',
         ),
@@ -214,7 +215,7 @@ class _WalletsPageState extends State<WalletsPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Add Wallet'),
+        label: Text(appText(context, 'Add Wallet', 'والٹ شامل کریں')),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
@@ -319,10 +320,10 @@ class _WalletsPageState extends State<WalletsPage> {
                                         },
                                         itemBuilder: (_) => const [
                                           PopupMenuItem(value: 'edit', child: Row(children: [
-                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text('Edit Wallet')])),
+                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
                                           PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9), Text('Delete Wallet')])),
+                                            SizedBox(width: 9), Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
                                           ],
                                         ),
                                       ),

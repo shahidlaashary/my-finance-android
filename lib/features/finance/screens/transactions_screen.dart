@@ -405,8 +405,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(appText(context, 'Delete Transaction?', 'لین دین حذف کریں؟')),
-        content: Text(appText(context, "This transaction will be deleted and its effect on ", "This transaction will be deleted and its effect on ")
-          'account balances will be reversed.',
+        content: Text(appText(context, "This transaction will be deleted and its effect on account balances will be reversed.", "یہ لین دین حذف ہوگا اور اکاؤنٹ بیلنس پر اس کا اثر واپس ہوگا۔"),
         ),
         actions: [
           TextButton(

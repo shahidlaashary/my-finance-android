@@ -1680,7 +1680,6 @@ const Map<String, Map<String, String>> _translations = {
     'Exchange Rates': 'زر ءِ تبادلہ ءِ شرح',
     'Currency': 'کرنسی',
     'Total': 'کل',
-    'Income': 'آمدنی',
     'Expenses': 'اخراجات',
     'This Month': 'ایں ماہ',
     'Monthly Trend': 'ماہوار رجحان',

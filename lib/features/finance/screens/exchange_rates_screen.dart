@@ -16,7 +16,7 @@ class ExchangeRatesScreen extends StatefulWidget {
 }
 
 class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
-  static const List<String> _currencies = CurrencyCatalog.supported.where((code) => code != 'PKR').toList();
+  static final List<String> _currencies = CurrencyCatalog.supported.where((code) => code != 'PKR').toList();
   final FinanceDB _database = FinanceDB.instance;
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];

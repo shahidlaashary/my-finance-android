@@ -127,8 +127,8 @@ class AppSettingsScreen extends StatelessWidget {
           ),
           _SettingsInfoTile(
             icon: Icons.language_rounded,
-            title: 'Language',
-            subtitle: 'English and Urdu language settings',
+            title: 'Languages',
+            subtitle: 'Choose your preferred language from the available options',
             onTap: () => _openScreen(context, const LanguageSettingsScreen()),
           ),
         ],

@@ -70,6 +70,7 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
+import 'package:my_finance/core/localization/app_text.dart';
   Future<void> _loadData() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
@@ -138,7 +139,7 @@ class _LoansScreenState extends State<LoansScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Give New Loan'),
+          title: Text(appText(context, 'Give New Loan', 'نیا قرض دیں')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -176,7 +177,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Lending Date'),
+                  title: Text(appText(context, 'Lending Date', 'قرض دینے کی تاریخ')),
                   subtitle: Text(_dateString(lendingDate)),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: () async {
@@ -186,7 +187,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Due Date'),
+                  title: Text(appText(context, 'Due Date', 'واپسی کی تاریخ')),
                   subtitle: Text(dueDate == null ? 'Not selected' : _dateString(dueDate!)),
                   trailing: const Icon(Icons.event),
                   onTap: () async {
@@ -205,11 +206,11 @@ class _LoansScreenState extends State<LoansScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Save Loan'),
+              child: Text(appText(context, 'Save Loan', 'قرض محفوظ کریں')),
             ),
           ],
         ),
@@ -264,7 +265,7 @@ class _LoansScreenState extends State<LoansScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Receive Repayment'),
+          title: Text(appText(context, 'Receive Repayment', 'قرض کی واپسی وصول کریں')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -298,7 +299,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Repayment Date'),
+                  title: Text(appText(context, 'Repayment Date', 'واپسی کی تاریخ')),
                   subtitle: Text(_dateString(repaymentDate)),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: () async {
@@ -319,11 +320,11 @@ class _LoansScreenState extends State<LoansScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Save Repayment'),
+              child: Text(appText(context, 'Save Repayment', 'واپسی محفوظ کریں')),
             ),
           ],
         ),
@@ -475,7 +476,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             actions: [
                                               TextButton(
                                                 onPressed: () => Navigator.pop(context, false),
-                                                child: const Text('Cancel'),
+                                                child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
                                               ),
                                               TextButton(
                                                 onPressed: () => Navigator.pop(context, true),
@@ -528,7 +529,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           _addRepayment(loan);
                         },
                         icon: const Icon(Icons.payments),
-                        label: const Text('Receive Repayment'),
+                        label: Text(appText(context, 'Receive Repayment', 'قرض کی واپسی وصول کریں')),
                       ),
                     ),
                 ],
@@ -552,7 +553,7 @@ class _LoansScreenState extends State<LoansScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -601,7 +602,7 @@ class _LoansScreenState extends State<LoansScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('New Loan'),
+        label: Text(appText(context, 'New Loan', 'نیا قرض')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -709,18 +710,18 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   if (loan.isPaid)
                                     const Chip(
-                                      label: Text('Paid'),
+                                      label: Text(appText(context, 'Paid', 'ادا شدہ')),
                                       visualDensity: VisualDensity.compact,
                                     )
                                   else if (loan.isOverdue)
                                     const Chip(
-                                      label: Text('Overdue'),
+                                      label: Text(appText(context, 'Overdue', 'میعاد ختم')),
                                       backgroundColor: Color(0xFFFFE0E0),
                                       visualDensity: VisualDensity.compact,
                                     )
                                   else
                                     const Chip(
-                                      label: Text('Active'),
+                                      label: Text(appText(context, 'Active', 'فعال')),
                                       visualDensity: VisualDensity.compact,
                                     ),
                                 ],
@@ -760,13 +761,13 @@ class _LoansScreenState extends State<LoansScreen> {
                                   TextButton.icon(
                                     onPressed: () => _showLoanDetails(loan),
                                     icon: const Icon(Icons.visibility),
-                                    label: const Text('Details'),
+                                    label: Text(appText(context, 'Details', 'تفصیلات')),
                                   ),
                                   if (!loan.isPaid)
                                     TextButton.icon(
                                       onPressed: () => _addRepayment(loan),
                                       icon: const Icon(Icons.payments),
-                                      label: const Text('Repayment'),
+                                      label: Text(appText(context, 'Repayment', 'قرض کی واپسی')),
                                     ),
                                   IconButton(
                                     onPressed: () => _deleteLoan(loan),

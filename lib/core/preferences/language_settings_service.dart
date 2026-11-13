@@ -7,16 +7,25 @@ class LanguageSettingsService {
   static final LanguageSettingsService instance = LanguageSettingsService._();
 
   static const _key = 'app_language_code';
+  static const supportedLanguageCodes = <String>{
+    'en', 'ur', 'ar', 'hi', 'pa', 'skr', 'sd',
+  };
+
   final ValueNotifier<Locale> locale = ValueNotifier<Locale>(const Locale('en'));
+
+  bool get isRightToLeft => const {'ur', 'ar', 'pa', 'skr', 'sd'}
+      .contains(locale.value.languageCode);
 
   Future<void> load() async {
     final preferences = await SharedPreferences.getInstance();
     final code = preferences.getString(_key) ?? 'en';
-    locale.value = code == 'ur' ? const Locale('ur') : const Locale('en');
+    locale.value = Locale(
+      supportedLanguageCodes.contains(code) ? code : 'en',
+    );
   }
 
   Future<void> setLanguage(String languageCode) async {
-    if (languageCode != 'en' && languageCode != 'ur') return;
+    if (!supportedLanguageCodes.contains(languageCode)) return;
     final previous = locale.value;
     locale.value = Locale(languageCode);
     try {

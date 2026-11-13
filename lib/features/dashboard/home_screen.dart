@@ -271,11 +271,11 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total Wallet Balance',
+                  Text(appText(context, 'Total Wallet Balance', 'کل والٹ بیلنس'),
                       style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   loading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 30,
                           width: 30,
                           child: CircularProgressIndicator(
@@ -289,17 +289,17 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                  const SizedBox(height: 7),
+                  SizedBox(height: 7),
                   Text('Consolidated in $baseCurrency',
                       style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            const Text('Financial Snapshot',
+            SizedBox(height: 18),
+            Text(appText(context, 'Financial Snapshot', 'مالیاتی جائزہ'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -310,7 +310,7 @@ class _HomePageState extends State<HomePage> {
                     color: const Color(0xFF3978C5),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: _metricCard(
                     title: 'Loans Receivable',
@@ -321,7 +321,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -333,9 +333,9 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Icon(Icons.account_balance_wallet_outlined,
                       color: AppColors.primary, size: 25),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('Estimated Net Worth',
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(appText(context, 'Estimated Net Worth', 'تخمینی خالص مالیت'),
                         style: TextStyle(fontWeight: FontWeight.w700,
                             color: AppColors.text, fontSize: 13)),
                   ),
@@ -352,11 +352,11 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            const Text('This Month',
+            SizedBox(height: 18),
+            Text(appText(context, 'This Month', 'اس ماہ'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -367,7 +367,7 @@ class _HomePageState extends State<HomePage> {
                     color: AppColors.income,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: _metricCard(
                     title: 'Expenses',
@@ -378,7 +378,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -398,16 +398,16 @@ class _HomePageState extends State<HomePage> {
                     child: const Icon(Icons.savings_outlined,
                         color: AppColors.primary),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Net Monthly Savings',
+                        Text(appText(context, 'Net Monthly Savings', 'ماہانہ خالص بچت'),
                             style: TextStyle(fontSize: 12,
                                 color: AppColors.muted,
                                 fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 3),
+                        SizedBox(height: 3),
                         Text(money(monthlySavings),
                             style: TextStyle(fontSize: 17,
                                 fontWeight: FontWeight.w800,
@@ -426,11 +426,11 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 22),
+            SizedBox(height: 22),
             Row(
               children: [
-                const Expanded(
-                  child: Text('Budget Alerts',
+                Expanded(
+                  child: Text(appText(context, 'Budget Alerts', 'بجٹ الرٹس'),
                       style: TextStyle(fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: AppColors.text)),
@@ -444,7 +444,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             if (loading)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               )
@@ -456,7 +456,7 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFEDF1EE)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.check_circle_outline_rounded,
                         color: AppColors.income),
@@ -471,11 +471,11 @@ class _HomePageState extends State<HomePage> {
               )
             else
               ...budgetAlerts.take(4).map(_budgetAlertCard),
-            const SizedBox(height: 22),
-            const Text('Overview',
+            SizedBox(height: 22),
+            Text(appText(context, 'Overview', 'جائزہ'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _overviewCard(
               icon: Icons.real_estate_agent_outlined,
               title: 'Assets Overview',
@@ -535,13 +535,13 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(children: [
             Icon(icon, color: color, size: 18),
-            const SizedBox(width: 7),
+            SizedBox(width: 7),
             Text(title, style: const TextStyle(fontSize: 12,
                 color: AppColors.muted, fontWeight: FontWeight.w600)),
           ]),
-          const SizedBox(height: 9),
+          SizedBox(height: 9),
           loading
-              ? const SizedBox(height: 18, width: 18,
+              ? SizedBox(height: 18, width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : FittedBox(
                   fit: BoxFit.scaleDown,
@@ -594,10 +594,10 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 13,
                     fontWeight: FontWeight.w800, color: color)),
           ]),
-          const SizedBox(height: 5),
+          SizedBox(height: 5),
           Text(status, style: TextStyle(fontSize: 11,
               fontWeight: FontWeight.w600, color: color)),
-          const SizedBox(height: 9),
+          SizedBox(height: 9),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
@@ -607,7 +607,7 @@ class _HomePageState extends State<HomePage> {
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: 7),
           Text('${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
               style: const TextStyle(fontSize: 10, color: AppColors.muted)),
         ],
@@ -653,14 +653,14 @@ class _HomePageState extends State<HomePage> {
               ),
               child: Icon(icon, color: color, size: 23),
             ),
-            const SizedBox(width: 13),
+            SizedBox(width: 13),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(
                       fontWeight: FontWeight.w800, fontSize: 14)),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(subtitle, style: const TextStyle(
                       color: AppColors.muted, fontSize: 11)),
                 ],

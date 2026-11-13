@@ -40,6 +40,7 @@ class _HomePageState extends State<HomePage> {
   int overviewAssetCount = 0;
   int overviewLoanCount = 0;
   int overviewOverdueLoanCount = 0;
+  int overviewBudgetCount = 0;
   int overviewGoalCount = 0;
   int overviewCompletedGoalCount = 0;
   int overviewRecurringCount = 0;
@@ -138,6 +139,7 @@ class _HomePageState extends State<HomePage> {
         budgetAlerts = alerts;
         overviewAssetCount = assets.length;
         overviewLoanCount = loans.where((loan) => !loan.isPaid).length;
+        overviewBudgetCount = budgets.length;
         overviewOverdueLoanCount = loans.where((loan) => loan.isOverdue).length;
         overviewGoalCount = goals.where((goal) => !goal.isCompleted).length;
         overviewCompletedGoalCount = goals.where((goal) => goal.isCompleted).length;
@@ -515,7 +517,7 @@ class _HomePageState extends State<HomePage> {
             _overviewCard(
               icon: Icons.account_balance_wallet_outlined,
               title: appText(context, 'Budgets Overview', 'بجٹ کا جائزہ'),
-              summary: loading ? 'Loading budget summary...' : '${budgetAlerts.length} active budget(s)',
+              summary: loading ? 'Loading budget summary...' : '$overviewBudgetCount active budget(s)',
               detail: budgetAlerts.isEmpty ? 'No budget alerts' : '${budgetAlerts.length} budget(s) need attention',
               color: const Color(0xFFDB9840),
             ),

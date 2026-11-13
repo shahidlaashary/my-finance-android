@@ -156,9 +156,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(appText(context, 'Restore Backup?', 'بیک اپ بحال کریں؟')),
-        content: Text(appText(context, "Restore karne se mojooda finance database aur attachments ", "Restore karne se mojooda finance database aur attachments ")
-          'backup wali files se replace ho jayengi. Is ke baad ki '
-          'tabdeeliyan zaya ho sakti hain. Kya aap jari rakhna chahte hain?',
+        content: Text(appText(context, "Restore karne se mojooda finance database aur attachments backup wali files se replace ho jayengi. Is ke baad ki tabdeeliyan zaya ho sakti hain. Kya aap jari rakhna chahte hain?", "بیک اپ بحال کرنے سے موجودہ ڈیٹابیس اور منسلک فائلیں بدل جائیں گی اور بعد کی تبدیلیاں ضائع ہو سکتی ہیں۔ کیا آپ جاری رکھنا چاہتے ہیں؟"),
         ),
         actions: [
           TextButton(

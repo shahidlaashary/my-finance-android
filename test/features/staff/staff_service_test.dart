@@ -142,6 +142,47 @@ void main() {
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 800);
   });
 
+  test('failed salary record insertion rolls back its transaction cleanly', () async {
+    final walletId = await FinanceDB.instance.addWallet(
+      name: 'Rollback Test Wallet',
+      type: 'Cash',
+      currency: 'PKR',
+      openingBalance: 500,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final staffId = await StaffService.saveStaff(
+      name: 'Rollback Test Staff',
+      phone: '',
+      role: '',
+      salary: 100,
+      joinedAt: DateTime(2026, 1, 1),
+      notes: '',
+    );
+    await FinanceDB.instance.db.execute('''
+      CREATE TRIGGER fail_staff_salary_insert
+      BEFORE INSERT ON staff_salaries
+      BEGIN
+        SELECT RAISE(ABORT, 'forced salary insert failure');
+      END
+    ''');
+
+    await expectLater(
+      StaffService.paySalary(
+        staffId: staffId,
+        amount: 100,
+        walletId: walletId,
+        date: DateTime(2026, 11, 1),
+        note: '',
+      ),
+      throwsA(isA<Exception>()),
+    );
+
+    expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 500);
+    expect(await FinanceDB.instance.db.query('transactions'), isEmpty);
+    expect(await RecycleBinService.getItems(), isEmpty);
+  });
+
   test('attendance rejects a staff ID that does not exist', () async {
     await expectLater(
       StaffService.saveAttendance(

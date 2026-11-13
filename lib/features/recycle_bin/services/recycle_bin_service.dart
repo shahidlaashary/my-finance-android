@@ -40,6 +40,46 @@ class RecycleBinService {
       final item = rows.first;
       final table = item['source_table'].toString();
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'transactions') {
+        final type = (record['type'] ?? '').toString().toLowerCase();
+        final amount = (record['amount'] as num).toDouble();
+        final walletId = (record['wallet_id'] as num).toInt();
+        final fee = (record.remove('_transfer_fee') as num?)?.toDouble() ?? 0.0;
+        Future<void> change(int id, double delta) async {
+          final changed = await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [delta, id]);
+          if (changed == 0) throw Exception('A linked wallet no longer exists. Restore the wallet first.');
+        }
+        if (type == 'income') {
+          await change(walletId, amount);
+        } else if (type == 'expense') {
+          final wallets = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+          if (wallets.isEmpty) throw Exception('The linked wallet no longer exists.');
+          if ((wallets.first['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance to restore this expense.');
+          await change(walletId, -amount);
+        } else if (type == 'transfer') {
+          final toId = (record['to_wallet_id'] as num?)?.toInt();
+          if (toId == null) throw Exception('Transfer destination is missing.');
+          final received = (record['to_amount'] as num?)?.toDouble() ?? amount;
+          final wallets = await txn.query('wallets', columns: ['id','balance'], where: 'id = ? OR id = ?', whereArgs: [walletId,toId]);
+          if (wallets.length < 2) throw Exception('Both linked wallets must exist before restoring this transfer.');
+          final source = wallets.firstWhere((w) => w['id'] == walletId);
+          if ((source['balance'] as num).toDouble() < amount + fee) throw Exception('Insufficient source wallet balance to restore this transfer.');
+          await change(walletId, -(amount + fee));
+          await change(toId, received);
+        } else if (type == 'adjustment') {
+          final delta = (record['balance_delta'] as num?)?.toDouble();
+          if (delta == null) throw Exception('Adjustment balance change is missing.');
+          await change(walletId, delta);
+        } else {
+          throw Exception('Unknown transaction type.');
+        }
+        await txn.insert('transactions', record);
+        if (fee > 0) {
+          await txn.insert('app_settings', {'setting_key':'transaction_transfer_fee_${record['id']}','setting_value':fee.toString()}, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'my_documents_records') {
         final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['my_documents_records'], limit: 1);
         final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();

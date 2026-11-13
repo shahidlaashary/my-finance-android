@@ -47,7 +47,7 @@ jobs:
           else
             echo "Android project is already tracked; no generated files to commit."
           fi
-      - name: Configure persistent Android release signing
+      - name: Configure Android signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -55,15 +55,43 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
+          secret_count=0
           for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
-            if [ -z "${!name:-}" ]; then
-              echo "Missing required GitHub Actions secret: ${name}"
-              echo "Add all four Android signing secrets in Settings > Secrets and variables > Actions, then rerun this workflow."
-              exit 1
+            if [ -n "${!name:-}" ]; then
+              secret_count=$((secret_count + 1))
             fi
           done
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-          test -s android/app/upload-keystore.jks
+
+          if [ "$secret_count" -eq 4 ]; then
+            echo "Using permanent Android release signing key."
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            test -s android/app/upload-keystore.jks
+            {
+              echo "ANDROID_KEYSTORE_PATH=upload-keystore.jks"
+              echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
+              echo "ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS"
+              echo "ANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+          elif [ "$secret_count" -eq 0 ]; then
+            echo "No permanent signing secrets configured; creating a temporary test signing key."
+            temp_password="$(openssl rand -hex 24)"
+            keytool -genkeypair -v \
+              -keystore android/app/temporary-test-signing.jks \
+              -storepass "$temp_password" \
+              -keypass "$temp_password" \
+              -alias myfinance-temporary \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=My Finance Temporary Test, OU=Development, O=My Finance, L=Unknown, ST=Unknown, C=PK"
+            {
+              echo "ANDROID_KEYSTORE_PATH=temporary-test-signing.jks"
+              echo "ANDROID_KEYSTORE_PASSWORD=$temp_password"
+              echo "ANDROID_KEY_ALIAS=myfinance-temporary"
+              echo "ANDROID_KEY_PASSWORD=$temp_password"
+            } >> "$GITHUB_ENV"
+          else
+            echo "Incomplete Android signing secrets: configure all four secrets together, or remove all four for temporary test signing."
+            exit 1
+          fi
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -71,11 +99,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build APK with increasing version code
-        env:
-          ANDROID_KEYSTORE_PATH: upload-keystore.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --no-tree-shake-icons --build-number "$GITHUB_RUN_NUMBER"
       - name: Upload APK
         uses: actions/upload-artifact@v4

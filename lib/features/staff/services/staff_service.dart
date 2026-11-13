@@ -59,8 +59,9 @@ class StaffService {
   static Future<void> deleteStaff(int id) async {
     await ensureTables();
     final db = FinanceDB.instance.db;
+    final salaryHistory = await db.query('staff_salaries', where: 'staff_id = ?', whereArgs: [id], limit: 1);
+    if (salaryHistory.isNotEmpty) throw Exception('This staff member has salary history. Recycle Bin support for staff records is being added; do not delete this record yet.');
     await db.transaction((txn) async {
-      await txn.delete('staff_salaries', where: 'staff_id = ?', whereArgs: [id]);
       await txn.delete('staff_attendance', where: 'staff_id = ?', whereArgs: [id]);
       await txn.delete('staff', where: 'id = ?', whereArgs: [id]);
     });

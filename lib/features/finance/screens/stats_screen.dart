@@ -226,7 +226,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildTrend() {
     if (_trend.isEmpty) {
-      return const Text('No income or expense trend available yet.', style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "No income or expense trend available yet.", "No income or expense trend available yet."), style: TextStyle(color: Colors.black54));
     }
     final maxValue = _trend.fold<double>(0, (maxValue, row) {
       final income = (row['income'] as num?)?.toDouble() ?? 0;
@@ -361,7 +361,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildCategories() {
     if (_categories.isEmpty) {
-      return const Text('No expense categories recorded for this period.', style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "No expense categories recorded for this period.", "No expense categories recorded for this period."), style: TextStyle(color: Colors.black54));
     }
     final visibleCategories = _showAllCategories ? _categories : _categories.take(5).toList();
     final total = visibleCategories.fold<double>(
@@ -404,7 +404,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Total', style: TextStyle(fontSize: 10, color: Colors.black54)),
+                      Text(appText(context, "Total", "Total"), style: TextStyle(fontSize: 10, color: Colors.black54)),
                       const SizedBox(height: 3),
                       Text(
                         _money(total),
@@ -468,7 +468,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildBalances() {
     if (_balances.isEmpty) {
-      return const Text('Create a wallet to see account balances here.', style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "Create a wallet to see account balances here.", "Create a wallet to see account balances here."), style: TextStyle(color: Colors.black54));
     }
     return Wrap(
       spacing: 9,
@@ -584,7 +584,7 @@ class _StatsScreenState extends State<StatsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: const Text('Reports and Analytics', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: Text(appText(context, "Reports and Analytics", "Reports and Analytics"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
         actions: buildSharedAppBarActions(context),
       ),
       body: _loading
@@ -610,7 +610,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         Expanded(child: DropdownButtonFormField<String>(
                           value: _period,
                           isExpanded: true,
-                          decoration: const InputDecoration(labelText: 'Period', prefixIcon: Icon(Icons.date_range), isDense: true),
+                          decoration: InputDecoration(labelText: 'Period', prefixIcon: Icon(Icons.date_range), isDense: true),
                           items: const ['This Month', 'Last Month', 'Last 6 Months', 'This Year', 'All Time']
                               .map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
                           onChanged: (value) { if (value != null) setState(() => _period = value); _loadData(); },
@@ -619,7 +619,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         Expanded(child: DropdownButtonFormField<String>(
                           value: _currency,
                           isExpanded: true,
-                          decoration: const InputDecoration(labelText: 'Currency', prefixIcon: Icon(Icons.payments_outlined), isDense: true),
+                          decoration: InputDecoration(labelText: 'Currency', prefixIcon: Icon(Icons.payments_outlined), isDense: true),
                           items: (_currencies.isEmpty ? <String>['PKR'] : _currencies)
                               .map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
                           onChanged: (value) { if (value != null) setState(() => _currency = value); _loadData(); },

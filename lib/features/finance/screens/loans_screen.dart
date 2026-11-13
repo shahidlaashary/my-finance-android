@@ -721,7 +721,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       visualDensity: VisualDensity.compact,
                                     )
                                   else
-                                    const Chip(
+                                    Chip(
                                       label: Text(appText(context, 'Active', 'فعال')),
                                       visualDensity: VisualDensity.compact,
                                     ),

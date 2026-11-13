@@ -13,6 +13,9 @@ import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
+import 'package:my_finance/features/finance/screens/goals_screen.dart';
+import 'package:my_finance/features/finance/screens/loans_screen.dart';
+import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 
 /// Dashboard home screen and its existing data-loading/presentation logic.
 class HomePage extends StatefulWidget {
@@ -626,9 +629,16 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => destinationTitle == 'Assets'
-                ? const AssetsScreen()
-                : widget.featurePageBuilder(destinationTitle),
+            builder: (_) {
+              switch (destinationTitle) {
+                case 'Assets': return const AssetsScreen();
+                case 'Loans': return const LoansScreen();
+                case 'Budgets': return const BudgetsScreen();
+                case 'Goals': return const GoalsScreen();
+                case 'Recurring Transactions': return const RecurringTransactionsScreen();
+                default: return widget.featurePageBuilder(destinationTitle);
+              }
+            },
           ),
         );
       },

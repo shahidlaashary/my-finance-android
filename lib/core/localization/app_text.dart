@@ -341,7 +341,7 @@ const Map<String, Map<String, String>> _translations = {
     "Vehicle Fuel Log": "سجل وقود المركبة",
     "Vehicle Expense": "مصروف المركبة",
     "Delete Staff?": "حذف الموظف؟",
-    "Delete this staff member and their attendance history?": "هل تريد حذف هذا الموظف وسجل حضوره؟",
+    "Delete this staff member and their attendance history?": "هل تريد حذف هذا الموظف وسجل رواتبه وحضوره؟",
   },
   'hi': {
     'Assets': 'संपत्तियाँ',
@@ -624,7 +624,7 @@ const Map<String, Map<String, String>> _translations = {
     "Vehicle Fuel Log": "वाहन ईंधन रिकॉर्ड",
     "Vehicle Expense": "वाहन खर्च",
     "Delete Staff?": "कर्मचारी हटाएं?",
-    "Delete this staff member and their attendance history?": "क्या इस कर्मचारी और उसकी उपस्थिति का इतिहास हटाना चाहते हैं?",
+    "Delete this staff member and their attendance history?": "क्या इस कर्मचारी और उसके वेतन तथा उपस्थिति का इतिहास हटाना चाहते हैं?",
   },
   'pa': {
     'Assets': 'اثاثے',
@@ -907,7 +907,7 @@ const Map<String, Map<String, String>> _translations = {
     "Vehicle Fuel Log": "گاڑی دے ایندھن دا ریکارڈ",
     "Vehicle Expense": "گاڑی دا خرچہ",
     "Delete Staff?": "اسٹاف حذف کریے؟",
-    "Delete this staff member and their attendance history?": "ایں اسٹاف ممبر تے اوندی حاضری دا ریکارڈ حذف کریے؟",
+    "Delete this staff member and their attendance history?": "ایں اسٹاف ممبر، اوندی تنخواہ تے حاضری دا ریکارڈ حذف کریے؟",
   },
   'skr': {
     'Assets': 'اثاثے',
@@ -1190,7 +1190,7 @@ const Map<String, Map<String, String>> _translations = {
     "Vehicle Fuel Log": "گاڑی دے ایندھن دا ریکارڈ",
     "Vehicle Expense": "گاڑی دا خرچہ",
     "Delete Staff?": "اسٹاف حذف کریے؟",
-    "Delete this staff member and their attendance history?": "ایں اسٹاف ممبر تے اوندی حاضری دا ریکارڈ حذف کریے؟",
+    "Delete this staff member and their attendance history?": "ایں اسٹاف ممبر، اوندی تنخواہ تے حاضری دا ریکارڈ حذف کریے؟",
   },
   'sd': {
     'Assets': 'اثاثا',
@@ -1473,7 +1473,7 @@ const Map<String, Map<String, String>> _translations = {
     "Vehicle Fuel Log": "گاڏي جي ٻارڻ جو رڪارڊ",
     "Vehicle Expense": "گاڏي جو خرچ",
     "Delete Staff?": "اسٽاف ختم ڪجي؟",
-    "Delete this staff member and their attendance history?": "ڇا هن اسٽاف ميمبر ۽ سندس حاضري جو رڪارڊ ختم ڪجي؟",
+    "Delete this staff member and their attendance history?": "ڇا هن اسٽاف ميمبر، سندس پگهار ۽ حاضري جو رڪارڊ ختم ڪجي؟",
   },
 };
 
@@ -1503,7 +1503,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     'Category':'زمرہ','Document':'دستاویز','Vehicle':'گاڑی','Vehicle Reminder':'گاڑی کی یاددہانی',
     'Vehicle Fuel Log':'گاڑی کے ایندھن کا ریکارڈ','Vehicle Expense':'گاڑی کا خرچ',
     'Delete Staff?':'اسٹاف حذف کریں؟',
-    'Delete this staff member and their attendance history?':'کیا اس اسٹاف ممبر اور اس کی حاضری کی تاریخ کو حذف کرنا چاہتے ہیں؟',
+    'Delete this staff member and their attendance history?':'کیا اس اسٹاف ممبر، اس کی تنخواہ اور حاضری کی تاریخ کو حذف کرنا چاہتے ہیں؟',
     'Deleted item':'حذف شدہ آئٹم','Staff member':'اسٹاف ممبر','Item':'آئٹم',
     'Restore deleted records or permanently remove them':'حذف شدہ ریکارڈ بحال کریں یا مستقل حذف کریں',
     "Wallet": "والٹ",
@@ -1525,7 +1525,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     "Vehicle Fuel Log": "گاڑی کے ایندھن کا ریکارڈ",
     "Vehicle Expense": "گاڑی کا خرچ",
     "Delete Staff?": "اسٹاف حذف کریں؟",
-    "Delete this staff member and their attendance history?": "کیا اس اسٹاف ممبر اور اس کی حاضری کی تاریخ کو حذف کرنا چاہتے ہیں؟",
+    "Delete this staff member and their attendance history?": "کیا اس اسٹاف ممبر، اس کی تنخواہ اور حاضری کی تاریخ کو حذف کرنا چاہتے ہیں؟",
     "No budgets found.": "کوئی بجٹ موجود نہیں۔",
     "No savings goals yet.": "ابھی کوئی بچت کا ہدف موجود نہیں۔",
     "No documents found": "کوئی دستاویز نہیں ملی",

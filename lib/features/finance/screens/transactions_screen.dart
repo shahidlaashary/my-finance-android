@@ -334,7 +334,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
                     if (amount == null || amount <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(appText(context, 'Enter a valid amount.', 'درست رقم درج کریں۔')),
                         ),
                       );
@@ -345,7 +345,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
                     if (type == 'transfer' && toWalletId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(appText(context, 'Select a destination account.', 'رقم وصول کرنے والا اکاؤنٹ منتخب کریں۔')),
                         ),
                       );

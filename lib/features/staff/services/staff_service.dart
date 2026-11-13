@@ -94,8 +94,11 @@ class StaffService {
     required int walletId, required DateTime date, required String note}) async {
     await ensureTables();
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid salary amount.');
-    final staff = await FinanceDB.instance.db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
+    final db = FinanceDB.instance.db;
+    final staff = await db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
     if (staff.isEmpty) throw Exception('Staff member not found.');
+    final wallets = await db.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+    if (wallets.isEmpty) throw Exception('Select an available wallet.');
     final name = staff.first['name'].toString();
     final txId = await TransactionsService.addTransaction(type: 'Expense', amount: amount,
       walletId: walletId, category: 'Staff Salary',
@@ -119,7 +122,10 @@ class StaffService {
     await ensureTables();
     const allowed = ['Present', 'Absent', 'Late', 'Leave', 'Half Day'];
     if (!allowed.contains(status)) throw Exception('Select a valid attendance status.');
-    await FinanceDB.instance.db.insert('staff_attendance', {
+    final db = FinanceDB.instance.db;
+    final staff = await db.query('staff', columns: ['id'], where: 'id = ?', whereArgs: [staffId], limit: 1);
+    if (staff.isEmpty) throw Exception('Staff member not found.');
+    await db.insert('staff_attendance', {
       'staff_id': staffId,
       'attendance_date': DateTime(date.year, date.month, date.day).toIso8601String(),
       'status': status, 'note': note.trim(),

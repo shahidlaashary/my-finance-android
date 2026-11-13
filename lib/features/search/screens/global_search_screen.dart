@@ -24,6 +24,13 @@ import 'package:my_finance/features/settings/general_app_preferences_screen.dart
 import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
 import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
+import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/finance/services/assets_service.dart';
+import 'package:my_finance/features/documents/services/my_documents_service.dart';
+import 'package:my_finance/features/stock/services/stock_service.dart';
+import 'package:my_finance/features/staff/services/staff_service.dart';
+import 'package:my_finance/features/installments/services/installment_service.dart';
+import 'package:my_finance/features/vehicles/services/vehicle_service.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/app/screens/about_hub_screen.dart';
 
@@ -37,6 +44,13 @@ class _SearchEntry {
   const _SearchEntry(this.title, this.subtitle, this.icon, this.keywords, this.page);
 }
 
+class _RecordSearchResult {
+  final String title, subtitle;
+  final IconData icon;
+  final Widget Function() page;
+  const _RecordSearchResult(this.title, this.subtitle, this.icon, this.page);
+}
+
 class GlobalSearchScreen extends StatefulWidget {
   const GlobalSearchScreen({super.key});
 
@@ -46,6 +60,84 @@ class GlobalSearchScreen extends StatefulWidget {
 
 class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   final _controller = TextEditingController();
+  List<_RecordSearchResult> _recordResults = [];
+  bool _searchingRecords = false;
+  int _searchRequest = 0;
+
+  bool _matches(Map<String, dynamic> row, String query) =>
+      row.values.any((value) => value != null && value.toString().toLowerCase().contains(query));
+
+  Future<void> _searchRecords(String rawQuery) async {
+    final query = rawQuery.trim().toLowerCase();
+    final request = ++_searchRequest;
+    if (query.length < 2) {
+      if (mounted) setState(() { _recordResults = []; _searchingRecords = false; });
+      return;
+    }
+    setState(() => _searchingRecords = true);
+    final found = <_RecordSearchResult>[];
+    Future<void> collect(Future<void> Function() task) async {
+      try { await task(); } catch (_) {}
+    }
+    await collect(() async {
+      final rows = await TransactionsService.getTransactions();
+      for (final row in rows.where((r) => _matches(r, query)).take(12)) {
+        final type = row['type']?.toString() ?? 'Transaction';
+        final category = row['category_name']?.toString() ?? row['category']?.toString() ?? '';
+        final note = row['note']?.toString() ?? '';
+        found.add(_RecordSearchResult('$type • ${row['amount'] ?? ''}',
+          [category, note, row['date']?.toString() ?? ''].where((v) => v.trim().isNotEmpty).join(' · '),
+          Icons.receipt_long_outlined, () => const TransactionsScreen()));
+      }
+    });
+    await collect(() async {
+      final rows = await AssetsService().getAssets();
+      for (final item in rows.where((a) => [a.name, a.category, a.notes].any((v) => v.toLowerCase().contains(query))).take(8)) {
+        found.add(_RecordSearchResult(item.name, 'Asset · ${item.category}${item.isSold ? ' · Sold' : ''}',
+          Icons.real_estate_agent_outlined, () => const AssetsScreen()));
+      }
+    });
+    await collect(() async {
+      final rows = await MyDocumentsService.instance.getDocuments();
+      for (final item in rows.where((d) => [d.title, d.category, d.documentNumber, d.notes].any((v) => v.toLowerCase().contains(query))).take(8)) {
+        found.add(_RecordSearchResult(item.title, 'Document · ${item.category}${item.documentNumber.isEmpty ? '' : ' · ${item.documentNumber}'}',
+          Icons.folder_copy_outlined, () => const MyDocumentsScreen()));
+      }
+    });
+    await collect(() async {
+      final rows = await StockService.getItems();
+      for (final item in rows.where((i) => [i.name, i.sku, i.category, i.notes].any((v) => v.toLowerCase().contains(query))).take(8)) {
+        found.add(_RecordSearchResult(item.name, 'Stock · ${item.category} · Qty ${item.quantity}',
+          Icons.inventory_2_outlined, () => const StockManagerScreen()));
+      }
+    });
+    await collect(() async {
+      final rows = await StaffService.getStaff();
+      for (final row in rows.where((r) => _matches(r, query)).take(8)) {
+        found.add(_RecordSearchResult(row['name']?.toString() ?? 'Staff',
+          'Staff · ${row['role'] ?? ''} · ${row['phone'] ?? ''}',
+          Icons.badge_outlined, () => const StaffScreen()));
+      }
+    });
+    await collect(() async {
+      final rows = await InstallmentService.getContracts();
+      for (final row in rows.where((r) => _matches(r, query)).take(8)) {
+        found.add(_RecordSearchResult(row['item_name']?.toString() ?? 'Installment',
+          'Installment · ${row['party_name'] ?? ''} · ${row['direction'] ?? ''}',
+          Icons.payments_outlined, () => const InstallmentsScreen()));
+      }
+    });
+    await collect(() async {
+      final rows = await VehicleService.getVehicles();
+      for (final row in rows.where((r) => _matches(r, query)).take(8)) {
+        found.add(_RecordSearchResult(row['name']?.toString() ?? row['model']?.toString() ?? 'Vehicle',
+          'Vehicle · ${row['registration'] ?? row['registration_number'] ?? row['make'] ?? ''}',
+          Icons.directions_car_outlined, () => const VehiclesScreen()));
+      }
+    });
+    if (!mounted || request != _searchRequest) return;
+    setState(() { _recordResults = found; _searchingRecords = false; });
+  }
   late final List<_SearchEntry> _entries = [
     _SearchEntry('Home', 'Dashboard and financial snapshot', Icons.home_outlined, ['dashboard','overview','balance','home'], () => const HomePage(featurePageBuilder: _unusedFeatureBuilder)),
     _SearchEntry('Assets', 'Manage owned assets and depreciation', Icons.real_estate_agent_outlined, ['property','vehicle','gold','livestock','business','asset depreciation'], () => const AssetsScreen()),
@@ -111,13 +203,13 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             child: TextField(
               controller: _controller,
               autofocus: true,
-              onChanged: (_) => setState(() {}),
+              onChanged: (value) { setState(() {}); _searchRecords(value); },
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: 'Search any feature or module...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _controller.text.isEmpty ? null : IconButton(
-                  onPressed: () { _controller.clear(); setState(() {}); },
+                  onPressed: () { _controller.clear(); _searchRecords(''); setState(() {}); },
                   icon: const Icon(Icons.close_rounded),
                 ),
                 filled: true,
@@ -131,27 +223,48 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             padding: const EdgeInsets.fromLTRB(18, 0, 18, 9),
             child: Row(
               children: [
-                Text(_controller.text.isEmpty ? 'ALL FEATURES' : 'SEARCH RESULTS',
+                Text(_controller.text.isEmpty ? 'ALL FEATURES' : 'FEATURES & RECORDS',
                   style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.1, color: AppColors.muted)),
                 const Spacer(),
-                Text('${results.length} found', style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+                Text('${results.length + _recordResults.length} found', style: const TextStyle(fontSize: 11, color: AppColors.muted)),
               ],
             ),
           ),
           Expanded(
-            child: results.isEmpty
+            child: results.isEmpty && _recordResults.isEmpty && !_searchingRecords
               ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.search_off_rounded, size: 48, color: AppColors.muted.withValues(alpha: .6)),
                   const SizedBox(height: 10),
-                  const Text('No matching feature found', style: TextStyle(fontWeight: FontWeight.w700)),
+                  const Text('No matching result found', style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
-                  const Text('Try another keyword or module name.', style: TextStyle(fontSize: 12, color: AppColors.muted)),
+                  const Text('Try another keyword, name, number or detail.', style: TextStyle(fontSize: 12, color: AppColors.muted)),
                 ]))
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: results.length,
+                  itemCount: results.length + _recordResults.length + (_searchingRecords ? 1 : 0),
                   separatorBuilder: (_, __) => const SizedBox(height: 7),
                   itemBuilder: (context, index) {
+                    if (index >= results.length) {
+                      if (_searchingRecords && index == results.length) {
+                        return const Padding(padding: EdgeInsets.all(18), child: Center(child: CircularProgressIndicator()));
+                      }
+                      final record = _recordResults[index - results.length - (_searchingRecords ? 1 : 0)];
+                      return Material(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 3),
+                          leading: Container(width: 40, height: 40,
+                            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(12)),
+                            child: Icon(record.icon, color: AppColors.primary, size: 21)),
+                          title: Text(record.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                          subtitle: Text(record.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11)),
+                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.muted),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => record.page())),
+                        ),
+                      );
+                    }
                     final entry = results[index];
                     return Material(
                       color: Theme.of(context).cardColor,

@@ -15,89 +15,57 @@ void main() {
   });
 
   setUp(() async {
-    databaseDirectory = await Directory.systemTemp.createTemp(
-      'my_finance_installment_test_',
-    );
+    databaseDirectory = await Directory.systemTemp.createTemp('my_finance_installment_test_');
     await databaseFactory.setDatabasesPath(databaseDirectory.path);
     await FinanceDB.instance.init();
   });
 
   tearDown(() async {
     await FinanceDB.instance.close();
-    if (await databaseDirectory.exists()) {
-      await databaseDirectory.delete(recursive: true);
-    }
+    if (await databaseDirectory.exists()) await databaseDirectory.delete(recursive: true);
   });
 
-  Future<int> createWallet(double balance) {
-    return FinanceDB.instance.addWallet(
-      name: 'Test Wallet',
-      type: 'Cash',
-      currency: 'PKR',
-      openingBalance: balance,
-      iconCode: 1,
-      excludeTotal: false,
-    );
-  }
+  Future<int> createWallet(double balance) => FinanceDB.instance.addWallet(
+    name: 'Test Wallet', type: 'Cash', currency: 'PKR',
+    openingBalance: balance, iconCode: 1, excludeTotal: false,
+  );
 
-  test('buy contract advance and later payment deduct wallet atomically', () async {
+  test('buy contract advance and payment deduct wallet', () async {
     final walletId = await createWallet(10000);
-
     final contractId = await InstallmentService.addContract(
-      direction: 'buy',
-      itemName: 'Laptop',
-      partyName: 'Seller',
-      totalAmount: 5000,
-      advance: 1000,
-      walletId: walletId,
-      installmentAmount: 1000,
-      frequency: 'Monthly',
-      startDate: '2026-11-13',
-      notes: '',
+      direction: 'buy', itemName: 'Laptop', partyName: 'Seller',
+      totalAmount: 5000, advance: 1000, walletId: walletId,
+      installmentAmount: 1000, frequency: 'Monthly',
+      startDate: '2026-11-13', notes: '',
     );
-
-    expect((await FinanceDB.instance.getWallet(walletId)! )['balance'], 9000);
+    final afterAdvance = await FinanceDB.instance.getWallet(walletId);
+    expect((afterAdvance!['balance'] as num).toDouble(), 9000);
 
     await InstallmentService.addPayment(
-      contractId: contractId,
-      amount: 1000,
-      date: '2026-12-13',
-      note: 'First installment',
+      contractId: contractId, amount: 1000, date: '2026-12-13', note: 'First installment',
     );
-
     final wallet = await FinanceDB.instance.getWallet(walletId);
     expect((wallet!['balance'] as num).toDouble(), 8000);
-    final contracts = await InstallmentService.getContracts();
-    expect((contracts.single['paid_amount'] as num).toDouble(), 2000);
-    expect(contracts.single['status'], 'active');
+    final contract = (await InstallmentService.getContracts()).single;
+    expect((contract['paid_amount'] as num).toDouble(), 2000);
+    expect(contract['status'], 'active');
     expect(await InstallmentService.getPayments(contractId), hasLength(2));
   });
 
-  test('overpayment is rejected without changing wallet or contract', () async {
+  test('overpayment leaves wallet and contract unchanged', () async {
     final walletId = await createWallet(10000);
     final contractId = await InstallmentService.addContract(
-      direction: 'buy',
-      itemName: 'Phone',
-      partyName: 'Seller',
-      totalAmount: 3000,
-      advance: 500,
-      walletId: walletId,
-      installmentAmount: 500,
-      frequency: 'Monthly',
-      startDate: '2026-11-13',
-      notes: '',
+      direction: 'buy', itemName: 'Phone', partyName: 'Seller',
+      totalAmount: 3000, advance: 500, walletId: walletId,
+      installmentAmount: 500, frequency: 'Monthly',
+      startDate: '2026-11-13', notes: '',
     );
-
     await expectLater(
       InstallmentService.addPayment(
-        contractId: contractId,
-        amount: 2501,
-        date: '2026-12-13',
-        note: '',
+        contractId: contractId, amount: 2501, date: '2026-12-13', note: '',
       ),
       throwsA(isA<Exception>()),
     );
-
     final wallet = await FinanceDB.instance.getWallet(walletId);
     expect((wallet!['balance'] as num).toDouble(), 9500);
     final contract = (await InstallmentService.getContracts()).single;
@@ -105,28 +73,17 @@ void main() {
     expect(await InstallmentService.getPayments(contractId), hasLength(1));
   });
 
-  test('sell contract advance and payment increase wallet', () async {
+  test('sell contract advance and final payment increase wallet', () async {
     final walletId = await createWallet(1000);
     final contractId = await InstallmentService.addContract(
-      direction: 'sell',
-      itemName: 'Bicycle',
-      partyName: 'Buyer',
-      totalAmount: 4000,
-      advance: 1000,
-      walletId: walletId,
-      installmentAmount: 1000,
-      frequency: 'Monthly',
-      startDate: '2026-11-13',
-      notes: '',
+      direction: 'sell', itemName: 'Bicycle', partyName: 'Buyer',
+      totalAmount: 4000, advance: 1000, walletId: walletId,
+      installmentAmount: 1000, frequency: 'Monthly',
+      startDate: '2026-11-13', notes: '',
     );
-
     await InstallmentService.addPayment(
-      contractId: contractId,
-      amount: 3000,
-      date: '2026-12-13',
-      note: 'Final payment',
+      contractId: contractId, amount: 3000, date: '2026-12-13', note: 'Final payment',
     );
-
     final wallet = await FinanceDB.instance.getWallet(walletId);
     expect((wallet!['balance'] as num).toDouble(), 5000);
     final contract = (await InstallmentService.getContracts()).single;

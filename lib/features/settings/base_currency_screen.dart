@@ -214,7 +214,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                         prefixIcon: const Icon(Icons.search_rounded),
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 9),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -225,7 +225,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                     Expanded(child: ListView.separated(
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 5),
+                      separatorBuilder: (_, __) => const SizedBox(height: 4),
                       itemBuilder: (context, index) {
                         final code = filtered[index];
                         final selected = code == _selected;
@@ -242,10 +242,10 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                             child: Opacity(
                               opacity: enabled ? 1 : 0.45,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 child: Row(children: [
                                   Text(_currencyFlags[code] ?? '🌐',
-                                    style: const TextStyle(fontSize: 27)),
+                                    style: const TextStyle(fontSize: 24)),
                                   const SizedBox(width: 13),
                                   Expanded(child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,7 +347,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                     borderRadius: BorderRadius.circular(18),
                     onTap: _saving ? null : _showCurrencyPicker,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
+                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
                       child: Row(children: [
                         Text(_currencyFlags[_selected] ?? '🌐',
                           style: const TextStyle(fontSize: 31)),
@@ -356,7 +356,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(_selected, style: const TextStyle(
-                              fontWeight: FontWeight.w800, fontSize: 16)),
+                              fontWeight: FontWeight.w800, fontSize: 15)),
                             const SizedBox(height: 2),
                             Text(_currencyCountries[_selected] ?? _selected,
                               style: TextStyle(

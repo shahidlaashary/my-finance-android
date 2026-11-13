@@ -241,7 +241,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     ),
                   ),
                   const SizedBox(height: 9),
-                  Expanded(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  SizedBox(height: 154, child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     Expanded(child: _buildActionCard(icon: Icons.cloud_upload_rounded, title: appText(context, 'Create Backup', 'دستی بیک اپ بنائیں'), description: 'Save database and attachments as a ZIP file.', buttonText: 'Create Backup', color: Colors.indigo, onPressed: _createBackup)),
                     const SizedBox(width: 9),
                     Expanded(child: _buildActionCard(icon: Icons.settings_backup_restore_rounded, title: appText(context, 'Restore Backup', 'بیک اپ بحال کریں'), description: 'Restore from an existing My Finance ZIP file.', buttonText: 'Select ZIP File', color: Colors.teal, onPressed: _selectAndRestoreBackup)),
@@ -296,21 +296,57 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
-        padding: const EdgeInsets.all(11),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(width: 39, height: 39, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 22)),
-            const SizedBox(height: 9),
-            Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 5),
-            Expanded(child: Text(description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5, color: Colors.grey, height: 1.25))),
-            const SizedBox(height: 7),
-            SizedBox(width: double.infinity, child: FilledButton(onPressed: _isProcessing ? null : onPressed, style: FilledButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10), textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)), child: Text(buttonText, maxLines: 1, overflow: TextOverflow.ellipsis))),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: color, size: 21),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 9.5, color: Colors.grey, height: 1.15),
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              height: 32,
+              child: FilledButton(
+                onPressed: _isProcessing ? null : onPressed,
+                style: FilledButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                ),
+                child: Text(buttonText, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-}
+}}

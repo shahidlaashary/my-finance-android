@@ -1,5 +1,6 @@
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class StockItem {
   final int? id;
@@ -84,6 +85,10 @@ class StockService {
     await _ensureTables();
     final db=FinanceDB.instance.db;
     await db.transaction((txn) async {
+      final rows = await txn.query('stock_items', where: 'id = ?', whereArgs: [id], limit: 1);
+      if (rows.isEmpty) return;
+      final movements = await txn.query('stock_movements', where: 'item_id = ?', whereArgs: [id]);
+      await txn.insert('recycle_bin', {'entity_type':'Stock Item','entity_title':rows.first['name']?.toString() ?? 'Stock Item','source_table':'stock_items','source_id':id.toString(),'payload':__import__dummy,'related_payload':null,'deleted_at':DateTime.now().toIso8601String()});
       await txn.delete('stock_movements',where:'item_id=?',whereArgs:[id]);
       await txn.delete('stock_items',where:'id=?',whereArgs:[id]);
     });

@@ -210,8 +210,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               SizedBox(height: 15),
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Recurring',
+                child: Text(appText(context, "Recurring", "Recurring"),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -257,7 +256,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Date', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    Text(appText(context, "Date", "Date"), style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     SizedBox(height: 3),
                     Row(
                       children: [
@@ -288,7 +287,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text('Time', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    Text(appText(context, "Time", "Time"), style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -320,7 +319,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('Recurring', style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    Text(appText(context, "Recurring", "Recurring"), style: TextStyle(fontSize: 10, color: AppColors.muted)),
                     SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -512,7 +511,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
     if (selectedWalletId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wallet select karein.')),
+        SnackBar(content: Text(appText(context, "Wallet select karein.", "Wallet select karein."))),
       );
       return;
     }
@@ -525,7 +524,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         transferFee = double.tryParse(transferFeeController.text.trim()) ?? 0;
         if (!transferFee.isFinite || transferFee <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Valid transfer fee enter karein.')),
+            SnackBar(content: Text(appText(context, "Valid transfer fee enter karein.", "Valid transfer fee enter karein."))),
           );
           return;
         }
@@ -533,7 +532,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       if (selectedDestinationWalletId == null ||
           selectedDestinationWalletId == selectedWalletId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Different destination wallet select karein.')),
+          SnackBar(content: Text(appText(context, "Different destination wallet select karein.", "Different destination wallet select karein."))),
         );
         return;
       }
@@ -545,7 +544,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         destinationAmount = double.tryParse(destinationAmountController.text.trim());
         if (destinationAmount == null || destinationAmount <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Destination amount enter karein.')),
+            SnackBar(content: Text(appText(context, "Destination amount enter karein.", "Destination amount enter karein."))),
           );
           return;
         }
@@ -640,7 +639,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       return Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text('Pehle ek wallet add karein.'),
+          child: Text(appText(context, "Pehle ek wallet add karein.", "Pehle ek wallet add karein.")),
         ),
       );
     }
@@ -701,12 +700,10 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   ),
                   child: SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Transfer Fee',
+                    title: Text(appText(context, "Transfer Fee", "Transfer Fee"),
                       style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
-                    subtitle: const Text(
-                      'Add an optional fee to this transfer',
+                    subtitle: Text(appText(context, "Add an optional fee to this transfer", "Add an optional fee to this transfer"),
                       style: TextStyle(fontSize: 11),
                     ),
                     value: transferFeeEnabled,
@@ -765,8 +762,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text(
-                      'Save Transaction',
+                  : Text(appText(context, "Save Transaction", "Save Transaction"),
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                     ),
             ),

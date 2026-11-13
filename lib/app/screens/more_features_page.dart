@@ -96,8 +96,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'MY FINANCE',
+                  Text(appText(context, "MY FINANCE", "MY FINANCE"),
                     style: TextStyle(
                       color: colors.onSurface,
                       fontSize: 15,
@@ -106,8 +105,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    'Your Money. Your Control.',
+                  Text(appText(context, "Your Money. Your Control.", "Your Money. Your Control."),
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       fontSize: 13,
@@ -115,16 +113,14 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Smart • Simple • Secure',
+                  Text(appText(context, "Smart • Simple • Secure", "Smart • Simple • Secure"),
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'Created by Shahid Laashary',
+                  Text(appText(context, "Created by Shahid Laashary", "Created by Shahid Laashary"),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: colors.onSurface,
@@ -142,8 +138,7 @@ class MoreFeaturesPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Made with care for better financial management.',
+                  Text(appText(context, "Made with care for better financial management.", "Made with care for better financial management."),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: colors.onSurfaceVariant,

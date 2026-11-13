@@ -610,7 +610,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         Expanded(child: DropdownButtonFormField<String>(
                           value: _period,
                           isExpanded: true,
-                          decoration: InputDecoration(labelText: 'Period', prefixIcon: Icon(Icons.date_range), isDense: true),
+                          decoration: InputDecoration(labelText: appText(context, "Period", "Period"), prefixIcon: Icon(Icons.date_range), isDense: true),
                           items: const ['This Month', 'Last Month', 'Last 6 Months', 'This Year', 'All Time']
                               .map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
                           onChanged: (value) { if (value != null) setState(() => _period = value); _loadData(); },
@@ -619,7 +619,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         Expanded(child: DropdownButtonFormField<String>(
                           value: _currency,
                           isExpanded: true,
-                          decoration: InputDecoration(labelText: 'Currency', prefixIcon: Icon(Icons.payments_outlined), isDense: true),
+                          decoration: InputDecoration(labelText: appText(context, "Currency", "Currency"), prefixIcon: Icon(Icons.payments_outlined), isDense: true),
                           items: (_currencies.isEmpty ? <String>['PKR'] : _currencies)
                               .map((value) => DropdownMenuItem(value: value, child: Text(value))).toList(),
                           onChanged: (value) { if (value != null) setState(() => _currency = value); _loadData(); },

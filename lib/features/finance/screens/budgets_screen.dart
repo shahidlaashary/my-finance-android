@@ -40,6 +40,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     }
   }
 
+import 'package:my_finance/core/localization/app_text.dart';
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
@@ -133,7 +134,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     Expanded(child: DropdownButtonFormField<String?>(
                       value: category, isExpanded: true,
                       decoration: decoration('Category', Icons.category_outlined),
-                      items: [const DropdownMenuItem<String?>(value: null, child: Text('All Categories')),
+                      items: [const DropdownMenuItem<String?>(value: null, child: Text(appText(context, 'All Categories', 'تمام زمرے'))),
                         ..._categories.map((c) => DropdownMenuItem<String?>(value: c['name'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis)))],
                       onChanged: (v) => setSheetState(() => category = v),
                     )),
@@ -172,7 +173,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     )),
                   ]),
                   const SizedBox(height: 12),
-                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Cancel'))), const SizedBox(width: 10),
+                  Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), const SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
@@ -215,14 +216,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Budget'),
+          title: Text(appText(context, 'Delete Budget', 'بجٹ حذف کریں')),
           content: Text(
             'Are you sure you want to delete "${budget.name}"?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
@@ -311,7 +312,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'edit',
-                      child: Text('Edit Budget'),
+                      child: Text(appText(context, 'Edit Budget', 'بجٹ میں ترمیم کریں')),
                     ),
                     PopupMenuItem(
                       value: 'toggle',
@@ -384,7 +385,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               const Padding(
                 padding: EdgeInsets.only(top: 8),
                 child: Chip(
-                  label: Text('Paused'),
+                  label: Text(appText(context, 'Paused', 'روکا گیا')),
                   backgroundColor: Color(0xFFFFF0D9),
                 ),
               ),
@@ -416,7 +417,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         backgroundColor: const Color(0xFF147D59),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('New Budget'),
+        label: Text(appText(context, 'New Budget', 'نیا بجٹ')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -431,15 +432,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       segments: const [
                         ButtonSegment(
                           value: 'All',
-                          label: Text('All'),
+                          label: Text(appText(context, 'All', 'تمام')),
                         ),
                         ButtonSegment(
                           value: 'Active',
-                          label: Text('Active'),
+                          label: Text(appText(context, 'Active', 'فعال')),
                         ),
                         ButtonSegment(
                           value: 'Paused',
-                          label: Text('Paused'),
+                          label: Text(appText(context, 'Paused', 'روکا گیا')),
                         ),
                       ],
                       selected: {_filter},

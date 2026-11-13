@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -157,7 +158,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             onPressed: () {
@@ -165,7 +166,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
               if (parsed == null || !parsed.isFinite || parsed <= 0) return;
               Navigator.pop(dialogContext, parsed);
             },
-            child: const Text('Save'),
+            child: Text(appText(context, 'Save', 'محفوظ کریں')),
           ),
         ],
       ),

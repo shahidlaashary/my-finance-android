@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/security/app_lock_screen.dart';
@@ -23,7 +24,7 @@ class AppSettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Settings',
+          appText(context, 'Settings', 'ترتیبات'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -46,13 +47,13 @@ class AppSettingsScreen extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                   size: 32,
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
+                SizedBox(width: 14),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'App Settings',
+                        appText(context, 'App Settings', 'ایپ کی ترتیبات'),
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -60,7 +61,7 @@ class AppSettingsScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 5),
                       Text(
-                        'Manage your My Finance preferences.',
+                        appText(context, 'Manage your My Finance preferences.', 'My Finance ایپ کی ترجیحات منظم کریں۔'),
                         style: TextStyle(fontSize: 12),
                       ),
                     ],
@@ -70,7 +71,7 @@ class AppSettingsScreen extends StatelessWidget {
             ),
           ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           _SettingsInfoTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
@@ -164,7 +165,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         ),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(
             Icons.palette_rounded,
@@ -177,7 +178,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Personalize Your App',
+                  appText(context, 'Personalize Your App', 'اپنی ایپ کو اپنی پسند کے مطابق بنائیں'),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -186,7 +187,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  'Customize the look and feel of My Finance.',
+                  appText(context, 'Customize the look and feel of My Finance.', 'My Finance ایپ کی شکل و صورت تبدیل کریں۔'),
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -231,7 +232,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   ),
                   child: Icon(icon, color: primary, size: 23),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +244,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         description,
                         style: TextStyle(
@@ -257,7 +258,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 const Icon(Icons.check_circle, color: Colors.green, size: 19),
               ],
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
             ...children,
           ],
         ),
@@ -310,7 +311,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           _buildHeader(context),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           _buildActiveSection(
             context: context,
             icon: Icons.dark_mode_rounded,
@@ -318,7 +319,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             description: 'Choose a color theme for the entire app',
             children: [_buildThemeOptions()],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
         ],
       ),
     );
@@ -346,7 +347,7 @@ class _ComingSoonNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(Icons.info_outline_rounded, color: Colors.orange),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               message,

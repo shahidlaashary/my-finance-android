@@ -9,6 +9,7 @@ import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
+import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -105,6 +106,12 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Base Currency',
             subtitle: 'Choose the currency for consolidated totals',
             onTap: () => _openScreen(context, const BaseCurrencyScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.trending_down_rounded,
+            title: 'Asset Depreciation',
+            subtitle: 'Straight-line and declining-balance schedules',
+            onTap: () => _openScreen(context, const AssetDepreciationScreen()),
           ),
           _SettingsInfoTile(
             icon: Icons.notifications_active_outlined,

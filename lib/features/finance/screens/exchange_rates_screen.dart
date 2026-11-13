@@ -15,7 +15,11 @@ class ExchangeRatesScreen extends StatefulWidget {
 }
 
 class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
-  static const List<String> _currencies = ['USD', 'GBP', 'EUR', 'AED', 'SAR', 'INR'];
+  static const List<String> _currencies = [
+    'AED', 'AUD', 'BHD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'HKD',
+    'IDR', 'INR', 'JPY', 'KRW', 'KWD', 'MYR', 'NZD', 'OMR', 'QAR',
+    'SAR', 'SGD', 'THB', 'TRY', 'USD', 'ZAR',
+  ];
   final FinanceDB _database = FinanceDB.instance;
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];
@@ -24,6 +28,24 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   bool _updating = false;
   String? _message;
   bool _messageIsError = false;
+  final TextEditingController _convertAmount = TextEditingController(text: '1');
+  String _convertFrom = 'USD';
+  String _convertTo = 'PKR';
+
+  @override
+  void dispose() {
+    _convertAmount.dispose();
+    super.dispose();
+  }
+
+  double? get _convertedAmount {
+    final amount = double.tryParse(_convertAmount.text.trim());
+    final fromRate = _convertFrom == 'PKR' ? 1.0 : _rateFor(_convertFrom);
+    final toRate = _convertTo == 'PKR' ? 1.0 : _rateFor(_convertTo);
+    if (amount == null || !amount.isFinite || amount < 0 ||
+        fromRate == null || toRate == null || toRate <= 0) return null;
+    return amount * fromRate / toRate;
+  }
 
   @override
   void initState() {
@@ -252,6 +274,58 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       ),
                     ),
                   ),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Currency Converter',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                          SizedBox(height: 12),
+                          TextField(
+                            controller: _convertAmount,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(labelText: 'Amount', border: OutlineInputBorder()),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                          SizedBox(height: 10),
+                          Row(children: [
+                            Expanded(child: DropdownButtonFormField<String>(
+                              value: _convertFrom,
+                              isExpanded: true,
+                              decoration: const InputDecoration(labelText: 'From'),
+                              items: ['PKR', ..._currencies].map((code) =>
+                                DropdownMenuItem(value: code, child: Text(code))).toList(),
+                              onChanged: (value) => setState(() => _convertFrom = value ?? 'PKR'),
+                            )),
+                            const Padding(padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: Icon(Icons.swap_horiz_rounded)),
+                            Expanded(child: DropdownButtonFormField<String>(
+                              value: _convertTo,
+                              isExpanded: true,
+                              decoration: const InputDecoration(labelText: 'To'),
+                              items: ['PKR', ..._currencies].map((code) =>
+                                DropdownMenuItem(value: code, child: Text(code))).toList(),
+                              onChanged: (value) => setState(() => _convertTo = value ?? 'PKR'),
+                            )),
+                          ]),
+                          SizedBox(height: 12),
+                          Text(
+                            _convertedAmount == null
+                                ? 'Rate unavailable. Update exchange rates first.'
+                                : _convertTo + ' ' + NumberFormat('#,##0.####').format(_convertedAmount),
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
+                              color: _convertedAmount == null ? AppColors.muted : AppColors.primary),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text('Calculated from the latest saved PKR-based rates.',
+                            style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12),
                   if (_message != null) ...[
                     SizedBox(height: 8),
                     Material(

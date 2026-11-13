@@ -249,7 +249,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     final active = _debts.where((d) => !d.isPaid).toList();
     final currencies = <String>{for (final d in active) _currency(d.walletId)};
     final extra = double.tryParse(_extraController.text.trim()) ?? 0;
-    final estimate = _estimate(active, extra, _strategy);
+    final estimates = {for (final currency in currencies) currency: _estimate(active.where((d) => _currency(d.walletId) == currency).toList(), extra, _strategy)};
     return Scaffold(
       appBar: AppBar(title: const Text('Debt Payoff Planner', style: TextStyle(fontWeight: FontWeight.w800)), actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh))]),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: const Text('Add Debt')),
@@ -297,10 +297,13 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
             Text(_strategy == 'Avalanche' ? 'Avalanche: highest interest rate first to reduce estimated interest.' : 'Snowball: smallest outstanding balance first for faster wins.'),
             TextField(controller: _extraController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Extra monthly payment', helperText: 'Added on top of minimum payments'), onChanged: (_) => setState(() {})),
             const SizedBox(height: 12),
-            if (active.isEmpty) const Text('Add an active debt to calculate a payoff plan.') else if (estimate.months == 0) const Text('Increase your monthly payment. Current minimums may not cover estimated interest.') else Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Estimated payoff: ${estimate.months} months', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              Text('Estimated interest: ${_money(estimate.interest)} (combined currencies are not converted)'),
-            ]),
+            if (active.isEmpty) const Text('Add an active debt to calculate a payoff plan.') else ...estimates.entries.map((entry) {
+              final result = entry.value;
+              return Padding(padding: const EdgeInsets.only(top: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w800)),
+                if (result.months == 0) const Text('Increase the monthly payment; current minimums may not cover estimated interest.') else Text('Estimated payoff: ${result.months} months • Interest: ${_money(result.interest)}'),
+              ]));
+            }),
             const SizedBox(height: 4),
             Text('Planner only: actual lender charges, fees and payment allocation may differ.', style: Theme.of(context).textTheme.bodySmall),
           ]))),

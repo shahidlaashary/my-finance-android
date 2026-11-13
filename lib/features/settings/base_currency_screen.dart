@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 
@@ -198,10 +199,10 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                       ),
                     )),
                     const SizedBox(height: 18),
-                    Text('Choose base currency',
+                    Text(appText(context, 'Choose base currency', 'بنیادی کرنسی منتخب کریں'),
                       style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    Text('Search by currency name or code',
+                    Text(appText(context, 'Search by currency name or code', 'کرنسی کے نام یا کوڈ سے تلاش کریں'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant)),
                     const SizedBox(height: 14),
@@ -209,7 +210,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                       autofocus: true,
                       onChanged: (value) => setSheetState(() => query = value),
                       decoration: InputDecoration(
-                        hintText: 'Search currencies...',
+                        hintText: appText(context, 'Search currencies...', 'کرنسیاں تلاش کریں...'),
                         prefixIcon: const Icon(Icons.search_rounded),
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest,
@@ -307,7 +308,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Base Currency',
+        title: Text(appText(context, 'Base Currency', 'بنیادی کرنسی'),
             style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: _loading
@@ -321,7 +322,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Choose your main currency',
+                        Text(appText(context, 'Choose your main currency', 'اپنی بنیادی کرنسی منتخب کریں'),
                             style: TextStyle(fontWeight: FontWeight.bold,
                                 fontSize: 16)),
                         const SizedBox(height: 6),
@@ -379,7 +380,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                             width: 18, height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.check_rounded),
-                    label: Text(_saving ? 'Saving...' : 'Save Base Currency'),
+                    label: Text(_saving ? appText(context, 'Saving...', 'محفوظ ہو رہا ہے...') : appText(context, 'Save Base Currency', 'بنیادی کرنسی محفوظ کریں')),
                   ),
                 ),
                 if (_rates.length < _available.length)

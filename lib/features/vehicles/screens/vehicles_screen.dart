@@ -743,7 +743,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showReminderForm(reminder: r);
           if (v == 'delete') _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder');
-        }, itemBuilder: (_) => const [
+        }, itemBuilder: (_) => [
           PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Reminder', 'یاددہانی میں ترمیم کریں'))),
           PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Reminder', 'یاددہانی حذف کریں'))),
         ]),

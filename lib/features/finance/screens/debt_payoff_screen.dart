@@ -128,22 +128,22 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Debt Name *')),
-          TextField(controller: lender, decoration: const InputDecoration(labelText: 'Lender / Party *')),
-          TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone (optional)')),
-          TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Original Debt Amount *')),
-          TextField(controller: outstanding, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Current Outstanding Balance *', helperText: 'Update this when the lender adds interest or charges.')),
-          TextField(controller: rate, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Annual Interest Rate (%)')),
-          TextField(controller: minimum, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Minimum Monthly Payment')),
+          TextField(controller: name, decoration: InputDecoration(labelText: 'Debt Name *')),
+          TextField(controller: lender, decoration: InputDecoration(labelText: 'Lender / Party *')),
+          TextField(controller: phone, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: 'Phone (optional)')),
+          TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Original Debt Amount *')),
+          TextField(controller: outstanding, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Current Outstanding Balance *', helperText: 'Update this when the lender adds interest or charges.')),
+          TextField(controller: rate, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Annual Interest Rate (%)')),
+          TextField(controller: minimum, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Minimum Monthly Payment')),
           const SizedBox(height: 10),
           DropdownButtonFormField<int>(
-            value: walletId, isExpanded: true, decoration: const InputDecoration(labelText: 'Currency / Linked Account'),
+            value: walletId, isExpanded: true, decoration: InputDecoration(labelText: 'Currency / Linked Account'),
             items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${(w['currency'] ?? 'PKR').toString().toUpperCase()})'))).toList(),
             onChanged: (v) { if (v != null) setDialog(() => walletId = v); },
           ),
           ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Start Date", "Start Date")), subtitle: Text(_date(start)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => start = d); }),
           ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Due Date", "Due Date")), subtitle: Text(due == null ? 'Not set' : _date(due!)), trailing: const Icon(Icons.event), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: due ?? start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => due = d); }),
-          TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes')),
+          TextField(controller: notes, maxLines: 2, decoration: InputDecoration(labelText: 'Notes')),
               ]),
             )),
             Padding(
@@ -214,10 +214,10 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text('Outstanding: ${_currency(debt.walletId)} ${_money(debt.balance)}'),
-        TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Payment Amount *')),
-        DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: const InputDecoration(labelText: 'Pay From Account'), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
+        TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Payment Amount *')),
+        DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: InputDecoration(labelText: 'Pay From Account'), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
         ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Payment Date", "Payment Date")), subtitle: Text(_date(paidOn)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: paidOn, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => paidOn = d); }),
-        TextField(controller: notes, decoration: const InputDecoration(labelText: 'Notes (optional)')),
+        TextField(controller: notes, decoration: InputDecoration(labelText: 'Notes (optional)')),
               ]),
             )),
             Padding(
@@ -264,7 +264,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
           if (snap.hasError) return Text('Unable to load payments: ${snap.error}');
           final items = snap.data ?? [];
-          if (items.isEmpty) return const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text(appText(context, "No payments yet.", "No payments yet.")));
+          if (items.isEmpty) return Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text(appText(context, "No payments yet.", "No payments yet.")));
           return Column(children: items.map((p) => ListTile(
             contentPadding: EdgeInsets.zero, title: Text('${_currency(debt.walletId)} ${_money(p.amount)}'),
             subtitle: Text('${p.paymentDate} • ${p.notes.isEmpty ? 'Payment' : p.notes}'),
@@ -339,7 +339,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           Row(children: [Expanded(child: Text(appText(context, "Your Debts", "Your Debts"), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))), TextButton.icon(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: Text(appText(context, "Add", "Add")))]),
           if (active.isEmpty) Card(child: Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(_debts.isEmpty ? 'No debts added yet. Tap Add Debt to get started.' : 'All debts have been paid off.')))),
           ...active.map((d) => Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))), if (_isOverdue(d)) const Chip(label: Text(appText(context, "Overdue", "Overdue"), style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)]),
+            Row(children: [Expanded(child: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))), if (_isOverdue(d)) Chip(label: Text(appText(context, "Overdue", "Overdue"), style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)]),
             Text('Lender: ${d.lender} • ${_currency(d.walletId)}'),
             if (d.dueDate != null) Text('Due: ${d.dueDate}'),
             const SizedBox(height: 8),
@@ -363,10 +363,10 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(appText(context, "Choose how to prioritize your debts. Estimates assume monthly payments and fixed interest rates.", "Choose how to prioritize your debts. Estimates assume monthly payments and fixed interest rates.")),
             const SizedBox(height: 10),
-            SegmentedButton<String>(segments: const [ButtonSegment(value: 'Avalanche', label: Text(appText(context, "Avalanche", "Avalanche"))), ButtonSegment(value: 'Snowball', label: Text(appText(context, "Snowball", "Snowball")))], selected: {_strategy}, onSelectionChanged: (v) => setState(() => _strategy = v.first)),
+            SegmentedButton<String>(segments: [ButtonSegment(value: 'Avalanche', label: Text(appText(context, "Avalanche", "Avalanche"))), ButtonSegment(value: 'Snowball', label: Text(appText(context, "Snowball", "Snowball")))], selected: {_strategy}, onSelectionChanged: (v) => setState(() => _strategy = v.first)),
             const SizedBox(height: 8),
             Text(_strategy == 'Avalanche' ? 'Avalanche: highest interest rate first to reduce estimated interest.' : 'Snowball: smallest outstanding balance first for faster wins.'),
-            TextField(controller: _extraController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Extra monthly payment', helperText: 'Added on top of minimum payments'), onChanged: (_) => setState(() {})),
+            TextField(controller: _extraController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Extra monthly payment', helperText: 'Added on top of minimum payments'), onChanged: (_) => setState(() {})),
             const SizedBox(height: 12),
             if (active.isEmpty) Text(appText(context, "Add an active debt to calculate a payoff plan.", "Add an active debt to calculate a payoff plan.")) else ...estimates.entries.map((entry) {
               final result = entry.value;

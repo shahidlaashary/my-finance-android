@@ -5,6 +5,7 @@ import 'package:my_finance/core/database/database_platform.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
+import 'package:my_finance/features/backup_restore/services/automatic_backup_service.dart';
 
 /// Prepares Flutter, the database platform and saved app preferences.
 class AppBootstrapService {
@@ -37,5 +38,8 @@ class AppBootstrapService {
     );
     await appearance.load();
     await LanguageSettingsService.instance.load();
+
+    // Best-effort daily backup check; backup errors must not block app startup.
+    try { await AutomaticBackupService.runIfDue(); } catch (_) { /* Status is shown on Backup & Restore. */ }
   }
 }

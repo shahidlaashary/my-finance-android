@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
+import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/finance_category.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
@@ -184,7 +185,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 .toList();
 
             return AlertDialog(
-              title: const Text('Edit Transaction'),
+              title: Text(appText(context, 'Edit Transaction', 'لین دین میں ترمیم کریں')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -294,7 +295,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     const SizedBox(height: 14),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Transaction Date'),
+                      title: Text(appText(context, 'Transaction Date', 'لین دین کی تاریخ')),
                       subtitle: Text(
                         DateFormat(dateFormat).format(selectedDate),
                       ),
@@ -323,7 +324,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   onPressed: () {
                     Navigator.pop(dialogContext, false);
                   },
-                  child: const Text('Cancel'),
+                  child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
                 ),
                 FilledButton(
                   onPressed: () async {
@@ -334,7 +335,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (amount == null || amount <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Enter a valid amount.'),
+                          content: Text(appText(context, 'Enter a valid amount.', 'درست رقم درج کریں۔')),
                         ),
                       );
                       return;
@@ -345,7 +346,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (type == 'transfer' && toWalletId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Select a destination account.'),
+                          content: Text(appText(context, 'Select a destination account.', 'رقم وصول کرنے والا اکاؤنٹ منتخب کریں۔')),
                         ),
                       );
                       return;
@@ -379,7 +380,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       }
                     }
                   },
-                  child: const Text('Save Changes'),
+                  child: Text(appText(context, 'Save Changes', 'تبدیلیاں محفوظ کریں')),
                 ),
               ],
             );
@@ -403,7 +404,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Transaction?'),
+        title: Text(appText(context, 'Delete Transaction?', 'لین دین حذف کریں؟')),
         content: const Text(
           'This transaction will be deleted and its effect on '
           'account balances will be reversed.',
@@ -411,7 +412,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
@@ -546,13 +547,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   children: [
                                     Icon(Icons.attach_file),
                                     SizedBox(width: 10),
-                                    Text('Attachments'),
+                                    Text(appText(context, 'Attachments', 'منسلک فائلیں')),
                                   ],
                                 ),
                               ),
                               PopupMenuItem(
                                 value: 'edit',
-                                child: Text('Edit'),
+                                child: Text(appText(context, 'Edit', 'ترمیم کریں')),
                               ),
                               PopupMenuItem(
                                 value: 'delete',

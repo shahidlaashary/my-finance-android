@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 
@@ -75,7 +77,7 @@ class AssetDepreciationService {
     final depreciable = (purchasePrice - salvage).clamp(0, double.infinity);
     double bookValue;
     if (method == 'declining_balance') {
-      bookValue = purchasePrice * _pow(1 - rate, years);
+      bookValue = purchasePrice * math.pow(1 - rate, years).toDouble();
       bookValue = bookValue.clamp(salvage, purchasePrice);
     } else {
       final annual = depreciable / life;

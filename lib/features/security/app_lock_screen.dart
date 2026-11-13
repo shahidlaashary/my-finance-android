@@ -361,9 +361,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(appText(context, "Your PIN is stored as a salted hash in secure device storage. ", "Your PIN is stored as a salted hash in secure device storage. ")
-            'Biometric unlock uses the security system built into your device; '
-            'your PIN remains available as a backup.',
+          Text(appText(context, "Your PIN is stored as a salted hash in secure device storage. Biometric unlock uses the security system built into your device; your PIN remains available as a backup.", "آپ کا PIN محفوظ ڈیوائس اسٹوریج میں محفوظ ہے۔ بایومیٹرک ان لاک آپ کے ڈیوائس کے سکیورٹی سسٹم کو استعمال کرتا ہے؛ PIN متبادل کے طور پر دستیاب رہتا ہے۔"),
             style: TextStyle(
               color: Theme.of(context).hintColor,
               fontSize: 12,

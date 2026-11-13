@@ -23,9 +23,9 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
 
   Future<void> _load() async {
     try {
-      final values = await Future.wait([
+      final values = await Future.wait<dynamic>([
         InstallmentService.getContracts(),
-        FinanceDB.instance.db.then((db) => db.query('wallets', orderBy: 'name')),
+        FinanceDB.instance.db.query('wallets', orderBy: 'name'),
       ]);
       if (!mounted) return;
       setState(() {
@@ -110,7 +110,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
   }
 
   Future<void> _recordPayment(Map<String, dynamic> c) async {
-    final amount = TextEditingController(text: _money((c['installment_amount'] as num).toDouble().clamp(0, (c['total_amount'] as num).toDouble() - (c['paid_amount'] as num).toDouble())));
+    final amount = TextEditingController(text: _cash((c['installment_amount'] as num).toDouble().clamp(0, (c['total_amount'] as num).toDouble() - (c['paid_amount'] as num).toDouble())));
     final note = TextEditingController();
     DateTime date = DateTime.now();
     final result = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(

@@ -140,10 +140,13 @@ class _LoansScreenState extends State<LoansScreen> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(appText(context, 'Give New Loan', 'نیا قرض دیں')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          content: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height -
+                MediaQuery.of(context).viewInsets.bottom - 180),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 TextField(
                   controller: _nameController,
                   decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
@@ -201,6 +204,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
                 ),
               ],
+              ),
             ),
           ),
           actions: [

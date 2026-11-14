@@ -93,16 +93,6 @@ class LanguageSettingsScreen extends StatelessWidget {
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 30,
-                                  child: Center(
-                                    child: Text(
-                                      language.flag,
-                                      style: const TextStyle(fontSize: 19),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 7),
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -142,6 +132,14 @@ class LanguageSettingsScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  width: 30,
+                                  child: Center(
+                                    child: Text(language.flag,
+                                      style: const TextStyle(fontSize: 19)),
                                   ),
                                 ),
                               ],

@@ -345,6 +345,12 @@ class _RecurringTransactionsScreenState
                 'Destination',
                 _accountName(item.toWalletId),
               ),
+            if (isTransfer && item.transferFee > 0)
+              _detailRow(
+                Icons.payments_outlined,
+                'Transfer fee',
+                _money(item.transferFee, _currency(item.walletId)),
+              ),
             _detailRow(
               Icons.repeat,
               'Frequency',
@@ -583,6 +589,7 @@ class _RecurringTransactionDialogState
 
   late final TextEditingController _titleController;
   late final TextEditingController _amountController;
+  late final TextEditingController _transferFeeController;
   late final TextEditingController _noteController;
 
   late String _type;
@@ -596,6 +603,7 @@ class _RecurringTransactionDialogState
   DateTime? _endDate;
 
   bool _saving = false;
+  bool _transferFeeEnabled = false;
 
   bool get _isTransfer => _type == 'transfer';
 
@@ -612,6 +620,11 @@ class _RecurringTransactionDialogState
     _amountController = TextEditingController(
       text: item?.amount.toString() ?? '',
     );
+
+    _transferFeeController = TextEditingController(
+      text: item != null && item.transferFee > 0 ? item.transferFee.toString() : '',
+    );
+    _transferFeeEnabled = item != null && item.transferFee > 0;
 
     _noteController = TextEditingController(
       text: item?.note ?? '',
@@ -722,6 +735,15 @@ class _RecurringTransactionDialogState
     }
 
     final amount = double.tryParse(_amountController.text.trim());
+    final transferFee = _isTransfer && _transferFeeEnabled
+        ? (double.tryParse(_transferFeeController.text.trim()) ?? double.nan)
+        : 0.0;
+
+    if (_isTransfer && _transferFeeEnabled &&
+        (!transferFee.isFinite || transferFee < 0)) {
+      _message('Please enter a valid transfer fee.');
+      return;
+    }
 
     if (amount == null || amount <= 0) {
       _message(appText(context, 'Please enter a valid amount.', 'براہ کرم درست رقم درج کریں۔'));
@@ -736,6 +758,7 @@ class _RecurringTransactionDialogState
         title: _titleController.text.trim(),
         type: _type,
         amount: amount,
+        transferFee: transferFee,
         walletId: _walletId!,
         toWalletId: _isTransfer ? _toWalletId : null,
         category: _isTransfer ? null : _category,
@@ -780,6 +803,7 @@ class _RecurringTransactionDialogState
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _transferFeeController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -811,6 +835,38 @@ class _RecurringTransactionDialogState
               SizedBox(width: 8),
               Expanded(child: DropdownButtonFormField<int>(value: _toWalletId, isExpanded: true, decoration: _decoration('To Wallet', icon: Icons.account_balance_outlined), items: widget.wallets.where((a) => a['id'] != _walletId).map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _toWalletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
             ]),
+            SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAF9),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: const Color(0xFFE2E9E5)),
+              ),
+              child: SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: Text('Transfer Fee', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                subtitle: Text('Add an optional fee to this recurring transfer', style: const TextStyle(fontSize: 11)),
+                value: _transferFeeEnabled,
+                onChanged: _saving ? null : (value) => setState(() {
+                  _transferFeeEnabled = value;
+                  if (!value) _transferFeeController.clear();
+                }),
+              ),
+            ),
+            if (_transferFeeEnabled) ...[
+              SizedBox(height: 10),
+              TextFormField(
+                controller: _transferFeeController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: _decoration('Fee Amount (${widget.wallets.firstWhere((a) => a['id'] == _walletId, orElse: () => {'currency': ''})['currency'] ?? ''})', icon: Icons.payments_outlined),
+                validator: (value) {
+                  if (!_transferFeeEnabled) return null;
+                  final fee = double.tryParse(value ?? '');
+                  return fee == null || !fee.isFinite || fee < 0 ? 'Enter a valid fee amount.' : null;
+                },
+              ),
+            ],
           ] else ...[
             Row(children: [
               Expanded(child: TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; })),

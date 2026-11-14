@@ -141,7 +141,7 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
             ]),
           ])),
           const SizedBox(height: 14),
-          Wrap(spacing: 8, children: ['All', 'Business', 'Personal'].map((v) => ChoiceChip(label: Text(v), selected: _filter == v, onSelected: (_) => setState(() => _filter = v)).toList()),
+          Wrap(spacing: 8, children: ['All', 'Business', 'Personal'].map((v) => ChoiceChip(label: Text(v), selected: _filter == v, onSelected: (_) => setState(() => _filter = v))).toList()),
           const SizedBox(height: 8),
           if (visible.isEmpty) const Padding(padding: EdgeInsets.only(top: 55), child: Column(children: [
             Icon(Icons.handshake_outlined, size: 56, color: AppColors.primary),

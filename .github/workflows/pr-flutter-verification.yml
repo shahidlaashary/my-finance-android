@@ -1,0 +1,37 @@
+name: PR Flutter Tests and APK
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Run Flutter tests
+        run: flutter test
+      - name: Build release APK
+        run: flutter build apk --release --no-tree-shake-icons
+      - name: Upload verification APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-Finance-PR-Verification-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

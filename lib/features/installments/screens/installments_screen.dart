@@ -64,7 +64,10 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     final result = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(
       builder: (ctx, setD) => AlertDialog(
         title: Text(direction == 'sell' ? 'Sell on Installments' : 'Buy on Installments'),
-        content: SizedBox(width: 520, child: SingleChildScrollView(child: Form(
+        content: SizedBox(width: 520, child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height -
+            MediaQuery.of(ctx).viewInsets.bottom - 180),
+          child: SingleChildScrollView(child: Form(
           key: formKey,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextFormField(controller: item, decoration: const InputDecoration(labelText: 'Item / Product name *'),
@@ -87,7 +90,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
               onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setD(() => start = d); }),
             TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes')),
           ]),
-        ))),
+        )))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(onPressed: () { if (formKey.currentState!.validate()) Navigator.pop(ctx, true); }, child: const Text('Create Plan')),

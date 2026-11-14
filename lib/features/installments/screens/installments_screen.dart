@@ -61,42 +61,175 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     String frequency = 'Monthly';
     DateTime start = DateTime.now();
     final formKey = GlobalKey<FormState>();
-    final result = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setD) => AlertDialog(
-        title: Text(direction == 'sell' ? 'Sell on Installments' : 'Buy on Installments'),
-        content: SizedBox(width: 520, child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height -
-            MediaQuery.of(ctx).viewInsets.bottom - 180),
-          child: SingleChildScrollView(child: Form(
-          key: formKey,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextFormField(controller: item, decoration: const InputDecoration(labelText: 'Item / Product name *'),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null),
-            TextFormField(controller: party, decoration: InputDecoration(labelText: direction == 'sell' ? 'Customer name *' : 'Seller name *'),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null),
-            TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone number')),
-            TextField(controller: total, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Total price *')),
-            TextField(controller: advance, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Advance payment')),
-            TextField(controller: installment, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Each installment *')),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: const InputDecoration(labelText: 'Linked account'),
-              items: _wallets.map((w) => DropdownMenuItem(value: w['id'] as int, child: Text('${w['name']} (${w['currency'] ?? 'PKR'})'))).toList(),
-              onChanged: (v) { if (v != null) setD(() => walletId = v); }),
-            DropdownButtonFormField<String>(value: frequency, decoration: const InputDecoration(labelText: 'Installment frequency'),
-              items: ['Weekly', 'Bi-weekly', 'Monthly'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-              onChanged: (v) { if (v != null) setD(() => frequency = v); }),
-            ListTile(contentPadding: EdgeInsets.zero, title: const Text('First installment date'),
-              subtitle: Text(_date(start)), trailing: const Icon(Icons.calendar_month),
-              onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setD(() => start = d); }),
-            TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes')),
-          ]),
-        )))),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () { if (formKey.currentState!.validate()) Navigator.pop(ctx, true); }, child: const Text('Create Plan')),
-        ],
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (ctx, setD) {
+          final screenHeight = MediaQuery.sizeOf(ctx).height;
+          final keyboardHeight = MediaQuery.viewInsetsOf(ctx).bottom;
+          final maxSheetHeight = keyboardHeight > 0
+              ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
+              : screenHeight * 0.82;
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: keyboardHeight),
+            child: SafeArea(
+              top: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxSheetHeight),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD9E0DC),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                direction == 'sell' ? 'Give / Sell on Installments' : 'Take / Buy on Installments',
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF202A26),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => Navigator.pop(sheetContext, false),
+                              icon: const Icon(Icons.close_rounded),
+                              color: const Color(0xFF718078),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
+                          child: Form(
+                            key: formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextFormField(
+                                  controller: item,
+                                  decoration: const InputDecoration(labelText: 'Item / Product name *'),
+                                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                                ),
+                                TextFormField(
+                                  controller: party,
+                                  decoration: InputDecoration(labelText: direction == 'sell' ? 'Customer name *' : 'Seller name *'),
+                                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                                ),
+                                TextField(
+                                  controller: phone,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: const InputDecoration(labelText: 'Phone number'),
+                                ),
+                                TextField(
+                                  controller: total,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: const InputDecoration(labelText: 'Total price *'),
+                                ),
+                                TextField(
+                                  controller: advance,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: const InputDecoration(labelText: 'Advance payment'),
+                                ),
+                                TextField(
+                                  controller: installment,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  decoration: const InputDecoration(labelText: 'Each installment *'),
+                                ),
+                                const SizedBox(height: 10),
+                                DropdownButtonFormField<int>(
+                                  value: walletId,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(labelText: 'Linked account'),
+                                  items: _wallets.map((w) => DropdownMenuItem(
+                                    value: w['id'] as int,
+                                    child: Text('${w['name']} (${w['currency'] ?? 'PKR'})'),
+                                  )).toList(),
+                                  onChanged: (v) { if (v != null) setD(() => walletId = v); },
+                                ),
+                                DropdownButtonFormField<String>(
+                                  value: frequency,
+                                  decoration: const InputDecoration(labelText: 'Installment frequency'),
+                                  items: ['Weekly', 'Bi-weekly', 'Monthly'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                                  onChanged: (v) { if (v != null) setD(() => frequency = v); },
+                                ),
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('First installment date'),
+                                  subtitle: Text(_date(start)),
+                                  trailing: const Icon(Icons.calendar_month),
+                                  onTap: () async {
+                                    final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100));
+                                    if (d != null) setD(() => start = d);
+                                  },
+                                ),
+                                TextField(
+                                  controller: notes,
+                                  maxLines: 2,
+                                  decoration: const InputDecoration(labelText: 'Notes'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(sheetContext, false),
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () {
+                                  if (formKey.currentState!.validate()) {
+                                    Navigator.pop(sheetContext, true);
+                                  }
+                                },
+                                child: const Text('Create Plan'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
-    ));
+    );
     if (result == true) {
       try {
         await InstallmentService.addContract(

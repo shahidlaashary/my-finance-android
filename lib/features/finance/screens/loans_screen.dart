@@ -135,89 +135,160 @@ class _LoansScreenState extends State<LoansScreen> {
     int? walletId = _selectedAccountId;
     DateTime lendingDate = _lendingDate;
     DateTime? dueDate = _dueDate;
-    final result = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(appText(context, 'Give New Loan', 'نیا قرض دیں')),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height -
-                MediaQuery.of(context).viewInsets.bottom - 180),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
-                ),
-                TextField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: appText(context, "Phone Number", "Phone Number")),
-                ),
-                TextField(
-                  controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
-                ),
-                SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: walletId,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: appText(context, "Payment Account *", "Payment Account *")),
-                  items: _wallets.map((account) {
-                    return DropdownMenuItem<int>(
-                      value: account['id'] as int,
-                      child: Text(
-                        '${account['name']} '
-                        '(${(account['currency']?.toString() ?? 'PKR').toUpperCase()})',
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final screenHeight = MediaQuery.sizeOf(context).height;
+          final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+          final maxSheetHeight = keyboardHeight > 0
+              ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * 0.95
+              : screenHeight * 0.78;
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: keyboardHeight),
+            child: SafeArea(
+              top: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxSheetHeight),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD9E0DC),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setDialogState(() => walletId = value),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                appText(context, 'Give New Loan', 'نیا قرض دیں'),
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF202A26),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => Navigator.pop(sheetContext, false),
+                              icon: const Icon(Icons.close_rounded),
+                              color: const Color(0xFF718078),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: _nameController,
+                                decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
+                              ),
+                              TextField(
+                                controller: _phoneController,
+                                keyboardType: TextInputType.phone,
+                                decoration: InputDecoration(labelText: appText(context, "Phone Number", "Phone Number")),
+                              ),
+                              TextField(
+                                controller: _amountController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
+                              ),
+                              const SizedBox(height: 12),
+                              DropdownButtonFormField<int>(
+                                value: walletId,
+                                isExpanded: true,
+                                decoration: InputDecoration(labelText: appText(context, "Payment Account *", "Payment Account *")),
+                                items: _wallets.map((account) {
+                                  return DropdownMenuItem<int>(
+                                    value: account['id'] as int,
+                                    child: Text(
+                                      '${account['name']} '
+                                      '(${(account['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) => setSheetState(() => walletId = value),
+                              ),
+                              const SizedBox(height: 12),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(appText(context, 'Lending Date', 'قرض دینے کی تاریخ')),
+                                subtitle: Text(_dateString(lendingDate)),
+                                trailing: const Icon(Icons.calendar_month),
+                                onTap: () async {
+                                  final date = await _pickDate(lendingDate);
+                                  if (date != null) setSheetState(() => lendingDate = date);
+                                },
+                              ),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(appText(context, 'Due Date', 'واپسی کی تاریخ')),
+                                subtitle: Text(dueDate == null ? 'Not selected' : _dateString(dueDate!)),
+                                trailing: const Icon(Icons.event),
+                                onTap: () async {
+                                  final date = await _pickDate(dueDate ?? lendingDate);
+                                  if (date != null) setSheetState(() => dueDate = date);
+                                },
+                              ),
+                              TextField(
+                                controller: _notesController,
+                                maxLines: 3,
+                                decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(sheetContext, false),
+                                child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(sheetContext, true),
+                                child: Text(appText(context, 'Save Loan', 'قرض محفوظ کریں')),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(appText(context, 'Lending Date', 'قرض دینے کی تاریخ')),
-                  subtitle: Text(_dateString(lendingDate)),
-                  trailing: const Icon(Icons.calendar_month),
-                  onTap: () async {
-                    final date = await _pickDate(lendingDate);
-                    if (date != null) setDialogState(() => lendingDate = date);
-                  },
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(appText(context, 'Due Date', 'واپسی کی تاریخ')),
-                  subtitle: Text(dueDate == null ? 'Not selected' : _dateString(dueDate!)),
-                  trailing: const Icon(Icons.event),
-                  onTap: () async {
-                    final date = await _pickDate(dueDate ?? lendingDate);
-                    if (date != null) setDialogState(() => dueDate = date);
-                  },
-                ),
-                TextField(
-                  controller: _notesController,
-                  maxLines: 3,
-                  decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
-                ),
-              ],
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(appText(context, 'Save Loan', 'قرض محفوظ کریں')),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
     if (result != true) return;

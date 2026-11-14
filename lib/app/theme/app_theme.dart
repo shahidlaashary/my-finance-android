@@ -119,10 +119,33 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: palette.surface,
         surfaceTintColor: Colors.transparent,
-        elevation: 1,
+        shadowColor: palette.primary.withOpacity(0.07),
+        elevation: 1.5,
+        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: palette.text.withOpacity(0.045)),
         ),
+      ),
+      textTheme: Typography.material2021().black.apply(
+        bodyColor: palette.text,
+        displayColor: palette.text,
+        fontFamily: fontFamily,
+      ),
+      iconTheme: IconThemeData(color: palette.primary),
+      listTileTheme: ListTileThemeData(
+        iconColor: palette.primary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: palette.primary.withOpacity(0.075),
+        selectedColor: palette.primary.withOpacity(0.16),
+        side: BorderSide(color: palette.primary.withOpacity(0.12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+        labelStyle: TextStyle(color: palette.text, fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -156,6 +179,18 @@ class AppTheme {
           backgroundColor: palette.primary,
           foregroundColor: palette.onPrimary,
         ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 46),
+          side: BorderSide(color: palette.primary.withOpacity(0.35)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: palette.primary,

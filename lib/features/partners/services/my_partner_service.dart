@@ -144,6 +144,54 @@ class MyPartnerService {
     ''', [partnerId]);
   }
 
+  Future<void> transferWithPartner({
+    required int partnerId,
+    required int walletId,
+    required double amount,
+    required bool walletToPartner,
+    required String note,
+    required DateTime date,
+  }) async {
+    await _ensureTables();
+    if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid transfer amount.');
+    final db = FinanceDB.instance.db;
+    await db.transaction((txn) async {
+      final walletRows = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
+      if (walletRows.isEmpty) throw Exception('Selected wallet not found.');
+      final walletBalance = (walletRows.first['balance'] as num).toDouble();
+      final walletDelta = walletToPartner ? -amount : amount;
+      if (walletDelta < 0 && walletBalance + walletDelta < -0.000001) {
+        throw Exception('Insufficient wallet balance.');
+      }
+      await txn.update('wallets', {'balance': walletBalance + walletDelta}, where: 'id = ?', whereArgs: [walletId]);
+      await txn.insert('transactions', {
+        'type': walletToPartner ? 'Expense' : 'Income',
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': null,
+        'to_amount': null,
+        'exchange_rate': null,
+        'balance_delta': null,
+        'category': walletToPartner ? 'My Partner Transfer Out' : 'My Partner Transfer In',
+        'note': note.trim(),
+        'date': date.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      await txn.insert('partner_transactions', {
+        'partner_id': partnerId,
+        'wallet_id': walletId,
+        'type': walletToPartner ? 'Wallet Transfer In' : 'Wallet Transfer Out',
+        'amount': amount,
+        'balance_delta': walletToPartner ? amount : -amount,
+        'category': 'Wallet Transfer',
+        'note': note.trim(),
+        'date': date.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    });
+    AppRefreshController.notifyChanged();
+  }
+
   Future<void> addTransaction({
     required int partnerId,
     required String type,

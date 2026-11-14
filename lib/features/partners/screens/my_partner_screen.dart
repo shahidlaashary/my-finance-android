@@ -237,6 +237,78 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
     if (result == true) { await _service.setWalletLinks(widget.partnerId, selected.toList()); await _load(); }
   }
 
+  Future<void> _transfer() async {
+    if (_linked.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link at least one wallet to this partner first.')));
+      return;
+    }
+    final amount = TextEditingController();
+    final note = TextEditingController();
+    int? walletId = _linked.first['id'] as int;
+    bool walletToPartner = true;
+    DateTime date = DateTime.now();
+    final result = await _sheet<bool>(
+      title: 'Transfer with Partner',
+      save: 'Confirm Transfer',
+      onSave: () {
+        final value = double.tryParse(amount.text);
+        if (value == null || !value.isFinite || value <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid amount.')));
+          return;
+        }
+        Navigator.pop(context, true);
+      },
+      body: (context, setS) => Column(children: [
+        DropdownButtonFormField<bool>(
+          value: walletToPartner,
+          decoration: const InputDecoration(labelText: 'Transfer Direction'),
+          items: const [
+            DropdownMenuItem(value: true, child: Text('Existing Wallet → Partner')),
+            DropdownMenuItem(value: false, child: Text('Partner → Existing Wallet')),
+          ],
+          onChanged: (v) => setS(() => walletToPartner = v ?? walletToPartner),
+        ),
+        TextFormField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Amount *')),
+        DropdownButtonFormField<int>(
+          value: walletId,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: 'Linked Wallet'),
+          items: _linked.map((w) => DropdownMenuItem(value: w['id'] as int, child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(),
+          onChanged: (v) => setS(() => walletId = v),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Transfer Date'),
+          subtitle: Text(date.toIso8601String().split('T').first),
+          trailing: const Icon(Icons.calendar_month),
+          onTap: () async {
+            final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100));
+            if (d != null) setS(() => date = d);
+          },
+        ),
+        TextFormField(controller: note, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes / Memo')),
+      ]),
+    );
+    if (result == true && walletId != null) {
+      try {
+        await _service.transferWithPartner(
+          partnerId: widget.partnerId,
+          walletId: walletId!,
+          amount: double.parse(amount.text),
+          walletToPartner: walletToPartner,
+          note: note.text,
+          date: date,
+        );
+        await _load();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Partner transfer saved successfully.')));
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+    amount.dispose();
+    note.dispose();
+  }
+
   Future<void> _addTransaction() async {
     if (_wallets.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a wallet first.'))); return; }
     final amount = TextEditingController();
@@ -285,10 +357,17 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
         ])),
         const SizedBox(height: 12),
         Card(color: Colors.white, child: ListTile(leading: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary), title: const Text('Linked Wallets', style: TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(_linked.isEmpty ? 'No wallets linked' : _linked.length.toString() + ' wallet(s) linked'), trailing: const Icon(Icons.chevron_right_rounded), onTap: _manageWallets)),
+        Card(color: Colors.white, child: ListTile(
+          leading: const Icon(Icons.swap_horiz_rounded, color: AppColors.primary),
+          title: const Text('Transfer Between Wallet & Partner', style: TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: const Text('Move money in either direction'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: _transfer,
+        )),
         const Padding(padding: EdgeInsets.fromLTRB(4,16,4,8), child: Text('Transaction History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
         if (_transactions.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No transactions yet', style: TextStyle(color: AppColors.muted)))),
         ..._transactions.map((t) {
-          final incoming = {'Money Received','Partner Contribution','Profit Received'}.contains(t['type']);
+          final incoming = {'Money Received','Partner Contribution','Profit Received','Wallet Transfer In'}.contains(t['type']);
           final currency = t['currency']?.toString() ?? 'PKR';
           return Card(color: Colors.white, margin: const EdgeInsets.only(bottom: 8), child: ListTile(
             leading: CircleAvatar(backgroundColor: (incoming ? AppColors.income : AppColors.expense).withValues(alpha: .12), child: Icon(incoming ? Icons.south_west_rounded : Icons.north_east_rounded, color: incoming ? AppColors.income : AppColors.expense)),

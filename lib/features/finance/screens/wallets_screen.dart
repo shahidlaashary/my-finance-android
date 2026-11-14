@@ -270,7 +270,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                 alignment: Alignment.bottomCenter,
                                 child: FractionallySizedBox(
                                   widthFactor: 1,
-                                  heightFactor: 0.60,
+                                  heightFactor: 0.72,
                                   child: CustomPaint(
                                     painter: _WalletWavePainter(AppColors.primary),
                                   ),

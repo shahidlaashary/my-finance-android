@@ -37,7 +37,7 @@ class AppSettingsScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             onTap: () => _openScreen(context, const GeneralAppPreferencesScreen()),
             child: Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
@@ -73,7 +73,7 @@ class AppSettingsScreen extends StatelessWidget {
             ),
           ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 12),
           _SettingsInfoTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
@@ -395,19 +395,19 @@ class _SettingsInfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 1,
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 7),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 15,
-          vertical: 5,
+          horizontal: 13,
+          vertical: 2,
         ),
         leading: Icon(
           icon,
           color: Theme.of(context).colorScheme.primary,
-          size: 25,
+          size: 23,
         ),
         title: Text(
           appText(context, title, title),

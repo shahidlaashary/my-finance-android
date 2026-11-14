@@ -156,7 +156,7 @@ class MyPartnerService {
     await _ensureTables();
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid amount.');
     final moneyIn = <String>{'Money Received', 'Partner Contribution', 'Profit Received'};
-    final moneyOut = <String>{'Money Given', 'Partner Withdrawal', 'Profit Paid'};
+    final moneyOut = <String>{'Money Given', 'Partner Withdrawal', 'Profit Paid', 'Shared Expense'};
     if (!moneyIn.contains(type) && !moneyOut.contains(type) && type != 'Shared Expense') {
       throw Exception('Invalid transaction type.');
     }

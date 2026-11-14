@@ -21,7 +21,7 @@ class AboutHubScreen extends StatelessWidget {
       Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 18),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(20),
@@ -29,19 +29,19 @@ class AboutHubScreen extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.account_balance_wallet_rounded,
-                color: Theme.of(context).colorScheme.primary, size: 24),
+                color: Theme.of(context).colorScheme.primary, size: 30),
             ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 10),
             Text(appText(context, "MY FINANCE", "MY FINANCE"),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1.8)),
+                fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2.1)),
             const SizedBox(height: 3),
             Text(appText(context, "Smart • Simple • Secure", "Smart • Simple • Secure"),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -59,7 +59,26 @@ class AboutHubScreen extends StatelessWidget {
           ],
         ),
       ),
-      ...sections.map((s)=>Card(margin:const EdgeInsets.only(bottom:9),child:ListTile(leading:Icon(s.icon,color:Theme.of(context).colorScheme.primary),title:Text(s.title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text(s.subtitle),trailing:const Icon(Icons.chevron_right_rounded),onTap:s.action))),
+      ...sections.map((s)=>Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          minVerticalPadding: 12,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          leading: Container(
+            width: 38, height: 38,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(s.icon, color: Theme.of(context).colorScheme.primary, size: 21),
+          ),
+          title: Text(s.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          subtitle: Text(s.subtitle, style: const TextStyle(fontSize: 12, height: 1.25)),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: s.action,
+        ),
+      )),
     ]));
   }
   static void _open(BuildContext context,Widget page)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>page));

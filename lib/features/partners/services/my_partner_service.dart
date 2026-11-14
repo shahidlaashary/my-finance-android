@@ -173,6 +173,19 @@ class MyPartnerService {
           throw Exception('Insufficient wallet balance.');
         }
         await txn.update('wallets', {'balance': current + walletDelta}, where: 'id = ?', whereArgs: [walletId]);
+        await txn.insert('transactions', {
+          'type': walletIn ? 'Income' : 'Expense',
+          'amount': amount,
+          'wallet_id': walletId,
+          'to_wallet_id': null,
+          'to_amount': null,
+          'exchange_rate': null,
+          'balance_delta': null,
+          'category': 'My Partner - ' + type,
+          'note': note.trim(),
+          'date': date.toIso8601String(),
+          'created_at': DateTime.now().toIso8601String(),
+        });
       }
       await txn.insert('partner_transactions', {
         'partner_id': partnerId,

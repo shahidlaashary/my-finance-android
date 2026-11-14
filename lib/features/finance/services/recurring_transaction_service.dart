@@ -54,6 +54,7 @@ class RecurringTransactionService {
         title TEXT NOT NULL,
         type TEXT NOT NULL,
         amount REAL NOT NULL,
+        transfer_fee REAL NOT NULL DEFAULT 0,
         wallet_id INTEGER NOT NULL,
         to_wallet_id INTEGER,
         category TEXT,
@@ -66,7 +67,10 @@ class RecurringTransactionService {
         created_at TEXT NOT NULL
       )
     ''');
-
+    final columns = await db.rawQuery('PRAGMA table_info($_tableName)');
+    if (!columns.any((column) => column['name'] == 'transfer_fee')) {
+      await db.execute('ALTER TABLE $_tableName ADD COLUMN transfer_fee REAL NOT NULL DEFAULT 0');
+    }
   }
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);
@@ -119,6 +123,10 @@ class RecurringTransactionService {
     }
     if (!model.amount.isFinite || model.amount <= 0) {
       throw Exception('Amount must be greater than zero.');
+    }
+    if (!model.transferFee.isFinite || model.transferFee < 0 ||
+        (model.type.toLowerCase() != 'transfer' && model.transferFee > 0)) {
+      throw Exception('Invalid transfer fee.');
     }
     final type = model.type.toLowerCase();
     if (!['income', 'expense', 'transfer'].contains(type)) {
@@ -201,6 +209,7 @@ class RecurringTransactionService {
       'title': model.title.trim(),
       'type': model.type.toLowerCase(),
       'amount': model.amount,
+      'transfer_fee': model.type.toLowerCase() == 'transfer' ? model.transferFee : 0.0,
       'wallet_id': model.walletId,
       'to_wallet_id': model.toWalletId,
       'category': model.category,
@@ -308,6 +317,9 @@ class RecurringTransactionService {
   ) async {
     final type = recurring['type'].toString().toLowerCase();
     final amount = (recurring['amount'] as num).toDouble();
+    final transferFee = type == 'transfer'
+        ? ((recurring['transfer_fee'] as num?)?.toDouble() ?? 0.0)
+        : 0.0;
     final walletId = recurring['wallet_id'] as int;
     final toWalletId = recurring['to_wallet_id'] as int?;
     final wallets = await txn.query(
@@ -343,7 +355,8 @@ class RecurringTransactionService {
       }
     }
     if (type == 'expense' || type == 'transfer') {
-      if (balance < amount) {
+      final requiredBalance = amount + (type == 'transfer' ? transferFee : 0.0);
+      if (balance < requiredBalance) {
         throw Exception(
           'Insufficient balance in account ${account['name']}.',
         );
@@ -359,7 +372,7 @@ class RecurringTransactionService {
     } else {
       await txn.update(
         'wallets',
-        {'balance': balance - amount},
+        {'balance': balance - amount - (type == 'transfer' ? transferFee : 0.0)},
         where: 'id = ?',
         whereArgs: [walletId],
       );
@@ -374,7 +387,7 @@ class RecurringTransactionService {
         whereArgs: [toWalletId],
       );
     }
-    await txn.insert('transactions', {
+    final transactionId = await txn.insert('transactions', {
       'type': type == 'income' ? 'Income' : type == 'expense' ? 'Expense' : 'Transfer',
       'amount': amount,
       'wallet_id': walletId,
@@ -387,6 +400,12 @@ class RecurringTransactionService {
       'date': _date(transactionDate),
       'created_at': DateTime.now().toIso8601String(),
     });
+    if (type == 'transfer' && transferFee > 0) {
+      await txn.insert('app_settings', {
+        'setting_key': 'transaction_transfer_fee_$transactionId',
+        'setting_value': transferFee.toString(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
   }
   /// Jin recurring transactions ki date aa chuki ho un sab ko process karta hai.
   ///

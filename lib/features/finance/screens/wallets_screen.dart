@@ -243,7 +243,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
-                      childAspectRatio: 1.92,
+                      childAspectRatio: 1.62,
                     ),
                     itemCount: wallets.length,
                     itemBuilder: (context, index) {
@@ -270,7 +270,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                 alignment: Alignment.bottomCenter,
                                 child: FractionallySizedBox(
                                   widthFactor: 1,
-                                  heightFactor: 0.5,
+                                  heightFactor: 0.60,
                                   child: CustomPaint(
                                     painter: _WalletWavePainter(AppColors.primary),
                                   ),
@@ -278,19 +278,19 @@ class _WalletsPageState extends State<WalletsPage> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 6, 4, 7),
+                              padding: const EdgeInsets.fromLTRB(10, 9, 8, 10),
                               child: Column(
                                 children: [
                                   Row(
                                     children: [
                                       Container(
-                                        width: 29, height: 29,
+                                        width: 34, height: 34,
                                         decoration: BoxDecoration(
                                           color: AppColors.primary.withValues(alpha: 0.12),
                                           borderRadius: BorderRadius.circular(9),
                                         ),
                                         child: Icon(IconData(iconCode, fontFamily: 'MaterialIcons'),
-                                            color: AppColors.primary, size: 17),
+                                            color: AppColors.primary, size: 20),
                                       ),
                                       SizedBox(width: 5),
                                       Expanded(
@@ -300,12 +300,12 @@ class _WalletsPageState extends State<WalletsPage> {
                                           children: [
                                             Text(wallet['name'] as String,
                                               maxLines: 1, overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 10.5,
+                                              style: const TextStyle(fontSize: 11.5,
                                                 fontWeight: FontWeight.w800, color: AppColors.text)),
                                             SizedBox(height: 2),
                                             Text(walletType, maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 9,
+                                              style: const TextStyle(fontSize: 10,
                                                 fontWeight: FontWeight.w700, color: AppColors.primary)),
                                           ],
                                         ),
@@ -339,7 +339,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                       SizedBox(
                                         width: 47,
                                         child: Text(appText(context, 'BALANCE', 'بیلنس'), textAlign: TextAlign.left,
-                                          style: TextStyle(fontSize: 8,
+                                          style: TextStyle(fontSize: 9,
                                             fontWeight: FontWeight.w800, color: Colors.white)),
                                       ),
                                       Expanded(
@@ -348,7 +348,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(fontSize: 12,
                                             fontWeight: FontWeight.w900, color: Colors.white,
-                                            letterSpacing: -0.3)),
+                                            letterSpacing: -0.2)),
                                       ),
                                       if (excluded) ...[
                                         SizedBox(width: 3),

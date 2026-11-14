@@ -3,6 +3,7 @@ class RecurringTransactionModel {
   final String title;
   final String type;
   final double amount;
+  final double transferFee;
   final int walletId;
   final int? toWalletId;
   final String? category;
@@ -19,6 +20,7 @@ class RecurringTransactionModel {
     required this.title,
     required this.type,
     required this.amount,
+    this.transferFee = 0,
     required this.walletId,
     this.toWalletId,
     this.category,
@@ -50,6 +52,7 @@ class RecurringTransactionModel {
       title: (map['title'] ?? '').toString(),
       type: (map['type'] ?? 'Expense').toString(),
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      transferFee: (map['transfer_fee'] as num?)?.toDouble() ?? 0.0,
       walletId: (map['wallet_id'] as num?)?.toInt() ?? 0,
       toWalletId: (map['to_wallet_id'] as num?)?.toInt(),
       category: map['category']?.toString(),
@@ -78,6 +81,7 @@ class RecurringTransactionModel {
       'title': title,
       'type': type,
       'amount': amount,
+      'transfer_fee': transferFee,
       'wallet_id': walletId,
       'to_wallet_id': toWalletId,
       'category': category,
@@ -96,6 +100,7 @@ class RecurringTransactionModel {
     String? title,
     String? type,
     double? amount,
+    double? transferFee,
     int? walletId,
     int? toWalletId,
     String? category,
@@ -112,6 +117,7 @@ class RecurringTransactionModel {
       title: title ?? this.title,
       type: type ?? this.type,
       amount: amount ?? this.amount,
+      transferFee: transferFee ?? this.transferFee,
       walletId: walletId ?? this.walletId,
       toWalletId: toWalletId ?? this.toWalletId,
       category: category ?? this.category,

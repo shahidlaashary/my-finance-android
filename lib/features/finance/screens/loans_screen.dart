@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
@@ -135,6 +136,8 @@ class _LoansScreenState extends State<LoansScreen> {
     int? walletId = _selectedAccountId;
     DateTime lendingDate = _lendingDate;
     DateTime? dueDate = _dueDate;
+    final List<XFile> pendingLoanImages = [];
+    final ImagePicker loanImagePicker = ImagePicker();
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -233,30 +236,76 @@ class _LoansScreenState extends State<LoansScreen> {
                                 onChanged: (value) => setSheetState(() => walletId = value),
                               ),
                               const SizedBox(height: 12),
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(appText(context, 'Lending Date', 'قرض دینے کی تاریخ')),
-                                subtitle: Text(_dateString(lendingDate)),
-                                trailing: const Icon(Icons.calendar_month),
-                                onTap: () async {
-                                  final date = await _pickDate(lendingDate);
-                                  if (date != null) setSheetState(() => lendingDate = date);
-                                },
+                              Row(
+                                children: [
+                                  Expanded(child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () async {
+                                      final date = await _pickDate(lendingDate);
+                                      if (date != null) setSheetState(() => lendingDate = date);
+                                    },
+                                    child: InputDecorator(
+                                      decoration: InputDecoration(labelText: appText(context, 'Lending Date', 'قرض دینے کی تاریخ'), suffixIcon: const Icon(Icons.calendar_month)),
+                                      child: Text(_dateString(lendingDate), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    ),
+                                  )),
+                                  const SizedBox(width: 10),
+                                  Expanded(child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () async {
+                                      final date = await _pickDate(dueDate ?? lendingDate);
+                                      if (date != null) setSheetState(() => dueDate = date);
+                                    },
+                                    child: InputDecorator(
+                                      decoration: InputDecoration(labelText: appText(context, 'Due Date', 'واپسی کی تاریخ'), suffixIcon: const Icon(Icons.event)),
+                                      child: Text(dueDate == null ? 'Not selected' : _dateString(dueDate!), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    ),
+                                  )),
+                                ],
                               ),
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(appText(context, 'Due Date', 'واپسی کی تاریخ')),
-                                subtitle: Text(dueDate == null ? 'Not selected' : _dateString(dueDate!)),
-                                trailing: const Icon(Icons.event),
-                                onTap: () async {
-                                  final date = await _pickDate(dueDate ?? lendingDate);
-                                  if (date != null) setSheetState(() => dueDate = date);
-                                },
-                              ),
-                              TextField(
-                                controller: _notesController,
-                                maxLines: 3,
-                                decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
+                              const SizedBox(height: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Theme.of(context).inputDecorationTheme.fillColor,
+                                ),
+                                padding: const EdgeInsets.fromLTRB(12, 4, 8, 8),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  TextField(
+                                    controller: _notesController,
+                                    maxLines: 3,
+                                    decoration: InputDecoration(
+                                      labelText: appText(context, "Notes", "Notes"),
+                                      border: InputBorder.none,
+                                      filled: false,
+                                    ),
+                                  ),
+                                  Row(children: [
+                                    TextButton.icon(
+                                      onPressed: () async {
+                                        final photos = await loanImagePicker.pickMultiImage(imageQuality: 85);
+                                        if (photos.isNotEmpty) setSheetState(() => pendingLoanImages.addAll(photos));
+                                      },
+                                      icon: const Icon(Icons.photo_library_outlined),
+                                      label: const Text('Gallery'),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () async {
+                                        final photo = await loanImagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
+                                        if (photo != null) setSheetState(() => pendingLoanImages.add(photo));
+                                      },
+                                      icon: const Icon(Icons.camera_alt_outlined),
+                                      label: const Text('Camera'),
+                                    ),
+                                  ]),
+                                  if (pendingLoanImages.isNotEmpty)
+                                    Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 6, runSpacing: 4, children: pendingLoanImages.asMap().entries.map((entry) => Chip(
+                                      avatar: const Icon(Icons.image_outlined, size: 16),
+                                      label: SizedBox(width: 105, child: Text(entry.value.name, overflow: TextOverflow.ellipsis)),
+                                      onDeleted: () => setSheetState(() => pendingLoanImages.removeAt(entry.key)),
+                                    )).toList())),
+                                ]),
                               ),
                             ],
                           ),
@@ -316,7 +365,15 @@ class _LoansScreenState extends State<LoansScreen> {
         notes: _notesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
-      await LoansService.addLoan(loan);
+      final loanId = await LoansService.addLoan(loan);
+      for (final image in pendingLoanImages) {
+        await AttachmentService.addAttachment(
+          ownerType: AttachmentOwnerTypes.loan,
+          ownerId: loanId,
+          sourcePath: image.path,
+          originalFileName: image.name,
+        );
+      }
       _selectedAccountId = walletId;
       await _loadData();
       _showMessage('Loan saved successfully.');

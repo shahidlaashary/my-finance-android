@@ -416,6 +416,46 @@ class BackupService {
         );
       }
 
+      // Restore ke waqt purane device ke absolute attachment paths ko
+      // mojooda device ke documents folder ke mutabiq dobara set karein.
+      final stagedConnection = await openDatabase(stagedDatabase.path);
+      try {
+        final attachmentTables = await stagedConnection.rawQuery(
+          "SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'finance_attachments'",
+        );
+
+        if (attachmentTables.isNotEmpty) {
+          final attachmentRows = await stagedConnection.query(
+            'finance_attachments',
+            columns: ['id', 'file_path'],
+          );
+
+          for (final row in attachmentRows) {
+            final id = row['id'];
+            final storedPath = row['file_path']?.toString();
+            if (id == null || storedPath == null || storedPath.isEmpty) {
+              continue;
+            }
+
+            final restoredPath = resolveRestoredAttachmentPath(
+              storedPath: storedPath,
+              attachmentsDirectory: currentAttachments.path,
+            );
+            if (restoredPath == storedPath) continue;
+
+            await stagedConnection.update(
+              'finance_attachments',
+              {'file_path': restoredPath},
+              where: 'id = ?',
+              whereArgs: [id],
+            );
+          }
+        }
+      } finally {
+        await stagedConnection.close();
+      }
+
       // Move existing database aside.
       if (await currentDatabase.exists()) {
         await currentDatabase.rename(oldDatabase.path);
@@ -497,6 +537,29 @@ class BackupService {
     } catch (_) {
       // Keep previous attachments if cleanup fails.
     }
+  }
+
+  /// Backup restore ke liye stored attachment path ko current device par map karta hai.
+  /// Legacy/external paths mein attachment folder marker na ho to original path return hota hai.
+  static String resolveRestoredAttachmentPath({
+    required String storedPath,
+    required String attachmentsDirectory,
+  }) {
+    const attachmentMarker = '/my_finance_attachments/';
+    final normalizedStoredPath = storedPath.replaceAll('\\', '/');
+    final markerIndex = normalizedStoredPath.lastIndexOf(attachmentMarker);
+
+    if (markerIndex < 0) return storedPath;
+
+    final relativePath = normalizedStoredPath.substring(
+      markerIndex + attachmentMarker.length,
+    );
+    _validateArchivePath(relativePath);
+
+    return p.join(
+      attachmentsDirectory,
+      p.joinAll(p.posix.split(relativePath)),
+    );
   }
 
   /// Validates archive paths to prevent directory traversal.

@@ -1007,10 +1007,13 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
     backgroundColor:AppColors.background,
     appBar:AppBar(title:Text(appText(context,'Manage Wallets','والٹس کا انتظام')),backgroundColor:Colors.white,foregroundColor:AppColors.text),
     body:_loading?const Center(child:CircularProgressIndicator()):ReorderableListView(
+      buildDefaultDragHandles:false,
       padding:const EdgeInsets.only(top:8,bottom:24),
       onReorder:(oldIndex,newIndex) async {
+        oldIndex--; newIndex--;
         if(newIndex>oldIndex)newIndex--;
-        final item=_active.removeAt(oldIndex); _active.insert(newIndex,item);
+        if(oldIndex<0 || oldIndex>=_active.length)return;
+        final item=_active.removeAt(oldIndex); _active.insert(newIndex.clamp(0,_active.length),item);
         setState((){});
         await _saveIds('wallet_display_order',_active.map((w)=>(w['id'] as num).toInt()).toList() + _archived.map((w)=>(w['id'] as num).toInt()).toList());
       },
@@ -1018,7 +1021,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
         Padding(key:const ValueKey('active_header'),padding:const EdgeInsets.fromLTRB(16,8,16,4),child:Text(appText(context,'All Wallets','تمام والٹس'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),
         if(_active.isEmpty) const Padding(key:ValueKey('empty_active'),padding:EdgeInsets.all(16),child:Text('No active wallets')),
         ..._active.map((w)=>Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
-          const Padding(padding:EdgeInsets.only(left:8),child:Icon(Icons.drag_handle_rounded,color:AppColors.muted)),
+          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:_active.indexOf(w)+1,child:const Icon(Icons.drag_handle_rounded,color:AppColors.muted))),
           Expanded(child:_walletTile(w,archived:false)),
         ]))),
         Padding(key:const ValueKey('archived_header'),padding:const EdgeInsets.fromLTRB(16,20,16,4),child:Text(appText(context,'Archived / Hidden','محفوظ / پوشیدہ'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),

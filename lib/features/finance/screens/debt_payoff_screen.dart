@@ -141,8 +141,11 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
             items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${(w['currency'] ?? 'PKR').toString().toUpperCase()})'))).toList(),
             onChanged: (v) { if (v != null) setDialog(() => walletId = v); },
           ),
-          ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Start Date", "Start Date")), subtitle: Text(_date(start)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => start = d); }),
-          ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Due Date", "Due Date")), subtitle: Text(due == null ? 'Not set' : _date(due!)), trailing: const Icon(Icons.event), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: due ?? start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => due = d); }),
+          Row(children: [
+            Expanded(child: ListTile(dense: true, contentPadding: EdgeInsets.zero, title: Text(appText(context, "Start Date", "Start Date"), style: const TextStyle(fontSize: 12)), subtitle: Text(_date(start), style: const TextStyle(fontSize: 13)), trailing: const Icon(Icons.calendar_month, size: 19), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => start = d); })),
+            const SizedBox(width: 8),
+            Expanded(child: ListTile(dense: true, contentPadding: EdgeInsets.zero, title: Text(appText(context, "Due Date", "Due Date"), style: const TextStyle(fontSize: 12)), subtitle: Text(due == null ? 'Not set' : _date(due!), style: const TextStyle(fontSize: 13)), trailing: const Icon(Icons.event, size: 19), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: due ?? start, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => due = d); })),
+          ]),
           TextField(controller: notes, maxLines: 2, decoration: InputDecoration(labelText: appText(context, "Notes", "Notes"))),
               ]),
             )),

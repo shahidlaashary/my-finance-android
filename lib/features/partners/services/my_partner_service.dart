@@ -223,7 +223,7 @@ class MyPartnerService {
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid amount.');
     // Partner ledger signs represent the amount the partner owes us:
     // positive = receivable/investment outstanding; negative = settled/paid back.
-    const partnerDeltaByType = <String, double Function(double)>{
+    final partnerDeltaByType = <String, double Function(double)>{
       'Money Given': (v) => v,
       'Money Received': (v) => -v,
       'Partner Contribution': (v) => v,

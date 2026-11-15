@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -89,6 +90,8 @@ class _WalletsPageState extends State<WalletsPage> {
   bool loading = true;
   bool hideBalances = false;
   String numberFormat = '1,234.56';
+  Set<int> _archivedWalletIds = {}; 
+  List<int> _walletOrder = [];
 
   @override
   void initState() {
@@ -113,11 +116,21 @@ class _WalletsPageState extends State<WalletsPage> {
     final hide = await GeneralPreferences.instance.hideBalances;
     final format = await GeneralPreferences.instance.numberFormat;
     final result = await FinanceDB.instance.getWallets();
+    final settings = await FinanceDB.instance.db.query('app_settings', where: 'setting_key IN (?, ?)', whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
+    final values = {for (final row in settings) row['setting_key'].toString(): row['setting_value']?.toString() ?? ''};
+    Set<int> archived = {};
+    List<int> order = [];
+    try { archived = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e) => (e as num).toInt()).toSet(); } catch (_) {}
+    try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e) => (e as num).toInt()).toList(); } catch (_) {}
+    result.removeWhere((w) => archived.contains((w['id'] as num).toInt()));
+    result.sort((a,b) { final ai=order.indexOf((a['id'] as num).toInt()); final bi=order.indexOf((b['id'] as num).toInt()); if(ai<0&&bi<0)return 0; if(ai<0)return 1; if(bi<0)return -1; return ai.compareTo(bi); });
 
     if (!mounted) return;
 
     setState(() {
       wallets = result;
+      _archivedWalletIds = archived;
+      _walletOrder = order;
       hideBalances = hide;
       numberFormat = format;
       loading = false;
@@ -206,7 +219,7 @@ class _WalletsPageState extends State<WalletsPage> {
           appText(context, 'My Wallets', 'میرے والٹس'),
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
-        actions: buildMainSectionAppBarActions(context),
+        actions: [TextButton.icon(onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => WalletManagementPage(hideBalances: hideBalances, numberFormat: numberFormat))); await loadWallets(); }, icon: const Icon(Icons.tune_rounded), label: Text(appText(context, 'Manage', 'انتظام کریں'))), ...buildMainSectionAppBarActions(context)],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => openWalletForm(),
@@ -319,6 +332,8 @@ class _WalletsPageState extends State<WalletsPage> {
                                           ],
                                         ),
                                       ),
+                                      SizedBox.shrink(),
+                                      /* removed per-card overflow menu
                                       SizedBox(
                                         width: 22,
                                         child: PopupMenuButton<String>(
@@ -339,6 +354,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                           ],
                                         ),
                                       ),
+                                      */
                                     ],
                                   ),
                                   const Spacer(),
@@ -900,3 +916,115 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 }
 
 // ============================================================
+
+
+// ============================================================
+// Wallet management: ordering, archive/restore and delete
+// ============================================================
+class WalletManagementPage extends StatefulWidget {
+  final bool hideBalances;
+  final String numberFormat;
+  const WalletManagementPage({super.key, required this.hideBalances, required this.numberFormat});
+  @override
+  State<WalletManagementPage> createState() => _WalletManagementPageState();
+}
+
+class _WalletManagementPageState extends State<WalletManagementPage> {
+  List<Map<String, dynamic>> _active = [];
+  List<Map<String, dynamic>> _archived = [];
+  bool _loading = true;
+
+  @override
+  void initState() { super.initState(); _load(); }
+
+  Future<void> _saveIds(String key, List<int> ids) async {
+    await FinanceDB.instance.db.insert('app_settings',
+      {'setting_key': key, 'setting_value': jsonEncode(ids)},
+      conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> _load() async {
+    final db = FinanceDB.instance.db;
+    final all = await db.query('wallets');
+    final rows = await db.query('app_settings',
+      where: 'setting_key IN (?, ?)',
+      whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
+    final values = {for (final r in rows) r['setting_key'].toString(): r['setting_value']?.toString() ?? ''};
+    List<int> hidden = [], order = [];
+    try { hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
+    try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
+    all.sort((a,b) { final ai=order.indexOf((a['id'] as num).toInt()); final bi=order.indexOf((b['id'] as num).toInt()); if(ai<0&&bi<0)return 0; if(ai<0)return 1; if(bi<0)return -1; return ai.compareTo(bi); });
+    if (!mounted) return;
+    setState(() {
+      _active = all.where((w)=>!hidden.contains((w['id'] as num).toInt())).toList();
+      _archived = all.where((w)=>hidden.contains((w['id'] as num).toInt())).toList();
+      _loading = false;
+    });
+  }
+
+  String _money(Map<String,dynamic> w) {
+    if (widget.hideBalances) return '${w['currency']} ••••••';
+    final locale = widget.numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
+    return "${w['currency']} ${NumberFormat('#,##0.00', locale).format((w['balance'] as num).toDouble())}";
+  }
+
+  Future<void> _archive(Map<String,dynamic> wallet, bool archive) async {
+    final id=(wallet['id'] as num).toInt();
+    final ids=_archived.map((w)=>(w['id'] as num).toInt()).toList();
+    if (archive) { if(!ids.contains(id)) ids.add(id); } else { ids.remove(id); }
+    await _saveIds('wallet_archived_ids', ids);
+    await _load();
+  }
+
+  Future<void> _delete(Map<String,dynamic> wallet) async {
+    final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(
+      title: Text(appText(context,'Delete Wallet?','والٹ حذف کریں؟')),
+      content: Text('Delete "${wallet['name']}"? This cannot be undone here.'),
+      actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:Text(appText(context,'Cancel','منسوخ کریں'))),
+        FilledButton(onPressed:()=>Navigator.pop(c,true),child:Text(appText(context,'Delete','حذف کریں')))]));
+    if(yes!=true)return;
+    try { await FinanceDB.instance.deleteWallet((wallet['id'] as num).toInt()); await _load(); }
+    catch(e) { if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString().replaceFirst('Exception: ','')))); }
+  }
+
+  Widget _walletTile(Map<String,dynamic> w,{required bool archived}) {
+    final icon=IconData((w['icon_code'] as num).toInt(),fontFamily:'MaterialIcons');
+    return Card(margin:const EdgeInsets.symmetric(horizontal:12,vertical:4),child:ListTile(
+      leading: Icon(icon,color:AppColors.primary),
+      title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontWeight:FontWeight.w700)),
+      subtitle: Text(_money(w)),
+      trailing: Row(mainAxisSize:MainAxisSize.min,children:[
+        IconButton(tooltip:archived?'Restore':'Hide',onPressed:()=>_archive(w,!archived),
+          icon:Icon(archived?Icons.unarchive_outlined:Icons.archive_outlined)),
+        IconButton(tooltip:'Delete',onPressed:()=>_delete(w),
+          icon:const Icon(Icons.delete_outline,color:AppColors.expense)),
+      ]),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor:AppColors.background,
+    appBar:AppBar(title:Text(appText(context,'Manage Wallets','والٹس کا انتظام')),backgroundColor:Colors.white,foregroundColor:AppColors.text),
+    body:_loading?const Center(child:CircularProgressIndicator()):ReorderableListView(
+      padding:const EdgeInsets.only(top:8,bottom:24),
+      onReorder:(oldIndex,newIndex) async {
+        if(newIndex>oldIndex)newIndex--;
+        final item=_active.removeAt(oldIndex); _active.insert(newIndex,item);
+        setState((){});
+        await _saveIds('wallet_display_order',_active.map((w)=>(w['id'] as num).toInt()).toList() + _archived.map((w)=>(w['id'] as num).toInt()).toList());
+      },
+      children:[
+        Padding(key:const ValueKey('active_header'),padding:const EdgeInsets.fromLTRB(16,8,16,4),child:Text(appText(context,'All Wallets','تمام والٹس'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),
+        if(_active.isEmpty) const Padding(key:ValueKey('empty_active'),padding:EdgeInsets.all(16),child:Text('No active wallets')),
+        ..._active.map((w)=>Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
+          const Padding(padding:EdgeInsets.only(left:8),child:Icon(Icons.drag_handle_rounded,color:AppColors.muted)),
+          Expanded(child:_walletTile(w,archived:false)),
+        ]))),
+        Padding(key:const ValueKey('archived_header'),padding:const EdgeInsets.fromLTRB(16,20,16,4),child:Text(appText(context,'Archived / Hidden','محفوظ / پوشیدہ'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),
+        if(_archived.isEmpty) const Padding(key:ValueKey('empty_archived'),padding:EdgeInsets.all(16),child:Text('No hidden or archived wallets')),
+        ..._archived.map((w)=>Container(key:ValueKey('archived_${w['id']}'),child:_walletTile(w,archived:true))),
+      ],
+    ),
+  );
+}

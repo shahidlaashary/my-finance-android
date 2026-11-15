@@ -281,38 +281,59 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     ))));
   }
 
+  Widget _plannerMetric(BuildContext context, String label, String value, IconData icon) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .35), borderRadius: BorderRadius.circular(12)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 17, color: Theme.of(context).colorScheme.primary),
+      const SizedBox(width: 7),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        Text(value, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800)),
+      ]),
+    ]),
+  );
+
   ({int months, double interest}) _estimate(List<DebtRecord> source, double extra, String strategy) {
-    final debts = source.where((d) => d.balance > 0).map((d) => {
+    final debts = source.where((d) => d.balance > 0).map((d) => <String, double>{
       'balance': d.balance, 'rate': d.annualInterestRate, 'minimum': d.minimumPayment,
     }).toList();
-    if (debts.isEmpty) return (months: 0, interest: 0);
-    if (debts.any((d) => (d['minimum'] as double) <= (d['balance'] as double) * (d['rate'] as double) / 1200) && extra <= 0) return (months: 0, interest: 0);
+    if (debts.isEmpty || extra < 0 || !extra.isFinite) return (months: 0, interest: 0);
+    // Keep the monthly budget constant: a paid-off debt's minimum payment
+    // rolls over to the remaining debts automatically.
+    var monthlyBudget = debts.fold<double>(extra, (sum, d) => sum + d['minimum']!);
     var interestTotal = 0.0;
     for (var month = 1; month <= 600; month++) {
+      var monthlyInterest = 0.0;
       for (final d in debts) {
-        final interest = (d['balance'] as double) * (d['rate'] as double) / 1200;
-        d['balance'] = (d['balance'] as double) + interest;
-        interestTotal += interest;
+        final interest = d['balance']! * d['rate']! / 1200;
+        d['balance'] = d['balance']! + interest;
+        monthlyInterest += interest;
       }
-      var budget = extra;
+      interestTotal += monthlyInterest;
+      var minimumsPaid = 0.0;
       for (final d in debts) {
-        final bal = d['balance'] as double;
-        final pay = math.min(bal, d['minimum'] as double).toDouble();
-        d['balance'] = bal - pay;
-        budget += math.max(0.0, (d['minimum'] as double) - pay).toDouble();
+        final pay = math.min(d['balance']!, d['minimum']!).toDouble();
+        d['balance'] = d['balance']! - pay;
+        minimumsPaid += pay;
       }
+      var budget = math.max(0.0, monthlyBudget - minimumsPaid);
       debts.sort((a, b) => strategy == 'Snowball'
-        ? (a['balance'] as double).compareTo(b['balance'] as double)
-        : (b['rate'] as double).compareTo(a['rate'] as double));
+        ? a['balance']!.compareTo(b['balance']!)
+        : b['rate']!.compareTo(a['rate']!));
       for (final d in debts) {
         if (budget <= 0) break;
-        final bal = d['balance'] as double;
-        final pay = math.min(bal, budget).toDouble();
-        d['balance'] = bal - pay;
+        final pay = math.min(d['balance']!, budget).toDouble();
+        d['balance'] = d['balance']! - pay;
         budget -= pay;
       }
-      debts.removeWhere((d) => (d['balance'] as double) <= 0.005);
+      debts.removeWhere((d) => d['balance']! <= 0.005);
       if (debts.isEmpty) return (months: month, interest: interestTotal);
+      // If all available payments are consumed by interest, this plan cannot amortize.
+      final principalPaid = monthlyBudget - (minimumsPaid + budget);
+      if (principalPaid <= monthlyInterest + 0.000001 && month > 2 && extra <= 0) {
+        // Continue simulation; another debt may roll its minimum forward next month.
+      }
     }
     return (months: 600, interest: interestTotal);
   }
@@ -337,6 +358,11 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               return Padding(padding: const EdgeInsets.only(bottom: 4), child: Text('$c ${_money(total)}', style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800)));
             }),
             Text('${active.length} active • ${_debts.where((d) => d.isPaid).length} paid off', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              _plannerMetric(context, 'Monthly minimum', currencies.isEmpty ? '0' : currencies.map((c) => '$c ${_money(active.where((d) => _currency(d.walletId) == c).fold<double>(0, (s, d) => s + d.minimumPayment))}').join(' • '), Icons.calendar_month_rounded),
+              _plannerMetric(context, 'Overdue', '${active.where(_isOverdue).length}', Icons.warning_amber_rounded),
+            ]),
           ]))),
           const SizedBox(height: 10),
           Row(children: [Expanded(child: Text(appText(context, "Your Debts", "Your Debts"), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))), TextButton.icon(onPressed: () => _editDebt(), icon: const Icon(Icons.add), label: Text(appText(context, "Add", "Add")))]),

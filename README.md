@@ -217,3 +217,4 @@ License:
 Private personal finance project.
 
 All rights reserved by Shahid Laashary
+

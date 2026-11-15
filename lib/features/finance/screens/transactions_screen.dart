@@ -12,7 +12,10 @@ import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
 class TransactionsScreen extends StatefulWidget {
-  const TransactionsScreen({super.key});
+  final int? walletId;
+  final String? walletName;
+
+  const TransactionsScreen({super.key, this.walletId, this.walletName});
 
   @override
   State<TransactionsScreen> createState() =>
@@ -53,7 +56,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final number = await GeneralPreferences.instance.numberFormat;
       final date = await GeneralPreferences.instance.dateFormat;
       final week = await GeneralPreferences.instance.weekStart;
-      final result = await TransactionsService.getTransactions();
+      final result = await TransactionsService.getTransactions(walletId: widget.walletId);
 
       if (!mounted) return;
 
@@ -509,7 +512,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         titleSpacing: 16,
         toolbarHeight: 56,
         title: Text(
-          appText(context, "Transactions", "Transactions"),
+          widget.walletName ?? appText(context, "Transactions", "Transactions"),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,

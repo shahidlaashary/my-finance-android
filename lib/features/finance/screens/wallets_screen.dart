@@ -8,6 +8,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
+import 'package:my_finance/features/finance/screens/transactions_screen.dart';
 
 // Wallet ke options
 // ============================================================
@@ -263,7 +264,15 @@ class _WalletsPageState extends State<WalletsPage> {
                           borderRadius: BorderRadius.circular(16),
                           side: const BorderSide(color: Color(0xFFE5ECE8)),
                         ),
-                        child: Stack(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => TransactionsScreen(
+                              walletId: wallet['id'] as int,
+                              walletName: wallet['name'] as String,
+                            ),
+                          )),
+                          child: Stack(
                           children: [
                             Positioned.fill(
                               child: Align(
@@ -361,6 +370,7 @@ class _WalletsPageState extends State<WalletsPage> {
                               ),
                             ),
                           ],
+                          ),
                         ),
                       );
                     },

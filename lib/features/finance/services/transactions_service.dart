@@ -277,8 +277,10 @@ class TransactionsService {
     AppRefreshController.notifyChanged();
   }
 
-  static Future<List<Map<String, dynamic>>> getTransactions() async {
+  static Future<List<Map<String, dynamic>>> getTransactions({int? walletId}) async {
     final db = await database;
+    final walletFilter = walletId == null ? '' : 'WHERE t.wallet_id = ? OR t.to_wallet_id = ?';
+    final args = walletId == null ? <Object>[] : <Object>[walletId, walletId];
     return db.rawQuery("""
       SELECT t.*, t.category AS category_name,
         source.currency AS wallet_currency,
@@ -288,8 +290,9 @@ class TransactionsService {
           LIMIT 1), 0) AS transfer_fee
       FROM transactions t
       LEFT JOIN wallets AS source ON source.id = t.wallet_id
+      $walletFilter
       ORDER BY t.date DESC, t.id DESC
-    """);
+    """, args);
   }
 
   static Future<List<Map<String, dynamic>>> getAccounts() async {

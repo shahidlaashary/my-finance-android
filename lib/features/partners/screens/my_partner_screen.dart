@@ -367,7 +367,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
         const Padding(padding: EdgeInsets.fromLTRB(4,16,4,8), child: Text('Transaction History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
         if (_transactions.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No transactions yet', style: TextStyle(color: AppColors.muted)))),
         ..._transactions.map((t) {
-          final incoming = {'Money Received','Partner Contribution','Profit Received','Wallet Transfer In'}.contains(t['type']);
+          final incoming = ((t['balance_delta'] as num?)?.toDouble() ?? 0) > 0;
           final currency = t['currency']?.toString() ?? 'PKR';
           return Card(color: Colors.white, margin: const EdgeInsets.only(bottom: 8), child: ListTile(
             leading: CircleAvatar(backgroundColor: (incoming ? AppColors.income : AppColors.expense).withValues(alpha: .12), child: Icon(incoming ? Icons.south_west_rounded : Icons.north_east_rounded, color: incoming ? AppColors.income : AppColors.expense)),

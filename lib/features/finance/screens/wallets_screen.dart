@@ -243,7 +243,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
-                      childAspectRatio: 1.62,
+                      childAspectRatio: 1.78,
                     ),
                     itemCount: wallets.length,
                     itemBuilder: (context, index) {

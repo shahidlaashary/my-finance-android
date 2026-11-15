@@ -367,7 +367,28 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
         const Padding(padding: EdgeInsets.fromLTRB(4,16,4,8), child: Text('Transaction History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
         if (_transactions.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No transactions yet', style: TextStyle(color: AppColors.muted)))),
         ..._transactions.map((t) {
-          final incoming = ((t['balance_delta'] as num?)?.toDouble() ?? 0) > 0;
+          // History direction is CASH movement, not partner receivable balance.
+          // A received payment reduces the partner's outstanding ledger (negative
+          // balance_delta) but must still be shown as money IN (+) in history.
+          const cashInTypes = {
+            'Money Received',
+            'Partner Withdrawal',
+            'Profit Received',
+            'Wallet Transfer Out',
+          };
+          const cashOutTypes = {
+            'Money Given',
+            'Partner Contribution',
+            'Shared Expense',
+            'Profit Paid',
+            'Wallet Transfer In',
+          };
+          final transactionType = t['type']?.toString() ?? '';
+          final incoming = cashInTypes.contains(transactionType)
+              ? true
+              : cashOutTypes.contains(transactionType)
+                  ? false
+                  : ((t['balance_delta'] as num?)?.toDouble() ?? 0) < 0;
           final currency = t['currency']?.toString() ?? 'PKR';
           return Card(color: Colors.white, margin: const EdgeInsets.only(bottom: 8), child: ListTile(
             leading: CircleAvatar(backgroundColor: (incoming ? AppColors.income : AppColors.expense).withValues(alpha: .12), child: Icon(incoming ? Icons.south_west_rounded : Icons.north_east_rounded, color: incoming ? AppColors.income : AppColors.expense)),

@@ -232,42 +232,51 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? Center(
-              child: CircularProgressIndicator(),
-            )
-          : _error != null
-              ? _buildError()
-              : RefreshIndicator(
-                  onRefresh: _loadReports,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: FilledButton.icon(
-                                  onPressed: _exportPdfReport,
-                                  icon: const Icon(Icons.picture_as_pdf),
-                                  label: const Text('PDF Report'),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: _sharePdfStatement,
-                                  icon: const Icon(Icons.share),
-                                  label: const Text('PDF Statement'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+      body: Column(
+        children: [
+          // Keep PDF actions pinned at the top and visible even while reports load.
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Export / Share PDF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                    const SizedBox(height: 10),
+                    Row(children: [
+                      Expanded(child: FilledButton.icon(
+                        onPressed: _exportPdfReport,
+                        icon: const Icon(Icons.picture_as_pdf_rounded),
+                        label: const Text('PDF Report'),
+                      )),
+                      const SizedBox(width: 10),
+                      Expanded(child: OutlinedButton.icon(
+                        onPressed: _sharePdfStatement,
+                        icon: const Icon(Icons.share_rounded),
+                        label: const Text('PDF Statement'),
+                      )),
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? _buildError()
+                    : RefreshIndicator(
+                        onRefresh: _loadReports,
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          children: [
+                      const SizedBox(height: 4),
                       _buildFilters(),
                       SizedBox(height: 20),
                       _buildSummaryCards(),
@@ -282,9 +291,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       SizedBox(height: 24),
                       _buildTransactionHistory(),
                       SizedBox(height: 30),
-                    ],
-                  ),
-                ),
+                        ],
+                      ),
+                    ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -243,6 +243,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed: _exportPdfReport,
+                                  icon: const Icon(Icons.picture_as_pdf),
+                                  label: const Text('PDF Report'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _sharePdfStatement,
+                                  icon: const Icon(Icons.share),
+                                  label: const Text('PDF Statement'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       _buildFilters(),
                       SizedBox(height: 20),
                       _buildSummaryCards(),

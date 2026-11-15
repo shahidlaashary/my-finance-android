@@ -54,11 +54,11 @@ class MyPartnerService {
     await db.execute("""
       UPDATE partner_transactions
       SET balance_delta = CASE type
-        WHEN 'Money Given' THEN amount
-        WHEN 'Money Received' THEN -amount
-        WHEN 'Partner Contribution' THEN amount
+        WHEN 'Money Given' THEN -amount
+        WHEN 'Money Received' THEN amount
+        WHEN 'Partner Contribution' THEN -amount
         WHEN 'Shared Expense' THEN amount
-        WHEN 'Partner Withdrawal' THEN -amount
+        WHEN 'Partner Withdrawal' THEN amount
         WHEN 'Profit Received' THEN -amount
         WHEN 'Profit Paid' THEN amount
         ELSE balance_delta
@@ -221,20 +221,20 @@ class MyPartnerService {
   }) async {
     await _ensureTables();
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid amount.');
-    // Partner ledger signs represent the amount the partner owes us:
-    // positive = receivable/investment outstanding; negative = settled/paid back.
+    // Types are named from the PARTNER's perspective:
+    // Money Given = partner gives us (wallet IN); Money Received = partner
+    // receives from us (wallet OUT). Positive ledger = partner owes us.
     final partnerDeltaByType = <String, double Function(double)>{
-      'Money Given': (v) => v,
-      'Money Received': (v) => -v,
-      'Partner Contribution': (v) => v,
+      'Money Given': (v) => -v,
+      'Money Received': (v) => v,
+      'Partner Contribution': (v) => -v,
       'Shared Expense': (v) => v,
-      'Partner Withdrawal': (v) => -v,
+      'Partner Withdrawal': (v) => v,
       'Profit Received': (v) => -v,
       'Profit Paid': (v) => v,
     };
-    // Cash leaving our wallet versus cash received into it.
-    const walletInTypes = <String>{'Money Received', 'Partner Withdrawal', 'Profit Received'};
-    const walletOutTypes = <String>{'Money Given', 'Partner Contribution', 'Shared Expense', 'Profit Paid'};
+    const walletInTypes = <String>{'Money Given', 'Partner Contribution', 'Profit Received'};
+    const walletOutTypes = <String>{'Money Received', 'Shared Expense', 'Partner Withdrawal', 'Profit Paid'};
     final deltaFn = partnerDeltaByType[type];
     if (deltaFn == null) throw Exception('Invalid transaction type.');
     final delta = deltaFn(amount);

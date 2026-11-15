@@ -371,15 +371,15 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
           // A received payment reduces the partner's outstanding ledger (negative
           // balance_delta) but must still be shown as money IN (+) in history.
           const cashInTypes = {
-            'Money Received',
-            'Partner Withdrawal',
+            'Money Given',
+            'Partner Contribution',
             'Profit Received',
             'Wallet Transfer Out',
           };
           const cashOutTypes = {
-            'Money Given',
-            'Partner Contribution',
+            'Money Received',
             'Shared Expense',
+            'Partner Withdrawal',
             'Profit Paid',
             'Wallet Transfer In',
           };

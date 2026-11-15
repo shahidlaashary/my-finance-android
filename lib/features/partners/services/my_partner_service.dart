@@ -49,6 +49,24 @@ class MyPartnerService {
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_partner_tx_partner_date ON partner_transactions(partner_id, date DESC)');
+    // Repair legacy ledger rows created with the old reversed sign mapping.
+    // Transfer entries are intentionally excluded because their signs are already correct.
+    await db.execute("""
+      UPDATE partner_transactions
+      SET balance_delta = CASE type
+        WHEN 'Money Given' THEN amount
+        WHEN 'Money Received' THEN -amount
+        WHEN 'Partner Contribution' THEN amount
+        WHEN 'Shared Expense' THEN amount
+        WHEN 'Partner Withdrawal' THEN -amount
+        WHEN 'Profit Received' THEN -amount
+        WHEN 'Profit Paid' THEN amount
+        ELSE balance_delta
+      END
+      WHERE type IN ('Money Given','Money Received','Partner Contribution',
+        'Shared Expense','Partner Withdrawal','Profit Received','Profit Paid')
+    """);
+
   }
 
   Future<List<Map<String, dynamic>>> getPartners() async {

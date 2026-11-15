@@ -203,19 +203,31 @@ class MyPartnerService {
   }) async {
     await _ensureTables();
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid amount.');
-    final moneyIn = <String>{'Money Received', 'Partner Contribution', 'Profit Received'};
-    final moneyOut = <String>{'Money Given', 'Partner Withdrawal', 'Profit Paid', 'Shared Expense'};
-    if (!moneyIn.contains(type) && !moneyOut.contains(type) && type != 'Shared Expense') {
-      throw Exception('Invalid transaction type.');
-    }
-    final delta = moneyOut.contains(type) ? amount : -amount;
+    // Partner ledger signs represent the amount the partner owes us:
+    // positive = receivable/investment outstanding; negative = settled/paid back.
+    const partnerDeltaByType = <String, double Function(double)>{
+      'Money Given': (v) => v,
+      'Money Received': (v) => -v,
+      'Partner Contribution': (v) => v,
+      'Shared Expense': (v) => v,
+      'Partner Withdrawal': (v) => -v,
+      'Profit Received': (v) => -v,
+      'Profit Paid': (v) => v,
+    };
+    // Cash leaving our wallet versus cash received into it.
+    const walletInTypes = <String>{'Money Received', 'Partner Withdrawal', 'Profit Received'};
+    const walletOutTypes = <String>{'Money Given', 'Partner Contribution', 'Shared Expense', 'Profit Paid'};
+    final deltaFn = partnerDeltaByType[type];
+    if (deltaFn == null) throw Exception('Invalid transaction type.');
+    final delta = deltaFn(amount);
     final db = FinanceDB.instance.db;
     await db.transaction((txn) async {
       if (walletId != null) {
         final rows = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
         if (rows.isEmpty) throw Exception('Selected wallet not found.');
         final current = (rows.first['balance'] as num).toDouble();
-        final walletIn = moneyIn.contains(type);
+        final walletIn = walletInTypes.contains(type);
+        if (!walletIn && !walletOutTypes.contains(type)) throw Exception('Invalid wallet transaction type.');
         final walletDelta = walletIn ? amount : -amount;
         if (walletDelta < 0 && current + walletDelta < -0.000001) {
           throw Exception('Insufficient wallet balance.');

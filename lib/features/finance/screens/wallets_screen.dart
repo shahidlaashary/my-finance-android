@@ -112,30 +112,56 @@ class _WalletsPageState extends State<WalletsPage> {
   }
 
   Future<void> loadWallets() async {
-    setState(() => loading = true);
-
-    final hide = await GeneralPreferences.instance.hideBalances;
-    final format = await GeneralPreferences.instance.numberFormat;
-    final result = await FinanceDB.instance.getWallets();
-    final settings = await FinanceDB.instance.db.query('app_settings', where: 'setting_key IN (?, ?)', whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
-    final values = {for (final row in settings) row['setting_key'].toString(): row['setting_value']?.toString() ?? ''};
-    Set<int> archived = {};
-    List<int> order = [];
-    try { archived = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e) => (e as num).toInt()).toSet(); } catch (_) {}
-    try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e) => (e as num).toInt()).toList(); } catch (_) {}
-    result.removeWhere((w) => archived.contains((w['id'] as num).toInt()));
-    result.sort((a,b) { final ai=order.indexOf((a['id'] as num).toInt()); final bi=order.indexOf((b['id'] as num).toInt()); if(ai<0&&bi<0)return 0; if(ai<0)return 1; if(bi<0)return -1; return ai.compareTo(bi); });
-
     if (!mounted) return;
-
-    setState(() {
-      wallets = result;
-      _archivedWalletIds = archived;
-      _walletOrder = order;
-      hideBalances = hide;
-      numberFormat = format;
-      loading = false;
-    });
+    setState(() => loading = true);
+    try {
+      final hide = await GeneralPreferences.instance.hideBalances;
+      final format = await GeneralPreferences.instance.numberFormat;
+      final result = await FinanceDB.instance.getWallets();
+      final settings = await FinanceDB.instance.db.query(
+        'app_settings',
+        where: 'setting_key IN (?, ?)',
+        whereArgs: ['wallet_archived_ids', 'wallet_display_order'],
+      );
+      final values = {
+        for (final row in settings)
+          row['setting_key'].toString(): row['setting_value']?.toString() ?? ''
+      };
+      Set<int> archived = {};
+      List<int> order = [];
+      try {
+        archived = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List)
+            .map((e) => (e as num).toInt()).toSet();
+      } catch (_) {}
+      try {
+        order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List)
+            .map((e) => (e as num).toInt()).toList();
+      } catch (_) {}
+      result.removeWhere((w) => archived.contains((w['id'] as num).toInt()));
+      result.sort((a, b) {
+        final ai = order.indexOf((a['id'] as num).toInt());
+        final bi = order.indexOf((b['id'] as num).toInt());
+        if (ai < 0 && bi < 0) return 0;
+        if (ai < 0) return 1;
+        if (bi < 0) return -1;
+        return ai.compareTo(bi);
+      });
+      if (!mounted) return;
+      setState(() {
+        wallets = result;
+        _archivedWalletIds = archived;
+        _walletOrder = order;
+        hideBalances = hide;
+        numberFormat = format;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Wallets load nahi ho sake: ${e.toString()}')),
+      );
+    }
   }
 
   String formatMoney(double amount, String currency) {

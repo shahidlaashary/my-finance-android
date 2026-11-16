@@ -16,7 +16,7 @@ Future<void> main() async {
   const setupCompletedKey = 'first_time_setup_completed';
   var setupCompleted = prefs.getBool(setupCompletedKey) ?? false;
   // Existing installations that already chose a header name skip onboarding.
-  if (!setupCompleted && (await GeneralPreferences.instance.headerName).trim().isNotEmpty) {
+  if (!setupCompleted && (await GeneralPreferences.instance.yourName).trim().isNotEmpty) {
     setupCompleted = true;
     await prefs.setBool(setupCompletedKey, true);
   }

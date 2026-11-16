@@ -262,7 +262,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Finance", "My Finance"),
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
-        ),
+        )),
         actions: buildSharedAppBarActions(context),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),

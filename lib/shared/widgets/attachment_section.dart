@@ -397,18 +397,33 @@ class _AttachmentSectionState extends State<AttachmentSection> {
 
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      isImage
-                          ? Icons.image
-                          : attachment.fileType == 'pdf'
-                              ? Icons.picture_as_pdf
-                              : Icons.insert_drive_file,
-                      color: isImage
-                          ? Colors.blue
-                          : attachment.fileType == 'pdf'
-                              ? Colors.red
-                              : null,
-                    ),
+                    leading: widget.readOnly && isImage
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(7),
+                            child: Image.file(
+                              File(attachment.filePath),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: Icon(Icons.broken_image_outlined),
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            isImage
+                                ? Icons.image
+                                : attachment.fileType == 'pdf'
+                                    ? Icons.picture_as_pdf
+                                    : Icons.insert_drive_file,
+                            color: isImage
+                                ? Colors.blue
+                                : attachment.fileType == 'pdf'
+                                    ? Colors.red
+                                    : null,
+                          ),
                     title: Text(
                       attachment.fileName,
                       maxLines: 1,

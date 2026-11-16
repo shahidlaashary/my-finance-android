@@ -8,7 +8,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/app/screens/main_screen.dart';
 
-/// First-install personalization. Saves the name into the existing header setting.
+/// First-install setup for the user's name and preferred base currency.
 class FirstTimeSetupScreen extends StatefulWidget {
   const FirstTimeSetupScreen({super.key});
 
@@ -79,7 +79,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     setState(() => _saving = true);
     try {
       await _refreshSelectedRate();
-      await GeneralPreferences.instance.setHeaderName(name);
+      await GeneralPreferences.instance.setYourName(name);
       await FinanceDB.instance.setBaseCurrency(_currency);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_completedKey, true);
@@ -94,6 +94,80 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
       );
       setState(() => _saving = false);
     }
+  }
+
+  static const Map<String, String> _currencyFlags = {
+    'PKR':'🇵🇰','USD':'🇺🇸','GBP':'🇬🇧','EUR':'🇪🇺','AED':'🇦🇪',
+    'SAR':'🇸🇦','INR':'🇮🇳','CAD':'🇨🇦','AUD':'🇦🇺','JPY':'🇯🇵',
+    'CNY':'🇨🇳','CHF':'🇨🇭','SGD':'🇸🇬','NZD':'🇳🇿','KWD':'🇰🇼',
+    'QAR':'🇶🇦','BHD':'🇧🇭','OMR':'🇴🇲','MYR':'🇲🇾','TRY':'🇹🇷',
+    'ZAR':'🇿🇦','HKD':'🇭🇰','IDR':'🇮🇩','KRW':'🇰🇷','THB':'🇹🇭',
+  };
+
+  Future<void> _showCurrencyPicker() async {
+    final theme = Theme.of(context);
+    final picked = await showModalBottomSheet<String>(
+      context: context, isScrollControlled: true, useSafeArea: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+      builder: (sheetContext) {
+        var query = '';
+        return StatefulBuilder(builder: (context, setSheetState) {
+          final filtered = currencies.where((code) {
+            final name = _currencyNames[code] ?? code;
+            final q = query.trim().toLowerCase();
+            return q.isEmpty || code.toLowerCase().contains(q) || name.toLowerCase().contains(q);
+          }).toList();
+          return Padding(
+            padding: EdgeInsets.only(left: 18, right: 18, top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 18),
+            child: SizedBox(height: MediaQuery.of(context).size.height * .72,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Center(child: Container(width: 38, height: 4,
+                  decoration: BoxDecoration(color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(4)))),
+                const SizedBox(height: 18),
+                Text('Choose base currency', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text('Search by currency name or code', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                const SizedBox(height: 14),
+                TextField(autofocus: true, onChanged: (v) => setSheetState(() => query = v),
+                  decoration: InputDecoration(hintText: 'Search currencies...',
+                    prefixIcon: const Icon(Icons.search_rounded), filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerHighest,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 9),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
+                const SizedBox(height: 12),
+                Expanded(child: ListView.separated(itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 4),
+                  itemBuilder: (context, index) {
+                    final code = filtered[index]; final selected = code == _currency;
+                    return Material(
+                      color: selected ? theme.colorScheme.primaryContainer.withOpacity(.65) : theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(15),
+                      child: InkWell(borderRadius: BorderRadius.circular(15),
+                        onTap: () => Navigator.pop(sheetContext, code),
+                        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: Row(children: [
+                            Text(_currencyFlags[code] ?? '🌐', style: const TextStyle(fontSize: 24)),
+                            const SizedBox(width: 13),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(code, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                              Text(_currencyNames[code] ?? code, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                            ])),
+                            if (selected) Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary),
+                          ]),
+                        ),
+                      ),
+                    );
+                  })),
+              ]),
+            ),
+          );
+        });
+      });
+    if (picked != null && mounted) setState(() => _currency = picked);
   }
 
   @override
@@ -144,20 +218,33 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                   const SizedBox(height: 22),
                   Text('Base Currency', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 9),
-                  DropdownButtonFormField<String>(
-                    value: _currency, isExpanded: true,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.currency_exchange_rounded),
-                      border: OutlineInputBorder(),
+                  Material(
+                    color: theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(18),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: _saving ? null : _showCurrencyPicker,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+                        child: Row(children: [
+                          Text(_currencyFlags[_currency] ?? '🌐',
+                            style: const TextStyle(fontSize: 31)),
+                          const SizedBox(width: 14),
+                          Expanded(child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_currency, style: const TextStyle(
+                                fontWeight: FontWeight.w800, fontSize: 15)),
+                              const SizedBox(height: 2),
+                              Text(_currencyNames[_currency] ?? _currency,
+                                style: TextStyle(color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 12)),
+                            ],
+                          )),
+                          const Icon(Icons.unfold_more_rounded),
+                        ]),
+                      ),
                     ),
-                    items: currencies.map((code) => DropdownMenuItem(
-                      value: code,
-                      child: Text('$code — ${_currencyNames[code] ?? code}',
-                        overflow: TextOverflow.ellipsis),
-                    )).toList(),
-                    onChanged: _saving ? null : (value) {
-                      if (value != null) setState(() => _currency = value);
-                    },
                   ),
                   const SizedBox(height: 28),
                   SizedBox(

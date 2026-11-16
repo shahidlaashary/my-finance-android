@@ -482,26 +482,57 @@ class _HomePageState extends State<HomePage> {
                           final entry = entries[index];
                           final converted = convertedByCurrency[
                               entry.key.trim().toUpperCase()];
+                          final amountText = hideBalances
+                              ? '******'
+                              : NumberFormat(
+                                  '#,##0.00',
+                                  numberFormat == '1.234,56' ? 'de_DE' : 'en_US',
+                                ).format(entry.value);
+                          final convertedText = hideBalances
+                              ? '$baseCurrency ******'
+                              : converted == null
+                                  ? 'Rate missing'
+                                  : _currencyAmount(baseCurrency, converted);
                           return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Row(
                               children: [
-                                Text(
-                                  _currencyFlag(entry.key),
-                                  style: const TextStyle(fontSize: 23),
+                                SizedBox(
+                                  width: 27,
+                                  child: Text(
+                                    _currencyFlag(entry.key),
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    hideBalances
-                                        ? '${entry.key} · ${_currencyCountry(entry.key)} · ****** = $baseCurrency ******'
-                                        : '${entry.key} · ${_currencyCountry(entry.key)} · ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(entry.value)} = ${converted == null ? 'Rate missing' : _currencyAmount(baseCurrency, converted)}',
-                                    maxLines: 2,
+                                    '${entry.key} · ${_currencyCountry(entry.key)} · $amountText',
+                                    maxLines: 1,
+                                    softWrap: false,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.text,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  width: 124,
+                                  child: Text(
+                                    '= $convertedText',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: converted == null
+                                          ? AppColors.expense
+                                          : AppColors.primary,
                                     ),
                                   ),
                                 ),
@@ -543,7 +574,7 @@ class _HomePageState extends State<HomePage> {
                                     ? '$baseCurrency —'
                                     : _currencyAmount(
                                         baseCurrency,
-                                        foreignTotalPKR / selectedBaseRate,
+                                        (foreignTotalPKR + pkrWalletTotal) / selectedBaseRate,
                                       ),
                         style: const TextStyle(
                           fontSize: 14,

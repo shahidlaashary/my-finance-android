@@ -654,7 +654,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
     final displayRows = <Map<String, dynamic>>[];
     for (final entry in groupedByDate.entries) {
-      displayRows.add({'dateHeader': entry.key});
+      // Daily net is calculated independently per currency. Income adds,
+      // expenses subtract; transfers and balance adjustments are excluded
+      // because they are not income/expense activity.
+      final dailyNetByCurrency = <String, double>{};
+      for (final item in entry.value) {
+        final type = normalizeType(item['type']?.toString() ?? '');
+        if (type != 'income' && type != 'expense') continue;
+        final currency = item['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+        if (currency.isEmpty) continue;
+        final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+        dailyNetByCurrency.update(
+          currency,
+          (current) => current + (type == 'income' ? amount : -amount),
+          ifAbsent: () => type == 'income' ? amount : -amount,
+        );
+      }
+      displayRows.add({
+        'dateHeader': entry.key,
+        'dailyNetByCurrency': dailyNetByCurrency,
+      });
       for (final item in entry.value) {
         displayRows.add({'transaction': item});
       }
@@ -806,14 +825,102 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               if (row.containsKey('dateHeader')) {
                                 final rawDate = row['dateHeader'] as String;
                                 final parsedHeader = DateTime.tryParse(rawDate);
-                                final label = parsedHeader == null ? rawDate : DateFormat(dateFormat).format(parsedHeader);
-                                return Padding(
-                                  padding: const EdgeInsets.fromLTRB(2, 14, 2, 9),
-                                  child: Row(children: [
-                                    Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF43534A))),
-                                    const SizedBox(width: 10),
-                                    const Expanded(child: Divider(height: 1, color: Color(0xFFE3EAE5))),
-                                  ]),
+                                final dailyNet = row['dailyNetByCurrency'] as Map<String, double>? ?? const {};
+                                final netEntries = dailyNet.entries.toList()
+                                  ..sort((a, b) => a.key.compareTo(b.key));
+                                final dayNumber = parsedHeader == null
+                                    ? '—'
+                                    : DateFormat('dd').format(parsedHeader);
+                                final dayName = parsedHeader == null
+                                    ? 'Unknown day'
+                                    : DateFormat('EEEE').format(parsedHeader);
+                                final monthYear = parsedHeader == null
+                                    ? rawDate
+                                    : DateFormat('MMMM yyyy').format(parsedHeader);
+                                return Container(
+                                  margin: const EdgeInsets.fromLTRB(0, 12, 0, 9),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF2F7F4),
+                                    borderRadius: BorderRadius.circular(15),
+                                    border: Border.all(color: const Color(0xFFE2ECE5)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        dayNumber,
+                                        style: const TextStyle(
+                                          fontSize: 34,
+                                          height: 1,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -1.2,
+                                          color: Color(0xFF147D59),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              dayName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                height: 1.15,
+                                                fontWeight: FontWeight.w800,
+                                                color: Color(0xFF25332C),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              monthYear,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                height: 1.1,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF7B8781),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (netEntries.isNotEmpty) ...[
+                                        const SizedBox(width: 8),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: netEntries.map((entry) {
+                                            final net = entry.value;
+                                            final netColor = net > 0
+                                                ? const Color(0xFF159B65)
+                                                : net < 0
+                                                    ? const Color(0xFFE45B5B)
+                                                    : const Color(0xFF68766F);
+                                            return Padding(
+                                              padding: const EdgeInsets.symmetric(vertical: 1),
+                                              child: Text(
+                                                hideBalances
+                                                    ? '${entry.key} ••••••'
+                                                    : '${net > 0 ? '+' : net < 0 ? '−' : ''}${entry.key} ${money(net.abs())}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: netColor,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 );
                               }
                               final item = row['transaction'] as Map<String, dynamic>;

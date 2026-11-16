@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -46,6 +47,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   DateTime selectedDate = DateTime.now();
   String selectedRecurring = 'None';
   XFile? selectedNoteImage;
+  final List<PlatformFile> selectedNotePdfs = [];
 
   bool saving = false;
   bool loading = true;
@@ -472,24 +474,32 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       controller: noteController,
       maxLines: 2,
       decoration: decoration('Notes (Optional)', icon: Icons.notes_rounded).copyWith(
-        suffixIcon: IconButton(
-          tooltip: selectedNoteImage == null ? 'Attach image' : 'Change image',
-          icon: Icon(
-            selectedNoteImage == null
-                ? Icons.add_photo_alternate_outlined
-                : Icons.image_rounded,
-            color: AppColors.primary,
-          ),
-          onPressed: _pickNoteImage,
+        suffixIcon: PopupMenuButton<String>(
+          tooltip: 'Add attachment',
+          icon: const Icon(Icons.attach_file_rounded, color: AppColors.primary),
+          onSelected: (value) {
+            if (value == 'camera') {
+              _pickNoteImage(ImageSource.camera);
+            } else if (value == 'gallery') {
+              _pickNoteImage(ImageSource.gallery);
+            } else if (value == 'pdf') {
+              _pickNotePdfs();
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: 'camera', child: Text('Camera')),
+            PopupMenuItem(value: 'gallery', child: Text('Gallery')),
+            PopupMenuItem(value: 'pdf', child: Text('Add PDFs')),
+          ],
         ),
       ),
     );
   }
 
-  Future<void> _pickNoteImage() async {
+  Future<void> _pickNoteImage(ImageSource source) async {
     try {
       final picked = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 85,
       );
       if (picked != null && mounted) {
@@ -499,6 +509,24 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Image select nahi ho saki: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickNotePdfs() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: true,
+      );
+      if (result != null && mounted) {
+        setState(() => selectedNotePdfs.addAll(result.files.where((file) => file.path != null)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PDF select nahi ho saki: $e')),
       );
     }
   }
@@ -584,16 +612,23 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       );
 
       String? attachmentWarning;
+      final selectedAttachments = <({String path, String name})>[];
       if (selectedNoteImage != null) {
+        selectedAttachments.add((path: selectedNoteImage!.path, name: selectedNoteImage!.name));
+      }
+      for (final pdf in selectedNotePdfs) {
+        if (pdf.path != null) selectedAttachments.add((path: pdf.path!, name: pdf.name));
+      }
+      for (final attachment in selectedAttachments) {
         try {
           await AttachmentService.addAttachment(
             ownerType: AttachmentOwnerTypes.transaction,
             ownerId: transactionId,
-            sourcePath: selectedNoteImage!.path,
-            originalFileName: selectedNoteImage!.name,
+            sourcePath: attachment.path,
+            originalFileName: attachment.name,
           );
         } catch (e) {
-          attachmentWarning = e.toString().replaceFirst('Exception: ', '');
+          attachmentWarning ??= e.toString().replaceFirst('Exception: ', '');
         }
       }
 
@@ -604,7 +639,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           content: Text(
             attachmentWarning == null
                 ? 'Transaction successfully saved.'
-                : 'Transaction saved, but image could not be attached: $attachmentWarning',
+                : 'Transaction saved, but an attachment could not be added: $attachmentWarning',
           ),
         ),
       );

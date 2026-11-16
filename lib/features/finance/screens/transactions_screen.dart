@@ -225,6 +225,88 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return type.trim().toLowerCase();
   }
 
+  Future<void> _editAdjustmentTransaction(Map<String, dynamic> item) async {
+    final controller = TextEditingController(
+      text: ((item['balance_delta'] as num?)?.toDouble() ?? 0).toStringAsFixed(2),
+    );
+    final noteController = TextEditingController(text: item['note']?.toString() ?? '');
+    DateTime selectedDate = DateTime.tryParse(item['date']?.toString() ?? '') ?? DateTime.now();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, updateDialog) => AlertDialog(
+          title: const Text('Edit Adjustment'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                decoration: const InputDecoration(
+                  labelText: 'Balance change (+ / -)',
+                  helperText: 'Use + to increase and - to decrease the wallet balance',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Transaction Date'),
+                subtitle: Text(DateFormat(dateFormat).format(selectedDate)),
+                trailing: const Icon(Icons.calendar_month),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    locale: weekStart == 'Sunday' ? const Locale('en', 'US') : const Locale('en', 'GB'),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+                  if (date != null) updateDialog(() => selectedDate = date);
+                },
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () async {
+                final delta = double.tryParse(controller.text.trim());
+                if (delta == null || !delta.isFinite || delta == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Enter a valid non-zero balance change.')),
+                  );
+                  return;
+                }
+                try {
+                  await TransactionsService.updateAdjustmentTransaction(
+                    id: item['id'] as int,
+                    balanceDelta: delta,
+                    note: noteController.text.trim(),
+                    date: selectedDate.toIso8601String(),
+                  );
+                  if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text('$e')));
+                  }
+                }
+              },
+              child: const Text('Save Changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    noteController.dispose();
+    if (result == true) await loadTransactions();
+  }
+
   Future<void> editTransaction(
     Map<String, dynamic> item,
   ) async {
@@ -240,6 +322,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
 
     final type = normalizeType(item['type'] as String);
+    if (type == 'adjustment') {
+      await _editAdjustmentTransaction(item);
+      return;
+    }
 
     if (!['income', 'expense', 'transfer'].contains(type)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -441,11 +527,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           });
                         }
                       },
-                    ),
-                    const SizedBox(height: 12),
-                    AttachmentSection(
-                      ownerType: 'transaction',
-                      ownerId: item['id'] as int,
                     ),
                   ],
                 ),
@@ -1062,7 +1143,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               }
                                             },
                                             itemBuilder: (context) => [
-                                              if (!isAdjustment && !isCommittee) PopupMenuItem(
+                                              if (!isCommittee) PopupMenuItem(
                                                 value: 'edit',
                                                 child: Text(appText(context, 'Edit', 'ترمیم کریں')),
                                               ),

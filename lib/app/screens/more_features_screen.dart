@@ -33,45 +33,14 @@ class AppSettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => _openScreen(context, const GeneralAppPreferencesScreen()),
-            child: Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
+          _SettingsInfoTile(
+            icon: Icons.tune_rounded,
+            title: 'App Settings',
+            subtitle: 'Manage your My Finance preferences.',
+            onTap: () => _openScreen(
+              context,
+              const GeneralAppPreferencesScreen(),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.tune_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 32,
-                ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        appText(context, 'App Settings', 'ایپ کی ترتیبات'),
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        appText(context, 'Manage your My Finance preferences.', 'My Finance ایپ کی ترجیحات منظم کریں۔'),
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           ),
           SizedBox(height: 12),
           const _YourNameSettingsTile(),

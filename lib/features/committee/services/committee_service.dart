@@ -166,6 +166,16 @@ class CommitteeService {
       if (committee.isEmpty || member.isEmpty || wallets.isEmpty) throw Exception('Committee, member or wallet not found.');
       final wallet = wallets.first;
       final balance = (wallet['balance'] as num).toDouble();
+      final pot = (committee.first['installment_amount'] as num).toDouble() *
+          (committee.first['member_count'] as num).toInt();
+      final previous = Sqflite.firstIntValue(await txn.rawQuery(
+        'SELECT COALESCE(SUM(amount),0) FROM committee_entries WHERE committee_id=? AND member_id=? AND entry_type=?',
+        [committeeId, memberId, entryType])) ?? 0;
+      if (previous + amount > pot + 0.000001) {
+        throw Exception(entryType == 'Installment'
+          ? 'This member has already paid the full committee contribution.'
+          : 'Payout cannot exceed this member\'s scheduled committee amount.');
+      }
       if (entryType == 'Payout' && balance + 0.000001 < amount) {
         throw Exception('Insufficient balance. Available: ${wallet['currency']} ${balance.toStringAsFixed(2)}');
       }
@@ -188,6 +198,16 @@ class CommitteeService {
         'SELECT COUNT(*) FROM committee_entries WHERE committee_id=?', [committeeId])) ?? 0;
       if (count > 0) {
         await txn.update('committees', {'status': 'Active'}, where: 'id=?', whereArgs: [committeeId]);
+      }
+      final memberCount = (committee.first['member_count'] as num).toInt();
+      final completedPayouts = Sqflite.firstIntValue(await txn.rawQuery('''
+        SELECT COUNT(*) FROM committee_members m
+        WHERE m.committee_id=? AND
+          COALESCE((SELECT SUM(e.amount) FROM committee_entries e
+            WHERE e.member_id=m.id AND e.entry_type='Payout'),0) >= ?
+      ''', [committeeId, pot - 0.000001])) ?? 0;
+      if (completedPayouts >= memberCount) {
+        await txn.update('committees', {'status': 'Completed'}, where: 'id=?', whereArgs: [committeeId]);
       }
       return entryId;
     });

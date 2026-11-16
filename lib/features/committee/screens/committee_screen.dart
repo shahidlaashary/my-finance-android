@@ -181,12 +181,12 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
 
   Future<void> _record(String type) async {
     if(members.isEmpty||wallets.isEmpty){_msg('Add members and wallets first.');return;}
-    final amount=TextEditingController(text: type=='Installment' ? '${widget.committee['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
     final pot=(widget.committee['installment_amount'] as num).toDouble()*members.length;
     final eligibleMembers=type=='Payout'
       ? members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).take(1).toList()
       : members;
     if(eligibleMembers.isEmpty){_msg('All scheduled payouts are complete.');return;}
+    final amount=TextEditingController(text: type=='Installment' ? '${widget.committee['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
     int memberId=(eligibleMembers.first['id'] as num).toInt();
     int walletId=wallets.any((w)=>(w['id'] as num).toInt()==committeeWallet)?committeeWallet:(wallets.first['id'] as num).toInt();
     DateTime date=DateTime.now();final note=TextEditingController();

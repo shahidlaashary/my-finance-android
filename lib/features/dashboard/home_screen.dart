@@ -282,7 +282,10 @@ class _HomePageState extends State<HomePage> {
 
   MapEntry<String, double>? get firstOtherCurrency {
     if (otherCurrencyTotals.isEmpty) return null;
-    final entries = otherCurrencyTotals.entries.toList()
+    final entries = otherCurrencyTotals.entries
+        .where((entry) =>
+            entry.key.trim().toUpperCase() != baseCurrency.trim().toUpperCase())
+        .toList()
       ..sort((a, b) => a.key.compareTo(b.key));
     return entries.first;
   }
@@ -498,24 +501,40 @@ class _HomePageState extends State<HomePage> {
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 27,
+                                  width: 23,
                                   child: Text(
                                     _currencyFlag(entry.key),
-                                    style: const TextStyle(fontSize: 22),
+                                    style: const TextStyle(fontSize: 18),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
-                                    '${entry.key} · ${_currencyCountry(entry.key)} · $amountText',
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.text,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${entry.key} · ${_currencyCountry(entry.key)}',
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.text,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        amountText,
+                                        maxLines: 1,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.text,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -574,7 +593,7 @@ class _HomePageState extends State<HomePage> {
                                     ? '$baseCurrency —'
                                     : _currencyAmount(
                                         baseCurrency,
-                                        (foreignTotalPKR + pkrWalletTotal) / selectedBaseRate,
+                                        foreignTotalPKR / selectedBaseRate,
                                       ),
                         style: const TextStyle(
                           fontSize: 14,

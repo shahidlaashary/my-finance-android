@@ -684,6 +684,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ('income', 'Income'),
       ('expense', 'Expense'),
       ('transfer', 'Transfer'),
+      ('committee', 'Committee'),
     ];
 
     return Scaffold(
@@ -928,24 +929,33 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final isIncome = type == 'income';
                               final isExpense = type == 'expense';
                               final isTransfer = type == 'transfer';
+                              final isCommittee = type == 'committee';
                               final isAdjustment = type == 'adjustment';
-                              final color = isAdjustment
-                                  ? const Color(0xFF8A6D3B)
-                                  : isIncome
+                              final color = isCommittee
+                                  ? const Color(0xFF7653B5)
+                                  : isAdjustment
+                                      ? const Color(0xFF8A6D3B)
+                                      : isIncome
                                   ? const Color(0xFF159B65)
                                   : isExpense
                                       ? const Color(0xFFE45B5B)
                                       : const Color(0xFF3979C6);
-                              final icon = isIncome
+                              final icon = isCommittee
+                                  ? Icons.groups_2_outlined
+                                  : isIncome
                                   ? Icons.south_west_rounded
                                   : isExpense
                                       ? Icons.north_east_rounded
                                       : isAdjustment
                                           ? Icons.tune_rounded
                                           : Icons.swap_horiz_rounded;
-                              final title = isAdjustment
-                                  ? 'Adjustment'
-                                  : (item['note']?.toString().trim().isNotEmpty ?? false)
+                              final title = isCommittee
+                                  ? ((item['note']?.toString().trim().isNotEmpty ?? false)
+                                      ? item['note'].toString().trim()
+                                      : 'Committee')
+                                  : isAdjustment
+                                      ? 'Adjustment'
+                                      : (item['note']?.toString().trim().isNotEmpty ?? false)
                                       ? item['note'].toString().trim()
                                       : isIncome
                                           ? 'Income'

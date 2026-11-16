@@ -33,6 +33,7 @@ class AppSettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const _YourNameSettingsTile(),
           _SettingsInfoTile(
             icon: Icons.tune_rounded,
             title: 'App Settings',
@@ -42,9 +43,6 @@ class AppSettingsScreen extends StatelessWidget {
               const GeneralAppPreferencesScreen(),
             ),
           ),
-          SizedBox(height: 12),
-          const _YourNameSettingsTile(),
-          SizedBox(height: 12),
           _SettingsInfoTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',

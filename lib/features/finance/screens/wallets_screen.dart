@@ -503,7 +503,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     selectedCurrency = wallet?['currency'] as String? ?? 'PKR';
     _loadBaseCurrencyAsDefault();
 
-    if (!walletTypes.contains(selectedType) && !isEditing) selectedType = 'Other';
+    if (!walletTypes.contains(selectedType)) selectedType = 'Other';
     if (!CurrencyCatalog.supported.contains(selectedCurrency) && !isEditing) {
       selectedCurrency = 'PKR';
     }
@@ -814,10 +814,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               value: selectedType,
                               isExpanded: true,
                               decoration: _fieldDecoration('Wallet Type'),
-                              items: [
-                                if (!walletTypes.contains(selectedType)) selectedType,
-                                ...walletTypes,
-                              ].map((type) {
+                              items: walletTypes.map((type) {
                                 return DropdownMenuItem(
                                   value: type,
                                   child: Text(

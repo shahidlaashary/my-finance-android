@@ -318,7 +318,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showAllCurrencies() async {
     final entries = otherCurrencyTotals.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
-    final pkrRate = await FinanceDB.instance.getExchangeRate('PKR') ?? 1.0;
     final selectedBaseRate =
         await FinanceDB.instance.getExchangeRate(baseCurrency);
     final convertedByCurrency = <String, double>{};
@@ -392,8 +391,8 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                 child: Text(
                                   hideBalances
-                                      ? '${entry.key} · ${_currencyCountry(entry.key)}  ****** = $baseCurrency ******'
-                                      : '${entry.key} · ${_currencyCountry(entry.key)}  ${_currencyAmount(entry.key, entry.value)}  =  ${converted == null ? '$baseCurrency —' : _currencyAmount(baseCurrency, converted)}',
+                                      ? '${entry.key} · ${_currencyCountry(entry.key)} · ****** = $baseCurrency ******'
+                                      : '${entry.key} · ${_currencyCountry(entry.key)} · ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(entry.value)} = ${converted == null ? '$baseCurrency —' : _currencyAmount(baseCurrency, converted)}',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(

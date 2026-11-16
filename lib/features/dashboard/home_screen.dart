@@ -285,53 +285,52 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _currencyFlag(String currency) {
-    switch (currency.toUpperCase()) {
-      case 'USD': return '🇺🇸';
-      case 'EUR': return '🇪🇺';
-      case 'GBP': return '🇬🇧';
-      case 'AED': return '🇦🇪';
-      case 'SAR': return '🇸🇦';
-      case 'QAR': return '🇶🇦';
-      case 'KWD': return '🇰🇼';
-      case 'BHD': return '🇧🇭';
-      case 'OMR': return '🇴🇲';
-      case 'CAD': return '🇨🇦';
-      case 'AUD': return '🇦🇺';
-      case 'NZD': return '🇳🇿';
-      case 'INR': return '🇮🇳';
-      case 'JPY': return '🇯🇵';
-      case 'CNY': return '🇨🇳';
-      case 'CHF': return '🇨🇭';
-      case 'TRY': return '🇹🇷';
-      case 'MYR': return '🇲🇾';
-      case 'SGD': return '🇸🇬';
-      case 'THB': return '🇹🇭';
-      case 'BDT': return '🇧🇩';
-      case 'LKR': return '🇱🇰';
-      case 'NPR': return '🇳🇵';
-      case 'AFN': return '🇦🇫';
-      case 'IRR': return '🇮🇷';
-      case 'RUB': return '🇷🇺';
-      case 'ZAR': return '🇿🇦';
-      case 'SAR': return '🇸🇦';
-      case 'HKD': return '🇭🇰';
-      default: return '🌐';
-    }
+    const flags = {
+      'PKR': '🇵🇰', 'USD': '🇺🇸', 'GBP': '🇬🇧', 'EUR': '🇪🇺',
+      'AED': '🇦🇪', 'SAR': '🇸🇦', 'INR': '🇮🇳', 'CAD': '🇨🇦',
+      'AUD': '🇦🇺', 'JPY': '🇯🇵', 'CNY': '🇨🇳', 'CHF': '🇨🇭',
+      'SGD': '🇸🇬', 'NZD': '🇳🇿', 'KWD': '🇰🇼', 'QAR': '🇶🇦',
+      'BHD': '🇧🇭', 'OMR': '🇴🇲', 'MYR': '🇲🇾', 'TRY': '🇹🇷',
+      'ZAR': '🇿🇦', 'HKD': '🇭🇰', 'IDR': '🇮🇩', 'KRW': '🇰🇷',
+      'THB': '🇹🇭', 'BDT': '🇧🇩', 'LKR': '🇱🇰', 'NPR': '🇳🇵',
+      'AFN': '🇦🇫', 'IRR': '🇮🇷', 'RUB': '🇷🇺',
+    };
+    return flags[currency.toUpperCase()] ?? '🌐';
+  }
+
+  String _currencyCountry(String currency) {
+    const countries = {
+      'PKR': 'Pakistan', 'USD': 'United States', 'GBP': 'United Kingdom',
+      'EUR': 'European Union', 'AED': 'United Arab Emirates',
+      'SAR': 'Saudi Arabia', 'INR': 'India', 'CAD': 'Canada',
+      'AUD': 'Australia', 'JPY': 'Japan', 'CNY': 'China',
+      'CHF': 'Switzerland', 'SGD': 'Singapore', 'NZD': 'New Zealand',
+      'KWD': 'Kuwait', 'QAR': 'Qatar', 'BHD': 'Bahrain',
+      'OMR': 'Oman', 'MYR': 'Malaysia', 'TRY': 'Türkiye',
+      'ZAR': 'South Africa', 'HKD': 'Hong Kong', 'IDR': 'Indonesia',
+      'KRW': 'South Korea', 'THB': 'Thailand', 'BDT': 'Bangladesh',
+      'LKR': 'Sri Lanka', 'NPR': 'Nepal', 'AFN': 'Afghanistan',
+      'IRR': 'Iran', 'RUB': 'Russia',
+    };
+    return countries[currency.toUpperCase()] ?? 'Other region';
   }
 
   Future<void> _showAllCurrencies() async {
     final entries = otherCurrencyTotals.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
-    final pkrRate = await FinanceDB.instance.getExchangeRate('PKR');
+    final pkrRate = await FinanceDB.instance.getExchangeRate('PKR') ?? 1.0;
+    final selectedBaseRate =
+        await FinanceDB.instance.getExchangeRate(baseCurrency);
     final convertedByCurrency = <String, double>{};
     double foreignTotalPKR = 0;
-    if (pkrRate != null && pkrRate > 0) {
-      for (final entry in entries) {
-        final rate = await FinanceDB.instance.getExchangeRate(entry.key);
-        if (rate == null) continue;
-        final converted = entry.value * rate / pkrRate;
-        convertedByCurrency[entry.key] = converted;
-        foreignTotalPKR += converted;
+    for (final entry in entries) {
+      final rate = await FinanceDB.instance.getExchangeRate(entry.key);
+      if (rate == null) continue;
+      // Exchange rates are stored as PKR value per one unit of currency.
+      foreignTotalPKR += entry.value * rate;
+      if (selectedBaseRate != null && selectedBaseRate > 0) {
+        convertedByCurrency[entry.key] =
+            entry.value * rate / selectedBaseRate;
       }
     }
     if (!mounted) return;
@@ -393,8 +392,8 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                 child: Text(
                                   hideBalances
-                                      ? '${entry.key} ****** = PKR ******'
-                                      : '${_currencyAmount(entry.key, entry.value)}  =  ${converted == null ? 'PKR —' : _currencyAmount('PKR', converted)}',
+                                      ? '${entry.key} · ${_currencyCountry(entry.key)}  ****** = $baseCurrency ******'
+                                      : '${entry.key} · ${_currencyCountry(entry.key)}  ${_currencyAmount(entry.key, entry.value)}  =  ${converted == null ? '$baseCurrency —' : _currencyAmount(baseCurrency, converted)}',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(

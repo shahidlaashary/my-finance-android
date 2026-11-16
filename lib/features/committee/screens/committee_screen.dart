@@ -234,6 +234,8 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   }
 
   Widget _overview(Map<String,dynamic> c){
+    final sharedWalletRows=wallets.where((w)=>(w['id'] as num).toInt()==committeeWallet).toList();
+    final sharedWallet=sharedWalletRows.isEmpty?null:sharedWalletRows.first;
     final collected=entries.where((e)=>e['entry_type']=='Installment').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
     final payout=entries.where((e)=>e['entry_type']=='Payout').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
     final pot=(c['installment_amount'] as num).toDouble()*members.length;
@@ -250,7 +252,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         Expanded(child:_stat('Payouts',payout,Colors.deepPurple)),
       ]),
       Card(child:ListTile(title:const Text('Next payout turn'),subtitle:Text(next.isEmpty?'All members have received a payout':next.first['name'].toString()),leading:const Icon(Icons.event_available))),
-      Card(child:ListTile(title:const Text('Committee wallet'),subtitle:const Text('Shared by all committees'),trailing:const Icon(Icons.account_balance_wallet))),
+      Card(child:ListTile(title:const Text('Shared Committee Wallet'),subtitle:Text(sharedWallet==null?'Shared by all committees':'Balance: ${sharedWallet['currency']} ${money.format(sharedWallet['balance'])} • used by all committees'),trailing:const Icon(Icons.account_balance_wallet))),
       const SizedBox(height:8),
       Wrap(spacing:8,children:[
         OutlinedButton(onPressed:()=>_record('Installment'),child:const Text('Record deposit')),

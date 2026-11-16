@@ -136,10 +136,17 @@ class LanguageSettingsScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 SizedBox(
-                                  width: 30,
-                                  child: Center(
-                                    child: Text(language.flag,
-                                      style: const TextStyle(fontSize: 19)),
+                                  width: 42,
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      language.flag,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 19,
+                                        height: 1,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),

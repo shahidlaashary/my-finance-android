@@ -244,10 +244,10 @@ class _WalletsPageState extends State<WalletsPage> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(
           appText(context, 'My Wallets', 'میرے والٹس'),
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
-        ),
+        )),
         actions: [...buildMainSectionAppBarActions(context)],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -261,11 +261,15 @@ class _WalletsPageState extends State<WalletsPage> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                    child: TextButton.icon(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(
+                        appText(context, 'My Wallets', 'میرے والٹس'),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
+                      )),
+                      TextButton.icon(
                       onPressed: () async {
                         await Navigator.push(context, MaterialPageRoute(
                           builder: (_) => WalletManagementPage(
@@ -278,6 +282,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       icon: const Icon(Icons.tune_rounded, size: 18),
                       label: Text(appText(context, 'Manage', 'انتظام کریں')),
                     ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -979,13 +984,25 @@ class WalletManagementPage extends StatefulWidget {
   State<WalletManagementPage> createState() => _WalletManagementPageState();
 }
 
-class _WalletManagementPageState extends State<WalletManagementPage> {
+class _WalletManagementPageState extends State<WalletManagementPage> with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _active = [];
   List<Map<String, dynamic>> _archived = [];
   bool _loading = true;
+  String? _loadError;
+  late final TabController _tabs;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 2, vsync: this);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
 
   Future<void> _saveIds(String key, List<int> ids) async {
     await FinanceDB.instance.db.insert('app_settings',
@@ -994,22 +1011,34 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
   }
 
   Future<void> _load() async {
-    final db = FinanceDB.instance.db;
-    final all = await db.query('wallets');
-    final rows = await db.query('app_settings',
-      where: 'setting_key IN (?, ?)',
-      whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
-    final values = {for (final r in rows) r['setting_key'].toString(): r['setting_value']?.toString() ?? ''};
-    List<int> hidden = [], order = [];
-    try { hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
-    try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
-    all.sort((a,b) { final ai=order.indexOf((a['id'] as num).toInt()); final bi=order.indexOf((b['id'] as num).toInt()); if(ai<0&&bi<0)return 0; if(ai<0)return 1; if(bi<0)return -1; return ai.compareTo(bi); });
     if (!mounted) return;
-    setState(() {
-      _active = all.where((w)=>!hidden.contains((w['id'] as num).toInt())).toList();
-      _archived = all.where((w)=>hidden.contains((w['id'] as num).toInt())).toList();
-      _loading = false;
-    });
+    setState(() { _loading = true; _loadError = null; });
+    try {
+      final db = FinanceDB.instance.db;
+      final all = List<Map<String, dynamic>>.from(await db.query('wallets'));
+      final rows = await db.query('app_settings',
+        where: 'setting_key IN (?, ?)',
+        whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
+      final values = {for (final r in rows) r['setting_key'].toString(): r['setting_value']?.toString() ?? ''};
+      List<int> hidden = [], order = [];
+      try { hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
+      try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
+      all.sort((a,b) {
+        final ai=order.indexOf((a['id'] as num).toInt());
+        final bi=order.indexOf((b['id'] as num).toInt());
+        if(ai<0&&bi<0)return 0; if(ai<0)return 1; if(bi<0)return -1;
+        return ai.compareTo(bi);
+      });
+      if (!mounted) return;
+      setState(() {
+        _active = all.where((w)=>!hidden.contains((w['id'] as num).toInt())).toList();
+        _archived = all.where((w)=>hidden.contains((w['id'] as num).toInt())).toList();
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _loading = false; _loadError = e.toString(); });
+    }
   }
 
   String _money(Map<String,dynamic> w) {
@@ -1052,32 +1081,63 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
     ));
   }
 
+  Widget _activeList() {
+    if (_active.isEmpty) return Center(child: Text(appText(context,'No active wallets','کوئی فعال والٹ موجود نہیں')));
+    return ReorderableListView.builder(
+      padding: const EdgeInsets.only(top:8,bottom:24),
+      itemCount: _active.length,
+      onReorder: (oldIndex,newIndex) async {
+        if(newIndex>oldIndex)newIndex--;
+        if(oldIndex<0 || oldIndex>=_active.length)return;
+        final item=_active.removeAt(oldIndex);
+        _active.insert(newIndex.clamp(0,_active.length),item);
+        setState((){});
+        await _saveIds('wallet_display_order',
+          _active.map((w)=>(w['id'] as num).toInt()).toList() +
+          _archived.map((w)=>(w['id'] as num).toInt()).toList());
+      },
+      itemBuilder: (context,index) {
+        final w=_active[index];
+        return Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
+          const Padding(padding:EdgeInsets.only(left:8),child:Icon(Icons.drag_handle_rounded,color:AppColors.muted)),
+          Expanded(child:_walletTile(w,archived:false)),
+        ]));
+      },
+    );
+  }
+
+  Widget _archivedList() {
+    if (_archived.isEmpty) return Center(child: Text(appText(context,'No hidden or archived wallets','کوئی پوشیدہ یا آرکائیو والٹ موجود نہیں')));
+    return ListView(padding:const EdgeInsets.only(top:8,bottom:24),
+      children:_archived.map((w)=>_walletTile(w,archived:true)).toList());
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor:AppColors.background,
-    appBar:AppBar(title:Text(appText(context,'Manage Wallets','والٹس کا انتظام')),backgroundColor:Colors.white,foregroundColor:AppColors.text),
-    body:_loading?const Center(child:CircularProgressIndicator()):ReorderableListView(
-      buildDefaultDragHandles:false,
-      padding:const EdgeInsets.only(top:8,bottom:24),
-      onReorder:(oldIndex,newIndex) async {
-        oldIndex--; newIndex--;
-        if(newIndex>oldIndex)newIndex--;
-        if(oldIndex<0 || oldIndex>=_active.length)return;
-        final item=_active.removeAt(oldIndex); _active.insert(newIndex.clamp(0,_active.length),item);
-        setState((){});
-        await _saveIds('wallet_display_order',_active.map((w)=>(w['id'] as num).toInt()).toList() + _archived.map((w)=>(w['id'] as num).toInt()).toList());
-      },
-      children:[
-        Padding(key:const ValueKey('active_header'),padding:const EdgeInsets.fromLTRB(16,8,16,4),child:Text(appText(context,'All Wallets','تمام والٹس'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),
-        if(_active.isEmpty) const Padding(key:ValueKey('empty_active'),padding:EdgeInsets.all(16),child:Text('No active wallets')),
-        ..._active.map((w)=>Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
-          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:_active.indexOf(w)+1,child:const Icon(Icons.drag_handle_rounded,color:AppColors.muted))),
-          Expanded(child:_walletTile(w,archived:false)),
-        ]))),
-        Padding(key:const ValueKey('archived_header'),padding:const EdgeInsets.fromLTRB(16,20,16,4),child:Text(appText(context,'Archived / Hidden','محفوظ / پوشیدہ'),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),
-        if(_archived.isEmpty) const Padding(key:ValueKey('empty_archived'),padding:EdgeInsets.all(16),child:Text('No hidden or archived wallets')),
-        ..._archived.map((w)=>Container(key:ValueKey('archived_${w['id']}'),child:_walletTile(w,archived:true))),
-      ],
+    appBar:AppBar(
+      title:Text(appText(context,'Manage Wallets','والٹس کا انتظام')),
+      backgroundColor:Colors.white,
+      foregroundColor:AppColors.text,
+      bottom:TabBar(
+        controller:_tabs,
+        labelColor:AppColors.primary,
+        unselectedLabelColor:AppColors.muted,
+        indicatorColor:AppColors.primary,
+        tabs:[
+          Tab(text:'Active Wallets (${_active.length})'),
+          Tab(text:'Hidden / Archived (${_archived.length})'),
+        ],
+      ),
     ),
+    body:_loading
+      ? const Center(child:CircularProgressIndicator())
+      : _loadError != null
+        ? Center(child:Padding(padding:const EdgeInsets.all(20),child:Column(
+            mainAxisSize:MainAxisSize.min,children:[
+              Text('Wallets could not be loaded: $_loadError',textAlign:TextAlign.center),
+              const SizedBox(height:12),FilledButton(onPressed:_load,child:const Text('Retry')),
+            ])))
+        : TabBarView(controller:_tabs,children:[_activeList(),_archivedList()]),
   );
 }

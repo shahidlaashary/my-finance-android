@@ -322,7 +322,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showAllCurrencies() async {
-    final entries = otherCurrencyTotals.entries.toList()
+    final entries = otherCurrencyTotals.entries
+        .where((entry) =>
+            entry.key.trim().toUpperCase() != baseCurrency.trim().toUpperCase())
+        .toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
     // The Exchange Rates screen refreshes missing rates when it opens.
@@ -485,61 +488,60 @@ class _HomePageState extends State<HomePage> {
                           final entry = entries[index];
                           final converted = convertedByCurrency[
                               entry.key.trim().toUpperCase()];
-                          final amountText = hideBalances
-                              ? '******'
-                              : NumberFormat(
-                                  '#,##0.00',
-                                  numberFormat == '1.234,56' ? 'de_DE' : 'en_US',
-                                ).format(entry.value);
+                          final amountText = _currencyAmount(
+                            entry.key,
+                            entry.value,
+                          );
                           final convertedText = hideBalances
                               ? '$baseCurrency ******'
                               : converted == null
                                   ? 'Rate missing'
                                   : _currencyAmount(baseCurrency, converted);
                           return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 11),
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 23,
+                                  width: 17,
                                   child: Text(
                                     _currencyFlag(entry.key),
-                                    style: const TextStyle(fontSize: 18),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '${entry.key} · ${_currencyCountry(entry.key)}',
-                                        maxLines: 1,
-                                        softWrap: false,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.text,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        amountText,
-                                        maxLines: 1,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.text,
-                                        ),
-                                      ),
-                                    ],
+                                  flex: 5,
+                                  child: Text(
+                                    '${entry.key} · ${_currencyCountry(entry.key)}',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.text,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: 124,
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    amountText,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.text,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  flex: 4,
                                   child: Text(
                                     '= $convertedText',
                                     maxLines: 1,
@@ -547,7 +549,7 @@ class _HomePageState extends State<HomePage> {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 9,
                                       fontWeight: FontWeight.w800,
                                       color: converted == null
                                           ? AppColors.expense

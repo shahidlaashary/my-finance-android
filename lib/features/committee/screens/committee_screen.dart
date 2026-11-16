@@ -254,7 +254,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
 
   Widget _schedule(Map<String,dynamic> c){
     final frequency=c['frequency'].toString();final base=DateTime.parse(c['first_due_date']);
-    DateTime due(int n){if(frequency=='Daily')return base.add(Duration(days:n));if(frequency=='Weekly')return base.add(Duration(days:7*n));return DateTime(base.year,base.month+n,base.day);}
+    DateTime due(int n){if(frequency=='Daily')return base.add(Duration(days:n));if(frequency=='Weekly')return base.add(Duration(days:7*n));final year=base.year+(base.month-1+n)~/12;final month=(base.month-1+n)%12+1;final day=base.day.clamp(1,DateUtils.getDaysInMonth(year,month));return DateTime(year,month,day);}
     return ListView(padding:const EdgeInsets.all(12),children:[
       const Padding(padding:EdgeInsets.all(8),child:Text('Fixed payout order • turn sequence follows member order')),
       ...members.map((m){final turn=(m['turn_no'] as num).toInt();return Card(child:ListTile(

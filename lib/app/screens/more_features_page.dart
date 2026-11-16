@@ -94,122 +94,116 @@ class MoreFeaturesPage extends StatelessWidget {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          const columns = 2;
-          const rows = 7;
-          const horizontalPadding = 12.0;
-          const verticalPadding = 12.0;
-          const crossAxisSpacing = 10.0;
-          const mainAxisSpacing = 8.0;
+          const horizontalPadding = 10.0;
+          const verticalPadding = 6.0;
+          const itemSpacing = 4.0;
           final itemHeight = (constraints.maxHeight -
                   verticalPadding * 2 -
-                  mainAxisSpacing * (rows - 1)) /
-              rows;
+                  itemSpacing * (features.length - 1)) /
+              features.length;
 
-          return GridView.builder(
+          return ListView.builder(
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(
               horizontal: horizontalPadding,
               vertical: verticalPadding,
             ),
             itemCount: features.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: crossAxisSpacing,
-              mainAxisSpacing: mainAxisSpacing,
-              mainAxisExtent: itemHeight,
-            ),
+            itemExtent: itemHeight,
             itemBuilder: (context, index) {
               final feature = features[index];
 
-              return Card(
-                margin: EdgeInsets.zero,
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) {
-                          if (feature['title'] == 'Settings') {
-                            return const AppSettingsScreen();
-                          }
-                          if (feature['title'] == 'Asset Depreciation') {
-                            return const AssetDepreciationScreen();
-                          }
-                          if (feature['title'] == 'Vehicle Manager') {
-                            return const VehiclesScreen();
-                          }
-                          if (feature['title'] == 'My Documents') {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: itemSpacing),
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) {
+                            if (feature['title'] == 'Settings') {
+                              return const AppSettingsScreen();
+                            }
+                            if (feature['title'] == 'Asset Depreciation') {
+                              return const AssetDepreciationScreen();
+                            }
+                            if (feature['title'] == 'Vehicle Manager') {
+                              return const VehiclesScreen();
+                            }
+                            if (feature['title'] == 'My Documents') {
+                              return const MyDocumentsScreen();
+                            }
+                            if (feature['title'] == 'Recurring Transactions') {
+                              return const RecurringTransactionsScreen();
+                            }
+                            if (feature['title'] == 'Exchange Rates') {
+                              return const ExchangeRatesScreen();
+                            }
+                            if (feature['title'] == 'Debt Payoff Planner') {
+                              return const DebtPayoffScreen();
+                            }
+                            if (feature['title'] == 'Staff Management') {
+                              return const StaffScreen();
+                            }
+                            if (feature['title'] == 'Installment Manager') {
+                              return const InstallmentsScreen();
+                            }
+                            if (feature['title'] == 'Committee') {
+                              return const CommitteeScreen();
+                            }
+                            if (feature['title'] == 'Recycle Bin') {
+                              return const RecycleBinScreen();
+                            }
+                            if (feature['title'] == 'Stock Manager') {
+                              return const StockManagerScreen();
+                            }
+                            if (feature['title'] == 'My Partner') {
+                              return const MyPartnerScreen();
+                            }
+                            if (feature['title'] == 'About') {
+                              return const AboutHubScreen();
+                            }
                             return const MyDocumentsScreen();
-                          }
-                          if (feature['title'] == 'Recurring Transactions') {
-                            return const RecurringTransactionsScreen();
-                          }
-                          if (feature['title'] == 'Exchange Rates') {
-                            return const ExchangeRatesScreen();
-                          }
-                          if (feature['title'] == 'Debt Payoff Planner') {
-                            return const DebtPayoffScreen();
-                          }
-                          if (feature['title'] == 'Staff Management') {
-                            return const StaffScreen();
-                          }
-                          if (feature['title'] == 'Installment Manager') {
-                            return const InstallmentsScreen();
-                          }
-                          if (feature['title'] == 'Committee') {
-                            return const CommitteeScreen();
-                          }
-                          if (feature['title'] == 'Recycle Bin') {
-                            return const RecycleBinScreen();
-                          }
-                          if (feature['title'] == 'Stock Manager') {
-                            return const StockManagerScreen();
-                          }
-                          if (feature['title'] == 'My Partner') {
-                            return const MyPartnerScreen();
-                          }
-                          if (feature['title'] == 'About') {
-                            return const AboutHubScreen();
-                          }
-                          return const MyDocumentsScreen();
-                        },
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    child: Row(
-                      children: [
-                        Icon(
-                          feature['icon'] as IconData,
-                          color: AppColors.primary,
-                          size: 21,
+                          },
                         ),
-                        const SizedBox(width: 7),
-                        Expanded(
-                          child: Text(
-                            appText(
-                              context,
-                              feature['title'] as String,
-                              feature['title'] as String,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              height: 1.1,
-                              fontWeight: FontWeight.w700,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 1),
+                      child: Row(
+                        children: [
+                          Icon(
+                            feature['icon'] as IconData,
+                            color: AppColors.primary,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              appText(
+                                context,
+                                feature['title'] as String,
+                                feature['title'] as String,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                height: 1,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: AppColors.muted,
-                          size: 17,
-                        ),
-                      ],
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppColors.muted,
+                            size: 16,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

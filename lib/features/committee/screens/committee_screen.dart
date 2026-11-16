@@ -207,10 +207,10 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     ])),
     floatingActionButton:PopupMenuButton<String>(icon:const Icon(Icons.add_circle,size:52),tooltip:'Add committee entry',
       onSelected:(v){if(v=='member')_addMember();if(v=='installment')_record('Installment');if(v=='payout')_record('Payout');},
-      itemBuilder:(_)=>const[
-        PopupMenuItem(value:'member',child:Text('Add member')),
-        PopupMenuItem(value:'installment',child:Text('Record installment')),
-        PopupMenuItem(value:'payout',child:Text('Record payout')),
+      itemBuilder:(_)=>[
+        if(entries.isEmpty) const PopupMenuItem(value:'member',child:Text('Add member')),
+        const PopupMenuItem(value:'installment',child:Text('Record installment')),
+        const PopupMenuItem(value:'payout',child:Text('Record payout')),
       ]),
     body:loading?const Center(child:CircularProgressIndicator()):TabBarView(controller:tabs,children:[
       _overview(c),_members(),_schedule(c),_history(),
@@ -254,7 +254,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     final dueCount=_dueCycles(c);
     final dueAmount=(c['installment_amount'] as num).toDouble()*dueCount;
     return ListView(padding:const EdgeInsets.all(12),children:[
-      Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:_addMember,icon:const Icon(Icons.person_add),label:const Text('Add member'))),
+      if(entries.isEmpty) Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:_addMember,icon:const Icon(Icons.person_add),label:const Text('Add member'))),
       ...members.map((m){
         final paid=(m['paid'] as num).toDouble();
         final remaining=(dueAmount-paid).clamp(0.0,pot);
@@ -281,12 +281,12 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       count=(now.year-start.year)*12+now.month-start.month+1;
       if(now.day<start.day)count--;
     }
-    return count.clamp(0,members.length);
+    return count.clamp(0,members.length).toInt();
   }
 
   Widget _schedule(Map<String,dynamic> c){
     final frequency=c['frequency'].toString();final base=DateTime.parse(c['first_due_date']);
-    DateTime due(int n){if(frequency=='Daily')return base.add(Duration(days:n));if(frequency=='Weekly')return base.add(Duration(days:7*n));final year=base.year+(base.month-1+n)~/12;final month=(base.month-1+n)%12+1;final day=base.day.clamp(1,DateUtils.getDaysInMonth(year,month));return DateTime(year,month,day);}
+    DateTime due(int n){if(frequency=='Daily')return base.add(Duration(days:n));if(frequency=='Weekly')return base.add(Duration(days:7*n));final year=base.year+(base.month-1+n)~/12;final month=(base.month-1+n)%12+1;final day=base.day.clamp(1,DateUtils.getDaysInMonth(year,month)).toInt();return DateTime(year,month,day);}
     return ListView(padding:const EdgeInsets.all(12),children:[
       const Padding(padding:EdgeInsets.all(8),child:Text('Fixed payout order • turn sequence follows member order')),
       ...members.map((m){final turn=(m['turn_no'] as num).toInt();return Card(child:ListTile(

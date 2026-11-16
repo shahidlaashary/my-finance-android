@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
-import 'package:my_finance/shared/widgets/currency_picker_field.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
@@ -595,6 +594,58 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     }
   }
 
+  static const Map<String,String> _walletCurrencyFlags = {'PKR':'🇵🇰','USD':'🇺🇸','GBP':'🇬🇧','EUR':'🇪🇺','AED':'🇦🇪','SAR':'🇸🇦','INR':'🇮🇳','CAD':'🇨🇦','AUD':'🇦🇺','JPY':'🇯🇵','CNY':'🇨🇳','CHF':'🇨🇭','SGD':'🇸🇬','NZD':'🇳🇿','KWD':'🇰🇼','QAR':'🇶🇦','BHD':'🇧🇭','OMR':'🇴🇲','MYR':'🇲🇾','TRY':'🇹🇷','ZAR':'🇿🇦','HKD':'🇭🇰','IDR':'🇮🇩','KRW':'🇰🇷','THB':'🇹🇭'};
+  static const Map<String,String> _walletCurrencyNames = {'PKR':'Pakistani Rupee','USD':'US Dollar','GBP':'British Pound','EUR':'Euro','AED':'UAE Dirham','SAR':'Saudi Riyal','INR':'Indian Rupee','CAD':'Canadian Dollar','AUD':'Australian Dollar','JPY':'Japanese Yen','CNY':'Chinese Yuan','CHF':'Swiss Franc','SGD':'Singapore Dollar','NZD':'New Zealand Dollar','KWD':'Kuwaiti Dinar','QAR':'Qatari Riyal','BHD':'Bahraini Dinar','OMR':'Omani Rial','MYR':'Malaysian Ringgit','TRY':'Turkish Lira','ZAR':'South African Rand','HKD':'Hong Kong Dollar','IDR':'Indonesian Rupiah','KRW':'South Korean Won','THB':'Thai Baht'};
+
+  Future<void> _showWalletCurrencyPicker() async {
+    final theme = Theme.of(context);
+    final picked = await showModalBottomSheet<String>(
+      context: context, isScrollControlled: true, useSafeArea: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+      builder: (sheetContext) {
+        var query = '';
+        return StatefulBuilder(builder: (context, setSheetState) {
+          final currencies = CurrencyCatalog.supported.toList()..sort();
+          final filtered = currencies.where((code) {
+            final name = _walletCurrencyNames[code] ?? code;
+            final q = query.trim().toLowerCase();
+            return q.isEmpty || code.toLowerCase().contains(q) || name.toLowerCase().contains(q);
+          }).toList();
+          return Padding(
+            padding: EdgeInsets.only(left: 18,right: 18,top: 12,bottom: MediaQuery.of(context).viewInsets.bottom+18),
+            child: SizedBox(height: MediaQuery.of(context).size.height*.72,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start,children:[
+                Center(child: Container(width:38,height:4,decoration:BoxDecoration(color:theme.colorScheme.outlineVariant,borderRadius:BorderRadius.circular(4)))),
+                const SizedBox(height:18),
+                Text('Choose wallet currency',style:theme.textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800)),
+                const SizedBox(height:4),
+                Text('Search by currency name or code',style:theme.textTheme.bodySmall?.copyWith(color:theme.colorScheme.onSurfaceVariant)),
+                const SizedBox(height:14),
+                TextField(autofocus:true,onChanged:(v)=>setSheetState(()=>query=v),
+                  decoration:InputDecoration(hintText:'Search currencies...',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:theme.colorScheme.surfaceContainerHighest,contentPadding:const EdgeInsets.symmetric(vertical:9),border:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:BorderSide.none))),
+                const SizedBox(height:12),
+                Expanded(child:ListView.separated(itemCount:filtered.length,separatorBuilder:(_,__)=>const SizedBox(height:4),itemBuilder:(context,index){
+                  final code=filtered[index],selected=code==selectedCurrency;
+                  return Material(color:selected?theme.colorScheme.primaryContainer.withOpacity(.65):theme.colorScheme.surfaceContainerLow,borderRadius:BorderRadius.circular(15),
+                    child:InkWell(borderRadius:BorderRadius.circular(15),onTap:()=>Navigator.pop(sheetContext,code),
+                      child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),child:Row(children:[
+                        Text(_walletCurrencyFlags[code]??'🌐',style:const TextStyle(fontSize:24)),const SizedBox(width:13),
+                        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          Text(code,style:theme.textTheme.titleSmall?.copyWith(fontWeight:FontWeight.w800)),
+                          Text(_walletCurrencyNames[code]??code,style:theme.textTheme.bodySmall?.copyWith(color:theme.colorScheme.onSurfaceVariant)),
+                        ])),
+                        if(selected)Icon(Icons.check_circle_rounded,color:theme.colorScheme.primary),
+                      ]))),
+                })),
+              ]),
+            ),
+          );
+        });
+      });
+    if(picked!=null&&mounted)setState(()=>selectedCurrency=picked);
+  }
+
   InputDecoration _fieldDecoration(String label, {IconData? icon}) {
     return InputDecoration(
       labelText: label,
@@ -814,7 +865,31 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         children: [
                           Expanded(
                             flex: 4,
-                            child: CurrencyPickerField(value:selectedCurrency,label:'Currency',includeUnknownValue:true,onChanged:(v)=>setState(()=>selectedCurrency=v)),
+                            child: Material(
+                              color: Theme.of(context).colorScheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: saving ? null : _showWalletCurrencyPicker,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                                  child: Row(children: [
+                                    Text(_walletCurrencyFlags[selectedCurrency] ?? '🌐',
+                                      style: const TextStyle(fontSize: 23)),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center, children: [
+                                      Text(selectedCurrency, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                                      Text(_walletCurrencyNames[selectedCurrency] ?? selectedCurrency,
+                                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                    ])),
+                                    const Icon(Icons.unfold_more_rounded, size: 18),
+                                  ]),
+                                ),
+                              ),
+                            ),
                           ),
                           SizedBox(width: 10),
                           Expanded(

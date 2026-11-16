@@ -100,7 +100,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
           decoration: InputDecoration(
             labelText: 'New balance',
-            prefixText: '\${wallet['currency']} ',
+            prefixText: '${wallet['currency']} ',
             border: const OutlineInputBorder(),
           ),
         ),
@@ -187,7 +187,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
-                Text(hideBalances ? '\${currency} ••••••' : '\${currency} \${money(balance, conceal: false)}',
+                Text(hideBalances ? '${currency} ••••••' : '${currency} ${money(balance, conceal: false)}',
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
                         color: Color(0xFF147D59))),
               ],

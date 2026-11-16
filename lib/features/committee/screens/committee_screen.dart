@@ -89,13 +89,11 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
           const SizedBox(height:16), FilledButton.icon(onPressed:_create,icon:const Icon(Icons.add),label:const Text('Create Committee')),
         ]))) :
         RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
-          FutureBuilder<int>(future:CommitteeService.sharedWalletId(),builder:(context,snapshot) => Card(child:ListTile(
+          Card(child:ListTile(
             leading:const CircleAvatar(child:Icon(Icons.account_balance_wallet_outlined)),
             title:const Text('Shared Committee Wallet',style:TextStyle(fontWeight:FontWeight.w700)),
-            subtitle:const Text('Used by all committees'),
-            trailing:const Icon(Icons.chevron_right),
-            onTap:()=>_message('Committee Wallet ID: ${snapshot.data ?? 'Loading'}'),
-          ))),
+            subtitle:const Text('One common wallet used by all committees. View its balance in Wallets.'),
+          )),
           const SizedBox(height:8),
           ...committees.map((c) {
             final collected=(c['collected'] as num?)?.toDouble()??0;

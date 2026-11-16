@@ -142,6 +142,9 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         CommitteeService.getMembers(id),CommitteeService.getEntries(id),
         CommitteeService.getWallets(),CommitteeService.sharedWalletId(),
       ]);
+      final currentCommittees=await CommitteeService.getCommittees();
+      final current=currentCommittees.where((item)=>(item['id'] as num).toInt()==id);
+      if(current.isNotEmpty) widget.committee.addAll(current.first);
       if(mounted)setState((){
         members=values[0] as List<Map<String,dynamic>>;
         entries=values[1] as List<Map<String,dynamic>>;

@@ -225,37 +225,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return type.trim().toLowerCase();
   }
 
-  Future<void> showAttachments(Map<String, dynamic> item) async {
-    final transactionId = item['id'] as int;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 8,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            ),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.65,
-              child: SingleChildScrollView(
-                child: AttachmentSection(
-                  ownerType: 'transaction',
-                  ownerId: transactionId,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> editTransaction(
     Map<String, dynamic> item,
   ) async {
@@ -1090,21 +1059,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                 editTransaction(item);
                                               } else if (value == 'delete') {
                                                 deleteTransaction(item);
-                                              } else if (value == 'attachments') {
-                                                showAttachments(item);
                                               }
                                             },
                                             itemBuilder: (context) => [
-                                              PopupMenuItem(
-                                                value: 'attachments',
-                                                child: Row(
-                                                  children: [
-                                                    const Icon(Icons.attach_file, size: 19),
-                                                    const SizedBox(width: 10),
-                                                    Text(appText(context, 'Attachments', 'منسلک فائلیں')),
-                                                  ],
-                                                ),
-                                              ),
                                               if (!isAdjustment && !isCommittee) PopupMenuItem(
                                                 value: 'edit',
                                                 child: Text(appText(context, 'Edit', 'ترمیم کریں')),

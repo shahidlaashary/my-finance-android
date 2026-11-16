@@ -5,11 +5,11 @@ import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/security/app_lock_screen.dart';
 import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
-import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -74,6 +74,8 @@ class AppSettingsScreen extends StatelessWidget {
           ),
           ),
           SizedBox(height: 12),
+          const _YourNameSettingsTile(),
+          SizedBox(height: 12),
           _SettingsInfoTile(
             icon: Icons.palette_outlined,
             title: 'Appearance',
@@ -106,12 +108,6 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Base Currency',
             subtitle: 'Choose the currency for consolidated totals',
             onTap: () => _openScreen(context, const BaseCurrencyScreen()),
-          ),
-          _SettingsInfoTile(
-            icon: Icons.trending_down_rounded,
-            title: 'Asset Depreciation',
-            subtitle: 'Straight-line and declining-balance schedules',
-            onTap: () => _openScreen(context, const AssetDepreciationScreen()),
           ),
           _SettingsInfoTile(
             icon: Icons.notifications_active_outlined,
@@ -427,4 +423,73 @@ class _SettingsInfoTile extends StatelessWidget {
       ),
     );
   }
+}
+
+
+class _YourNameSettingsTile extends StatefulWidget {
+  const _YourNameSettingsTile();
+  @override
+  State<_YourNameSettingsTile> createState() => _YourNameSettingsTileState();
+}
+class _YourNameSettingsTileState extends State<_YourNameSettingsTile> {
+  final _preferences = GeneralPreferences.instance;
+  Future<void> _changeName() async {
+    final controller = TextEditingController(text: await _preferences.yourName);
+    if (!mounted) { controller.dispose(); return; }
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Change Your Name'),
+        content: TextField(controller: controller, autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Your Name', hintText: 'Enter your name')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (saved == true) await _preferences.setYourName(controller.text);
+    controller.dispose();
+  }
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Your Name', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        ValueListenableBuilder<int>(
+          valueListenable: _preferences.revision,
+          builder: (context, _, __) => FutureBuilder<String>(
+            future: _preferences.yourName,
+            builder: (context, snapshot) {
+              final name = snapshot.data?.trim() ?? '';
+              return Row(children: [
+                Expanded(child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(11)),
+                  child: Row(children: [
+                    const Icon(Icons.person_outline, size: 19),
+                    const SizedBox(width: 9),
+                    Expanded(child: Text(name.isEmpty ? 'Name not set' : name,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700))),
+                  ]),
+                )),
+                const SizedBox(width: 8),
+                OutlinedButton(onPressed: _changeName,
+                  style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 13)),
+                  child: const Text('Change')),
+              ]);
+            },
+          ),
+        ),
+      ]),
+    ),
+  );
 }

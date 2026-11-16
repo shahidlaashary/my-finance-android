@@ -1061,6 +1061,19 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
     await _load();
   }
 
+  Future<void> _edit(Map<String, dynamic> wallet) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => WalletFormDialog(wallet: wallet),
+    );
+    if (saved == true) await _load();
+  }
+
   Future<void> _delete(Map<String,dynamic> wallet) async {
     final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(
       title: Text(appText(context,'Delete Wallet?','والٹ حذف کریں؟')),
@@ -1079,6 +1092,8 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontWeight:FontWeight.w700)),
       subtitle: Text(_money(w)),
       trailing: Row(mainAxisSize:MainAxisSize.min,children:[
+        IconButton(tooltip:'Edit',onPressed:()=>_edit(w),
+          icon:const Icon(Icons.edit_outlined)),
         IconButton(tooltip:archived?'Restore':'Hide',onPressed:()=>_archive(w,!archived),
           icon:Icon(archived?Icons.unarchive_outlined:Icons.archive_outlined)),
         IconButton(tooltip:'Delete',onPressed:()=>_delete(w),

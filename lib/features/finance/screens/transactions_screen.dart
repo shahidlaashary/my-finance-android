@@ -512,14 +512,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         titleSpacing: 16,
         toolbarHeight: 56,
         title: widget.walletId == null
-            ? GeneralPreferences.instance.personalizedHeaderTitle(context, Text(
-                appText(context, "Transactions", "Transactions"),
-                style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF202A26),
-          ),
-        ),
+            ? GeneralPreferences.instance.personalizedHeaderTitle(
+                context,
+                Text(
+                  appText(context, "Transactions", "Transactions"),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202A26)),
+                ),
+              )
+            : Text(
+                widget.walletName ?? appText(context, "Transactions", "Transactions"),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202A26)),
+              ),
         actions: buildSharedAppBarActions(context),
       ),
       body: loading

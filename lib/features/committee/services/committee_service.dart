@@ -21,7 +21,8 @@ class CommitteeService {
     await db.execute('''CREATE TABLE IF NOT EXISTS committee_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT, committee_id INTEGER NOT NULL,
       member_id INTEGER NOT NULL, entry_type TEXT NOT NULL,
-      amount REAL NOT NULL, wallet_id INTEGER NOT NULL,
+      amount REAL NOT NULL, wallet_amount REAL NOT NULL DEFAULT 0,
+      committee_currency TEXT NOT NULL DEFAULT 'PKR', wallet_id INTEGER NOT NULL,
       transaction_id INTEGER, entry_date TEXT NOT NULL,
       note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)''');
     final committeeColumns = await db.rawQuery('PRAGMA table_info(committees)');

@@ -240,7 +240,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     ]);
   }
 
-  Widget _stat(String title,double value,Color color)=>Expanded(child:Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+  Widget _stat(String title,double value,Color color)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
     Text(title,style:const TextStyle(color:Colors.black54)),const SizedBox(height:5),
     Text(money.format(value),style:TextStyle(fontWeight:FontWeight.w800,fontSize:18,color:color)),
   ]))));

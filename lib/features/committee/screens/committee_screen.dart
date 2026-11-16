@@ -262,9 +262,10 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       ...members.map((m){
         final paid=(m['paid'] as num).toDouble();
         final remaining=(dueAmount-paid).clamp(0.0,pot);
+        final paymentStatus=dueCount==0?'Upcoming':remaining<=0.000001?'Paid':paid>0?'Partial':'Overdue';
         return Card(child:ListTile(leading:CircleAvatar(child:Text(m['turn_no'].toString())),
           title:Text(m['name'].toString()),
-          subtitle:Text('Paid: ${money.format(paid)} • Due: ${money.format(dueAmount)} • Remaining: ${money.format(remaining)}\nPayout received: ${money.format(m['received'])}'),
+          subtitle:Text('$paymentStatus • Paid: ${money.format(paid)} • Due: ${money.format(dueAmount)} • Remaining: ${money.format(remaining)}\nPayout received: ${money.format(m['received'])}'),
           isThreeLine:true,
           trailing:Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))));
       }),
@@ -295,8 +296,8 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       const Padding(padding:EdgeInsets.all(8),child:Text('Fixed payout order • turn sequence follows member order')),
       ...members.map((m){final turn=(m['turn_no'] as num).toInt();return Card(child:ListTile(
         leading:CircleAvatar(child:Text('$turn')),title:Text(m['name'].toString()),
-        subtitle:Text(DateFormat('dd MMM yyyy').format(due(turn-1))),
-        trailing:Text(money.format((c['installment_amount'] as num).toDouble()*members.length)),
+        subtitle:Text('${DateFormat('dd MMM yyyy').format(due(turn-1))} • ${(m['received'] as num).toDouble() >= (c['installment_amount'] as num).toDouble()*members.length-0.000001 ? 'Paid' : (m['received'] as num).toDouble()>0 ? 'Partial' : 'Pending'}'),
+        trailing:Text('${money.format((c['installment_amount'] as num).toDouble()*members.length)} ${c['currency'] ?? 'PKR'}'),
       ));}),
     ]);
   }

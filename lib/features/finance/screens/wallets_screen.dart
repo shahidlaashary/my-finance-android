@@ -117,7 +117,9 @@ class _WalletsPageState extends State<WalletsPage> {
     try {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
-      final result = await FinanceDB.instance.getWallets();
+      final result = List<Map<String, dynamic>>.from(
+        await FinanceDB.instance.getWallets(),
+      );
       final settings = await FinanceDB.instance.db.query(
         'app_settings',
         where: 'setting_key IN (?, ?)',

@@ -475,6 +475,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
   late bool excludeTotal;
 
   bool saving = false;
+  final GlobalKey _currencyPickerKey = GlobalKey();
 
   bool get isEditing => widget.wallet != null;
 
@@ -601,51 +602,110 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
   Future<void> _showWalletCurrencyPicker() async {
     final theme = Theme.of(context);
-    final picked = await showModalBottomSheet<String>(
-      context: context, isScrollControlled: true, useSafeArea: true,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
-      builder: (sheetContext) {
+    final renderObject = _currencyPickerKey.currentContext?.findRenderObject();
+    final pickerWidth = renderObject is RenderBox
+        ? renderObject.size.width
+        : MediaQuery.of(context).size.width * 0.42;
+    final picked = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
         var query = '';
-        return StatefulBuilder(builder: (context, setSheetState) {
+        return StatefulBuilder(builder: (context, setDialogState) {
           final currencies = CurrencyCatalog.supported.toList()..sort();
           final filtered = currencies.where((code) {
             final name = _walletCurrencyNames[code] ?? code;
             final q = query.trim().toLowerCase();
             return q.isEmpty || code.toLowerCase().contains(q) || name.toLowerCase().contains(q);
           }).toList();
-          return Padding(
-            padding: EdgeInsets.only(left: 18,right: 18,top: 12,bottom: MediaQuery.of(context).viewInsets.bottom+18),
-            child: SizedBox(height: MediaQuery.of(context).size.height*.72,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start,children:[
-                Center(child: Container(width:38,height:4,decoration:BoxDecoration(color:theme.colorScheme.outlineVariant,borderRadius:BorderRadius.circular(4)))),
-                const SizedBox(height:18),
-                Text('Choose wallet currency',style:theme.textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800)),
-                const SizedBox(height:4),
-                Text('Search by currency name or code',style:theme.textTheme.bodySmall?.copyWith(color:theme.colorScheme.onSurfaceVariant)),
-                const SizedBox(height:14),
-                TextField(autofocus:true,onChanged:(v)=>setSheetState(()=>query=v),
-                  decoration:InputDecoration(hintText:'Search currencies...',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:theme.colorScheme.surfaceContainerHighest,contentPadding:const EdgeInsets.symmetric(vertical:9),border:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:BorderSide.none))),
-                const SizedBox(height:12),
-                Expanded(child:ListView.separated(itemCount:filtered.length,separatorBuilder:(_,__)=>const SizedBox(height:4),itemBuilder:(context,index){
-                  final code=filtered[index],selected=code==selectedCurrency;
-                  return Material(color:selected?theme.colorScheme.primaryContainer.withOpacity(.65):theme.colorScheme.surfaceContainerLow,borderRadius:BorderRadius.circular(15),
-                    child:InkWell(borderRadius:BorderRadius.circular(15),onTap:()=>Navigator.pop(sheetContext,code),
-                      child:Padding(padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),child:Row(children:[
-                        Text(_walletCurrencyFlags[code]??'🌐',style:const TextStyle(fontSize:24)),const SizedBox(width:13),
-                        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                          Text(code,style:theme.textTheme.titleSmall?.copyWith(fontWeight:FontWeight.w800)),
-                          Text(_walletCurrencyNames[code]??code,style:theme.textTheme.bodySmall?.copyWith(color:theme.colorScheme.onSurfaceVariant)),
-                        ])),
-                        if(selected)Icon(Icons.check_circle_rounded,color:theme.colorScheme.primary),
-                      ]))));
-                })),
-              ]),
+          return Dialog(
+            insetPadding: EdgeInsets.zero,
+            alignment: Alignment.center,
+            backgroundColor: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            constraints: BoxConstraints.tightFor(width: pickerWidth),
+            child: SizedBox(
+              width: pickerWidth,
+              height: MediaQuery.of(context).size.height * .72,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Center(child: Container(width: 34, height: 4, decoration: BoxDecoration(
+                    color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(4),
+                  ))),
+                  const SizedBox(height: 14),
+                  Text('Choose currency', maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  Text('Search by name or code', maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    autofocus: true,
+                    onChanged: (v) => setDialogState(() => query = v),
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Icon(Icons.search_rounded, size: 19),
+                      prefixIconConstraints: const BoxConstraints(minWidth: 36),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(13),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(child: ListView.separated(
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 4),
+                    itemBuilder: (context, index) {
+                      final code = filtered[index];
+                      final selected = code == selectedCurrency;
+                      return Material(
+                        color: selected
+                            ? theme.colorScheme.primaryContainer.withOpacity(.65)
+                            : theme.colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => Navigator.pop(dialogContext, code),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            child: Row(children: [
+                              Text(_walletCurrencyFlags[code] ?? '🌐',
+                                style: const TextStyle(fontSize: 21)),
+                              const SizedBox(width: 7),
+                              Expanded(child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(code, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                                  Text(_walletCurrencyNames[code] ?? code,
+                                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
+                                  ),
+                                ],
+                              )),
+                              if (selected) Icon(Icons.check_circle_rounded,
+                                size: 17, color: theme.colorScheme.primary),
+                            ]),
+                          ),
+                        ),
+                      );
+                    },
+                  )),
+                ]),
+              ),
             ),
           );
         });
-      });
-    if(picked!=null&&mounted)setState(()=>selectedCurrency=picked);
+      },
+    );
+    if (picked != null && mounted) setState(() => selectedCurrency = picked);
   }
 
   InputDecoration _fieldDecoration(String label, {IconData? icon}) {
@@ -867,14 +927,17 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         children: [
                           Expanded(
                             flex: 4,
-                            child: Material(
+                            child: SizedBox(
+                              key: _currencyPickerKey,
+                              height: 56,
+                              child: Material(
                               color: Theme.of(context).colorScheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(14),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(14),
                                 onTap: saving ? null : _showWalletCurrencyPicker,
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                   child: Row(children: [
                                     Text(_walletCurrencyFlags[selectedCurrency] ?? '🌐',
                                       style: const TextStyle(fontSize: 23)),
@@ -891,6 +954,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                   ]),
                                 ),
                               ),
+                            ),
                             ),
                           ),
                           SizedBox(width: 10),

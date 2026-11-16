@@ -782,7 +782,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     children: [
                       Expanded(
@@ -830,27 +830,38 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 7),
-                      SizedBox(
-                        height: 42,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RecurringTransactionsScreen(),
+                      const SizedBox(width: 5),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(22),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RecurringTransactionsScreen(),
+                            ),
+                          ).then((_) => loadTransactions());
+                        },
+                        child: Container(
+                          height: 42,
+                          padding: const EdgeInsets.symmetric(horizontal: 9),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF2F5F3),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.settings_outlined, size: 15, color: Color(0xFF52615A)),
+                              SizedBox(width: 4),
+                              Text(
+                                'Manage',
+                                style: TextStyle(
+                                  color: Color(0xFF52615A),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ).then((_) => loadTransactions());
-                          },
-                          icon: const Icon(Icons.settings_outlined, size: 16),
-                          label: const Text('Manage'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF147D59),
-                            side: const BorderSide(color: Color(0xFFB9D8C8)),
-                            padding: const EdgeInsets.symmetric(horizontal: 9),
-                            visualDensity: VisualDensity.compact,
-                            textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            ],
                           ),
                         ),
                       ),

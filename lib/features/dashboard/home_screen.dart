@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
@@ -318,13 +321,63 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showAllCurrencies() async {
     final entries = otherCurrencyTotals.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
-    // Read the same saved rates collection used by the Exchange Rates screen.
-    // Prefer the newest record if legacy data contains duplicate currency codes
-    // with different casing (for example, "aed" and "AED").
-    final savedRateRows = await FinanceDB.instance.db.query(
-      'exchange_rates',
-      orderBy: 'updated_at DESC, id DESC',
-    );
+
+    // The Exchange Rates screen refreshes missing rates when it opens.
+    // The dashboard summary can be opened without visiting that screen, so
+    // fetch any rates required by this summary before reading the saved table.
+    final requiredCurrencies = <String>{
+      ...entries.map((entry) => entry.key.trim().toUpperCase()),
+      baseCurrency.trim().toUpperCase(),
+    }..remove('PKR');
+
+    final savedRates = await FinanceDB.instance.getExchangeRates();
+    final availableCurrencies = savedRates
+        .map((row) => row['currency']?.toString().trim().toUpperCase() ?? '')
+        .where((code) => code.isNotEmpty)
+        .toSet();
+    final missingBeforeRefresh =
+        requiredCurrencies.difference(availableCurrencies);
+
+    if (missingBeforeRefresh.isNotEmpty) {
+      final client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 15);
+      try {
+        final request = await client
+            .getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))
+            .timeout(const Duration(seconds: 20));
+        request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+        final response =
+            await request.close().timeout(const Duration(seconds: 20));
+        if (response.statusCode == HttpStatus.ok) {
+          final body = await response
+              .transform(utf8.decoder)
+              .join()
+              .timeout(const Duration(seconds: 20));
+          final payload = jsonDecode(body) as Map<String, dynamic>;
+          final providerRates = payload['rates'] as Map<String, dynamic>?;
+          if (payload['result'] == 'success' && providerRates != null) {
+            for (final currency in missingBeforeRefresh) {
+              final rawRate = providerRates[currency];
+              if (rawRate is! num || rawRate <= 0) continue;
+              // Provider gives foreign units per PKR; store PKR per unit.
+              final pkrPerUnit = 1 / rawRate.toDouble();
+              if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
+              await FinanceDB.instance.saveExchangeRate(
+                currency,
+                pkrPerUnit,
+                source: 'automatic',
+              );
+            }
+          }
+        }
+      } catch (_) {
+        // Keep the summary usable offline; missing rates are shown below.
+      } finally {
+        client.close(force: true);
+      }
+    }
+
+    final savedRateRows = await FinanceDB.instance.getExchangeRates();
     final ratesByCurrency = <String, double>{};
     for (final row in savedRateRows) {
       final code = row['currency']?.toString().trim().toUpperCase() ?? '';
@@ -332,11 +385,12 @@ class _HomePageState extends State<HomePage> {
       if (code.isEmpty || rawRate is! num) continue;
       final rate = rawRate.toDouble();
       if (rate.isFinite && rate > 0) {
-        ratesByCurrency.putIfAbsent(code, () => rate);
+        ratesByCurrency[code] = rate;
       }
     }
     ratesByCurrency['PKR'] = 1.0;
-    final selectedBaseRate = ratesByCurrency[baseCurrency.toUpperCase()];
+
+    final selectedBaseRate = ratesByCurrency[baseCurrency.trim().toUpperCase()];
     final convertedByCurrency = <String, double>{};
     final missingRates = <String>[];
     double foreignTotalPKR = 0;
@@ -375,56 +429,84 @@ class _HomePageState extends State<HomePage> {
               Container(
                 width: 42,
                 height: 4,
-                decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.currency_exchange_rounded, color: AppColors.primary),
+                    const Icon(Icons.currency_exchange_rounded,
+                        color: AppColors.primary),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(appText(context, 'All Currencies Summary', 'تمام کرنسیوں کا خلاصہ'),
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text))),
-                    IconButton(tooltip: appText(context, 'Close', 'بند کریں'),
-                      onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded)),
+                    Expanded(
+                      child: Text(
+                        appText(context, 'All Currencies Summary',
+                            'تمام کرنسیوں کا خلاصہ'),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: appText(context, 'Close', 'بند کریں'),
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
                   ],
                 ),
               ),
               const Divider(height: 1),
               Flexible(
                 child: entries.isEmpty
-                    ? Padding(padding: const EdgeInsets.all(28),
-                        child: Text(appText(context, 'No other currency wallets.', 'دیگر کرنسی کے والٹس موجود نہیں۔'),
-                          style: TextStyle(color: AppColors.muted)))
+                    ? Padding(
+                        padding: const EdgeInsets.all(28),
+                        child: Text(
+                          appText(context, 'No other currency wallets.',
+                              'دیگر کرنسی کے والٹس موجود نہیں۔'),
+                          style: TextStyle(color: AppColors.muted),
+                        ),
+                      )
                     : ListView.separated(
                         shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 8),
                         itemCount: entries.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEDF1EE)),
+                        separatorBuilder: (_, __) => const Divider(
+                            height: 1, color: Color(0xFFEDF1EE)),
                         itemBuilder: (context, index) {
                           final entry = entries[index];
-                          final converted = convertedByCurrency[entry.key];
+                          final converted = convertedByCurrency[
+                              entry.key.trim().toUpperCase()];
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Row(children: [
-                              Text(_currencyFlag(entry.key),
-                                style: const TextStyle(fontSize: 23)),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  hideBalances
-                                      ? '${entry.key} · ${_currencyCountry(entry.key)} · ****** = $baseCurrency ******'
-                                      : '${entry.key} · ${_currencyCountry(entry.key)} · ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(entry.value)} = ${converted == null ? 'Rate missing' : _currencyAmount(baseCurrency, converted)}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.text,
+                            child: Row(
+                              children: [
+                                Text(
+                                  _currencyFlag(entry.key),
+                                  style: const TextStyle(fontSize: 23),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    hideBalances
+                                        ? '${entry.key} · ${_currencyCountry(entry.key)} · ****** = $baseCurrency ******'
+                                        : '${entry.key} · ${_currencyCountry(entry.key)} · ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(entry.value)} = ${converted == null ? 'Rate missing' : _currencyAmount(baseCurrency, converted)}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.text,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ]),
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -432,25 +514,45 @@ class _HomePageState extends State<HomePage> {
               if (entries.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Row(children: [
-                    Expanded(child: Text('Total of all currencies in $baseCurrency',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text))),
-                    const SizedBox(width: 8),
-                    Text(
-                      hideBalances
-                          ? '$baseCurrency ******'
-                          : missingRates.isNotEmpty
-                              ? 'Rate needed: ${missingRates.join(', ')}'
-                              : selectedBaseRate == null || selectedBaseRate <= 0
-                                  ? '$baseCurrency —'
-                                  : _currencyAmount(baseCurrency, foreignTotalPKR / selectedBaseRate),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.primary)),
-                  ]),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Total of all currencies in $baseCurrency',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        hideBalances
+                            ? '$baseCurrency ******'
+                            : missingRates.isNotEmpty
+                                ? 'Rate needed: ${missingRates.join(', ')}'
+                                : selectedBaseRate == null ||
+                                        selectedBaseRate <= 0
+                                    ? '$baseCurrency —'
+                                    : _currencyAmount(
+                                        baseCurrency,
+                                        foreignTotalPKR / selectedBaseRate,
+                                      ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),

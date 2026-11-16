@@ -643,7 +643,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final pageCount = (filteredTransactions.length / transactionsPerPage).ceil();
     final safePage = currentPage.clamp(0, pageCount > 0 ? pageCount - 1 : 0).toInt();
     final pageTransactions = filteredTransactions
-        .skip((showAllTransactions ? safePage : 0) * transactionsPerPage)
+        .skip((widget.showAllTransactions ? safePage : 0) * transactionsPerPage)
         .take(transactionsPerPage)
         .toList();
     final groupedByDate = <String, List<Map<String, dynamic>>>{};
@@ -759,7 +759,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             itemCount: displayRows.length + 1,
                             itemBuilder: (context, index) {
                               if (index == displayRows.length) {
-                                if (!showAllTransactions && filteredTransactions.length > transactionsPerPage) {
+                                if (!widget.showAllTransactions && filteredTransactions.length > transactionsPerPage) {
                                   return Align(
                                     alignment: Alignment.center,
                                     child: Padding(
@@ -778,7 +778,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     ),
                                   );
                                 }
-                                if (showAllTransactions && pageCount > 1) {
+                                if (widget.showAllTransactions && pageCount > 1) {
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     child: Row(
@@ -1033,6 +1033,7 @@ class TransactionDetailScreen extends StatelessWidget {
                 ? Icons.tune_rounded
                 : Icons.swap_horiz_rounded;
     final amount = (transaction['amount'] as num?)?.toDouble() ?? 0;
+    final toAmount = (transaction['to_amount'] as num?)?.toDouble();
     final currency = transaction['wallet_currency']?.toString() ?? '';
     final date = DateTime.tryParse(transaction['date']?.toString() ?? '');
     final note = transaction['note']?.toString().trim() ?? '';

@@ -220,7 +220,8 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   Widget _overview(Map<String,dynamic> c){
     final collected=entries.where((e)=>e['entry_type']=='Installment').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
     final payout=entries.where((e)=>e['entry_type']=='Payout').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
-    final pot=(c['installment_amount'] as num).toDouble()*members.length;\n    final next=members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).toList();
+    final pot=(c['installment_amount'] as num).toDouble()*members.length;
+    final next=members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).toList();
     return ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text(c['status'].toString().toUpperCase(),style:const TextStyle(fontWeight:FontWeight.bold,color:Colors.green)),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';\nimport 'dart:io';\n\nimport 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -37,7 +37,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     super.dispose();
   }
 
-  Future<void> _finish() async {
+  Future<void> _refreshSelectedRate() async {\n    if (_currency == 'PKR') return;\n    final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);\n    try {\n      final request = await client.getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))\n          .timeout(const Duration(seconds: 20));\n      request.headers.set(HttpHeaders.acceptHeader, 'application/json');\n      final response = await request.close().timeout(const Duration(seconds: 20));\n      if (response.statusCode != HttpStatus.ok) {\n        throw HttpException('Exchange-rate service returned HTTP ${response.statusCode}.');\n      }\n      final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 20));\n      final payload = jsonDecode(body) as Map<String, dynamic>;\n      final rates = payload['rates'] as Map<String, dynamic>?;\n      final rate = rates?[_currency];\n      if (payload['result'] != 'success' || rate is! num || rate <= 0) {\n        throw const FormatException('Selected currency rate is unavailable.');\n      }\n      await FinanceDB.instance.saveExchangeRate(_currency, 1 / rate.toDouble(), source: 'automatic');\n    } finally {\n      client.close(force: true);\n    }\n  }\n\n  Future<void> _finish() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

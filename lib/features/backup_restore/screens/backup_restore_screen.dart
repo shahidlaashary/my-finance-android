@@ -241,7 +241,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     ),
                   ),
                   const SizedBox(height: 9),
-                  SizedBox(height: 154, child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  SizedBox(height: 184, child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     Expanded(child: _buildActionCard(icon: Icons.cloud_upload_rounded, title: appText(context, 'Create Backup', 'دستی بیک اپ بنائیں'), description: 'Save database and attachments as a ZIP file.', buttonText: 'Create Backup', color: Colors.indigo, onPressed: _createBackup)),
                     const SizedBox(width: 9),
                     Expanded(child: _buildActionCard(icon: Icons.settings_backup_restore_rounded, title: appText(context, 'Restore Backup', 'بیک اپ بحال کریں'), description: 'Restore from an existing My Finance ZIP file.', buttonText: 'Select ZIP File', color: Colors.teal, onPressed: _selectAndRestoreBackup)),

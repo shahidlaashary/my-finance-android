@@ -167,7 +167,7 @@ class _WalletsPageState extends State<WalletsPage> {
   }
 
   String formatMoney(double amount, String currency) {
-    if (hideBalances) return '$currency ••••••';
+    if (hideBalances) return '$currency ******';
     final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
     return '$currency ${NumberFormat('#,##0.00', locale).format(amount)}';
   }
@@ -1033,7 +1033,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
   }
 
   String _money(Map<String,dynamic> w) {
-    if (widget.hideBalances) return '${w['currency']} ••••••';
+    if (widget.hideBalances) return '${w['currency']} ******';
     final locale = widget.numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
     return "${w['currency']} ${NumberFormat('#,##0.00', locale).format((w['balance'] as num).toDouble())}";
   }

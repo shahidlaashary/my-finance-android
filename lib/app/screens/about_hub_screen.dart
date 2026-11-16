@@ -14,14 +14,13 @@ class AboutHubScreen extends StatelessWidget {
       _AboutEntry('Quick Tour','A short guide to the main app features',Icons.explore_outlined,()=>_open(context,const _QuickTourPage())),
       _AboutEntry('Privacy Policy','How your information is stored and handled',Icons.privacy_tip_outlined,()=>_open(context,const _PrivacyPage())),
       _AboutEntry('Terms of Use','Important terms for using My Finance',Icons.gavel_outlined,()=>_open(context,const _TermsPage())),
-      _AboutEntry('Open Source Licenses','Licenses for third-party packages',Icons.article_outlined,()=>showLicensePage(context:context,applicationName:'My Finance',applicationVersion:'1.0.0',applicationLegalese:'© ${DateTime.now().year} Shahid Laashary')),
       _AboutEntry('Storage Information','Local database and attachment storage details',Icons.storage_outlined,()=>_open(context,const _StoragePage())),
     ];
     return Scaffold(appBar:AppBar(title:Text(appText(context, "About My Finance", "About My Finance"),style:TextStyle(fontWeight:FontWeight.w800))),body:ListView(padding:const EdgeInsets.all(16),children:[
       Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 18),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(20),
@@ -29,16 +28,16 @@ class AboutHubScreen extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              width: 58,
-              height: 58,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.account_balance_wallet_rounded,
-                color: Theme.of(context).colorScheme.primary, size: 30),
+                color: Theme.of(context).colorScheme.primary, size: 25),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             Text(appText(context, "MY FINANCE", "MY FINANCE"),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2.1)),

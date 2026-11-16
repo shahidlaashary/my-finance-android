@@ -708,7 +708,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         label: Text(filter.$2),
                         selected: selected,
                         showCheckmark: false,
-                        onSelected: (_) => setState(() => selectedFilter = filter.$1),
+                        onSelected: (_) => setState(() {
+                          selectedFilter = filter.$1;
+                          currentPage = 0;
+                        }),
                         backgroundColor: const Color(0xFFF2F5F3),
                         selectedColor: const Color(0xFF147D59),
                         labelStyle: TextStyle(
@@ -1030,9 +1033,6 @@ class TransactionDetailScreen extends StatelessWidget {
                 ? Icons.tune_rounded
                 : Icons.swap_horiz_rounded;
     final amount = (transaction['amount'] as num?)?.toDouble() ?? 0;
-    final fee = (transaction['transfer_fee'] as num?)?.toDouble() ?? 0;
-    final toAmount = (transaction['to_amount'] as num?)?.toDouble();
-    final exchangeRate = (transaction['exchange_rate'] as num?)?.toDouble();
     final currency = transaction['wallet_currency']?.toString() ?? '';
     final date = DateTime.tryParse(transaction['date']?.toString() ?? '');
     final note = transaction['note']?.toString().trim() ?? '';
@@ -1052,7 +1052,6 @@ class TransactionDetailScreen extends StatelessWidget {
           }
 
           final sourceId = transaction['wallet_id'];
-          final destinationId = transaction['to_wallet_id'];
           final details = <Widget>[
             _detailRow('Transaction ID', '#${transaction['id']}'),
             _detailRow('Type', type),

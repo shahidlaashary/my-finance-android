@@ -1,0 +1,15 @@
+import 'package:flutter/material.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
+class CurrencyPickerField extends StatelessWidget {
+ final String value; final ValueChanged<String> onChanged; final String label; final bool enabled; final bool includeUnknownValue;
+ const CurrencyPickerField({super.key,required this.value,required this.onChanged,this.label='Currency',this.enabled=true,this.includeUnknownValue=false});
+ static const names={'PKR':'Pakistani Rupee','USD':'US Dollar','GBP':'British Pound','EUR':'Euro','AED':'UAE Dirham','SAR':'Saudi Riyal','INR':'Indian Rupee','CAD':'Canadian Dollar','AUD':'Australian Dollar','JPY':'Japanese Yen','CNY':'Chinese Yuan','CHF':'Swiss Franc','SGD':'Singapore Dollar','NZD':'New Zealand Dollar','KWD':'Kuwaiti Dinar','QAR':'Qatari Riyal','BHD':'Bahraini Dinar','OMR':'Omani Rial','MYR':'Malaysian Ringgit','TRY':'Turkish Lira','ZAR':'South African Rand','HKD':'Hong Kong Dollar','IDR':'Indonesian Rupiah','KRW':'South Korean Won','THB':'Thai Baht'};
+ static const flags={'PKR':'🇵🇰','USD':'🇺🇸','GBP':'🇬🇧','EUR':'🇪🇺','AED':'🇦🇪','SAR':'🇸🇦','INR':'🇮🇳','CAD':'🇨🇦','AUD':'🇦🇺','JPY':'🇯🇵','CNY':'🇨🇳','CHF':'🇨🇭','SGD':'🇸🇬','NZD':'🇳🇿','KWD':'🇰🇼','QAR':'🇶🇦','BHD':'🇧🇭','OMR':'🇴🇲','MYR':'🇲🇾','TRY':'🇹🇷','ZAR':'🇿🇦','HKD':'🇭🇰','IDR':'🇮🇩','KRW':'🇰🇷','THB':'🇹🇭'};
+ @override Widget build(BuildContext context){
+  final t=Theme.of(context);final list=[...CurrencyCatalog.supported,if(includeUnknownValue&&!CurrencyCatalog.supported.contains(value))value];
+  return DropdownButtonFormField<String>(value:value,isExpanded:true,menuMaxHeight:420,borderRadius:BorderRadius.circular(16),dropdownColor:t.colorScheme.surface,icon:const Icon(Icons.keyboard_arrow_down_rounded),
+   decoration:InputDecoration(labelText:label,filled:true,fillColor:t.colorScheme.surface,border:OutlineInputBorder(borderRadius:BorderRadius.circular(13)),enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(13),borderSide:BorderSide(color:t.colorScheme.outlineVariant)),focusedBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(13),borderSide:BorderSide(color:t.colorScheme.primary,width:1.5)),contentPadding:const EdgeInsets.symmetric(horizontal:11,vertical:12),isDense:true),
+   items:list.map((c)=>DropdownMenuItem<String>(value:c,child:Row(children:[Text(flags[c]??'🌐',style:const TextStyle(fontSize:21)),const SizedBox(width:9),Expanded(child:Column(mainAxisAlignment:MainAxisAlignment.center,crossAxisAlignment:CrossAxisAlignment.start,children:[Text(c,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:13,fontWeight:FontWeight.w800)),Text(names[c]??c,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(fontSize:10.5,color:t.colorScheme.onSurfaceVariant))])),if(c==value)Icon(Icons.check_circle_rounded,size:17,color:t.colorScheme.primary)]))).toList(),
+   onChanged:enabled?(v){if(v!=null)onChanged(v);}:null);
+ }
+}

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
+import 'package:my_finance/shared/widgets/currency_picker_field.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
@@ -813,28 +814,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                         children: [
                           Expanded(
                             flex: 4,
-                            child: DropdownButtonFormField<String>(
-                              value: selectedCurrency,
-                              isExpanded: true,
-                              decoration: _fieldDecoration('Currency'),
-                              items: [
-                                ...CurrencyCatalog.supported,
-                                if (!CurrencyCatalog.supported.contains(selectedCurrency)) selectedCurrency,
-                              ].map((currency) {
-                                return DropdownMenuItem(
-                                  value: currency,
-                                  child: Text(
-                                    currency,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() => selectedCurrency = value);
-                                }
-                              },
-                            ),
+                            child: CurrencyPickerField(value:selectedCurrency,label:'Currency',includeUnknownValue:true,onChanged:(v)=>setState(()=>selectedCurrency=v)),
                           ),
                           SizedBox(width: 10),
                           Expanded(

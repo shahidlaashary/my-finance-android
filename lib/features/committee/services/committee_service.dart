@@ -11,7 +11,7 @@ class CommitteeService {
     await db.execute('''CREATE TABLE IF NOT EXISTS committees (
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
       frequency TEXT NOT NULL, installment_amount REAL NOT NULL,
-      member_count INTEGER NOT NULL, start_date TEXT NOT NULL,
+      member_count INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'PKR', start_date TEXT NOT NULL,
       first_due_date TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'Upcoming',
       created_at TEXT NOT NULL)''');
     await db.execute('''CREATE TABLE IF NOT EXISTS committee_members (
@@ -24,6 +24,17 @@ class CommitteeService {
       amount REAL NOT NULL, wallet_id INTEGER NOT NULL,
       transaction_id INTEGER, entry_date TEXT NOT NULL,
       note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)''');
+    final committeeColumns = await db.rawQuery('PRAGMA table_info(committees)');
+    if (!committeeColumns.any((column) => column['name'] == 'currency')) {
+      await db.execute("ALTER TABLE committees ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'");
+    }
+    final entryColumns = await db.rawQuery('PRAGMA table_info(committee_entries)');
+    if (!entryColumns.any((column) => column['name'] == 'wallet_amount')) {
+      await db.execute('ALTER TABLE committee_entries ADD COLUMN wallet_amount REAL NOT NULL DEFAULT 0');
+    }
+    if (!entryColumns.any((column) => column['name'] == 'committee_currency')) {
+      await db.execute("ALTER TABLE committee_entries ADD COLUMN committee_currency TEXT NOT NULL DEFAULT 'PKR'");
+    }
     await db.execute('CREATE INDEX IF NOT EXISTS idx_committee_members_committee ON committee_members(committee_id, turn_no)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_committee_entries_committee ON committee_entries(committee_id, entry_date DESC)');
   }
@@ -116,9 +127,14 @@ class CommitteeService {
     final db = FinanceDB.instance.db;
     final now = DateTime.now().toIso8601String();
     final id = await db.transaction((txn) async {
+      final currencyRows = await txn.query('app_settings', columns: ['setting_value'],
+        where: 'setting_key=?', whereArgs: ['main_currency'], limit: 1);
+      final committeeCurrency = currencyRows.isEmpty ? 'PKR' :
+        (currencyRows.first['setting_value']?.toString() ?? 'PKR');
       final committeeId = await txn.insert('committees', {
         'name': name.trim(), 'frequency': frequency, 'installment_amount': installmentAmount,
-        'member_count': members.length, 'start_date': startDate.toIso8601String(),
+        'member_count': members.length, 'currency': committeeCurrency,
+        'start_date': startDate.toIso8601String(),
         'first_due_date': firstDueDate.toIso8601String(),
         'status': startDate.isAfter(DateTime.now()) ? 'Upcoming' : 'Active', 'created_at': now,
       });
@@ -165,6 +181,23 @@ class CommitteeService {
       final wallets = await txn.query('wallets', where: 'id=?', whereArgs: [walletId], limit: 1);
       if (committee.isEmpty || member.isEmpty || wallets.isEmpty) throw Exception('Committee, member or wallet not found.');
       final wallet = wallets.first;
+      final committeeCurrency = (committee.first['currency'] ?? 'PKR').toString().toUpperCase();
+      final walletCurrency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
+      final rateRows = await txn.query('exchange_rates',
+        where: 'currency IN (?, ?)', whereArgs: [committeeCurrency, walletCurrency]);
+      double? rateFor(String currency) {
+        if (currency == committeeCurrency && !rateRows.any((r) => r['currency'] == currency)) return 1;
+        for (final row in rateRows) {
+          if (row['currency'] == currency) return (row['rate'] as num).toDouble();
+        }
+        return currency == committeeCurrency ? 1 : null;
+      }
+      final committeeRate = rateFor(committeeCurrency);
+      final walletRate = rateFor(walletCurrency);
+      if (committeeRate == null || walletRate == null || walletRate <= 0) {
+        throw Exception('Exchange rate is not available for the selected wallet currency.');
+      }
+      final walletAmount = amount * committeeRate / walletRate;
       final balance = (wallet['balance'] as num).toDouble();
       final pot = (committee.first['installment_amount'] as num).toDouble() *
           (committee.first['member_count'] as num).toInt();
@@ -192,14 +225,14 @@ class CommitteeService {
           ? 'This member has already paid the full committee contribution.'
           : 'Payout cannot exceed this member\'s scheduled committee amount.');
       }
-      if (entryType == 'Payout' && balance + 0.000001 < amount) {
+      if (entryType == 'Payout' && balance + 0.000001 < walletAmount) {
         throw Exception('Insufficient balance. Available: ${wallet['currency']} ${balance.toStringAsFixed(2)}');
       }
-      await txn.update('wallets', {'balance': balance + (entryType == 'Installment' ? amount : -amount)},
+      await txn.update('wallets', {'balance': balance + (entryType == 'Installment' ? walletAmount : -walletAmount)},
         where: 'id=?', whereArgs: [walletId]);
       final now = DateTime.now().toIso8601String();
       final transactionId = await txn.insert('transactions', {
-        'type': 'Committee', 'amount': amount, 'wallet_id': walletId,
+        'type': 'Committee', 'amount': walletAmount, 'wallet_id': walletId,
         'to_wallet_id': null, 'to_amount': null, 'exchange_rate': null, 'balance_delta': null,
         'category': entryType == 'Installment' ? 'Committee Installment' : 'Committee Payout',
         'note': '${committee.first['name']} • ${member.first['name']} • ${entryType == 'Installment' ? 'Installment' : 'Payout'}',
@@ -207,7 +240,7 @@ class CommitteeService {
       });
       final entryId = await txn.insert('committee_entries', {
         'committee_id': committeeId, 'member_id': memberId, 'entry_type': entryType,
-        'amount': amount, 'wallet_id': walletId, 'transaction_id': transactionId,
+        'amount': amount, 'wallet_amount': walletAmount, 'committee_currency': committeeCurrency,\n        'wallet_id': walletId, 'transaction_id': transactionId,
         'entry_date': date.toIso8601String(), 'note': note.trim(), 'created_at': now,
       });
       final count = Sqflite.firstIntValue(await txn.rawQuery(

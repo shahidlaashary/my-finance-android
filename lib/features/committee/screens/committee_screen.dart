@@ -166,6 +166,19 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     if(ok==true){try{await CommitteeService.addMember(id,n.text,p.text);await _load();}catch(e){_msg(e.toString());}}
   }
 
+  Future<void> _moveMember(int index, int direction) async {
+    final target=index+direction;
+    if(target<0||target>=members.length||entries.isNotEmpty)return;
+    final reordered=List<Map<String,dynamic>>.from(members);
+    final current=reordered[index];
+    reordered[index]=reordered[target];
+    reordered[target]=current;
+    try{
+      await CommitteeService.reorderMembers(id,reordered.map((m)=>(m['id'] as num).toInt()).toList());
+      await _load();
+    }catch(e){_msg(e.toString());}
+  }
+
   Future<void> _record(String type) async {
     if(members.isEmpty||wallets.isEmpty){_msg('Add members and wallets first.');return;}
     final amount=TextEditingController(text: type=='Installment' ? '${widget.committee['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
@@ -267,7 +280,10 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
           title:Text(m['name'].toString()),
           subtitle:Text('$paymentStatus • Paid: ${money.format(paid)} • Due: ${money.format(dueAmount)} • Remaining: ${money.format(remaining)}\nPayout received: ${money.format(m['received'])}'),
           isThreeLine:true,
-          trailing:Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))));
+          trailing:entries.isEmpty?Row(mainAxisSize:MainAxisSize.min,children:[
+            IconButton(visualDensity:VisualDensity.compact,onPressed:()=>_moveMember(members.indexOf(m),-1),icon:const Icon(Icons.arrow_upward,size:18)),
+            IconButton(visualDensity:VisualDensity.compact,onPressed:()=>_moveMember(members.indexOf(m),1),icon:const Icon(Icons.arrow_downward,size:18)),
+          ]):Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))));
       }),
     ]);
   }

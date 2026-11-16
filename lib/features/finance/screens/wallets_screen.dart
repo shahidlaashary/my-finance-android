@@ -1090,7 +1090,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
         if(newIndex>oldIndex)newIndex--;
         if(oldIndex<0 || oldIndex>=_active.length)return;
         final item=_active.removeAt(oldIndex);
-        _active.insert(newIndex.clamp(0,_active.length),item);
+        _active.insert(newIndex.clamp(0,_active.length).toInt(),item);
         setState((){});
         await _saveIds('wallet_display_order',
           _active.map((w)=>(w['id'] as num).toInt()).toList() +
@@ -1099,7 +1099,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       itemBuilder: (context,index) {
         final w=_active[index];
         return Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
-          const Padding(padding:EdgeInsets.only(left:8),child:Icon(Icons.drag_handle_rounded,color:AppColors.muted)),
+          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.drag_handle_rounded,color:AppColors.muted))),
           Expanded(child:_walletTile(w,archived:false)),
         ]));
       },

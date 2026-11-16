@@ -20,6 +20,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   bool _deleteConfirmation = true;
   bool _hideBalances = false;
   bool _hapticFeedback = true;
+  final TextEditingController _headerNameController = TextEditingController();
 
   @override
   void initState() {
@@ -32,7 +33,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
       _preferences.dateFormat, _preferences.weekStart, _preferences.numberFormat,
       _preferences.defaultDate, _preferences.rememberWallet,
       _preferences.deleteConfirmation, _preferences.hideBalances,
-      _preferences.hapticFeedback,
+      _preferences.hapticFeedback, _preferences.headerName,
     ]);
     if (!mounted) return;
     setState(() {
@@ -44,9 +45,13 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
       _deleteConfirmation = values[5] as bool;
       _hideBalances = values[6] as bool;
       _hapticFeedback = values[7] as bool;
+      _headerNameController.text = values[8] as String;
       _loading = false;
     });
   }
+
+  @override
+  void dispose() { _headerNameController.dispose(); super.dispose(); }
 
   Future<void> _save(Future<void> Function() action) async {
     await action();
@@ -84,6 +89,23 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
       body: _loading ? Center(child: CircularProgressIndicator()) : ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Card(child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Personalized App Name', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              const Text('This name will appear in the header on all main tabs.'),
+              const SizedBox(height: 10),
+              TextField(controller: _headerNameController,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(hintText: 'Enter your name',
+                  border: OutlineInputBorder(), prefixIcon: Icon(Icons.person_outline))),
+              const SizedBox(height: 8),
+              Align(alignment: Alignment.centerRight, child: FilledButton.icon(
+                onPressed: () => _save(() => _preferences.setHeaderName(_headerNameController.text)),
+                icon: const Icon(Icons.save_outlined), label: const Text('Save Name'))),
+            ]),
+          )),
           _choice('Date Format', 'Choose how dates appear', Icons.calendar_month, _dateFormat,
             const ['dd/MM/yyyy','MM/dd/yyyy','yyyy-MM-dd'], (v) { setState(() => _dateFormat=v); _save(() => _preferences.setDateFormat(v)); }),
           _choice('First Day of Week', 'Calendar week starts on', Icons.calendar_view_week, _weekStart,

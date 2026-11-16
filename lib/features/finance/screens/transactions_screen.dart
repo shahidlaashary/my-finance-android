@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/finance_category.dart';
@@ -24,6 +25,7 @@ class TransactionsScreen extends StatefulWidget {
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
   List<Map<String, dynamic>> transactions = [];
+  Map<String, dynamic>? walletInfo;
   bool loading = true;
   bool hideBalances = false;
   String numberFormat = '1,234.56';
@@ -57,11 +59,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final date = await GeneralPreferences.instance.dateFormat;
       final week = await GeneralPreferences.instance.weekStart;
       final result = await TransactionsService.getTransactions(walletId: widget.walletId);
+      final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
 
       if (!mounted) return;
 
       setState(() {
         transactions = result;
+        walletInfo = wallet;
         hideBalances = hide;
         numberFormat = number;
         dateFormat = date;
@@ -77,6 +81,131 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         SnackBar(content: Text('Error: $e')),
       );
     }
+  }
+
+
+  Future<void> adjustWalletBalance() async {
+    final wallet = walletInfo;
+    if (wallet == null) return;
+    final controller = TextEditingController(
+      text: (wallet['balance'] as num).toStringAsFixed(2),
+    );
+    final newBalance = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Adjust Balance'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+          decoration: InputDecoration(
+            labelText: 'New balance',
+            prefixText: '\${wallet['currency']} ',
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = double.tryParse(controller.text.trim());
+              if (value == null || !value.isFinite) return;
+              Navigator.pop(dialogContext, value);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (newBalance == null) return;
+    try {
+      await FinanceDB.instance.updateWallet(
+        id: (wallet['id'] as num).toInt(),
+        name: wallet['name'] as String,
+        type: wallet['type'] as String,
+        customType: wallet['custom_type'] as String?,
+        currency: wallet['currency'] as String,
+        requestedCurrentBalance: newBalance,
+        walletNumber: wallet['wallet_number'] as String?,
+        iconCode: (wallet['icon_code'] as num).toInt(),
+        excludeTotal: (wallet['exclude_total'] as num? ?? 0).toInt() == 1,
+      );
+      await loadTransactions();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Balance adjusted. Adjustment transaction added.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
+
+  Widget _buildWalletSummaryCard() {
+    final wallet = walletInfo;
+    if (widget.walletId == null || wallet == null) return const SizedBox.shrink();
+    final currency = wallet['currency']?.toString() ?? '';
+    final balance = (wallet['balance'] as num?)?.toDouble() ?? 0;
+    final iconCode = (wallet['icon_code'] as num?)?.toInt() ??
+        Icons.account_balance_wallet_outlined.codePoint;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEAF5EF), Color(0xFFF7FBF8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFDCEBE2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFF147D59).withValues(alpha: 0.11),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(IconData(iconCode, fontFamily: 'MaterialIcons'),
+                color: const Color(0xFF147D59), size: 25),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(wallet['name']?.toString() ?? 'Wallet',
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text(hideBalances ? '\${currency} ••••••' : '\${currency} \${money(balance, conceal: false)}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+                        color: Color(0xFF147D59))),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.tonal(
+            onPressed: adjustWalletBalance,
+            style: FilledButton.styleFrom(
+              foregroundColor: const Color(0xFF147D59),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('Adjust Balance', style: TextStyle(fontSize: 11.5)),
+          ),
+        ],
+      ),
+    );
   }
 
   String money(dynamic amount, {bool conceal = true}) {
@@ -529,6 +658,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
                 SizedBox(
                   height: 42,
@@ -596,7 +726,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final isIncome = type == 'income';
                               final isExpense = type == 'expense';
                               final isTransfer = type == 'transfer';
-                              final color = isIncome
+                              final isAdjustment = type == 'adjustment';
+                              final color = isAdjustment
+                                  ? const Color(0xFF8A6D3B)
+                                  : isIncome
                                   ? const Color(0xFF159B65)
                                   : isExpense
                                       ? const Color(0xFFE45B5B)
@@ -605,14 +738,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   ? Icons.south_west_rounded
                                   : isExpense
                                       ? Icons.north_east_rounded
-                                      : Icons.swap_horiz_rounded;
-                              final title = (item['note']?.toString().trim().isNotEmpty ?? false)
-                                  ? item['note'].toString().trim()
-                                  : isIncome
-                                      ? 'Income'
-                                      : isExpense
-                                          ? 'Expense'
-                                          : 'Transfer';
+                                      : isAdjustment
+                                          ? Icons.tune_rounded
+                                          : Icons.swap_horiz_rounded;
+                              final title = isAdjustment
+                                  ? 'Adjustment'
+                                  : (item['note']?.toString().trim().isNotEmpty ?? false)
+                                      ? item['note'].toString().trim()
+                                      : isIncome
+                                          ? 'Income'
+                                          : isExpense
+                                              ? 'Expense'
+                                              : 'Transfer';
                               final category = item['category']?.toString().trim() ?? '';
                               final currency = item['wallet_currency']?.toString() ?? '';
                               final amount = (item['amount'] as num?)?.toDouble() ?? 0.0;
@@ -679,7 +816,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             const SizedBox(height: 3),
                                             Text(
                                               [
-                                                isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category),
+                                                isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
                                                 if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
                                               ].join('  •  '),
                                               maxLines: 1,
@@ -708,7 +845,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            '${isIncome ? '+' : isExpense ? '-' : '⇄'} $currency ${money(amount)}',
+                                            '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((item['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : '⇄'} $currency ${money(isAdjustment ? ((item['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount)}',
                                             maxLines: 1,
                                             style: TextStyle(
                                               fontSize: 12.5,
@@ -745,7 +882,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                   ],
                                                 ),
                                               ),
-                                              PopupMenuItem(
+                                              if (!isAdjustment) PopupMenuItem(
                                                 value: 'edit',
                                                 child: Text(appText(context, 'Edit', 'ترمیم کریں')),
                                               ),
@@ -785,7 +922,10 @@ class TransactionDetailScreen extends StatelessWidget {
     final isIncome = normalized == 'income';
     final isExpense = normalized == 'expense';
     final isTransfer = normalized == 'transfer';
-    final color = isIncome
+    final isAdjustment = normalized == 'adjustment';
+    final color = isAdjustment
+        ? const Color(0xFF8A6D3B)
+        : isIncome
         ? const Color(0xFF159B65)
         : isExpense
             ? const Color(0xFFE45B5B)
@@ -794,7 +934,9 @@ class TransactionDetailScreen extends StatelessWidget {
         ? Icons.south_west_rounded
         : isExpense
             ? Icons.north_east_rounded
-            : Icons.swap_horiz_rounded;
+            : isAdjustment
+                ? Icons.tune_rounded
+                : Icons.swap_horiz_rounded;
     final amount = (transaction['amount'] as num?)?.toDouble() ?? 0;
     final fee = (transaction['transfer_fee'] as num?)?.toDouble() ?? 0;
     final toAmount = (transaction['to_amount'] as num?)?.toDouble();
@@ -822,6 +964,7 @@ class TransactionDetailScreen extends StatelessWidget {
           final details = <Widget>[
             _detailRow('Transaction ID', '#${transaction['id']}'),
             _detailRow('Type', type),
+            if (isAdjustment) _detailRow('Balance Change', '${((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-'} ${currency} ${((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount).toStringAsFixed(2)}'),
             _detailRow('Date & Time', date == null
                 ? (transaction['date']?.toString() ?? '—')
                 : DateFormat('dd MMM yyyy, hh:mm a').format(date)),
@@ -865,7 +1008,7 @@ class TransactionDetailScreen extends StatelessWidget {
                     Text(type, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 5),
                     Text(
-                      '${isIncome ? '+' : isExpense ? '-' : ''} $currency ${amount.toStringAsFixed(2)}',
+                      '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : ''} $currency ${(isAdjustment ? ((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount).toStringAsFixed(2)}',
                       style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: color),
                     ),
                     if (isTransfer && toAmount != null) ...[

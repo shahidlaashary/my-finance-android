@@ -416,10 +416,15 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(children: [
-                    Expanded(child: Text(appText(context, 'Total of all currencies in PKR', 'تمام کرنسیوں کا PKR میں کل'),
+                    Expanded(child: Text('Total of all currencies in $baseCurrency',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text))),
                     const SizedBox(width: 8),
-                    Text(hideBalances ? 'PKR ******' : 'PKR ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(foreignTotalPKR)}',
+                    Text(
+                      hideBalances
+                          ? '$baseCurrency ******'
+                          : selectedBaseRate == null || selectedBaseRate <= 0
+                              ? '$baseCurrency —'
+                              : _currencyAmount(baseCurrency, foreignTotalPKR / selectedBaseRate),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.primary)),
                   ]),
                 ),

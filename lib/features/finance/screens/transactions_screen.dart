@@ -33,6 +33,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String dateFormat = 'dd/MM/yyyy';
   String weekStart = 'Monday';
   String selectedFilter = 'all';
+  Set<int> recurringTransactionIds = <int>{};
   int currentPage = 0;
 
   @override
@@ -61,12 +62,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final date = await GeneralPreferences.instance.dateFormat;
       final week = await GeneralPreferences.instance.weekStart;
       final result = await TransactionsService.getTransactions(walletId: widget.walletId);
+      final db = await TransactionsService.database;
+      final recurringMarkers = await db.query(
+        'app_settings',
+        columns: ['setting_key'],
+        where: "setting_key LIKE 'recurring_transaction_%'",
+      );
+      final recurringIds = recurringMarkers
+          .map((row) => int.tryParse(row['setting_key'].toString().replaceFirst('recurring_transaction_', '')))
+          .whereType<int>()
+          .toSet();
       final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
 
       if (!mounted) return;
 
       setState(() {
         transactions = result;
+        recurringTransactionIds = recurringIds;
         walletInfo = wallet;
         hideBalances = hide;
         numberFormat = number;
@@ -680,6 +692,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     final filteredTransactions = transactions.where((item) {
       final type = normalizeType(item['type']?.toString() ?? '');
+      if (selectedFilter == 'recurring') {
+        final id = (item['id'] as num?)?.toInt();
+        return id != null && recurringTransactionIds.contains(id);
+      }
       return selectedFilter == 'all' || type == selectedFilter;
     }).toList()
       ..sort((a, b) {
@@ -734,7 +750,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ('income', 'Income'),
       ('expense', 'Expense'),
       ('transfer', 'Transfer'),
-      ('committee', 'Committee'),
+      ('recurring', 'Recurring'),
     ];
 
     return Scaffold(

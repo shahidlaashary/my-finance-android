@@ -17,17 +17,10 @@ class GeneralPreferences {
   static const _deleteConfirmKey = 'general_delete_confirmation';
   static const _hideBalancesKey = 'general_hide_balances';
   static const _hapticsKey = 'general_haptic_feedback';
-  static const _yourNameKey = 'general_your_name';
+  static const _yourNameKey = 'general_header_name';
 
-  Future<String> get yourName async {
-    final prefs = await SharedPreferences.getInstance();
-    final current = prefs.getString(_yourNameKey);
-    if (current != null) return current;
-    // One-time migration keeps names saved by older Custom Name versions.
-    final legacy = prefs.getString('general_header_name') ?? '';
-    if (legacy.isNotEmpty) await prefs.setString(_yourNameKey, legacy);
-    return legacy;
-  }
+  Future<String> get yourName async =>
+      (await SharedPreferences.getInstance()).getString(_yourNameKey) ?? '';
   Future<void> setYourName(String value) async {
     await (await SharedPreferences.getInstance()).setString(_yourNameKey, value.trim());
     _notifyChanged();

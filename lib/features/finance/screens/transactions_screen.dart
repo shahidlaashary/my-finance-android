@@ -1239,7 +1239,7 @@ class TransactionDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [color.withValues(alpha: 0.13), color.withValues(alpha: 0.045)],
@@ -1252,23 +1252,23 @@ class TransactionDetailScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(icon, color: color, size: 26),
+                      child: Icon(icon, color: color, size: 21),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 4),
                     Text(type, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 2),
                     Text(
                       '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : ''} $currency ${(isAdjustment ? ((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount).toStringAsFixed(2)}',
-                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: color),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color),
                     ),
                     if (isTransfer && toAmount != null) ...[
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 2),
                       Text('Received: ${toAmount.toStringAsFixed(2)}',
                           style: const TextStyle(fontSize: 12, color: Color(0xFF65736B))),
                     ],
@@ -1283,17 +1283,10 @@ class TransactionDetailScreen extends StatelessWidget {
                 children: details,
               ),
               const SizedBox(height: 12),
-              _detailSection(
-                context,
-                title: 'Attachments',
-                icon: Icons.attach_file_rounded,
-                children: [
-                  AttachmentSection(
-                    ownerType: 'transaction',
-                    ownerId: transaction['id'] as int,
-                    readOnly: true,
-                  ),
-                ],
+              AttachmentSection(
+                ownerType: 'transaction',
+                ownerId: transaction['id'] as int,
+                readOnly: true,
               ),
             ],
           );

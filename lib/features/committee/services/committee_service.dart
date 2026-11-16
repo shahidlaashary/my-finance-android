@@ -172,6 +172,21 @@ class CommitteeService {
         'SELECT COALESCE(SUM(amount),0) AS total FROM committee_entries WHERE committee_id=? AND member_id=? AND entry_type=?',
         [committeeId, memberId, entryType]);
       final previous = (previousRows.first['total'] as num).toDouble();
+      if (entryType == 'Payout') {
+        final orderedMembers = await txn.query('committee_members',
+          where: 'committee_id=?', whereArgs: [committeeId], orderBy: 'turn_no ASC');
+        int? nextMember;
+        for (final candidate in orderedMembers) {
+          final paidRows = await txn.rawQuery(
+            "SELECT COALESCE(SUM(amount),0) AS total FROM committee_entries WHERE committee_id=? AND member_id=? AND entry_type='Payout'",
+            [committeeId, candidate['id']]);
+          if ((paidRows.first['total'] as num).toDouble() < pot - 0.000001) {
+            nextMember = (candidate['id'] as num).toInt();
+            break;
+          }
+        }
+        if (nextMember != memberId) throw Exception('Payout must follow the fixed turn order. Complete the current member\'s payout first.');
+      }
       if (previous + amount > pot + 0.000001) {
         throw Exception(entryType == 'Installment'
           ? 'This member has already paid the full committee contribution.'

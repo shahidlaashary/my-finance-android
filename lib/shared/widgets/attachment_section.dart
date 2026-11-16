@@ -13,11 +13,13 @@ import 'package:my_finance/core/services/attachment_service.dart';
 class AttachmentSection extends StatefulWidget {
   final String ownerType;
   final int ownerId;
+  final bool readOnly;
 
   const AttachmentSection({
     super.key,
     required this.ownerType,
     required this.ownerId,
+    this.readOnly = false,
   });
 
   @override
@@ -346,7 +348,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
             ),
             const SizedBox(height: 12),
 
-            Wrap(
+            if (!widget.readOnly) Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
@@ -417,7 +419,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                       '${_formatSize(attachment.fileSize)}',
                     ),
                     onTap: () => _openAttachment(attachment),
-                    trailing: PopupMenuButton<String>(
+                    trailing: widget.readOnly ? null : PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'open') {
                           _openAttachment(attachment);

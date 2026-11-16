@@ -248,8 +248,8 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         Text('Start: ${DateFormat('dd MMM yyyy').format(DateTime.parse(c['start_date']))}'),
       ]))),
       Row(children:[
-        Expanded(child:_stat('Collected',collected,Colors.green)),const SizedBox(width:8),
-        Expanded(child:_stat('Payouts',payout,Colors.deepPurple)),
+        Expanded(child:_stat('Collected (${c['currency'] ?? 'PKR'})',collected,Colors.green)),const SizedBox(width:8),
+        Expanded(child:_stat('Payouts (${c['currency'] ?? 'PKR'})',payout,Colors.deepPurple)),
       ]),
       Card(child:ListTile(title:const Text('Next payout turn'),subtitle:Text(next.isEmpty?'All members have received a payout':next.first['name'].toString()),leading:const Icon(Icons.event_available))),
       Card(child:ListTile(title:const Text('Shared Committee Wallet'),subtitle:Text(sharedWallet==null?'Shared by all committees':'Balance: ${sharedWallet['currency']} ${money.format(sharedWallet['balance'])} • used by all committees'),trailing:const Icon(Icons.account_balance_wallet))),

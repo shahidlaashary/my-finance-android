@@ -476,6 +476,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
   bool saving = false;
   final GlobalKey _currencyPickerKey = GlobalKey();
+  final GlobalKey _walletTypePickerKey = GlobalKey();
 
   bool get isEditing => widget.wallet != null;
 
@@ -599,6 +600,78 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
   static const Map<String,String> _walletCurrencyFlags = {'PKR':'🇵🇰','USD':'🇺🇸','GBP':'🇬🇧','EUR':'🇪🇺','AED':'🇦🇪','SAR':'🇸🇦','INR':'🇮🇳','CAD':'🇨🇦','AUD':'🇦🇺','JPY':'🇯🇵','CNY':'🇨🇳','CHF':'🇨🇭','SGD':'🇸🇬','NZD':'🇳🇿','KWD':'🇰🇼','QAR':'🇶🇦','BHD':'🇧🇭','OMR':'🇴🇲','MYR':'🇲🇾','TRY':'🇹🇷','ZAR':'🇿🇦','HKD':'🇭🇰','IDR':'🇮🇩','KRW':'🇰🇷','THB':'🇹🇭'};
   static const Map<String,String> _walletCurrencyNames = {'PKR':'Pakistani Rupee','USD':'US Dollar','GBP':'British Pound','EUR':'Euro','AED':'UAE Dirham','SAR':'Saudi Riyal','INR':'Indian Rupee','CAD':'Canadian Dollar','AUD':'Australian Dollar','JPY':'Japanese Yen','CNY':'Chinese Yuan','CHF':'Swiss Franc','SGD':'Singapore Dollar','NZD':'New Zealand Dollar','KWD':'Kuwaiti Dinar','QAR':'Qatari Riyal','BHD':'Bahraini Dinar','OMR':'Omani Rial','MYR':'Malaysian Ringgit','TRY':'Turkish Lira','ZAR':'South African Rand','HKD':'Hong Kong Dollar','IDR':'Indonesian Rupiah','KRW':'South Korean Won','THB':'Thai Baht'};
+
+  static const Map<String, IconData> _walletTypeIcons = {
+    'Cash': Icons.payments_outlined,
+    'Bank': Icons.account_balance_outlined,
+    'Credit Card': Icons.credit_card_outlined,
+    'Debit Card': Icons.credit_card_rounded,
+    'Digital Wallet': Icons.account_balance_wallet_outlined,
+    'Investment': Icons.trending_up_rounded,
+    'Other': Icons.category_outlined,
+    'Custom': Icons.tune_rounded,
+  };
+
+  Future<void> _showWalletTypePicker() async {
+    final theme = Theme.of(context);
+    final renderObject = _walletTypePickerKey.currentContext?.findRenderObject();
+    final pickerWidth = renderObject is RenderBox
+        ? renderObject.size.width
+        : MediaQuery.of(context).size.width * 0.32;
+    final picked = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => Dialog(
+        insetPadding: EdgeInsets.zero,
+        backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        constraints: BoxConstraints.tightFor(width: pickerWidth),
+        child: SizedBox(
+          width: pickerWidth,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: walletTypes.map((type) {
+                final selected = type == selectedType;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Material(
+                    color: selected
+                        ? theme.colorScheme.primaryContainer.withOpacity(.65)
+                        : theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(11),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(11),
+                      onTap: () => Navigator.pop(dialogContext, type),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+                        child: Row(children: [
+                          Icon(_walletTypeIcons[type] ?? Icons.wallet_outlined,
+                            size: 19, color: selected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 7),
+                          Expanded(child: Text(type, maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                          if (selected) Icon(Icons.check_circle_rounded,
+                            size: 16, color: theme.colorScheme.primary),
+                        ]),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() => selectedType = picked);
+    }
+  }
 
   Future<void> _showWalletCurrencyPicker() async {
     final theme = Theme.of(context);
@@ -870,25 +943,25 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           SizedBox(width: 10),
                           Expanded(
                             flex: 3,
-                            child: DropdownButtonFormField<String>(
-                              value: selectedType,
-                              isExpanded: true,
-                              decoration: _fieldDecoration('Wallet Type'),
-                              items: walletTypes.map((type) {
-                                return DropdownMenuItem(
-                                  value: type,
-                                  child: Text(
-                                    type,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() => selectedType = value);
-                                }
-                              },
+                            child: SizedBox(
+                              key: _walletTypePickerKey,
+                              height: 56,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: saving ? null : _showWalletTypePicker,
+                                child: InputDecorator(
+                                  decoration: _fieldDecoration('Wallet Type'),
+                                  child: Row(children: [
+                                    Icon(_walletTypeIcons[selectedType] ?? Icons.wallet_outlined,
+                                      size: 19, color: AppColors.primary),
+                                    const SizedBox(width: 7),
+                                    Expanded(child: Text(selectedType,
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13))),
+                                    const Icon(Icons.arrow_drop_down_rounded, size: 21),
+                                  ]),
+                                ),
+                              ),
                             ),
                           ),
                         ],

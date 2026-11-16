@@ -28,16 +28,11 @@ class FinanceDB {
     // Fresh database: koi migration ya old-data conversion nahi.
     _database = await openDatabase(
       fullPath,
-      version: 2,
+      version: 3,
       onCreate: _createDatabase,
       onUpgrade: (database, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await _createExchangeRateHistoryTable(database);
-          await database.execute('''
-            INSERT INTO exchange_rate_history (currency, rate, recorded_at, source)
-            SELECT currency, rate, updated_at, 'migration'
-            FROM exchange_rates
-          ''');
+        if (oldVersion < 3) {
+          await database.execute('DROP TABLE IF EXISTS exchange_rate_history');
         }
       },
     );
@@ -112,8 +107,6 @@ class FinanceDB {
       )
     ''');
 
-    await _createExchangeRateHistoryTable(db);
-
     await db.execute('''
       CREATE TABLE app_settings (
         setting_key TEXT PRIMARY KEY,
@@ -133,22 +126,6 @@ class FinanceDB {
       'setting_key': 'main_currency',
       'setting_value': 'PKR',
     });
-  }
-
-  Future<void> _createExchangeRateHistoryTable(DatabaseExecutor database) async {
-    await database.execute('''
-      CREATE TABLE IF NOT EXISTS exchange_rate_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        currency TEXT NOT NULL,
-        rate REAL NOT NULL,
-        recorded_at TEXT NOT NULL,
-        source TEXT NOT NULL DEFAULT 'manual'
-      )
-    ''');
-    await database.execute('''
-      CREATE INDEX IF NOT EXISTS idx_exchange_rate_history_currency_date
-      ON exchange_rate_history(currency, recorded_at DESC)
-    ''');
   }
 
   // ----------------------------------------------------------
@@ -350,19 +327,6 @@ class FinanceDB {
     return db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
   }
 
-  Future<List<Map<String, dynamic>>> getExchangeRateHistory({
-    String? currency,
-    int limit = 100,
-  }) {
-    return db.query(
-      'exchange_rate_history',
-      where: currency == null ? null : 'UPPER(currency) = ?',
-      whereArgs: currency == null ? null : [currency.toUpperCase()],
-      orderBy: 'recorded_at DESC, id DESC',
-      limit: limit,
-    );
-  }
-
   Future<void> saveExchangeRate(
     String currency,
     double rate, {
@@ -384,12 +348,6 @@ class FinanceDB {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      await txn.insert('exchange_rate_history', {
-        'currency': normalized,
-        'rate': rate,
-        'recorded_at': now,
-        'source': source,
-      });
     });
     AppRefreshController.notifyChanged();
   }

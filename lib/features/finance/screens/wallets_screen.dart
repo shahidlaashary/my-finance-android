@@ -270,18 +270,24 @@ class _WalletsPageState extends State<WalletsPage> {
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
                       )),
                       TextButton.icon(
-                      onPressed: () async {
-                        await Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => WalletManagementPage(
-                            hideBalances: hideBalances,
-                            numberFormat: numberFormat,
-                          ),
-                        ));
-                        await loadWallets();
-                      },
-                      icon: const Icon(Icons.tune_rounded, size: 18),
-                      label: Text(appText(context, 'Manage', 'انتظام کریں')),
-                    ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: () async {
+                          await Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => WalletManagementPage(
+                              hideBalances: hideBalances,
+                              numberFormat: numberFormat,
+                            ),
+                          ));
+                          await loadWallets();
+                        },
+                        icon: const Icon(Icons.tune_rounded, size: 18),
+                        label: Text(appText(context, 'Manage', 'انتظام کریں')),
+                      ),
                     ],
                   ),
                 ),
@@ -303,7 +309,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       : RefreshIndicator(
                           onRefresh: loadWallets,
                           child: GridView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                            padding: const EdgeInsets.fromLTRB(16, 2, 16, 100),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,

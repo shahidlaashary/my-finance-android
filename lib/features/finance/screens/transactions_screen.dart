@@ -15,8 +15,9 @@ import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 class TransactionsScreen extends StatefulWidget {
   final int? walletId;
   final String? walletName;
+  final bool showAllTransactions;
 
-  const TransactionsScreen({super.key, this.walletId, this.walletName});
+  const TransactionsScreen({super.key, this.walletId, this.walletName, this.showAllTransactions = false});
 
   @override
   State<TransactionsScreen> createState() =>
@@ -32,6 +33,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String dateFormat = 'dd/MM/yyyy';
   String weekStart = 'Monday';
   String selectedFilter = 'all';
+  int currentPage = 0;
 
   @override
   void initState() {
@@ -471,6 +473,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         }
                       },
                     ),
+                    const SizedBox(height: 12),
+                    AttachmentSection(
+                      ownerType: 'transaction',
+                      ownerId: item['id'] as int,
+                    ),
                   ],
                 ),
               ),
@@ -624,7 +631,32 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final filteredTransactions = transactions.where((item) {
       final type = normalizeType(item['type']?.toString() ?? '');
       return selectedFilter == 'all' || type == selectedFilter;
-    }).toList();
+    }).toList()
+      ..sort((a, b) {
+        final aDate = DateTime.tryParse(a['date']?.toString() ?? '') ?? DateTime(1970);
+        final bDate = DateTime.tryParse(b['date']?.toString() ?? '') ?? DateTime(1970);
+        return bDate.compareTo(aDate);
+      });
+
+    // Group by calendar date, then paginate by day so a date is never split.
+    final groupedByDate = <String, List<Map<String, dynamic>>>{};
+    for (final item in filteredTransactions) {
+      final parsed = DateTime.tryParse(item['date']?.toString() ?? '');
+      final key = parsed == null ? 'Unknown date' : DateFormat('yyyy-MM-dd').format(parsed);
+      groupedByDate.putIfAbsent(key, () => []).add(item);
+    }
+    final dateKeys = groupedByDate.keys.toList();
+    const daysPerPage = 7;
+    final pageCount = (dateKeys.length / daysPerPage).ceil();
+    final safePage = currentPage.clamp(0, pageCount > 0 ? pageCount - 1 : 0).toInt();
+    final pageDateKeys = dateKeys.skip(safePage * daysPerPage).take(daysPerPage).toList();
+    final displayRows = <Map<String, dynamic>>[];
+    for (final key in pageDateKeys) {
+      displayRows.add({'dateHeader': key});
+      for (final item in groupedByDate[key]!) {
+        displayRows.add({'transaction': item});
+      }
+    }
 
     final filters = [
       ('all', 'All'),
@@ -719,9 +751,67 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           onRefresh: loadTransactions,
                           child: ListView.builder(
                             padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
-                            itemCount: filteredTransactions.length,
+                            itemCount: displayRows.length + 1,
                             itemBuilder: (context, index) {
-                              final item = filteredTransactions[index];
+                              if (index == displayRows.length) {
+                                if (!showAllTransactions && dateKeys.length > daysPerPage) {
+                                  return Align(
+                                    alignment: Alignment.center,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      child: OutlinedButton.icon(
+                                        onPressed: () => Navigator.push(context, MaterialPageRoute(
+                                          builder: (_) => TransactionsScreen(
+                                            walletId: widget.walletId,
+                                            walletName: widget.walletName,
+                                            showAllTransactions: true,
+                                          ),
+                                        )),
+                                        icon: const Icon(Icons.view_list_rounded),
+                                        label: const Text('View All Transactions'),
+                                      ),
+                                    ),
+                                  );
+                                }
+                                if (showAllTransactions && pageCount > 1) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        OutlinedButton(
+                                          onPressed: safePage > 0 ? () => setState(() => currentPage--) : null,
+                                          child: const Text('Previous'),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                                          child: Text('Page ${safePage + 1} of $pageCount'),
+                                        ),
+                                        OutlinedButton(
+                                          onPressed: safePage < pageCount - 1 ? () => setState(() => currentPage++) : null,
+                                          child: const Text('Next'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                                return const SizedBox(height: 8);
+                              }
+                              final row = displayRows[index];
+                              if (row.containsKey('dateHeader')) {
+                                final rawDate = row['dateHeader'] as String;
+                                final parsedHeader = DateTime.tryParse(rawDate);
+                                final label = parsedHeader == null ? rawDate : DateFormat(dateFormat).format(parsedHeader);
+                                return Padding(
+                                  padding: const EdgeInsets.fromLTRB(2, 14, 2, 9),
+                                  child: Row(children: [
+                                    Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF43534A))),
+                                    const SizedBox(width: 10),
+                                    const Expanded(child: Divider(height: 1, color: Color(0xFFE3EAE5))),
+                                  ]),
+                                );
+                              }
+                              final item = row['transaction'] as Map<String, dynamic>;
                               final type = normalizeType(item['type']?.toString() ?? '');
                               final isIncome = type == 'income';
                               final isExpense = type == 'expense';
@@ -964,26 +1054,19 @@ class TransactionDetailScreen extends StatelessWidget {
           final details = <Widget>[
             _detailRow('Transaction ID', '#${transaction['id']}'),
             _detailRow('Type', type),
-            if (isAdjustment) _detailRow('Balance Change', '${((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-'} ${currency} ${((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount).toStringAsFixed(2)}'),
             _detailRow('Date & Time', date == null
                 ? (transaction['date']?.toString() ?? '—')
                 : DateFormat('dd MMM yyyy, hh:mm a').format(date)),
             _detailRow('Account', walletName(sourceId)),
-            if (isTransfer) _detailRow('Destination Account', walletName(destinationId)),
-            if (!isTransfer) _detailRow('Category', category.isEmpty ? 'No category' : category),
-            if (isTransfer && toAmount != null)
-              _detailRow('Amount Received', '${transaction['to_currency'] ?? ''} ${toAmount.toStringAsFixed(2)}'),
-            if (isTransfer && exchangeRate != null)
-              _detailRow('Exchange Rate', exchangeRate.toStringAsFixed(6)),
-            if (isTransfer) _detailRow('Transfer Fee', '$currency ${fee.toStringAsFixed(2)}'),
+            _detailRow('Category', category.isEmpty ? (isTransfer ? 'Transfer' : 'No category') : category),
             _detailRow('Description / Note', note.isEmpty ? '—' : note),
           ];
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
             children: [
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [color.withValues(alpha: 0.13), color.withValues(alpha: 0.045)],
@@ -996,20 +1079,20 @@ class TransactionDetailScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(icon, color: color, size: 26),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 7),
                     Text(type, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 5),
                     Text(
                       '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : ''} $currency ${(isAdjustment ? ((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount).toStringAsFixed(2)}',
-                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: color),
+                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: color),
                     ),
                     if (isTransfer && toAmount != null) ...[
                       const SizedBox(height: 5),
@@ -1026,7 +1109,7 @@ class TransactionDetailScreen extends StatelessWidget {
                 icon: Icons.receipt_long_outlined,
                 children: details,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               _detailSection(
                 context,
                 title: 'Attachments',
@@ -1035,6 +1118,7 @@ class TransactionDetailScreen extends StatelessWidget {
                   AttachmentSection(
                     ownerType: 'transaction',
                     ownerId: transaction['id'] as int,
+                    readOnly: true,
                   ),
                 ],
               ),

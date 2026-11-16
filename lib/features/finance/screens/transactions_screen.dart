@@ -1057,7 +1057,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((item['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : '⇄'} $currency ${money(isAdjustment ? ((item['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount)}',
+                                            '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((item['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : isCommittee ? ((item['category']?.toString().toLowerCase().contains('installment') ?? false) ? '+' : '-') : '⇄'} $currency ${money(isAdjustment ? ((item['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount)}',
                                             maxLines: 1,
                                             style: TextStyle(
                                               fontSize: 12.5,

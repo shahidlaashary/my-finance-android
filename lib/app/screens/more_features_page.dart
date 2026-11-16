@@ -5,7 +5,6 @@ import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
-import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
 import 'package:my_finance/features/staff/screens/staff_screen.dart';
@@ -34,10 +33,6 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'My Documents',
         'icon': Icons.folder_copy_outlined,
-      },
-      {
-        'title': 'Recurring Transactions',
-        'icon': Icons.repeat_rounded,
       },
       {
         'title': 'Staff Management',
@@ -122,9 +117,6 @@ class MoreFeaturesPage extends StatelessWidget {
                             }
                             if (feature['title'] == 'My Documents') {
                               return const MyDocumentsScreen();
-                            }
-                            if (feature['title'] == 'Recurring Transactions') {
-                              return const RecurringTransactionsScreen();
                             }
                             if (feature['title'] == 'Exchange Rates') {
                               return const ExchangeRatesScreen();

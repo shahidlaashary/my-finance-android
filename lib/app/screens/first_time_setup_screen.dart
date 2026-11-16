@@ -22,6 +22,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   bool _saving = false;
 
   static const _completedKey = 'first_time_setup_completed';
+  List<String> get currencies => CurrencyCatalog.supported.toList()..sort();
   static const _currencyNames = <String, String>{
     'PKR': 'Pakistani Rupee', 'USD': 'US Dollar', 'GBP': 'British Pound',
     'EUR': 'Euro', 'AED': 'UAE Dirham', 'SAR': 'Saudi Riyal',
@@ -138,6 +139,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                     fillColor: theme.colorScheme.surfaceContainerHighest,
                     contentPadding: const EdgeInsets.symmetric(vertical: 9),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
+                ),
                 const SizedBox(height: 12),
                 Expanded(child: ListView.separated(itemCount: filtered.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 4),

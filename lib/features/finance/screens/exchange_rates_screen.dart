@@ -20,7 +20,6 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   final FinanceDB _database = FinanceDB.instance;
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];
-  List<Map<String, dynamic>> _history = [];
   bool _loading = true;
   bool _updating = false;
   String? _message;
@@ -53,11 +52,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   Future<void> _loadData({bool autoUpdateIfStale = false}) async {
     try {
       final rates = await _database.getExchangeRates();
-      final history = await _database.getExchangeRateHistory(limit: 30);
       if (!mounted) return;
       setState(() {
         _rates = rates;
-        _history = history;
         _loading = false;
       });
 
@@ -392,37 +389,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 18),
-                  Text(appText(context, 'Rate History', 'شرحوں کی تاریخ'),
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                  SizedBox(height: 8),
-                  if (_history.isEmpty)
-                    Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(18),
-                        child: Text('Abhi rate history available nahi. Rate save ya online update karein.'),
-                      ),
-                    )
-                  else
-                    Card(
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < _history.length; i++) ...[
-                            ListTile(
-                              dense: true,
-                              title: Text(
-                                '1 ${_history[i]['currency']} = PKR ${_numberFormat.format((_history[i]['rate'] as num).toDouble())}',
-                                style: const TextStyle(fontWeight: FontWeight.w700),
-                              ),
-                              subtitle: Text(
-                                '${_dateLabel(_history[i]['recorded_at'])} • ${_history[i]['source'] == 'automatic' ? 'Online update' : _history[i]['source'] == 'migration' ? 'Existing rate' : 'Manual update'}',
-                              ),
-                            ),
-                            if (i != _history.length - 1) const Divider(height: 1),
-                          ],
-                        ],
-                      ),
-                    ),
+
                 ],
               ),
             ),

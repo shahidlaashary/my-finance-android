@@ -234,6 +234,40 @@ class TransactionsService {
     });
   }
 
+  static Future<void> updateAdjustmentTransaction({
+    required int id,
+    required double balanceDelta,
+    required String note,
+    required String date,
+  }) async {
+    if (!balanceDelta.isFinite || balanceDelta == 0) {
+      throw Exception('Balance change must be a non-zero amount.');
+    }
+    final db = await database;
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'transactions',
+        where: "id = ? AND LOWER(type) = 'adjustment'",
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (rows.isEmpty) throw Exception('Adjustment transaction not found.');
+      final row = rows.first;
+      final walletId = (row['wallet_id'] as num).toInt();
+      final oldDelta = (row['balance_delta'] as num?)?.toDouble();
+      if (oldDelta == null) throw Exception('Adjustment balance change is missing.');
+      await _changeBalance(txn, walletId, -oldDelta);
+      await _changeBalance(txn, walletId, balanceDelta);
+      await txn.update('transactions', {
+        'amount': balanceDelta.abs(),
+        'balance_delta': balanceDelta,
+        'note': note,
+        'date': date,
+      }, where: 'id = ?', whereArgs: [id]);
+    });
+    AppRefreshController.notifyChanged();
+  }
+
   static Future<void> deleteTransaction(int id) async {
     final db = await database;
     final existing = await db.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);

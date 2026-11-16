@@ -408,7 +408,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(appText(context, "My Budgets", "My Budgets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Budgets", "My Budgets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26)))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(

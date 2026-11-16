@@ -390,29 +390,13 @@ class _WalletsPageState extends State<WalletsPage> {
                                           ],
                                         ),
                                       ),
-                                      PopupMenuButton<String>(
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(minWidth: 155),
-                                        icon: const Icon(Icons.more_vert_rounded),
-                                        iconSize: 17,
-                                        onSelected: (value) {
-                                          if (value == 'edit') openWalletForm(wallet);
-                                          else if (value == 'delete') deleteWallet(wallet);
-                                        },
-                                        itemBuilder: (_) => [
-                                          PopupMenuItem(value: 'edit', child: Row(children: [
-                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9),
-                                            Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
-                                          PopupMenuItem(value: 'delete', child: Row(children: [
-                                            Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9),
-                                            Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
-                                        ],
-                                      ),
-                                      if (excluded) const Icon(
-                                        Icons.remove_circle_outline_rounded,
-                                        size: 19,
-                                        color: AppColors.expense,
+                                      if (excluded) Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: const Icon(
+                                          Icons.remove_circle_outline_rounded,
+                                          size: 19,
+                                          color: AppColors.expense,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -1106,10 +1090,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
           icon: const Icon(Icons.delete_outline, color: AppColors.expense),
         ),
         IconButton(
-          tooltip: archived ? 'Restore' : 'Hide',
+          tooltip: archived ? 'Unhide Wallet' : 'Hide Wallet',
           visualDensity: VisualDensity.compact,
           onPressed: () => _archive(w, !archived),
-          icon: Icon(archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+          icon: Icon(archived ? Icons.visibility_outlined : Icons.archive_outlined),
         ),
       ]),
     ));

@@ -202,5 +202,5 @@ class CommitteeService {
     AppRefreshController.notifyChanged();
   }
 
-  static Future<int> sharedWalletId() => getSharedWalletId(create: true);
+  static Future<int> sharedWalletId() => getSharedWalletId(create: false);
 }

@@ -318,21 +318,39 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showAllCurrencies() async {
     final entries = otherCurrencyTotals.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
-    final selectedBaseRate =
-        await FinanceDB.instance.getExchangeRate(baseCurrency);
+    // Read the same saved rates collection used by the Exchange Rates screen.
+    // Prefer the newest record if legacy data contains duplicate currency codes
+    // with different casing (for example, "aed" and "AED").
+    final savedRateRows = await FinanceDB.instance.db.query(
+      'exchange_rates',
+      orderBy: 'updated_at DESC, id DESC',
+    );
+    final ratesByCurrency = <String, double>{};
+    for (final row in savedRateRows) {
+      final code = row['currency']?.toString().trim().toUpperCase() ?? '';
+      final rawRate = row['rate'];
+      if (code.isEmpty || rawRate is! num) continue;
+      final rate = rawRate.toDouble();
+      if (rate.isFinite && rate > 0) {
+        ratesByCurrency.putIfAbsent(code, () => rate);
+      }
+    }
+    ratesByCurrency['PKR'] = 1.0;
+    final selectedBaseRate = ratesByCurrency[baseCurrency.toUpperCase()];
     final convertedByCurrency = <String, double>{};
     final missingRates = <String>[];
     double foreignTotalPKR = 0;
     for (final entry in entries) {
-      final rate = await FinanceDB.instance.getExchangeRate(entry.key);
-      if (rate == null || !rate.isFinite || rate <= 0) {
-        missingRates.add(entry.key);
+      final currency = entry.key.trim().toUpperCase();
+      final rate = ratesByCurrency[currency];
+      if (rate == null) {
+        missingRates.add(currency);
         continue;
       }
       // Exchange rates are stored as PKR value per one unit of currency.
       foreignTotalPKR += entry.value * rate;
       if (selectedBaseRate != null && selectedBaseRate > 0) {
-        convertedByCurrency[entry.key] =
+        convertedByCurrency[currency] =
             entry.value * rate / selectedBaseRate;
       }
     }

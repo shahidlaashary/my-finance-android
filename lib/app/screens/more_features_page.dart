@@ -66,6 +66,10 @@ class MoreFeaturesPage extends StatelessWidget {
         'icon': Icons.payments_rounded,
       },
       {
+        'title': 'Committee',
+        'icon': Icons.groups_2_outlined,
+      },
+      {
         'title': 'My Partner',
         'icon': Icons.handshake_outlined,
       },
@@ -173,6 +177,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Installment Manager') {
                         return const InstallmentsScreen();
+                      }
+                      if (feature['title'] == 'Committee') {
+                        return const CommitteeScreen();
                       }
                       if (feature['title'] == 'Recycle Bin') {
                         return const RecycleBinScreen();

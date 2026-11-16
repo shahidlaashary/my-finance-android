@@ -94,41 +94,8 @@ class MoreFeaturesPage extends StatelessWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: features.length + 1,
+        itemCount: features.length,
         itemBuilder: (context, index) {
-          if (index == features.length) {
-            final colors = Theme.of(context).colorScheme;
-            return Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colors.primary.withValues(alpha: 0.12),
-                    colors.secondary.withValues(alpha: 0.06),
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.primary.withValues(alpha: 0.16)),
-              ),
-              child: Center(
-                child: Text(
-                  'Created by Shahid Laashary',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: colors.onSurface,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.15,
-                  ),
-                ),
-              ),
-            );
-          }
           final feature = features[index];
 
           return Card(

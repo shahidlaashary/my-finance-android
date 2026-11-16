@@ -62,7 +62,7 @@ class _WalletWavePainter extends CustomPainter {
     canvas.scale(-1, 1);
 
     Path wave(double offset) => Path()
-      ..moveTo(0, size.height * 0.35 + offset)
+      ..moveTo(0, size.height * 0.35 + offset + 1.0)
       ..quadraticBezierTo(size.width * 0.28, -size.height * 0.08 - offset, size.width * 0.52, size.height * 0.38)
       ..quadraticBezierTo(size.width * 0.78, size.height * 0.88 + offset, size.width, size.height * 0.20)
       ..lineTo(size.width, size.height)
@@ -1072,10 +1072,14 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
 
   Widget _walletTile(Map<String,dynamic> w,{required bool archived}) {
     final icon=IconData((w['icon_code'] as num).toInt(),fontFamily:'MaterialIcons');
-    return Card(margin:const EdgeInsets.symmetric(horizontal:12,vertical:4),child:ListTile(
-      leading: Icon(icon,color:AppColors.primary),
-      title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontWeight:FontWeight.w700)),
-      subtitle: Text(_money(w)),
+    return Card(margin:const EdgeInsets.symmetric(horizontal:12,vertical:2),child:ListTile(
+      dense: true,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -3),
+      minVerticalPadding: 2,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+      leading: Icon(icon,color:AppColors.primary,size:21),
+      title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w700)),
+      subtitle: Text(_money(w),style: const TextStyle(fontSize:11)),
       trailing: Row(mainAxisSize:MainAxisSize.min,children:[
         IconButton(
           tooltip: 'Edit Wallet',

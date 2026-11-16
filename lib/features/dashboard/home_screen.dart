@@ -31,6 +31,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   double totalBalance = 0;
+  double pkrWalletTotal = 0;
+  Map<String, double> otherCurrencyTotals = {};
   double monthlyIncome = 0;
   double monthlyExpense = 0;
   double currentAssetsPKR = 0;
@@ -104,6 +106,24 @@ class _HomePageState extends State<HomePage> {
       }
 
       final balance = await FinanceDB.instance.getTotalBalanceInBaseCurrency();
+      final walletCurrencyRows = await db.rawQuery('''
+        SELECT UPPER(currency) AS currency, COALESCE(SUM(balance), 0) AS total
+        FROM wallets
+        WHERE COALESCE(exclude_total, 0) = 0
+        GROUP BY UPPER(currency)
+        ORDER BY UPPER(currency)
+      ''');
+      double pkrBalance = 0;
+      final foreignBalances = <String, double>{};
+      for (final row in walletCurrencyRows) {
+        final currency = (row['currency'] as String? ?? '').toUpperCase();
+        final amount = (row['total'] as num?)?.toDouble() ?? 0;
+        if (currency == 'PKR') {
+          pkrBalance = amount;
+        } else if (currency.isNotEmpty) {
+          foreignBalances[currency] = amount;
+        }
+      }
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
       final loansByCurrency =
@@ -132,6 +152,8 @@ class _HomePageState extends State<HomePage> {
         numberFormat = format;
         baseCurrency = selectedBaseCurrency;
         totalBalance = balance;
+        pkrWalletTotal = pkrBalance;
+        otherCurrencyTotals = foreignBalances;
         monthlyIncome = income;
         monthlyExpense = expense;
         currentAssetsPKR = assetsValue;
@@ -249,6 +271,100 @@ class _HomePageState extends State<HomePage> {
     return '$baseCurrency ${NumberFormat('#,##0.00', locale).format(amount)}';
   }
 
+  String _currencyAmount(String currency, double amount) {
+    if (hideBalances) return '$currency ******';
+    final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
+    return '$currency ${NumberFormat('#,##0.00', locale).format(amount)}';
+  }
+
+  MapEntry<String, double>? get firstOtherCurrency {
+    if (otherCurrencyTotals.isEmpty) return null;
+    final entries = otherCurrencyTotals.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return entries.first;
+  }
+
+  void _showAllCurrencies() {
+    final entries = otherCurrencyTotals.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.72,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.currency_exchange_rounded, color: AppColors.primary),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(appText(context, 'All Currencies Summary', 'تمام کرنسیوں کا خلاصہ'),
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.text))),
+                    IconButton(tooltip: appText(context, 'Close', 'بند کریں'),
+                      onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded)),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Flexible(
+                child: entries.isEmpty
+                    ? Padding(padding: const EdgeInsets.all(28),
+                        child: Text(appText(context, 'No other currency wallets.', 'دیگر کرنسی کے والٹس موجود نہیں۔'),
+                          style: TextStyle(color: AppColors.muted)))
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        itemCount: entries.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEDF1EE)),
+                        itemBuilder: (context, index) {
+                          final entry = entries[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            child: Row(children: [
+                              Expanded(child: Text(entry.key,
+                                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.text))),
+                              Text(_currencyAmount(entry.key, entry.value),
+                                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.text)),
+                            ]),
+                          );
+                        },
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+                child: Row(children: [
+                  const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(appText(context, 'Each currency is shown separately.', 'ہر کرنسی الگ دکھائی گئی ہے۔'),
+                    style: const TextStyle(fontSize: 12, color: AppColors.muted))),
+                  TextButton(onPressed: () => Navigator.pop(sheetContext),
+                    child: Text(appText(context, 'Close', 'بند کریں'))),
+                ]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   double get monthlySavings => monthlyIncome - monthlyExpense;
 
   double get savingsRate => monthlyIncome <= 0
@@ -297,25 +413,65 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(appText(context, 'Total Wallet Balance', 'کل والٹ بیلنس'),
                       style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  SizedBox(height: 8),
-                  loading
-                      ? SizedBox(
-                          height: 30,
-                          width: 30,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2),
-                        )
-                      : Text(
-                          money(totalBalance),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 27,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                  SizedBox(height: 7),
-                  Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
-                      style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(height: 14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(appText(context, 'PKR Wallets', 'PKR والٹس'),
+                          style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 7),
+                        loading ? const SizedBox(height: 25, width: 25,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
+                            child: Text(_currencyAmount('PKR', pkrWalletTotal),
+                              style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w800))),
+                      ])),
+                      const SizedBox(width: 14),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(appText(context, 'Other Currencies', 'دیگر کرنسیاں'),
+                          style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 7),
+                        if (loading)
+                          const SizedBox(height: 25, width: 25,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        else if (firstOtherCurrency == null)
+                          Text(appText(context, 'No other currencies', 'کوئی دوسری کرنسی نہیں'),
+                            style: const TextStyle(color: Colors.white, fontSize: 12))
+                        else ...[
+                          FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
+                            child: Text(_currencyAmount(firstOtherCurrency!.key, firstOtherCurrency!.value),
+                              style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800))),
+                          if (otherCurrencyTotals.length > 1)
+                            Padding(padding: const EdgeInsets.only(top: 3),
+                              child: Text('+${otherCurrencyTotals.length - 1} ${appText(context, 'more currencies', 'مزید کرنسیاں')}',
+                                style: const TextStyle(color: Colors.white70, fontSize: 11))),
+                          TextButton(onPressed: _showAllCurrencies,
+                            style: TextButton.styleFrom(foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 4), minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                            child: Text(appText(context, 'View All Currencies', 'تمام کرنسیاں دیکھیں'),
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                        ],
+                      ])),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.13),
+                      borderRadius: BorderRadius.circular(15)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
+                        style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      loading ? const SizedBox(height: 20, width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text(money(totalBalance),
+                          style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
+                    ]),
+                  ),
                 ],
               ),
             ),

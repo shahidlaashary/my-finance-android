@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GeneralPreferences {
@@ -16,6 +17,27 @@ class GeneralPreferences {
   static const _deleteConfirmKey = 'general_delete_confirmation';
   static const _hideBalancesKey = 'general_hide_balances';
   static const _hapticsKey = 'general_haptic_feedback';
+  static const _headerNameKey = 'general_header_name';
+
+  Future<String> get headerName async => (await SharedPreferences.getInstance()).getString(_headerNameKey) ?? '';
+  Future<void> setHeaderName(String value) async {
+    await (await SharedPreferences.getInstance()).setString(_headerNameKey, value.trim());
+    _notifyChanged();
+  }
+
+  Widget personalizedHeaderTitle(BuildContext context, Widget fallback) =>
+      ValueListenableBuilder<int>(
+        valueListenable: revision,
+        builder: (context, _, __) => FutureBuilder<String>(
+          future: headerName,
+          builder: (context, snapshot) {
+            final name = snapshot.data?.trim() ?? '';
+            return name.isEmpty ? fallback : Text(name, maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800));
+          },
+        ),
+      );
 
   Future<String> get dateFormat async =>
       (await SharedPreferences.getInstance()).getString(_dateFormatKey) ?? 'dd/MM/yyyy';
@@ -75,7 +97,7 @@ class GeneralPreferences {
 
   Future<void> reset() async {
     final p = await SharedPreferences.getInstance();
-    for (final key in [_dateFormatKey,_weekStartKey,_numberFormatKey,_rememberWalletKey,_defaultDateKey,_deleteConfirmKey,_hideBalancesKey,_hapticsKey]) {
+    for (final key in [_dateFormatKey,_weekStartKey,_numberFormatKey,_rememberWalletKey,_defaultDateKey,_deleteConfirmKey,_hideBalancesKey,_hapticsKey,_headerNameKey]) {
       await p.remove(key);
     }
     _notifyChanged();

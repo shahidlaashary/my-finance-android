@@ -511,9 +511,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: Text(
-          widget.walletName ?? appText(context, "Transactions", "Transactions"),
-          style: const TextStyle(
+        title: widget.walletId == null
+            ? GeneralPreferences.instance.personalizedHeaderTitle(context, Text(
+                appText(context, "Transactions", "Transactions"),
+                style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: Color(0xFF202A26),

@@ -390,29 +390,30 @@ class _WalletsPageState extends State<WalletsPage> {
                                           ],
                                         ),
                                       ),
-                                      SizedBox.shrink(),
-                                      /* removed per-card overflow menu
-                                      SizedBox(
-                                        width: 22,
-                                        child: PopupMenuButton<String>(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 145),
-                                          icon: const Icon(Icons.more_vert_rounded),
-                                          iconSize: 17,
+                                      PopupMenuButton<String>(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 155),
+                                        icon: const Icon(Icons.more_vert_rounded),
+                                        iconSize: 17,
                                         onSelected: (value) {
                                           if (value == 'edit') openWalletForm(wallet);
                                           else if (value == 'delete') deleteWallet(wallet);
                                         },
                                         itemBuilder: (_) => [
                                           PopupMenuItem(value: 'edit', child: Row(children: [
-                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
+                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9),
+                                            Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
                                           PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9), Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
-                                          ],
-                                        ),
+                                            SizedBox(width: 9),
+                                            Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
+                                        ],
                                       ),
-                                      */
+                                      if (excluded) const Icon(
+                                        Icons.remove_circle_outline_rounded,
+                                        size: 19,
+                                        color: AppColors.expense,
+                                      ),
                                     ],
                                   ),
                                   const Spacer(),
@@ -1092,12 +1093,26 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontWeight:FontWeight.w700)),
       subtitle: Text(_money(w)),
       trailing: Row(mainAxisSize:MainAxisSize.min,children:[
-        IconButton(tooltip:'Edit',onPressed:()=>_edit(w),
-          icon:const Icon(Icons.edit_outlined)),
         IconButton(tooltip:archived?'Restore':'Hide',onPressed:()=>_archive(w,!archived),
           icon:Icon(archived?Icons.unarchive_outlined:Icons.archive_outlined)),
-        IconButton(tooltip:'Delete',onPressed:()=>_delete(w),
-          icon:const Icon(Icons.delete_outline,color:AppColors.expense)),
+        PopupMenuButton<String>(
+          tooltip: 'More options',
+          onSelected: (value) {
+            if (value == 'edit') _edit(w);
+            if (value == 'delete') _delete(w);
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem(value:'edit',child:Row(children:[
+              const Icon(Icons.edit_outlined,size:18), const SizedBox(width:9),
+              Text(appText(context,'Edit Wallet','والٹ میں ترمیم کریں')),
+            ])),
+            PopupMenuItem(value:'delete',child:Row(children:[
+              const Icon(Icons.delete_outline,size:18,color:AppColors.expense),
+              const SizedBox(width:9),
+              Text(appText(context,'Delete Wallet','والٹ حذف کریں')),
+            ])),
+          ],
+        ),
       ]),
     ));
   }

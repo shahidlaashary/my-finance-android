@@ -1,4 +1,7 @@
-import 'dart:convert';\nimport 'dart:io';\n\nimport 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -37,7 +40,35 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     super.dispose();
   }
 
-  Future<void> _refreshSelectedRate() async {\n    if (_currency == 'PKR') return;\n    final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);\n    try {\n      final request = await client.getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))\n          .timeout(const Duration(seconds: 20));\n      request.headers.set(HttpHeaders.acceptHeader, 'application/json');\n      final response = await request.close().timeout(const Duration(seconds: 20));\n      if (response.statusCode != HttpStatus.ok) {\n        throw HttpException('Exchange-rate service returned HTTP ${response.statusCode}.');\n      }\n      final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 20));\n      final payload = jsonDecode(body) as Map<String, dynamic>;\n      final rates = payload['rates'] as Map<String, dynamic>?;\n      final rate = rates?[_currency];\n      if (payload['result'] != 'success' || rate is! num || rate <= 0) {\n        throw const FormatException('Selected currency rate is unavailable.');\n      }\n      await FinanceDB.instance.saveExchangeRate(_currency, 1 / rate.toDouble(), source: 'automatic');\n    } finally {\n      client.close(force: true);\n    }\n  }\n\n  Future<void> _finish() async {
+  Future<void> _refreshSelectedRate() async {
+    if (_currency == 'PKR') return;
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+    try {
+      final request = await client.getUrl(
+        Uri.parse('https://open.er-api.com/v6/latest/PKR'),
+      ).timeout(const Duration(seconds: 20));
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      final response = await request.close().timeout(const Duration(seconds: 20));
+      if (response.statusCode != HttpStatus.ok) {
+        throw HttpException('Exchange-rate service returned HTTP ${response.statusCode}.');
+      }
+      final body = await response.transform(utf8.decoder).join()
+          .timeout(const Duration(seconds: 20));
+      final payload = jsonDecode(body) as Map<String, dynamic>;
+      final rates = payload['rates'] as Map<String, dynamic>?;
+      final rate = rates?[_currency];
+      if (payload['result'] != 'success' || rate is! num || rate <= 0) {
+        throw const FormatException('Selected currency rate is unavailable.');
+      }
+      await FinanceDB.instance.saveExchangeRate(
+        _currency, 1 / rate.toDouble(), source: 'automatic',
+      );
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Future<void> _finish() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,7 +78,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     }
     setState(() => _saving = true);
     try {
-      // Reuse the exact existing Custom Name setting used by every page header.
+      await _refreshSelectedRate();
       await GeneralPreferences.instance.setHeaderName(name);
       await FinanceDB.instance.setBaseCurrency(_currency);
       final prefs = await SharedPreferences.getInstance();
@@ -80,23 +111,19 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    height: 82,
-                    width: 82,
-                    alignment: Alignment.center,
+                    height: 82, width: 82, alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(26),
                     ),
                     child: Icon(Icons.account_balance_wallet_rounded,
-                        size: 43, color: theme.colorScheme.primary),
+                      size: 43, color: theme.colorScheme.primary),
                   ),
                   const SizedBox(height: 25),
-                  Text('Welcome to My Finance',
-                    textAlign: TextAlign.center,
+                  Text('Welcome to My Finance', textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  Text("Let's personalize your experience",
-                    textAlign: TextAlign.center,
+                  Text("Let's personalize your experience", textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant)),
                   const SizedBox(height: 32),
@@ -118,8 +145,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                   Text('Base Currency', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 9),
                   DropdownButtonFormField<String>(
-                    value: _currency,
-                    isExpanded: true,
+                    value: _currency, isExpanded: true,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.currency_exchange_rounded),
                       border: OutlineInputBorder(),
@@ -139,14 +165,16 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                     child: FilledButton(
                       onPressed: _saving ? null : _finish,
                       child: _saving
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(width: 22, height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2))
                         : const Text('Get Started', style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ),
                   const SizedBox(height: 13),
                   Text('You can change your name and currency anytime in Settings.',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant)),
                 ],
               ),
             ),

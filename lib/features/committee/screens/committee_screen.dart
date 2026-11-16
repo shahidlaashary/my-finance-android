@@ -180,7 +180,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         DropdownButtonFormField<int>(value:memberId,decoration:const InputDecoration(labelText:'Member'),
           items:eligibleMembers.map((m)=>DropdownMenuItem(value:(m['id'] as num).toInt(),child:Text(m['name'].toString()))).toList(),
           onChanged:(v){if(v!=null)setD(()=>memberId=v);}),
-        TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Amount')),
+        TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:'Amount (${widget.committee['currency'] ?? 'PKR'})')),
         DropdownButtonFormField<int>(value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Deposit into':'Pay from'),
           items:wallets.map((w)=>DropdownMenuItem(value:(w['id'] as num).toInt(),child:Text('${w['name']} (${w['currency']})'))).toList(),
           onChanged:(v){if(v!=null)setD(()=>walletId=v);}),
@@ -302,8 +302,8 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       final e=entries[i];final deposit=e['entry_type']=='Installment';
       return Card(child:ListTile(leading:CircleAvatar(child:Icon(deposit?Icons.south_west:Icons.north_east,color:deposit?Colors.green:Colors.deepPurple)),
         title:Text('${e['member_name']} • ${e['entry_type']}'),
-        subtitle:Text('${DateFormat('dd MMM yyyy').format(DateTime.parse(e['entry_date']))} • ${e['wallet_name']}'),
-        trailing:Text('${deposit?'+':'−'} ${e['wallet_currency']} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Colors.green:Colors.deepPurple)),
+        subtitle:Text('${DateFormat('dd MMM yyyy').format(DateTime.parse(e['entry_date']))} • ${money.format(e['wallet_amount'] ?? e['amount'])} ${e['wallet_currency']} → ${e['wallet_name']}'),
+        trailing:Text('${deposit?'+':'−'} ${e['committee_currency'] ?? widget.committee['currency'] ?? 'PKR'} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Colors.green:Colors.deepPurple)),
       ));
     });
 

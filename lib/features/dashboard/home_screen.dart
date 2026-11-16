@@ -321,10 +321,14 @@ class _HomePageState extends State<HomePage> {
     final selectedBaseRate =
         await FinanceDB.instance.getExchangeRate(baseCurrency);
     final convertedByCurrency = <String, double>{};
+    final missingRates = <String>[];
     double foreignTotalPKR = 0;
     for (final entry in entries) {
       final rate = await FinanceDB.instance.getExchangeRate(entry.key);
-      if (rate == null) continue;
+      if (rate == null || !rate.isFinite || rate <= 0) {
+        missingRates.add(entry.key);
+        continue;
+      }
       // Exchange rates are stored as PKR value per one unit of currency.
       foreignTotalPKR += entry.value * rate;
       if (selectedBaseRate != null && selectedBaseRate > 0) {
@@ -392,7 +396,7 @@ class _HomePageState extends State<HomePage> {
                                 child: Text(
                                   hideBalances
                                       ? '${entry.key} · ${_currencyCountry(entry.key)} · ****** = $baseCurrency ******'
-                                      : '${entry.key} · ${_currencyCountry(entry.key)} · ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(entry.value)} = ${converted == null ? '$baseCurrency —' : _currencyAmount(baseCurrency, converted)}',
+                                      : '${entry.key} · ${_currencyCountry(entry.key)} · ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(entry.value)} = ${converted == null ? 'Rate missing' : _currencyAmount(baseCurrency, converted)}',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -422,9 +426,11 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       hideBalances
                           ? '$baseCurrency ******'
-                          : selectedBaseRate == null || selectedBaseRate <= 0
-                              ? '$baseCurrency —'
-                              : _currencyAmount(baseCurrency, foreignTotalPKR / selectedBaseRate),
+                          : missingRates.isNotEmpty
+                              ? 'Rate needed: ${missingRates.join(', ')}'
+                              : selectedBaseRate == null || selectedBaseRate <= 0
+                                  ? '$baseCurrency —'
+                                  : _currencyAmount(baseCurrency, foreignTotalPKR / selectedBaseRate),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.primary)),
                   ]),
                 ),
@@ -462,7 +468,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Primary wallet balance.
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF147D59), Color(0xFF0B6245)],
@@ -482,8 +488,8 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(appText(context, 'Total Wallet Balance', 'کل والٹ بیلنس'),
-                      style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 8),
+                      style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  const SizedBox(height: 5),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -526,20 +532,21 @@ class _HomePageState extends State<HomePage> {
                       ])),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(15)),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
-                        style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      loading ? const SizedBox(height: 20, width: 20,
+                      borderRadius: BorderRadius.circular(12)),
+                    child: Row(children: [
+                      Expanded(child: Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
+                        style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600))),
+                      const SizedBox(width: 8),
+                      loading ? const SizedBox(height: 18, width: 18,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text(money(totalBalance),
-                          style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
+                        : Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight,
+                            child: Text(money(totalBalance),
+                              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)))),
                     ]),
                   ),
                 ],

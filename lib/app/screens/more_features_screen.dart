@@ -422,43 +422,49 @@ class _YourNameSettingsTileState extends State<_YourNameSettingsTile> {
     controller.dispose();
   }
   @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Your Name', style: TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 8),
-        ValueListenableBuilder<int>(
-          valueListenable: _preferences.revision,
-          builder: (context, _, __) => FutureBuilder<String>(
-            future: _preferences.yourName,
-            builder: (context, snapshot) {
-              final name = snapshot.data?.trim() ?? '';
-              return Row(children: [
-                Expanded(child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(11)),
-                  child: Row(children: [
-                    const Icon(Icons.person_outline, size: 19),
-                    const SizedBox(width: 9),
-                    Expanded(child: Text(name.isEmpty ? 'Name not set' : name,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700))),
-                  ]),
-                )),
-                const SizedBox(width: 8),
-                OutlinedButton(onPressed: _changeName,
-                  style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 13)),
-                  child: const Text('Change')),
-              ]);
-            },
+  Widget build(BuildContext context) => ValueListenableBuilder<int>(
+    valueListenable: _preferences.revision,
+    builder: (context, _, __) => FutureBuilder<String>(
+      future: _preferences.yourName,
+      builder: (context, snapshot) {
+        final name = snapshot.data?.trim() ?? '';
+        return Card(
+          elevation: 1,
+          margin: const EdgeInsets.only(bottom: 7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
-        ),
-      ]),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 2,
+            ),
+            leading: Icon(
+              Icons.person_outline_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              size: 23,
+            ),
+            title: const Text(
+              'Your Name',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            subtitle: Text(
+              name.isEmpty ? 'Name not set' : name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+            trailing: TextButton(
+              onPressed: _changeName,
+              child: const Text('Change'),
+            ),
+            onTap: _changeName,
+          ),
+        );
+      },
     ),
   );
 }

@@ -92,18 +92,32 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
           Card(child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Personalized App Name', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text('Custom Name', style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text('This name will appear in the header on all main tabs.'),
+              const Text('This name appears in the header on all main tabs.'),
+              const SizedBox(height: 12),
+              FutureBuilder<String>(
+                future: _preferences.headerName,
+                builder: (context, snapshot) => Container(
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.person_outline),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(
+                      (snapshot.data ?? '').trim().isEmpty ? 'Name not set' : snapshot.data!.trim(),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    )),
+                  ]),
+                ),
+              ),
               const SizedBox(height: 10),
-              TextField(controller: _headerNameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(hintText: 'Enter your name',
-                  border: OutlineInputBorder(), prefixIcon: Icon(Icons.person_outline))),
-              const SizedBox(height: 8),
-              Align(alignment: Alignment.centerRight, child: FilledButton.icon(
-                onPressed: () => _save(() => _preferences.setHeaderName(_headerNameController.text)),
-                icon: const Icon(Icons.save_outlined), label: const Text('Save Name'))),
+              Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(
+                onPressed: _changeHeaderName,
+                icon: const Icon(Icons.edit_outlined), label: const Text('Change'))),
             ]),
           )),
           _choice('Date Format', 'Choose how dates appear', Icons.calendar_month, _dateFormat,

@@ -15,7 +15,6 @@ import 'package:my_finance/features/installments/screens/installments_screen.dar
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
 import 'package:my_finance/features/staff/screens/staff_screen.dart';
-import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
@@ -163,7 +162,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     _SearchEntry('Vehicle Manager', 'Vehicle details and records', Icons.directions_car_outlined, ['car','bike','motorcycle','vehicle'], () => const VehiclesScreen()),
     _SearchEntry('Stock Manager', 'Inventory and stock records', Icons.inventory_2_outlined, ['inventory','products','items','stock'], () => const StockManagerScreen()),
     _SearchEntry('Staff Management', 'Manage staff and employee records', Icons.badge_outlined, ['employees','salary','team','staff'], () => const StaffScreen()),
-    _SearchEntry('Recurring Transactions', 'Scheduled income and expenses', Icons.repeat_rounded, ['recurring','repeat','schedule','automatic','monthly'], () => const RecurringTransactionsScreen()),
     _SearchEntry('Exchange Rates', 'Currency conversion and exchange rates', Icons.currency_exchange_rounded, ['forex','convert','rate','exchange'], () => const ExchangeRatesScreen()),
     _SearchEntry('Backup & Restore', 'Back up or restore app data', Icons.backup_outlined, ['backup','restore','export','import','data safety'], () => const BackupRestoreScreen()),
     _SearchEntry('Recycle Bin', 'Restore or permanently delete removed records', Icons.delete_outline_rounded, ['deleted','trash','restore','bin'], () => const RecycleBinScreen()),

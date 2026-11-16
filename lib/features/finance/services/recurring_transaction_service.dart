@@ -400,6 +400,10 @@ class RecurringTransactionService {
       'date': _date(transactionDate),
       'created_at': DateTime.now().toIso8601String(),
     });
+    await txn.insert('app_settings', {
+      'setting_key': 'recurring_transaction_$transactionId',
+      'setting_value': (recurring['id'] ?? '').toString(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     if (type == 'transfer' && transferFee > 0) {
       await txn.insert('app_settings', {
         'setting_key': 'transaction_transfer_fee_$transactionId',

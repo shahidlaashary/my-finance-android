@@ -284,9 +284,45 @@ class _HomePageState extends State<HomePage> {
     return entries.first;
   }
 
-  void _showAllCurrencies() {
+  IconData _currencyIcon(String currency) {
+    switch (currency.toUpperCase()) {
+      case 'USD':
+      case 'CAD':
+      case 'AUD':
+        return Icons.attach_money_rounded;
+      case 'EUR':
+      case 'GBP':
+        return Icons.euro_rounded;
+      case 'AED':
+      case 'SAR':
+      case 'QAR':
+      case 'KWD':
+        return Icons.account_balance_rounded;
+      case 'JPY':
+      case 'CNY':
+      case 'INR':
+        return Icons.currency_yen_rounded;
+      default:
+        return Icons.currency_exchange_rounded;
+    }
+  }
+
+  Future<void> _showAllCurrencies() async {
     final entries = otherCurrencyTotals.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
+    final pkrRate = await FinanceDB.instance.getExchangeRate('PKR');
+    final convertedByCurrency = <String, double>{};
+    double foreignTotalPKR = 0;
+    if (pkrRate != null && pkrRate > 0) {
+      for (final entry in entries) {
+        final rate = await FinanceDB.instance.getExchangeRate(entry.key);
+        if (rate == null) continue;
+        final converted = entry.value * rate / pkrRate;
+        convertedByCurrency[entry.key] = converted;
+        foreignTotalPKR += converted;
+      }
+    }
+    if (!mounted) return;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -303,14 +339,14 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
               Container(
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+                padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
                 child: Row(
                   children: [
                     const Icon(Icons.currency_exchange_rounded, color: AppColors.primary),
@@ -335,29 +371,53 @@ class _HomePageState extends State<HomePage> {
                         separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEDF1EE)),
                         itemBuilder: (context, index) {
                           final entry = entries[index];
+                          final converted = convertedByCurrency[entry.key];
                           return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Row(children: [
-                              Expanded(child: Text(entry.key,
-                                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.text))),
-                              Text(_currencyAmount(entry.key, entry.value),
-                                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.text)),
+                              Icon(_currencyIcon(entry.key), size: 21, color: AppColors.primary),
+                              const SizedBox(width: 10),
+                              Expanded(child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(entry.key,
+                                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.text)),
+                                  const SizedBox(height: 3),
+                                  Text(_currencyAmount(entry.key, entry.value),
+                                    style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                                ],
+                              )),
+                              const SizedBox(width: 8),
+                              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                                Text(hideBalances
+                                    ? 'PKR ******'
+                                    : converted == null ? 'PKR —' : _currencyAmount('PKR', converted),
+                                  style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
+                                const SizedBox(height: 2),
+                                Text(appText(context, 'Converted', 'تبدیل شدہ'),
+                                  style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+                              ]),
                             ]),
                           );
                         },
                       ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
-                child: Row(children: [
-                  const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(appText(context, 'Each currency is shown separately.', 'ہر کرنسی الگ دکھائی گئی ہے۔'),
-                    style: const TextStyle(fontSize: 12, color: AppColors.muted))),
-                  TextButton(onPressed: () => Navigator.pop(sheetContext),
-                    child: Text(appText(context, 'Close', 'بند کریں'))),
-                ]),
-              ),
+              if (entries.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(children: [
+                    Expanded(child: Text(appText(context, 'Total of all currencies in PKR', 'تمام کرنسیوں کا PKR میں کل'),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.text))),
+                    const SizedBox(width: 8),
+                    Text(hideBalances ? 'PKR ******' : 'PKR ${NumberFormat('#,##0.00', numberFormat == '1.234,56' ? 'de_DE' : 'en_US').format(foreignTotalPKR)}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                  ]),
+                ),
             ],
           ),
         ),
@@ -392,7 +452,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Primary wallet balance.
             Container(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF147D59), Color(0xFF0B6245)],
@@ -413,14 +473,14 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(appText(context, 'Total Wallet Balance', 'کل والٹ بیلنس'),
                       style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(appText(context, 'PKR Wallets', 'PKR والٹس'),
                           style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 7),
+                        const SizedBox(height: 4),
                         loading ? const SizedBox(height: 25, width: 25,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
@@ -456,10 +516,10 @@ class _HomePageState extends State<HomePage> {
                       ])),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.13),
                       borderRadius: BorderRadius.circular(15)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -1106,10 +1106,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
           icon: const Icon(Icons.delete_outline, color: AppColors.expense),
         ),
         IconButton(
-          tooltip: archived ? 'Restore' : 'Hide',
+          tooltip: archived ? 'Unhide Wallet' : 'Hide Wallet',
           visualDensity: VisualDensity.compact,
           onPressed: () => _archive(w, !archived),
-          icon: Icon(archived ? Icons.unarchive_outlined : Icons.archive_outlined),
+          icon: Icon(archived ? Icons.visibility_outlined : Icons.archive_outlined),
         ),
       ]),
     ));

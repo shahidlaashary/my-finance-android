@@ -18,8 +18,6 @@ import 'package:my_finance/features/finance/screens/transactions_screen.dart';
 const List<String> walletTypes = [
   'Cash',
   'Bank',
-  'Savings',
-  'Current',
   'Credit Card',
   'Debit Card',
   'Digital Wallet',
@@ -323,7 +321,11 @@ class _WalletsPageState extends State<WalletsPage> {
                       final balance = (wallet['balance'] as num).toDouble();
                       final currency = wallet['currency'] as String;
                       final iconCode = wallet['icon_code'] as int;
-                      final walletType = (wallet['type'] as String?) ?? 'Wallet';
+                      final rawWalletType = (wallet['type'] as String?) ?? 'Wallet';
+                      final customWalletType = wallet['custom_type']?.toString().trim() ?? '';
+                      final walletType = rawWalletType == 'Custom' && customWalletType.isNotEmpty
+                          ? customWalletType
+                          : rawWalletType;
                       final excluded = (wallet['exclude_total'] as int) == 1;
 
                       return Card(
@@ -501,7 +503,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     selectedCurrency = wallet?['currency'] as String? ?? 'PKR';
     _loadBaseCurrencyAsDefault();
 
-    if (!walletTypes.contains(selectedType)) selectedType = 'Other';
+    if (!walletTypes.contains(selectedType) && !isEditing) selectedType = 'Other';
     if (!CurrencyCatalog.supported.contains(selectedCurrency) && !isEditing) {
       selectedCurrency = 'PKR';
     }
@@ -812,7 +814,10 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               value: selectedType,
                               isExpanded: true,
                               decoration: _fieldDecoration('Wallet Type'),
-                              items: walletTypes.map((type) {
+                              items: [
+                                if (!walletTypes.contains(selectedType)) selectedType,
+                                ...walletTypes,
+                              ].map((type) {
                                 return DropdownMenuItem(
                                   value: type,
                                   child: Text(

@@ -169,6 +169,29 @@ class CommitteeService {
     AppRefreshController.notifyChanged();
   }
 
+  static Future<void> reorderMembers(int committeeId, List<int> orderedMemberIds) async {
+    await _ensureSchema();
+    final db = FinanceDB.instance.db;
+    await db.transaction((txn) async {
+      final entryCount = Sqflite.firstIntValue(await txn.rawQuery(
+        'SELECT COUNT(*) FROM committee_entries WHERE committee_id=?', [committeeId])) ?? 0;
+      if (entryCount > 0) throw Exception('Turn order is locked after committee activity starts.');
+      final rows = await txn.query('committee_members',
+        columns: ['id'], where: 'committee_id=?', whereArgs: [committeeId]);
+      final existing = rows.map((row) => (row['id'] as num).toInt()).toSet();
+      if (orderedMemberIds.length != existing.length ||
+          orderedMemberIds.toSet().length != existing.length ||
+          !orderedMemberIds.toSet().containsAll(existing)) {
+        throw Exception('Invalid member turn order.');
+      }
+      for (var i = 0; i < orderedMemberIds.length; i++) {
+        await txn.update('committee_members', {'turn_no': i + 1},
+          where: 'id=? AND committee_id=?', whereArgs: [orderedMemberIds[i], committeeId]);
+      }
+    });
+    AppRefreshController.notifyChanged();
+  }
+
   static Future<int> recordEntry({
     required int committeeId, required int memberId, required String entryType,
     required double amount, required int walletId, required DateTime date, String note = '',

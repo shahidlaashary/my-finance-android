@@ -244,7 +244,7 @@ class _HomePageState extends State<HomePage> {
       totalBalance + currentAssetsPKR + loansReceivablePKR;
 
   String money(double amount) {
-    if (hideBalances) return '[0m$baseCurrency ••••••';
+    if (hideBalances) return '$baseCurrency ******';
     final locale = numberFormat == '1.234,56' ? 'de_DE' : 'en_US';
     return '$baseCurrency ${NumberFormat('#,##0.00', locale).format(amount)}';
   }

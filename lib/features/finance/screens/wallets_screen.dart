@@ -62,7 +62,7 @@ class _WalletWavePainter extends CustomPainter {
     canvas.scale(-1, 1);
 
     Path wave(double offset) => Path()
-      ..moveTo(0, size.height * 0.30 + offset)
+      ..moveTo(0, size.height * 0.35 + offset)
       ..quadraticBezierTo(size.width * 0.28, -size.height * 0.08 - offset, size.width * 0.52, size.height * 0.38)
       ..quadraticBezierTo(size.width * 0.78, size.height * 0.88 + offset, size.width, size.height * 0.20)
       ..lineTo(size.width, size.height)
@@ -262,7 +262,7 @@ class _WalletsPageState extends State<WalletsPage> {
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 5, 16, 0),
                   child: Row(
                     children: [
                       Expanded(child: Text(
@@ -309,13 +309,13 @@ class _WalletsPageState extends State<WalletsPage> {
                       : RefreshIndicator(
                           onRefresh: loadWallets,
                           child: GridView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 2, 16, 100),
+                            padding: const EdgeInsets.fromLTRB(16, 7, 16, 100),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
-                              childAspectRatio: 1.78,
+                              childAspectRatio: 1.88,
                             ),
                             itemCount: wallets.length,
                             itemBuilder: (context, index) {

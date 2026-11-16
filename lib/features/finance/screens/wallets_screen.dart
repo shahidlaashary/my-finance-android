@@ -220,7 +220,7 @@ class _WalletsPageState extends State<WalletsPage> {
           appText(context, 'My Wallets', 'میرے والٹس'),
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
-        actions: [TextButton.icon(onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => WalletManagementPage(hideBalances: hideBalances, numberFormat: numberFormat))); await loadWallets(); }, icon: const Icon(Icons.tune_rounded), label: Text(appText(context, 'Manage', 'انتظام کریں'))), ...buildMainSectionAppBarActions(context)],
+        actions: [...buildMainSectionAppBarActions(context)],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => openWalletForm(),
@@ -230,38 +230,56 @@ class _WalletsPageState extends State<WalletsPage> {
         label: Text(appText(context, 'Add Wallet', 'والٹ شامل کریں')),
       ),
       body: loading
-          ? Center(child: CircularProgressIndicator())
-          : wallets.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        size: 58,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        appText(context, 'No wallets added yet', 'ابھی کوئی والٹ شامل نہیں کیا گیا'),
-                        style: TextStyle(color: AppColors.muted),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: loadWallets,
-                  child: GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 1.78,
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: TextButton.icon(
+                      onPressed: () async {
+                        await Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => WalletManagementPage(
+                            hideBalances: hideBalances,
+                            numberFormat: numberFormat,
+                          ),
+                        ));
+                        await loadWallets();
+                      },
+                      icon: const Icon(Icons.tune_rounded, size: 18),
+                      label: Text(appText(context, 'Manage', 'انتظام کریں')),
                     ),
-                    itemCount: wallets.length,
-                    itemBuilder: (context, index) {
+                  ),
+                ),
+                Expanded(
+                  child: wallets.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.account_balance_wallet_outlined,
+                                  size: 58, color: AppColors.primary),
+                              SizedBox(height: 12),
+                              Text(appText(context, 'No wallets added yet',
+                                  'ابھی کوئی والٹ شامل نہیں کیا گیا'),
+                                  style: TextStyle(color: AppColors.muted)),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: loadWallets,
+                          child: GridView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 1.78,
+                            ),
+                            itemCount: wallets.length,
+                            itemBuilder: (context, index) {
                       final wallet = wallets[index];
                       final balance = (wallet['balance'] as num).toDouble();
                       final currency = wallet['currency'] as String;
@@ -390,9 +408,12 @@ class _WalletsPageState extends State<WalletsPage> {
                           ),
                         ),
                       );
-                    },
-                  ),
+                            },
+                          ),
+                        ),
                 ),
+              ],
+            ),
     );
   }
 }

@@ -168,9 +168,10 @@ class CommitteeService {
       final balance = (wallet['balance'] as num).toDouble();
       final pot = (committee.first['installment_amount'] as num).toDouble() *
           (committee.first['member_count'] as num).toInt();
-      final previous = Sqflite.firstIntValue(await txn.rawQuery(
-        'SELECT COALESCE(SUM(amount),0) FROM committee_entries WHERE committee_id=? AND member_id=? AND entry_type=?',
-        [committeeId, memberId, entryType])) ?? 0;
+      final previousRows = await txn.rawQuery(
+        'SELECT COALESCE(SUM(amount),0) AS total FROM committee_entries WHERE committee_id=? AND member_id=? AND entry_type=?',
+        [committeeId, memberId, entryType]);
+      final previous = (previousRows.first['total'] as num).toDouble();
       if (previous + amount > pot + 0.000001) {
         throw Exception(entryType == 'Installment'
           ? 'This member has already paid the full committee contribution.'

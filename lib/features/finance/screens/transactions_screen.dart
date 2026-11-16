@@ -714,37 +714,48 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               children: [
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
-                SizedBox(
+                Container(
                   height: 42,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: filters.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final filter = filters[index];
+                  margin: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F5F3),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Row(
+                    children: filters.map((filter) {
                       final selected = selectedFilter == filter.$1;
-                      return ChoiceChip(
-                        label: Text(filter.$2),
-                        selected: selected,
-                        showCheckmark: false,
-                        onSelected: (_) => setState(() {
-                          selectedFilter = filter.$1;
-                          currentPage = 0;
-                        }),
-                        backgroundColor: const Color(0xFFF2F5F3),
-                        selectedColor: const Color(0xFF147D59),
-                        labelStyle: TextStyle(
-                          color: selected ? Colors.white : const Color(0xFF52615A),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                        side: BorderSide.none,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22),
+                      return Expanded(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(19),
+                          onTap: () => setState(() {
+                            selectedFilter = filter.$1;
+                            currentPage = 0;
+                          }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: selected ? const Color(0xFF147D59) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(19),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                filter.$2,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: selected ? Colors.white : const Color(0xFF52615A),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       );
-                    },
+                    }).toList(),
                   ),
                 ),
                 const SizedBox(height: 8),

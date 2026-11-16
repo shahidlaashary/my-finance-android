@@ -100,9 +100,6 @@ class MoreFeaturesPage extends StatelessWidget {
           const verticalPadding = 12.0;
           const crossAxisSpacing = 10.0;
           const mainAxisSpacing = 8.0;
-          final itemWidth =
-              (constraints.maxWidth - horizontalPadding * 2 - crossAxisSpacing) /
-                  columns;
           final itemHeight = (constraints.maxHeight -
                   verticalPadding * 2 -
                   mainAxisSpacing * (rows - 1)) /

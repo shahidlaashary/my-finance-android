@@ -165,7 +165,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
 
   Future<void> _record(String type) async {
     if(members.isEmpty||wallets.isEmpty){_msg('Add members and wallets first.');return;}
-    final amount=TextEditingController(text: type=='Installment'?' ${widget.committee['installment_amount']}':'');
+    final amount=TextEditingController(text: type=='Installment' ? '${widget.committee['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
     final pot=(widget.committee['installment_amount'] as num).toDouble()*members.length;
     final eligibleMembers=type=='Payout'
       ? members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).take(1).toList()
@@ -220,7 +220,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   Widget _overview(Map<String,dynamic> c){
     final collected=entries.where((e)=>e['entry_type']=='Installment').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
     final payout=entries.where((e)=>e['entry_type']=='Payout').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
-    final next=members.where((m)=>(m['received'] as num).toDouble()==0).toList();
+    final pot=(c['installment_amount'] as num).toDouble()*members.length;\n    final next=members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).toList();
     return ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text(c['status'].toString().toUpperCase(),style:const TextStyle(fontWeight:FontWeight.bold,color:Colors.green)),

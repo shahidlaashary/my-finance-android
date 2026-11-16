@@ -260,7 +260,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(appText(context, "My Finance", "My Finance"),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Finance", "My Finance"),
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
         ),
         actions: buildSharedAppBarActions(context),

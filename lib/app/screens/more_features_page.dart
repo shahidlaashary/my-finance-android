@@ -14,6 +14,7 @@ import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart'
 import 'package:my_finance/app/screens/about_hub_screen.dart';
 import 'package:my_finance/features/installments/screens/installments_screen.dart';
 import 'package:my_finance/features/partners/screens/my_partner_screen.dart';
+import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -26,6 +27,10 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'About',
         'icon': Icons.info_outline_rounded,
+      },
+      {
+        'title': 'Asset Depreciation',
+        'icon': Icons.trending_down_rounded,
       },
       {
         'title': 'Exchange Rates',
@@ -143,6 +148,9 @@ class MoreFeaturesPage extends StatelessWidget {
                     builder: (_) {
                       if (feature['title'] == 'Settings') {
                         return const AppSettingsScreen();
+                      }
+                      if (feature['title'] == 'Asset Depreciation') {
+                        return const AssetDepreciationScreen();
                       }
                       if (feature['title'] == 'Vehicle Manager') {
                         return const VehiclesScreen();

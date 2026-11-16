@@ -122,7 +122,7 @@ class CommitteeService {
     required DateTime startDate, required DateTime firstDueDate,
   }) async {
     await _ensureSchema();
-    if (name.trim().isEmpty || installmentAmount <= 0 || !installmentAmount.isFinite || members.length < 2) {
+    if (name.trim().isEmpty || installmentAmount <= 0 || !installmentAmount.isFinite || members.length < 2 || !['Daily', 'Weekly', 'Monthly'].contains(frequency) || firstDueDate.isBefore(DateTime(startDate.year, startDate.month, startDate.day))) {
       throw Exception('Enter a name, valid installment and at least two members.');
     }
     final db = FinanceDB.instance.db;

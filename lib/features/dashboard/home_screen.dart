@@ -284,26 +284,38 @@ class _HomePageState extends State<HomePage> {
     return entries.first;
   }
 
-  IconData _currencyIcon(String currency) {
+  String _currencyFlag(String currency) {
     switch (currency.toUpperCase()) {
-      case 'USD':
-      case 'CAD':
-      case 'AUD':
-        return Icons.attach_money_rounded;
-      case 'EUR':
-      case 'GBP':
-        return Icons.euro_rounded;
-      case 'AED':
-      case 'SAR':
-      case 'QAR':
-      case 'KWD':
-        return Icons.account_balance_rounded;
-      case 'JPY':
-      case 'CNY':
-      case 'INR':
-        return Icons.currency_yen_rounded;
-      default:
-        return Icons.currency_exchange_rounded;
+      case 'USD': return '🇺🇸';
+      case 'EUR': return '🇪🇺';
+      case 'GBP': return '🇬🇧';
+      case 'AED': return '🇦🇪';
+      case 'SAR': return '🇸🇦';
+      case 'QAR': return '🇶🇦';
+      case 'KWD': return '🇰🇼';
+      case 'BHD': return '🇧🇭';
+      case 'OMR': return '🇴🇲';
+      case 'CAD': return '🇨🇦';
+      case 'AUD': return '🇦🇺';
+      case 'NZD': return '🇳🇿';
+      case 'INR': return '🇮🇳';
+      case 'JPY': return '🇯🇵';
+      case 'CNY': return '🇨🇳';
+      case 'CHF': return '🇨🇭';
+      case 'TRY': return '🇹🇷';
+      case 'MYR': return '🇲🇾';
+      case 'SGD': return '🇸🇬';
+      case 'THB': return '🇹🇭';
+      case 'BDT': return '🇧🇩';
+      case 'LKR': return '🇱🇰';
+      case 'NPR': return '🇳🇵';
+      case 'AFN': return '🇦🇫';
+      case 'IRR': return '🇮🇷';
+      case 'RUB': return '🇷🇺';
+      case 'ZAR': return '🇿🇦';
+      case 'SAR': return '🇸🇦';
+      case 'HKD': return '🇭🇰';
+      default: return '🌐';
     }
   }
 
@@ -373,30 +385,25 @@ class _HomePageState extends State<HomePage> {
                           final entry = entries[index];
                           final converted = convertedByCurrency[entry.key];
                           return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(children: [
-                              Icon(_currencyIcon(entry.key), size: 21, color: AppColors.primary),
-                              const SizedBox(width: 10),
-                              Expanded(child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(entry.key,
-                                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.text)),
-                                  const SizedBox(height: 3),
-                                  Text(_currencyAmount(entry.key, entry.value),
-                                    style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-                                ],
-                              )),
-                              const SizedBox(width: 8),
-                              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                                Text(hideBalances
-                                    ? 'PKR ******'
-                                    : converted == null ? 'PKR —' : _currencyAmount('PKR', converted),
-                                  style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
-                                const SizedBox(height: 2),
-                                Text(appText(context, 'Converted', 'تبدیل شدہ'),
-                                  style: const TextStyle(fontSize: 10, color: AppColors.muted)),
-                              ]),
+                              Text(_currencyFlag(entry.key),
+                                style: const TextStyle(fontSize: 23)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  hideBalances
+                                      ? '${entry.key} ****** = PKR ******'
+                                      : '${_currencyAmount(entry.key, entry.value)}  =  ${converted == null ? 'PKR —' : _currencyAmount('PKR', converted)}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.text,
+                                  ),
+                                ),
+                              ),
                             ]),
                           );
                         },

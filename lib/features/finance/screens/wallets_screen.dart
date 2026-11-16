@@ -999,7 +999,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       Row(
                         children: [
                           Expanded(
-                            flex: 4,
+                            flex: 1,
                             child: SizedBox(
                               key: _currencyPickerKey,
                               height: 56,
@@ -1032,7 +1032,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           ),
                           SizedBox(width: 10),
                           Expanded(
-                            flex: 5,
+                            flex: 1,
                             child: TextFormField(
                               controller: isEditing
                                   ? currentController

@@ -1093,25 +1093,23 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontWeight:FontWeight.w700)),
       subtitle: Text(_money(w)),
       trailing: Row(mainAxisSize:MainAxisSize.min,children:[
-        IconButton(tooltip:archived?'Restore':'Hide',onPressed:()=>_archive(w,!archived),
-          icon:Icon(archived?Icons.unarchive_outlined:Icons.archive_outlined)),
-        PopupMenuButton<String>(
-          tooltip: 'More options',
-          onSelected: (value) {
-            if (value == 'edit') _edit(w);
-            if (value == 'delete') _delete(w);
-          },
-          itemBuilder: (_) => [
-            PopupMenuItem(value:'edit',child:Row(children:[
-              const Icon(Icons.edit_outlined,size:18), const SizedBox(width:9),
-              Text(appText(context,'Edit Wallet','والٹ میں ترمیم کریں')),
-            ])),
-            PopupMenuItem(value:'delete',child:Row(children:[
-              const Icon(Icons.delete_outline,size:18,color:AppColors.expense),
-              const SizedBox(width:9),
-              Text(appText(context,'Delete Wallet','والٹ حذف کریں')),
-            ])),
-          ],
+        IconButton(
+          tooltip: 'Edit Wallet',
+          visualDensity: VisualDensity.compact,
+          onPressed: () => _edit(w),
+          icon: const Icon(Icons.edit_outlined),
+        ),
+        IconButton(
+          tooltip: 'Delete Wallet',
+          visualDensity: VisualDensity.compact,
+          onPressed: () => _delete(w),
+          icon: const Icon(Icons.delete_outline, color: AppColors.expense),
+        ),
+        IconButton(
+          tooltip: archived ? 'Restore' : 'Hide',
+          visualDensity: VisualDensity.compact,
+          onPressed: () => _archive(w, !archived),
+          icon: Icon(archived ? Icons.unarchive_outlined : Icons.archive_outlined),
         ),
       ]),
     ));
@@ -1135,7 +1133,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       itemBuilder: (context,index) {
         final w=_active[index];
         return Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
-          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.drag_handle_rounded,color:AppColors.muted))),
+          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.reorder_rounded,color:AppColors.muted))),
           Expanded(child:_walletTile(w,archived:false)),
         ]));
       },

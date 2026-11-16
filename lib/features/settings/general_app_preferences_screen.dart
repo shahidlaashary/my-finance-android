@@ -20,7 +20,6 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   bool _deleteConfirmation = true;
   bool _hideBalances = false;
   bool _hapticFeedback = true;
-  final TextEditingController _yourNameController = TextEditingController();
 
   @override
   void initState() {
@@ -33,50 +32,25 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
       _preferences.dateFormat, _preferences.weekStart, _preferences.numberFormat,
       _preferences.defaultDate, _preferences.rememberWallet,
       _preferences.deleteConfirmation, _preferences.hideBalances,
-      _preferences.hapticFeedback, _preferences.yourName,
+      _preferences.hapticFeedback,
     ]);
+    if (values[3] != 'Today') await _preferences.setDefaultDate('Today');
     if (!mounted) return;
     setState(() {
       _dateFormat = values[0] as String;
       _weekStart = values[1] as String;
       _numberFormat = values[2] as String;
-      _defaultDate = values[3] as String;
+      _defaultDate = 'Today';
       _rememberWallet = values[4] as bool;
       _deleteConfirmation = values[5] as bool;
       _hideBalances = values[6] as bool;
       _hapticFeedback = values[7] as bool;
-      _yourNameController.text = values[8] as String;
       _loading = false;
     });
   }
 
   @override
-  void dispose() { _yourNameController.dispose(); super.dispose(); }
-
-  Future<void> _changeHeaderName() async {
-    _yourNameController.text = await _preferences.yourName;
-    if (!mounted) return;
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Change Your Name'),
-        content: TextField(
-          controller: _yourNameController,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Your Name', hintText: 'Enter your name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save')),
-        ],
-      ),
-    );
-    if (saved == true) {
-      await _save(() => _preferences.setYourName(_yourNameController.text));
-      if (mounted) setState(() {});
-    }
-  }
+  void dispose() { super.dispose(); }
 
   Future<void> _save(Future<void> Function() action) async {
     await action();
@@ -107,6 +81,24 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
         subtitle: Text(subtitle), value: value, onChanged: onChanged,
       ));
 
+  Widget _defaultDateTile() => Card(child: ListTile(
+    leading: Icon(Icons.event, color: Theme.of(context).colorScheme.primary),
+    title: const Text('Default Transaction Date', maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontWeight: FontWeight.w600)),
+    trailing: DropdownButton<String>(
+      value: _defaultDate,
+      underline: const SizedBox.shrink(),
+      items: const [DropdownMenuItem(value: 'Today', child: Text('Today'))],
+      onChanged: (value) {
+        if (value != null) {
+          setState(() => _defaultDate = value);
+          _save(() => _preferences.setDefaultDate(value));
+        }
+      },
+    ),
+  ));
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,37 +106,6 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
       body: _loading ? Center(child: CircularProgressIndicator()) : ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Your Name', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              const Text('This name appears in the header on all main tabs.'),
-              const SizedBox(height: 12),
-              FutureBuilder<String>(
-                future: _preferences.yourName,
-                builder: (context, snapshot) => Container(
-                  padding: const EdgeInsets.all(13),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(children: [
-                    const Icon(Icons.person_outline),
-                    const SizedBox(width: 10),
-                    Expanded(child: Text(
-                      (snapshot.data ?? '').trim().isEmpty ? 'Name not set' : snapshot.data!.trim(),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    )),
-                  ]),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(
-                onPressed: _changeHeaderName,
-                icon: const Icon(Icons.edit_outlined), label: const Text('Change'))),
-            ]),
-          )),
           _choice('Date Format', 'Choose how dates appear', Icons.calendar_month, _dateFormat,
             const ['dd/MM/yyyy','MM/dd/yyyy','yyyy-MM-dd'], (v) { setState(() => _dateFormat=v); _save(() => _preferences.setDateFormat(v)); }),
           _choice('First Day of Week', 'Calendar week starts on', Icons.calendar_view_week, _weekStart,
@@ -153,8 +114,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
             const ['1,234.56','1.234,56'], (v) { setState(() => _numberFormat=v); _save(() => _preferences.setNumberFormat(v)); }),
           _toggle('Remember Last Wallet', 'Preselect the wallet used last time', Icons.account_balance_wallet_outlined, _rememberWallet,
             (v) { setState(() => _rememberWallet=v); _save(() => _preferences.setRememberWallet(v)); }),
-          _choice('Default Transaction Date', 'Date used for a new transaction', Icons.event, _defaultDate,
-            const ['Today','Last Selected Date'], (v) { setState(() => _defaultDate=v); _save(() => _preferences.setDefaultDate(v)); }),
+          _defaultDateTile(),
           _toggle('Delete Confirmation', 'Ask before deleting records', Icons.delete_outline, _deleteConfirmation,
             (v) { setState(() => _deleteConfirmation=v); _save(() => _preferences.setDeleteConfirmation(v)); }),
           _toggle('Hide Balances', 'Hide financial amounts in the app', Icons.visibility_off_outlined, _hideBalances,

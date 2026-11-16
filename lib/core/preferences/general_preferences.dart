@@ -17,11 +17,11 @@ class GeneralPreferences {
   static const _deleteConfirmKey = 'general_delete_confirmation';
   static const _hideBalancesKey = 'general_hide_balances';
   static const _hapticsKey = 'general_haptic_feedback';
-  static const _headerNameKey = 'general_header_name';
+  static const _yourNameKey = 'general_your_name';
 
-  Future<String> get headerName async => (await SharedPreferences.getInstance()).getString(_headerNameKey) ?? '';
-  Future<void> setHeaderName(String value) async {
-    await (await SharedPreferences.getInstance()).setString(_headerNameKey, value.trim());
+  Future<String> get yourName async => (await SharedPreferences.getInstance()).getString(_yourNameKey) ?? '';
+  Future<void> setYourName(String value) async {
+    await (await SharedPreferences.getInstance()).setString(_yourNameKey, value.trim());
     _notifyChanged();
   }
 
@@ -29,7 +29,7 @@ class GeneralPreferences {
       ValueListenableBuilder<int>(
         valueListenable: revision,
         builder: (context, _, __) => FutureBuilder<String>(
-          future: headerName,
+          future: yourName,
           builder: (context, snapshot) {
             final name = snapshot.data?.trim() ?? '';
             return name.isEmpty ? fallback : Text(name, maxLines: 1,
@@ -97,7 +97,7 @@ class GeneralPreferences {
 
   Future<void> reset() async {
     final p = await SharedPreferences.getInstance();
-    for (final key in [_dateFormatKey,_weekStartKey,_numberFormatKey,_rememberWalletKey,_defaultDateKey,_deleteConfirmKey,_hideBalancesKey,_hapticsKey,_headerNameKey]) {
+    for (final key in [_dateFormatKey,_weekStartKey,_numberFormatKey,_rememberWalletKey,_defaultDateKey,_deleteConfirmKey,_hideBalancesKey,_hapticsKey,_yourNameKey]) {
       await p.remove(key);
     }
     _notifyChanged();

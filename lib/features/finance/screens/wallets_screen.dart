@@ -270,18 +270,24 @@ class _WalletsPageState extends State<WalletsPage> {
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
                       )),
                       TextButton.icon(
-                      onPressed: () async {
-                        await Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => WalletManagementPage(
-                            hideBalances: hideBalances,
-                            numberFormat: numberFormat,
-                          ),
-                        ));
-                        await loadWallets();
-                      },
-                      icon: const Icon(Icons.tune_rounded, size: 18),
-                      label: Text(appText(context, 'Manage', 'انتظام کریں')),
-                    ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: () async {
+                          await Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => WalletManagementPage(
+                              hideBalances: hideBalances,
+                              numberFormat: numberFormat,
+                            ),
+                          ));
+                          await loadWallets();
+                        },
+                        icon: const Icon(Icons.tune_rounded, size: 18),
+                        label: Text(appText(context, 'Manage', 'انتظام کریں')),
+                      ),
                     ],
                   ),
                 ),
@@ -303,7 +309,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       : RefreshIndicator(
                           onRefresh: loadWallets,
                           child: GridView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                            padding: const EdgeInsets.fromLTRB(16, 2, 16, 100),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
@@ -384,29 +390,30 @@ class _WalletsPageState extends State<WalletsPage> {
                                           ],
                                         ),
                                       ),
-                                      SizedBox.shrink(),
-                                      /* removed per-card overflow menu
-                                      SizedBox(
-                                        width: 22,
-                                        child: PopupMenuButton<String>(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 145),
-                                          icon: const Icon(Icons.more_vert_rounded),
-                                          iconSize: 17,
+                                      PopupMenuButton<String>(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 155),
+                                        icon: const Icon(Icons.more_vert_rounded),
+                                        iconSize: 17,
                                         onSelected: (value) {
                                           if (value == 'edit') openWalletForm(wallet);
                                           else if (value == 'delete') deleteWallet(wallet);
                                         },
                                         itemBuilder: (_) => [
                                           PopupMenuItem(value: 'edit', child: Row(children: [
-                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9), Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
+                                            Icon(Icons.edit_outlined, size: 18), SizedBox(width: 9),
+                                            Text(appText(context, 'Edit Wallet', 'والٹ میں ترمیم کریں'))])),
                                           PopupMenuItem(value: 'delete', child: Row(children: [
                                             Icon(Icons.delete_outline, size: 18, color: AppColors.expense),
-                                            SizedBox(width: 9), Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
-                                          ],
-                                        ),
+                                            SizedBox(width: 9),
+                                            Text(appText(context, 'Delete Wallet', 'والٹ حذف کریں'))])),
+                                        ],
                                       ),
-                                      */
+                                      if (excluded) const Icon(
+                                        Icons.remove_circle_outline_rounded,
+                                        size: 19,
+                                        color: AppColors.expense,
+                                      ),
                                     ],
                                   ),
                                   const Spacer(),
@@ -1055,6 +1062,19 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
     await _load();
   }
 
+  Future<void> _edit(Map<String, dynamic> wallet) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => WalletFormDialog(wallet: wallet),
+    );
+    if (saved == true) await _load();
+  }
+
   Future<void> _delete(Map<String,dynamic> wallet) async {
     final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(
       title: Text(appText(context,'Delete Wallet?','والٹ حذف کریں؟')),
@@ -1075,8 +1095,24 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       trailing: Row(mainAxisSize:MainAxisSize.min,children:[
         IconButton(tooltip:archived?'Restore':'Hide',onPressed:()=>_archive(w,!archived),
           icon:Icon(archived?Icons.unarchive_outlined:Icons.archive_outlined)),
-        IconButton(tooltip:'Delete',onPressed:()=>_delete(w),
-          icon:const Icon(Icons.delete_outline,color:AppColors.expense)),
+        PopupMenuButton<String>(
+          tooltip: 'More options',
+          onSelected: (value) {
+            if (value == 'edit') _edit(w);
+            if (value == 'delete') _delete(w);
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem(value:'edit',child:Row(children:[
+              const Icon(Icons.edit_outlined,size:18), const SizedBox(width:9),
+              Text(appText(context,'Edit Wallet','والٹ میں ترمیم کریں')),
+            ])),
+            PopupMenuItem(value:'delete',child:Row(children:[
+              const Icon(Icons.delete_outline,size:18,color:AppColors.expense),
+              const SizedBox(width:9),
+              Text(appText(context,'Delete Wallet','والٹ حذف کریں')),
+            ])),
+          ],
+        ),
       ]),
     ));
   }

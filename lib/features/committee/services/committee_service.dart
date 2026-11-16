@@ -244,7 +244,8 @@ class CommitteeService {
       });
       final entryId = await txn.insert('committee_entries', {
         'committee_id': committeeId, 'member_id': memberId, 'entry_type': entryType,
-        'amount': amount, 'wallet_amount': walletAmount, 'committee_currency': committeeCurrency,\n        'wallet_id': walletId, 'transaction_id': transactionId,
+        'amount': amount, 'wallet_amount': walletAmount, 'committee_currency': committeeCurrency,
+        'wallet_id': walletId, 'transaction_id': transactionId,
         'entry_date': date.toIso8601String(), 'note': note.trim(), 'created_at': now,
       });
       final count = Sqflite.firstIntValue(await txn.rawQuery(

@@ -166,14 +166,19 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   Future<void> _record(String type) async {
     if(members.isEmpty||wallets.isEmpty){_msg('Add members and wallets first.');return;}
     final amount=TextEditingController(text: type=='Installment'?' ${widget.committee['installment_amount']}':'');
-    int memberId=(members.first['id'] as num).toInt();
+    final pot=(widget.committee['installment_amount'] as num).toDouble()*members.length;
+    final eligibleMembers=type=='Payout'
+      ? members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).take(1).toList()
+      : members;
+    if(eligibleMembers.isEmpty){_msg('All scheduled payouts are complete.');return;}
+    int memberId=(eligibleMembers.first['id'] as num).toInt();
     int walletId=wallets.any((w)=>(w['id'] as num).toInt()==committeeWallet)?committeeWallet:(wallets.first['id'] as num).toInt();
     DateTime date=DateTime.now();final note=TextEditingController();
     final ok=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
       title:Text(type=='Installment'?'Record Installment Deposit':'Record Member Payout'),
       content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
         DropdownButtonFormField<int>(value:memberId,decoration:const InputDecoration(labelText:'Member'),
-          items:members.map((m)=>DropdownMenuItem(value:(m['id'] as num).toInt(),child:Text(m['name'].toString()))).toList(),
+          items:eligibleMembers.map((m)=>DropdownMenuItem(value:(m['id'] as num).toInt(),child:Text(m['name'].toString()))).toList(),
           onChanged:(v){if(v!=null)setD(()=>memberId=v);}),
         TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Amount')),
         DropdownButtonFormField<int>(value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Deposit into':'Pay from'),
@@ -243,12 +248,41 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     Text(money.format(value),style:TextStyle(fontWeight:FontWeight.w800,fontSize:18,color:color)),
   ])));
 
-  Widget _members()=>ListView(padding:const EdgeInsets.all(12),children:[
-    Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:_addMember,icon:const Icon(Icons.person_add),label:const Text('Add member'))),
-    ...members.map((m)=>Card(child:ListTile(leading:CircleAvatar(child:Text(m['turn_no'].toString())),
-      title:Text(m['name'].toString()),subtitle:Text('Paid: ${money.format(m['paid'])} • Received: ${money.format(m['received'])}'),
-      trailing:Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))))),
-  ]);
+  Widget _members(){
+    final c=widget.committee;
+    final pot=(c['installment_amount'] as num).toDouble()*members.length;
+    final dueCount=_dueCycles(c);
+    final dueAmount=(c['installment_amount'] as num).toDouble()*dueCount;
+    return ListView(padding:const EdgeInsets.all(12),children:[
+      Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:_addMember,icon:const Icon(Icons.person_add),label:const Text('Add member'))),
+      ...members.map((m){
+        final paid=(m['paid'] as num).toDouble();
+        final remaining=(dueAmount-paid).clamp(0.0,pot);
+        return Card(child:ListTile(leading:CircleAvatar(child:Text(m['turn_no'].toString())),
+          title:Text(m['name'].toString()),
+          subtitle:Text('Paid: ${money.format(paid)} • Due: ${money.format(dueAmount)} • Remaining: ${money.format(remaining)}\nPayout received: ${money.format(m['received'])}'),
+          isThreeLine:true,
+          trailing:Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))));
+      }),
+    ]);
+  }
+
+  int _dueCycles(Map<String,dynamic> c){
+    final first=DateTime.parse(c['first_due_date']);
+    final today=DateTime.now();
+    final start=DateTime(first.year,first.month,first.day);
+    final now=DateTime(today.year,today.month,today.day);
+    if(now.isBefore(start))return 0;
+    final frequency=c['frequency'].toString();
+    int count;
+    if(frequency=='Daily'){count=now.difference(start).inDays+1;}
+    else if(frequency=='Weekly'){count=now.difference(start).inDays~/7+1;}
+    else{
+      count=(now.year-start.year)*12+now.month-start.month+1;
+      if(now.day<start.day)count--;
+    }
+    return count.clamp(0,members.length);
+  }
 
   Widget _schedule(Map<String,dynamic> c){
     final frequency=c['frequency'].toString();final base=DateTime.parse(c['first_due_date']);

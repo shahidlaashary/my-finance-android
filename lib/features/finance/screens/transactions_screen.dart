@@ -1094,11 +1094,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                   ],
                                                 ),
                                               ),
-                                              if (!isAdjustment) PopupMenuItem(
+                                              if (!isAdjustment && !isCommittee) PopupMenuItem(
                                                 value: 'edit',
                                                 child: Text(appText(context, 'Edit', 'ترمیم کریں')),
                                               ),
-                                              PopupMenuItem(
+                                              if (!isCommittee) PopupMenuItem(
                                                 value: 'delete',
                                                 child: Text(appText(context, 'Delete', 'Delete')),
                                               ),
@@ -1135,14 +1135,19 @@ class TransactionDetailScreen extends StatelessWidget {
     final isExpense = normalized == 'expense';
     final isTransfer = normalized == 'transfer';
     final isAdjustment = normalized == 'adjustment';
-    final color = isAdjustment
+    final isCommittee = normalized == 'committee';
+    final color = isCommittee
+        ? const Color(0xFF7653B5)
+        : isAdjustment
         ? const Color(0xFF8A6D3B)
         : isIncome
         ? const Color(0xFF159B65)
         : isExpense
             ? const Color(0xFFE45B5B)
             : const Color(0xFF3979C6);
-    final icon = isIncome
+    final icon = isCommittee
+        ? Icons.groups_2_outlined
+        : isIncome
         ? Icons.south_west_rounded
         : isExpense
             ? Icons.north_east_rounded

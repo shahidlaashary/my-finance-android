@@ -129,10 +129,11 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   int committeeWallet=-1;
   bool loading=true;
   final money=NumberFormat('#,##0.##');
-  int get id=>(widget.committee['id'] as num).toInt();
+  late Map<String,dynamic> committeeData;
+  int get id=>(committeeData['id'] as num).toInt();
 
   @override
-  void initState(){super.initState();tabs=TabController(length:4,vsync:this);_load();}
+  void initState(){super.initState();committeeData=Map<String,dynamic>.from(widget.committee);tabs=TabController(length:4,vsync:this);_load();}
   @override
   void dispose(){tabs.dispose();super.dispose();}
 
@@ -144,7 +145,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       ]);
       final currentCommittees=await CommitteeService.getCommittees();
       final current=currentCommittees.where((item)=>(item['id'] as num).toInt()==id);
-      if(current.isNotEmpty) widget.committee.addAll(current.first);
+      if(current.isNotEmpty) committeeData=Map<String,dynamic>.from(current.first);
       if(mounted)setState((){
         members=values[0] as List<Map<String,dynamic>>;
         entries=values[1] as List<Map<String,dynamic>>;
@@ -181,12 +182,12 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
 
   Future<void> _record(String type) async {
     if(members.isEmpty||wallets.isEmpty){_msg('Add members and wallets first.');return;}
-    final pot=(widget.committee['installment_amount'] as num).toDouble()*members.length;
+    final pot=(committeeData['installment_amount'] as num).toDouble()*members.length;
     final eligibleMembers=type=='Payout'
       ? members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).take(1).toList()
       : members;
     if(eligibleMembers.isEmpty){_msg('All scheduled payouts are complete.');return;}
-    final amount=TextEditingController(text: type=='Installment' ? '${widget.committee['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
+    final amount=TextEditingController(text: type=='Installment' ? '${committeeData['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
     int memberId=(eligibleMembers.first['id'] as num).toInt();
     int walletId=wallets.any((w)=>(w['id'] as num).toInt()==committeeWallet)?committeeWallet:(wallets.first['id'] as num).toInt();
     DateTime date=DateTime.now();final note=TextEditingController();
@@ -196,7 +197,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         DropdownButtonFormField<int>(value:memberId,decoration:const InputDecoration(labelText:'Member'),
           items:eligibleMembers.map((m)=>DropdownMenuItem(value:(m['id'] as num).toInt(),child:Text(m['name'].toString()))).toList(),
           onChanged:(v){if(v!=null)setD(()=>memberId=v);}),
-        TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:'Amount (${widget.committee['currency'] ?? 'PKR'})')),
+        TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:'Amount (${committeeData['currency'] ?? 'PKR'})')),
         DropdownButtonFormField<int>(value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Deposit into':'Pay from'),
           items:wallets.map((w)=>DropdownMenuItem(value:(w['id'] as num).toInt(),child:Text('${w['name']} (${w['currency']})'))).toList(),
           onChanged:(v){if(v!=null)setD(()=>walletId=v);}),
@@ -217,7 +218,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
 
   @override
   Widget build(BuildContext context){
-    final c=widget.committee;
+    final c=committeeData;
     return Scaffold(appBar:AppBar(title:Text(c['name'].toString()),bottom:TabBar(controller:tabs,isScrollable:true,tabs:const[
       Tab(text:'Overview'),Tab(text:'Members'),Tab(text:'Schedule'),Tab(text:'History'),
     ])),
@@ -268,7 +269,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   ])));
 
   Widget _members(){
-    final c=widget.committee;
+    final c=committeeData;
     final pot=(c['installment_amount'] as num).toDouble()*members.length;
     final dueCount=_dueCycles(c);
     final dueAmount=(c['installment_amount'] as num).toDouble()*dueCount;
@@ -326,17 +327,17 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       return Card(child:ListTile(leading:CircleAvatar(child:Icon(deposit?Icons.south_west:Icons.north_east,color:deposit?Colors.green:Colors.deepPurple)),
         title:Text('${e['member_name']} • ${e['entry_type']}'),
         subtitle:Text('${DateFormat('dd MMM yyyy').format(DateTime.parse(e['entry_date']))} • ${money.format(e['wallet_amount'] ?? e['amount'])} ${e['wallet_currency']} → ${e['wallet_name']}'),
-        trailing:Text('${deposit?'+':'−'} ${e['committee_currency'] ?? widget.committee['currency'] ?? 'PKR'} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Colors.green:Colors.deepPurple)),
+        trailing:Text('${deposit?'+':'−'} ${e['committee_currency'] ?? committeeData['currency'] ?? 'PKR'} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Colors.green:Colors.deepPurple)),
       ));
     });
 
   Future<void> _changeStatus()async{
-    String status=widget.committee['status'].toString();
+    String status=committeeData['status'].toString();
     final ok=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
       title:const Text('Committee status'),
       content:DropdownButtonFormField<String>(value:status,items:['Upcoming','Active','Completed'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setD(()=>status=v);}),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
     )));
-    if(ok==true){await CommitteeService.updateStatus(id,status);widget.committee['status']=status;if(mounted)setState(()=>{});_msg('Status updated.');}
+    if(ok==true){await CommitteeService.updateStatus(id,status);committeeData['status']=status;if(mounted)setState(()=>{});_msg('Status updated.');}
   }
 }

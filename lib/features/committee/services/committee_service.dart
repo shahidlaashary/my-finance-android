@@ -156,6 +156,9 @@ class CommitteeService {
     await _ensureSchema();
     if (name.trim().isEmpty) throw Exception('Enter member name.');
     final db = FinanceDB.instance.db;
+    final entryCount = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM committee_entries WHERE committee_id=?', [committeeId])) ?? 0;
+    if (entryCount > 0) throw Exception('Members cannot be added after committee transactions have started.');
     final count = Sqflite.firstIntValue(await db.rawQuery(
       'SELECT COUNT(*) FROM committee_members WHERE committee_id=?', [committeeId])) ?? 0;
     await db.insert('committee_members', {

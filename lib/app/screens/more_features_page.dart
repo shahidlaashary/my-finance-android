@@ -90,8 +90,8 @@ class MoreFeaturesPage extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           const horizontalPadding = 10.0;
-          const verticalPadding = 6.0;
-          const itemSpacing = 4.0;
+          const verticalPadding = 3.0;
+          const itemSpacing = 1.5;
           final itemHeight = (constraints.maxHeight -
                   verticalPadding * 2 -
                   itemSpacing * (features.length - 1)) /
@@ -170,7 +170,7 @@ class MoreFeaturesPage extends StatelessWidget {
                           Icon(
                             feature['icon'] as IconData,
                             color: AppColors.primary,
-                            size: 18,
+                            size: 21,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -183,7 +183,7 @@ class MoreFeaturesPage extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 13,
                                 height: 1,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -192,7 +192,7 @@ class MoreFeaturesPage extends StatelessWidget {
                           const Icon(
                             Icons.chevron_right_rounded,
                             color: AppColors.muted,
-                            size: 16,
+                            size: 18,
                           ),
                         ],
                       ),

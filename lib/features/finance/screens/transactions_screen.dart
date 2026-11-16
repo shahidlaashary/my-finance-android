@@ -638,22 +638,24 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return bDate.compareTo(aDate);
       });
 
-    // Group by calendar date, then paginate by day so a date is never split.
+    // Show a compact first page, then paginate the complete history in View All.
+    const transactionsPerPage = 10;
+    final pageCount = (filteredTransactions.length / transactionsPerPage).ceil();
+    final safePage = currentPage.clamp(0, pageCount > 0 ? pageCount - 1 : 0).toInt();
+    final pageTransactions = filteredTransactions
+        .skip((showAllTransactions ? safePage : 0) * transactionsPerPage)
+        .take(transactionsPerPage)
+        .toList();
     final groupedByDate = <String, List<Map<String, dynamic>>>{};
-    for (final item in filteredTransactions) {
+    for (final item in pageTransactions) {
       final parsed = DateTime.tryParse(item['date']?.toString() ?? '');
       final key = parsed == null ? 'Unknown date' : DateFormat('yyyy-MM-dd').format(parsed);
       groupedByDate.putIfAbsent(key, () => []).add(item);
     }
-    final dateKeys = groupedByDate.keys.toList();
-    const daysPerPage = 7;
-    final pageCount = (dateKeys.length / daysPerPage).ceil();
-    final safePage = currentPage.clamp(0, pageCount > 0 ? pageCount - 1 : 0).toInt();
-    final pageDateKeys = dateKeys.skip(safePage * daysPerPage).take(daysPerPage).toList();
     final displayRows = <Map<String, dynamic>>[];
-    for (final key in pageDateKeys) {
-      displayRows.add({'dateHeader': key});
-      for (final item in groupedByDate[key]!) {
+    for (final entry in groupedByDate.entries) {
+      displayRows.add({'dateHeader': entry.key});
+      for (final item in entry.value) {
         displayRows.add({'transaction': item});
       }
     }
@@ -754,7 +756,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             itemCount: displayRows.length + 1,
                             itemBuilder: (context, index) {
                               if (index == displayRows.length) {
-                                if (!showAllTransactions && dateKeys.length > daysPerPage) {
+                                if (!showAllTransactions && filteredTransactions.length > transactionsPerPage) {
                                   return Align(
                                     alignment: Alignment.center,
                                     child: Padding(

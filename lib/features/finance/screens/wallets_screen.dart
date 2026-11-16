@@ -636,7 +636,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                           Text(_walletCurrencyNames[code]??code,style:theme.textTheme.bodySmall?.copyWith(color:theme.colorScheme.onSurfaceVariant)),
                         ])),
                         if(selected)Icon(Icons.check_circle_rounded,color:theme.colorScheme.primary),
-                      ]))),
+                      ])))),
                 })),
               ]),
             ),

@@ -53,6 +53,31 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   @override
   void dispose() { _headerNameController.dispose(); super.dispose(); }
 
+  Future<void> _changeHeaderName() async {
+    _headerNameController.text = await _preferences.headerName;
+    if (!mounted) return;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Change Custom Name'),
+        content: TextField(
+          controller: _headerNameController,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Your Name', hintText: 'Enter your name'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (saved == true) {
+      await _save(() => _preferences.setHeaderName(_headerNameController.text));
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _save(Future<void> Function() action) async {
     await action();
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(

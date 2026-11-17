@@ -74,6 +74,9 @@ class LoansService {
         amount REAL NOT NULL,
         remaining_amount REAL NOT NULL,
         wallet_id INTEGER NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'PKR',
+        source_type TEXT,
+        source_id INTEGER,
         lending_date TEXT NOT NULL,
         due_date TEXT,
         notes TEXT NOT NULL DEFAULT '',
@@ -93,6 +96,18 @@ class LoansService {
         created_at TEXT NOT NULL
       )
     ''' );
+
+    final loanColumns = await db.rawQuery('PRAGMA table_info(loans)');
+    if (!loanColumns.any((column) => column['name'] == 'currency')) {
+      await db.execute("ALTER TABLE loans ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'");
+    }
+    if (!loanColumns.any((column) => column['name'] == 'source_type')) {
+      await db.execute("ALTER TABLE loans ADD COLUMN source_type TEXT");
+    }
+    if (!loanColumns.any((column) => column['name'] == 'source_id')) {
+      await db.execute("ALTER TABLE loans ADD COLUMN source_id INTEGER");
+    }
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_loans_source ON loans(source_type, source_id)');
 
     final partyColumns = await db.rawQuery('PRAGMA table_info(loan_parties)');
     if (!partyColumns.any((column) => column['name'] == 'currency')) {
@@ -244,7 +259,7 @@ class LoansService {
     final db = await _database;
     final rows = await db.rawQuery('''
       SELECT
-        UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))) AS currency,
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))) AS currency,
         loans.loan_type AS loan_type,
         COALESCE(SUM(loans.remaining_amount), 0) AS outstanding,
         COUNT(*) AS loan_count
@@ -338,7 +353,7 @@ class LoansService {
     return db.transaction((txn) async {
       final party = await txn.query(
         'loan_parties',
-        columns: ['id'],
+        columns: ['id', 'currency'],
         where: 'id = ?',
         whereArgs: [loan.partyId],
         limit: 1,
@@ -376,6 +391,85 @@ class LoansService {
       );
 
       return loanId;
+    });
+  }
+
+  /// Asset purchase/sale ke liye loan create karta hai, bina kisi wallet ko debit/credit kiye.
+  /// Matching-currency wallet sirf repayment currency anchor hota hai.
+  static Future<int> createAssetLinkedLoan({
+    required int partyId,
+    required String loanType,
+    required double amount,
+    required String lendingDate,
+    required String sourceType,
+    required int sourceId,
+    String notes = '',
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw Exception('Loan amount must be greater than zero.');
+    if (sourceType != 'asset_purchase' && sourceType != 'asset_sale') {
+      throw Exception('Invalid asset loan reference.');
+    }
+    final db = await _database;
+    return db.transaction((txn) async {
+      final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [partyId], limit: 1);
+      if (parties.isEmpty) throw Exception('Selected party was not found.');
+      final currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+      final wallets = await txn.query(
+        'wallets',
+        columns: ['id'],
+        where: 'UPPER(TRIM(COALESCE(currency, \'PKR\'))) = ?',
+        whereArgs: [currency],
+        orderBy: 'id ASC',
+        limit: 1,
+      );
+      if (wallets.isEmpty) {
+        throw Exception('Create a $currency wallet first. A matching-currency wallet is required for future repayments.');
+      }
+      final walletId = (wallets.first['id'] as num).toInt();
+      return txn.insert('loans', {
+        'party_id': partyId,
+        'loan_type': loanType,
+        'amount': amount,
+        'remaining_amount': amount,
+        'wallet_id': walletId,
+        'currency': currency,
+        'source_type': sourceType,
+        'source_id': sourceId,
+        'lending_date': lendingDate,
+        'notes': notes,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    });
+  }
+
+  /// Asset-linked loan ko uski repayments ke baghair edit karta hai.
+  static Future<void> updateAssetLinkedLoan({
+    required int loanId,
+    required int partyId,
+    required String loanType,
+    required double amount,
+    required String lendingDate,
+    required String notes,
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw Exception('Loan amount must be greater than zero.');
+    final db = await _database;
+    await db.transaction((txn) async {
+      final rows = await txn.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
+      if (rows.isEmpty || rows.first['source_type'] == null) throw Exception('Linked asset loan was not found.');
+      final repayments = await txn.query('loan_repayments', columns: ['id'], where: 'loan_id = ?', whereArgs: [loanId], limit: 1);
+      if (repayments.isNotEmpty) throw Exception('This asset already has loan repayments. Its linked loan details cannot be changed.');
+      final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [partyId], limit: 1);
+      if (parties.isEmpty) throw Exception('Selected party was not found.');
+      final currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+      final wallets = await txn.query('wallets', columns: ['id'], where: 'UPPER(TRIM(COALESCE(currency, \'PKR\'))) = ?', whereArgs: [currency], limit: 1);
+      if (wallets.isEmpty) throw Exception('Create a $currency wallet first for future repayments.');
+      await txn.update('loans', {
+        'party_id': partyId, 'loan_type': loanType, 'amount': amount,
+        'remaining_amount': amount, 'wallet_id': wallets.first['id'],
+        'currency': currency, 'lending_date': lendingDate,
+        'notes': notes, 'status': 'active',
+      }, where: 'id = ?', whereArgs: [loanId]);
     });
   }
 
@@ -421,8 +515,7 @@ class LoansService {
         );
       }
 
-      final loanCurrency =
-          await _getWalletCurrency(txn, loan.walletId);
+      final loanCurrency = loan.currency.toUpperCase();
 
       final receivingCurrency =
           await _getWalletCurrency(txn, repayment.walletId);
@@ -526,7 +619,7 @@ class LoansService {
       INNER JOIN wallets
         ON wallets.id = loans.wallet_id
       WHERE loans.remaining_amount > 0
-      GROUP BY UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))), loans.loan_type
+      GROUP BY UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))), loans.loan_type
       ORDER BY currency ASC, loans.loan_type ASC
     ''');
 
@@ -676,12 +769,14 @@ class LoansService {
         );
       }
 
-      // Di gayi asal loan raqam wallet mein wapas jama karta hai.
-      await _changeWalletBalance(
-        txn,
-        walletId: loan.walletId,
-        amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
-      );
+      // Asset-linked loans never moved their reference wallet on creation.
+      if (!loan.isAssetLinked) {
+        await _changeWalletBalance(
+          txn,
+          walletId: loan.walletId,
+          amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
+        );
+      }
 
       await txn.delete(
         'loan_repayments',

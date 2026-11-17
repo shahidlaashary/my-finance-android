@@ -218,12 +218,12 @@ class AssetsService {
           'Sale date cannot be before purchase date.',
         );
       }
-      final purchaseAccount = await _getWallet(txn, asset.walletId);
-      final saleAccount = await _getWallet(txn, saleWalletId);
+      final purchaseWallet = await _getWallet(txn, asset.walletId);
+      final saleWallet = await _getWallet(txn, saleWalletId);
 
       // Mukhtalif currencies ko seedha add karne se asset ki sale value aur profit ghalat hota.
-      final purchaseCurrency = (purchaseAccount['currency'] ?? 'PKR').toString().toUpperCase();
-      final saleCurrency = (saleAccount['currency'] ?? 'PKR').toString().toUpperCase();
+      final purchaseCurrency = (purchaseWallet['currency'] ?? 'PKR').toString().toUpperCase();
+      final saleCurrency = (saleWallet['currency'] ?? 'PKR').toString().toUpperCase();
       if (purchaseCurrency != saleCurrency) {
         throw Exception(
           'Asset sale wallet must use the same currency as its purchase wallet.',
@@ -274,12 +274,12 @@ class AssetsService {
       if (oldAsset.isSold) {
         throw Exception('Sold assets cannot be edited.');
       }
-      final oldAccount = await _getWallet(txn, oldAsset.walletId);
-      final updatedAccount = await _getWallet(txn, updatedAsset.walletId);
+      final oldWallet = await _getWallet(txn, oldAsset.walletId);
+      final updatedWallet = await _getWallet(txn, updatedAsset.walletId);
 
       // Asset ki purchase amount ko doosri currency mein convert kiye baghair move nahi karte.
-      final oldCurrency = (oldAccount['currency'] ?? 'PKR').toString().toUpperCase();
-      final updatedCurrency = (updatedAccount['currency'] ?? 'PKR').toString().toUpperCase();
+      final oldCurrency = (oldWallet['currency'] ?? 'PKR').toString().toUpperCase();
+      final updatedCurrency = (updatedWallet['currency'] ?? 'PKR').toString().toUpperCase();
       if (oldCurrency != updatedCurrency) {
         throw Exception(
           'Asset must remain linked to an wallet with the same currency.',
@@ -431,7 +431,7 @@ class AssetsService {
       (double total, double value) => total + value,
     );
   }
-  Future<List<AssetsModel>> getAssetsByAccount(
+  Future<List<AssetsModel>> getAssetsByWallet(
     int walletId,
   ) async {
     final db = await _database;

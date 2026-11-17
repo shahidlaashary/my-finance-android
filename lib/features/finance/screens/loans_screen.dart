@@ -164,68 +164,16 @@ class _LoansScreenState extends State<LoansScreen> {
   }
 
   Future<void> _showParties() async {
-    await _loadData();
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Parties & Ledgers'),
-        content: SizedBox(
-          width: 520,
-          child: _parties.isEmpty
-            ? const Text('No parties added yet.')
-            : ListView(shrinkWrap: true, children: _parties.map((party) {
-                final id = party['id'] as int;
-                return FutureBuilder<Map<String, dynamic>>(
-                  future: LoansService.getPartySummary(id),
-                  builder: (context, snapshot) {
-                    final summary = snapshot.data ?? {};
-                    final balances = (summary['balances'] as List<dynamic>? ?? []);
-                    return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-                      title: Text(party['name']?.toString() ?? ''),
-                      subtitle: Text(balances.isEmpty ? 'No loan history yet' : balances.map((item) => '${item['currency']} ${item['loan_type'] == 'given' ? 'Receivable' : 'Payable'}: ${_money((item['outstanding'] as num).toDouble())}').join('  |  ')),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () async {
-                        final loans = await LoansService.getLoansForParty(id);
-                        if (!dialogContext.mounted) return;
-                        await showDialog<void>(
-                          context: dialogContext,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(party['name']?.toString() ?? 'Party Ledger'),
-                            content: SizedBox(width: 520, child: loans.isEmpty
-                              ? const Text('No loan history for this party.')
-                              : ListView(shrinkWrap: true, children: loans.map((loan) => ListTile(
-                                  title: Text('${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
-                                  subtitle: Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)} • ${loan.lendingDate}'),
-                                  onTap: () {
-                                    Navigator.pop(ctx);
-                                    Navigator.pop(dialogContext);
-                                    _showLoanDetails(loan);
-                                  },
-                                )).toList())),
-                            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              }).toList()),
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PartyManagementPage(
+          hideBalances: _hideBalances,
+          onLoanTap: (loan) => _showLoanDetails(loan),
         ),
-        actions: [
-          TextButton.icon(onPressed: () async {
-            final id = await _createParty();
-            if (id != null) {
-              await _loadData();
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-              if (mounted) _showParties();
-            }
-          }, icon: const Icon(Icons.person_add_alt_1), label: const Text('Add Party')),
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
-        ],
       ),
     );
+    await _loadData();
   }
 
   Future<void> _addLoan() async {
@@ -1138,6 +1086,351 @@ class _LoansScreenState extends State<LoansScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+
+class PartyManagementPage extends StatefulWidget {
+  final bool hideBalances;
+  final ValueChanged<LoansModel> onLoanTap;
+
+  const PartyManagementPage({
+    super.key,
+    required this.hideBalances,
+    required this.onLoanTap,
+  });
+
+  @override
+  State<PartyManagementPage> createState() => _PartyManagementPageState();
+}
+
+class _PartyManagementPageState extends State<PartyManagementPage> {
+  List<Map<String, dynamic>> _parties = [];
+  bool _loading = true;
+  String _search = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadParties();
+  }
+
+  Future<void> _loadParties() async {
+    final parties = await LoansService.getParties();
+    if (!mounted) return;
+    setState(() {
+      _parties = parties;
+      _loading = false;
+    });
+  }
+
+  String _money(num value) =>
+      widget.hideBalances ? '••••••' : value.toStringAsFixed(2);
+
+  Future<void> _editParty([Map<String, dynamic>? party]) async {
+    final name = TextEditingController(text: party?['name']?.toString() ?? '');
+    final phone = TextEditingController(text: party?['phone']?.toString() ?? '');
+    final address = TextEditingController(text: party?['address']?.toString() ?? '');
+    final formKey = GlobalKey<FormState>();
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(party == null ? 'Add New Party' : 'Edit Party'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextFormField(
+                controller: name,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: 'Party Name *'),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Party name is required'
+                    : null,
+              ),
+              TextFormField(
+                controller: phone,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+              ),
+              TextFormField(
+                controller: address,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
+            ]),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (saved == true) {
+      try {
+        if (party == null) {
+          await LoansService.addParty(
+            name: name.text,
+            phone: phone.text,
+            address: address.text,
+          );
+        } else {
+          await LoansService.updateParty(
+            id: (party['id'] as num).toInt(),
+            name: name.text,
+            phone: phone.text,
+            address: address.text,
+          );
+        }
+        await _loadParties();
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save party: $error')),
+          );
+        }
+      }
+    }
+    name.dispose();
+    phone.dispose();
+    address.dispose();
+  }
+
+  Future<void> _deleteParty(Map<String, dynamic> party) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Party?'),
+        content: Text(
+          'Delete "${party['name']}"? Parties linked to any loan cannot be deleted, so loan history remains safe.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await LoansService.deleteParty((party['id'] as num).toInt());
+      await _loadParties();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Party deleted')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    }
+  }
+
+  Future<void> _openLedger(Map<String, dynamic> party) async {
+    final id = (party['id'] as num).toInt();
+    final loans = await LoansService.getLoansForParty(id);
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.72,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(
+                      '${party['name']} • Ledger',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(Icons.close),
+                  ),
+                ]),
+              ),
+              Expanded(
+                child: loans.isEmpty
+                    ? const Center(child: Text('No loan history for this party.'))
+                    : ListView.separated(
+                        itemCount: loans.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (_, index) {
+                          final loan = loans[index];
+                          return ListTile(
+                            title: Text(
+                              '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.amount.toStringAsFixed(2)}',
+                            ),
+                            subtitle: Text(
+                              'Outstanding: ${_money(loan.remainingAmount)} • ${loan.lendingDate}',
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Navigator.pop(context);
+                              widget.onLoanTap(loan);
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _parties.where((party) {
+      final query = _search.trim().toLowerCase();
+      return query.isEmpty ||
+          (party['name']?.toString().toLowerCase().contains(query) ?? false) ||
+          (party['phone']?.toString().toLowerCase().contains(query) ?? false);
+    }).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Manage Parties'),
+        actions: [
+          IconButton(
+            onPressed: () => _editParty(),
+            tooltip: 'Add Party',
+            icon: const Icon(Icons.person_add_alt_1),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              onChanged: (value) => setState(() => _search = value),
+              decoration: InputDecoration(
+                hintText: 'Search parties',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _search.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () => setState(() => _search = ''),
+                        icon: const Icon(Icons.close),
+                      ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : filtered.isEmpty
+                    ? Center(
+                        child: Text(_search.isEmpty
+                            ? 'No parties added yet.'
+                            : 'No matching parties found.'),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 20),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final party = filtered[index];
+                          return FutureBuilder<Map<String, dynamic>>(
+                            future: LoansService.getPartySummary(
+                              (party['id'] as num).toInt(),
+                            ),
+                            builder: (context, snapshot) {
+                              final balances = (snapshot.data?['balances']
+                                      as List<dynamic>?) ??
+                                  [];
+                              final summary = balances.isEmpty
+                                  ? 'No loan history yet'
+                                  : balances.map((item) {
+                                      final amount =
+                                          (item['outstanding'] as num?) ?? 0;
+                                      final type = item['loan_type'] == 'given'
+                                          ? 'Receivable'
+                                          : 'Payable';
+                                      return '${item['currency']} $type: ${_money(amount)}';
+                                    }).join('  •  ');
+                              return ListTile(
+                                leading: const CircleAvatar(
+                                  child: Icon(Icons.person_outline),
+                                ),
+                                title: Text(party['name']?.toString() ?? ''),
+                                subtitle: Text(
+                                  [
+                                    if ((party['phone'] ?? '').toString().isNotEmpty)
+                                      party['phone'].toString(),
+                                    summary,
+                                  ].join('\n'),
+                                ),
+                                isThreeLine: true,
+                                onTap: () => _openLedger(party),
+                                trailing: PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'edit') _editParty(party);
+                                    if (value == 'delete') _deleteParty(party);
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: ListTile(
+                                        dense: true,
+                                        leading: Icon(Icons.edit_outlined),
+                                        title: Text('Edit'),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: ListTile(
+                                        dense: true,
+                                        leading: Icon(Icons.delete_outline, color: Colors.red),
+                                        title: Text('Delete'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _editParty(),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Party'),
+      ),
     );
   }
 }

@@ -20,6 +20,7 @@ class _LoansScreenState extends State<LoansScreen> {
   List<LoansModel> _loans = [];
   List<Map<String, dynamic>> _wallets = [];
   List<Map<String, dynamic>> _parties = [];
+  Map<int, String> _assetNames = {};
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
   bool _hideBalances = false;
@@ -88,11 +89,22 @@ class _LoansScreenState extends State<LoansScreen> {
       final parties = await LoansService.getParties();
       final outstandingByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
+      final assetNames = <int, String>{};
+      try {
+        final db = await TransactionsService.database;
+        final assetRows = await db.query('assets', columns: ['id', 'name']);
+        for (final row in assetRows) {
+          assetNames[(row['id'] as num).toInt()] = row['name']?.toString() ?? 'Asset';
+        }
+      } catch (_) {
+        // Asset table may not exist until the Asset section is first opened.
+      }
       if (!mounted) return;
       setState(() {
         _hideBalances = hideBalances;
         _wallets = wallets;
         _parties = parties;
+        _assetNames = assetNames;
         _loans = loans;
         _outstandingByCurrency = outstandingByCurrency;
         _loading = false;
@@ -590,6 +602,12 @@ class _LoansScreenState extends State<LoansScreen> {
 
   String _partyPhoneForLoan(LoansModel loan) =>
       _partyForLoan(loan)?['phone']?.toString() ?? '-';
+  String _assetReferenceLabel(LoansModel loan) {
+    if (!loan.isAssetLinked || loan.sourceId == null) return '';
+    final name = _assetNames[loan.sourceId!] ?? 'Asset';
+    final type = loan.sourceType == 'asset_purchase' ? 'Purchase' : 'Sale';
+    return '$name • $type';
+  }
 
   Future<void> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return;
@@ -742,7 +760,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${_partyNameForLoan(loan)}'),
                   Text('${appText(context, 'Phone:', 'فون:')} ${_partyPhoneForLoan(loan)}'),
                   Text('${appText(context, 'Currency:', 'کرنسی:')} $currency'),
-                  if (loan.isAssetLinked) Text('Linked Asset Reference: ${loan.sourceType == 'asset_purchase' ? 'Purchase' : 'Sale'} • ID ${loan.sourceId}'),
+                  if (loan.isAssetLinked) Text('Linked Asset Reference: ${_assetReferenceLabel(loan)} • ID ${loan.sourceId}'),
                   Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithLoanCurrency(loan.amount, loan)}'),
                   Text('${appText(context, 'Repaid:', 'واپس ادا شدہ:')} ${_moneyWithLoanCurrency(loan.repaidAmount, loan)}'),
                   Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_moneyWithLoanCurrency(loan.remainingAmount, loan)}'),
@@ -1067,7 +1085,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 Text(_partyPhoneForLoan(loan)),
                               SizedBox(height: 8),
                               Text(loan.loanType == 'given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
-                              if (loan.isAssetLinked) Text('Linked Asset • ID: ${loan.sourceId}'),
+                              if (loan.isAssetLinked) Text('Linked Asset: ${_assetReferenceLabel(loan)} • ID: ${loan.sourceId}'),
                               Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'
                                 '${_moneyWithLoanCurrency(loan.amount, loan)}',
                               ),

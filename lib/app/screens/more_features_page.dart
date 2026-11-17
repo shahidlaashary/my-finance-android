@@ -9,7 +9,6 @@ import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
 import 'package:my_finance/features/staff/screens/staff_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
-import 'package:my_finance/app/screens/about_hub_screen.dart';
 import 'package:my_finance/features/installments/screens/installments_screen.dart';
 import 'package:my_finance/features/committee/screens/committee_screen.dart';
 import 'package:my_finance/features/partners/screens/my_partner_screen.dart';
@@ -22,10 +21,6 @@ class MoreFeaturesPage extends StatelessWidget {
     // Budgets, Goals aur Stats ab bottom navigation mein mojood hain.
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
-      {
-        'title': 'About',
-        'icon': Icons.info_outline_rounded,
-      },
       {
         'title': 'Exchange Rates',
         'icon': Icons.currency_exchange_rounded,
@@ -139,9 +134,6 @@ class MoreFeaturesPage extends StatelessWidget {
                             if (feature['title'] == 'My Partner') {
                               return const MyPartnerScreen();
                             }
-                            if (feature['title'] == 'About') {
-                              return const AboutHubScreen();
-                            }
                             return const MyDocumentsScreen();
                           },
                         ),
@@ -154,7 +146,7 @@ class MoreFeaturesPage extends StatelessWidget {
                           Icon(
                             feature['icon'] as IconData,
                             color: AppColors.primary,
-                            size: 21,
+                            size: 23,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -167,16 +159,16 @@ class MoreFeaturesPage extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                           const Icon(
                             Icons.chevron_right_rounded,
                             color: AppColors.muted,
-                            size: 18,
+                            size: 24,
                           ),
                         ],
                       ),

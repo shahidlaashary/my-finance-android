@@ -325,7 +325,7 @@ class ReportsService {
   }
 
   // --------------------------------------------------
-  // ACCOUNT-WISE TRANSACTION SUMMARY
+  // WALLET-WISE TRANSACTION SUMMARY
   // --------------------------------------------------
 
   Future<List<Map<String, dynamic>>> getAccountBreakdown({
@@ -518,7 +518,7 @@ class ReportsService {
   }
 
   // --------------------------------------------------
-  // TOTAL ACCOUNT BALANCES BY CURRENCY
+  // TOTAL WALLET BALANCES BY CURRENCY
   // --------------------------------------------------
 
   Future<List<Map<String, dynamic>>> getBalancesByCurrency() async {
@@ -529,7 +529,7 @@ class ReportsService {
       SELECT
         currency,
         SUM(balance) AS total_balance,
-        COUNT(id) AS account_count
+        COUNT(id) AS wallet_count
 
       FROM wallets
 
@@ -545,8 +545,8 @@ class ReportsService {
       return {
         'currency': row['currency'],
         'total_balance': _number(row['total_balance']),
-        'account_count':
-            (row['account_count'] as num?)?.toInt() ?? 0,
+        'wallet_count':
+            (row['wallet_count'] as num?)?.toInt() ?? 0,
       };
     }).toList();
   }

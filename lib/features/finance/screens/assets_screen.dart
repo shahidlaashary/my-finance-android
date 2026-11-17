@@ -10,7 +10,6 @@ import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
-import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -909,49 +908,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AssetDepreciationScreen(),
-                          ),
-                        );
-                        if (mounted) _loadData();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE8F4ED),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.trending_down_rounded, color: Color(0xFF147D59)),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Asset Depreciation', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                                  SizedBox(height: 3),
-                                  Text('Configure methods and view asset book values', style: TextStyle(fontSize: 11, color: Colors.black54)),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
                   SizedBox(height: 10),
                   GridView.builder(
                     itemCount: categoryItems.length,

@@ -348,8 +348,8 @@ class AssetsService {
     final existing = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
     if (existing.isEmpty) return;
     final asset = AssetsModel.fromMap(existing.first);
-    if (asset.linkedLoanId != null) await LoansService.deleteLoan(asset.linkedLoanId!);
-    if (asset.saleLinkedLoanId != null) await LoansService.deleteLoan(asset.saleLinkedLoanId!);
+    if (asset.linkedLoanId != null) await LoansService.deleteLoan(asset.linkedLoanId!, fromAssetDelete: true);
+    if (asset.saleLinkedLoanId != null) await LoansService.deleteLoan(asset.saleLinkedLoanId!, fromAssetDelete: true);
     await RecycleBinService.archive(type: 'Asset', title: asset.name, table: 'assets', id: assetId, record: existing.first);
     await db.transaction((txn) async {
       final rows = await txn.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);

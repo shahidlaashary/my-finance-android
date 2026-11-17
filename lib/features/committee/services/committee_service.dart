@@ -45,37 +45,8 @@ class CommitteeService {
     }
     await db.execute('CREATE INDEX IF NOT EXISTS idx_committee_members_committee ON committee_members(committee_id, turn_no)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_committee_entries_committee ON committee_entries(committee_id, entry_date DESC)');
-    await _migrateSharedCommitteeWallet();
   }
 
-  static Future<void> _migrateSharedCommitteeWallet() async {
-    final db = FinanceDB.instance.db;
-    final marker = await db.query('app_settings', columns: ['setting_value'],
-      where: 'setting_key=?', whereArgs: ['committee_internal_ledger_migrated_v1'], limit: 1);
-    if (marker.isNotEmpty) return;
-    await db.transaction((txn) async {
-      final setting = await txn.query('app_settings', columns: ['setting_value'],
-        where: 'setting_key=?', whereArgs: ['committee_shared_wallet_id'], limit: 1);
-      final oldId = setting.isEmpty ? null : int.tryParse(setting.first['setting_value']?.toString() ?? '');
-      if (oldId != null) {
-        // Old committee entries already represent the internal ledger. Detach
-        // them from the former shared wallet without changing member amounts.
-        await txn.update('committee_entries', {
-          'wallet_id': -1, 'wallet_amount': 0, 'wallet_currency': '', 'payment_method': 'None',
-          'transaction_id': null,
-        }, where: 'wallet_id=?', whereArgs: [oldId]);
-        await txn.delete('transactions', where: "wallet_id=? AND LOWER(type)='committee'",
-          whereArgs: [oldId]);
-        final references = await txn.query('transactions', columns: ['id'],
-          where: 'wallet_id=? OR to_wallet_id=?', whereArgs: [oldId, oldId], limit: 1);
-        if (references.isEmpty) await txn.delete('wallets', where: 'id=?', whereArgs: [oldId]);
-      }
-      await txn.delete('app_settings', where: 'setting_key=?', whereArgs: ['committee_shared_wallet_id']);
-      await txn.insert('app_settings', {
-        'setting_key': 'committee_internal_ledger_migrated_v1', 'setting_value': '1',
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    });
-  }
 
   static Future<List<Map<String, dynamic>>> getCommittees() async {
     await _ensureSchema();

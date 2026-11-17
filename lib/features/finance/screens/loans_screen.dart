@@ -235,7 +235,7 @@ class _LoansScreenState extends State<LoansScreen> {
     _nameController.clear();
     _phoneController.clear();
     _loanType = 'given';
-    _selectedPartyId = _parties.isEmpty ? null : _parties.first['id'] as int;
+    _selectedPartyId = null;
     bool createNewParty = _parties.isEmpty;
     if (!createNewParty && _selectedPartyId != null) {
       final selected = _parties.firstWhere((p) => p['id'] == _selectedPartyId);
@@ -335,7 +335,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               DropdownButtonFormField<String>(
                                 value: createNewParty ? '__new_party__' : _selectedPartyId?.toString(),
                                 isExpanded: true,
-                                decoration: const InputDecoration(labelText: 'Select Party *'),
+                                decoration: const InputDecoration(labelText: 'Select Party *', hintText: 'Choose an existing party or create new'),
                                 items: [
                                   ..._parties.map((party) => DropdownMenuItem<String>(
                                     value: party['id'].toString(),

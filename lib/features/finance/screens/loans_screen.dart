@@ -27,8 +27,8 @@ class _LoansScreenState extends State<LoansScreen> {
   final _notesController = TextEditingController();
   final _repaymentAmountController = TextEditingController();
   final _repaymentNotesController = TextEditingController();
-  int? _selectedAccountId;
-  int? _selectedRepaymentAccountId;
+  int? _selectedWalletId;
+  int? _selectedRepaymentWalletId;
   DateTime _lendingDate = DateTime.now();
   DateTime? _dueDate;
   @override
@@ -54,7 +54,7 @@ class _LoansScreenState extends State<LoansScreen> {
         '${date.day.toString().padLeft(2, '0')}';
   }
   String _money(double amount) => _hideBalances ? '••••••' : amount.toStringAsFixed(2);
-  String _currencyForAccount(int walletId) {
+  String _currencyForWallet(int walletId) {
     final wallet = _wallets.cast<Map<String, dynamic>?>().firstWhere(
       (item) => item?['id'] == walletId,
       orElse: () => null,
@@ -64,7 +64,7 @@ class _LoansScreenState extends State<LoansScreen> {
         .toUpperCase();
   }
   String _moneyWithCurrency(double amount, int walletId) {
-    return '${_currencyForAccount(walletId)} ${_money(amount)}';
+    return '${_currencyForWallet(walletId)} ${_money(amount)}';
   }
   void _onPreferencesChanged() async {
     final hidden = await GeneralPreferences.instance.hideBalances;
@@ -92,12 +92,12 @@ class _LoansScreenState extends State<LoansScreen> {
               .map((wallet) => (wallet['id'] as num).toInt())
               .toSet();
           final firstWalletId = (_wallets.first['id'] as num).toInt();
-          if (_selectedAccountId == null || !walletIds.contains(_selectedAccountId)) {
-            _selectedAccountId = firstWalletId;
+          if (_selectedWalletId == null || !walletIds.contains(_selectedWalletId)) {
+            _selectedWalletId = firstWalletId;
           }
-          if (_selectedRepaymentAccountId == null ||
-              !walletIds.contains(_selectedRepaymentAccountId)) {
-            _selectedRepaymentAccountId = firstWalletId;
+          if (_selectedRepaymentWalletId == null ||
+              !walletIds.contains(_selectedRepaymentWalletId)) {
+            _selectedRepaymentWalletId = firstWalletId;
           }
         }
       });
@@ -134,7 +134,7 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Please create an wallet first.');
       return;
     }
-    int? walletId = _selectedAccountId;
+    int? walletId = _selectedWalletId;
     DateTime lendingDate = _lendingDate;
     DateTime? dueDate = _dueDate;
     final List<XFile> pendingLoanImages = [];
@@ -375,7 +375,7 @@ class _LoansScreenState extends State<LoansScreen> {
           originalFileName: image.name,
         );
       }
-      _selectedAccountId = walletId;
+      _selectedWalletId = walletId;
       await _loadData();
       _showMessage('Loan saved successfully.');
     } catch (error) {
@@ -392,7 +392,7 @@ class _LoansScreenState extends State<LoansScreen> {
     }
     _repaymentAmountController.clear();
     _repaymentNotesController.clear();
-    int? walletId = _selectedRepaymentAccountId;
+    int? walletId = _selectedRepaymentWalletId;
     DateTime repaymentDate = DateTime.now();
     final result = await showDialog<bool>(
       context: context,
@@ -476,8 +476,8 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Please select a receiving wallet.');
       return;
     }
-    if (_currencyForAccount(walletId!) !=
-        _currencyForAccount(loan.walletId)) {
+    if (_currencyForWallet(walletId!) !=
+        _currencyForWallet(loan.walletId)) {
       _showMessage('Receiving wallet must use the same currency as the loan.');
       return;
     }
@@ -492,7 +492,7 @@ class _LoansScreenState extends State<LoansScreen> {
         createdAt: DateTime.now().toIso8601String(),
       );
       await LoansService.addRepayment(repayment);
-      _selectedRepaymentAccountId = walletId;
+      _selectedRepaymentWalletId = walletId;
       await _loadData();
       _showMessage('Repayment saved successfully.');
     } catch (error) {
@@ -501,7 +501,7 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _showLoanDetails(LoansModel loan) async {
     if (loan.id == null) return;
-    final currency = _currencyForAccount(loan.walletId);
+    final currency = _currencyForWallet(loan.walletId);
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -863,7 +863,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     )
                   else
                     ..._loans.map((loan) {
-                      final currency = _currencyForAccount(loan.walletId);
+                      final currency = _currencyForWallet(loan.walletId);
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(

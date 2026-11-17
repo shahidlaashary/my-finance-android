@@ -130,7 +130,7 @@ class _WalletsPageState extends State<WalletsPage> {
       Set<int> hidden = {};
       List<int> order = [];
       try {
-        archived = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List)
+        hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List)
             .map((e) => (e as num).toInt()).toSet();
       } catch (_) {}
       try {

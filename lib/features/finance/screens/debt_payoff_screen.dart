@@ -82,14 +82,14 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
 
   String _walletName(int id) {
     for (final w in _wallets) {
-      if ((w['id'] as num).toInt() == id) return w['name']?.toString() ?? 'Account';
+      if ((w['id'] as num).toInt() == id) return w['name']?.toString() ?? 'Wallet';
     }
-    return 'Account';
+    return 'Wallet';
   }
 
   Future<void> _editDebt([DebtRecord? debt]) async {
     if (_wallets.isEmpty) {
-      _message('Please create an account first.');
+      _message('Please create an wallet first.');
       return;
     }
     final name = TextEditingController(text: debt?.name ?? '');
@@ -137,7 +137,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           TextField(controller: minimum, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: appText(context, "Minimum Monthly Payment", "Minimum Monthly Payment"))),
           const SizedBox(height: 10),
           DropdownButtonFormField<int>(
-            value: walletId, isExpanded: true, decoration: InputDecoration(labelText: appText(context, "Currency / Linked Account", "Currency / Linked Account")),
+            value: walletId, isExpanded: true, decoration: InputDecoration(labelText: appText(context, "Currency / Linked Wallet", "Currency / Linked Wallet")),
             items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${(w['currency'] ?? 'PKR').toString().toUpperCase()})'))).toList(),
             onChanged: (v) { if (v != null) setDialog(() => walletId = v); },
           ),
@@ -188,7 +188,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     final amount = TextEditingController();
     final notes = TextEditingController();
     final matchingWallets = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == _currency(debt.walletId)).toList();
-    if (matchingWallets.isEmpty) { _message('No account found for this debt currency.'); return; }
+    if (matchingWallets.isEmpty) { _message('No wallet found for this debt currency.'); return; }
     int walletId = (matchingWallets.first['id'] as num).toInt();
     DateTime paidOn = DateTime.now();
     final result = await showModalBottomSheet<bool>(
@@ -218,7 +218,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_currency(debt.walletId)} ${_money(debt.balance)}'),
         TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: appText(context, "Payment Amount *", "Payment Amount *"))),
-        DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: InputDecoration(labelText: appText(context, "Pay From Account", "Pay From Account")), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
+        DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: InputDecoration(labelText: appText(context, "Pay From Wallet", "Pay From Wallet")), items: matchingWallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']}'))).toList(), onChanged: (v) { if (v != null) setDialog(() => walletId = v); }),
         ListTile(contentPadding: EdgeInsets.zero, title: Text(appText(context, "Payment Date", "Payment Date")), subtitle: Text(_date(paidOn)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: ctx, initialDate: paidOn, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setDialog(() => paidOn = d); }),
         TextField(controller: notes, decoration: InputDecoration(labelText: appText(context, "Notes (optional)", "Notes (optional)"))),
               ]),
@@ -243,7 +243,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
         try {
           await DebtPayoffService.addPayment(DebtPayment(debtId: debt.id!, amount: value, walletId: walletId, paymentDate: _date(paidOn), notes: notes.text.trim()));
           await _load();
-          _message('Payment recorded and account balance updated.');
+          _message('Payment recorded and wallet balance updated.');
         } catch (e) { _message('Payment failed: $e'); }
       }
     }
@@ -260,7 +260,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
         Text('Outstanding: ${_currency(debt.walletId)} ${_money(debt.balance)}'),
         Text('${appText(context, 'Paid:', 'ادا شدہ:')} ${_currency(debt.walletId)} ${_money(debt.paidAmount)}'),
         Text('Interest: ${debt.annualInterestRate.toStringAsFixed(2)}% p.a. • Minimum: ${_money(debt.minimumPayment)} / month'),
-        Text('${appText(context, 'Account:', 'اکاؤنٹ:')} ${_walletName(debt.walletId)}'), Text('Start: ${debt.startDate} • Due: ${debt.dueDate ?? 'Not set'}'),
+        Text('${appText(context, 'Wallet:', 'اکاؤنٹ:')} ${_walletName(debt.walletId)}'), Text('Start: ${debt.startDate} • Due: ${debt.dueDate ?? 'Not set'}'),
         if (debt.notes.isNotEmpty) Text('${appText(context, 'Notes:', 'نوٹس:')} ${debt.notes}'),
         const Divider(height: 26), Text(appText(context, "Payment History", "Payment History"), style: TextStyle(fontWeight: FontWeight.bold)),
         FutureBuilder<List<DebtPayment>>(future: DebtPayoffService.getPayments(debt.id!), builder: (context, snap) {
@@ -272,7 +272,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
             contentPadding: EdgeInsets.zero, title: Text('${_currency(debt.walletId)} ${_money(p.amount)}'),
             subtitle: Text('${p.paymentDate} • ${p.notes.isEmpty ? 'Payment' : p.notes}'),
             trailing: IconButton(icon: const Icon(Icons.delete_outline, color: Colors.red), tooltip: 'Delete payment', onPressed: () async {
-              final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(appText(context, "Delete payment?", "Delete payment?")), content: Text(appText(context, "This will restore the amount to the account and debt balance.", "This will restore the amount to the account and debt balance.")), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(appText(context, "Delete", "Delete")))]));
+              final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(appText(context, "Delete payment?", "Delete payment?")), content: Text(appText(context, "This will restore the amount to the wallet and debt balance.", "This will restore the amount to the wallet and debt balance.")), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(appText(context, "Delete", "Delete")))]));
               if (ok == true && p.id != null) { try { await DebtPayoffService.deletePayment(p.id!); if (ctx.mounted) Navigator.pop(ctx); await _load(); } catch (e) { _message('Could not delete payment: $e'); } }
             }),
           )).toList());
@@ -382,7 +382,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
               TextButton.icon(onPressed: d.isPaid ? null : () => _payDebt(d), icon: const Icon(Icons.payments_outlined), label: Text(appText(context, "Pay", "Pay"))),
               IconButton(tooltip: 'Edit debt', onPressed: () => _editDebt(d), icon: const Icon(Icons.edit_outlined)),
               IconButton(tooltip: 'Delete debt', onPressed: () async {
-                final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(appText(context, "Delete this debt?", "Delete this debt?")), content: Text(appText(context, "Recorded payments will be reversed back into their accounts.", "Recorded payments will be reversed back into their accounts.")), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(appText(context, "Delete", "Delete")))]));
+                final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(appText(context, "Delete this debt?", "Delete this debt?")), content: Text(appText(context, "Recorded payments will be reversed back into their wallets.", "Recorded payments will be reversed back into their wallets.")), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(appText(context, "Cancel", "Cancel"))), FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(appText(context, "Delete", "Delete")))]));
                 if (ok == true && d.id != null) { try { await DebtPayoffService.deleteDebt(d.id!); await _load(); } catch (e) { _message('Could not delete debt: $e'); } }
               }, icon: const Icon(Icons.delete_outline, color: Colors.red)),
             ]),

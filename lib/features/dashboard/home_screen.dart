@@ -513,9 +513,9 @@ class _HomePageState extends State<HomePage> {
                                   flex: 5,
                                   child: Text(
                                     '${entry.key} · ${_currencyCountry(entry.key)}',
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                    softWrap: true,
+                                    overflow: TextOverflow.clip,
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,

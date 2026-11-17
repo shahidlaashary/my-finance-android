@@ -318,7 +318,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
     document.addPage(pw.MultiPage(
       build: (context) => [
-        pw.Text(statementOnly ? 'My Finance - Account Statement' : 'My Finance - Financial Report',
+        pw.Text(statementOnly ? 'My Finance - Wallet Statement' : 'My Finance - Financial Report',
           style: pw.TextStyle(fontSize: 21, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 6),
         pw.Text('Period: $dateRange'),
@@ -629,7 +629,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(appText(context, "Current Account Balances", "Current Account Balances"),
+        Text(appText(context, "Current Wallet Balances", "Current Wallet Balances"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -638,7 +638,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         SizedBox(height: 10),
 
         if (items.isEmpty)
-          _emptyMessage('No account balances available'),
+          _emptyMessage('No wallet balances available'),
 
         ...items.map((item) {
           final currency = item['currency']?.toString() ?? '';
@@ -910,7 +910,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(appText(context, "Account-wise Summary", "Account-wise Summary"),
+        Text(appText(context, "Wallet-wise Summary", "Wallet-wise Summary"),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -919,7 +919,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         SizedBox(height: 10),
 
         if (items.isEmpty)
-          _emptyMessage('No account activity found'),
+          _emptyMessage('No wallet activity found'),
 
         ...items.map((item) {
           final currency =
@@ -934,7 +934,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 children: [
                   Text(
                     item['wallet_name']?.toString() ??
-                        'Account',
+                        'Wallet',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1066,7 +1066,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           final category =
               item['category_name']?.toString() ?? '';
 
-          final account =
+          final wallet =
               item['wallet_name']?.toString() ?? '';
 
           return Card(
@@ -1082,7 +1082,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               subtitle: Text(
                 [
-                  account,
+                  wallet,
                   if (category.isNotEmpty) category,
                   dateText,
                 ].where((value) => value.isNotEmpty).join(' • '),

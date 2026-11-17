@@ -9,7 +9,6 @@ import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/features/finance/screens/debt_payoff_screen.dart';
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
   @override
@@ -979,58 +978,6 @@ class _LoansScreenState extends State<LoansScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DebtPayoffScreen(),
-                          ),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF147D59).withValues(alpha: .10),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.trending_down_rounded,
-                                color: Color(0xFF147D59),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    appText(context, 'Debt Payoff Planner', 'Debt Payoff Planner'),
-                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    appText(context, 'Plan repayments and estimate your debt-free date', 'Plan repayments and estimate your debt-free date'),
-                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.chevron_right_rounded, color: Color(0xFF7B8781)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _showParties,
                     icon: const Icon(Icons.people_alt_outlined),

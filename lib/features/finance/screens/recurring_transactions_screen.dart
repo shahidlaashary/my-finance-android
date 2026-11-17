@@ -93,13 +93,13 @@ class _RecurringTransactionsScreenState
   }
 
   String _accountName(int? id) {
-    if (id == null) return 'Unknown account';
+    if (id == null) return 'Unknown wallet';
 
     final matches = _wallets.where(
-      (account) => account['id'] == id,
+      (wallet) => wallet['id'] == id,
     );
 
-    if (matches.isEmpty) return 'Unknown account';
+    if (matches.isEmpty) return 'Unknown wallet';
 
     return matches.first['name'].toString();
   }
@@ -108,7 +108,7 @@ class _RecurringTransactionsScreenState
     if (id == null) return '';
 
     final matches = _wallets.where(
-      (account) => account['id'] == id,
+      (wallet) => wallet['id'] == id,
     );
 
     if (matches.isEmpty) return '';
@@ -207,7 +207,7 @@ class _RecurringTransactionsScreenState
   }) async {
     if (_wallets.isEmpty) {
       _showMessage(
-        'Please create an account before adding a recurring transaction.',
+        'Please create an wallet before adding a recurring transaction.',
         isError: true,
       );
       return;
@@ -336,7 +336,7 @@ class _RecurringTransactionsScreenState
             const Divider(height: 24),
             _detailRow(
               Icons.account_balance_wallet,
-              'Account',
+              'Wallet',
               _accountName(item.walletId),
             ),
             if (isTransfer)
@@ -653,7 +653,7 @@ class _RecurringTransactionDialogState
     if (id == null) return false;
 
     return widget.wallets.any(
-      (account) => account['id'] == id,
+      (wallet) => wallet['id'] == id,
     );
   }
 
@@ -700,13 +700,13 @@ class _RecurringTransactionDialogState
     if (!_formKey.currentState!.validate()) return;
 
     if (_walletId == null) {
-      _message('Please select an account.');
+      _message('Please select an wallet.');
       return;
     }
 
     if (_isTransfer) {
       if (_toWalletId == null) {
-        _message('Please select destination account.');
+        _message('Please select destination wallet.');
         return;
       }
 
@@ -831,9 +831,9 @@ class _RecurringTransactionDialogState
             Row(children: [
               Expanded(child: TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; })),
               SizedBox(width: 8),
-              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('From Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() { _walletId = value; if (_toWalletId == value) _toWalletId = null; }), validator: (value) => value == null ? 'Select wallet' : null)),
+              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('From Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((wallet) => DropdownMenuItem<int>(value: wallet['id'] as int, child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() { _walletId = value; if (_toWalletId == value) _toWalletId = null; }), validator: (value) => value == null ? 'Select wallet' : null)),
               SizedBox(width: 8),
-              Expanded(child: DropdownButtonFormField<int>(value: _toWalletId, isExpanded: true, decoration: _decoration('To Wallet', icon: Icons.account_balance_outlined), items: widget.wallets.where((a) => a['id'] != _walletId).map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _toWalletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
+              Expanded(child: DropdownButtonFormField<int>(value: _toWalletId, isExpanded: true, decoration: _decoration('To Wallet', icon: Icons.account_balance_outlined), items: widget.wallets.where((a) => a['id'] != _walletId).map((wallet) => DropdownMenuItem<int>(value: wallet['id'] as int, child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _toWalletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
             ]),
             SizedBox(height: 12),
             Container(
@@ -871,7 +871,7 @@ class _RecurringTransactionDialogState
             Row(children: [
               Expanded(child: TextFormField(controller: _amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Amount', icon: Icons.payments_outlined), validator: (value) { final amount = double.tryParse(value ?? ''); return amount == null || amount <= 0 ? 'Enter a valid amount.' : null; })),
               SizedBox(width: 10),
-              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((account) => DropdownMenuItem<int>(value: account['id'] as int, child: Text('${account['name']} (${account['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _walletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
+              Expanded(child: DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _decoration('Wallet', icon: Icons.account_balance_wallet_outlined), items: widget.wallets.map((wallet) => DropdownMenuItem<int>(value: wallet['id'] as int, child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (value) => setState(() => _walletId = value), validator: (value) => value == null ? 'Select wallet' : null)),
             ]),
             SizedBox(height: 12),
             Row(children: [

@@ -88,10 +88,16 @@ class LoansService {
         name TEXT NOT NULL,
         phone TEXT,
         address TEXT NOT NULL DEFAULT '',
+        currency TEXT NOT NULL DEFAULT 'PKR',
         notes TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL
       )
     ''' );
+
+    final partyColumns = await db.rawQuery('PRAGMA table_info(loan_parties)');
+    if (!partyColumns.any((column) => column['name'] == 'currency')) {
+      await db.execute("ALTER TABLE loan_parties ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'");
+    }
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loan_repayments (
@@ -129,6 +135,7 @@ class LoansService {
     String? phone,
     String address = '',
     String notes = '',
+    String currency = 'PKR',
   }) async {
     final db = await _database;
     final normalizedName = name.trim();
@@ -149,6 +156,7 @@ class LoansService {
       'name': normalizedName,
       'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
       'address': address.trim(),
+      'currency': currency.trim().toUpperCase(),
       'notes': notes.trim(),
       'created_at': DateTime.now().toIso8601String(),
     });
@@ -159,6 +167,7 @@ class LoansService {
     required String name,
     String? phone,
     String address = '',
+    String currency = 'PKR',
   }) async {
     final db = await _database;
     final normalizedName = name.trim();
@@ -179,6 +188,7 @@ class LoansService {
         'name': normalizedName,
         'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
         'address': address.trim(),
+        'currency': currency.trim().toUpperCase(),
       },
       where: 'id = ?',
       whereArgs: [id],
@@ -335,6 +345,11 @@ class LoansService {
       );
       if (party.isEmpty) {
         throw Exception('Selected party was not found.');
+      }
+      final partyCurrency = (party.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+      final walletCurrency = await _getWalletCurrency(txn, loan.walletId);
+      if (partyCurrency != walletCurrency) {
+        throw Exception('Selected wallet currency ($walletCurrency) does not match this party currency ($partyCurrency).');
       }
 
       final balance = await _getWalletBalance(

@@ -191,7 +191,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         };
         for (final loan in rows) {
           final data = loan.toMap();
-          final partyName = partyNames[loan.partyId] ?? '';
+          final partyName = loan.partyId == null ? '' : (partyNames[loan.partyId!] ?? '');
           data['party_name'] = partyName;
           final title = partyName.isEmpty ? 'Loan #${loan.id?.toString() ?? ''}' : partyName;
           _addRecord(

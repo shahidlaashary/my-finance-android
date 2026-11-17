@@ -153,7 +153,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     _SearchEntry('Assets', 'Manage owned assets and depreciation', Icons.real_estate_agent_outlined, ['property','vehicle','gold','livestock','business','asset depreciation'], () => const AssetsScreen()),
     _SearchEntry('Budgets', 'Limits, spending and budget alerts', Icons.account_balance_wallet_outlined, ['budget','limit','spending','alerts'], () => const BudgetsScreen()),
     _SearchEntry('Goals', 'Savings targets and progress', Icons.flag_outlined, ['saving','target','goal'], () => const GoalsScreen()),
-    _SearchEntry('Loans', 'Track money lent and borrowed', Icons.handshake_outlined, ['debt','borrow','lend','receivable','payable'], () => const LoansScreen()),
+    _SearchEntry('Loans', 'Track money lent and borrowed', Icons.handshake_outlined, ['loan','loans','borrow','lend','receivable','payable'], () => const LoansScreen()),
     _SearchEntry('Reports & Analytics', 'Charts, insights and financial reports', Icons.bar_chart_outlined, ['reports','analytics','graphs','charts','statistics','income expense'], () => const StatsScreen()),
     _SearchEntry('Transactions', 'Search and manage income, expenses and transfers', Icons.receipt_long_outlined, ['income','expense','transfer','entries','payments'], () => const TransactionsScreen()),
     _SearchEntry('Wallets', 'Wallets, balances and currencies', Icons.account_balance_outlined, ['wallets','cash','bank','currency','wallet'], () => const WalletsPage()),

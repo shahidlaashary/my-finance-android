@@ -41,13 +41,7 @@ class TransactionsService {
 
   static Future<Database> _openDatabase() async {
     final path = await getDatabasesPath();
-    return openDatabase(
-      p.join(path, 'my_finance.db'),
-      onOpen: (db) async {
-        await db.execute('DROP TABLE IF EXISTS debt_payments');
-        await db.execute('DROP TABLE IF EXISTS debts');
-      },
-    );
+    return openDatabase(p.join(path, 'my_finance.db'));
   }
 
 

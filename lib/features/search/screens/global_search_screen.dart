@@ -201,7 +201,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             query: query,
             type: 'Loans',
             title: title,
-            subtitle: '${loan.loanType == 'given' ? 'Money given' : 'Money borrowed'}  ·  Remaining ${loan.remainingAmount}',
+            subtitle: '${loan.loanType == 'Loan Given' ? 'Loan Given' : 'Loan Taken'}  ·  Remaining ${loan.remainingAmount}',
             icon: Icons.handshake_outlined,
             data: data,
           );

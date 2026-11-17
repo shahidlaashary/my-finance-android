@@ -547,7 +547,7 @@ class _HomePageState extends State<HomePage> {
                                     maxLines: 1,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.left,
+                                    textAlign: TextAlign.right,
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,

@@ -108,7 +108,7 @@ class LoansService {
     ''');
   }
 
-  static Future<Map<String, dynamic>> _getAccount(
+  static Future<Map<String, dynamic>> _getWallet(
     Transaction txn,
     int walletId,
   ) async {
@@ -127,19 +127,19 @@ class LoansService {
     return wallets.first;
   }
 
-  static Future<double> _getAccountBalance(
+  static Future<double> _getWalletBalance(
     Transaction txn,
     int walletId,
   ) async {
-    final wallet = await _getAccount(txn, walletId);
+    final wallet = await _getWallet(txn, walletId);
     return (wallet['balance'] as num).toDouble();
   }
 
-  static Future<String> _getAccountCurrency(
+  static Future<String> _getWalletCurrency(
     Transaction txn,
     int walletId,
   ) async {
-    final wallet = await _getAccount(txn, walletId);
+    final wallet = await _getWallet(txn, walletId);
 
     return (wallet['currency']?.toString() ?? 'PKR')
         .trim()
@@ -182,7 +182,7 @@ class LoansService {
     }
 
     return db.transaction((txn) async {
-      final balance = await _getAccountBalance(
+      final balance = await _getWalletBalance(
         txn,
         loan.walletId,
       );
@@ -253,10 +253,10 @@ class LoansService {
       }
 
       final loanCurrency =
-          await _getAccountCurrency(txn, loan.walletId);
+          await _getWalletCurrency(txn, loan.walletId);
 
       final receivingCurrency =
-          await _getAccountCurrency(txn, repayment.walletId);
+          await _getWalletCurrency(txn, repayment.walletId);
 
       if (loanCurrency != receivingCurrency) {
         throw Exception(
@@ -420,7 +420,7 @@ class LoansService {
 
       final loan = LoansModel.fromMap(loanRows.first);
 
-      await _getAccount(txn, repayment.walletId);
+      await _getWallet(txn, repayment.walletId);
 
       final restoredRemaining =
           (loan.remainingAmount + repayment.amount)
@@ -472,7 +472,7 @@ class LoansService {
 
       final loan = LoansModel.fromMap(loanRows.first);
 
-      await _getAccount(txn, loan.walletId);
+      await _getWallet(txn, loan.walletId);
 
       final repayments = await txn.query(
         'loan_repayments',
@@ -484,7 +484,7 @@ class LoansService {
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
 
-        await _getAccount(txn, repayment.walletId);
+        await _getWallet(txn, repayment.walletId);
 
         await _changeAccountBalance(
           txn,

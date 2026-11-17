@@ -49,7 +49,7 @@ class AssetsService {
       limit: 1,
     );
     if (rows.isEmpty) {
-      throw Exception('Selected account was not found.');
+      throw Exception('Selected wallet was not found.');
     }
     return rows.first;
   }
@@ -57,8 +57,8 @@ class AssetsService {
     Transaction txn,
     int walletId,
   ) async {
-    final account = await _getAccount(txn, walletId);
-    return (account['balance'] as num).toDouble();
+    final wallet = await _getAccount(txn, walletId);
+    return (wallet['balance'] as num).toDouble();
   }
   Future<void> _changeBalance(
     Transaction txn, {
@@ -80,7 +80,7 @@ class AssetsService {
       throw Exception('Asset name is required.');
     }
     if (asset.walletId <= 0) {
-      throw Exception('Please select a valid account.');
+      throw Exception('Please select a valid wallet.');
     }
     if (!asset.purchasePrice.isFinite ||
         asset.purchasePrice <= 0) {
@@ -116,15 +116,15 @@ class AssetsService {
     final db = await _database;
     await _ensureTables(db);
     return db.transaction((txn) async {
-      final account = await _getAccount(
+      final wallet = await _getAccount(
         txn,
         asset.walletId,
       );
       // Asset ki purchase value us wallet ki currency mein hoti hai.
       // Isi liye asset ko purchase karne se pehle linked currency validate karte hain.
-      final balance = (account['balance'] as num).toDouble();
+      final balance = (wallet['balance'] as num).toDouble();
       if (balance < asset.purchasePrice) {
-        throw Exception('Insufficient account balance.');
+        throw Exception('Insufficient wallet balance.');
       }
       final now = DateTime.now();
       final map = asset.copyWith(
@@ -226,7 +226,7 @@ class AssetsService {
       final saleCurrency = (saleAccount['currency'] ?? 'PKR').toString().toUpperCase();
       if (purchaseCurrency != saleCurrency) {
         throw Exception(
-          'Asset sale account must use the same currency as its purchase account.',
+          'Asset sale wallet must use the same currency as its purchase wallet.',
         );
       }
 
@@ -282,7 +282,7 @@ class AssetsService {
       final updatedCurrency = (updatedAccount['currency'] ?? 'PKR').toString().toUpperCase();
       if (oldCurrency != updatedCurrency) {
         throw Exception(
-          'Asset must remain linked to an account with the same currency.',
+          'Asset must remain linked to an wallet with the same currency.',
         );
       }
 
@@ -296,7 +296,7 @@ class AssetsService {
         updatedAsset.walletId,
       );
       if (newBalance < updatedAsset.purchasePrice) {
-        throw Exception('Insufficient account balance.');
+        throw Exception('Insufficient wallet balance.');
       }
       await _changeBalance(
         txn,

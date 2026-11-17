@@ -511,9 +511,9 @@ class _LoansScreenState extends State<LoansScreen> {
       ),
     );
     if (result != true) return;
-    var name = _nameController.text.trim();
+    final name = _nameController.text.trim();
     final amount = double.tryParse(_amountController.text.trim());
-    if (name.isEmpty || amount == null || !amount.isFinite || amount <= 0) {
+    if ((createNewParty && name.isEmpty) || amount == null || !amount.isFinite || amount <= 0) {
       _showMessage('Enter a valid party name and loan amount.');
       return;
     }
@@ -532,13 +532,8 @@ class _LoansScreenState extends State<LoansScreen> {
           phone: _phoneController.text,
         );
         await _loadData();
-        name = _nameController.text.trim();
       }
       final loan = LoansModel(
-        borrowerName: name,
-        borrowerPhone: _phoneController.text.trim().isEmpty
-            ? null
-            : _phoneController.text.trim(),
         partyId: _selectedPartyId,
         loanType: _loanType,
         amount: amount,
@@ -565,6 +560,21 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Could not save loan: $error');
     }
   }
+  Map<String, dynamic>? _partyForLoan(LoansModel loan) {
+    final partyId = loan.partyId;
+    if (partyId == null) return null;
+    for (final party in _parties) {
+      if (party['id'] == partyId) return party;
+    }
+    return null;
+  }
+
+  String _partyNameForLoan(LoansModel loan) =>
+      _partyForLoan(loan)?['name']?.toString() ?? 'Unknown Party';
+
+  String _partyPhoneForLoan(LoansModel loan) =>
+      _partyForLoan(loan)?['phone']?.toString() ?? '-';
+
   Future<void> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return;
     await _loadData();
@@ -586,7 +596,7 @@ class _LoansScreenState extends State<LoansScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${loan.loanType == 'given' ? 'Borrower:' : 'Lender:'} ${loan.borrowerName}'),
+                Text('${loan.loanType == 'given' ? 'Borrower:' : 'Lender:'} ${_partyNameForLoan(loan)}'),
                 SizedBox(height: 6),
                 Text('${appText(context, "Outstanding: ", "بقایا: ")}'
                   '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
@@ -711,8 +721,8 @@ class _LoansScreenState extends State<LoansScreen> {
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${loan.borrowerName}'),
-                  Text('${appText(context, 'Phone:', 'فون:')} ${loan.borrowerPhone ?? '-'}'),
+                  Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${_partyNameForLoan(loan)}'),
+                  Text('${appText(context, 'Phone:', 'فون:')} ${_partyPhoneForLoan(loan)}'),
                   Text('${appText(context, 'Currency:', 'کرنسی:')} $currency'),
                   Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
                   Text('${appText(context, 'Repaid:', 'واپس ادا شدہ:')} ${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}'),
@@ -1064,7 +1074,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      '${loan.borrowerName} • ${loan.loanType == 'given' ? 'Given' : 'Taken'}',
+                                      '${_partyNameForLoan(loan)} • ${loan.loanType == 'given' ? 'Given' : 'Taken'}',
                                       style: const TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.bold,
@@ -1089,8 +1099,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                     ),
                                 ],
                               ),
-                              if (loan.borrowerPhone != null)
-                                Text(loan.borrowerPhone!),
+                              if (_partyPhoneForLoan(loan) != '-')
+                                Text(_partyPhoneForLoan(loan)),
                               SizedBox(height: 8),
                               Text(loan.loanType == 'given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
                               Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'

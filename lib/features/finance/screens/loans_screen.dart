@@ -68,6 +68,9 @@ class _LoansScreenState extends State<LoansScreen> {
   String _moneyWithCurrency(double amount, int walletId) {
     return '${_currencyForWallet(walletId)} ${_money(amount)}';
   }
+  String _moneyWithLoanCurrency(double amount, LoansModel loan) {
+    return '${loan.currency.toUpperCase()} ${_money(amount)}';
+  }
   void _onPreferencesChanged() async {
     final hidden = await GeneralPreferences.instance.hideBalances;
     if (mounted && hidden != _hideBalances) {
@@ -606,7 +609,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 Text('${loan.loanType == 'given' ? 'Borrower:' : 'Lender:'} ${_partyNameForLoan(loan)}'),
                 SizedBox(height: 6),
                 Text('${appText(context, "Outstanding: ", "بقایا: ")}'
-                  '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
+                  '${_moneyWithLoanCurrency(loan.remainingAmount, loan)}',
                 ),
                 TextField(
                   controller: _repaymentAmountController,
@@ -729,8 +732,9 @@ class _LoansScreenState extends State<LoansScreen> {
                   Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${_partyNameForLoan(loan)}'),
                   Text('${appText(context, 'Phone:', 'فون:')} ${_partyPhoneForLoan(loan)}'),
                   Text('${appText(context, 'Currency:', 'کرنسی:')} $currency'),
-                  Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
-                  Text('${appText(context, 'Repaid:', 'واپس ادا شدہ:')} ${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}'),
+                  if (loan.isAssetLinked) Text('Linked Asset Reference: ${loan.sourceType == 'asset_purchase' ? 'Purchase' : 'Sale'} • ID ${loan.sourceId}'),
+                  Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithLoanCurrency(loan.amount, loan)}'),
+                  Text('${appText(context, 'Repaid:', 'واپس ادا شدہ:')} ${_moneyWithLoanCurrency(loan.repaidAmount, loan)}'),
                   Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}'),
                   Text('${appText(context, 'Lending Date:', 'قرض دینے کی تاریخ:')} ${loan.lendingDate}'),
                   Text('Due Date: ${loan.dueDate ?? '-'}'),
@@ -777,10 +781,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     title: Text(
-                                      _moneyWithCurrency(
-                                        repayment.amount,
-                                        loan.walletId,
-                                      ),
+                                      _moneyWithLoanCurrency(repayment.amount, loan),
                                     ),
                                     subtitle: Text(
                                       'Date: ${repayment.repaymentDate}\n'
@@ -1056,6 +1057,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 Text(_partyPhoneForLoan(loan)),
                               SizedBox(height: 8),
                               Text(loan.loanType == 'given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
+                              if (loan.isAssetLinked) Text('Linked Asset • ID: ${loan.sourceId}'),
                               Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'
                                 '${_moneyWithCurrency(loan.amount, loan.walletId)}',
                               ),

@@ -702,15 +702,48 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               ),
               SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: _amountField()),
                   SizedBox(width: 10),
                   Expanded(
-                    child: _notesField(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAF9),
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: const Color(0xFFE2E9E5)),
+                      ),
+                      child: SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(appText(context, "Transfer Fee", "Transfer Fee"),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        subtitle: Text(appText(context, "Add an optional fee to this transfer", "Add an optional fee to this transfer"),
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        value: transferFeeEnabled,
+                        activeColor: AppColors.primary,
+                        onChanged: (value) => setState(() {
+                          transferFeeEnabled = value;
+                          if (!value) transferFeeController.clear();
+                        }),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              
+              if (transferFeeEnabled) ...[
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: transferFeeController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: decoration(
+                    'Fee Amount (${selectedWallet?['currency'] ?? ''})',
+                    icon: Icons.payments_outlined,
+                  ),
+                ),
+              ],
               if (selectedWallet != null &&
                   selectedDestinationWallet != null &&
                   selectedWallet!['currency'] != selectedDestinationWallet!['currency']) ...[
@@ -725,42 +758,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 ),
               ],
               SizedBox(height: 12),
-              if (isTransfer) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAF9),
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(color: const Color(0xFFE2E9E5)),
-                  ),
-                  child: SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(appText(context, "Transfer Fee", "Transfer Fee"),
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                    ),
-                    subtitle: Text(appText(context, "Add an optional fee to this transfer", "Add an optional fee to this transfer"),
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    value: transferFeeEnabled,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) => setState(() {
-                      transferFeeEnabled = value;
-                      if (!value) transferFeeController.clear();
-                    }),
-                  ),
-                ),
-                if (transferFeeEnabled) ...[
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: transferFeeController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: decoration(
-                      'Fee Amount (${selectedWallet?['currency'] ?? ''})',
-                      icon: Icons.payments_outlined,
-                    ),
-                  ),
-                ],
-              ],
+              _notesField(),
             ] else ...[
               Row(
                 children: [

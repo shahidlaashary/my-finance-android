@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
@@ -207,7 +209,8 @@ class _LoansScreenState extends State<LoansScreen> {
     if (walletId != null && _currencyForWallet(walletId) != initialCurrency) walletId = null;
     DateTime lendingDate = _lendingDate;
     DateTime? dueDate = _dueDate;
-    String newPartyCurrency = 'PKR';
+    final configuredBaseCurrency = await FinanceDB.instance.getBaseCurrency();
+    String newPartyCurrency = CurrencyCatalog.supported.contains(configuredBaseCurrency) ? configuredBaseCurrency : 'PKR';
     final List<XFile> pendingLoanImages = [];
     final ImagePicker loanImagePicker = ImagePicker();
     final result = await showModalBottomSheet<bool>(
@@ -327,7 +330,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             _selectedPartyId = null;
                                             _nameController.clear();
                                             _phoneController.clear();
-                                            newPartyCurrency = 'PKR';
+                                            newPartyCurrency = CurrencyCatalog.supported.contains(configuredBaseCurrency) ? configuredBaseCurrency : 'PKR';
                                             final matching = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == newPartyCurrency);
                                             walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
                                           } else {
@@ -363,7 +366,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   value: newPartyCurrency,
                                   isExpanded: true,
                                   decoration: const InputDecoration(labelText: 'Party Currency *'),
-                                  items: const ['PKR', 'USD', 'SAR', 'AED', 'GBP', 'EUR', 'INR', 'CAD', 'AUD', 'CNY', 'TRY', 'KWD', 'QAR', 'OMR', 'BHD'].map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
+                                  items: CurrencyCatalog.supported.map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
                                   onChanged: (value) => setSheetState(() {
                                     newPartyCurrency = value ?? 'PKR';
                                     final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == newPartyCurrency);
@@ -1164,8 +1167,9 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final name = TextEditingController(text: party?['name']?.toString() ?? '');
     final phone = TextEditingController(text: party?['phone']?.toString() ?? '');
     final address = TextEditingController(text: party?['address']?.toString() ?? '');
-    String selectedCurrency = (party?['currency']?.toString() ?? 'PKR').toUpperCase();
-    const currencies = ['PKR', 'USD', 'SAR', 'AED', 'GBP', 'EUR', 'INR', 'CAD', 'AUD', 'CNY', 'TRY', 'KWD', 'QAR', 'OMR', 'BHD'];
+    final configuredBaseCurrency = await FinanceDB.instance.getBaseCurrency();
+    String selectedCurrency = (party?['currency']?.toString() ?? configuredBaseCurrency).toUpperCase();
+    final currencies = CurrencyCatalog.supported;
     final formKey = GlobalKey<FormState>();
     final saved = await showDialog<bool>(
       context: context,

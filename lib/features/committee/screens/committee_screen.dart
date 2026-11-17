@@ -99,6 +99,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
                 Text('${c['frequency']} • ${c['actual_members']} members • ${c['status']}'),
                 const SizedBox(height:5), Text('Installment: ${c['currency'] ?? 'PKR'} ${money.format(c['installment_amount'])}'),
                 Text('Collected: ${money.format(collected)}   •   Paid out: ${money.format(paid)}'),
+                Text('Committee balance: ${money.format(c['available_balance'] ?? (collected-paid))} ${c['currency'] ?? 'PKR'}'),
               ])),
               trailing:const Icon(Icons.chevron_right), onTap:()=>_open(c),
             ));

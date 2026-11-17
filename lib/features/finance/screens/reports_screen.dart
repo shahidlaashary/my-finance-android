@@ -89,7 +89,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           type: 'expense',
           currency: _selectedCurrency,
         ),
-        _service.getAccountBreakdown(
+        _service.getWalletBreakdown(
           startDate: _startDate,
           endDate: _endDate,
         ),
@@ -650,7 +650,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               title: Text(currency),
               subtitle: Text(
-                '${item['account_count']} wallets',
+                '${item['wallet_count']} wallets',
               ),
               trailing: Text(
                 _money(

@@ -287,7 +287,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       SizedBox(height: 24),
                       _buildCategorySection(),
                       SizedBox(height: 24),
-                      _buildAccountSection(),
+                      _buildWalletSection(),
                       SizedBox(height: 24),
                       _buildTransactionHistory(),
                       SizedBox(height: 30),
@@ -897,7 +897,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildAccountSection() {
+  Widget _buildWalletSection() {
     final items = _selectedCurrency == null
         ? _wallets
         : _wallets
@@ -942,21 +942,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                   SizedBox(height: 10),
 
-                  _accountValue(
+                  _walletValue(
                     'Income',
                     item['income'],
                     currency,
                     Colors.green,
                   ),
 
-                  _accountValue(
+                  _walletValue(
                     'Expense',
                     item['expense'],
                     currency,
                     Colors.red,
                   ),
 
-                  _accountValue(
+                  _walletValue(
                     'Transfers',
                     item['transfers'],
                     currency,
@@ -965,7 +965,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                   const Divider(),
 
-                  _accountValue(
+                  _walletValue(
                     'Net',
                     item['net'],
                     currency,
@@ -990,7 +990,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _accountValue(
+  Widget _walletValue(
     String label,
     dynamic amount,
     String currency,

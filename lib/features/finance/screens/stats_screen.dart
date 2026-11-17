@@ -578,11 +578,9 @@ class _StatsScreenState extends State<StatsScreen> {
     }).toList();
     final goalTarget = currencyGoals.fold<double>(0, (sum, g) => sum + g.targetAmount);
     final goalSaved = currencyGoals.fold<double>(0, (sum, g) => sum + g.savedAmount);
-    final currencyLoans = _loans.where((loan) {
-      final matches = _wallets.where((w) => (w['id'] as num).toInt() == loan.walletId);
-      final currency = matches.isEmpty ? 'PKR' : (matches.first['currency']?.toString() ?? 'PKR');
-      return currency.toUpperCase() == _currency.toUpperCase();
-    }).toList();
+    final currencyLoans = _loans.where((loan) =>
+      loan.currency.toUpperCase() == _currency.toUpperCase()
+    ).toList();
     final loanOutstanding = currencyLoans.fold<double>(0, (sum, l) => sum + l.remainingAmount);
     final loanRepaid = currencyLoans.fold<double>(0, (sum, l) => sum + l.repaidAmount);
     return [

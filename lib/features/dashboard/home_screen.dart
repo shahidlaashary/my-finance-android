@@ -530,11 +530,13 @@ class _HomePageState extends State<HomePage> {
                                     children: [
                                       Expanded(
                                         flex: 5,
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
+                                        child: Align(
                                           alignment: Alignment.centerRight,
-                                          child: Text(
-                                            amountText,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              amountText,
                                             maxLines: 1,
                                             softWrap: false,
                                             textAlign: TextAlign.right,
@@ -542,6 +544,7 @@ class _HomePageState extends State<HomePage> {
                                               fontSize: 12,
                                               fontWeight: FontWeight.w800,
                                               color: AppColors.text,
+                                              ),
                                             ),
                                           ),
                                         ),

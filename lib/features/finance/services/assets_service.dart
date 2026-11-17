@@ -358,9 +358,11 @@ class AssetsService {
       if (rows.isEmpty) return;
       final current = AssetsModel.fromMap(rows.first);
       if (current.isSold && current.salePrice != null && current.salePaymentType.toLowerCase() != 'loan') {
+        await _getWallet(txn, current.saleWalletId ?? current.walletId);
         await _changeBalance(txn, walletId: current.saleWalletId ?? current.walletId, amount: -current.salePrice!);
       }
       if (current.paymentType.toLowerCase() != 'loan') {
+        await _getWallet(txn, current.walletId);
         await _changeBalance(txn, walletId: current.walletId, amount: current.purchasePrice);
       }
       await txn.delete('assets', where: 'id = ?', whereArgs: [assetId]);

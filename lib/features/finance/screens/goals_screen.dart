@@ -78,12 +78,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
     return [
       DropdownMenuItem<int?>(
         value: null,
-        child: Text(appText(context, "No linked account", "No linked account")),
+        child: Text(appText(context, "No linked wallet", "No linked wallet")),
       ),
-      ..._wallets.map((account) {
-        final id = account['id'] as int;
-        final name = account['name'].toString();
-        final currency = account['currency']?.toString() ?? 'PKR';
+      ..._wallets.map((wallet) {
+        final id = wallet['id'] as int;
+        final name = wallet['name'].toString();
+        final currency = wallet['currency']?.toString() ?? 'PKR';
         return DropdownMenuItem<int?>(
           value: id,
           child: Text('$name ($currency)'),
@@ -139,7 +139,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     SizedBox(width: 10),
                     Expanded(child: DropdownButtonFormField<int?>(
                       value: walletId, isExpanded: true,
-                      decoration: decoration('Linked Account', Icons.account_balance_wallet_outlined),
+                      decoration: decoration('Linked Wallet', Icons.account_balance_wallet_outlined),
                       items: _accountItems(), onChanged: (v) => setSheetState(() => walletId = v),
                     )),
                   ]),
@@ -214,7 +214,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   ) async {
     if (goal.id == null) return;
     if (goal.walletId == null) {
-      _message('Please edit this goal and select a linked account first.');
+      _message('Please edit this goal and select a linked wallet first.');
       return;
     }
     final controller = TextEditingController();
@@ -455,10 +455,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final completed = goal.savedAmount >= goal.targetAmount;
     final targetDate = goal.targetDate ?? DateTime.now();
     final linkedAccount = _wallets.where(
-      (account) => account['id'] == goal.walletId,
+      (wallet) => wallet['id'] == goal.walletId,
     );
     final accountLabel = linkedAccount.isEmpty
-        ? 'No linked account'
+        ? 'No linked wallet'
         : '${linkedAccount.first['name']} '
             '(${linkedAccount.first['currency'] ?? 'PKR'})';
     final currency = linkedAccount.isEmpty
@@ -528,7 +528,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             ),
             SizedBox(height: 14),
             Text(
-              'Account: $accountLabel',
+              'Wallet: $accountLabel',
               style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 12,

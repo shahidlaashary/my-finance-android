@@ -55,11 +55,11 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   String _money(double amount) => _hideBalances ? '••••••' : amount.toStringAsFixed(2);
   String _currencyForAccount(int walletId) {
-    final account = _wallets.cast<Map<String, dynamic>?>().firstWhere(
+    final wallet = _wallets.cast<Map<String, dynamic>?>().firstWhere(
       (item) => item?['id'] == walletId,
       orElse: () => null,
     );
-    return (account?['currency']?.toString() ?? 'PKR')
+    return (wallet?['currency']?.toString() ?? 'PKR')
         .trim()
         .toUpperCase();
   }
@@ -131,7 +131,7 @@ class _LoansScreenState extends State<LoansScreen> {
     _lendingDate = DateTime.now();
     _dueDate = null;
     if (_wallets.isEmpty) {
-      _showMessage('Please create an account first.');
+      _showMessage('Please create an wallet first.');
       return;
     }
     int? walletId = _selectedAccountId;
@@ -224,13 +224,13 @@ class _LoansScreenState extends State<LoansScreen> {
                               DropdownButtonFormField<int>(
                                 value: walletId,
                                 isExpanded: true,
-                                decoration: InputDecoration(labelText: appText(context, "Payment Account *", "Payment Account *")),
-                                items: _wallets.map((account) {
+                                decoration: InputDecoration(labelText: appText(context, "Payment Wallet *", "Payment Wallet *")),
+                                items: _wallets.map((wallet) {
                                   return DropdownMenuItem<int>(
-                                    value: account['id'] as int,
+                                    value: wallet['id'] as int,
                                     child: Text(
-                                      '${account['name']} '
-                                      '(${(account['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                                      '${wallet['name']} '
+                                      '(${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
                                     ),
                                   );
                                 }).toList(),
@@ -349,7 +349,7 @@ class _LoansScreenState extends State<LoansScreen> {
       return;
     }
     if (walletId == null) {
-      _showMessage('Please select an account.');
+      _showMessage('Please select an wallet.');
       return;
     }
     try {
@@ -387,7 +387,7 @@ class _LoansScreenState extends State<LoansScreen> {
     await _loadData();
     if (!mounted) return;
     if (_wallets.isEmpty) {
-      _showMessage('Please create an account first.');
+      _showMessage('Please create an wallet first.');
       return;
     }
     _repaymentAmountController.clear();
@@ -417,13 +417,13 @@ class _LoansScreenState extends State<LoansScreen> {
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: appText(context, "Receiving Account *", "Receiving Account *")),
-                  items: _wallets.map((account) {
+                  decoration: InputDecoration(labelText: appText(context, "Receiving Wallet *", "Receiving Wallet *")),
+                  items: _wallets.map((wallet) {
                     return DropdownMenuItem<int>(
-                      value: account['id'] as int,
+                      value: wallet['id'] as int,
                       child: Text(
-                        '${account['name']} '
-                        '(${(account['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                        '${wallet['name']} '
+                        '(${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
                       ),
                     );
                   }).toList(),
@@ -473,12 +473,12 @@ class _LoansScreenState extends State<LoansScreen> {
       return;
     }
     if (walletId == null) {
-      _showMessage('Please select a receiving account.');
+      _showMessage('Please select a receiving wallet.');
       return;
     }
     if (_currencyForAccount(walletId!) !=
         _currencyForAccount(loan.walletId)) {
-      _showMessage('Receiving account must use the same currency as the loan.');
+      _showMessage('Receiving wallet must use the same currency as the loan.');
       return;
     }
     try {
@@ -599,7 +599,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                           context: context,
                                           builder: (context) => AlertDialog(
                                             title: Text(appText(context, "Delete Repayment?", "Delete Repayment?")),
-                                            content: Text(appText(context, "This will reverse the account balance and loan balance.", "This will reverse the account balance and loan balance."),
+                                            content: Text(appText(context, "This will reverse the wallet balance and loan balance.", "This will reverse the wallet balance and loan balance."),
                                             ),
                                             actions: [
                                               TextButton(
@@ -674,7 +674,7 @@ class _LoansScreenState extends State<LoansScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(appText(context, "Delete Loan?", "Delete Loan?")),
-        content: Text(appText(context, "This will delete the loan and its repayment history, and reverse the related account balance changes.", "یہ قرض اور اس کی ادائیگیوں کی تاریخ حذف کرکے متعلقہ اکاؤنٹ بیلنس کی تبدیلیاں واپس کرے گا۔")),
+        content: Text(appText(context, "This will delete the loan and its repayment history, and reverse the related wallet balance changes.", "یہ قرض اور اس کی ادائیگیوں کی تاریخ حذف کرکے متعلقہ اکاؤنٹ بیلنس کی تبدیلیاں واپس کرے گا۔")),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

@@ -502,13 +502,13 @@ class _HomePageState extends State<HomePage> {
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 17,
+                                  width: 18,
                                   child: Text(
                                     _currencyFlag(entry.key),
-                                    style: const TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 15),
                                   ),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 2),
                                 Expanded(
                                   flex: 5,
                                   child: Text(
@@ -517,13 +517,13 @@ class _HomePageState extends State<HomePage> {
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 9,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.text,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 2),
                                 Expanded(
                                   flex: 3,
                                   child: Text(
@@ -533,13 +533,13 @@ class _HomePageState extends State<HomePage> {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
-                                      fontSize: 9,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.text,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 2),
                                 Expanded(
                                   flex: 4,
                                   child: Text(
@@ -549,7 +549,7 @@ class _HomePageState extends State<HomePage> {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
-                                      fontSize: 9,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.w800,
                                       color: converted == null
                                           ? AppColors.expense

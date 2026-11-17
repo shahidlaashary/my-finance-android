@@ -768,52 +768,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               children: [
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
-                Padding(
-                  // Align the first filter with the AppBar title and the
-                  // Recurring label with the trailing Settings action.
-                  padding: const EdgeInsets.only(left: 16, right: 12),
-                  child: SizedBox(
-                    height: 38,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ...filters.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final filter = entry.value;
-                          final selected = selectedFilter == filter.$1;
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () => setState(() {
-                              selectedFilter = filter.$1;
-                              currentPage = 0;
-                            }),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              height: 32,
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 4),
-                              decoration: BoxDecoration(
-                                color: selected ? const Color(0xFF147D59) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                filter.$2,
-                                maxLines: 1,
-                                softWrap: false,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: selected ? Colors.white : const Color(0xFF52615A),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: filters.length + 1,
+                    separatorBuilder: (_, __) => const SizedBox(width: 7),
+                    itemBuilder: (context, index) {
+                      if (index == filters.length) {
+                        return ActionChip(
+                          avatar: const Icon(
+                            Icons.settings_outlined,
+                            size: 15,
+                            color: Color(0xFF52615A),
+                          ),
+                          label: const Text('Recurring'),
+                          onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -821,35 +792,44 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               ),
                             ).then((_) => loadTransactions());
                           },
-                          child: Container(
-                            height: 32,
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.only(left: 3, right: 0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF2F5F3),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.settings_outlined, size: 12, color: Color(0xFF52615A)),
-                                SizedBox(width: 3),
-                                Text(
-                                  'Recurring',
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  style: TextStyle(
-                                    color: Color(0xFF52615A),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          labelStyle: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF52615A),
                           ),
+                          backgroundColor: Theme.of(context).cardColor,
+                          side: const BorderSide(color: Color(0xFFE5ECE8)),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        );
+                      }
+
+                      final filter = filters[index];
+                      final selected = selectedFilter == filter.$1;
+                      return ChoiceChip(
+                        label: Text(filter.$2),
+                        selected: selected,
+                        onSelected: (_) => setState(() {
+                          selectedFilter = filter.$1;
+                          currentPage = 0;
+                        }),
+                        labelStyle: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: selected ? Colors.white : const Color(0xFF52615A),
                         ),
-                      ],
-                    ),
+                        selectedColor: const Color(0xFF147D59),
+                        backgroundColor: Theme.of(context).cardColor,
+                        side: BorderSide(
+                          color: selected
+                              ? const Color(0xFF147D59)
+                              : const Color(0xFFE5ECE8),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        showCheckmark: false,
+                      );
+                    },
                   ),
                 ),
                 Expanded(

@@ -125,6 +125,12 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return matches.first['name'].toString();
   }
 
+  String _partyName(int? partyId) {
+    if (partyId == null) return '-';
+    final matches = _parties.where((party) => (party['id'] as num).toInt() == partyId);
+    return matches.isEmpty ? 'Unknown Party' : matches.first['name'].toString();
+  }
+
   String _currency(int walletId) {
     final matches = _wallets.where(
       (wallet) =>
@@ -708,8 +714,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
   }
 
   Widget _assetCard(AssetsModel asset) {
-    final purchaseCurrency = _currency(asset.walletId);
-    final saleCurrency = _currency(asset.saleWalletId ?? asset.walletId);
+    final purchaseCurrency = asset.currency.toUpperCase();
+    final saleCurrency = asset.currency.toUpperCase();
     final currency = asset.isSold ? saleCurrency : purchaseCurrency;
     final value = asset.isSold && asset.salePrice != null ? asset.salePrice! : asset.currentValue;
     final profitLoss = asset.isSold && asset.salePrice != null ? asset.salePrice! - asset.purchasePrice : asset.currentValue - asset.purchasePrice;
@@ -748,8 +754,12 @@ class _AssetsScreenState extends State<AssetsScreen> {
             const SizedBox(height: 6),
             _detailRow(asset.isSold ? 'Realized Profit/Loss' : 'Unrealized Profit/Loss', '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Colors.green : Colors.red, bold: true),
             const SizedBox(height: 6),
-            _detailRow('Purchase Wallet', _walletName(asset.walletId)),
-            if (asset.isSold) _detailRow('Sale Wallet', _walletName(asset.saleWalletId ?? asset.walletId)),
+            _detailRow('Purchase Payment Type', asset.paymentType),
+            if (asset.paymentType.toLowerCase() == 'loan') _detailRow('Payable Party', _partyName(asset.partyId)),
+            _detailRow('Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
+            if (asset.isSold) _detailRow('Sale Payment Type', asset.salePaymentType),
+            if (asset.isSold && asset.salePaymentType.toLowerCase() == 'loan') _detailRow('Receivable Party', _partyName(asset.salePartyId)),
+            if (asset.isSold && asset.salePaymentType.toLowerCase() != 'loan') _detailRow('Sale Wallet', _walletName(asset.saleWalletId ?? asset.walletId)),
             const SizedBox(height: 6),
             _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
             if (asset.isSold && asset.saleDate != null) _detailRow('Sale Date', DateFormat('dd MMM yyyy').format(asset.saleDate!)),

@@ -502,13 +502,13 @@ class _HomePageState extends State<HomePage> {
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 18,
+                                  width: 22,
                                   child: Text(
                                     _currencyFlag(entry.key),
                                     style: const TextStyle(fontSize: 18),
                                   ),
                                 ),
-                                const SizedBox(width: 2),
+                                const SizedBox(width: 6),
                                 Expanded(
                                   flex: 5,
                                   child: Text(
@@ -539,7 +539,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 2),
+                                const SizedBox(width: 0),
                                 Expanded(
                                   flex: 4,
                                   child: Text(

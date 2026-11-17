@@ -280,6 +280,17 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               )).toList(),
                               onChanged: (v) => setSheetState(() => selectedPartyId = v),
                               validator: (v) => selectedPaymentType == 'Loan' && v == null ? 'Select a party' : null,
+                            ),
+                          if (selectedPaymentType == 'Loan' && selectedPartyId != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Loan currency: ${_parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
+                                  style: const TextStyle(fontSize: 12, color: Color(0xFF147D59), fontWeight: FontWeight.w600),
+                                ),
+                              ),
                             )
                           else
                             DropdownButtonFormField<int>(

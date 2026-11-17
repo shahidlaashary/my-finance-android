@@ -321,14 +321,30 @@ class _LoansScreenState extends State<LoansScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              DropdownButtonFormField<String>(
-                                value: _loanType,
-                                decoration: const InputDecoration(labelText: 'Loan Type'),
-                                items: const [
-                                  DropdownMenuItem(value: 'given', child: Text('Loan Given')),
-                                  DropdownMenuItem(value: 'taken', child: Text('Loan Taken')),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      value: _loanType,
+                                      isExpanded: true,
+                                      decoration: const InputDecoration(labelText: 'Loan Type'),
+                                      items: const [
+                                        DropdownMenuItem(value: 'given', child: Text('Loan Given')),
+                                        DropdownMenuItem(value: 'taken', child: Text('Loan Taken')),
+                                      ],
+                                      onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _amountController,
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
+                                    ),
+                                  ),
                                 ],
-                                onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
                               ),
                               const SizedBox(height: 10),
                               DropdownButtonFormField<String>(
@@ -383,11 +399,6 @@ class _LoansScreenState extends State<LoansScreen> {
                                     style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                                   ),
                                 ),
-                              TextField(
-                                controller: _amountController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
-                              ),
                               const SizedBox(height: 12),
                               DropdownButtonFormField<int>(
                                 value: walletId,

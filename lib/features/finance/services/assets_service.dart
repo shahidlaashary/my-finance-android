@@ -372,12 +372,12 @@ class AssetsService {
     final db = await _database;
     await _ensureTables(db);
     final rows = await db.rawQuery('''
-      SELECT a.currency AS currency,
+      SELECT s.currency AS currency,
              COALESCE(SUM(s.current_value), 0) AS total
       FROM assets s
       INNER JOIN wallets a ON a.id = s.wallet_id
       WHERE s.is_sold = 0
-      GROUP BY a.currency
+      GROUP BY s.currency
     ''');
     return {
       for (final row in rows)
@@ -389,7 +389,7 @@ class AssetsService {
     final db = await _database;
     await _ensureTables(db);
     final rows = await db.rawQuery('''
-      SELECT a.currency AS currency,
+      SELECT s.currency AS currency,
              COALESCE(SUM(s.purchase_price), 0) AS total
       FROM assets s
       INNER JOIN wallets a ON a.id = s.wallet_id
@@ -406,7 +406,7 @@ class AssetsService {
     final db = await _database;
     await _ensureTables(db);
     final rows = await db.rawQuery('''
-      SELECT a.currency AS currency,
+      SELECT s.currency AS currency,
              COALESCE(
                SUM(s.sale_price - s.purchase_price), 0
              ) AS total

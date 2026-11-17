@@ -10,6 +10,7 @@ import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
+import 'package:my_finance/app/screens/about_hub_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -93,6 +94,12 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Languages',
             subtitle: 'Choose your preferred language from the available options',
             onTap: () => _openScreen(context, const LanguageSettingsScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.info_outline_rounded,
+            title: 'About',
+            subtitle: 'App information, version and developer details',
+            onTap: () => _openScreen(context, const AboutHubScreen()),
           ),
         ],
       ),
@@ -365,7 +372,7 @@ class _SettingsInfoTile extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 13,
-          vertical: 2,
+          vertical: 1,
         ),
         leading: Icon(
           icon,

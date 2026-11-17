@@ -10,6 +10,7 @@ import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
+import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -26,6 +27,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   List<AssetsModel> _assets = [];
   List<Map<String, dynamic>> _wallets = [];
+  List<Map<String, dynamic>> _parties = [];
 
   Map<String, double> _currentValues = {};
   Map<String, double> _purchaseValues = {};
@@ -90,6 +92,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         'wallets',
         orderBy: 'name ASC',
       );
+      final parties = await LoansService.getParties();
 
       if (!mounted) return;
 
@@ -97,6 +100,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         _hideBalances = hideBalances;
         _assets = assets;
         _wallets = wallets;
+        _parties = parties;
         _currentValues = current;
         _purchaseValues = purchase;
         _realizedProfitLoss = realized;
@@ -159,6 +163,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
     final currentController = TextEditingController(text: asset?.currentValue.toString() ?? '');
     final notesController = TextEditingController(text: asset?.notes ?? '');
     int? selectedWallet = asset?.walletId;
+    String selectedPaymentType = asset?.paymentType ?? 'Wallet';
+    int? selectedPartyId = asset?.partyId;
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
     const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments', 'Livestock', 'Business'];
@@ -248,14 +254,39 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               onChanged: (v) { if (v != null) setSheetState(() => selectedCategory = v); },
                             )),
                             SizedBox(width: 10),
-                            Expanded(child: DropdownButtonFormField<int>(
-                              value: selectedWallet, isExpanded: true,
-                              decoration: fieldDecoration('Payment Wallet', Icons.account_balance_wallet_outlined),
-                              items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(),
-                              onChanged: (v) => setSheetState(() => selectedWallet = v),
-                              validator: (v) => v == null ? appText(context, 'Select wallet', 'اکاؤنٹ منتخب کریں') : null,
+                            Expanded(child: DropdownButtonFormField<String>(
+                              value: selectedPaymentType,
+                              isExpanded: true,
+                              decoration: fieldDecoration('Payment Type', Icons.payments_outlined),
+                              items: const ['Cash', 'Bank', 'Wallet', 'Loan'].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                              onChanged: asset == null ? (v) => setSheetState(() { selectedPaymentType = v ?? 'Wallet'; }) : null,
                             )),
                           ]),
+                          SizedBox(height: 10),
+                          if (selectedPaymentType == 'Loan')
+                            DropdownButtonFormField<int>(
+                              value: selectedPartyId,
+                              isExpanded: true,
+                              decoration: fieldDecoration('Select Party *', Icons.person_outline),
+                              items: _parties.map((party) => DropdownMenuItem<int>(
+                                value: (party['id'] as num).toInt(),
+                                child: Text('${party['name']} • ${(party['currency'] ?? 'PKR').toString().toUpperCase()}', overflow: TextOverflow.ellipsis),
+                              )).toList(),
+                              onChanged: (v) => setSheetState(() => selectedPartyId = v),
+                              validator: (v) => selectedPaymentType == 'Loan' && v == null ? 'Select a party' : null,
+                            )
+                          else
+                            DropdownButtonFormField<int>(
+                              value: selectedWallet,
+                              isExpanded: true,
+                              decoration: fieldDecoration('Payment Wallet', Icons.account_balance_wallet_outlined),
+                              items: _wallets.map((w) => DropdownMenuItem<int>(
+                                value: (w['id'] as num).toInt(),
+                                child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis),
+                              )).toList(),
+                              onChanged: (v) => setSheetState(() => selectedWallet = v),
+                              validator: (v) => selectedPaymentType != 'Loan' && v == null ? 'Select wallet' : null,
+                            ),
                           SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: TextFormField(
@@ -327,7 +358,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 try {
                                   final model = AssetsModel(id: asset?.id, name: nameController.text.trim(), category: selectedCategory,
                                     purchasePrice: double.parse(purchaseController.text), currentValue: double.parse(currentController.text),
-                                    purchaseDate: purchaseDate, walletId: selectedWallet!, notes: notesController.text.trim(),
+                                    purchaseDate: purchaseDate, walletId: selectedWallet ?? 0, paymentType: selectedPaymentType, partyId: selectedPaymentType == 'Loan' ? selectedPartyId : null, currency: asset?.currency ?? 'PKR', linkedLoanId: asset?.linkedLoanId, notes: notesController.text.trim(),
                                     isSold: asset?.isSold ?? false, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
                                     createdAt: asset?.createdAt ?? DateTime.now());
                                   setSheetState(() => saving = true);
@@ -436,12 +467,13 @@ class _AssetsScreenState extends State<AssetsScreen> {
       text: asset.currentValue.toString(),
     );
 
+    DateTime saleDate = DateTime.now();
+    int? selectedSaleWallet = asset.walletId;
+    String selectedSalePaymentType = 'Wallet';
+    int? selectedBuyerParty;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) {
-        DateTime saleDate = DateTime.now();
-        int? selectedSaleWallet = asset.walletId;
-
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -460,21 +492,36 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     ),
                   ),
                   SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedSaleWallet,
+                  DropdownButtonFormField<String>(
+                    value: selectedSalePaymentType,
                     isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: appText(context, "Sale Wallet", "Sale Wallet"),
-                      prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                    ),
-                    items: _wallets.map((wallet) {
-                      return DropdownMenuItem<int>(
+                    decoration: const InputDecoration(labelText: 'Payment Type'),
+                    items: const ['Cash', 'Bank', 'Wallet', 'Loan'].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                    onChanged: (value) => setDialogState(() => selectedSalePaymentType = value ?? 'Wallet'),
+                  ),
+                  const SizedBox(height: 8),
+                  if (selectedSalePaymentType == 'Loan')
+                    DropdownButtonFormField<int>(
+                      value: selectedBuyerParty,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Buyer Party *'),
+                      items: _parties.map((party) => DropdownMenuItem<int>(
+                        value: (party['id'] as num).toInt(),
+                        child: Text('${party['name']} • ${party['currency'] ?? 'PKR'}', overflow: TextOverflow.ellipsis),
+                      )).toList(),
+                      onChanged: (value) => setDialogState(() => selectedBuyerParty = value),
+                    )
+                  else
+                    DropdownButtonFormField<int>(
+                      value: selectedSaleWallet,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Sale Wallet'),
+                      items: _wallets.map((wallet) => DropdownMenuItem<int>(
                         value: (wallet['id'] as num).toInt(),
                         child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})'),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setDialogState(() => selectedSaleWallet = value),
-                  ),
+                      )).toList(),
+                      onChanged: (value) => setDialogState(() => selectedSaleWallet = value),
+                    ),
                   SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -518,11 +565,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       return;
                     }
 
-                    if (selectedSaleWallet == null) return;
+                    if (selectedSalePaymentType == 'Loan' && selectedBuyerParty == null) return;
+                    if (selectedSalePaymentType != 'Loan' && selectedSaleWallet == null) return;
                     Navigator.pop(context, {
                       'price': price,
                       'date': saleDate,
-                      'walletId': selectedSaleWallet,
+                      'walletId': selectedSaleWallet ?? 0,
+                      'paymentType': selectedSalePaymentType,
+                      'partyId': selectedBuyerParty,
                     });
                   },
                   child: Text(appText(context, 'Confirm Sale', 'فروخت کی تصدیق کریں')),
@@ -544,6 +594,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
         salePrice: result['price'] as double,
         saleDate: result['date'] as DateTime,
         saleWalletId: result['walletId'] as int,
+        paymentType: result['paymentType'] as String,
+        partyId: result['partyId'] as int?,
       );
 
       await _loadData();

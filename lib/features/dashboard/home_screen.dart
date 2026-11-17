@@ -505,7 +505,7 @@ class _HomePageState extends State<HomePage> {
                                   width: 18,
                                   child: Text(
                                     _currencyFlag(entry.key),
-                                    style: const TextStyle(fontSize: 15),
+                                    style: const TextStyle(fontSize: 18),
                                   ),
                                 ),
                                 const SizedBox(width: 2),

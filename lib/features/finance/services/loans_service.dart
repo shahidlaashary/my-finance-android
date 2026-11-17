@@ -154,6 +154,70 @@ class LoansService {
     });
   }
 
+  static Future<void> updateParty({
+    required int id,
+    required String name,
+    String? phone,
+    String address = '',
+  }) async {
+    final db = await _database;
+    final normalizedName = name.trim();
+    if (normalizedName.isEmpty) throw Exception('Party name is required.');
+    final normalizedPhone = phone?.trim() ?? '';
+    final duplicate = await db.query(
+      'loan_parties',
+      where: "id != ? AND LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ?",
+      whereArgs: [id, normalizedName, normalizedPhone],
+      limit: 1,
+    );
+    if (duplicate.isNotEmpty) {
+      throw Exception('A party with this name and phone number already exists.');
+    }
+    final changed = await db.update(
+      'loan_parties',
+      {
+        'name': normalizedName,
+        'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
+        'address': address.trim(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (changed == 0) throw Exception('Party was not found.');
+  }
+
+  /// Party sirf tab delete hoti hai jab us ke sath koi loan linked na ho.
+  static Future<void> deleteParty(int partyId) async {
+    final db = await _database;
+    final linkedLoans = await db.query(
+      'loans',
+      columns: ['id'],
+      where: 'party_id = ?',
+      whereArgs: [partyId],
+      limit: 1,
+    );
+    if (linkedLoans.isNotEmpty) {
+      throw Exception(
+        'This party has loan history. Delete is blocked to protect linked loans and ledger records.',
+      );
+    }
+    final rows = await db.query(
+      'loan_parties',
+      where: 'id = ?',
+      whereArgs: [partyId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return;
+    await RecycleBinService.archive(
+      type: 'Loan Party',
+      title: rows.first['name']?.toString() ?? 'Party',
+      table: 'loan_parties',
+      id: partyId,
+      record: rows.first,
+    );
+    await db.delete('loan_parties', where: 'id = ?', whereArgs: [partyId]);
+  }
+
   static Future<Map<String, dynamic>?> getPartyById(int id) async {
     final db = await _database;
     final rows = await db.query('loan_parties', where: 'id = ?', whereArgs: [id], limit: 1);

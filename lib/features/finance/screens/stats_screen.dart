@@ -114,7 +114,7 @@ class _StatsScreenState extends State<StatsScreen> {
       final budgets = await BudgetsService.getBudgets();
       final goals = await GoalsService.getGoals();
       final loans = await LoansService.getLoans();
-      final wallets = await TransactionsService.getAccounts();
+      final wallets = await TransactionsService.getWallets();
       final balances = await _reports.getBalancesByCurrency();
       final allCurrencies = <String>{
         ...currencies,

@@ -181,12 +181,11 @@ class _LoansScreenState extends State<LoansScreen> {
                   future: LoansService.getPartySummary(id),
                   builder: (context, snapshot) {
                     final summary = snapshot.data ?? {};
-                    final given = (summary['receivable'] as num?)?.toDouble() ?? 0;
-                    final taken = (summary['payable'] as num?)?.toDouble() ?? 0;
+                    final balances = (summary['balances'] as List<dynamic>? ?? []);
                     return ListTile(
                       leading: const CircleAvatar(child: Icon(Icons.person_outline)),
                       title: Text(party['name']?.toString() ?? ''),
-                      subtitle: Text('Given outstanding: ${_money(given)} • Taken outstanding: ${_money(taken)}'),
+                      subtitle: Text(balances.isEmpty ? 'No loan history yet' : balances.map((item) => '${item['currency']} ${item['loan_type'] == 'given' ? 'Receivable' : 'Payable'}: ${_money((item['outstanding'] as num).toDouble())}').join('  |  ')),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
                         final loans = await LoansService.getLoansForParty(id);
@@ -504,8 +503,12 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Enter a valid borrower name and amount.');
       return;
     }
+    if (_selectedPartyId == null) {
+      _showMessage('Please select or create a party first.');
+      return;
+    }
     if (walletId == null) {
-      _showMessage('Please select an wallet.');
+      _showMessage('Please select a wallet.');
       return;
     }
     try {

@@ -396,7 +396,7 @@ class AssetsService {
       FROM assets s
       INNER JOIN wallets a ON a.id = s.wallet_id
       WHERE s.is_sold = 0
-      GROUP BY a.currency
+      GROUP BY s.currency
     ''');
     return {
       for (final row in rows)

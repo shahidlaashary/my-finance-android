@@ -621,7 +621,7 @@ class LoansService {
 
     final rows = await db.rawQuery('''
       SELECT
-        UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))) AS currency,
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))) AS currency,
         loans.loan_type AS loan_type,
         COALESCE(SUM(loans.remaining_amount), 0) AS total
       FROM loans

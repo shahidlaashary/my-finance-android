@@ -770,76 +770,111 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Wrap(
-                    spacing: 3,
-                    runSpacing: 0,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  child: Row(
                     children: [
-                      ...filters.map((filter) {
+                      ...filters.asMap().entries.map((entry) {
+                        final filter = entry.value;
                         final selected = selectedFilter == filter.$1;
-                        return ChoiceChip(
-                          label: Text(filter.$2),
+                        final chipFlex = switch (filter.$1) {
+                          'all' => 5,
+                          'income' => 7,
+                          'expense' => 8,
+                          'transfer' => 8,
+                          _ => 7,
+                        };
+                        return Expanded(
+                          flex: chipFlex,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              right: entry.key == filters.length - 1 ? 0 : 3,
+                            ),
+                            child: ChoiceChip(
+                              label: SizedBox(
+                                width: double.infinity,
+                                child: Text(
+                                  filter.$2,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
+                              ),
+                              labelPadding: EdgeInsets.zero,
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              selected: selected,
+                              onSelected: (_) => setState(() {
+                                selectedFilter = filter.$1;
+                                currentPage = 0;
+                              }),
+                              labelStyle: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: selected
+                                    ? Colors.white
+                                    : const Color(0xFF52615A),
+                              ),
+                              selectedColor: const Color(0xFF147D59),
+                              backgroundColor: Theme.of(context).cardColor,
+                              side: BorderSide(
+                                color: selected
+                                    ? const Color(0xFF147D59)
+                                    : const Color(0xFFE5ECE8),
+                              ),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              showCheckmark: false,
+                            ),
+                          ),
+                        );
+                      }),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        flex: 13,
+                        child: ActionChip(
+                          label: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(
+                                  Icons.settings_outlined,
+                                  size: 14,
+                                  color: Color(0xFF52615A),
+                                ),
+                                SizedBox(width: 2),
+                                Flexible(
+                                  child: Text(
+                                    'Recurring',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           labelPadding: EdgeInsets.zero,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          selected: selected,
-                          onSelected: (_) => setState(() {
-                            selectedFilter = filter.$1;
-                            currentPage = 0;
-                          }),
-                          labelStyle: TextStyle(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const RecurringTransactionsScreen(),
+                              ),
+                            ).then((_) => loadTransactions());
+                          },
+                          labelStyle: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: selected
-                                ? Colors.white
-                                : const Color(0xFF52615A),
+                            color: Color(0xFF52615A),
                           ),
-                          selectedColor: const Color(0xFF147D59),
                           backgroundColor: Theme.of(context).cardColor,
-                          side: BorderSide(
-                            color: selected
-                                ? const Color(0xFF147D59)
-                                : const Color(0xFFE5ECE8),
-                          ),
+                          side: const BorderSide(color: Color(0xFFE5ECE8)),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
-                          showCheckmark: false,
-                        );
-                      }),
-                      ActionChip(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(
-                              Icons.settings_outlined,
-                              size: 14,
-                              color: Color(0xFF52615A),
-                            ),
-                            SizedBox(width: 2),
-                            Text('Recurring'),
-                          ],
                         ),
-                        labelPadding: EdgeInsets.zero,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const RecurringTransactionsScreen(),
-                            ),
-                          ).then((_) => loadTransactions());
-                        },
-                        labelStyle: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF52615A),
-                        ),
-                        backgroundColor: Theme.of(context).cardColor,
-                        side: const BorderSide(color: Color(0xFFE5ECE8)),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
                       ),
                     ],
                   ),

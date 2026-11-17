@@ -28,11 +28,14 @@ class FinanceDB {
     // Fresh database: koi migration ya old-data conversion nahi.
     _database = await openDatabase(
       fullPath,
-      version: 3,
+      version: 4,
       onCreate: _createDatabase,
       onUpgrade: (database, oldVersion, newVersion) async {
         if (oldVersion < 3) {
           await database.execute('DROP TABLE IF EXISTS exchange_rate_history');
+        }
+        if (oldVersion < 4) {
+          await database.execute('DROP TABLE IF EXISTS asset_depreciation');
         }
       },
     );

@@ -416,14 +416,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       value: walletId,
                       isExpanded: true,
                       decoration: InputDecoration(
-                        labelText: appText(context, "Account", "Account"),
+                        labelText: appText(context, "Wallet", "Wallet"),
                         border: OutlineInputBorder(),
                       ),
-                      items: wallets.map((account) {
+                      items: wallets.map((wallet) {
                         return DropdownMenuItem<int>(
-                          value: account['id'] as int,
+                          value: wallet['id'] as int,
                           child: Text(
-                            '${account['name']} (${account['currency']})',
+                            '${wallet['name']} (${wallet['currency']})',
                           ),
                         );
                       }).toList(),
@@ -457,14 +457,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         value: toWalletId,
                         isExpanded: true,
                         decoration: InputDecoration(
-                          labelText: appText(context, "Destination Account", "Destination Account"),
+                          labelText: appText(context, "Destination Wallet", "Destination Wallet"),
                           border: OutlineInputBorder(),
                         ),
-                        items: availableDestinations.map((account) {
+                        items: availableDestinations.map((wallet) {
                           return DropdownMenuItem<int>(
-                            value: account['id'] as int,
+                            value: wallet['id'] as int,
                             child: Text(
-                              '${account['name']} (${account['currency']})',
+                              '${wallet['name']} (${wallet['currency']})',
                             ),
                           );
                         }).toList(),
@@ -591,7 +591,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (type == 'transfer' && toWalletId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(appText(context, 'Select a destination account.', 'رقم وصول کرنے والا اکاؤنٹ منتخب کریں۔')),
+                          content: Text(appText(context, 'Select a destination wallet.', 'رقم وصول کرنے والا اکاؤنٹ منتخب کریں۔')),
                         ),
                       );
                       return;
@@ -655,7 +655,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(appText(context, 'Delete Transaction?', 'لین دین حذف کریں؟')),
-        content: Text(appText(context, "This transaction will be deleted and its effect on account balances will be reversed.", "یہ لین دین حذف ہوگا اور اکاؤنٹ بیلنس پر اس کا اثر واپس ہوگا۔"),
+        content: Text(appText(context, "This transaction will be deleted and its effect on wallet balances will be reversed.", "یہ لین دین حذف ہوگا اور اکاؤنٹ بیلنس پر اس کا اثر واپس ہوگا۔"),
         ),
         actions: [
           TextButton(
@@ -1276,7 +1276,7 @@ class TransactionDetailScreen extends StatelessWidget {
           final wallets = snapshot.data ?? const <Map<String, dynamic>>[];
           String walletName(dynamic id) {
             final match = wallets.where((wallet) => wallet['id'] == id);
-            return match.isEmpty ? 'Account #$id' : match.first['name'].toString();
+            return match.isEmpty ? 'Wallet #$id' : match.first['name'].toString();
           }
 
           final sourceId = transaction['wallet_id'];
@@ -1286,7 +1286,7 @@ class TransactionDetailScreen extends StatelessWidget {
             _detailRow('Date & Time', date == null
                 ? (transaction['date']?.toString() ?? '—')
                 : DateFormat('dd MMM yyyy, hh:mm a').format(date)),
-            _detailRow('Account', walletName(sourceId)),
+            _detailRow('Wallet', walletName(sourceId)),
             _detailRow('Category', category.isEmpty ? (isTransfer ? 'Transfer' : 'No category') : category),
             _detailRow('Description / Note', note.isEmpty ? '—' : note),
           ];

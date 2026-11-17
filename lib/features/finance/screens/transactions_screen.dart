@@ -34,7 +34,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String dateFormat = 'dd/MM/yyyy';
   String weekStart = 'Monday';
   String selectedFilter = 'all';
-  Set<int> recurringTransactionIds = <int>{};
   int currentPage = 0;
 
   @override
@@ -63,23 +62,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final date = await GeneralPreferences.instance.dateFormat;
       final week = await GeneralPreferences.instance.weekStart;
       final result = await TransactionsService.getTransactions(walletId: widget.walletId);
-      final db = await TransactionsService.database;
-      final recurringMarkers = await db.query(
-        'app_settings',
-        columns: ['setting_key'],
-        where: "setting_key LIKE 'recurring_transaction_%'",
-      );
-      final recurringIds = recurringMarkers
-          .map((row) => int.tryParse(row['setting_key'].toString().replaceFirst('recurring_transaction_', '')))
-          .whereType<int>()
-          .toSet();
       final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
 
       if (!mounted) return;
 
       setState(() {
         transactions = result;
-        recurringTransactionIds = recurringIds;
         walletInfo = wallet;
         hideBalances = hide;
         numberFormat = number;

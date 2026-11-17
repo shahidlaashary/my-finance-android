@@ -599,6 +599,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
     purchaseController.dispose();
     currentController.dispose();
     notesController.dispose();
+    newPartyNameController.dispose();
+    newPartyPhoneController.dispose();
   }
 
   Future<void> _updateValuation(AssetsModel asset) async {

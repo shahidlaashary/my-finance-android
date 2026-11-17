@@ -3,6 +3,7 @@ import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
+import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class AssetsService {
   Future<Database> get _database async {
@@ -344,14 +345,31 @@ class AssetsService {
     AppRefreshController.notifyChanged();
   }
 
+  Future<void> _deleteAssetLinkedLoan(int loanId) async {
+    final repayments = await LoansService.getRepayments(loanId);
+    await LoansService.deleteLoan(loanId, fromAssetDelete: true);
+    await AttachmentService.deleteOwnerAttachments(
+      ownerType: AttachmentOwnerTypes.loan,
+      ownerId: loanId,
+    );
+    for (final repayment in repayments) {
+      if (repayment.id != null) {
+        await AttachmentService.deleteOwnerAttachments(
+          ownerType: AttachmentOwnerTypes.repayment,
+          ownerId: repayment.id!,
+        );
+      }
+    }
+  }
+
   Future<void> deleteAsset(int assetId) async {
     final db = await _database;
     await _ensureTables(db);
     final existing = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
     if (existing.isEmpty) return;
     final asset = AssetsModel.fromMap(existing.first);
-    if (asset.linkedLoanId != null) await LoansService.deleteLoan(asset.linkedLoanId!, fromAssetDelete: true);
-    if (asset.saleLinkedLoanId != null) await LoansService.deleteLoan(asset.saleLinkedLoanId!, fromAssetDelete: true);
+    if (asset.linkedLoanId != null) await _deleteAssetLinkedLoan(asset.linkedLoanId!);
+    if (asset.saleLinkedLoanId != null) await _deleteAssetLinkedLoan(asset.saleLinkedLoanId!);
     await RecycleBinService.archive(type: 'Asset', title: asset.name, table: 'assets', id: assetId, record: existing.first);
     await db.transaction((txn) async {
       final rows = await txn.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);

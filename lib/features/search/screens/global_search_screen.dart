@@ -23,7 +23,6 @@ import 'package:my_finance/features/security/app_lock_screen.dart';
 import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
 import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
-import 'package:my_finance/features/finance/screens/asset_depreciation_screen.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/documents/services/my_documents_service.dart';
@@ -150,7 +149,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   }
   late final List<_SearchEntry> _entries = [
     _SearchEntry('Home', 'Dashboard and financial snapshot', Icons.home_outlined, ['dashboard','overview','balance','home'], () => const HomePage(featurePageBuilder: _unusedFeatureBuilder)),
-    _SearchEntry('Assets', 'Manage owned assets and depreciation', Icons.real_estate_agent_outlined, ['property','vehicle','gold','livestock','business','asset depreciation'], () => const AssetsScreen()),
+    _SearchEntry('Assets', 'Manage owned assets', Icons.real_estate_agent_outlined, ['property','vehicle','gold','livestock','business','assets'], () => const AssetsScreen()),
     _SearchEntry('Budgets', 'Limits, spending and budget alerts', Icons.account_balance_wallet_outlined, ['budget','limit','spending','alerts'], () => const BudgetsScreen()),
     _SearchEntry('Goals', 'Savings targets and progress', Icons.flag_outlined, ['saving','target','goal'], () => const GoalsScreen()),
     _SearchEntry('Loans', 'Track money lent and borrowed', Icons.handshake_outlined, ['loan','loans','borrow','lend','receivable','payable'], () => const LoansScreen()),
@@ -171,7 +170,6 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     _SearchEntry('Appearance', 'Themes, colors and display mode', Icons.palette_outlined, ['theme','dark mode','light mode','color'], () => const GeneralAppPreferencesScreen()),
     _SearchEntry('Base Currency', 'Choose your main currency', Icons.currency_exchange_outlined, ['pkr','default currency','main currency'], () => const BaseCurrencyScreen()),
     _SearchEntry('Languages', 'Change the app language', Icons.language_rounded, ['translation','urdu','english','pashto','balochi'], () => const LanguageSettingsScreen()),
-    _SearchEntry('Asset Depreciation', 'Calculate asset value reduction', Icons.trending_down_rounded, ['depreciation','straight line','declining balance'], () => const AssetDepreciationScreen()),
     _SearchEntry('About', 'App information and credits', Icons.info_outline_rounded, ['about app','version','created by'], () => const AboutHubScreen()),
   ];
 

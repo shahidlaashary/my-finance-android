@@ -769,7 +769,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
                 Padding(
-                  padding: EdgeInsets.zero,
+                  // Align the first filter with the AppBar title and the
+                  // Recurring label with the trailing Settings action.
+                  padding: const EdgeInsets.only(left: 16, right: 12),
                   child: SizedBox(
                     height: 38,
                     child: Row(
@@ -790,7 +792,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               duration: const Duration(milliseconds: 180),
                               height: 30,
                               alignment: Alignment.center,
-                              padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 5),
+                              padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 3),
                               decoration: BoxDecoration(
                                 color: selected ? const Color(0xFF147D59) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(16),
@@ -822,7 +824,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           child: Container(
                             height: 30,
                             alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            padding: const EdgeInsets.only(left: 3, right: 0),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF2F5F3),
                               borderRadius: BorderRadius.circular(16),

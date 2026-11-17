@@ -768,70 +768,73 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               children: [
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
-                SizedBox(
-                  height: 42,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: filters.length + 1,
-                    separatorBuilder: (_, __) => const SizedBox(width: 7),
-                    itemBuilder: (context, index) {
-                      if (index == filters.length) {
-                        return ActionChip(
-                          avatar: const Icon(
-                            Icons.settings_outlined,
-                            size: 15,
-                            color: Color(0xFF52615A),
-                          ),
-                          label: const Text('Recurring'),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RecurringTransactionsScreen(),
-                              ),
-                            ).then((_) => loadTransactions());
-                          },
-                          labelStyle: const TextStyle(
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 0,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ...filters.map((filter) {
+                        final selected = selectedFilter == filter.$1;
+                        return ChoiceChip(
+                          label: Text(filter.$2),
+                          selected: selected,
+                          onSelected: (_) => setState(() {
+                            selectedFilter = filter.$1;
+                            currentPage = 0;
+                          }),
+                          labelStyle: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF52615A),
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF52615A),
                           ),
+                          selectedColor: const Color(0xFF147D59),
                           backgroundColor: Theme.of(context).cardColor,
-                          side: const BorderSide(color: Color(0xFFE5ECE8)),
+                          side: BorderSide(
+                            color: selected
+                                ? const Color(0xFF147D59)
+                                : const Color(0xFFE5ECE8),
+                          ),
                           visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          showCheckmark: false,
                         );
-                      }
-
-                      final filter = filters[index];
-                      final selected = selectedFilter == filter.$1;
-                      return ChoiceChip(
-                        label: Text(filter.$2),
-                        selected: selected,
-                        onSelected: (_) => setState(() {
-                          selectedFilter = filter.$1;
-                          currentPage = 0;
-                        }),
-                        labelStyle: TextStyle(
+                      }),
+                      ActionChip(
+                        avatar: const Icon(
+                          Icons.settings_outlined,
+                          size: 15,
+                          color: Color(0xFF52615A),
+                        ),
+                        label: const Text('Recurring'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const RecurringTransactionsScreen(),
+                            ),
+                          ).then((_) => loadTransactions());
+                        },
+                        labelStyle: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: selected ? Colors.white : const Color(0xFF52615A),
+                          color: Color(0xFF52615A),
                         ),
-                        selectedColor: const Color(0xFF147D59),
                         backgroundColor: Theme.of(context).cardColor,
-                        side: BorderSide(
-                          color: selected
-                              ? const Color(0xFF147D59)
-                              : const Color(0xFFE5ECE8),
-                        ),
+                        side: const BorderSide(color: Color(0xFFE5ECE8)),
                         visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        showCheckmark: false,
-                      );
-                    },
+                        materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 6),
                 Expanded(
                   child: filteredTransactions.isEmpty
                       ? Center(

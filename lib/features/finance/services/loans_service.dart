@@ -381,6 +381,7 @@ class LoansService {
         loan.copyWith(
           remainingAmount: loan.amount,
           status: 'active',
+          currency: partyCurrency,
         ).toMap()..remove('id'),
       );
 

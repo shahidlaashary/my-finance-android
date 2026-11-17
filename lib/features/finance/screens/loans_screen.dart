@@ -290,7 +290,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
-                                    flex: 2,
+                                    flex: 1,
                                     child: DropdownButtonFormField<String>(
                                       value: createNewParty ? '__new_party__' : _selectedPartyId?.toString(),
                                       isExpanded: true,
@@ -309,7 +309,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         )),
                                         const DropdownMenuItem<String>(
                                           value: '__new_party__',
-                                          child: Text('＋ Create New Party', overflow: TextOverflow.ellipsis),
+                                          child: Text('＋ Create Party', overflow: TextOverflow.ellipsis),
                                         ),
                                       ],
                                       onChanged: (value) {
@@ -347,7 +347,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
-                                    flex: 2,
+                                    flex: 1,
                                     child: DropdownButtonFormField<int>(
                                       value: walletId,
                                       isExpanded: true,

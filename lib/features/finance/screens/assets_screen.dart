@@ -131,17 +131,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return matches.isEmpty ? 'Unknown Party' : matches.first['name'].toString();
   }
 
-  String _currency(int walletId) {
-    final matches = _wallets.where(
-      (wallet) =>
-          (wallet['id'] as num).toInt() == walletId,
-    );
-
-    if (matches.isEmpty) return 'PKR';
-
-    return matches.first['currency']?.toString() ?? 'PKR';
-  }
-
   List<AssetsModel> get _visibleAssets => _selectedCategory == null
       ? _assets
       : _assets.where((asset) => asset.category.trim().toLowerCase() == _selectedCategory!.toLowerCase()).toList();

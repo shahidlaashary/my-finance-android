@@ -770,13 +770,9 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 ],
               ),
               SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _categoryField()),
-                  SizedBox(width: 10),
-                  Expanded(child: _notesField()),
-                ],
-              ),
+              _categoryField(),
+              SizedBox(height: 12),
+              _notesField(),
             ],
             SizedBox(height: 20),
             FilledButton(

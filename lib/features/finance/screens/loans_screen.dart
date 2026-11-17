@@ -32,7 +32,7 @@ class _LoansScreenState extends State<LoansScreen> {
   DateTime _lendingDate = DateTime.now();
   DateTime? _dueDate;
   int? _selectedPartyId;
-  String _loanType = 'given';
+  String _loanType = 'Loan Given';
   @override
   void initState() {
     super.initState();
@@ -184,7 +184,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     return ListTile(
                       leading: const CircleAvatar(child: Icon(Icons.person_outline)),
                       title: Text(party['name']?.toString() ?? ''),
-                      subtitle: Text(balances.isEmpty ? 'No loan history yet' : balances.map((item) => '${item['currency']} ${item['loan_type'] == 'given' ? 'Receivable' : 'Payable'}: ${_money((item['outstanding'] as num).toDouble())}').join('  |  ')),
+                      subtitle: Text(balances.isEmpty ? 'No loan history yet' : balances.map((item) => '${item['currency']} ${item['loan_type'] == 'Loan Given' ? 'Receivable' : 'Payable'}: ${_money((item['outstanding'] as num).toDouble())}').join('  |  ')),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
                         final loans = await LoansService.getLoansForParty(id);
@@ -196,7 +196,7 @@ class _LoansScreenState extends State<LoansScreen> {
                             content: SizedBox(width: 520, child: loans.isEmpty
                               ? const Text('No loan history for this party.')
                               : ListView(shrinkWrap: true, children: loans.map((loan) => ListTile(
-                                  title: Text('${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
+                                  title: Text('${loan.loanType == 'Loan Given' ? 'Loan Given' : 'Loan Taken'} • ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
                                   subtitle: Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)} • ${loan.lendingDate}'),
                                   onTap: () {
                                     Navigator.pop(ctx);
@@ -233,7 +233,7 @@ class _LoansScreenState extends State<LoansScreen> {
     if (!mounted) return;
     _nameController.clear();
     _phoneController.clear();
-    _loanType = 'given';
+    _loanType = 'Loan Given';
     _selectedPartyId = null;
     bool createNewParty = _parties.isEmpty;
     if (!createNewParty && _selectedPartyId != null) {
@@ -325,10 +325,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                 value: _loanType,
                                 decoration: const InputDecoration(labelText: 'Loan Type'),
                                 items: const [
-                                  DropdownMenuItem(value: 'given', child: Text('Loan Given')),
-                                  DropdownMenuItem(value: 'taken', child: Text('Loan Taken')),
+                                  DropdownMenuItem(value: 'Loan Given', child: Text('Loan Given')),
+                                  DropdownMenuItem(value: 'Loan Taken', child: Text('Loan Taken')),
                                 ],
-                                onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
+                                onChanged: (value) => setSheetState(() => _loanType = value ?? 'Loan Given'),
                               ),
                               const SizedBox(height: 10),
                               DropdownButtonFormField<String>(
@@ -590,12 +590,12 @@ class _LoansScreenState extends State<LoansScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(loan.loanType == 'given' ? 'Receive Repayment' : 'Pay Back Loan'),
+          title: Text(loan.loanType == 'Loan Given' ? 'Receive Repayment' : 'Pay Back Loan'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${loan.loanType == 'given' ? 'Borrower:' : 'Lender:'} ${_partyNameForLoan(loan)}'),
+                Text('${loan.loanType == 'Loan Given' ? 'Borrower:' : 'Lender:'} ${_partyNameForLoan(loan)}'),
                 SizedBox(height: 6),
                 Text('${appText(context, "Outstanding: ", "بقایا: ")}'
                   '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
@@ -609,7 +609,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: loan.loanType == 'given' ? 'Receiving Wallet *' : 'Paying Wallet *'),
+                  decoration: InputDecoration(labelText: loan.loanType == 'Loan Given' ? 'Receiving Wallet *' : 'Paying Wallet *'),
                   items: _wallets.map((wallet) {
                     return DropdownMenuItem<int>(
                       value: wallet['id'] as int,
@@ -648,7 +648,7 @@ class _LoansScreenState extends State<LoansScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(loan.loanType == 'given' ? 'Save Repayment' : 'Save Payment'),
+              child: Text(loan.loanType == 'Loan Given' ? 'Save Repayment' : 'Save Payment'),
             ),
           ],
         ),
@@ -720,7 +720,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${_partyNameForLoan(loan)}'),
+                  Text('${loan.loanType == 'Loan Given' ? 'Borrower' : 'Lender'}: ${_partyNameForLoan(loan)}'),
                   Text('${appText(context, 'Phone:', 'فون:')} ${_partyPhoneForLoan(loan)}'),
                   Text('${appText(context, 'Currency:', 'کرنسی:')} $currency'),
                   Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
@@ -849,7 +849,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           _addRepayment(loan);
                         },
                         icon: const Icon(Icons.payments),
-                        label: Text(loan.loanType == 'given' ? 'Receive Repayment' : 'Pay Back Loan'),
+                        label: Text(loan.loanType == 'Loan Given' ? 'Receive Repayment' : 'Pay Back Loan'),
                       ),
                     ),
                 ],
@@ -1021,7 +1021,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      '${_partyNameForLoan(loan)} • ${loan.loanType == 'given' ? 'Given' : 'Taken'}',
+                                      '${_partyNameForLoan(loan)} • ${loan.loanType == 'Loan Given' ? 'Given' : 'Taken'}',
                                       style: const TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.bold,
@@ -1049,7 +1049,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               if (_partyPhoneForLoan(loan) != '-')
                                 Text(_partyPhoneForLoan(loan)),
                               SizedBox(height: 8),
-                              Text(loan.loanType == 'given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
+                              Text(loan.loanType == 'Loan Given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
                               Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'
                                 '${_moneyWithCurrency(loan.amount, loan.walletId)}',
                               ),
@@ -1059,7 +1059,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               Text(appText(context, "Remaining: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}", "باقی: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}"),
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              Text('${loan.loanType == 'given' ? 'Lending Date' : 'Borrowing Date'}: ${loan.lendingDate}'),
+                              Text('${loan.loanType == 'Loan Given' ? 'Lending Date' : 'Borrowing Date'}: ${loan.lendingDate}'),
                               if (loan.dueDate != null)
                                 Text('Due Date: ${loan.dueDate}'),
                               SizedBox(height: 8),

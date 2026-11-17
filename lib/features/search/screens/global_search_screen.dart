@@ -7,7 +7,6 @@ import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
 import 'package:my_finance/features/finance/screens/goals_screen.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
-import 'package:my_finance/features/finance/screens/stats_screen.dart';
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/wallets_screen.dart';
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
@@ -15,14 +14,7 @@ import 'package:my_finance/features/installments/screens/installments_screen.dar
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
 import 'package:my_finance/features/staff/screens/staff_screen.dart';
-import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
-import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
-import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
-import 'package:my_finance/features/security/app_lock_screen.dart';
-import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
-import 'package:my_finance/features/settings/base_currency_screen.dart';
-import 'package:my_finance/features/settings/language_settings_screen.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/documents/services/my_documents_service.dart';
@@ -30,8 +22,6 @@ import 'package:my_finance/features/stock/services/stock_service.dart';
 import 'package:my_finance/features/staff/services/staff_service.dart';
 import 'package:my_finance/features/installments/services/installment_service.dart';
 import 'package:my_finance/features/vehicles/services/vehicle_service.dart';
-import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/app/screens/about_hub_screen.dart';
 
 class _SearchEntry {
   final String title;
@@ -153,24 +143,13 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     _SearchEntry('Budgets', 'Limits, spending and budget alerts', Icons.account_balance_wallet_outlined, ['budget','limit','spending','alerts'], () => const BudgetsScreen()),
     _SearchEntry('Goals', 'Savings targets and progress', Icons.flag_outlined, ['saving','target','goal'], () => const GoalsScreen()),
     _SearchEntry('Loans', 'Track money lent and borrowed', Icons.handshake_outlined, ['loan','loans','borrow','lend','receivable','payable'], () => const LoansScreen()),
-    _SearchEntry('Reports & Analytics', 'Charts, insights and financial reports', Icons.bar_chart_outlined, ['reports','analytics','graphs','charts','statistics','income expense'], () => const StatsScreen()),
     _SearchEntry('Transactions', 'Search and manage income, expenses and transfers', Icons.receipt_long_outlined, ['income','expense','transfer','entries','payments'], () => const TransactionsScreen()),
     _SearchEntry('Wallets', 'Wallets, balances and currencies', Icons.account_balance_outlined, ['wallets','cash','bank','currency','wallet'], () => const WalletsPage()),
     _SearchEntry('My Documents', 'Store and find important documents', Icons.folder_copy_outlined, ['files','papers','pdf','attachments','identity','expiry'], () => const MyDocumentsScreen()),
     _SearchEntry('Installment Manager', 'Buy or sell items on installments', Icons.payments_outlined, ['qist','qistain','installment','monthly payment','buy','sell'], () => const InstallmentsScreen()),
     _SearchEntry('Vehicle Manager', 'Vehicle details and records', Icons.directions_car_outlined, ['car','bike','motorcycle','vehicle'], () => const VehiclesScreen()),
     _SearchEntry('Stock Manager', 'Inventory and stock records', Icons.inventory_2_outlined, ['inventory','products','items','stock'], () => const StockManagerScreen()),
-    _SearchEntry('Staff Management', 'Manage staff and employee records', Icons.badge_outlined, ['employees','salary','team','staff'], () => const StaffScreen()),
-    _SearchEntry('Exchange Rates', 'Currency conversion and exchange rates', Icons.currency_exchange_rounded, ['forex','convert','rate','exchange'], () => const ExchangeRatesScreen()),
-    _SearchEntry('Backup & Restore', 'Back up or restore app data', Icons.backup_outlined, ['backup','restore','export','import','data safety'], () => const BackupRestoreScreen()),
     _SearchEntry('Recycle Bin', 'Restore or permanently delete removed records', Icons.delete_outline_rounded, ['deleted','trash','restore','bin'], () => const RecycleBinScreen()),
-    _SearchEntry('Notifications & Reminders', 'Manage reminders and alerts', Icons.notifications_active_outlined, ['notification','reminder','alarm','due date'], () => const RemindersScreen()),
-    _SearchEntry('App Lock & Security', 'PIN and biometric protection', Icons.security_outlined, ['security','pin','password','fingerprint','face unlock','lock'], () => const AppLockScreen()),
-    _SearchEntry('App Settings', 'Preferences and app configuration', Icons.tune_rounded, ['settings','preferences','customize'], () => const AppSettingsScreen()),
-    _SearchEntry('Appearance', 'Themes, colors and display mode', Icons.palette_outlined, ['theme','dark mode','light mode','color'], () => const GeneralAppPreferencesScreen()),
-    _SearchEntry('Base Currency', 'Choose your main currency', Icons.currency_exchange_outlined, ['pkr','default currency','main currency'], () => const BaseCurrencyScreen()),
-    _SearchEntry('Languages', 'Change the app language', Icons.language_rounded, ['translation','urdu','english','pashto','balochi'], () => const LanguageSettingsScreen()),
-    _SearchEntry('About', 'App information and credits', Icons.info_outline_rounded, ['about app','version','created by'], () => const AboutHubScreen()),
   ];
 
   static Widget _unusedFeatureBuilder(String title) => const SizedBox.shrink();

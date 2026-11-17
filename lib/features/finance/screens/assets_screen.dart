@@ -265,14 +265,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
     int? selectedWallet = asset?.walletId;
     String selectedPaymentType = asset?.paymentType ?? 'Wallet';
     final defaultAssetCurrency = asset?.currency ?? await FinanceDB.instance.getBaseCurrency();
-    newPartyCurrency = CurrencyCatalog.supported.contains(defaultAssetCurrency.toUpperCase())
-        ? defaultAssetCurrency.toUpperCase()
-        : 'PKR';
+    String newPartyCurrency =
+        CurrencyCatalog.supported.contains(defaultAssetCurrency.toUpperCase())
+            ? defaultAssetCurrency.toUpperCase()
+            : 'PKR';
     int? selectedPartyId = asset?.partyId;
     bool createNewParty = false;
     final newPartyNameController = TextEditingController();
     final newPartyPhoneController = TextEditingController();
-    String newPartyCurrency = 'PKR';
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
     const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments', 'Livestock', 'Business'];

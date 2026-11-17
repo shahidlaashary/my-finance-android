@@ -1121,7 +1121,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       icon: const Icon(Icons.payments),
                                       label: Text(appText(context, 'Repayment', 'قرض کی واپسی')),
                                     ),
-                                  IconButton(
+                                  if (!loan.isAssetLinked) IconButton(
                                     onPressed: () => _deleteLoan(loan),
                                     icon: const Icon(
                                       Icons.delete_outline,

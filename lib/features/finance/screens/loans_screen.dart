@@ -68,9 +68,6 @@ class _LoansScreenState extends State<LoansScreen> {
         .trim()
         .toUpperCase();
   }
-  String _moneyWithCurrency(double amount, int walletId) {
-    return '${_currencyForWallet(walletId)} ${_money(amount)}';
-  }
   String _moneyWithLoanCurrency(double amount, LoansModel loan) {
     return '${loan.currency.toUpperCase()} ${_money(amount)}';
   }
@@ -142,44 +139,6 @@ class _LoansScreenState extends State<LoansScreen> {
       lastDate: DateTime(2100),
     );
   }
-  Future<int?> _createParty() async {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final addressController = TextEditingController();
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Add New Party'),
-        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Party Name *')),
-          TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone Number')),
-          TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
-        ])),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save Party')),
-        ],
-      ),
-    );
-    if (result != true || nameController.text.trim().isEmpty) {
-      nameController.dispose(); phoneController.dispose(); addressController.dispose();
-      return null;
-    }
-    try {
-      final id = await LoansService.addParty(
-        name: nameController.text,
-        phone: phoneController.text,
-        address: addressController.text,
-      );
-      nameController.dispose(); phoneController.dispose(); addressController.dispose();
-      return id;
-    } catch (error) {
-      _showMessage('Could not save party: $error');
-      nameController.dispose(); phoneController.dispose(); addressController.dispose();
-      return null;
-    }
-  }
-
   Future<void> _showParties() async {
     await Navigator.push<void>(
       context,

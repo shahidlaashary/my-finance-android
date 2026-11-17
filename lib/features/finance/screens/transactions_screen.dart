@@ -771,7 +771,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Wrap(
-                    spacing: 7,
+                    spacing: 3,
                     runSpacing: 0,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
@@ -779,6 +779,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         final selected = selectedFilter == filter.$1;
                         return ChoiceChip(
                           label: Text(filter.$2),
+                          labelPadding: EdgeInsets.zero,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           selected: selected,
                           onSelected: (_) => setState(() {
                             selectedFilter = filter.$1;
@@ -805,12 +807,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         );
                       }),
                       ActionChip(
-                        avatar: const Icon(
-                          Icons.settings_outlined,
-                          size: 15,
-                          color: Color(0xFF52615A),
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.settings_outlined,
+                              size: 14,
+                              color: Color(0xFF52615A),
+                            ),
+                            SizedBox(width: 2),
+                            Text('Recurring'),
+                          ],
                         ),
-                        label: const Text('Recurring'),
+                        labelPadding: EdgeInsets.zero,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         onPressed: () {
                           Navigator.push(
                             context,

@@ -89,12 +89,6 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
           const SizedBox(height:16), FilledButton.icon(onPressed:_create,icon:const Icon(Icons.add),label:const Text('Create Committee')),
         ]))) :
         RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.all(16),children:[
-          Card(child:ListTile(
-            leading:const CircleAvatar(child:Icon(Icons.account_balance_wallet_outlined)),
-            title:const Text('Shared Committee Wallet',style:TextStyle(fontWeight:FontWeight.w700)),
-            subtitle:const Text('One common wallet used by all committees. View its balance in Wallets.'),
-          )),
-          const SizedBox(height:8),
           ...committees.map((c) {
             final collected=(c['collected'] as num?)?.toDouble()??0;
             final paid=(c['paid_out'] as num?)?.toDouble()??0;
@@ -126,7 +120,6 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   List<Map<String,dynamic>> members=[];
   List<Map<String,dynamic>> entries=[];
   List<Map<String,dynamic>> wallets=[];
-  int committeeWallet=-1;
   bool loading=true;
   final money=NumberFormat('#,##0.##');
   late Map<String,dynamic> committeeData;
@@ -141,7 +134,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     try{
       final values=await Future.wait([
         CommitteeService.getMembers(id),CommitteeService.getEntries(id),
-        CommitteeService.getWallets(),CommitteeService.sharedWalletId(),
+        CommitteeService.getWallets(),
       ]);
       final currentCommittees=await CommitteeService.getCommittees();
       final current=currentCommittees.where((item)=>(item['id'] as num).toInt()==id);
@@ -150,7 +143,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         members=values[0] as List<Map<String,dynamic>>;
         entries=values[1] as List<Map<String,dynamic>>;
         wallets=values[2] as List<Map<String,dynamic>>;
-        committeeWallet=values[3] as int;loading=false;
+        loading=false;
       });
     }catch(e){if(mounted)setState(()=>loading=false);_msg(e.toString());}
   }
@@ -181,7 +174,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   }
 
   Future<void> _record(String type) async {
-    if(members.isEmpty||wallets.isEmpty){_msg('Add members and wallets first.');return;}
+    if(members.isEmpty){_msg('Add members first.');return;}
     final pot=(committeeData['installment_amount'] as num).toDouble()*members.length;
     final eligibleMembers=type=='Payout'
       ? members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).take(1).toList()
@@ -189,29 +182,43 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     if(eligibleMembers.isEmpty){_msg('All scheduled payouts are complete.');return;}
     final amount=TextEditingController(text: type=='Installment' ? '${committeeData['installment_amount']}' : '${pot-(eligibleMembers.first['received'] as num).toDouble()}');
     int memberId=(eligibleMembers.first['id'] as num).toInt();
-    int walletId=wallets.any((w)=>(w['id'] as num).toInt()==committeeWallet)?committeeWallet:(wallets.first['id'] as num).toInt();
+    int? walletId=wallets.isEmpty?null:(wallets.first['id'] as num).toInt();
+    String paymentMethod='Without Wallet';
     DateTime date=DateTime.now();final note=TextEditingController();
     final ok=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
-      title:Text(type=='Installment'?'Record Installment Deposit':'Record Member Payout'),
+      title:Text(type=='Installment'?'Record Installment Payment':'Record Member Payout'),
       content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
         DropdownButtonFormField<int>(value:memberId,decoration:const InputDecoration(labelText:'Member'),
           items:eligibleMembers.map((m)=>DropdownMenuItem(value:(m['id'] as num).toInt(),child:Text(m['name'].toString()))).toList(),
           onChanged:(v){if(v!=null)setD(()=>memberId=v);}),
         TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:'Amount (${committeeData['currency'] ?? 'PKR'})')),
-        DropdownButtonFormField<int>(value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Deposit into':'Pay from'),
-          items:wallets.map((w)=>DropdownMenuItem(value:(w['id'] as num).toInt(),child:Text('${w['name']} (${w['currency']})'))).toList(),
-          onChanged:(v){if(v!=null)setD(()=>walletId=v);}),
+        DropdownButtonFormField<String>(value:paymentMethod,decoration:const InputDecoration(labelText:'Payment method'),
+          items:const [
+            DropdownMenuItem(value:'Without Wallet',child:Text('Record Without Wallet')),
+            DropdownMenuItem(value:'Existing Wallet',child:Text('Use Existing Wallet')),
+          ],
+          onChanged:(v){if(v!=null)setD(()=>paymentMethod=v);}),
+        if(paymentMethod=='Existing Wallet') ...[
+          if(wallets.isEmpty) const Padding(padding:EdgeInsets.all(8),child:Text('No existing wallets available.')),
+          if(wallets.isNotEmpty) DropdownButtonFormField<int>(value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Pay from Wallet':'Receive into Wallet'),
+            items:wallets.map((w)=>DropdownMenuItem(value:(w['id'] as num).toInt(),child:Text('${w['name']} • ${w['currency']} ${money.format(w['balance'])}'))).toList(),
+            onChanged:(v){setD(()=>walletId=v);}),
+        ],
         ListTile(contentPadding:EdgeInsets.zero,title:const Text('Date'),subtitle:Text(DateFormat('dd MMM yyyy').format(date)),
           trailing:const Icon(Icons.calendar_today),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:date,firstDate:DateTime(2000),lastDate:DateTime(2100));if(d!=null)setD(()=>date=d);}),
         TextField(controller:note,decoration:const InputDecoration(labelText:'Note (optional)')),
-        if(type=='Installment') const Text('Default destination is Committee Wallet. Each new entry resets to this wallet.',style:TextStyle(fontSize:11,color:Colors.black54)),
-        if(type=='Payout') const Text('Committee Wallet is the default source. Insufficient balance is not allowed.',style:TextStyle(fontSize:11,color:Colors.black54)),
+        Text(type=='Installment'
+          ? 'The committee ledger will receive this installment. A selected personal wallet is reduced only when you choose one.'
+          : 'The committee ledger will pay this member. A selected personal wallet is increased only when you choose one.',
+          style:const TextStyle(fontSize:11,color:Colors.black54)),
       ])),
-      actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
+      actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
+        FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
     )));
     if(ok==true){try{
+      if(paymentMethod=='Existing Wallet'&&walletId==null){_msg('Select a wallet or choose Without Wallet.');return;}
       await CommitteeService.recordEntry(committeeId:id,memberId:memberId,entryType:type,
-        amount:double.parse(amount.text.trim()),walletId:walletId,date:date,note:note.text);
+        amount:double.parse(amount.text.trim()),walletId:paymentMethod=='Existing Wallet'?walletId:null,date:date,note:note.text);
       await _load();
     }catch(e){_msg(e.toString());}}
   }
@@ -235,31 +242,36 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   }
 
   Widget _overview(Map<String,dynamic> c){
-    final sharedWalletRows=wallets.where((w)=>(w['id'] as num).toInt()==committeeWallet).toList();
-    final sharedWallet=sharedWalletRows.isEmpty?null:sharedWalletRows.first;
     final collected=entries.where((e)=>e['entry_type']=='Installment').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
     final payout=entries.where((e)=>e['entry_type']=='Payout').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
-    final pot=(c['installment_amount'] as num).toDouble()*members.length;
-    final next=members.where((m)=>(m['received'] as num).toDouble()<pot-0.000001).toList();
+    final balance=collected-payout;
+    final dueCycles=_dueCycles(c);
+    final dueTotal=(c['installment_amount'] as num).toDouble()*dueCycles*members.length;
+    final pending=(dueTotal-collected).clamp(0.0,double.infinity);
+    final next=members.where((m)=>(m['received'] as num).toDouble()<(c['installment_amount'] as num).toDouble()*members.length-0.000001).toList();
     return ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text(c['status'].toString().toUpperCase(),style:const TextStyle(fontWeight:FontWeight.bold,color:Colors.green)),
         const SizedBox(height:8),Text('${c['frequency']} • ${members.length} members'),
-        Text('Installment: ${money.format(c['installment_amount'])}'),
+        Text('Installment: ${money.format(c['installment_amount'])} ${c['currency'] ?? 'PKR'}'),
         Text('Start: ${DateFormat('dd MMM yyyy').format(DateTime.parse(c['start_date']))}'),
       ]))),
       Row(children:[
-        Expanded(child:_stat('Collected (${c['currency'] ?? 'PKR'})',collected,Colors.green)),const SizedBox(width:8),
-        Expanded(child:_stat('Payouts (${c['currency'] ?? 'PKR'})',payout,Colors.deepPurple)),
+        Expanded(child:_stat('Total collected',collected,Colors.green)),const SizedBox(width:8),
+        Expanded(child:_stat('Total payouts',payout,Colors.deepPurple)),
+      ]),
+      Row(children:[
+        Expanded(child:_stat('Available balance',balance,Colors.blue)),const SizedBox(width:8),
+        Expanded(child:_stat('Pending collection',pending,Colors.orange)),
       ]),
       Card(child:ListTile(title:const Text('Next payout turn'),subtitle:Text(next.isEmpty?'All members have received a payout':next.first['name'].toString()),leading:const Icon(Icons.event_available))),
-      Card(child:ListTile(title:const Text('Shared Committee Wallet'),subtitle:Text(sharedWallet==null?'Shared by all committees':'Balance: ${sharedWallet['currency']} ${money.format(sharedWallet['balance'])} • used by all committees'),trailing:const Icon(Icons.account_balance_wallet))),
       const SizedBox(height:8),
       Wrap(spacing:8,children:[
-        OutlinedButton(onPressed:()=>_record('Installment'),child:const Text('Record deposit')),
+        OutlinedButton(onPressed:()=>_record('Installment'),child:const Text('Record installment')),
         OutlinedButton(onPressed:()=>_record('Payout'),child:const Text('Record payout')),
         OutlinedButton(onPressed:()=>_changeStatus(),child:const Text('Change status')),
       ]),
+      const Padding(padding:EdgeInsets.only(top:12),child:Text('Committee funds are kept in this module and are separate from personal Wallet balances.',style:TextStyle(fontSize:12,color:Colors.black54))),
     ]);
   }
 
@@ -283,12 +295,46 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
           title:Text(m['name'].toString()),
           subtitle:Text('$paymentStatus • Paid: ${money.format(paid)} • Due: ${money.format(dueAmount)} • Remaining: ${money.format(remaining)}\nPayout received: ${money.format(m['received'])}'),
           isThreeLine:true,
+          onTap:()=>_showMemberLedger(m),
           trailing:entries.isEmpty?Row(mainAxisSize:MainAxisSize.min,children:[
             IconButton(visualDensity:VisualDensity.compact,onPressed:()=>_moveMember(members.indexOf(m),-1),icon:const Icon(Icons.arrow_upward,size:18)),
             IconButton(visualDensity:VisualDensity.compact,onPressed:()=>_moveMember(members.indexOf(m),1),icon:const Icon(Icons.arrow_downward,size:18)),
           ]):Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))));
       }),
     ]);
+  }
+
+  Future<void> _showMemberLedger(Map<String,dynamic> member) async {
+    final memberId=(member['id'] as num).toInt();
+    final rows=entries.where((e)=>(e['member_id'] as num).toInt()==memberId).toList();
+    final paid=rows.where((e)=>e['entry_type']=='Installment').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
+    final received=rows.where((e)=>e['entry_type']=='Payout').fold<double>(0,(s,e)=>s+(e['amount'] as num).toDouble());
+    await showModalBottomSheet<void>(context:context,isScrollControlled:true,showDragHandle:true,
+      builder:(ctx)=>SafeArea(child:Padding(padding:const EdgeInsets.fromLTRB(16,0,16,20),child:SizedBox(
+        height:MediaQuery.of(ctx).size.height*0.72,
+        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text(member['name'].toString(),style:Theme.of(ctx).textTheme.titleLarge),
+          const SizedBox(height:8),
+          Text('Installments: ${money.format(paid)} • Payout received: ${money.format(received)}',
+            style:const TextStyle(fontWeight:FontWeight.w600)),
+          const Divider(height:20),
+          Expanded(child:rows.isEmpty?const Center(child:Text('No entries for this member yet.')):
+            ListView.builder(itemCount:rows.length,itemBuilder:(context,index){
+              final e=rows[index];final deposit=e['entry_type']=='Installment';
+              final date=DateTime.tryParse(e['entry_date']?.toString()??'');
+              final method=e['payment_method']=='Wallet'
+                ? 'Wallet: ${e['wallet_name']??'Unavailable'}'
+                : 'Without Wallet';
+              return ListTile(
+                contentPadding:EdgeInsets.zero,
+                leading:Icon(deposit?Icons.call_received:Icons.call_made,color:deposit?Colors.green:Colors.deepPurple),
+                title:Text('${e['entry_type']} • ${committeeData['currency']??'PKR'} ${money.format(e['amount'])}'),
+                subtitle:Text('${date==null?'':DateFormat('dd MMM yyyy').format(date)} • $method${(e['note']??'').toString().isEmpty?'':' • ${e['note']}'}'),
+                trailing:Icon(deposit?Icons.add:Icons.remove,color:deposit?Colors.green:Colors.deepPurple),
+              );
+            })),
+        ]),
+      ))));
   }
 
   int _dueCycles(Map<String,dynamic> c){
@@ -326,7 +372,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       final e=entries[i];final deposit=e['entry_type']=='Installment';
       return Card(child:ListTile(leading:CircleAvatar(child:Icon(deposit?Icons.south_west:Icons.north_east,color:deposit?Colors.green:Colors.deepPurple)),
         title:Text('${e['member_name']} • ${e['entry_type']}'),
-        subtitle:Text('${DateFormat('dd MMM yyyy').format(DateTime.parse(e['entry_date']))} • ${money.format(e['wallet_amount'] ?? e['amount'])} ${e['wallet_currency']} → ${e['wallet_name']}'),
+        subtitle:Text('${DateFormat('dd MMM yyyy').format(DateTime.parse(e['entry_date']))} • ${e['payment_method']=='Wallet' ? 'Wallet: ${e['wallet_name'] ?? 'Unavailable'} • ${money.format(e['wallet_amount'])} ${e['wallet_currency']}' : 'Without Wallet'}'),
         trailing:Text('${deposit?'+':'−'} ${e['committee_currency'] ?? committeeData['currency'] ?? 'PKR'} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Colors.green:Colors.deepPurple)),
       ));
     });

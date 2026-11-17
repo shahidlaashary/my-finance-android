@@ -769,7 +769,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
                 Padding(
-                padding: const EdgeInsets.fromLTRB(10, 0, 6, 0),
+                padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
                 child: SizedBox(
                   height: 38,
                   child: Row(

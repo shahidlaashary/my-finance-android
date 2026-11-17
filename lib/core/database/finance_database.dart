@@ -558,6 +558,37 @@ class FinanceDB {
       );
     }
 
+    final loanTable = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+    );
+    if (loanTable.isNotEmpty) {
+      final linkedLoans = await db.query(
+        'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+      );
+      final linkedRepayments = await db.query(
+        'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+      );
+      if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
+        throw Exception('This wallet is linked to loan records or repayments. Remove or settle those records before deleting the wallet.');
+      }
+    }
+
+    final assetTable = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
+    );
+    if (assetTable.isNotEmpty) {
+      final linkedAssets = await db.query(
+        'assets',
+        columns: ['id'],
+        where: 'wallet_id = ? OR sale_wallet_id = ?',
+        whereArgs: [id, id],
+        limit: 1,
+      );
+      if (linkedAssets.isNotEmpty) {
+        throw Exception('This wallet is linked to an asset purchase or sale. Delete or update the asset before deleting the wallet.');
+      }
+    }
+
     final walletRows = await db.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);
     if (walletRows.isEmpty) return;
     await RecycleBinService.archive(type: 'Wallet', title: walletRows.first['name']?.toString() ?? 'Wallet', table: 'wallets', id: id, record: walletRows.first);

@@ -158,6 +158,7 @@ class LoansService {
     final normalizedPhone = phone?.trim() ?? '';
     final existing = await db.query(
       'loan_parties',
+      columns: ['id', 'currency'],
       where: normalizedPhone.isEmpty
           ? 'LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, \'\') = \'\''
           : 'LOWER(TRIM(name)) = LOWER(?) AND phone = ?',
@@ -166,7 +167,13 @@ class LoansService {
           : [normalizedName, normalizedPhone],
       limit: 1,
     );
-    if (existing.isNotEmpty) return existing.first['id'] as int;
+    if (existing.isNotEmpty) {
+      final existingCurrency = (existing.first['currency']?.toString() ?? 'PKR').toUpperCase();
+      if (existingCurrency != currency.trim().toUpperCase()) {
+        throw Exception('A party with this name and phone already exists in ' + existingCurrency + '. Edit that party to change its currency.');
+      }
+      return existing.first['id'] as int;
+    }
     return db.insert('loan_parties', {
       'name': normalizedName,
       'phone': normalizedPhone.isEmpty ? null : normalizedPhone,

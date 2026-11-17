@@ -955,8 +955,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
           leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFE8F4EE), borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 21)),
           title: Row(children: [
             Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
@@ -1014,14 +1014,19 @@ class _AssetsScreenState extends State<AssetsScreen> {
     bool bold = false,
   }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Flexible(child: Text(title)),
-        SizedBox(width: 8),
-        Flexible(
+        Expanded(
+          flex: 6,
+          child: Text(title),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 5,
           child: Text(
             value,
             textAlign: TextAlign.end,
+            softWrap: true,
             style: TextStyle(
               color: valueColor,
               fontWeight:

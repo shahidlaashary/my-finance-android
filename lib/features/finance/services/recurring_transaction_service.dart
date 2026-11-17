@@ -138,17 +138,17 @@ class RecurringTransactionService {
       throw Exception('Invalid recurring frequency.');
     }
     if (model.walletId <= 0) {
-      throw Exception('A valid account is required.');
+      throw Exception('A valid wallet is required.');
     }
     if (type == 'transfer') {
       if (model.toWalletId == null ||
           model.toWalletId! <= 0 ||
           model.toWalletId == model.walletId) {
-        throw Exception('A valid destination account is required.');
+        throw Exception('A valid destination wallet is required.');
       }
     } else if (model.toWalletId != null) {
       throw Exception(
-        'Destination account is only allowed for transfers.',
+        'Destination wallet is only allowed for transfers.',
       );
     }
     final startDate = _parseDate(model.startDate);
@@ -179,7 +179,7 @@ class RecurringTransactionService {
       limit: 1,
     );
     if (sourceAccounts.isEmpty) {
-      throw Exception('Selected account does not exist.');
+      throw Exception('Selected wallet does not exist.');
     }
     if (model.type.toLowerCase() == 'transfer') {
       final destinationAccounts = await db.query(
@@ -189,7 +189,7 @@ class RecurringTransactionService {
         limit: 1,
       );
       if (destinationAccounts.isEmpty) {
-        throw Exception('Destination account does not exist.');
+        throw Exception('Destination wallet does not exist.');
       }
       final sourceCurrency =
           sourceAccounts.first['currency']?.toString();
@@ -329,14 +329,14 @@ class RecurringTransactionService {
       limit: 1,
     );
     if (wallets.isEmpty) {
-      throw Exception('Recurring transaction account not found.');
+      throw Exception('Recurring transaction wallet not found.');
     }
-    final account = wallets.first;
-    final balance = (account['balance'] as num).toDouble();
+    final wallet = wallets.first;
+    final balance = (wallet['balance'] as num).toDouble();
     Map<String, Object?>? destination;
     if (type == 'transfer') {
       if (toWalletId == null || toWalletId == walletId) {
-        throw Exception('Invalid destination account.');
+        throw Exception('Invalid destination wallet.');
       }
       final destinationAccounts = await txn.query(
         'wallets',
@@ -345,10 +345,10 @@ class RecurringTransactionService {
         limit: 1,
       );
       if (destinationAccounts.isEmpty) {
-        throw Exception('Destination account not found.');
+        throw Exception('Destination wallet not found.');
       }
       destination = destinationAccounts.first;
-      if (destination['currency'] != account['currency']) {
+      if (destination['currency'] != wallet['currency']) {
         throw Exception(
           'Transfer wallets must have the same currency.',
         );
@@ -358,7 +358,7 @@ class RecurringTransactionService {
       final requiredBalance = amount + (type == 'transfer' ? transferFee : 0.0);
       if (balance < requiredBalance) {
         throw Exception(
-          'Insufficient balance in account ${account['name']}.',
+          'Insufficient balance in wallet ${wallet['name']}.',
         );
       }
     }

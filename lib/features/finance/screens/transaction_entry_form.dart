@@ -702,9 +702,14 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               ),
               SizedBox(height: 12),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(child: _amountField()),
+                  Expanded(
+                    child: SizedBox(
+                      height: 56,
+                      child: _amountField(),
+                    ),
+                  ),
                   SizedBox(width: 10),
                   Expanded(
                     child: SizedBox(
@@ -720,8 +725,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                           children: [
                             Expanded(
                               child: Text(
-                                appText(context, "Transfer Fee", "Transfer Fee"),
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                appText(context, "Add fee (Optional)", "Add fee (Optional)"),
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),

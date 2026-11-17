@@ -693,9 +693,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     final filteredTransactions = transactions.where((item) {
       final type = normalizeType(item['type']?.toString() ?? '');
-      if (selectedFilter == 'recurring') {
-        final id = (item['id'] as num?)?.toInt();
-        return id != null && recurringTransactionIds.contains(id);
+      if (selectedFilter == 'others') {
+        return !['income', 'expense', 'transfer'].contains(type);
       }
       return selectedFilter == 'all' || type == selectedFilter;
     }).toList()
@@ -751,7 +750,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ('income', 'Income'),
       ('expense', 'Expense'),
       ('transfer', 'Transfer'),
-      ('recurring', 'Recurring'),
+      ('others', 'Others'),
     ];
 
     return Scaffold(
@@ -842,7 +841,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 Icon(Icons.settings_outlined, size: 14, color: Color(0xFF52615A)),
                                 SizedBox(width: 3),
                                 Text(
-                                  'Manage',
+                                  'Recurring',
                                   style: TextStyle(
                                     color: Color(0xFF52615A),
                                     fontSize: 11.5,

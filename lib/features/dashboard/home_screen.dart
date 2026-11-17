@@ -512,7 +512,7 @@ class _HomePageState extends State<HomePage> {
                                 Expanded(
                                   flex: 6,
                                   child: Text(
-                                    '${entry.key} · ${_currencyCountry(entry.key)}',
+                                    _currencyCountry(entry.key),
                                     maxLines: 1,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,

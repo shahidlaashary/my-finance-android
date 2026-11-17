@@ -510,7 +510,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
-                                  flex: 6,
+                                  flex: 3,
                                   child: Text(
                                     _currencyCountry(entry.key),
                                     maxLines: 1,
@@ -525,38 +525,45 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Expanded(
-                                  flex: 5,
+                                  flex: 8,
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      Flexible(
-                                        child: Text(
-                                          amountText,
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.text,
+                                      Expanded(
+                                        flex: 5,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            amountText,
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.text,
+                                            ),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 2),
-                                      Flexible(
-                                        child: Text(
-                                          '= $convertedText',
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.right,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            color: converted == null
-                                                ? AppColors.expense
-                                                : AppColors.primary,
+                                      Expanded(
+                                        flex: 7,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            '= $convertedText',
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            textAlign: TextAlign.right,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: converted == null
+                                                  ? AppColors.expense
+                                                  : AppColors.primary,
+                                            ),
                                           ),
                                         ),
                                       ),

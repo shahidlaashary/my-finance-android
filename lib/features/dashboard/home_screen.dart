@@ -523,38 +523,44 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 2),
+                                const SizedBox(width: 4),
                                 Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    amountText,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.text,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 2),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    '= $convertedText',
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      color: converted == null
-                                          ? AppColors.expense
-                                          : AppColors.primary,
-                                    ),
+                                  flex: 5,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          amountText,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.text,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Flexible(
+                                        child: Text(
+                                          '= $convertedText',
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: converted == null
+                                                ? AppColors.expense
+                                                : AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],

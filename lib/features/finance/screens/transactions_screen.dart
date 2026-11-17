@@ -769,16 +769,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
                 Padding(
-                padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
-                child: SizedBox(
-                  height: 38,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ...filters.map((filter) {
-                        final selected = selectedFilter == filter.$1;
-                        return Expanded(
-                          child: InkWell(
+                  padding: EdgeInsets.zero,
+                  child: SizedBox(
+                    height: 38,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ...filters.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final filter = entry.value;
+                          final selected = selectedFilter == filter.$1;
+                          return InkWell(
                             borderRadius: BorderRadius.circular(16),
                             onTap: () => setState(() {
                               selectedFilter = filter.$1;
@@ -788,7 +790,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               duration: const Duration(milliseconds: 180),
                               height: 30,
                               alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(horizontal: 2),
+                              padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 5),
                               decoration: BoxDecoration(
                                 color: selected ? const Color(0xFF147D59) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(16),
@@ -796,6 +798,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               child: Text(
                                 filter.$2,
                                 maxLines: 1,
+                                softWrap: false,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: selected ? Colors.white : const Color(0xFF52615A),
@@ -804,11 +807,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }),
-                      Expanded(
-                        child: InkWell(
+                          );
+                        }),
+                        InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: () {
                             Navigator.push(
@@ -821,36 +822,34 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           child: Container(
                             height: 30,
                             alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF2F5F3),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.settings_outlined, size: 11, color: Color(0xFF52615A)),
-                                SizedBox(width: 2),
+                                SizedBox(width: 3),
                                 Text(
-                                    'Recurring',
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      color: Color(0xFF52615A),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                  'Recurring',
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: TextStyle(
+                                    color: Color(0xFF52615A),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
                                   ),
+                                ),
                               ],
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-                const SizedBox(height: 8),
                 Expanded(
                   child: filteredTransactions.isEmpty
                       ? Center(

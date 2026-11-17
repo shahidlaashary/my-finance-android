@@ -782,94 +782,79 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 _buildWalletSummaryCard(),
                 const SizedBox(height: 8),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(3, 0, 6, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 38,
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF2F5F3),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: filters.map((filter) {
-                              final selected = selectedFilter == filter.$1;
-                              return Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(16),
-                                    onTap: () => setState(() {
-                                      selectedFilter = filter.$1;
-                                      currentPage = 0;
-                                    }),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 180),
-                                      height: 30,
-                                      alignment: Alignment.center,
-                                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                                      decoration: BoxDecoration(
-                                        color: selected ? const Color(0xFF147D59) : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          filter.$2,
-                                          maxLines: 1,
-                                          style: TextStyle(
-                                            color: selected ? Colors.white : const Color(0xFF52615A),
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RecurringTransactionsScreen(),
-                            ),
-                          ).then((_) => loadTransactions());
-                        },
-                        child: Container(
-                          height: 38,
-                          padding: const EdgeInsets.symmetric(horizontal: 9),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF2F5F3),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.settings_outlined, size: 15, color: Color(0xFF52615A)),
-                              SizedBox(width: 4),
-                              Text(
-                                'Manage',
+                  padding: const EdgeInsets.fromLTRB(16, 0, 6, 0),
+                  child: SizedBox(
+                    height: 38,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ...filters.map((filter) {
+                          final selected = selectedFilter == filter.$1;
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => setState(() {
+                              selectedFilter = filter.$1;
+                              currentPage = 0;
+                            }),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              height: 30,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: selected ? const Color(0xFF147D59) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                filter.$2,
+                                maxLines: 1,
                                 style: TextStyle(
-                                  color: Color(0xFF52615A),
-                                  fontSize: 11.5,
+                                  color: selected ? Colors.white : const Color(0xFF52615A),
                                   fontWeight: FontWeight.w700,
+                                  fontSize: 11.5,
                                 ),
                               ),
-                            ],
+                            ),
+                          );
+                        }),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RecurringTransactionsScreen(),
+                              ),
+                            ).then((_) => loadTransactions());
+                          },
+                          child: Container(
+                            height: 30,
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F5F3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.settings_outlined, size: 14, color: Color(0xFF52615A)),
+                                SizedBox(width: 3),
+                                Text(
+                                  'Manage',
+                                  style: TextStyle(
+                                    color: Color(0xFF52615A),
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),

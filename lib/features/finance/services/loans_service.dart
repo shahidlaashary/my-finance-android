@@ -120,25 +120,6 @@ class LoansService {
     ''');
 
     await db.execute('''
-      INSERT INTO loan_parties (name, phone, created_at)
-      SELECT DISTINCT TRIM(borrower_name), borrower_phone, MIN(created_at)
-      FROM loans
-      WHERE TRIM(COALESCE(borrower_name, '')) != ''
-        AND party_id IS NULL
-      GROUP BY LOWER(TRIM(borrower_name)), COALESCE(borrower_phone, '')
-    ''');
-    await db.execute('''
-      UPDATE loans
-      SET party_id = (
-        SELECT loan_parties.id FROM loan_parties
-        WHERE LOWER(TRIM(loan_parties.name)) = LOWER(TRIM(loans.borrower_name))
-          AND COALESCE(loan_parties.phone, '') = COALESCE(loans.borrower_phone, '')
-        LIMIT 1
-      )
-      WHERE party_id IS NULL
-    ''');
-
-    await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_loans_status
       ON loans(status)
     ''');

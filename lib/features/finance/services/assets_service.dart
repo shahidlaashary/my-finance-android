@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class AssetsService {
   Future<Database> get _database async {
@@ -17,11 +18,18 @@ class AssetsService {
         current_value REAL NOT NULL,
         purchase_date TEXT NOT NULL,
         wallet_id INTEGER NOT NULL,
+        payment_type TEXT NOT NULL DEFAULT 'Wallet',
+        party_id INTEGER,
+        currency TEXT NOT NULL DEFAULT 'PKR',
+        linked_loan_id INTEGER,
         notes TEXT NOT NULL DEFAULT '',
         is_sold INTEGER NOT NULL DEFAULT 0,
         sale_date TEXT,
         sale_price REAL,
         sale_wallet_id INTEGER,
+        sale_payment_type TEXT NOT NULL DEFAULT 'Wallet',
+        sale_party_id INTEGER,
+        sale_linked_loan_id INTEGER,
         created_at TEXT NOT NULL
       )
     ''');
@@ -36,6 +44,21 @@ class AssetsService {
   }
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
+    final columns = await db.rawQuery('PRAGMA table_info(assets)');
+    final existing = columns.map((row) => row['name']).toSet();
+    final migrations = <String, String>{
+      'payment_type': "ALTER TABLE assets ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'Wallet'",
+      'party_id': 'ALTER TABLE assets ADD COLUMN party_id INTEGER',
+      'currency': "ALTER TABLE assets ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'",
+      'linked_loan_id': 'ALTER TABLE assets ADD COLUMN linked_loan_id INTEGER',
+      'sale_payment_type': "ALTER TABLE assets ADD COLUMN sale_payment_type TEXT NOT NULL DEFAULT 'Wallet'",
+      'sale_party_id': 'ALTER TABLE assets ADD COLUMN sale_party_id INTEGER',
+      'sale_linked_loan_id': 'ALTER TABLE assets ADD COLUMN sale_linked_loan_id INTEGER',
+    };
+    for (final entry in migrations.entries) {
+      if (!existing.contains(entry.key)) await db.execute(entry.value);
+    }
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_assets_linked_loan ON assets(linked_loan_id, sale_linked_loan_id)');
   }
   Future<Map<String, dynamic>> _getWallet(
     Transaction txn,
@@ -79,7 +102,7 @@ class AssetsService {
     if (asset.name.trim().isEmpty) {
       throw Exception('Asset name is required.');
     }
-    if (asset.walletId <= 0) {
+    if (asset.paymentType.toLowerCase() != 'loan' && asset.walletId <= 0) {
       throw Exception('Please select a valid wallet.');
     }
     if (!asset.purchasePrice.isFinite ||
@@ -108,42 +131,54 @@ class AssetsService {
   }
   Future<int> addAsset(AssetsModel asset) async {
     _validateAsset(asset);
-    if (asset.isSold) {
-      throw Exception(
-        'Please add the asset first, then record its sale.',
-      );
-    }
+    if (asset.isSold) throw Exception('Please add the asset first, then record its sale.');
     final db = await _database;
     await _ensureTables(db);
-    return db.transaction((txn) async {
-      final wallet = await _getWallet(
-        txn,
-        asset.walletId,
-      );
-      // Asset ki purchase value us wallet ki currency mein hoti hai.
-      // Isi liye asset ko purchase karne se pehle linked currency validate karte hain.
-      final balance = (wallet['balance'] as num).toDouble();
-      if (balance < asset.purchasePrice) {
-        throw Exception('Insufficient wallet balance.');
-      }
-      final now = DateTime.now();
+    final isLoan = asset.paymentType.toLowerCase() == 'loan';
+    var anchorWalletId = asset.walletId;
+    var currency = asset.currency.toUpperCase();
+    if (isLoan) {
+      if (asset.partyId == null) throw Exception('Please select a party for this loan purchase.');
+      final party = await LoansService.getPartyById(asset.partyId!);
+      if (party == null) throw Exception('Selected party was not found.');
+      currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+      final matching = await db.query('wallets', columns: ['id'], where: "UPPER(TRIM(COALESCE(currency, 'PKR'))) = ?", whereArgs: [currency], limit: 1);
+      if (matching.isEmpty) throw Exception('Create a ' + currency + ' wallet first. It is required for future loan repayments.');
+      anchorWalletId = (matching.first['id'] as num).toInt();
+    }
+    final assetId = await db.transaction((txn) async {
+      final wallet = await _getWallet(txn, anchorWalletId);
+      final walletCurrency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
+      if (walletCurrency != currency) throw Exception('Asset currency does not match its wallet/party currency.');
+      if (!isLoan && (wallet['balance'] as num).toDouble() < asset.purchasePrice) throw Exception('Insufficient wallet balance.');
       final map = asset.copyWith(
+        walletId: anchorWalletId, currency: currency,
         name: asset.name.trim(),
-        category: asset.category.trim().isEmpty
-            ? 'Other'
-            : asset.category.trim(),
-        createdAt: asset.createdAt ?? now,
-      ).toMap()
-        ..remove('id');
-      final assetId = await txn.insert('assets', map);
-      await _changeBalance(
-        txn,
-        walletId: asset.walletId,
-        amount: -asset.purchasePrice,
-      );
-      return assetId;
+        category: asset.category.trim().isEmpty ? 'Other' : asset.category.trim(),
+        createdAt: asset.createdAt ?? DateTime.now(),
+      ).toMap()..remove('id');
+      final id = await txn.insert('assets', map);
+      if (!isLoan) await _changeBalance(txn, walletId: anchorWalletId, amount: -asset.purchasePrice);
+      return id;
     });
+    if (isLoan) {
+      try {
+        final loanId = await LoansService.createAssetLinkedLoan(
+          partyId: asset.partyId!, loanType: 'taken', amount: asset.purchasePrice,
+          lendingDate: asset.purchaseDate.toIso8601String().split('T').first,
+          sourceType: 'asset_purchase', sourceId: assetId,
+          notes: 'Asset purchase: ' + asset.name,
+        );
+        await db.update('assets', {'linked_loan_id': loanId}, where: 'id = ?', whereArgs: [assetId]);
+      } catch (_) {
+        await db.delete('assets', where: 'id = ?', whereArgs: [assetId]);
+        rethrow;
+      }
+    }
+    AppRefreshController.notifyChanged();
+    return assetId;
   }
+
   Future<List<AssetsModel>> getAssets({
     bool includeSold = true,
   }) async {

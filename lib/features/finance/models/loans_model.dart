@@ -2,6 +2,8 @@ class LoansModel {
   final int? id;
   final String borrowerName;
   final String? borrowerPhone;
+  final int? partyId;
+  final String loanType;
   final double amount;
   final double remainingAmount;
   final int walletId;
@@ -15,6 +17,8 @@ class LoansModel {
     this.id,
     required this.borrowerName,
     this.borrowerPhone,
+    this.partyId,
+    this.loanType = 'given',
     required this.amount,
     required this.remainingAmount,
     required this.walletId,
@@ -48,6 +52,8 @@ class LoansModel {
       'id': id,
       'borrower_name': borrowerName,
       'borrower_phone': borrowerPhone,
+      'party_id': partyId,
+      'loan_type': loanType,
       'amount': amount,
       'remaining_amount': remainingAmount,
       'wallet_id': walletId,
@@ -64,6 +70,8 @@ class LoansModel {
       id: map['id'] as int?,
       borrowerName: map['borrower_name'] as String,
       borrowerPhone: map['borrower_phone'] as String?,
+      partyId: map['party_id'] as int?,
+      loanType: map['loan_type'] as String? ?? 'given',
       amount: (map['amount'] as num).toDouble(),
       remainingAmount: (map['remaining_amount'] as num).toDouble(),
       walletId: map['wallet_id'] as int,
@@ -79,6 +87,8 @@ class LoansModel {
     int? id,
     String? borrowerName,
     String? borrowerPhone,
+    int? partyId,
+    String? loanType,
     double? amount,
     double? remainingAmount,
     int? walletId,
@@ -92,6 +102,8 @@ class LoansModel {
       id: id ?? this.id,
       borrowerName: borrowerName ?? this.borrowerName,
       borrowerPhone: borrowerPhone ?? this.borrowerPhone,
+      partyId: partyId ?? this.partyId,
+      loanType: loanType ?? this.loanType,
       amount: amount ?? this.amount,
       remainingAmount: remainingAmount ?? this.remainingAmount,
       walletId: walletId ?? this.walletId,

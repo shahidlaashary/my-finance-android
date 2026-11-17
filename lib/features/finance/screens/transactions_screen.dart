@@ -840,7 +840,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   softWrap: false,
                                   style: TextStyle(
                                     color: Color(0xFF52615A),
-                                    fontSize: 12,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),

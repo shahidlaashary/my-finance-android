@@ -74,7 +74,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       _message('Error loading savings: $e');
     }
   }
-  List<DropdownMenuItem<int?>> _accountItems() {
+  List<DropdownMenuItem<int?>> _walletItems() {
     return [
       DropdownMenuItem<int?>(
         value: null,
@@ -140,7 +140,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     Expanded(child: DropdownButtonFormField<int?>(
                       value: walletId, isExpanded: true,
                       decoration: decoration('Linked Wallet', Icons.account_balance_wallet_outlined),
-                      items: _accountItems(), onChanged: (v) => setSheetState(() => walletId = v),
+                      items: _walletItems(), onChanged: (v) => setSheetState(() => walletId = v),
                     )),
                   ]),
                   SizedBox(height: 12),
@@ -454,16 +454,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
         (goal.targetAmount - goal.savedAmount).clamp(0.0, double.infinity);
     final completed = goal.savedAmount >= goal.targetAmount;
     final targetDate = goal.targetDate ?? DateTime.now();
-    final linkedAccount = _wallets.where(
+    final linkedWallet = _wallets.where(
       (wallet) => wallet['id'] == goal.walletId,
     );
-    final accountLabel = linkedAccount.isEmpty
+    final walletLabel = linkedWallet.isEmpty
         ? 'No linked wallet'
-        : '${linkedAccount.first['name']} '
-            '(${linkedAccount.first['currency'] ?? 'PKR'})';
-    final currency = linkedAccount.isEmpty
+        : '${linkedWallet.first['name']} '
+            '(${linkedWallet.first['currency'] ?? 'PKR'})';
+    final currency = linkedWallet.isEmpty
         ? 'Unassigned'
-        : linkedAccount.first['currency']?.toString() ?? 'PKR';
+        : linkedWallet.first['currency']?.toString() ?? 'PKR';
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 12,
@@ -528,7 +528,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             ),
             SizedBox(height: 14),
             Text(
-              'Wallet: $accountLabel',
+              'Wallet: $walletLabel',
               style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 12,

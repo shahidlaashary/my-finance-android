@@ -707,27 +707,38 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   Expanded(child: _amountField()),
                   SizedBox(width: 10),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAF9),
-                        borderRadius: BorderRadius.circular(13),
-                        border: Border.all(color: const Color(0xFFE2E9E5)),
-                      ),
-                      child: SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(appText(context, "Transfer Fee", "Transfer Fee"),
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    child: SizedBox(
+                      height: 56,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAF9),
+                          borderRadius: BorderRadius.circular(13),
+                          border: Border.all(color: const Color(0xFFE2E9E5)),
                         ),
-                        subtitle: Text(appText(context, "Add an optional fee to this transfer", "Add an optional fee to this transfer"),
-                          style: TextStyle(fontSize: 11),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                appText(context, "Transfer Fee", "Transfer Fee"),
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Transform.scale(
+                              scale: 0.8,
+                              child: Switch.adaptive(
+                                value: transferFeeEnabled,
+                                activeColor: AppColors.primary,
+                                onChanged: (value) => setState(() {
+                                  transferFeeEnabled = value;
+                                  if (!value) transferFeeController.clear();
+                                }),
+                              ),
+                            ),
+                          ],
                         ),
-                        value: transferFeeEnabled,
-                        activeColor: AppColors.primary,
-                        onChanged: (value) => setState(() {
-                          transferFeeEnabled = value;
-                          if (!value) transferFeeController.clear();
-                        }),
                       ),
                     ),
                   ),

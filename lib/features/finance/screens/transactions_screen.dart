@@ -790,9 +790,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             }),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 180),
-                              height: 30,
+                              height: 32,
                               alignment: Alignment.center,
-                              padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 3),
+                              padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 4),
                               decoration: BoxDecoration(
                                 color: selected ? const Color(0xFF147D59) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(16),
@@ -805,7 +805,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 style: TextStyle(
                                   color: selected ? Colors.white : const Color(0xFF52615A),
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 12,
+                                  fontSize: 13,
                                 ),
                               ),
                             ),
@@ -822,7 +822,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ).then((_) => loadTransactions());
                           },
                           child: Container(
-                            height: 30,
+                            height: 32,
                             alignment: Alignment.center,
                             padding: const EdgeInsets.only(left: 3, right: 0),
                             decoration: BoxDecoration(
@@ -832,7 +832,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.settings_outlined, size: 11, color: Color(0xFF52615A)),
+                                Icon(Icons.settings_outlined, size: 12, color: Color(0xFF52615A)),
                                 SizedBox(width: 3),
                                 Text(
                                   'Recurring',

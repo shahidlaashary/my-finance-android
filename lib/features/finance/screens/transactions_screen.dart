@@ -808,7 +808,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         );
                       }),
                       Expanded(
-                        flex: 3,
+                        flex: 2,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: () {

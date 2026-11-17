@@ -121,7 +121,7 @@ class LoansService {
     );
 
     if (wallets.isEmpty) {
-      throw Exception('Selected account was not found.');
+      throw Exception('Selected wallet was not found.');
     }
 
     return wallets.first;
@@ -131,17 +131,17 @@ class LoansService {
     Transaction txn,
     int walletId,
   ) async {
-    final account = await _getAccount(txn, walletId);
-    return (account['balance'] as num).toDouble();
+    final wallet = await _getAccount(txn, walletId);
+    return (wallet['balance'] as num).toDouble();
   }
 
   static Future<String> _getAccountCurrency(
     Transaction txn,
     int walletId,
   ) async {
-    final account = await _getAccount(txn, walletId);
+    final wallet = await _getAccount(txn, walletId);
 
-    return (account['currency']?.toString() ?? 'PKR')
+    return (wallet['currency']?.toString() ?? 'PKR')
         .trim()
         .toUpperCase();
   }
@@ -162,7 +162,7 @@ class LoansService {
     AppRefreshController.notifyChanged();
   }
 
-  /// Loan banata hai aur di jane wali raqam source account se minus karta hai.
+  /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.
   static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;
     final borrower = loan.borrowerName.trim();
@@ -178,7 +178,7 @@ class LoansService {
     }
 
     if (loan.walletId <= 0) {
-      throw Exception('Please select a valid account.');
+      throw Exception('Please select a valid wallet.');
     }
 
     return db.transaction((txn) async {
@@ -188,7 +188,7 @@ class LoansService {
       );
 
       if (balance < loan.amount) {
-        throw Exception('Insufficient account balance.');
+        throw Exception('Insufficient wallet balance.');
       }
 
       final loanId = await txn.insert(
@@ -210,7 +210,7 @@ class LoansService {
     });
   }
 
-  /// Loan ki currency wale account mein repayment ka record banata hai.
+  /// Loan ki currency wale wallet mein repayment ka record banata hai.
   static Future<int> addRepayment(RepaymentModel repayment) async {
     final db = await _database;
 
@@ -221,7 +221,7 @@ class LoansService {
     }
 
     if (repayment.walletId <= 0) {
-      throw Exception('Please select a valid receiving account.');
+      throw Exception('Please select a valid receiving wallet.');
     }
 
     if (repayment.loanId <= 0) {
@@ -260,8 +260,8 @@ class LoansService {
 
       if (loanCurrency != receivingCurrency) {
         throw Exception(
-          'The receiving account must use the same currency as the loan '
-          'source account ($loanCurrency).',
+          'The receiving wallet must use the same currency as the loan '
+          'source wallet ($loanCurrency).',
         );
       }
 
@@ -338,7 +338,7 @@ class LoansService {
     return rows.map(RepaymentModel.fromMap).toList();
   }
 
-  /// Source account ki currency ke mutabiq baqi loan amounts deta hai.
+  /// Source wallet ki currency ke mutabiq baqi loan amounts deta hai.
   static Future<Map<String, double>>
       getTotalOutstandingByCurrency() async {
     final db = await _database;
@@ -387,7 +387,7 @@ class LoansService {
     return rows.map(LoansModel.fromMap).toList();
   }
 
-  /// Repayment delete karta hai aur account aur loan balances ko pehli halat mein lata hai.
+  /// Repayment delete karta hai aur wallet aur loan balances ko pehli halat mein lata hai.
   static Future<void> deleteRepayment(int repaymentId) async {
     final db = await _database;
 
@@ -451,7 +451,7 @@ class LoansService {
     });
   }
 
-  /// Loan delete karta hai aur us se mutaliq account balance changes wapas karta hai.
+  /// Loan delete karta hai aur us se mutaliq wallet balance changes wapas karta hai.
   static Future<void> deleteLoan(int loanId) async {
     final db = await _database;
 
@@ -493,7 +493,7 @@ class LoansService {
         );
       }
 
-      // Di gayi asal loan raqam account mein wapas jama karta hai.
+      // Di gayi asal loan raqam wallet mein wapas jama karta hai.
       await _changeAccountBalance(
         txn,
         walletId: loan.walletId,

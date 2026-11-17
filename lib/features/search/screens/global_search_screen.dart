@@ -118,7 +118,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
   Future<void> _searchRecords(String rawQuery, int request) async {
     final query = rawQuery.trim().toLowerCase();
-    if (query.length < 2 || request != _searchRequest) return;
+    if (!mounted || query.length < 2 || request != _searchRequest) return;
     setState(() => _searching = true);
 
     final found = <_SearchRecord>[];

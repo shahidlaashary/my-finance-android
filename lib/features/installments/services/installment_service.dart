@@ -54,9 +54,9 @@ class InstallmentService {
     final db = await _db;
     final id = await db.transaction((txn) async {
       final wallets = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
-      if (wallets.isEmpty) throw Exception('Selected account was not found.');
+      if (wallets.isEmpty) throw Exception('Selected wallet was not found.');
       final balance = (wallets.first['balance'] as num).toDouble();
-      if (direction == 'buy' && balance < advance) throw Exception('Insufficient account balance for advance.');
+      if (direction == 'buy' && balance < advance) throw Exception('Insufficient wallet balance for advance.');
       final now = DateTime.now().toIso8601String();
       final id = await txn.insert('installment_contracts', {
         'direction': direction, 'item_name': itemName.trim(), 'party_name': partyName.trim(),
@@ -89,9 +89,9 @@ class InstallmentService {
       final walletId = c['wallet_id'] as int;
       final direction = c['direction'] as String;
       final w = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
-      if (w.isEmpty) throw Exception('Linked account was not found.');
+      if (w.isEmpty) throw Exception('Linked wallet was not found.');
       if (direction == 'buy' && (w.first['balance'] as num).toDouble() < amount) {
-        throw Exception('Insufficient account balance.');
+        throw Exception('Insufficient wallet balance.');
       }
       final now = DateTime.now().toIso8601String();
       await _applyPayment(txn, contractId, amount, walletId, date, note, direction, now);

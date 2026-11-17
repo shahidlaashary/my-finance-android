@@ -455,10 +455,7 @@ class _YourNameSettingsTileState extends State<_YourNameSettingsTile> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12),
             ),
-            trailing: TextButton(
-              onPressed: _changeName,
-              child: const Text('Change'),
-            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
             onTap: _changeName,
           ),
         );

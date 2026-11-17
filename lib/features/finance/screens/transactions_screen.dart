@@ -1040,6 +1040,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final isExpense = type == 'expense';
                               final isTransfer = type == 'transfer';
                               final isCommittee = type == 'committee';
+                              final isCommitteeTransfer = item['category']?.toString() == 'Committee Transfer';
                               final isAdjustment = type == 'adjustment';
                               final color = isCommittee
                                   ? const Color(0xFF7653B5)
@@ -1199,11 +1200,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               }
                                             },
                                             itemBuilder: (context) => [
-                                              if (!isCommittee) PopupMenuItem(
+                                              if (!isCommittee && !isCommitteeTransfer) PopupMenuItem(
                                                 value: 'edit',
                                                 child: Text(appText(context, 'Edit', 'ترمیم کریں')),
                                               ),
-                                              if (!isCommittee) PopupMenuItem(
+                                              if (!isCommittee && !isCommitteeTransfer) PopupMenuItem(
                                                 value: 'delete',
                                                 child: Text(appText(context, 'Delete', 'Delete')),
                                               ),
@@ -1241,6 +1242,7 @@ class TransactionDetailScreen extends StatelessWidget {
     final isTransfer = normalized == 'transfer';
     final isAdjustment = normalized == 'adjustment';
     final isCommittee = normalized == 'committee';
+    final isCommitteeTransfer = transaction['category']?.toString() == 'Committee Transfer';
     final color = isCommittee
         ? const Color(0xFF7653B5)
         : isAdjustment

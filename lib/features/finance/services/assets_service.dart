@@ -228,61 +228,62 @@ class AssetsService {
     required double salePrice,
     required DateTime saleDate,
     required int saleWalletId,
+    String paymentType = 'Wallet',
+    int? partyId,
   }) async {
-    if (!salePrice.isFinite || salePrice < 0) {
-      throw Exception('Please enter a valid sale price.');
-    }
+    if (!salePrice.isFinite || salePrice < 0) throw Exception('Please enter a valid sale price.');
     final db = await _database;
     await _ensureTables(db);
+    final rows = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
+    if (rows.isEmpty) throw Exception('Asset was not found.');
+    final asset = AssetsModel.fromMap(rows.first);
+    if (asset.isSold) throw Exception('This asset has already been sold.');
+    if (saleDate.isBefore(asset.purchaseDate)) throw Exception('Sale date cannot be before purchase date.');
+    final isLoan = paymentType.toLowerCase() == 'loan';
+    var anchorWalletId = saleWalletId;
+    if (isLoan) {
+      if (partyId == null) throw Exception('Please select the buyer party.');
+      final party = await LoansService.getPartyById(partyId);
+      if (party == null) throw Exception('Selected buyer party was not found.');
+      final buyerCurrency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+      if (buyerCurrency != asset.currency.toUpperCase()) throw Exception('Buyer party currency must match the asset currency (' + asset.currency + ').');
+      final matching = await db.query('wallets', columns: ['id'], where: "UPPER(TRIM(COALESCE(currency, 'PKR'))) = ?", whereArgs: [buyerCurrency], limit: 1);
+      if (matching.isEmpty) throw Exception('Create a ' + buyerCurrency + ' wallet first for future loan repayments.');
+      anchorWalletId = (matching.first['id'] as num).toInt();
+    }
     await db.transaction((txn) async {
-      final rows = await txn.query(
-        'assets',
-        where: 'id = ?',
-        whereArgs: [assetId],
-        limit: 1,
-      );
-      if (rows.isEmpty) {
-        throw Exception('Asset was not found.');
-      }
-      final asset = AssetsModel.fromMap(rows.first);
-      if (asset.isSold) {
-        throw Exception('This asset has already been sold.');
-      }
-      if (saleDate.isBefore(asset.purchaseDate)) {
-        throw Exception(
-          'Sale date cannot be before purchase date.',
-        );
-      }
       final purchaseWallet = await _getWallet(txn, asset.walletId);
-      final saleWallet = await _getWallet(txn, saleWalletId);
-
-      // Mukhtalif currencies ko seedha add karne se asset ki sale value aur profit ghalat hota.
-      final purchaseCurrency = (purchaseWallet['currency'] ?? 'PKR').toString().toUpperCase();
+      final saleWallet = await _getWallet(txn, anchorWalletId);
+      final purchaseCurrency = (purchaseWallet['currency'] ?? asset.currency).toString().toUpperCase();
       final saleCurrency = (saleWallet['currency'] ?? 'PKR').toString().toUpperCase();
-      if (purchaseCurrency != saleCurrency) {
-        throw Exception(
-          'Asset sale wallet must use the same currency as its purchase wallet.',
-        );
-      }
-
-      await txn.update(
-        'assets',
-        {
-          'is_sold': 1,
-          'sale_date': saleDate.toIso8601String(),
-          'sale_price': salePrice,
-          'sale_wallet_id': saleWalletId,
-        },
-        where: 'id = ?',
-        whereArgs: [assetId],
-      );
-      await _changeBalance(
-        txn,
-        walletId: saleWalletId,
-        amount: salePrice,
-      );
+      if (purchaseCurrency != saleCurrency) throw Exception('Asset sale must use the same currency as its purchase.');
+      if (!isLoan) await _changeBalance(txn, walletId: anchorWalletId, amount: salePrice);
+      await txn.update('assets', {
+        'is_sold': 1, 'sale_date': saleDate.toIso8601String(),
+        'sale_price': salePrice, 'sale_wallet_id': anchorWalletId,
+        'sale_payment_type': paymentType, 'sale_party_id': isLoan ? partyId : null,
+      }, where: 'id = ?', whereArgs: [assetId]);
     });
+    if (isLoan) {
+      try {
+        final loanId = await LoansService.createAssetLinkedLoan(
+          partyId: partyId!, loanType: 'given', amount: salePrice,
+          lendingDate: saleDate.toIso8601String().split('T').first,
+          sourceType: 'asset_sale', sourceId: assetId,
+          notes: 'Asset sale: ' + asset.name,
+        );
+        await db.update('assets', {'sale_linked_loan_id': loanId}, where: 'id = ?', whereArgs: [assetId]);
+      } catch (_) {
+        await db.update('assets', {
+          'is_sold': 0, 'sale_date': null, 'sale_price': null,
+          'sale_wallet_id': null, 'sale_payment_type': 'Wallet', 'sale_party_id': null,
+        }, where: 'id = ?', whereArgs: [assetId]);
+        rethrow;
+      }
+    }
+    AppRefreshController.notifyChanged();
   }
+
   Future<void> updateAsset(AssetsModel updatedAsset) async {
     if (updatedAsset.id == null) {
       throw Exception('Asset ID is required for updating.');

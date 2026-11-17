@@ -34,7 +34,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   double totalBalance = 0;
-  double pkrWalletTotal = 0;
+  double baseCurrencyWalletTotal = 0;
   Map<String, double> otherCurrencyTotals = {};
   double monthlyIncome = 0;
   double monthlyExpense = 0;
@@ -116,13 +116,13 @@ class _HomePageState extends State<HomePage> {
         GROUP BY UPPER(currency)
         ORDER BY UPPER(currency)
       ''');
-      double pkrBalance = 0;
+      double baseCurrencyBalance = 0;
       final foreignBalances = <String, double>{};
       for (final row in walletCurrencyRows) {
         final currency = (row['currency'] as String? ?? '').toUpperCase();
         final amount = (row['total'] as num?)?.toDouble() ?? 0;
-        if (currency == 'PKR') {
-          pkrBalance = amount;
+        if (currency == selectedBaseCurrency.trim().toUpperCase()) {
+          baseCurrencyBalance = amount;
         } else if (currency.isNotEmpty) {
           foreignBalances[currency] = amount;
         }
@@ -155,7 +155,7 @@ class _HomePageState extends State<HomePage> {
         numberFormat = format;
         baseCurrency = selectedBaseCurrency;
         totalBalance = balance;
-        pkrWalletTotal = pkrBalance;
+        baseCurrencyWalletTotal = baseCurrencyBalance;
         otherCurrencyTotals = foreignBalances;
         monthlyIncome = income;
         monthlyExpense = expense;
@@ -659,20 +659,17 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(appText(context, 'Total Wallet Balance', 'کل والٹ بیلنس'),
-                      style: TextStyle(color: Colors.white70, fontSize: 13)),
-                  const SizedBox(height: 5),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(appText(context, 'PKR Wallets', 'PKR والٹس'),
+                        Text('$baseCurrency Wallets Total',
                           style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
                         loading ? const SizedBox(height: 25, width: 25,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-                            child: Text(_currencyAmount('PKR', pkrWalletTotal),
+                            child: Text(_currencyAmount(baseCurrency, baseCurrencyWalletTotal),
                               style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w800))),
                       ])),
                       const SizedBox(width: 14),

@@ -18,6 +18,7 @@ class LoansScreen extends StatefulWidget {
 class _LoansScreenState extends State<LoansScreen> {
   List<LoansModel> _loans = [];
   List<Map<String, dynamic>> _wallets = [];
+  List<Map<String, dynamic>> _parties = [];
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
   bool _hideBalances = false;
@@ -31,6 +32,8 @@ class _LoansScreenState extends State<LoansScreen> {
   int? _selectedRepaymentWalletId;
   DateTime _lendingDate = DateTime.now();
   DateTime? _dueDate;
+  int? _selectedPartyId;
+  String _loanType = 'given';
   @override
   void initState() {
     super.initState();
@@ -78,12 +81,14 @@ class _LoansScreenState extends State<LoansScreen> {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
       final wallets = await TransactionsService.getWallets();
       final loans = await LoansService.getLoans();
+      final parties = await LoansService.getParties();
       final outstandingByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
       if (!mounted) return;
       setState(() {
         _hideBalances = hideBalances;
         _wallets = wallets;
+        _parties = parties;
         _loans = loans;
         _outstandingByCurrency = outstandingByCurrency;
         _loading = false;
@@ -121,11 +126,112 @@ class _LoansScreenState extends State<LoansScreen> {
       lastDate: DateTime(2100),
     );
   }
+  Future<int?> _createParty() async {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final addressController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add New Party'),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Party Name *')),
+          TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone Number')),
+          TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save Party')),
+        ],
+      ),
+    );
+    if (result != true || nameController.text.trim().isEmpty) {
+      nameController.dispose(); phoneController.dispose(); addressController.dispose();
+      return null;
+    }
+    try {
+      final id = await LoansService.addParty(
+        name: nameController.text,
+        phone: phoneController.text,
+        address: addressController.text,
+      );
+      nameController.dispose(); phoneController.dispose(); addressController.dispose();
+      return id;
+    } catch (error) {
+      _showMessage('Could not save party: $error');
+      nameController.dispose(); phoneController.dispose(); addressController.dispose();
+      return null;
+    }
+  }
+
+  Future<void> _showParties() async {
+    await _loadData();
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Parties & Ledgers'),
+        content: SizedBox(
+          width: 520,
+          child: _parties.isEmpty
+            ? const Text('No parties added yet.')
+            : ListView(shrinkWrap: true, children: _parties.map((party) {
+                final id = party['id'] as int;
+                return FutureBuilder<Map<String, dynamic>>(
+                  future: LoansService.getPartySummary(id),
+                  builder: (context, snapshot) {
+                    final summary = snapshot.data ?? {};
+                    final given = (summary['receivable'] as num?)?.toDouble() ?? 0;
+                    final taken = (summary['payable'] as num?)?.toDouble() ?? 0;
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+                      title: Text(party['name']?.toString() ?? ''),
+                      subtitle: Text('Given outstanding: ${_money(given)} • Taken outstanding: ${_money(taken)}'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        final loans = await LoansService.getLoansForParty(id);
+                        if (!dialogContext.mounted) return;
+                        await showDialog<void>(
+                          context: dialogContext,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(party['name']?.toString() ?? 'Party Ledger'),
+                            content: SizedBox(width: 520, child: loans.isEmpty
+                              ? const Text('No loan history for this party.')
+                              : ListView(shrinkWrap: true, children: loans.map((loan) => ListTile(
+                                  title: Text('${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
+                                  subtitle: Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)} • ${loan.lendingDate}'),
+                                )).toList())),
+                            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              }).toList()),
+        ),
+        actions: [
+          TextButton.icon(onPressed: () async {
+            final id = await _createParty();
+            if (id != null) {
+              await _loadData();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              if (mounted) _showParties();
+            }
+          }, icon: const Icon(Icons.person_add_alt_1), label: const Text('Add Party')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
   Future<void> _addLoan() async {
     await _loadData();
     if (!mounted) return;
     _nameController.clear();
     _phoneController.clear();
+    _loanType = 'given';
+    _selectedPartyId = _parties.isEmpty ? null : _parties.first['id'] as int;
     _amountController.clear();
     _notesController.clear();
     _lendingDate = DateTime.now();
@@ -182,7 +288,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                appText(context, 'Give New Loan', 'نیا قرض دیں'),
+                                appText(context, 'New Loan', 'نیا قرض'),
                                 style: const TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
@@ -206,6 +312,56 @@ class _LoansScreenState extends State<LoansScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              DropdownButtonFormField<String>(
+                                value: _loanType,
+                                decoration: const InputDecoration(labelText: 'Loan Type'),
+                                items: const [
+                                  DropdownMenuItem(value: 'given', child: Text('Loan Given (I lend money)')),
+                                  DropdownMenuItem(value: 'taken', child: Text('Loan Taken (I borrow money)')),
+                                ],
+                                onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
+                              ),
+                              const SizedBox(height: 10),
+                              DropdownButtonFormField<int>(
+                                value: _selectedPartyId,
+                                isExpanded: true,
+                                decoration: const InputDecoration(labelText: 'Select Party *'),
+                                items: _parties.map((party) => DropdownMenuItem<int>(
+                                  value: party['id'] as int,
+                                  child: Text('${party['name']}${(party['phone'] ?? '').toString().isEmpty ? '' : ' • ${party['phone']}'}'),
+                                )).toList(),
+                                onChanged: (value) {
+                                  setSheetState(() {
+                                    _selectedPartyId = value;
+                                    final party = _parties.where((p) => p['id'] == value).firstOrNull;
+                                    if (party != null) {
+                                      _nameController.text = party['name']?.toString() ?? '';
+                                      _phoneController.text = party['phone']?.toString() ?? '';
+                                    }
+                                  });
+                                },
+                              ),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () async {
+                                    final partyId = await _createParty();
+                                    if (partyId != null) {
+                                      await _loadData();
+                                      setSheetState(() {
+                                        _selectedPartyId = partyId;
+                                        final party = _parties.where((p) => p['id'] == partyId).firstOrNull;
+                                        if (party != null) {
+                                          _nameController.text = party['name']?.toString() ?? '';
+                                          _phoneController.text = party['phone']?.toString() ?? '';
+                                        }
+                                      });
+                                    }
+                                  },
+                                  icon: const Icon(Icons.person_add_alt_1),
+                                  label: const Text('Add New Party'),
+                                ),
+                              ),
                               TextField(
                                 controller: _nameController,
                                 decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
@@ -358,6 +514,8 @@ class _LoansScreenState extends State<LoansScreen> {
         borrowerPhone: _phoneController.text.trim().isEmpty
             ? null
             : _phoneController.text.trim(),
+        partyId: _selectedPartyId,
+        loanType: _loanType,
         amount: amount,
         remainingAmount: amount,
         walletId: walletId!,
@@ -398,12 +556,12 @@ class _LoansScreenState extends State<LoansScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(appText(context, 'Receive Repayment', 'قرض کی واپسی وصول کریں')),
+          title: Text(loan.loanType == 'given' ? 'Receive Repayment' : 'Pay Back Loan'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${appText(context, 'Borrower:', 'قرض لینے والا:')} ${loan.borrowerName}'),
+                Text('${loan.loanType == 'given' ? 'Borrower:' : 'Lender:'} ${loan.borrowerName}'),
                 SizedBox(height: 6),
                 Text('${appText(context, "Outstanding: ", "بقایا: ")}'
                   '${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}',
@@ -417,7 +575,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 DropdownButtonFormField<int>(
                   value: walletId,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: appText(context, "Receiving Wallet *", "Receiving Wallet *")),
+                  decoration: InputDecoration(labelText: loan.loanType == 'given' ? 'Receiving Wallet *' : 'Paying Wallet *'),
                   items: _wallets.map((wallet) {
                     return DropdownMenuItem<int>(
                       value: wallet['id'] as int,
@@ -456,7 +614,7 @@ class _LoansScreenState extends State<LoansScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(appText(context, 'Save Repayment', 'واپسی محفوظ کریں')),
+              child: Text(loan.loanType == 'given' ? 'Save Repayment' : 'Save Payment'),
             ),
           ],
         ),
@@ -528,7 +686,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('Borrower: ${loan.borrowerName}'),
+                  Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${loan.borrowerName}'),
                   Text('${appText(context, 'Phone:', 'فون:')} ${loan.borrowerPhone ?? '-'}'),
                   Text('${appText(context, 'Currency:', 'کرنسی:')} $currency'),
                   Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
@@ -657,7 +815,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           _addRepayment(loan);
                         },
                         icon: const Icon(Icons.payments),
-                        label: Text(appText(context, 'Receive Repayment', 'قرض کی واپسی وصول کریں')),
+                        label: Text(loan.loanType == 'given' ? 'Receive Repayment' : 'Pay Back Loan'),
                       ),
                     ),
                 ],
@@ -837,6 +995,12 @@ class _LoansScreenState extends State<LoansScreen> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _showParties,
+                    icon: const Icon(Icons.people_alt_outlined),
+                    label: Text('Manage Parties (${_parties.length})'),
+                  ),
                   SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -875,7 +1039,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      loan.borrowerName,
+                                      '${loan.borrowerName} • ${loan.loanType == 'given' ? 'Given' : 'Taken'}',
                                       style: const TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.bold,
@@ -903,7 +1067,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               if (loan.borrowerPhone != null)
                                 Text(loan.borrowerPhone!),
                               SizedBox(height: 8),
-                              Text('Currency: $currency'),
+                              Text(loan.loanType == 'given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
                               Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'
                                 '${_moneyWithCurrency(loan.amount, loan.walletId)}',
                               ),
@@ -913,7 +1077,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               Text(appText(context, "Remaining: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}", "باقی: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}"),
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              Text('Lending Date: ${loan.lendingDate}'),
+                              Text('${loan.loanType == 'given' ? 'Lending Date' : 'Borrowing Date'}: ${loan.lendingDate}'),
                               if (loan.dueDate != null)
                                 Text('Due Date: ${loan.dueDate}'),
                               SizedBox(height: 8),

@@ -236,6 +236,12 @@ class _LoansScreenState extends State<LoansScreen> {
     _phoneController.clear();
     _loanType = 'given';
     _selectedPartyId = _parties.isEmpty ? null : _parties.first['id'] as int;
+    bool createNewParty = _parties.isEmpty;
+    if (!createNewParty && _selectedPartyId != null) {
+      final selected = _parties.firstWhere((p) => p['id'] == _selectedPartyId);
+      _nameController.text = selected['name']?.toString() ?? '';
+      _phoneController.text = selected['phone']?.toString() ?? '';
+    }
     _amountController.clear();
     _notesController.clear();
     _lendingDate = DateTime.now();
@@ -326,57 +332,58 @@ class _LoansScreenState extends State<LoansScreen> {
                                 onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
                               ),
                               const SizedBox(height: 10),
-                              DropdownButtonFormField<int>(
-                                value: _selectedPartyId,
+                              DropdownButtonFormField<String>(
+                                value: createNewParty ? '__new_party__' : _selectedPartyId?.toString(),
                                 isExpanded: true,
                                 decoration: const InputDecoration(labelText: 'Select Party *'),
-                                items: _parties.map((party) => DropdownMenuItem<int>(
-                                  value: party['id'] as int,
-                                  child: Text('${party['name']}${(party['phone'] ?? '').toString().isEmpty ? '' : ' • ${party['phone']}'}'),
-                                )).toList(),
+                                items: [
+                                  ..._parties.map((party) => DropdownMenuItem<String>(
+                                    value: party['id'].toString(),
+                                    child: Text('${party['name']}${(party['phone'] ?? '').toString().isEmpty ? '' : ' • ${party['phone']}'}'),
+                                  )),
+                                  const DropdownMenuItem<String>(
+                                    value: '__new_party__',
+                                    child: Text('＋ Create New Party'),
+                                  ),
+                                ],
                                 onChanged: (value) {
                                   setSheetState(() {
-                                    _selectedPartyId = value;
-                                    final party = _parties.where((p) => p['id'] == value).isEmpty ? null : _parties.firstWhere((p) => p['id'] == value);
-                                    if (party != null) {
-                                      _nameController.text = party['name']?.toString() ?? '';
-                                      _phoneController.text = party['phone']?.toString() ?? '';
+                                    createNewParty = value == '__new_party__';
+                                    if (createNewParty) {
+                                      _selectedPartyId = null;
+                                      _nameController.clear();
+                                      _phoneController.clear();
+                                    } else {
+                                      _selectedPartyId = int.tryParse(value ?? '');
+                                      final party = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
+                                          ? null
+                                          : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
+                                      _nameController.text = party?['name']?.toString() ?? '';
+                                      _phoneController.text = party?['phone']?.toString() ?? '';
                                     }
                                   });
                                 },
                               ),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton.icon(
-                                  onPressed: () async {
-                                    final partyId = await _createParty();
-                                    if (partyId != null) {
-                                      await _loadData();
-                                      setSheetState(() {
-                                        _selectedPartyId = partyId;
-                                        final party = _parties.where((p) => p['id'] == partyId).isEmpty ? null : _parties.firstWhere((p) => p['id'] == partyId);
-                                        if (party != null) {
-                                          _nameController.text = party['name']?.toString() ?? '';
-                                          _phoneController.text = party['phone']?.toString() ?? '';
-                                        }
-                                      });
-                                    }
-                                  },
-                                  icon: const Icon(Icons.person_add_alt_1),
-                                  label: const Text('Add New Party'),
+                              const SizedBox(height: 8),
+                              if (createNewParty) ...[
+                                TextField(
+                                  controller: _nameController,
+                                  textCapitalization: TextCapitalization.words,
+                                  decoration: const InputDecoration(labelText: 'Party Name *'),
                                 ),
-                              ),
-                              TextField(
-                                controller: _nameController,
-                                readOnly: _selectedPartyId != null,
-                                decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
-                              ),
-                              TextField(
-                                controller: _phoneController,
-                                readOnly: _selectedPartyId != null,
-                                keyboardType: TextInputType.phone,
-                                decoration: InputDecoration(labelText: appText(context, "Phone Number", "Phone Number")),
-                              ),
+                                TextField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: const InputDecoration(labelText: 'Phone Number'),
+                                ),
+                              ] else if (_selectedPartyId != null)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Selected: ${_nameController.text}${_phoneController.text.trim().isEmpty ? '' : ' • ${_phoneController.text}'}',
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
                               TextField(
                                 controller: _amountController,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -504,14 +511,14 @@ class _LoansScreenState extends State<LoansScreen> {
       ),
     );
     if (result != true) return;
-    final name = _nameController.text.trim();
+    var name = _nameController.text.trim();
     final amount = double.tryParse(_amountController.text.trim());
     if (name.isEmpty || amount == null || !amount.isFinite || amount <= 0) {
-      _showMessage('Enter a valid borrower name and amount.');
+      _showMessage('Enter a valid party name and loan amount.');
       return;
     }
-    if (_selectedPartyId == null) {
-      _showMessage('Please select or create a party first.');
+    if (!createNewParty && _selectedPartyId == null) {
+      _showMessage('Please select a party.');
       return;
     }
     if (walletId == null) {
@@ -519,6 +526,14 @@ class _LoansScreenState extends State<LoansScreen> {
       return;
     }
     try {
+      if (createNewParty) {
+        _selectedPartyId = await LoansService.addParty(
+          name: name,
+          phone: _phoneController.text,
+        );
+        await _loadData();
+        name = _nameController.text.trim();
+      }
       final loan = LoansModel(
         borrowerName: name,
         borrowerPhone: _phoneController.text.trim().isEmpty

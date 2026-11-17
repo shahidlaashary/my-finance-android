@@ -517,7 +517,7 @@ class _HomePageState extends State<HomePage> {
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.text,
                                     ),
@@ -533,7 +533,7 @@ class _HomePageState extends State<HomePage> {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.text,
                                     ),
@@ -549,7 +549,7 @@ class _HomePageState extends State<HomePage> {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w800,
                                       color: converted == null
                                           ? AppColors.expense

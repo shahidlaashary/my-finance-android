@@ -22,27 +22,11 @@ class CommitteeService {
       id INTEGER PRIMARY KEY AUTOINCREMENT, committee_id INTEGER NOT NULL,
       member_id INTEGER NOT NULL, entry_type TEXT NOT NULL,
       amount REAL NOT NULL, wallet_amount REAL NOT NULL DEFAULT 0,
-      committee_currency TEXT NOT NULL DEFAULT 'PKR', wallet_id INTEGER NOT NULL DEFAULT -1,
+      committee_currency TEXT NOT NULL DEFAULT 'PKR', wallet_currency TEXT NOT NULL DEFAULT '',
+      payment_method TEXT NOT NULL DEFAULT 'None', wallet_id INTEGER NOT NULL DEFAULT -1,
       transaction_id INTEGER, entry_date TEXT NOT NULL,
       note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)''');
 
-    final committeeColumns = await db.rawQuery('PRAGMA table_info(committees)');
-    if (!committeeColumns.any((c) => c['name'] == 'currency')) {
-      await db.execute("ALTER TABLE committees ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'");
-    }
-    final entryColumns = await db.rawQuery('PRAGMA table_info(committee_entries)');
-    if (!entryColumns.any((c) => c['name'] == 'wallet_amount')) {
-      await db.execute('ALTER TABLE committee_entries ADD COLUMN wallet_amount REAL NOT NULL DEFAULT 0');
-    }
-    if (!entryColumns.any((c) => c['name'] == 'committee_currency')) {
-      await db.execute("ALTER TABLE committee_entries ADD COLUMN committee_currency TEXT NOT NULL DEFAULT 'PKR'");
-    }
-    if (!entryColumns.any((c) => c['name'] == 'wallet_currency')) {
-      await db.execute("ALTER TABLE committee_entries ADD COLUMN wallet_currency TEXT NOT NULL DEFAULT ''");
-    }
-    if (!entryColumns.any((c) => c['name'] == 'payment_method')) {
-      await db.execute("ALTER TABLE committee_entries ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'None'");
-    }
     await db.execute('CREATE INDEX IF NOT EXISTS idx_committee_members_committee ON committee_members(committee_id, turn_no)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_committee_entries_committee ON committee_entries(committee_id, entry_date DESC)');
   }

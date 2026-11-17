@@ -42,7 +42,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
     try {
       final results = await Future.wait([
         DebtPayoffService.getDebts(),
-        TransactionsService.getAccounts(),
+        TransactionsService.getWallets(),
         GeneralPreferences.instance.hideBalances,
       ]);
       if (!mounted) return;

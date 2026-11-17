@@ -69,8 +69,6 @@ class LoansService {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        borrower_name TEXT NOT NULL,
-        borrower_phone TEXT,
         party_id INTEGER,
         loan_type TEXT NOT NULL DEFAULT 'given',
         amount REAL NOT NULL,
@@ -102,6 +100,43 @@ class LoansService {
     }
     if (!loanColumnNames.contains('loan_type')) {
       await db.execute("ALTER TABLE loans ADD COLUMN loan_type TEXT NOT NULL DEFAULT 'given'");
+    }
+
+    // Remove redundant borrower columns from databases created by older builds.
+    if (loanColumnNames.contains('borrower_name') ||
+        loanColumnNames.contains('borrower_phone')) {
+      await db.execute('PRAGMA foreign_keys = OFF');
+      try {
+        await db.execute('''
+          CREATE TABLE loans_without_borrower_fields (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            party_id INTEGER,
+            loan_type TEXT NOT NULL DEFAULT 'given',
+            amount REAL NOT NULL,
+            remaining_amount REAL NOT NULL,
+            wallet_id INTEGER NOT NULL,
+            lending_date TEXT NOT NULL,
+            due_date TEXT,
+            notes TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'active',
+            created_at TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          INSERT INTO loans_without_borrower_fields
+            (id, party_id, loan_type, amount, remaining_amount, wallet_id,
+             lending_date, due_date, notes, status, created_at)
+          SELECT id, party_id, loan_type, amount, remaining_amount, wallet_id,
+                 lending_date, due_date, notes, status, created_at
+          FROM loans
+        ''');
+        await db.execute('DROP TABLE loans');
+        await db.execute(
+          'ALTER TABLE loans_without_borrower_fields RENAME TO loans',
+        );
+      } finally {
+        await db.execute('PRAGMA foreign_keys = ON');
+      }
     }
 
     await db.execute('''
@@ -258,12 +293,6 @@ class LoansService {
   /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.
   static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;
-    final borrower = loan.borrowerName.trim();
-
-    if (borrower.isEmpty) {
-      throw Exception('Borrower name is required.');
-    }
-
     if (!loan.amount.isFinite || loan.amount <= 0) {
       throw Exception(
         'Loan amount must be a valid amount greater than zero.',
@@ -279,6 +308,17 @@ class LoansService {
     }
 
     return db.transaction((txn) async {
+      final party = await txn.query(
+        'loan_parties',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [loan.partyId],
+        limit: 1,
+      );
+      if (party.isEmpty) {
+        throw Exception('Selected party was not found.');
+      }
+
       final balance = await _getWalletBalance(
         txn,
         loan.walletId,
@@ -291,7 +331,6 @@ class LoansService {
       final loanId = await txn.insert(
         'loans',
         loan.copyWith(
-          borrowerName: borrower,
           remainingAmount: loan.amount,
           status: 'active',
         ).toMap()..remove('id'),
@@ -561,8 +600,16 @@ class LoansService {
     final loanSnapshot = await db.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
     if (loanSnapshot.isEmpty) return;
     final repaymentSnapshot = await db.query('loan_repayments', where: 'loan_id = ?', whereArgs: [loanId]);
-    await RecycleBinService.archive(type: 'Loan', title: loanSnapshot.first['borrower_name']?.toString() ?? 'Loan',
-      table: 'loans', id: loanId, record: loanSnapshot.first, related: repaymentSnapshot);
+    final partyId = (loanSnapshot.first['party_id'] as num?)?.toInt();
+    final party = partyId == null ? null : await getPartyById(partyId);
+    await RecycleBinService.archive(
+      type: 'Loan',
+      title: party?['name']?.toString() ?? 'Loan',
+      table: 'loans',
+      id: loanId,
+      record: loanSnapshot.first,
+      related: repaymentSnapshot,
+    );
     await db.transaction((txn) async {
       final loanRows = await txn.query(
         'loans',

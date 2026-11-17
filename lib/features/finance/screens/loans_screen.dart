@@ -199,6 +199,11 @@ class _LoansScreenState extends State<LoansScreen> {
                               : ListView(shrinkWrap: true, children: loans.map((loan) => ListTile(
                                   title: Text('${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${_moneyWithCurrency(loan.amount, loan.walletId)}'),
                                   subtitle: Text('Outstanding: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)} • ${loan.lendingDate}'),
+                                  onTap: () {
+                                    Navigator.pop(ctx);
+                                    Navigator.pop(dialogContext);
+                                    _showLoanDetails(loan);
+                                  },
                                 )).toList())),
                             actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
                           ),
@@ -332,7 +337,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 onChanged: (value) {
                                   setSheetState(() {
                                     _selectedPartyId = value;
-                                    final party = _parties.where((p) => p['id'] == value).firstOrNull;
+                                    final party = _parties.where((p) => p['id'] == value).isEmpty ? null : _parties.firstWhere((p) => p['id'] == value);
                                     if (party != null) {
                                       _nameController.text = party['name']?.toString() ?? '';
                                       _phoneController.text = party['phone']?.toString() ?? '';
@@ -349,7 +354,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       await _loadData();
                                       setSheetState(() {
                                         _selectedPartyId = partyId;
-                                        final party = _parties.where((p) => p['id'] == partyId).firstOrNull;
+                                        final party = _parties.where((p) => p['id'] == partyId).isEmpty ? null : _parties.firstWhere((p) => p['id'] == partyId);
                                         if (party != null) {
                                           _nameController.text = party['name']?.toString() ?? '';
                                           _phoneController.text = party['phone']?.toString() ?? '';
@@ -363,10 +368,12 @@ class _LoansScreenState extends State<LoansScreen> {
                               ),
                               TextField(
                                 controller: _nameController,
+                                readOnly: _selectedPartyId != null,
                                 decoration: InputDecoration(labelText: appText(context, "Borrower Name *", "Borrower Name *")),
                               ),
                               TextField(
                                 controller: _phoneController,
+                                readOnly: _selectedPartyId != null,
                                 keyboardType: TextInputType.phone,
                                 decoration: InputDecoration(labelText: appText(context, "Phone Number", "Phone Number")),
                               ),

@@ -97,7 +97,7 @@ class GoalsService {
       limit: 1,
     );
     if (rows.isEmpty) {
-      throw Exception('Selected account was not found.');
+      throw Exception('Selected wallet was not found.');
     }
     return rows.first;
   }
@@ -200,7 +200,7 @@ class GoalsService {
     if (rows.isEmpty) return null;
     return GoalsModel.fromMap(rows.first);
   }
-  /// Savings goal mein raqam jama karta hai aur selected account se minus karta hai.
+  /// Savings goal mein raqam jama karta hai aur selected wallet se minus karta hai.
   static Future<int> addContribution({
     required int goalId,
     required int walletId,
@@ -226,16 +226,16 @@ class GoalsService {
       if (goal.isCompleted) {
         throw Exception('This savings goal is already completed.');
       }
-      final account = await _getAccount(txn, walletId);
+      final wallet = await _getAccount(txn, walletId);
       if (goal.walletId != null &&
           goal.walletId != walletId) {
         throw Exception(
-          'Please use the account linked to this savings goal.',
+          'Please use the wallet linked to this savings goal.',
         );
       }
-      final balance = (account['balance'] as num).toDouble();
+      final balance = (wallet['balance'] as num).toDouble();
       if (balance < amount) {
-        throw Exception('Insufficient account balance.');
+        throw Exception('Insufficient wallet balance.');
       }
       final newSavedAmount = goal.savedAmount + amount;
       final now = DateTime.now();
@@ -270,7 +270,7 @@ class GoalsService {
       return contributionId;
     });
   }
-  /// Savings goal se raqam nikal kar account mein jama karta hai.
+  /// Savings goal se raqam nikal kar wallet mein jama karta hai.
   static Future<int> withdraw({
     required int goalId,
     required double amount,
@@ -299,7 +299,7 @@ class GoalsService {
       }
       if (goal.walletId == null) {
         throw Exception(
-          'No account is linked to this savings goal.',
+          'No wallet is linked to this savings goal.',
         );
       }
       await _getAccount(txn, goal.walletId!);
@@ -374,7 +374,7 @@ class GoalsService {
       }
       if (updatedGoal.walletId != oldGoal.walletId) {
         throw Exception(
-          'The linked account cannot be changed after contributions.',
+          'The linked wallet cannot be changed after contributions.',
         );
       }
       if (updatedGoal.savedAmount != oldGoal.savedAmount) {
@@ -444,8 +444,8 @@ class GoalsService {
     });
     AppRefreshController.notifyChanged();
   }
-  /// Account currency ke mutabiq jama shuda raqam ka total deta hai.
-  /// Jin goals ke sath account link nahi, unhein Unassigned mein rakhta hai.
+  /// Wallet currency ke mutabiq jama shuda raqam ka total deta hai.
+  /// Jin goals ke sath wallet link nahi, unhein Unassigned mein rakhta hai.
   static Future<Map<String, double>> getTotalSavedByCurrency() async {
     final db = await _database;
     final rows = await db.rawQuery('''
@@ -463,8 +463,8 @@ class GoalsService {
         row['currency'].toString(): (row['total'] as num).toDouble(),
     };
   }
-  /// Account currency ke mutabiq target amounts ka total deta hai.
-  /// Jin goals ke sath account link nahi, unhein Unassigned mein rakhta hai.
+  /// Wallet currency ke mutabiq target amounts ka total deta hai.
+  /// Jin goals ke sath wallet link nahi, unhein Unassigned mein rakhta hai.
   static Future<Map<String, double>> getTotalTargetByCurrency() async {
     final db = await _database;
     final rows = await db.rawQuery('''

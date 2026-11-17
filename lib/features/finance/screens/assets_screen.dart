@@ -265,7 +265,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               isExpanded: true,
                               decoration: fieldDecoration('Payment Type', Icons.payments_outlined),
                               items: const ['Cash', 'Bank', 'Wallet', 'Loan'].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
-                              onChanged: asset == null ? (v) => setSheetState(() { selectedPaymentType = v ?? 'Wallet'; }) : null,
+                              onChanged: (v) {
+                                if (v == null) return;
+                                if (asset != null && ((v == 'Loan') != (asset.paymentType.toLowerCase() == 'loan'))) return;
+                                setSheetState(() => selectedPaymentType = v);
+                              },
                             )),
                           ]),
                           SizedBox(height: 10),

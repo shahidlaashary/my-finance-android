@@ -72,7 +72,7 @@ class RecycleBinService {
       if (table == 'loans') {
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
           id INTEGER PRIMARY KEY AUTOINCREMENT, party_id INTEGER,
-          loan_type TEXT NOT NULL DEFAULT 'Loan Given', amount REAL NOT NULL,
+          loan_type TEXT NOT NULL DEFAULT 'given', amount REAL NOT NULL,
           remaining_amount REAL NOT NULL, wallet_id INTEGER NOT NULL,
           lending_date TEXT NOT NULL, due_date TEXT,
           notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',

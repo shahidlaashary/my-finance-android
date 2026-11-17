@@ -515,7 +515,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildBalances() {
     if (_balances.isEmpty) {
-      return Text(appText(context, "Create a wallet to see account balances here.", "Create a wallet to see account balances here."), style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "Create a wallet to see wallet balances here.", "Create a wallet to see wallet balances here."), style: TextStyle(color: Colors.black54));
     }
     return Wrap(
       spacing: 9,
@@ -532,7 +532,7 @@ class _StatsScreenState extends State<StatsScreen> {
             Text(row['currency'].toString(), style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 5),
             Text(_money(row['total_balance']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            Text('${row['account_count']} account(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+            Text('${row['account_count']} wallet(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
           ]),
         );
       }).toList(),
@@ -667,7 +667,7 @@ class _StatsScreenState extends State<StatsScreen> {
       '${item['currency'] ?? _currency} ${_numberFormat.format((item['amount'] as num?)?.toDouble() ?? 0)}',
     ]).toList();
     document.addPage(pw.MultiPage(build: (context) => [
-      pw.Text(statementOnly ? 'My Finance - Account Statement' : 'My Finance - Financial Report',
+      pw.Text(statementOnly ? 'My Finance - Wallet Statement' : 'My Finance - Financial Report',
         style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
       pw.SizedBox(height: 8),
       pw.Text('Period: ${DateFormat('dd MMM yyyy').format(_startDate)} - ${DateFormat('dd MMM yyyy').format(_endDate)}'),

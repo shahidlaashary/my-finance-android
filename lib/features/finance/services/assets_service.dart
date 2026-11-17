@@ -308,11 +308,13 @@ class AssetsService {
       final party = await LoansService.getPartyById(updatedAsset.partyId!);
       if (party == null) throw Exception('Selected party was not found.');
       final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-      if (currency != oldAsset.currency.toUpperCase()) throw Exception('Party currency must remain ' + oldAsset.currency + ' for this asset.');
       final loanTermsChanged =
           updatedAsset.purchasePrice != oldAsset.purchasePrice ||
           updatedAsset.partyId != oldAsset.partyId ||
           !updatedAsset.purchaseDate.isAtSameMomentAs(oldAsset.purchaseDate);
+      if (loanTermsChanged && currency != oldAsset.currency.toUpperCase()) {
+        throw Exception('Party currency must remain ' + oldAsset.currency + ' for this asset.');
+      }
       if (loanTermsChanged) {
         await LoansService.updateAssetLinkedLoan(
           loanId: oldAsset.linkedLoanId!, partyId: updatedAsset.partyId!,

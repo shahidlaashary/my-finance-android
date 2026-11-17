@@ -14,7 +14,7 @@ class LoansModel {
   const LoansModel({
     this.id,
     required this.partyId,
-    this.loanType = 'given',
+    this.loanType = 'Loan Given',
     required this.amount,
     required this.remainingAmount,
     required this.walletId,
@@ -55,7 +55,7 @@ class LoansModel {
   factory LoansModel.fromMap(Map<String, dynamic> map) => LoansModel(
         id: map['id'] as int?,
         partyId: map['party_id'] as int?,
-        loanType: map['loan_type'] as String? ?? 'given',
+        loanType: map['loan_type'] as String? ?? 'Loan Given',
         amount: (map['amount'] as num).toDouble(),
         remainingAmount: (map['remaining_amount'] as num).toDouble(),
         walletId: map['wallet_id'] as int,

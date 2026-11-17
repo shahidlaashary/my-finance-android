@@ -269,7 +269,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             )),
                           ]),
                           SizedBox(height: 10),
-                          if (selectedPaymentType == 'Loan')
+                          if (selectedPaymentType == 'Loan') ...[
                             DropdownButtonFormField<int>(
                               value: selectedPartyId,
                               isExpanded: true,
@@ -279,20 +279,20 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 child: Text('${party['name']} • ${(party['currency'] ?? 'PKR').toString().toUpperCase()}', overflow: TextOverflow.ellipsis),
                               )).toList(),
                               onChanged: (v) => setSheetState(() => selectedPartyId = v),
-                              validator: (v) => selectedPaymentType == 'Loan' && v == null ? 'Select a party' : null,
+                              validator: (v) => v == null ? 'Select a party' : null,
                             ),
-                          if (selectedPaymentType == 'Loan' && selectedPartyId != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Loan currency: ${_parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF147D59), fontWeight: FontWeight.w600),
+                            if (selectedPartyId != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Loan currency: ${_parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
+                                    style: const TextStyle(fontSize: 12, color: Color(0xFF147D59), fontWeight: FontWeight.w600),
+                                  ),
                                 ),
                               ),
-                            )
-                          else
+                          ] else
                             DropdownButtonFormField<int>(
                               value: selectedWallet,
                               isExpanded: true,
@@ -302,7 +302,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis),
                               )).toList(),
                               onChanged: (v) => setSheetState(() => selectedWallet = v),
-                              validator: (v) => selectedPaymentType != 'Loan' && v == null ? 'Select wallet' : null,
+                              validator: (v) => v == null ? 'Select wallet' : null,
                             ),
                           SizedBox(height: 12),
                           Row(children: [

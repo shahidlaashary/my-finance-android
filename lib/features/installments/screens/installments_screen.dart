@@ -49,7 +49,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
   }
 
   Future<void> _addContract(String direction) async {
-    if (_wallets.isEmpty) { _message('Please create an account first.'); return; }
+    if (_wallets.isEmpty) { _message('Please create an wallet first.'); return; }
     final item = TextEditingController();
     final party = TextEditingController();
     final phone = TextEditingController();
@@ -164,7 +164,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
                                 DropdownButtonFormField<int>(
                                   value: walletId,
                                   isExpanded: true,
-                                  decoration: const InputDecoration(labelText: 'Linked account'),
+                                  decoration: const InputDecoration(labelText: 'Linked wallet'),
                                   items: _wallets.map((w) => DropdownMenuItem(
                                     value: w['id'] as int,
                                     child: Text('${w['name']} (${w['currency'] ?? 'PKR'})'),

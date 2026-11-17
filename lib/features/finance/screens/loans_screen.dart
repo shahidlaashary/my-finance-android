@@ -325,59 +325,71 @@ class _LoansScreenState extends State<LoansScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
+                                    flex: 1,
                                     child: DropdownButtonFormField<String>(
                                       value: _loanType,
                                       isExpanded: true,
-                                      decoration: const InputDecoration(labelText: 'Loan Type'),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Loan Type',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                                      ),
                                       items: const [
-                                        DropdownMenuItem(value: 'given', child: Text('Loan Given')),
-                                        DropdownMenuItem(value: 'taken', child: Text('Loan Taken')),
+                                        DropdownMenuItem(value: 'given', child: Text('Loan Given', overflow: TextOverflow.ellipsis)),
+                                        DropdownMenuItem(value: 'taken', child: Text('Loan Taken', overflow: TextOverflow.ellipsis)),
                                       ],
                                       onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 10),
                                   Expanded(
-                                    child: TextField(
-                                      controller: _amountController,
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
+                                    flex: 2,
+                                    child: DropdownButtonFormField<String>(
+                                      value: createNewParty ? '__new_party__' : _selectedPartyId?.toString(),
+                                      isExpanded: true,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Select Party *',
+                                        hintText: 'Choose party or create new',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                                      ),
+                                      items: [
+                                        ..._parties.map((party) => DropdownMenuItem<String>(
+                                          value: party['id'].toString(),
+                                          child: Text(
+                                            '${party['name']}${(party['phone'] ?? '').toString().isEmpty ? '' : ' • ${party['phone']}'}',
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        )),
+                                        const DropdownMenuItem<String>(
+                                          value: '__new_party__',
+                                          child: Text('＋ Create New Party', overflow: TextOverflow.ellipsis),
+                                        ),
+                                      ],
+                                      onChanged: (value) {
+                                        setSheetState(() {
+                                          createNewParty = value == '__new_party__';
+                                          if (createNewParty) {
+                                            _selectedPartyId = null;
+                                            _nameController.clear();
+                                            _phoneController.clear();
+                                          } else {
+                                            _selectedPartyId = int.tryParse(value ?? '');
+                                            final party = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
+                                                ? null
+                                                : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
+                                            _nameController.text = party?['name']?.toString() ?? '';
+                                            _phoneController.text = party?['phone']?.toString() ?? '';
+                                          }
+                                        });
+                                      },
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              DropdownButtonFormField<String>(
-                                value: createNewParty ? '__new_party__' : _selectedPartyId?.toString(),
-                                isExpanded: true,
-                                decoration: const InputDecoration(labelText: 'Select Party *', hintText: 'Choose an existing party or create new'),
-                                items: [
-                                  ..._parties.map((party) => DropdownMenuItem<String>(
-                                    value: party['id'].toString(),
-                                    child: Text('${party['name']}${(party['phone'] ?? '').toString().isEmpty ? '' : ' • ${party['phone']}'}'),
-                                  )),
-                                  const DropdownMenuItem<String>(
-                                    value: '__new_party__',
-                                    child: Text('＋ Create New Party'),
-                                  ),
-                                ],
-                                onChanged: (value) {
-                                  setSheetState(() {
-                                    createNewParty = value == '__new_party__';
-                                    if (createNewParty) {
-                                      _selectedPartyId = null;
-                                      _nameController.clear();
-                                      _phoneController.clear();
-                                    } else {
-                                      _selectedPartyId = int.tryParse(value ?? '');
-                                      final party = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
-                                          ? null
-                                          : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
-                                      _nameController.text = party?['name']?.toString() ?? '';
-                                      _phoneController.text = party?['phone']?.toString() ?? '';
-                                    }
-                                  });
-                                },
+                              TextField(
+                                controller: _amountController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
                               ),
                               const SizedBox(height: 8),
                               if (createNewParty) ...[

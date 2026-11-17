@@ -121,7 +121,7 @@ class _WalletsPageState extends State<WalletsPage> {
       final settings = await FinanceDB.instance.db.query(
         'app_settings',
         where: 'setting_key IN (?, ?)',
-        whereArgs: ['wallet_archived_ids', 'wallet_display_order'],
+        whereArgs: ['wallet_hidden_ids', 'wallet_display_order'],
       );
       final values = {
         for (final row in settings)
@@ -130,7 +130,7 @@ class _WalletsPageState extends State<WalletsPage> {
       Set<int> hidden = {};
       List<int> order = [];
       try {
-        hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List)
+        hidden = (jsonDecode(values['wallet_hidden_ids'] ?? '[]') as List)
             .map((e) => (e as num).toInt()).toSet();
       } catch (_) {}
       try {
@@ -1235,10 +1235,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       final all = List<Map<String, dynamic>>.from(await db.query('wallets'));
       final rows = await db.query('app_settings',
         where: 'setting_key IN (?, ?)',
-        whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
+        whereArgs: ['wallet_hidden_ids', 'wallet_display_order']);
       final values = {for (final r in rows) r['setting_key'].toString(): r['setting_value']?.toString() ?? ''};
       List<int> hidden = [], order = [];
-      try { hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
+      try { hidden = (jsonDecode(values['wallet_hidden_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
       try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
       all.sort((a,b) {
         final ai=order.indexOf((a['id'] as num).toInt());
@@ -1268,7 +1268,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
     final id=(wallet['id'] as num).toInt();
     final ids=_hidden.map((w)=>(w['id'] as num).toInt()).toList();
     if (hidden) { if(!ids.contains(id)) ids.add(id); } else { ids.remove(id); }
-    await _saveIds('wallet_archived_ids', ids);
+    await _saveIds('wallet_hidden_ids', ids);
     await _load();
   }
 

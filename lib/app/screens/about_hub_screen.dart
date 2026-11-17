@@ -100,7 +100,7 @@ class _WhatsNewPage extends StatelessWidget{
   const _WhatsNewPage();
   @override Widget build(BuildContext context)=>const _InfoPage(title:"What's New",icon:Icons.new_releases_outlined,children:[
     _SectionTitle('Current app version • 1.0.0'),_BodyText('This section is reserved for version-by-version release notes. Updates will be listed here as they are included in published app releases.'),
-    _SectionTitle('Main app areas'),_BulletList(['Wallets and multi-currency wallets','Income, expense and transfer tracking','Budgets, savings goals and reports','Loans, repayments and debt planning','Assets, vehicles and recurring transactions','Documents and local attachments']),
+    _SectionTitle('Main app areas'),_BulletList(['Multi-currency wallets','Income, expense and transfer tracking','Budgets, savings goals and reports','Loans, repayments and debt planning','Assets, vehicles and recurring transactions','Documents and local attachments']),
     _BodyText('Note: Features shown in development builds may change before a public release.'),
   ]);
 }

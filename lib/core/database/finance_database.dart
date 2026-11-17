@@ -383,8 +383,38 @@ class FinanceDB {
       double newOpening = oldOpening;
       double convertedOldBalance = oldBalance;
 
-      // Currency badalne par linked history convert karna.
+      // Loan aur asset records ki currency fixed hoti hai. Un ke
+      // reference wallet ki currency badalne se purane records ghalat ho sakte hain.
       if (oldCurrency != currency) {
+        final loanTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+        );
+        if (loanTable.isNotEmpty) {
+          final linkedLoans = await txn.query(
+            'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+          );
+          final linkedRepayments = await txn.query(
+            'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+          );
+          if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
+            throw Exception('Wallet currency cannot be changed while loans or repayments are linked to it.');
+          }
+        }
+        final assetTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
+        );
+        if (assetTable.isNotEmpty) {
+          final linkedAssets = await txn.query(
+            'assets',
+            columns: ['id'],
+            where: 'wallet_id = ? OR sale_wallet_id = ?',
+            whereArgs: [id, id],
+            limit: 1,
+          );
+          if (linkedAssets.isNotEmpty) {
+            throw Exception('Wallet currency cannot be changed while assets are linked to it.');
+          }
+        }
         final oldRate = await _getRateInTransaction(txn, oldCurrency);
         final newRate = await _getRateInTransaction(txn, currency);
 

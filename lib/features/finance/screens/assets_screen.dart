@@ -287,7 +287,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    'Loan currency: ${_parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
+                                    'Loan currency: ${asset?.currency ?? _parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
                                     style: const TextStyle(fontSize: 12, color: Color(0xFF147D59), fontWeight: FontWeight.w600),
                                   ),
                                 ),
@@ -629,7 +629,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         return AlertDialog(
           title: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں')),
           content: Text(
-            'Are you sure you want to delete "${asset.name}"?',
+            'Are you sure you want to delete "${asset.name}"? Any linked asset loan entries and repayments will also be removed and their wallet effects reversed.',
           ),
           actions: [
             TextButton(

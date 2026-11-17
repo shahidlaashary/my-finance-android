@@ -537,7 +537,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       value: selectedSaleWallet,
                       isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Sale Wallet'),
-                      items: _wallets.map((wallet) => DropdownMenuItem<int>(
+                      items: _wallets.where((wallet) => (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()).map((wallet) => DropdownMenuItem<int>(
                         value: (wallet['id'] as num).toInt(),
                         child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})'),
                       )).toList(),
@@ -586,8 +586,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       return;
                     }
 
-                    if (selectedSalePaymentType == 'Loan' && selectedBuyerParty == null) return;
-                    if (selectedSalePaymentType != 'Loan' && selectedSaleWallet == null) return;
+                    if (selectedSalePaymentType == 'Loan' && selectedBuyerParty == null) {
+                      _message('Select a buyer party with ' + asset.currency + ' currency.');
+                      return;
+                    }
+                    if (selectedSalePaymentType != 'Loan' && selectedSaleWallet == null) {
+                      _message('Select a sale wallet in ' + asset.currency + '.');
+                      return;
+                    }
                     Navigator.pop(context, {
                       'price': price,
                       'date': saleDate,

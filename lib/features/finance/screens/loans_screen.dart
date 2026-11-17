@@ -198,8 +198,13 @@ class _LoansScreenState extends State<LoansScreen> {
       return;
     }
     int? walletId = _selectedWalletId;
+    final initialParty = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
+        ? null : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
+    final initialCurrency = (initialParty?['currency']?.toString() ?? 'PKR').toUpperCase();
+    if (walletId != null && _currencyForWallet(walletId) != initialCurrency) walletId = null;
     DateTime lendingDate = _lendingDate;
     DateTime? dueDate = _dueDate;
+    String newPartyCurrency = 'PKR';
     final List<XFile> pendingLoanImages = [];
     final ImagePicker loanImagePicker = ImagePicker();
     final result = await showModalBottomSheet<bool>(
@@ -326,6 +331,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
                                             _nameController.text = party?['name']?.toString() ?? '';
                                             _phoneController.text = party?['phone']?.toString() ?? '';
+                                            final currency = (party?['currency']?.toString() ?? 'PKR').toUpperCase();
+                                            final matching = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency);
+                                            walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
                                           }
                                         });
                                       },
@@ -344,6 +352,17 @@ class _LoansScreenState extends State<LoansScreen> {
                                   controller: _phoneController,
                                   keyboardType: TextInputType.phone,
                                   decoration: const InputDecoration(labelText: 'Phone Number'),
+                                ),
+                                DropdownButtonFormField<String>(
+                                  value: newPartyCurrency,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(labelText: 'Party Currency *'),
+                                  items: const ['PKR', 'USD', 'SAR', 'AED', 'GBP', 'EUR', 'INR', 'CAD', 'AUD', 'CNY', 'TRY', 'KWD', 'QAR', 'OMR', 'BHD'].map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
+                                  onChanged: (value) => setSheetState(() {
+                                    newPartyCurrency = value ?? 'PKR';
+                                    final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == newPartyCurrency);
+                                    walletId = match.isEmpty ? null : (match.first['id'] as num).toInt();
+                                  }),
                                 ),
                               ] else if (_selectedPartyId != null)
                                 Align(
@@ -372,12 +391,16 @@ class _LoansScreenState extends State<LoansScreen> {
                                       value: walletId,
                                       isExpanded: true,
                                       decoration: InputDecoration(labelText: appText(context, "Payment Wallet *", "Payment Wallet *")),
-                                      items: _wallets.map((wallet) {
+                                      items: _wallets.where((wallet) {
+                                        final party = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
+                                            ? null : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
+                                        final currency = createNewParty ? newPartyCurrency : (party?['currency']?.toString() ?? 'PKR').toUpperCase();
+                                        return (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == currency;
+                                      }).map((wallet) {
                                         return DropdownMenuItem<int>(
-                                          value: wallet['id'] as int,
+                                          value: (wallet['id'] as num).toInt(),
                                           child: Text(
-                                            '${wallet['name']} '
-                                            '(${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                                            '${wallet['name']} (${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         );
@@ -512,6 +535,7 @@ class _LoansScreenState extends State<LoansScreen> {
         _selectedPartyId = await LoansService.addParty(
           name: name,
           phone: _phoneController.text,
+          currency: newPartyCurrency,
         );
         await _loadData();
       }
@@ -521,6 +545,7 @@ class _LoansScreenState extends State<LoansScreen> {
         amount: amount,
         remainingAmount: amount,
         walletId: walletId!,
+        currency: createNewParty ? newPartyCurrency : ((_parties.firstWhere((p) => p['id'] == _selectedPartyId, orElse: () => {'currency': 'PKR'})['currency']?.toString() ?? 'PKR').toUpperCase()),
         lendingDate: _dateString(lendingDate),
         dueDate: dueDate == null ? null : _dateString(dueDate!),
         notes: _notesController.text.trim(),
@@ -593,13 +618,12 @@ class _LoansScreenState extends State<LoansScreen> {
                   value: walletId,
                   isExpanded: true,
                   decoration: InputDecoration(labelText: loan.loanType == 'given' ? 'Receiving Wallet *' : 'Paying Wallet *'),
-                  items: _wallets.map((wallet) {
+                  items: _wallets.where((wallet) =>
+                    (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == loan.currency.toUpperCase()
+                  ).map((wallet) {
                     return DropdownMenuItem<int>(
-                      value: wallet['id'] as int,
-                      child: Text(
-                        '${wallet['name']} '
-                        '(${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
-                      ),
+                      value: (wallet['id'] as num).toInt(),
+                      child: Text('${wallet['name']} (${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})'),
                     );
                   }).toList(),
                   onChanged: (value) => setDialogState(() => walletId = value),
@@ -651,8 +675,7 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Please select a receiving wallet.');
       return;
     }
-    if (_currencyForWallet(walletId!) !=
-        _currencyForWallet(loan.walletId)) {
+    if (_currencyForWallet(walletId!) != loan.currency.toUpperCase()) {
       _showMessage('Receiving wallet must use the same currency as the loan.');
       return;
     }
@@ -676,7 +699,7 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _showLoanDetails(LoansModel loan) async {
     if (loan.id == null) return;
-    final currency = _currencyForWallet(loan.walletId);
+    final currency = loan.currency.toUpperCase();
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -992,7 +1015,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     )
                   else
                     ..._loans.map((loan) {
-                      final currency = _currencyForWallet(loan.walletId);
+                      final currency = loan.currency.toUpperCase();
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(

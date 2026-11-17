@@ -181,14 +181,24 @@ class LoansService {
     final db = await _database;
     final rows = await db.rawQuery('''
       SELECT
-        COALESCE(SUM(CASE WHEN loan_type = 'given' THEN amount ELSE 0 END), 0) AS total_given,
-        COALESCE(SUM(CASE WHEN loan_type = 'taken' THEN amount ELSE 0 END), 0) AS total_taken,
-        COALESCE(SUM(CASE WHEN loan_type = 'given' THEN remaining_amount ELSE 0 END), 0) AS receivable,
-        COALESCE(SUM(CASE WHEN loan_type = 'taken' THEN remaining_amount ELSE 0 END), 0) AS payable,
+        UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))) AS currency,
+        loans.loan_type AS loan_type,
+        COALESCE(SUM(loans.remaining_amount), 0) AS outstanding,
         COUNT(*) AS loan_count
-      FROM loans WHERE party_id = ?
+      FROM loans
+      INNER JOIN wallets ON wallets.id = loans.wallet_id
+      WHERE loans.party_id = ?
+      GROUP BY currency, loans.loan_type
+      ORDER BY currency, loans.loan_type
     ''', [partyId]);
-    return rows.first;
+    return {
+      'loan_count': rows.fold<int>(0, (sum, row) => sum + ((row['loan_count'] as num?)?.toInt() ?? 0)),
+      'balances': rows.map((row) => {
+        'currency': row['currency'],
+        'loan_type': row['loan_type'],
+        'outstanding': row['outstanding'],
+      }).toList(),
+    };
   }
 
   static Future<Map<String, dynamic>> _getWallet(
@@ -258,6 +268,10 @@ class LoansService {
       throw Exception(
         'Loan amount must be a valid amount greater than zero.',
       );
+    }
+
+    if (loan.partyId == null || loan.partyId! <= 0) {
+      throw Exception('Please select or create a party.');
     }
 
     if (loan.walletId <= 0) {
@@ -429,18 +443,19 @@ class LoansService {
     final rows = await db.rawQuery('''
       SELECT
         UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))) AS currency,
+        loans.loan_type AS loan_type,
         COALESCE(SUM(loans.remaining_amount), 0) AS total
       FROM loans
       INNER JOIN wallets
         ON wallets.id = loans.wallet_id
       WHERE loans.remaining_amount > 0
-      GROUP BY UPPER(TRIM(COALESCE(wallets.currency, 'PKR')))
-      ORDER BY currency ASC
+      GROUP BY UPPER(TRIM(COALESCE(wallets.currency, 'PKR'))), loans.loan_type
+      ORDER BY currency ASC, loans.loan_type ASC
     ''');
 
     return {
       for (final row in rows)
-        row['currency'].toString(): (row['total'] as num).toDouble(),
+        '${row['currency']} • ${row['loan_type'] == 'given' ? 'Receivable' : 'Payable'}': (row['total'] as num).toDouble(),
     };
   }
 

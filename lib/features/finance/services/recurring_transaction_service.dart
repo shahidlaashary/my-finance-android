@@ -168,33 +168,33 @@ class RecurringTransactionService {
       }
     }
   }
-  Future<void> _validateAccounts(
+  Future<void> _validateWallets(
     DatabaseExecutor db,
     RecurringTransactionModel model,
   ) async {
-    final sourceAccounts = await db.query(
+    final sourceWallets = await db.query(
       'wallets',
       where: 'id = ?',
       whereArgs: [model.walletId],
       limit: 1,
     );
-    if (sourceAccounts.isEmpty) {
+    if (sourceWallets.isEmpty) {
       throw Exception('Selected wallet does not exist.');
     }
     if (model.type.toLowerCase() == 'transfer') {
-      final destinationAccounts = await db.query(
+      final destinationWallets = await db.query(
         'wallets',
         where: 'id = ?',
         whereArgs: [model.toWalletId],
         limit: 1,
       );
-      if (destinationAccounts.isEmpty) {
+      if (destinationWallets.isEmpty) {
         throw Exception('Destination wallet does not exist.');
       }
       final sourceCurrency =
-          sourceAccounts.first['currency']?.toString();
+          sourceWallets.first['currency']?.toString();
       final destinationCurrency =
-          destinationAccounts.first['currency']?.toString();
+          destinationWallets.first['currency']?.toString();
       if (sourceCurrency != destinationCurrency) {
         throw Exception(
           'Transfer wallets must have the same currency.',
@@ -232,7 +232,7 @@ class RecurringTransactionService {
   ) async {
     _validateModel(model);
     final db = await _database;
-    await _validateAccounts(db, model);
+    await _validateWallets(db, model);
     final id = await db.insert(
       _tableName,
       _toMap(model),
@@ -277,7 +277,7 @@ class RecurringTransactionService {
     }
     _validateModel(model);
     final db = await _database;
-    await _validateAccounts(db, model);
+    await _validateWallets(db, model);
     final count = await db.update(
       _tableName,
       _toMap(model),
@@ -338,16 +338,16 @@ class RecurringTransactionService {
       if (toWalletId == null || toWalletId == walletId) {
         throw Exception('Invalid destination wallet.');
       }
-      final destinationAccounts = await txn.query(
+      final destinationWallets = await txn.query(
         'wallets',
         where: 'id = ?',
         whereArgs: [toWalletId],
         limit: 1,
       );
-      if (destinationAccounts.isEmpty) {
+      if (destinationWallets.isEmpty) {
         throw Exception('Destination wallet not found.');
       }
-      destination = destinationAccounts.first;
+      destination = destinationWallets.first;
       if (destination['currency'] != wallet['currency']) {
         throw Exception(
           'Transfer wallets must have the same currency.',

@@ -1289,6 +1289,11 @@ class TransactionDetailScreen extends StatelessWidget {
                 ? (transaction['date']?.toString() ?? '—')
                 : DateFormat('dd MMM yyyy, hh:mm a').format(date)),
             _detailRow('Wallet', walletName(sourceId)),
+            if (isCommitteeTransfer)
+              _detailRow('Transfer link', (transaction['balance_delta'] as num?)?.toDouble() != null &&
+                ((transaction['balance_delta'] as num).toDouble() < 0)
+                  ? 'Personal Wallet → Committee Ledger'
+                  : 'Committee Ledger → Personal Wallet'),
             _detailRow('Category', category.isEmpty ? (isTransfer ? 'Transfer' : 'No category') : category),
             _detailRow('Description / Note', note.isEmpty ? '—' : note),
           ];
@@ -1322,7 +1327,7 @@ class TransactionDetailScreen extends StatelessWidget {
                     Text(type, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
                     Text(
-                      '${isIncome ? '+' : isExpense ? '-' : isAdjustment ? (((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : ''} $currency ${(isAdjustment ? ((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount).toStringAsFixed(2)}',
+                      '${isIncome ? '+' : isExpense ? '-' : (isAdjustment || isCommitteeTransfer) ? (((transaction['balance_delta'] as num?)?.toDouble() ?? 0) >= 0 ? '+' : '-') : ''} $currency ${(isAdjustment || isCommitteeTransfer ? ((transaction['balance_delta'] as num?)?.toDouble().abs() ?? amount) : amount).toStringAsFixed(2)}',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color),
                     ),
                     if (isTransfer && toAmount != null) ...[

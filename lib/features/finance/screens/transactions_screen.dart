@@ -962,7 +962,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     : DateFormat('EEEE').format(parsedHeader);
                                 final monthYear = parsedHeader == null
                                     ? rawDate
-                                    : DateFormat('MMMM yyyy').format(parsedHeader);
+                                    : DateFormat('MMM yyyy').format(parsedHeader);
                                 return Container(
                                   margin: const EdgeInsets.fromLTRB(0, 12, 0, 9),
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
@@ -1123,19 +1123,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   ],
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(12, 12, 6, 12),
+                                  padding: const EdgeInsets.fromLTRB(10, 8, 5, 8),
                                   child: Row(
                                     children: [
                                       Container(
-                                        width: 46,
-                                        height: 46,
+                                        width: 40,
+                                        height: 40,
                                         decoration: BoxDecoration(
                                           color: color.withValues(alpha: 0.11),
-                                          borderRadius: BorderRadius.circular(14),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: Icon(icon, color: color, size: 23),
+                                        child: Icon(icon, color: color, size: 21),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 9),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1150,7 +1150,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                 color: Color(0xFF25332C),
                                               ),
                                             ),
-                                            const SizedBox(height: 3),
+                                            const SizedBox(height: 2),
                                             Text(
                                               [
                                                 isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
@@ -1163,7 +1163,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                 color: Color(0xFF7B8781),
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
+                                            const SizedBox(height: 2),
                                             Text(
                                               dateLabel,
                                               maxLines: 1,
@@ -1176,7 +1176,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: 4),
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1190,14 +1190,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               color: color,
                                             ),
                                           ),
-                                          const SizedBox(height: 5),
+                                          const SizedBox(height: 1),
                                           PopupMenuButton<String>(
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(minWidth: 150),
+                                            iconSize: 19,
+                                            style: IconButton.styleFrom(
+                                              minimumSize: const Size(30, 28),
+                                              maximumSize: const Size(30, 28),
+                                              padding: EdgeInsets.zero,
+                                              visualDensity: VisualDensity.compact,
+                                            ),
                                             icon: const Icon(
                                               Icons.more_horiz,
                                               color: Color(0xFF89958E),
-                                              size: 21,
+                                              size: 19,
                                             ),
                                             onSelected: (value) {
                                               if (value == 'edit') {

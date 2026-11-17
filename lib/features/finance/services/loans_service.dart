@@ -146,7 +146,7 @@ class LoansService {
         .toUpperCase();
   }
 
-  static Future<void> _changeAccountBalance(
+  static Future<void> _changeWalletBalance(
     Transaction txn, {
     required int walletId,
     required double amount,
@@ -200,7 +200,7 @@ class LoansService {
         ).toMap()..remove('id'),
       );
 
-      await _changeAccountBalance(
+      await _changeWalletBalance(
         txn,
         walletId: loan.walletId,
         amount: -loan.amount,
@@ -284,7 +284,7 @@ class LoansService {
         whereArgs: [repayment.loanId],
       );
 
-      await _changeAccountBalance(
+      await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
         amount: repayment.amount,
@@ -427,7 +427,7 @@ class LoansService {
               .clamp(0.0, loan.amount)
               .toDouble();
 
-      await _changeAccountBalance(
+      await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
         amount: -repayment.amount,
@@ -486,7 +486,7 @@ class LoansService {
 
         await _getWallet(txn, repayment.walletId);
 
-        await _changeAccountBalance(
+        await _changeWalletBalance(
           txn,
           walletId: repayment.walletId,
           amount: -repayment.amount,
@@ -494,7 +494,7 @@ class LoansService {
       }
 
       // Di gayi asal loan raqam wallet mein wapas jama karta hai.
-      await _changeAccountBalance(
+      await _changeWalletBalance(
         txn,
         walletId: loan.walletId,
         amount: loan.amount,

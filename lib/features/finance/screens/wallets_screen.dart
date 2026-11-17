@@ -89,7 +89,7 @@ class _WalletsPageState extends State<WalletsPage> {
   bool loading = true;
   bool hideBalances = false;
   String numberFormat = '1,234.56';
-  Set<int> _archivedWalletIds = {}; 
+  Set<int> _hiddenWalletIds = {}; 
   List<int> _walletOrder = [];
 
   @override
@@ -121,23 +121,23 @@ class _WalletsPageState extends State<WalletsPage> {
       final settings = await FinanceDB.instance.db.query(
         'app_settings',
         where: 'setting_key IN (?, ?)',
-        whereArgs: ['wallet_archived_ids', 'wallet_display_order'],
+        whereArgs: ['wallet_hidden_ids', 'wallet_display_order'],
       );
       final values = {
         for (final row in settings)
           row['setting_key'].toString(): row['setting_value']?.toString() ?? ''
       };
-      Set<int> archived = {};
+      Set<int> hidden = {};
       List<int> order = [];
       try {
-        archived = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List)
+        archived = (jsonDecode(values['wallet_hidden_ids'] ?? '[]') as List)
             .map((e) => (e as num).toInt()).toSet();
       } catch (_) {}
       try {
         order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List)
             .map((e) => (e as num).toInt()).toList();
       } catch (_) {}
-      result.removeWhere((w) => archived.contains((w['id'] as num).toInt()));
+      result.removeWhere((w) => hidden.contains((w['id'] as num).toInt()));
       result.sort((a, b) {
         final ai = order.indexOf((a['id'] as num).toInt());
         final bi = order.indexOf((b['id'] as num).toInt());
@@ -149,7 +149,7 @@ class _WalletsPageState extends State<WalletsPage> {
       if (!mounted) return;
       setState(() {
         wallets = result;
-        _archivedWalletIds = archived;
+        _hiddenWalletIds = hidden;
         _walletOrder = order;
         hideBalances = hide;
         numberFormat = format;
@@ -1203,7 +1203,7 @@ class WalletManagementPage extends StatefulWidget {
 
 class _WalletManagementPageState extends State<WalletManagementPage> with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _active = [];
-  List<Map<String, dynamic>> _archived = [];
+  List<Map<String, dynamic>> _hidden = [];
   bool _loading = true;
   String? _loadError;
   late final TabController _tabs;
@@ -1235,10 +1235,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       final all = List<Map<String, dynamic>>.from(await db.query('wallets'));
       final rows = await db.query('app_settings',
         where: 'setting_key IN (?, ?)',
-        whereArgs: ['wallet_archived_ids', 'wallet_display_order']);
+        whereArgs: ['wallet_hidden_ids', 'wallet_display_order']);
       final values = {for (final r in rows) r['setting_key'].toString(): r['setting_value']?.toString() ?? ''};
       List<int> hidden = [], order = [];
-      try { hidden = (jsonDecode(values['wallet_archived_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
+      try { hidden = (jsonDecode(values['wallet_hidden_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
       try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
       all.sort((a,b) {
         final ai=order.indexOf((a['id'] as num).toInt());
@@ -1249,7 +1249,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       if (!mounted) return;
       setState(() {
         _active = all.where((w)=>!hidden.contains((w['id'] as num).toInt())).toList();
-        _archived = all.where((w)=>hidden.contains((w['id'] as num).toInt())).toList();
+        _hidden = all.where((w)=>hidden.contains((w['id'] as num).toInt())).toList();
         _loading = false;
       });
     } catch (e) {
@@ -1264,11 +1264,11 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
     return "${w['currency']} ${NumberFormat('#,##0.00', locale).format((w['balance'] as num).toDouble())}";
   }
 
-  Future<void> _archive(Map<String,dynamic> wallet, bool archive) async {
+  Future<void> _setWalletHidden(Map<String,dynamic> wallet, bool hidden) async {
     final id=(wallet['id'] as num).toInt();
-    final ids=_archived.map((w)=>(w['id'] as num).toInt()).toList();
-    if (archive) { if(!ids.contains(id)) ids.add(id); } else { ids.remove(id); }
-    await _saveIds('wallet_archived_ids', ids);
+    final ids=_hidden.map((w)=>(w['id'] as num).toInt()).toList();
+    if (hidden) { if(!ids.contains(id)) ids.add(id); } else { ids.remove(id); }
+    await _saveIds('wallet_hidden_ids', ids);
     await _load();
   }
 
@@ -1296,7 +1296,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
     catch(e) { if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString().replaceFirst('Exception: ','')))); }
   }
 
-  Widget _walletTile(Map<String,dynamic> w,{required bool archived}) {
+  Widget _walletTile(Map<String,dynamic> w,{required bool hidden}) {
     final icon=IconData((w['icon_code'] as num).toInt(),fontFamily:'MaterialIcons');
     return Card(margin:const EdgeInsets.symmetric(horizontal:12,vertical:2),child:ListTile(
       dense: true,
@@ -1320,10 +1320,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
           icon: const Icon(Icons.delete_outline, color: AppColors.expense),
         ),
         IconButton(
-          tooltip: archived ? 'Unhide Wallet' : 'Hide Wallet',
+          tooltip: hidden ? 'Unhide Wallet' : 'Hide Wallet',
           visualDensity: VisualDensity.compact,
-          onPressed: () => _archive(w, !archived),
-          icon: Icon(archived ? Icons.visibility_outlined : Icons.archive_outlined),
+          onPressed: () => _setWalletHidden(w, !hidden),
+          icon: Icon(hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined),
         ),
       ]),
     ));
@@ -1342,22 +1342,22 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
         setState((){});
         await _saveIds('wallet_display_order',
           _active.map((w)=>(w['id'] as num).toInt()).toList() +
-          _archived.map((w)=>(w['id'] as num).toInt()).toList());
+          _hidden.map((w)=>(w['id'] as num).toInt()).toList());
       },
       itemBuilder: (context,index) {
         final w=_active[index];
         return Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
           Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.reorder_rounded,color:AppColors.muted))),
-          Expanded(child:_walletTile(w,archived:false)),
+          Expanded(child:_walletTile(w,hidden:false)),
         ]));
       },
     );
   }
 
-  Widget _archivedList() {
-    if (_archived.isEmpty) return Center(child: Text(appText(context,'No hidden or archived wallets','کوئی پوشیدہ یا آرکائیو والٹ موجود نہیں')));
+  Widget _hiddenList() {
+    if (_hidden.isEmpty) return Center(child: Text(appText(context,'No hidden wallets','کوئی پوشیدہ والٹ موجود نہیں')));
     return ListView(padding:const EdgeInsets.only(top:8,bottom:24),
-      children:_archived.map((w)=>_walletTile(w,archived:true)).toList());
+      children:_hidden.map((w)=>_walletTile(w,hidden:true)).toList());
   }
 
   @override
@@ -1374,7 +1374,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
         indicatorColor:AppColors.primary,
         tabs:[
           Tab(text:'Active Wallets (${_active.length})'),
-          Tab(text:'Hidden / Archived (${_archived.length})'),
+          Tab(text:'Hidden Wallets (${_hidden.length})'),
         ],
       ),
     ),
@@ -1386,6 +1386,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
               Text('Wallets could not be loaded: $_loadError',textAlign:TextAlign.center),
               const SizedBox(height:12),FilledButton(onPressed:_load,child:const Text('Retry')),
             ])))
-        : TabBarView(controller:_tabs,children:[_activeList(),_archivedList()]),
+        : TabBarView(controller:_tabs,children:[_activeList(),_hiddenList()]),
   );
 }

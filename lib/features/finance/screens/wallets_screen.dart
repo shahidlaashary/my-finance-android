@@ -622,6 +622,15 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     return Offset(size.width / 2, size.height * .65);
   }
 
+  Alignment _dialogAlignmentCenteredOnAnchor(Offset anchor, Size screen) {
+    final centerX = anchor.dx.clamp(12.0, screen.width - 12.0);
+    final centerY = anchor.dy.clamp(12.0, screen.height - 12.0);
+    return Alignment(
+      (centerX / screen.width) * 2 - 1,
+      (centerY / screen.height) * 2 - 1,
+    );
+  }
+
   Alignment _dialogAlignmentAbove(Offset anchor, Size screen, double height) {
     final centerX = anchor.dx.clamp(12.0, screen.width - 12.0);
     final top = (anchor.dy - height - 8).clamp(8.0, screen.height - height - 8);
@@ -637,13 +646,13 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     final screen = MediaQuery.sizeOf(context);
     final anchor = _pickerAnchorCenter(_walletTypePickerKey);
     const popupHeight = 370.0;
-    final popupWidth = screen.width < 245 ? screen.width - 24 : 220.0;
+    final popupWidth = screen.width < 190 ? screen.width - 20 : 174.0;
     final picked = await showDialog<String>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => Dialog(
         insetPadding: EdgeInsets.zero,
-        alignment: _dialogAlignmentAbove(anchor, screen, popupHeight),
+        alignment: _dialogAlignmentCenteredOnAnchor(anchor, screen),
         backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         constraints: BoxConstraints.tightFor(width: popupWidth, height: popupHeight),
@@ -701,7 +710,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     final anchor = _pickerAnchorCenter(_currencyPickerKey);
     final availableAbove = (anchor.dy - 12).clamp(180.0, screen.height * .82);
     final popupHeight = availableAbove.toDouble();
-    final popupWidth = (screen.width - 32).clamp(260.0, 360.0).toDouble();
+    final popupWidth = (screen.width - 32).clamp(210.0, 232.0).toDouble();
     final picked = await showDialog<String>(
       context: context,
       barrierDismissible: true,

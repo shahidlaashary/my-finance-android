@@ -329,7 +329,7 @@ class TransactionsService {
     """, args);
   }
 
-  static Future<List<Map<String, dynamic>>> getAccounts() async {
+  static Future<List<Map<String, dynamic>>> getWallets() async {
     final db = await database;
     return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
       orderBy: 'name COLLATE NOCASE ASC');

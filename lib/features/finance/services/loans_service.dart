@@ -729,11 +729,14 @@ class LoansService {
   }
 
   /// Loan delete karta hai aur us se mutaliq wallet balance changes wapas karta hai.
-  static Future<void> deleteLoan(int loanId) async {
+  static Future<void> deleteLoan(int loanId, {bool fromAssetDelete = false}) async {
     final db = await _database;
 
     final loanSnapshot = await db.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
     if (loanSnapshot.isEmpty) return;
+    if (loanSnapshot.first['source_type'] != null && !fromAssetDelete) {
+      throw Exception('This loan is linked to an asset. Delete the related asset from Asset Section instead.');
+    }
     final repaymentSnapshot = await db.query('loan_repayments', where: 'loan_id = ?', whereArgs: [loanId]);
     final partyId = (loanSnapshot.first['party_id'] as num?)?.toInt();
     final party = partyId == null ? null : await getPartyById(partyId);

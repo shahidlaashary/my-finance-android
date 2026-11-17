@@ -808,6 +808,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         );
                       }),
                       Expanded(
+                        flex: 3,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: () {
@@ -821,7 +822,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           child: Container(
                             height: 30,
                             alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(horizontal: 1),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF2F5F3),
                               borderRadius: BorderRadius.circular(16),
@@ -830,20 +831,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.settings_outlined, size: 12, color: Color(0xFF52615A)),
-                                SizedBox(width: 2),
-                                Flexible(
-                                  child: Text(
+                                Icon(Icons.settings_outlined, size: 13, color: Color(0xFF52615A)),
+                                SizedBox(width: 4),
+                                Text(
                                     'Recurring',
                                     maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: Color(0xFF52615A),
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                ),
                               ],
                             ),
                           ),

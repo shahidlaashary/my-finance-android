@@ -525,13 +525,13 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(width: 2),
                                 Expanded(
-                                  flex: 3,
+                                  flex: 2,
                                   child: Text(
                                     amountText,
                                     maxLines: 1,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
+                                    textAlign: TextAlign.right,
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,
@@ -539,15 +539,15 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 0),
+                                const SizedBox(width: 2),
                                 Expanded(
-                                  flex: 4,
+                                  flex: 3,
                                   child: Text(
                                     '= $convertedText',
                                     maxLines: 1,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
+                                    textAlign: TextAlign.left,
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,

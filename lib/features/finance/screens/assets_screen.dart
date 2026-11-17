@@ -113,19 +113,19 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   String _accountName(int walletId) {
     final matches = _wallets.where(
-      (account) =>
-          (account['id'] as num).toInt() == walletId,
+      (wallet) =>
+          (wallet['id'] as num).toInt() == walletId,
     );
 
-    if (matches.isEmpty) return 'Unknown account';
+    if (matches.isEmpty) return 'Unknown wallet';
 
     return matches.first['name'].toString();
   }
 
   String _currency(int walletId) {
     final matches = _wallets.where(
-      (account) =>
-          (account['id'] as num).toInt() == walletId,
+      (wallet) =>
+          (wallet['id'] as num).toInt() == walletId,
     );
 
     if (matches.isEmpty) return 'PKR';
@@ -251,10 +251,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             SizedBox(width: 10),
                             Expanded(child: DropdownButtonFormField<int>(
                               value: selectedAccount, isExpanded: true,
-                              decoration: fieldDecoration('Payment Account', Icons.account_balance_wallet_outlined),
+                              decoration: fieldDecoration('Payment Wallet', Icons.account_balance_wallet_outlined),
                               items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(),
                               onChanged: (v) => setSheetState(() => selectedAccount = v),
-                              validator: (v) => v == null ? appText(context, 'Select account', 'اکاؤنٹ منتخب کریں') : null,
+                              validator: (v) => v == null ? appText(context, 'Select wallet', 'اکاؤنٹ منتخب کریں') : null,
                             )),
                           ]),
                           SizedBox(height: 12),
@@ -465,7 +465,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     value: selectedSaleWallet,
                     isExpanded: true,
                     decoration: InputDecoration(
-                      labelText: appText(context, "Sale Account", "Sale Account"),
+                      labelText: appText(context, "Sale Wallet", "Sale Wallet"),
                       prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                     ),
                     items: _wallets.map((wallet) {
@@ -697,8 +697,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
             const SizedBox(height: 6),
             _detailRow(asset.isSold ? 'Realized Profit/Loss' : 'Unrealized Profit/Loss', '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Colors.green : Colors.red, bold: true),
             const SizedBox(height: 6),
-            _detailRow('Purchase Account', _accountName(asset.walletId)),
-            if (asset.isSold) _detailRow('Sale Account', _accountName(asset.saleWalletId ?? asset.walletId)),
+            _detailRow('Purchase Wallet', _accountName(asset.walletId)),
+            if (asset.isSold) _detailRow('Sale Wallet', _accountName(asset.saleWalletId ?? asset.walletId)),
             const SizedBox(height: 6),
             _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
             if (asset.isSold && asset.saleDate != null) _detailRow('Sale Date', DateFormat('dd MMM yyyy').format(asset.saleDate!)),

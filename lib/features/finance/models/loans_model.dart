@@ -1,7 +1,5 @@
 class LoansModel {
   final int? id;
-  final String borrowerName;
-  final String? borrowerPhone;
   final int? partyId;
   final String loanType;
   final double amount;
@@ -15,9 +13,7 @@ class LoansModel {
 
   const LoansModel({
     this.id,
-    required this.borrowerName,
-    this.borrowerPhone,
-    this.partyId,
+    required this.partyId,
     this.loanType = 'given',
     required this.amount,
     required this.remainingAmount,
@@ -32,61 +28,46 @@ class LoansModel {
   bool get isPaid => remainingAmount <= 0;
 
   bool get isOverdue {
-    if (isPaid || dueDate == null || dueDate!.isEmpty) {
-      return false;
-    }
-
+    if (isPaid || dueDate == null || dueDate!.isEmpty) return false;
     final due = DateTime.tryParse(dueDate!);
     if (due == null) return false;
-
     final today = DateTime.now();
     return due.isBefore(DateTime(today.year, today.month, today.day));
   }
 
-  double get repaidAmount {
-    return (amount - remainingAmount).clamp(0, amount).toDouble();
-  }
+  double get repaidAmount =>
+      (amount - remainingAmount).clamp(0, amount).toDouble();
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'borrower_name': borrowerName,
-      'borrower_phone': borrowerPhone,
-      'party_id': partyId,
-      'loan_type': loanType,
-      'amount': amount,
-      'remaining_amount': remainingAmount,
-      'wallet_id': walletId,
-      'lending_date': lendingDate,
-      'due_date': dueDate,
-      'notes': notes,
-      'status': status,
-      'created_at': createdAt,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'party_id': partyId,
+        'loan_type': loanType,
+        'amount': amount,
+        'remaining_amount': remainingAmount,
+        'wallet_id': walletId,
+        'lending_date': lendingDate,
+        'due_date': dueDate,
+        'notes': notes,
+        'status': status,
+        'created_at': createdAt,
+      };
 
-  factory LoansModel.fromMap(Map<String, dynamic> map) {
-    return LoansModel(
-      id: map['id'] as int?,
-      borrowerName: map['borrower_name'] as String,
-      borrowerPhone: map['borrower_phone'] as String?,
-      partyId: map['party_id'] as int?,
-      loanType: map['loan_type'] as String? ?? 'given',
-      amount: (map['amount'] as num).toDouble(),
-      remainingAmount: (map['remaining_amount'] as num).toDouble(),
-      walletId: map['wallet_id'] as int,
-      lendingDate: map['lending_date'] as String,
-      dueDate: map['due_date'] as String?,
-      notes: map['notes'] as String? ?? '',
-      status: map['status'] as String? ?? 'active',
-      createdAt: map['created_at'] as String,
-    );
-  }
+  factory LoansModel.fromMap(Map<String, dynamic> map) => LoansModel(
+        id: map['id'] as int?,
+        partyId: map['party_id'] as int?,
+        loanType: map['loan_type'] as String? ?? 'given',
+        amount: (map['amount'] as num).toDouble(),
+        remainingAmount: (map['remaining_amount'] as num).toDouble(),
+        walletId: map['wallet_id'] as int,
+        lendingDate: map['lending_date'] as String,
+        dueDate: map['due_date'] as String?,
+        notes: map['notes'] as String? ?? '',
+        status: map['status'] as String? ?? 'active',
+        createdAt: map['created_at'] as String,
+      );
 
   LoansModel copyWith({
     int? id,
-    String? borrowerName,
-    String? borrowerPhone,
     int? partyId,
     String? loanType,
     double? amount,
@@ -97,21 +78,18 @@ class LoansModel {
     String? notes,
     String? status,
     String? createdAt,
-  }) {
-    return LoansModel(
-      id: id ?? this.id,
-      borrowerName: borrowerName ?? this.borrowerName,
-      borrowerPhone: borrowerPhone ?? this.borrowerPhone,
-      partyId: partyId ?? this.partyId,
-      loanType: loanType ?? this.loanType,
-      amount: amount ?? this.amount,
-      remainingAmount: remainingAmount ?? this.remainingAmount,
-      walletId: walletId ?? this.walletId,
-      lendingDate: lendingDate ?? this.lendingDate,
-      dueDate: dueDate ?? this.dueDate,
-      notes: notes ?? this.notes,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
+  }) =>
+      LoansModel(
+        id: id ?? this.id,
+        partyId: partyId ?? this.partyId,
+        loanType: loanType ?? this.loanType,
+        amount: amount ?? this.amount,
+        remainingAmount: remainingAmount ?? this.remainingAmount,
+        walletId: walletId ?? this.walletId,
+        lendingDate: lendingDate ?? this.lendingDate,
+        dueDate: dueDate ?? this.dueDate,
+        notes: notes ?? this.notes,
+        status: status ?? this.status,
+        createdAt: createdAt ?? this.createdAt,
+      );
 }

@@ -449,8 +449,8 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        appText(context, 'All Currencies Summary',
-                            'تمام کرنسیوں کا خلاصہ'),
+                        appText(context, 'Foreign Currencies Summary',
+                            'غیر ملکی کرنسیوں کا خلاصہ'),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -576,7 +576,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Total of all currencies in $baseCurrency',
+                          'Total of foreign currencies in $baseCurrency',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,

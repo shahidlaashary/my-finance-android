@@ -1132,6 +1132,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final name = TextEditingController(text: party?['name']?.toString() ?? '');
     final phone = TextEditingController(text: party?['phone']?.toString() ?? '');
     final address = TextEditingController(text: party?['address']?.toString() ?? '');
+    String selectedCurrency = (party?['currency']?.toString() ?? 'PKR').toUpperCase();
+    const currencies = ['PKR', 'USD', 'SAR', 'AED', 'GBP', 'EUR', 'INR', 'CAD', 'AUD', 'CNY', 'TRY', 'KWD', 'QAR', 'OMR', 'BHD'];
     final formKey = GlobalKey<FormState>();
     final saved = await showDialog<bool>(
       context: context,
@@ -1158,6 +1160,14 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                 controller: address,
                 decoration: const InputDecoration(labelText: 'Address'),
               ),
+              const SizedBox(height: 12),
+              StatefulBuilder(builder: (context, setCurrencyState) => DropdownButtonFormField<String>(
+                value: currencies.contains(selectedCurrency) ? selectedCurrency : 'PKR',
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Party Currency *'),
+                items: currencies.map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
+                onChanged: (value) { if (value != null) setCurrencyState(() => selectedCurrency = value); },
+              )),
             ]),
           ),
         ),
@@ -1184,6 +1194,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
             name: name.text,
             phone: phone.text,
             address: address.text,
+            currency: selectedCurrency,
           );
         } else {
           await LoansService.updateParty(
@@ -1191,6 +1202,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
             name: name.text,
             phone: phone.text,
             address: address.text,
+            currency: selectedCurrency,
           );
         }
         await _loadParties();

@@ -67,10 +67,6 @@ class RecurringTransactionService {
         created_at TEXT NOT NULL
       )
     ''');
-    final columns = await db.rawQuery('PRAGMA table_info($_tableName)');
-    if (!columns.any((column) => column['name'] == 'transfer_fee')) {
-      await db.execute('ALTER TABLE $_tableName ADD COLUMN transfer_fee REAL NOT NULL DEFAULT 0');
-    }
   }
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);

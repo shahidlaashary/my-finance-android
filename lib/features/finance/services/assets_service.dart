@@ -285,113 +285,75 @@ class AssetsService {
   }
 
   Future<void> updateAsset(AssetsModel updatedAsset) async {
-    if (updatedAsset.id == null) {
-      throw Exception('Asset ID is required for updating.');
-    }
+    if (updatedAsset.id == null) throw Exception('Asset ID is required for updating.');
     _validateAsset(updatedAsset);
-    if (updatedAsset.isSold) {
-      throw Exception(
-        'Use the Sell Asset option to record a sale.',
-      );
-    }
+    if (updatedAsset.isSold) throw Exception('Use the Sell Asset option to record a sale.');
     final db = await _database;
     await _ensureTables(db);
-    await db.transaction((txn) async {
-      final rows = await txn.query(
-        'assets',
-        where: 'id = ?',
-        whereArgs: [updatedAsset.id],
-        limit: 1,
+    final rows = await db.query('assets', where: 'id = ?', whereArgs: [updatedAsset.id], limit: 1);
+    if (rows.isEmpty) throw Exception('Asset was not found.');
+    final oldAsset = AssetsModel.fromMap(rows.first);
+    if (oldAsset.isSold) throw Exception('Sold assets cannot be edited.');
+    final oldIsLoan = oldAsset.paymentType.toLowerCase() == 'loan';
+    final newIsLoan = updatedAsset.paymentType.toLowerCase() == 'loan';
+    if (oldIsLoan != newIsLoan) throw Exception('Payment Type cannot be changed after saving. Delete and recreate the asset to change it.');
+    if (oldIsLoan) {
+      if (updatedAsset.partyId == null || oldAsset.linkedLoanId == null) throw Exception('Linked loan or party is missing.');
+      final party = await LoansService.getPartyById(updatedAsset.partyId!);
+      if (party == null) throw Exception('Selected party was not found.');
+      final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+      if (currency != oldAsset.currency.toUpperCase()) throw Exception('Party currency must remain ' + oldAsset.currency + ' for this asset.');
+      await LoansService.updateAssetLinkedLoan(
+        loanId: oldAsset.linkedLoanId!, partyId: updatedAsset.partyId!,
+        loanType: 'taken', amount: updatedAsset.purchasePrice,
+        lendingDate: updatedAsset.purchaseDate.toIso8601String().split('T').first,
+        notes: 'Asset purchase: ' + updatedAsset.name,
       );
-      if (rows.isEmpty) {
-        throw Exception('Asset was not found.');
-      }
-      final oldAsset = AssetsModel.fromMap(rows.first);
-      if (oldAsset.isSold) {
-        throw Exception('Sold assets cannot be edited.');
-      }
-      final oldWallet = await _getWallet(txn, oldAsset.walletId);
-      final updatedWallet = await _getWallet(txn, updatedAsset.walletId);
-
-      // Asset ki purchase amount ko doosri currency mein convert kiye baghair move nahi karte.
-      final oldCurrency = (oldWallet['currency'] ?? 'PKR').toString().toUpperCase();
-      final updatedCurrency = (updatedWallet['currency'] ?? 'PKR').toString().toUpperCase();
-      if (oldCurrency != updatedCurrency) {
-        throw Exception(
-          'Asset must remain linked to an wallet with the same currency.',
-        );
-      }
-
-      await _changeBalance(
-        txn,
-        walletId: oldAsset.walletId,
-        amount: oldAsset.purchasePrice,
-      );
-      final newBalance = await _getBalance(
-        txn,
-        updatedAsset.walletId,
-      );
-      if (newBalance < updatedAsset.purchasePrice) {
-        throw Exception('Insufficient wallet balance.');
-      }
-      await _changeBalance(
-        txn,
-        walletId: updatedAsset.walletId,
-        amount: -updatedAsset.purchasePrice,
-      );
-      final map = updatedAsset.copyWith(
-        name: updatedAsset.name.trim(),
-        category: updatedAsset.category.trim().isEmpty
-            ? 'Other'
-            : updatedAsset.category.trim(),
-        createdAt: oldAsset.createdAt,
-      ).toMap()
-        ..remove('id');
-      await txn.update(
-        'assets',
-        map,
-        where: 'id = ?',
-        whereArgs: [updatedAsset.id],
-      );
-    });
+      await db.update('assets', updatedAsset.copyWith(
+        walletId: oldAsset.walletId, currency: oldAsset.currency,
+        linkedLoanId: oldAsset.linkedLoanId, createdAt: oldAsset.createdAt,
+      ).toMap()..remove('id'), where: 'id = ?', whereArgs: [updatedAsset.id]);
+    } else {
+      await db.transaction((txn) async {
+        final oldWallet = await _getWallet(txn, oldAsset.walletId);
+        final updatedWallet = await _getWallet(txn, updatedAsset.walletId);
+        final oldCurrency = (oldWallet['currency'] ?? 'PKR').toString().toUpperCase();
+        final updatedCurrency = (updatedWallet['currency'] ?? 'PKR').toString().toUpperCase();
+        if (oldCurrency != updatedCurrency) throw Exception('Asset must remain linked to a wallet with the same currency.');
+        await _changeBalance(txn, walletId: oldAsset.walletId, amount: oldAsset.purchasePrice);
+        if (await _getBalance(txn, updatedAsset.walletId) < updatedAsset.purchasePrice) throw Exception('Insufficient wallet balance.');
+        await _changeBalance(txn, walletId: updatedAsset.walletId, amount: -updatedAsset.purchasePrice);
+        final map = updatedAsset.copyWith(currency: updatedCurrency, createdAt: oldAsset.createdAt).toMap()..remove('id');
+        await txn.update('assets', map, where: 'id = ?', whereArgs: [updatedAsset.id]);
+      });
+    }
+    AppRefreshController.notifyChanged();
   }
+
   Future<void> deleteAsset(int assetId) async {
     final db = await _database;
     await _ensureTables(db);
     final existing = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
     if (existing.isEmpty) return;
-    await RecycleBinService.archive(type: 'Asset', title: existing.first['name']?.toString() ?? 'Asset', table: 'assets', id: assetId, record: existing.first);
+    final asset = AssetsModel.fromMap(existing.first);
+    if (asset.linkedLoanId != null) await LoansService.deleteLoan(asset.linkedLoanId!);
+    if (asset.saleLinkedLoanId != null) await LoansService.deleteLoan(asset.saleLinkedLoanId!);
+    await RecycleBinService.archive(type: 'Asset', title: asset.name, table: 'assets', id: assetId, record: existing.first);
     await db.transaction((txn) async {
-      final rows = await txn.query(
-        'assets',
-        where: 'id = ?',
-        whereArgs: [assetId],
-        limit: 1,
-      );
+      final rows = await txn.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
       if (rows.isEmpty) return;
-      final asset = AssetsModel.fromMap(rows.first);
-      await _getWallet(txn, asset.walletId);
-      if (asset.isSold && asset.salePrice != null) {
-        final saleWalletId = asset.saleWalletId ?? asset.walletId;
-        await _getWallet(txn, saleWalletId);
-        await _changeBalance(
-          txn,
-          walletId: saleWalletId,
-          amount: -asset.salePrice!,
-        );
+      final current = AssetsModel.fromMap(rows.first);
+      if (current.isSold && current.salePrice != null && current.salePaymentType.toLowerCase() != 'loan') {
+        await _changeBalance(txn, walletId: current.saleWalletId ?? current.walletId, amount: -current.salePrice!);
       }
-      await _changeBalance(
-        txn,
-        walletId: asset.walletId,
-        amount: asset.purchasePrice,
-      );
-      await txn.delete(
-        'assets',
-        where: 'id = ?',
-        whereArgs: [assetId],
-      );
+      if (current.paymentType.toLowerCase() != 'loan') {
+        await _changeBalance(txn, walletId: current.walletId, amount: current.purchasePrice);
+      }
+      await txn.delete('assets', where: 'id = ?', whereArgs: [assetId]);
     });
+    AppRefreshController.notifyChanged();
   }
+
   Future<Map<String, double>> getTotalCurrentValueByCurrency() async {
     final db = await _database;
     await _ensureTables(db);

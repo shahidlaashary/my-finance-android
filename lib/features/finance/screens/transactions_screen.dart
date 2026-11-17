@@ -800,7 +800,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 style: TextStyle(
                                   color: selected ? Colors.white : const Color(0xFF52615A),
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 12.5,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
@@ -808,7 +808,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         );
                       }),
                       Expanded(
-                        flex: 2,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: () {
@@ -831,14 +830,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.settings_outlined, size: 13, color: Color(0xFF52615A)),
-                                SizedBox(width: 4),
+                                Icon(Icons.settings_outlined, size: 11, color: Color(0xFF52615A)),
+                                SizedBox(width: 2),
                                 Text(
                                     'Recurring',
                                     maxLines: 1,
                                     style: TextStyle(
                                       color: Color(0xFF52615A),
-                                      fontSize: 11.5,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),

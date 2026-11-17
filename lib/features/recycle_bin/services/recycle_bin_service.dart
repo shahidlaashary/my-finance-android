@@ -13,13 +13,6 @@ class RecycleBinService {
       source_table TEXT NOT NULL, source_id TEXT NOT NULL,
       payload TEXT NOT NULL, related_payload TEXT,
       deleted_at TEXT NOT NULL, expires_at TEXT)''');
-    final columns = await FinanceDB.instance.db.rawQuery('PRAGMA table_info(recycle_bin)');
-    if (!columns.any((column) => column['name'] == 'expires_at')) {
-      await FinanceDB.instance.db.execute('ALTER TABLE recycle_bin ADD COLUMN expires_at TEXT');
-    }
-    await FinanceDB.instance.db.rawUpdate(
-      "UPDATE recycle_bin SET expires_at = strftime('%Y-%m-%dT%H:%M:%f', deleted_at, '+30 days') WHERE expires_at IS NULL",
-    );
   }
 
   static const int retentionDays = 30;

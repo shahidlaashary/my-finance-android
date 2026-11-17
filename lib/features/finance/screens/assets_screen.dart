@@ -511,7 +511,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       value: selectedBuyerParty,
                       isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Buyer Party *'),
-                      items: _parties.map((party) => DropdownMenuItem<int>(
+                      items: _parties.where((party) => (party['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()).map((party) => DropdownMenuItem<int>(
                         value: (party['id'] as num).toInt(),
                         child: Text('${party['name']} • ${party['currency'] ?? 'PKR'}', overflow: TextOverflow.ellipsis),
                       )).toList(),

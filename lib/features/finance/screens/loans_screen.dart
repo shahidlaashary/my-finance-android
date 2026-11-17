@@ -1399,6 +1399,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                 title: Text(party['name']?.toString() ?? ''),
                                 subtitle: Text(
                                   [
+                                    'Currency: ${(party['currency']?.toString() ?? 'PKR').toUpperCase()}',
                                     if ((party['phone'] ?? '').toString().isNotEmpty)
                                       party['phone'].toString(),
                                     summary,

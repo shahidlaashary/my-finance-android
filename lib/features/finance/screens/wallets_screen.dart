@@ -612,22 +612,43 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
     'Custom': Icons.tune_rounded,
   };
 
+  Offset _pickerAnchorCenter(GlobalKey key) {
+    final renderObject = key.currentContext?.findRenderObject();
+    if (renderObject is RenderBox && renderObject.hasSize) {
+      final topLeft = renderObject.localToGlobal(Offset.zero);
+      return Offset(topLeft.dx + renderObject.size.width / 2, topLeft.dy);
+    }
+    final size = MediaQuery.sizeOf(context);
+    return Offset(size.width / 2, size.height * .65);
+  }
+
+  Alignment _dialogAlignmentAbove(Offset anchor, Size screen, double height) {
+    final centerX = anchor.dx.clamp(12.0, screen.width - 12.0);
+    final top = (anchor.dy - height - 8).clamp(8.0, screen.height - height - 8);
+    final centerY = top + height / 2;
+    return Alignment(
+      (centerX / screen.width) * 2 - 1,
+      (centerY / screen.height) * 2 - 1,
+    );
+  }
+
   Future<void> _showWalletTypePicker() async {
     final theme = Theme.of(context);
-    final renderObject = _walletTypePickerKey.currentContext?.findRenderObject();
-    final pickerWidth = renderObject is RenderBox
-        ? renderObject.size.width
-        : MediaQuery.of(context).size.width * 0.32;
+    final screen = MediaQuery.sizeOf(context);
+    final anchor = _pickerAnchorCenter(_walletTypePickerKey);
+    const popupHeight = 370.0;
+    final popupWidth = screen.width < 245 ? screen.width - 24 : 220.0;
     final picked = await showDialog<String>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => Dialog(
         insetPadding: EdgeInsets.zero,
+        alignment: _dialogAlignmentAbove(anchor, screen, popupHeight),
         backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        constraints: BoxConstraints.tightFor(width: pickerWidth),
+        constraints: BoxConstraints.tightFor(width: popupWidth, height: popupHeight),
         child: SizedBox(
-          width: pickerWidth,
+          width: popupWidth,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
             child: Column(
@@ -653,7 +674,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                 : theme.colorScheme.onSurfaceVariant),
                           const SizedBox(width: 7),
                           Expanded(child: Text(type, maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
+                            overflow: TextOverflow.visible,
                             style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
                           if (selected) Icon(Icons.check_circle_rounded,
                             size: 16, color: theme.colorScheme.primary),
@@ -675,10 +697,11 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
   Future<void> _showWalletCurrencyPicker() async {
     final theme = Theme.of(context);
-    final renderObject = _currencyPickerKey.currentContext?.findRenderObject();
-    final pickerWidth = renderObject is RenderBox
-        ? renderObject.size.width
-        : MediaQuery.of(context).size.width * 0.42;
+    final screen = MediaQuery.sizeOf(context);
+    final anchor = _pickerAnchorCenter(_currencyPickerKey);
+    final availableAbove = (anchor.dy - 12).clamp(180.0, screen.height * .82);
+    final popupHeight = availableAbove.toDouble();
+    final popupWidth = (screen.width - 32).clamp(260.0, 360.0).toDouble();
     final picked = await showDialog<String>(
       context: context,
       barrierDismissible: true,
@@ -693,13 +716,13 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
           }).toList();
           return Dialog(
             insetPadding: EdgeInsets.zero,
-            alignment: Alignment.center,
+            alignment: _dialogAlignmentAbove(anchor, screen, popupHeight),
             backgroundColor: theme.colorScheme.surface,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            constraints: BoxConstraints.tightFor(width: pickerWidth),
+            constraints: BoxConstraints.tightFor(width: popupWidth, height: popupHeight),
             child: SizedBox(
-              width: pickerWidth,
-              height: MediaQuery.of(context).size.height * .72,
+              width: popupWidth,
+              height: popupHeight,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

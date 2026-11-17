@@ -76,7 +76,7 @@ class _LoansScreenState extends State<LoansScreen> {
   Future<void> _loadData() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
-      final wallets = await TransactionsService.getAccounts();
+      final wallets = await TransactionsService.getWallets();
       final loans = await LoansService.getLoans();
       final outstandingByCurrency =
           await LoansService.getTotalOutstandingByCurrency();

@@ -85,7 +85,7 @@ class GoalsService {
       ON goal_contributions(goal_id)
     ''');
   }
-  static Future<Map<String, dynamic>> _getAccount(
+  static Future<Map<String, dynamic>> _getWallet(
     Transaction txn,
     int walletId,
   ) async {
@@ -143,7 +143,7 @@ class GoalsService {
     }
     final goalId = await db.transaction((txn) async {
       if (goal.walletId != null) {
-        await _getAccount(txn, goal.walletId!);
+        await _getWallet(txn, goal.walletId!);
       }
       final now = DateTime.now();
       return txn.insert(
@@ -226,7 +226,7 @@ class GoalsService {
       if (goal.isCompleted) {
         throw Exception('This savings goal is already completed.');
       }
-      final wallet = await _getAccount(txn, walletId);
+      final wallet = await _getWallet(txn, walletId);
       if (goal.walletId != null &&
           goal.walletId != walletId) {
         throw Exception(
@@ -302,7 +302,7 @@ class GoalsService {
           'No wallet is linked to this savings goal.',
         );
       }
-      await _getAccount(txn, goal.walletId!);
+      await _getWallet(txn, goal.walletId!);
       final newSavedAmount =
           (goal.savedAmount - amount).clamp(0.0, goal.targetAmount).toDouble();
       final now = DateTime.now();
@@ -424,7 +424,7 @@ class GoalsService {
         final walletId = (row['wallet_id'] as num).toInt();
         final amount = (row['amount'] as num).toDouble();
         final type = row['type']?.toString();
-        await _getAccount(txn, walletId);
+        await _getWallet(txn, walletId);
         await _changeBalance(
           txn,
           walletId: walletId,

@@ -333,6 +333,26 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 8),
+                              if (createNewParty) ...[
+                                TextField(
+                                  controller: _nameController,
+                                  textCapitalization: TextCapitalization.words,
+                                  decoration: const InputDecoration(labelText: 'Party Name *'),
+                                ),
+                                TextField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: const InputDecoration(labelText: 'Phone Number'),
+                                ),
+                              ] else if (_selectedPartyId != null)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Selected: ${_nameController.text}${_phoneController.text.trim().isEmpty ? '' : ' • ${_phoneController.text}'}',
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
                               const SizedBox(height: 10),
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,26 +387,6 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              if (createNewParty) ...[
-                                TextField(
-                                  controller: _nameController,
-                                  textCapitalization: TextCapitalization.words,
-                                  decoration: const InputDecoration(labelText: 'Party Name *'),
-                                ),
-                                TextField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                                ),
-                              ] else if (_selectedPartyId != null)
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Selected: ${_nameController.text}${_phoneController.text.trim().isEmpty ? '' : ' • ${_phoneController.text}'}',
-                                    style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
                               const SizedBox(height: 12),
                               Row(
                                 children: [

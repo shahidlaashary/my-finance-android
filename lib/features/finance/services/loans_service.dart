@@ -70,7 +70,7 @@ class LoansService {
       CREATE TABLE IF NOT EXISTS loans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         party_id INTEGER,
-        loan_type TEXT NOT NULL DEFAULT 'Loan Given',
+        loan_type TEXT NOT NULL DEFAULT 'given',
         amount REAL NOT NULL,
         remaining_amount REAL NOT NULL,
         wallet_id INTEGER NOT NULL,
@@ -278,7 +278,7 @@ class LoansService {
         loan.walletId,
       );
 
-      if (loan.loanType == 'Loan Given' && balance < loan.amount) {
+      if (loan.loanType == 'given' && balance < loan.amount) {
         throw Exception('Insufficient wallet balance.');
       }
 
@@ -293,7 +293,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: loan.walletId,
-        amount: loan.loanType == 'Loan Given' ? -loan.amount : loan.amount,
+        amount: loan.loanType == 'given' ? -loan.amount : loan.amount,
       );
 
       return loanId;
@@ -355,7 +355,7 @@ class LoansService {
         );
       }
 
-      if (loan.loanType == 'Loan Taken' &&
+      if (loan.loanType == 'taken' &&
           await _getWalletBalance(txn, repayment.walletId) < repayment.amount) {
         throw Exception('Insufficient wallet balance to pay this loan.');
       }
@@ -382,7 +382,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
-        amount: loan.loanType == 'Loan Given' ? repayment.amount : -repayment.amount,
+        amount: loan.loanType == 'given' ? repayment.amount : -repayment.amount,
       );
 
       return repaymentId;
@@ -453,7 +453,7 @@ class LoansService {
 
     return {
       for (final row in rows)
-        '${row['currency']} • ${row['loan_type'] == 'Loan Given' ? 'Receivable' : 'Payable'}': (row['total'] as num).toDouble(),
+        '${row['currency']} • ${row['loan_type'] == 'given' ? 'Receivable' : 'Payable'}': (row['total'] as num).toDouble(),
     };
   }
 
@@ -526,7 +526,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
-        amount: loan.loanType == 'Loan Given' ? -repayment.amount : repayment.amount,
+        amount: loan.loanType == 'given' ? -repayment.amount : repayment.amount,
       );
 
       await txn.update(
@@ -593,7 +593,7 @@ class LoansService {
         await _changeWalletBalance(
           txn,
           walletId: repayment.walletId,
-          amount: loan.loanType == 'Loan Given' ? -repayment.amount : repayment.amount,
+          amount: loan.loanType == 'given' ? -repayment.amount : repayment.amount,
         );
       }
 
@@ -601,7 +601,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: loan.walletId,
-        amount: loan.loanType == 'Loan Given' ? loan.amount : -loan.amount,
+        amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
       );
 
       await txn.delete(

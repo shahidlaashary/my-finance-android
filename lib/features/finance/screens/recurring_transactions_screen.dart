@@ -92,7 +92,7 @@ class _RecurringTransactionsScreenState
         '${value.year}';
   }
 
-  String _accountName(int? id) {
+  String _walletName(int? id) {
     if (id == null) return 'Unknown wallet';
 
     final matches = _wallets.where(
@@ -337,13 +337,13 @@ class _RecurringTransactionsScreenState
             _detailRow(
               Icons.account_balance_wallet,
               'Wallet',
-              _accountName(item.walletId),
+              _walletName(item.walletId),
             ),
             if (isTransfer)
               _detailRow(
                 Icons.account_balance,
                 'Destination',
-                _accountName(item.toWalletId),
+                _walletName(item.toWalletId),
               ),
             if (isTransfer && item.transferFee > 0)
               _detailRow(

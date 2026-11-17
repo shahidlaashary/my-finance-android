@@ -56,7 +56,12 @@ class AssetsService {
       'sale_linked_loan_id': 'ALTER TABLE assets ADD COLUMN sale_linked_loan_id INTEGER',
     };
     for (final entry in migrations.entries) {
-      if (!existing.contains(entry.key)) await db.execute(entry.value);
+      if (!existing.contains(entry.key)) {
+        await db.execute(entry.value);
+        if (entry.key == 'currency') {
+          await db.execute("UPDATE assets SET currency = COALESCE((SELECT currency FROM wallets WHERE wallets.id = assets.wallet_id), 'PKR')");
+        }
+      }
     }
     await db.execute('CREATE INDEX IF NOT EXISTS idx_assets_linked_loan ON assets(linked_loan_id, sale_linked_loan_id)');
   }

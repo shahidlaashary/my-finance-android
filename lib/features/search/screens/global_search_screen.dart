@@ -10,6 +10,7 @@ import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/committee/services/committee_service.dart';
 import 'package:my_finance/features/documents/services/my_documents_service.dart';
 import 'package:my_finance/features/installments/services/installment_service.dart';
 import 'package:my_finance/features/stock/services/stock_service.dart';
@@ -54,6 +55,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     'Staff',
     'Installments',
     'Vehicles',
+    'Committee',
   ];
 
   final TextEditingController _controller = TextEditingController();
@@ -331,6 +333,56 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             icon: Icons.payments_outlined,
             data: data,
           );
+        }
+      }),
+      _collect(() async {
+        final committees = await CommitteeService.getCommittees();
+        for (final committee in committees) {
+          final committeeId = (committee['id'] as num).toInt();
+          final committeeName = committee['name']?.toString() ?? 'Committee';
+          final committeeData = Map<String, dynamic>.from(committee)
+            ..['record_kind'] = 'Committee';
+          _addRecord(
+            found,
+            query: query,
+            type: 'Committee',
+            title: committeeName,
+            subtitle: 'Committee  ·  ${committee['frequency'] ?? ''}  ·  ${committee['status'] ?? ''}',
+            icon: Icons.groups_2_outlined,
+            data: committeeData,
+          );
+
+          final members = await CommitteeService.getMembers(committeeId);
+          for (final member in members) {
+            final data = Map<String, dynamic>.from(member)
+              ..['committee_name'] = committeeName
+              ..['record_kind'] = 'Member';
+            _addRecord(
+              found,
+              query: query,
+              type: 'Committee',
+              title: member['name']?.toString() ?? 'Committee member',
+              subtitle: 'Member  ·  $committeeName  ·  ${member['phone'] ?? ''}',
+              icon: Icons.person_outline_rounded,
+              data: data,
+            );
+          }
+
+          final entries = await CommitteeService.getEntries(committeeId);
+          for (final entry in entries) {
+            final data = Map<String, dynamic>.from(entry)
+              ..['committee_name'] = committeeName
+              ..['record_kind'] = 'Committee entry';
+            _addRecord(
+              found,
+              query: query,
+              type: 'Committee',
+              title: entry['member_name']?.toString() ?? 'Committee entry',
+              subtitle: '${entry['entry_type'] ?? 'Entry'}  ·  $committeeName  ·  ${entry['amount'] ?? ''}  ·  ${entry['entry_date'] ?? ''}',
+              icon: Icons.payments_outlined,
+              data: data,
+            );
+          }
         }
       }),
       _collect(() async {

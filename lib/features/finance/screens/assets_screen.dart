@@ -948,7 +948,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       'Livestock': Icons.pets_outlined, 'Business': Icons.storefront_outlined,
     }[asset.category] ?? Icons.inventory_2_outlined;
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: const BorderSide(color: Color(0xFFE7EEEA))),
       clipBehavior: Clip.antiAlias,

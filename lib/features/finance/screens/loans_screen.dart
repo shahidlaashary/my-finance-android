@@ -223,6 +223,10 @@ class _LoansScreenState extends State<LoansScreen> {
     DateTime? dueDate = _dueDate;
     final configuredBaseCurrency = await FinanceDB.instance.getBaseCurrency();
     String newPartyCurrency = CurrencyCatalog.supported.contains(configuredBaseCurrency) ? configuredBaseCurrency : 'PKR';
+    if (createNewParty) {
+      final matching = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == newPartyCurrency);
+      walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
+    }
     final List<XFile> pendingLoanImages = [];
     final ImagePicker loanImagePicker = ImagePicker();
     final result = await showModalBottomSheet<bool>(

@@ -532,7 +532,7 @@ class _StatsScreenState extends State<StatsScreen> {
             Text(row['currency'].toString(), style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 5),
             Text(_money(row['total_balance']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            Text('${row['account_count']} wallet(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+            Text('${row['wallet_count']} wallet(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
           ]),
         );
       }).toList(),

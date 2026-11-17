@@ -328,7 +328,7 @@ class ReportsService {
   // WALLET-WISE TRANSACTION SUMMARY
   // --------------------------------------------------
 
-  Future<List<Map<String, dynamic>>> getAccountBreakdown({
+  Future<List<Map<String, dynamic>>> getWalletBreakdown({
     required DateTime startDate,
     required DateTime endDate,
   }) async {

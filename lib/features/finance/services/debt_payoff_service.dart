@@ -131,7 +131,7 @@ class DebtPayoffService {
     if (debt.balance < 0 || debt.balance > debt.originalAmount) throw Exception('Invalid outstanding balance.');
     if (debt.annualInterestRate < 0 || debt.minimumPayment < 0) throw Exception('Interest and minimum payment cannot be negative.');
     final wallets = await db.query('wallets', columns: ['id'], where: 'id=?', whereArgs: [debt.walletId], limit: 1);
-    if (wallets.isEmpty) throw Exception('Linked account was not found.');
+    if (wallets.isEmpty) throw Exception('Linked wallet was not found.');
     final balance = debt.balance;
     final values = {
       'name': debt.name.trim(), 'lender': debt.lender.trim(), 'phone': debt.phone.trim(),
@@ -159,13 +159,13 @@ class DebtPayoffService {
       final debt = DebtRecord.fromMap(debtRows.first);
       if (debt.isPaid || payment.amount > debt.balance + 0.000001) throw Exception('Payment exceeds outstanding debt.');
       final wallets = await txn.query('wallets', where: 'id=?', whereArgs: [payment.walletId], limit: 1);
-      if (wallets.isEmpty) throw Exception('Selected account not found.');
+      if (wallets.isEmpty) throw Exception('Selected wallet not found.');
       final debtWallets = await txn.query('wallets', columns: ['currency'], where: 'id=?', whereArgs: [debt.walletId], limit: 1);
       final paymentCurrency = (wallets.first['currency']?.toString() ?? 'PKR').toUpperCase();
       final debtCurrency = (debtWallets.isEmpty ? 'PKR' : debtWallets.first['currency']?.toString() ?? 'PKR').toUpperCase();
-      if (paymentCurrency != debtCurrency) throw Exception('Payment account must use $debtCurrency.');
+      if (paymentCurrency != debtCurrency) throw Exception('Payment wallet must use $debtCurrency.');
       final cash = (wallets.first['balance'] as num).toDouble();
-      if (cash < payment.amount) throw Exception('Insufficient account balance.');
+      if (cash < payment.amount) throw Exception('Insufficient wallet balance.');
       await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id=?', [payment.amount, payment.walletId]);
       final next = (debt.balance - payment.amount).clamp(0.0, debt.originalAmount).toDouble();
       await txn.update('debts', {'balance': next, 'status': next <= 0.000001 ? 'paid' : 'active'}, where: 'id=?', whereArgs: [payment.debtId]);
@@ -198,7 +198,7 @@ class DebtPayoffService {
       final debtRows = await txn.query('debts', where: 'id=?', whereArgs: [p.debtId], limit: 1);
       if (debtRows.isEmpty) throw Exception('Related debt not found.');
       final walletRows = await txn.query('wallets', where: 'id=?', whereArgs: [p.walletId], limit: 1);
-      if (walletRows.isEmpty) throw Exception('Payment account not found.');
+      if (walletRows.isEmpty) throw Exception('Payment wallet not found.');
       final debt = DebtRecord.fromMap(debtRows.first);
       await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id=?', [p.amount, p.walletId]);
       final restored = (debt.balance + p.amount).clamp(0.0, debt.originalAmount).toDouble();
@@ -219,7 +219,7 @@ class DebtPayoffService {
       for (final row in payments) {
         final p = DebtPayment.fromMap(row);
         final exists = await txn.query('wallets', columns: ['id'], where: 'id=?', whereArgs: [p.walletId], limit: 1);
-        if (exists.isEmpty) throw Exception('A payment account is missing; debt was not deleted.');
+        if (exists.isEmpty) throw Exception('A payment wallet is missing; debt was not deleted.');
       }
       for (final row in payments) {
         final p = DebtPayment.fromMap(row);

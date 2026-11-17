@@ -100,6 +100,7 @@ class LoansService {
     final loanColumns = await db.rawQuery('PRAGMA table_info(loans)');
     if (!loanColumns.any((column) => column['name'] == 'currency')) {
       await db.execute("ALTER TABLE loans ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'");
+      await db.execute("UPDATE loans SET currency = COALESCE((SELECT currency FROM wallets WHERE wallets.id = loans.wallet_id), 'PKR')");
     }
     if (!loanColumns.any((column) => column['name'] == 'source_type')) {
       await db.execute("ALTER TABLE loans ADD COLUMN source_type TEXT");

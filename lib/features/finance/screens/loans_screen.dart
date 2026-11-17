@@ -1350,10 +1350,10 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                           final loan = loans[index];
                           return ListTile(
                             title: Text(
-                              '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.amount.toStringAsFixed(2)}',
+                              '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.currency} ${loan.amount.toStringAsFixed(2)}',
                             ),
                             subtitle: Text(
-                              'Outstanding: ${_money(loan.remainingAmount)} • ${loan.lendingDate}',
+                              'Outstanding: ${loan.currency} ${_money(loan.remainingAmount)} • ${loan.lendingDate}',
                             ),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () {

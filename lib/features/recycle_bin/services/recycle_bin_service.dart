@@ -124,9 +124,10 @@ class RecycleBinService {
       }
       if (table == 'loans') {
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, borrower_name TEXT NOT NULL,
-          borrower_phone TEXT, amount REAL NOT NULL, remaining_amount REAL NOT NULL,
-          wallet_id INTEGER NOT NULL, lending_date TEXT NOT NULL, due_date TEXT,
+          id INTEGER PRIMARY KEY AUTOINCREMENT, party_id INTEGER,
+          loan_type TEXT NOT NULL DEFAULT 'given', amount REAL NOT NULL,
+          remaining_amount REAL NOT NULL, wallet_id INTEGER NOT NULL,
+          lending_date TEXT NOT NULL, due_date TEXT,
           notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',
           created_at TEXT NOT NULL)''');
         await txn.execute('''CREATE TABLE IF NOT EXISTS loan_repayments (
@@ -148,6 +149,8 @@ class RecycleBinService {
         if (source.isEmpty) throw Exception('The loan wallet no longer exists.');
         if ((source.first['balance'] as num).toDouble() < loanAmount) throw Exception('Insufficient wallet balance to restore this loan.');
         await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [loanAmount, loanWallet]);
+        record.remove('borrower_name');
+        record.remove('borrower_phone');
         await txn.insert('loans', record);
         for (final repayment in repayments) { await txn.insert('loan_repayments', repayment); }
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

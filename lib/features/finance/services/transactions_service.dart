@@ -83,6 +83,12 @@ class TransactionsService {
     } else if (type == 'Expense') {
       await _changeBalance(txn, walletId, amount);
     } else if (type == 'Transfer') {
+      if (toWalletId == null && row['category']?.toString() == 'Committee Transfer') {
+        final delta = (row['balance_delta'] as num?)?.toDouble();
+        if (delta == null || delta == 0) throw Exception('Committee transfer balance change is missing.');
+        await _changeBalance(txn, walletId, -delta);
+        return;
+      }
       if (toWalletId == null) throw Exception('Transfer destination is missing.');
       final destinationAmount = (row['to_amount'] as num?)?.toDouble() ?? amount;
       await _changeBalance(txn, walletId, amount + transferFee);

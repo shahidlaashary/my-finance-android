@@ -208,6 +208,9 @@ class TransactionsService {
     await db.transaction((txn) async {
       final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
       if (rows.isEmpty) throw Exception('Transaction not found.');
+      if (rows.first['category']?.toString() == 'Committee Transfer') {
+        throw Exception('Manage this transfer from the Committee module.');
+      }
       final oldFeeRows = await txn.query('app_settings', columns: ['setting_value'],
         where: 'setting_key = ?', whereArgs: ['transaction_transfer_fee_$id'], limit: 1);
       final oldFee = oldFeeRows.isEmpty ? 0.0 :
@@ -278,6 +281,9 @@ class TransactionsService {
     final db = await database;
     final existing = await db.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
     if (existing.isEmpty) throw Exception('Transaction not found.');
+    if (existing.first['category']?.toString() == 'Committee Transfer') {
+      throw Exception('Manage this transfer from the Committee module.');
+    }
     final feeRows = await db.query('app_settings', columns: ['setting_value'],
       where: 'setting_key = ?', whereArgs: ['transaction_transfer_fee_$id'], limit: 1);
     final fee = feeRows.isEmpty ? 0.0 :

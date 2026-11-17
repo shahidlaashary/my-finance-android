@@ -135,6 +135,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   Future<Map<String, dynamic>?> _createParty({
     required String initialCurrency,
+    bool lockCurrency = false,
   }) async {
     final name = TextEditingController();
     final phone = TextEditingController();
@@ -182,7 +183,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       value: currency,
                       child: Text(currency),
                     )).toList(),
-                    onChanged: (value) {
+                    onChanged: lockCurrency ? null : (value) {
                       if (value != null) {
                         setDialogState(() => selectedCurrency = value);
                       }
@@ -652,6 +653,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         onPressed: () async {
                           final created = await _createParty(
                             initialCurrency: asset.currency,
+                            lockCurrency: true,
                           );
                           if (created != null &&
                               (created['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()) {

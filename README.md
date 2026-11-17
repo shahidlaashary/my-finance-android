@@ -21,12 +21,12 @@ Features Under Development
 
 1. Dashboard and Wallets
 
-* Account management
+* Wallet management
 * Multiple wallet types
 * Opening balances
-* Account balance tracking
+* Wallet balance tracking
 * Custom wallet categories and icons
-* Account exclusion from total balance
+* Wallet exclusion from total balance
 * Income and expense overview
 
 2. Transactions
@@ -86,7 +86,7 @@ Features Under Development
 9. Reports and Analytics
 
 * Income and expense reports
-* Account summaries
+* Wallet summaries
 * Category-based reports
 * Financial trends
 * Currency-wise summaries
@@ -114,7 +114,7 @@ The current implementation includes development work on:
 
 * Flutter application structure
 * SQLite local database
-* Account management
+* Wallet management
 * Income and expense transactions
 * Own-wallet transfers
 * Transaction categories

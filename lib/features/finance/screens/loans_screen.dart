@@ -325,8 +325,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                 value: _loanType,
                                 decoration: const InputDecoration(labelText: 'Loan Type'),
                                 items: const [
-                                  DropdownMenuItem(value: 'given', child: Text('Loan Given (I lend money)')),
-                                  DropdownMenuItem(value: 'taken', child: Text('Loan Taken (I borrow money)')),
+                                  DropdownMenuItem(value: 'given', child: Text('Loan Given')),
+                                  DropdownMenuItem(value: 'taken', child: Text('Loan Taken')),
                                 ],
                                 onChanged: (value) => setSheetState(() => _loanType = value ?? 'given'),
                               ),

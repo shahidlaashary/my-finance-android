@@ -37,7 +37,7 @@ class AssetsService {
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
   }
-  Future<Map<String, dynamic>> _getAccount(
+  Future<Map<String, dynamic>> _getWallet(
     Transaction txn,
     int walletId,
   ) async {
@@ -57,7 +57,7 @@ class AssetsService {
     Transaction txn,
     int walletId,
   ) async {
-    final wallet = await _getAccount(txn, walletId);
+    final wallet = await _getWallet(txn, walletId);
     return (wallet['balance'] as num).toDouble();
   }
   Future<void> _changeBalance(
@@ -116,7 +116,7 @@ class AssetsService {
     final db = await _database;
     await _ensureTables(db);
     return db.transaction((txn) async {
-      final wallet = await _getAccount(
+      final wallet = await _getWallet(
         txn,
         asset.walletId,
       );
@@ -218,8 +218,8 @@ class AssetsService {
           'Sale date cannot be before purchase date.',
         );
       }
-      final purchaseAccount = await _getAccount(txn, asset.walletId);
-      final saleAccount = await _getAccount(txn, saleWalletId);
+      final purchaseAccount = await _getWallet(txn, asset.walletId);
+      final saleAccount = await _getWallet(txn, saleWalletId);
 
       // Mukhtalif currencies ko seedha add karne se asset ki sale value aur profit ghalat hota.
       final purchaseCurrency = (purchaseAccount['currency'] ?? 'PKR').toString().toUpperCase();
@@ -274,8 +274,8 @@ class AssetsService {
       if (oldAsset.isSold) {
         throw Exception('Sold assets cannot be edited.');
       }
-      final oldAccount = await _getAccount(txn, oldAsset.walletId);
-      final updatedAccount = await _getAccount(txn, updatedAsset.walletId);
+      final oldAccount = await _getWallet(txn, oldAsset.walletId);
+      final updatedAccount = await _getWallet(txn, updatedAsset.walletId);
 
       // Asset ki purchase amount ko doosri currency mein convert kiye baghair move nahi karte.
       final oldCurrency = (oldAccount['currency'] ?? 'PKR').toString().toUpperCase();
@@ -334,10 +334,10 @@ class AssetsService {
       );
       if (rows.isEmpty) return;
       final asset = AssetsModel.fromMap(rows.first);
-      await _getAccount(txn, asset.walletId);
+      await _getWallet(txn, asset.walletId);
       if (asset.isSold && asset.salePrice != null) {
         final saleWalletId = asset.saleWalletId ?? asset.walletId;
-        await _getAccount(txn, saleWalletId);
+        await _getWallet(txn, saleWalletId);
         await _changeBalance(
           txn,
           walletId: saleWalletId,

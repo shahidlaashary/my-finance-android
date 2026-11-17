@@ -151,7 +151,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       ..._currentValues.keys,
       ..._purchaseValues.keys,
       ..._realizedProfitLoss.keys,
-      ..._assets.map((asset) => _currency(asset.walletId)),
+      ..._assets.map((asset) => asset.currency.toUpperCase()),
     };
 
     final result = currencies.toList()..sort();

@@ -327,6 +327,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                             _selectedPartyId = null;
                                             _nameController.clear();
                                             _phoneController.clear();
+                                            newPartyCurrency = 'PKR';
+                                            final matching = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == newPartyCurrency);
+                                            walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
                                           } else {
                                             _selectedPartyId = int.tryParse(value ?? '');
                                             final party = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
@@ -596,6 +599,10 @@ class _LoansScreenState extends State<LoansScreen> {
     _repaymentAmountController.clear();
     _repaymentNotesController.clear();
     int? walletId = _selectedRepaymentWalletId;
+    if (walletId == null || _currencyForWallet(walletId) != loan.currency.toUpperCase()) {
+      final matching = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == loan.currency.toUpperCase());
+      walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
+    }
     DateTime repaymentDate = DateTime.now();
     final result = await showDialog<bool>(
       context: context,

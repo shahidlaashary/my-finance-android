@@ -742,7 +742,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   if (loan.isAssetLinked) Text('Linked Asset Reference: ${loan.sourceType == 'asset_purchase' ? 'Purchase' : 'Sale'} • ID ${loan.sourceId}'),
                   Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithLoanCurrency(loan.amount, loan)}'),
                   Text('${appText(context, 'Repaid:', 'واپس ادا شدہ:')} ${_moneyWithLoanCurrency(loan.repaidAmount, loan)}'),
-                  Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}'),
+                  Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_moneyWithLoanCurrency(loan.remainingAmount, loan)}'),
                   Text('${appText(context, 'Lending Date:', 'قرض دینے کی تاریخ:')} ${loan.lendingDate}'),
                   Text('Due Date: ${loan.dueDate ?? '-'}'),
                   Text('${appText(context, 'Notes:', 'نوٹس:')} ${loan.notes.isEmpty ? '-' : loan.notes}'),
@@ -1066,10 +1066,10 @@ class _LoansScreenState extends State<LoansScreen> {
                               Text(loan.loanType == 'given' ? 'Loan Given • Currency: $currency' : 'Loan Taken • Currency: $currency'),
                               if (loan.isAssetLinked) Text('Linked Asset • ID: ${loan.sourceId}'),
                               Text('${appText(context, "Loan Amount: ", "قرض کی رقم: ")}'
-                                '${_moneyWithCurrency(loan.amount, loan.walletId)}',
+                                '${_moneyWithLoanCurrency(loan.amount, loan)}',
                               ),
                               Text('${appText(context, "Repaid: ", "ادا شدہ: ")}'
-                                '${_moneyWithCurrency(loan.repaidAmount, loan.walletId)}',
+                                '${_moneyWithLoanCurrency(loan.repaidAmount, loan)}',
                               ),
                               Text(appText(context, "Remaining: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}", "باقی: ${_moneyWithCurrency(loan.remainingAmount, loan.walletId)}"),
                                 style: const TextStyle(fontWeight: FontWeight.bold),

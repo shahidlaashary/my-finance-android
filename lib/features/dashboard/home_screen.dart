@@ -510,14 +510,14 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
-                                  flex: 5,
+                                  flex: 6,
                                   child: Text(
                                     '${entry.key} · ${_currencyCountry(entry.key)}',
-                                    maxLines: 2,
-                                    softWrap: true,
-                                    overflow: TextOverflow.clip,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.text,
                                     ),

@@ -91,7 +91,7 @@ class _InfoPage extends StatelessWidget{
 class _AppDetailsPage extends StatelessWidget{
   const _AppDetailsPage();
   @override Widget build(BuildContext context)=>const _InfoPage(title:'App Details',icon:Icons.account_balance_wallet_rounded,children:[
-    _SectionTitle('My Finance'),_BodyText('My Finance is a personal finance management app designed to help organize accounts, income, expenses, budgets, savings goals, loans, assets, recurring transactions, documents and other financial records.'),
+    _SectionTitle('My Finance'),_BodyText('My Finance is a personal finance management app designed to help organize wallets, income, expenses, budgets, savings goals, loans, assets, recurring transactions, documents and other financial records.'),
     _SectionTitle('Application Information'),_InfoLine('App name','My Finance'),_InfoLine('Version','1.0.0'),_InfoLine('Developer','Shahid Laashary'),_InfoLine('Platform','Flutter • Android'),_InfoLine('Data storage','Local SQLite database'),
     _SectionTitle('Our Approach'),_BodyText('The app is designed to keep your finance records organized on your device. You remain responsible for reviewing your entries and keeping backup copies of important information.'),
   ]);
@@ -100,7 +100,7 @@ class _WhatsNewPage extends StatelessWidget{
   const _WhatsNewPage();
   @override Widget build(BuildContext context)=>const _InfoPage(title:"What's New",icon:Icons.new_releases_outlined,children:[
     _SectionTitle('Current app version • 1.0.0'),_BodyText('This section is reserved for version-by-version release notes. Updates will be listed here as they are included in published app releases.'),
-    _SectionTitle('Main app areas'),_BulletList(['Accounts and multi-currency wallets','Income, expense and transfer tracking','Budgets, savings goals and reports','Loans, repayments and debt planning','Assets, vehicles and recurring transactions','Documents and local attachments']),
+    _SectionTitle('Main app areas'),_BulletList(['Wallets and multi-currency wallets','Income, expense and transfer tracking','Budgets, savings goals and reports','Loans, repayments and debt planning','Assets, vehicles and recurring transactions','Documents and local attachments']),
     _BodyText('Note: Features shown in development builds may change before a public release.'),
   ]);
 }
@@ -109,7 +109,7 @@ class _QuickTourPageState extends State<_QuickTourPage>{
   final _controller=PageController();int _index=0;
   final _steps=const [
     (Icons.dashboard_outlined,'Dashboard','Get an overview of your finances, balances and recent activity.'),
-    (Icons.account_balance_wallet_outlined,'Accounts & Wallets','Create accounts in different currencies and track their balances.'),
+    (Icons.account_balance_wallet_outlined,'Wallets','Create wallets in different currencies and track their balances.'),
     (Icons.swap_horiz_rounded,'Transactions','Record income, expenses and transfers, and review your transaction history.'),
     (Icons.pie_chart_outline,'Budgets & Goals','Set spending limits and track progress towards savings targets.'),
     (Icons.handshake,'Loans & Debt','Track money lent to others separately from debts you need to repay.'),
@@ -124,7 +124,7 @@ class _QuickTourPageState extends State<_QuickTourPage>{
 class _PrivacyPage extends StatelessWidget{
   const _PrivacyPage();
   @override Widget build(BuildContext context)=>const _InfoPage(title:'Privacy Policy',icon:Icons.privacy_tip_outlined,children:[
-    _SectionTitle('1. Information you enter'),_BodyText('My Finance may store financial information you choose to enter, such as account names, balances, transactions, budgets, loans, goals, stock records and notes. Attachments you add are also stored as files on your device.'),
+    _SectionTitle('1. Information you enter'),_BodyText('My Finance may store financial information you choose to enter, such as wallet names, balances, transactions, budgets, loans, goals, stock records and notes. Attachments you add are also stored as files on your device.'),
     _SectionTitle('2. Local storage'),_BodyText('The current app uses a local SQLite database for financial records and local application storage for attachments. The project documentation describes cloud synchronization and remote backup as planned features, not currently available services.'),
     _SectionTitle('3. Network services'),_BodyText('Some optional features, such as online exchange-rate retrieval, may connect to external services when you use them. Those services have their own privacy practices.'),
     _SectionTitle('4. Sharing and disclosure'),_BodyText('The app does not provide an in-app account or cloud-sync service in its current documented configuration. If you export or share a backup, report or attachment, that action is controlled by you and the destination service may process the shared file.'),

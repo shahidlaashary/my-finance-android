@@ -488,15 +488,18 @@ class _HomePageState extends State<HomePage> {
                           final entry = entries[index];
                           final converted = convertedByCurrency[
                               entry.key.trim().toUpperCase()];
-                          final amountText = _currencyAmount(
-                            entry.key,
-                            entry.value,
+                          final summaryNumberFormat = NumberFormat(
+                            '#,##0.00',
+                            numberFormat == '1.234,56' ? 'de_DE' : 'en_US',
                           );
+                          final amountText = hideBalances
+                              ? '******'
+                              : summaryNumberFormat.format(entry.value);
                           final convertedText = hideBalances
-                              ? '$baseCurrency ******'
+                              ? '******'
                               : converted == null
                                   ? 'Rate missing'
-                                  : _currencyAmount(baseCurrency, converted);
+                                  : summaryNumberFormat.format(converted);
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 11),
                             child: Row(

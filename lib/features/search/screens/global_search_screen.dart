@@ -156,7 +156,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     _SearchEntry('Loans', 'Track money lent and borrowed', Icons.handshake_outlined, ['debt','borrow','lend','receivable','payable'], () => const LoansScreen()),
     _SearchEntry('Reports & Analytics', 'Charts, insights and financial reports', Icons.bar_chart_outlined, ['reports','analytics','graphs','charts','statistics','income expense'], () => const StatsScreen()),
     _SearchEntry('Transactions', 'Search and manage income, expenses and transfers', Icons.receipt_long_outlined, ['income','expense','transfer','entries','payments'], () => const TransactionsScreen()),
-    _SearchEntry('Wallets', 'Accounts, balances and currencies', Icons.account_balance_outlined, ['accounts','cash','bank','currency','wallet'], () => const WalletsPage()),
+    _SearchEntry('Wallets', 'Wallets, balances and currencies', Icons.account_balance_outlined, ['wallets','cash','bank','currency','wallet'], () => const WalletsPage()),
     _SearchEntry('My Documents', 'Store and find important documents', Icons.folder_copy_outlined, ['files','papers','pdf','attachments','identity','expiry'], () => const MyDocumentsScreen()),
     _SearchEntry('Installment Manager', 'Buy or sell items on installments', Icons.payments_outlined, ['qist','qistain','installment','monthly payment','buy','sell'], () => const InstallmentsScreen()),
     _SearchEntry('Vehicle Manager', 'Vehicle details and records', Icons.directions_car_outlined, ['car','bike','motorcycle','vehicle'], () => const VehiclesScreen()),

@@ -154,7 +154,8 @@ class AssetsService {
     final assetId = await db.transaction((txn) async {
       final wallet = await _getWallet(txn, anchorWalletId);
       final walletCurrency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
-      if (walletCurrency != currency) throw Exception('Asset currency does not match its wallet/party currency.');
+      if (isLoan && walletCurrency != currency) throw Exception('Asset currency does not match its party currency.');
+      if (!isLoan) currency = walletCurrency;
       if (!isLoan && (wallet['balance'] as num).toDouble() < asset.purchasePrice) throw Exception('Insufficient wallet balance.');
       final map = asset.copyWith(
         walletId: anchorWalletId, currency: currency,
@@ -308,12 +309,18 @@ class AssetsService {
       if (party == null) throw Exception('Selected party was not found.');
       final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
       if (currency != oldAsset.currency.toUpperCase()) throw Exception('Party currency must remain ' + oldAsset.currency + ' for this asset.');
-      await LoansService.updateAssetLinkedLoan(
-        loanId: oldAsset.linkedLoanId!, partyId: updatedAsset.partyId!,
-        loanType: 'taken', amount: updatedAsset.purchasePrice,
-        lendingDate: updatedAsset.purchaseDate.toIso8601String().split('T').first,
-        notes: 'Asset purchase: ' + updatedAsset.name,
-      );
+      final loanTermsChanged =
+          updatedAsset.purchasePrice != oldAsset.purchasePrice ||
+          updatedAsset.partyId != oldAsset.partyId ||
+          !updatedAsset.purchaseDate.isAtSameMomentAs(oldAsset.purchaseDate);
+      if (loanTermsChanged) {
+        await LoansService.updateAssetLinkedLoan(
+          loanId: oldAsset.linkedLoanId!, partyId: updatedAsset.partyId!,
+          loanType: 'taken', amount: updatedAsset.purchasePrice,
+          lendingDate: updatedAsset.purchaseDate.toIso8601String().split('T').first,
+          notes: 'Asset purchase: ' + updatedAsset.name,
+        );
+      }
       await db.update('assets', updatedAsset.copyWith(
         walletId: oldAsset.walletId, currency: oldAsset.currency,
         linkedLoanId: oldAsset.linkedLoanId, createdAt: oldAsset.createdAt,

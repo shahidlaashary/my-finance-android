@@ -100,7 +100,7 @@ class _WhatsNewPage extends StatelessWidget{
   const _WhatsNewPage();
   @override Widget build(BuildContext context)=>const _InfoPage(title:"What's New",icon:Icons.new_releases_outlined,children:[
     _SectionTitle('Current app version • 1.0.0'),_BodyText('This section is reserved for version-by-version release notes. Updates will be listed here as they are included in published app releases.'),
-    _SectionTitle('Main app areas'),_BulletList(['Multi-currency wallets','Income, expense and transfer tracking','Budgets, savings goals and reports','Loans, repayments and debt planning','Assets, vehicles and recurring transactions','Documents and local attachments']),
+    _SectionTitle('Main app areas'),_BulletList(['Multi-currency wallets','Income, expense and transfer tracking','Budgets, savings goals and reports','Loans and repayments','Assets, vehicles and recurring transactions','Documents and local attachments']),
     _BodyText('Note: Features shown in development builds may change before a public release.'),
   ]);
 }
@@ -112,7 +112,7 @@ class _QuickTourPageState extends State<_QuickTourPage>{
     (Icons.account_balance_wallet_outlined,'Wallets','Create wallets in different currencies and track their balances.'),
     (Icons.swap_horiz_rounded,'Transactions','Record income, expenses and transfers, and review your transaction history.'),
     (Icons.pie_chart_outline,'Budgets & Goals','Set spending limits and track progress towards savings targets.'),
-    (Icons.handshake,'Loans & Debt','Track money lent to others separately from debts you need to repay.'),
+    (Icons.handshake,'Loans','Track money lent to others and money borrowed.'),
     (Icons.inventory_2_outlined,'More Features','Explore stock management, documents, vehicles, exchange rates and other tools.'),
     (Icons.shield_outlined,'Keep your data safe','Review storage information and create backups regularly using the available backup tools.'),
   ];

@@ -168,7 +168,6 @@ Advanced Financial Features
 * Automatic and manual exchange rates
 * Historical exchange rates
 * PKR consolidated reports
-* Advanced asset depreciation
 * Additional financial analytics
 
 Getting Started

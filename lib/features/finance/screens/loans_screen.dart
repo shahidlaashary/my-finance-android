@@ -327,15 +327,25 @@ class _LoansScreenState extends State<LoansScreen> {
                               ),
                               const SizedBox(height: 8),
                               if (createNewParty) ...[
-                                TextField(
-                                  controller: _nameController,
-                                  textCapitalization: TextCapitalization.words,
-                                  decoration: const InputDecoration(labelText: 'Party Name *'),
-                                ),
-                                TextField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: const InputDecoration(labelText: 'Phone Number'),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _nameController,
+                                        textCapitalization: TextCapitalization.words,
+                                        decoration: const InputDecoration(labelText: 'Party Name *'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _phoneController,
+                                        keyboardType: TextInputType.phone,
+                                        decoration: const InputDecoration(labelText: 'Phone Number'),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 DropdownButtonFormField<String>(
                                   value: newPartyCurrency,

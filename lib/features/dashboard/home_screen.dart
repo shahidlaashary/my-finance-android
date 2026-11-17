@@ -523,7 +523,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 0),
                                 Expanded(
                                   flex: 8,
                                   child: Row(

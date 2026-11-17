@@ -71,6 +71,8 @@ class LoansService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         borrower_name TEXT NOT NULL,
         borrower_phone TEXT,
+        party_id INTEGER,
+        loan_type TEXT NOT NULL DEFAULT 'given',
         amount REAL NOT NULL,
         remaining_amount REAL NOT NULL,
         wallet_id INTEGER NOT NULL,
@@ -81,6 +83,26 @@ class LoansService {
         created_at TEXT NOT NULL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS loan_parties (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT,
+        address TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''' );
+
+    final loanColumns = await db.rawQuery('PRAGMA table_info(loans)');
+    final loanColumnNames = loanColumns.map((row) => row['name']).toSet();
+    if (!loanColumnNames.contains('party_id')) {
+      await db.execute('ALTER TABLE loans ADD COLUMN party_id INTEGER');
+    }
+    if (!loanColumnNames.contains('loan_type')) {
+      await db.execute("ALTER TABLE loans ADD COLUMN loan_type TEXT NOT NULL DEFAULT 'given'");
+    }
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loan_repayments (
@@ -106,6 +128,67 @@ class LoansService {
       CREATE INDEX IF NOT EXISTS idx_repayments_loan
       ON loan_repayments(loan_id)
     ''');
+  }
+
+  static Future<List<Map<String, dynamic>>> getParties() async {
+    final db = await _database;
+    return db.query('loan_parties', orderBy: 'name COLLATE NOCASE ASC');
+  }
+
+  static Future<int> addParty({
+    required String name,
+    String? phone,
+    String address = '',
+    String notes = '',
+  }) async {
+    final db = await _database;
+    final normalizedName = name.trim();
+    if (normalizedName.isEmpty) throw Exception('Party name is required.');
+    final normalizedPhone = phone?.trim() ?? '';
+    final existing = await db.query(
+      'loan_parties',
+      where: normalizedPhone.isEmpty
+          ? 'LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, \'\') = \'\''
+          : 'LOWER(TRIM(name)) = LOWER(?) AND phone = ?',
+      whereArgs: normalizedPhone.isEmpty
+          ? [normalizedName]
+          : [normalizedName, normalizedPhone],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) return existing.first['id'] as int;
+    return db.insert('loan_parties', {
+      'name': normalizedName,
+      'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
+      'address': address.trim(),
+      'notes': notes.trim(),
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static Future<Map<String, dynamic>?> getPartyById(int id) async {
+    final db = await _database;
+    final rows = await db.query('loan_parties', where: 'id = ?', whereArgs: [id], limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  static Future<List<LoansModel>> getLoansForParty(int partyId) async {
+    final db = await _database;
+    final rows = await db.query('loans', where: 'party_id = ?', whereArgs: [partyId], orderBy: 'lending_date DESC, id DESC');
+    return rows.map(LoansModel.fromMap).toList();
+  }
+
+  static Future<Map<String, dynamic>> getPartySummary(int partyId) async {
+    final db = await _database;
+    final rows = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(CASE WHEN loan_type = 'given' THEN amount ELSE 0 END), 0) AS total_given,
+        COALESCE(SUM(CASE WHEN loan_type = 'taken' THEN amount ELSE 0 END), 0) AS total_taken,
+        COALESCE(SUM(CASE WHEN loan_type = 'given' THEN remaining_amount ELSE 0 END), 0) AS receivable,
+        COALESCE(SUM(CASE WHEN loan_type = 'taken' THEN remaining_amount ELSE 0 END), 0) AS payable,
+        COUNT(*) AS loan_count
+      FROM loans WHERE party_id = ?
+    ''', [partyId]);
+    return rows.first;
   }
 
   static Future<Map<String, dynamic>> _getWallet(
@@ -187,7 +270,7 @@ class LoansService {
         loan.walletId,
       );
 
-      if (balance < loan.amount) {
+      if (loan.loanType == 'given' && balance < loan.amount) {
         throw Exception('Insufficient wallet balance.');
       }
 
@@ -203,7 +286,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: loan.walletId,
-        amount: -loan.amount,
+        amount: loan.loanType == 'given' ? -loan.amount : loan.amount,
       );
 
       return loanId;
@@ -287,7 +370,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
-        amount: repayment.amount,
+        amount: loan.loanType == 'given' ? repayment.amount : -repayment.amount,
       );
 
       return repaymentId;
@@ -430,7 +513,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
-        amount: -repayment.amount,
+        amount: loan.loanType == 'given' ? -repayment.amount : repayment.amount,
       );
 
       await txn.update(
@@ -497,7 +580,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: loan.walletId,
-        amount: loan.amount,
+        amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
       );
 
       await txn.delete(

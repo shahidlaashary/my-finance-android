@@ -392,53 +392,53 @@ class _LoansScreenState extends State<LoansScreen> {
                                   Expanded(
                                     flex: 1,
                                     child: TextField(
-                                                                    controller: _amountController,
-                                                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                                    decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
-                                                                  ),
-                                                                  const SizedBox(height: 8),
-                                                                  if (createNewParty) ...[
-                                                                    TextField(
-                                                                      controller: _nameController,
-                                                                      textCapitalization: TextCapitalization.words,
-                                                                      decoration: const InputDecoration(labelText: 'Party Name *'),
-                                                                    ),
-                                                                    TextField(
-                                                                      controller: _phoneController,
-                                                                      keyboardType: TextInputType.phone,
-                                                                      decoration: const InputDecoration(labelText: 'Phone Number'),
-                                                                    ),
-                                                                  ] else if (_selectedPartyId != null)
-                                                                    Align(
-                                                                      alignment: Alignment.centerLeft,
-                                                                      child: Text(
-                                                                        'Selected: ${_nameController.text}${_phoneController.text.trim().isEmpty ? '' : ' • ${_phoneController.text}'}',
-                                                                        style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
-                                                                      ),
-                                                                    ),
-                                                                  const SizedBox(height: 12),,
+                                      controller: _amountController,
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: InputDecoration(labelText: appText(context, "Loan Amount *", "Loan Amount *")),
+                                    ),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     flex: 2,
                                     child: DropdownButtonFormField<int>(
-                                                                    value: walletId,
-                                                                    isExpanded: true,
-                                                                    decoration: InputDecoration(labelText: appText(context, "Payment Wallet *", "Payment Wallet *")),
-                                                                    items: _wallets.map((wallet) {
-                                                                      return DropdownMenuItem<int>(
-                                                                        value: wallet['id'] as int,
-                                                                        child: Text(
-                                                                          '${wallet['name']} '
-                                                                          '(${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
-                                                                        ),
-                                                                      );
-                                                                    }).toList(),
-                                                                    onChanged: (value) => setSheetState(() => walletId = value),
-                                                                  ),,
+                                      value: walletId,
+                                      isExpanded: true,
+                                      decoration: InputDecoration(labelText: appText(context, "Payment Wallet *", "Payment Wallet *")),
+                                      items: _wallets.map((wallet) {
+                                        return DropdownMenuItem<int>(
+                                          value: wallet['id'] as int,
+                                          child: Text(
+                                            '${wallet['name']} '
+                                            '(${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})',
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) => setSheetState(() => walletId = value),
+                                    ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 8),
+                              if (createNewParty) ...[
+                                TextField(
+                                  controller: _nameController,
+                                  textCapitalization: TextCapitalization.words,
+                                  decoration: const InputDecoration(labelText: 'Party Name *'),
+                                ),
+                                TextField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: const InputDecoration(labelText: 'Phone Number'),
+                                ),
+                              ] else if (_selectedPartyId != null)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Selected: ${_nameController.text}${_phoneController.text.trim().isEmpty ? '' : ' • ${_phoneController.text}'}',
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
                               const SizedBox(height: 12),
                               Row(
                                 children: [

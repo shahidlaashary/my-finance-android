@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:image_picker/image_picker.dart';
@@ -131,6 +133,108 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return matches.isEmpty ? 'Unknown Party' : matches.first['name'].toString();
   }
 
+  Future<Map<String, dynamic>?> _createParty({
+    required String initialCurrency,
+  }) async {
+    final name = TextEditingController();
+    final phone = TextEditingController();
+    final address = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final currencies = CurrencyCatalog.supported;
+    String selectedCurrency = currencies.contains(initialCurrency.toUpperCase())
+        ? initialCurrency.toUpperCase()
+        : 'PKR';
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Create Party'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: name,
+                    autofocus: true,
+                    decoration: const InputDecoration(labelText: 'Party Name *'),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Party name is required'
+                        : null,
+                  ),
+                  TextFormField(
+                    controller: phone,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                  ),
+                  TextFormField(
+                    controller: address,
+                    decoration: const InputDecoration(labelText: 'Address'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedCurrency,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Party Currency *'),
+                    items: currencies.map((currency) => DropdownMenuItem(
+                      value: currency,
+                      child: Text(currency),
+                    )).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => selectedCurrency = value);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(dialogContext, true);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Map<String, dynamic>? createdParty;
+    if (saved == true) {
+      try {
+        final id = await LoansService.addParty(
+          name: name.text.trim(),
+          phone: phone.text.trim(),
+          address: address.text.trim(),
+          currency: selectedCurrency,
+        );
+        final refreshed = await LoansService.getParties();
+        if (!mounted) return null;
+        setState(() => _parties = refreshed);
+        createdParty = refreshed.firstWhere(
+          (party) => (party['id'] as num).toInt() == id,
+        );
+      } catch (error) {
+        _message('Could not create party: $error');
+      }
+    }
+    name.dispose();
+    phone.dispose();
+    address.dispose();
+    return createdParty;
+  }
+
   List<AssetsModel> get _visibleAssets => _selectedCategory == null
       ? _assets
       : _assets.where((asset) => asset.category.trim().toLowerCase() == _selectedCategory!.toLowerCase()).toList();
@@ -159,6 +263,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     final notesController = TextEditingController(text: asset?.notes ?? '');
     int? selectedWallet = asset?.walletId;
     String selectedPaymentType = asset?.paymentType ?? 'Wallet';
+    final defaultAssetCurrency = asset?.currency ?? await FinanceDB.instance.getBaseCurrency();
     int? selectedPartyId = asset?.partyId;
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
@@ -274,6 +379,23 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               onChanged: (v) => setSheetState(() => selectedPartyId = v),
                               validator: (v) => v == null ? 'Select a party' : null,
                             ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                onPressed: saving ? null : () async {
+                                  final created = await _createParty(
+                                    initialCurrency: defaultAssetCurrency,
+                                  );
+                                  if (created != null) {
+                                    setSheetState(() {
+                                      selectedPartyId = (created['id'] as num).toInt();
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.person_add_alt_1, size: 18),
+                                label: const Text('Create Party'),
+                              ),
+                            ),
                             if (selectedPartyId != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 6),
@@ -368,7 +490,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 try {
                                   final model = AssetsModel(id: asset?.id, name: nameController.text.trim(), category: selectedCategory,
                                     purchasePrice: double.parse(purchaseController.text), currentValue: double.parse(currentController.text),
-                                    purchaseDate: purchaseDate, walletId: selectedWallet ?? 0, paymentType: selectedPaymentType, partyId: selectedPaymentType == 'Loan' ? selectedPartyId : null, currency: asset?.currency ?? 'PKR', linkedLoanId: asset?.linkedLoanId, notes: notesController.text.trim(),
+                                    purchaseDate: purchaseDate, walletId: selectedWallet ?? 0, paymentType: selectedPaymentType, partyId: selectedPaymentType == 'Loan' ? selectedPartyId : null, currency: selectedPaymentType == 'Loan' && selectedPartyId != null
+                                         ? (_parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency']?.toString() ?? defaultAssetCurrency).toUpperCase()
+                                         : defaultAssetCurrency.toUpperCase(), linkedLoanId: asset?.linkedLoanId, notes: notesController.text.trim(),
                                     isSold: asset?.isSold ?? false, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
                                     createdAt: asset?.createdAt ?? DateTime.now());
                                   setSheetState(() => saving = true);
@@ -520,6 +644,27 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         child: Text('${party['name']} • ${party['currency'] ?? 'PKR'}', overflow: TextOverflow.ellipsis),
                       )).toList(),
                       onChanged: (value) => setDialogState(() => selectedBuyerParty = value),
+                    ),
+                  if (selectedSalePaymentType == 'Loan')
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          final created = await _createParty(
+                            initialCurrency: asset.currency,
+                          );
+                          if (created != null &&
+                              (created['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()) {
+                            setDialogState(() {
+                              selectedBuyerParty = (created['id'] as num).toInt();
+                            });
+                          } else if (created != null) {
+                            _message('Buyer party currency must match ' + asset.currency + '.');
+                          }
+                        },
+                        icon: const Icon(Icons.person_add_alt_1, size: 18),
+                        label: const Text('Create Party'),
+                      ),
                     )
                   else
                     DropdownButtonFormField<int>(

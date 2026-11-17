@@ -193,7 +193,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
           final data = loan.toMap();
           final partyName = partyNames[loan.partyId] ?? '';
           data['party_name'] = partyName;
-          final title = partyName.isEmpty ? 'Loan #${loan.id ?? ''}' : partyName;
+          final title = partyName.isEmpty ? 'Loan #${loan.id?.toString() ?? ''}' : partyName;
           _addRecord(
             found,
             query: query,
@@ -496,7 +496,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                   selectedColor: AppColors.primary,
                   backgroundColor: Theme.of(context).cardColor,
                   side: BorderSide(
-                    color: selected ? AppColors.primary : AppColors.border,
+                    color: selected ? AppColors.primary : const Color(0xFFE5ECE8),
                   ),
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

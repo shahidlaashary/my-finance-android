@@ -213,7 +213,7 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Transform.translate(
-                offset: Offset(0, index == 0 ? -0.75 : 0),
+                offset: Offset(0, index == 0 ? -1.25 : 0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -223,7 +223,7 @@ class _MainScreenState extends State<MainScreen> {
                       child: Center(
                         child: Icon(
                           isSelected ? activeIcon : icon,
-                          size: 21,
+                          size: 22,
                           color: isSelected
                               ? AppColors.primary
                               : AppColors.muted,

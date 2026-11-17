@@ -111,7 +111,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     }
   }
 
-  String _accountName(int walletId) {
+  String _walletName(int walletId) {
     final matches = _wallets.where(
       (wallet) =>
           (wallet['id'] as num).toInt() == walletId,
@@ -159,7 +159,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     final purchaseController = TextEditingController(text: asset?.purchasePrice.toString() ?? '');
     final currentController = TextEditingController(text: asset?.currentValue.toString() ?? '');
     final notesController = TextEditingController(text: asset?.notes ?? '');
-    int? selectedAccount = asset?.walletId;
+    int? selectedWallet = asset?.walletId;
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
     const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments', 'Livestock', 'Business'];
@@ -250,10 +250,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             )),
                             SizedBox(width: 10),
                             Expanded(child: DropdownButtonFormField<int>(
-                              value: selectedAccount, isExpanded: true,
+                              value: selectedWallet, isExpanded: true,
                               decoration: fieldDecoration('Payment Wallet', Icons.account_balance_wallet_outlined),
                               items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text('${w['name']} (${w['currency'] ?? 'PKR'})', overflow: TextOverflow.ellipsis))).toList(),
-                              onChanged: (v) => setSheetState(() => selectedAccount = v),
+                              onChanged: (v) => setSheetState(() => selectedWallet = v),
                               validator: (v) => v == null ? appText(context, 'Select wallet', 'اکاؤنٹ منتخب کریں') : null,
                             )),
                           ]),
@@ -328,7 +328,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 try {
                                   final model = AssetsModel(id: asset?.id, name: nameController.text.trim(), category: selectedCategory,
                                     purchasePrice: double.parse(purchaseController.text), currentValue: double.parse(currentController.text),
-                                    purchaseDate: purchaseDate, walletId: selectedAccount!, notes: notesController.text.trim(),
+                                    purchaseDate: purchaseDate, walletId: selectedWallet!, notes: notesController.text.trim(),
                                     isSold: asset?.isSold ?? false, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
                                     createdAt: asset?.createdAt ?? DateTime.now());
                                   setSheetState(() => saving = true);
@@ -697,8 +697,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
             const SizedBox(height: 6),
             _detailRow(asset.isSold ? 'Realized Profit/Loss' : 'Unrealized Profit/Loss', '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Colors.green : Colors.red, bold: true),
             const SizedBox(height: 6),
-            _detailRow('Purchase Wallet', _accountName(asset.walletId)),
-            if (asset.isSold) _detailRow('Sale Wallet', _accountName(asset.saleWalletId ?? asset.walletId)),
+            _detailRow('Purchase Wallet', _walletName(asset.walletId)),
+            if (asset.isSold) _detailRow('Sale Wallet', _walletName(asset.saleWalletId ?? asset.walletId)),
             const SizedBox(height: 6),
             _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
             if (asset.isSold && asset.saleDate != null) _detailRow('Sale Date', DateFormat('dd MMM yyyy').format(asset.saleDate!)),

@@ -248,7 +248,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     final balance=collected-payout;
     final dueCycles=_dueCycles(c);
     final dueTotal=(c['installment_amount'] as num).toDouble()*dueCycles*members.length;
-    final pending=(dueTotal-collected).clamp(0.0,double.infinity);
+    final pending=(dueTotal-collected).clamp(0.0,double.infinity).toDouble();
     final next=members.where((m)=>(m['received'] as num).toDouble()<(c['installment_amount'] as num).toDouble()*members.length-0.000001).toList();
     return ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[

@@ -1135,8 +1135,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final fee = (item['transfer_fee'] as num?)?.toDouble() ?? 0.0;
                               final parsedDate = DateTime.tryParse(item['date']?.toString() ?? '');
                               final dateLabel = parsedDate == null
-                                  ? displayDate(item['date'])
-                                  : DateFormat('dd MMM yyyy  •  hh:mm a').format(parsedDate);
+                                   ? displayDate(item['date'])
+                                   : DateFormat(item['is_scheduled'] == true ? 'dd MMM yyyy' : 'dd MMM yyyy  •  hh:mm a').format(parsedDate);
 
                               final isScheduled = item['is_scheduled'] == true;
                               return InkWell(
@@ -1197,8 +1197,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             Text(
                                               [
                                                 if (!isScheduled) isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
-                                                if (isScheduled) 'Scheduled',
-                                                 if (isScheduled && item['frequency'] != null) item['frequency'].toString(),
+                                                                                                 if (isScheduled && item['frequency'] != null) item['frequency'].toString(),
                                                  if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
                                               ].join('  •  '),
                                               maxLines: 1,

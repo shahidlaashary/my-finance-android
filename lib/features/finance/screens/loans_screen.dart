@@ -619,6 +619,12 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Could not save loan: $error');
     }
   }
+  String _displayLoanDate(String value) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+    return '${parsed.day.toString().padLeft(2, '0')}-${parsed.month.toString().padLeft(2, '0')}-${parsed.year}';
+  }
+
   Widget _loanDateInfo(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -632,7 +638,7 @@ class _LoansScreenState extends State<LoansScreen> {
               style: const TextStyle(fontSize: 10, color: Color(0xFF71877C),
                 fontWeight: FontWeight.w600)),
             const SizedBox(height: 3),
-            Text(value, maxLines: 2, overflow: TextOverflow.ellipsis,
+            Text(_displayLoanDate(value), maxLines: 1, overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 11, color: Color(0xFF263B32),
                 fontWeight: FontWeight.w700)),
           ],
@@ -1505,7 +1511,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
-                                          flex: 7,
+                                          flex: 8,
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
@@ -1655,10 +1661,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                               foregroundColor: const Color(0xFF1763A8),
                                             ),
                                             onPressed: () => _addRepayment(loan),
-                                            icon: const Icon(Icons.payments_outlined, size: 15),
+                                            icon: const Icon(Icons.payments_outlined, size: 18),
                                             label: Text(
                                               loan.loanType == 'given' ? 'Receive' : 'Pay Back',
-                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
                                             ),
                                           ),
                                         const Spacer(),

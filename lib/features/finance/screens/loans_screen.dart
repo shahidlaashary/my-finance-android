@@ -920,7 +920,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                 fontWeight: FontWeight.w800,
                                 color: Color(0xFF172B25))),
                           ),
-                          Container(
+                          Transform.translate(
+                            offset: const Offset(5, 0),
+                            child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
                               color: statusColor.withValues(alpha: 0.10),
@@ -929,8 +931,11 @@ class _LoansScreenState extends State<LoansScreen> {
                               color: statusColor, fontSize: 11,
                               fontWeight: FontWeight.w700)),
                           ),
-                          const SizedBox(width: 4),
-                          PopupMenuButton<String>(
+                          ),
+                          const SizedBox(width: 1),
+                          Transform.translate(
+                            offset: const Offset(5, 0),
+                            child: PopupMenuButton<String>(
                             tooltip: 'Loan options',
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
@@ -965,8 +970,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                 )),
                             ],
                           ),
+                          ),
                         ]),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 2),
                         Text(
                           '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.currency.toUpperCase()}',
                           style: const TextStyle(fontSize: 12,
@@ -984,14 +990,14 @@ class _LoansScreenState extends State<LoansScreen> {
                             child: Text('Asset: ${_assetReferenceLabel(loan)}',
                               style: const TextStyle(fontSize: 12, color: Color(0xFF65736C))),
                           ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         Text(_moneyWithLoanCurrency(loan.amount, loan),
                           style: const TextStyle(fontSize: 25,
                             fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
                         const SizedBox(height: 4),
                         Text('Total Loan Amount',
                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 8),
                         Row(children: [
                           Expanded(child: _loanDetailMetric(
                             'Repaid', _moneyWithLoanCurrency(loan.repaidAmount, loan))),
@@ -999,7 +1005,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           Expanded(child: _loanDetailMetric(
                             'Remaining', _moneyWithLoanCurrency(loan.remainingAmount, loan))),
                         ]),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 8),
                         Row(children: [
                           const Expanded(child: Text('Repayment Progress',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
@@ -1017,15 +1023,15 @@ class _LoansScreenState extends State<LoansScreen> {
                               loan.isOverdue ? const Color(0xFFE34D59) : const Color(0xFF28B879)),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         const Divider(height: 1),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Row(children: [
                           Expanded(child: _loanDetailMetric(
                             loan.loanType == 'given' ? 'Lending Date' : 'Borrowing Date',
-                            loan.lendingDate)),
+                            _displayLoanDate(loan.lendingDate))),
                           const SizedBox(width: 12),
-                          Expanded(child: _loanDetailMetric('Due Date', loan.dueDate ?? '-')),
+                          Expanded(child: _loanDetailMetric('Due Date', loan.dueDate == null ? '-' : _displayLoanDate(loan.dueDate!))),
                         ]),
                         if (loan.notes.isNotEmpty) ...[
                           const SizedBox(height: 12),
@@ -1034,11 +1040,22 @@ class _LoansScreenState extends State<LoansScreen> {
                           const SizedBox(height: 3),
                           Text(loan.notes),
                         ],
-                        const SizedBox(height: 14),
-                        AttachmentSection(
-                          ownerType: AttachmentOwnerTypes.loan,
-                          ownerId: loan.id!,
-                          readOnly: true,
+                        FutureBuilder(
+                          future: AttachmentService.getLoanAttachments(loan.id!),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState != ConnectionState.done ||
+                                (snapshot.data?.isEmpty ?? true)) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: AttachmentSection(
+                                ownerType: AttachmentOwnerTypes.loan,
+                                ownerId: loan.id!,
+                                readOnly: true,
+                              ),
+                            );
+                          },
                         ),
                         if (!loan.isPaid) ...[
                           const SizedBox(height: 12),

@@ -61,7 +61,7 @@ class _WalletWavePainter extends CustomPainter {
 
     Path wave(double offset) => Path()
       ..moveTo(0, size.height * 0.35 + offset + 1.0)
-      ..quadraticBezierTo(size.width * 0.28, -size.height * 0.08 - offset, size.width * 0.52, size.height * 0.38)
+      ..quadraticBezierTo(size.width * 0.28, -size.height * 0.03 - offset, size.width * 0.52, size.height * 0.38)
       ..quadraticBezierTo(size.width * 0.78, size.height * 0.88 + offset, size.width, size.height * 0.20)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)

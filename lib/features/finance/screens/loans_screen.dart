@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
@@ -211,6 +212,7 @@ class _LoansScreenState extends State<LoansScreen> {
       walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
     }
     final List<XFile> pendingLoanImages = [];
+    final List<PlatformFile> pendingLoanPdfs = [];
     final ImagePicker loanImagePicker = ImagePicker();
     final result = await showModalBottomSheet<bool>(
       context: context,
@@ -491,12 +493,34 @@ class _LoansScreenState extends State<LoansScreen> {
                                       icon: const Icon(Icons.camera_alt_outlined),
                                       label: const Text('Camera'),
                                     ),
+                                    TextButton.icon(
+                                      onPressed: () async {
+                                        final result = await FilePicker.platform.pickFiles(
+                                          type: FileType.custom,
+                                          allowedExtensions: ['pdf'],
+                                          allowMultiple: true,
+                                        );
+                                        if (result != null) {
+                                          setSheetState(() => pendingLoanPdfs.addAll(
+                                            result.files.where((file) => file.path != null),
+                                          ));
+                                        }
+                                      },
+                                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                                      label: const Text('PDF'),
+                                    ),
                                   ]),
                                   if (pendingLoanImages.isNotEmpty)
                                     Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 6, runSpacing: 4, children: pendingLoanImages.asMap().entries.map((entry) => Chip(
                                       avatar: const Icon(Icons.image_outlined, size: 16),
                                       label: SizedBox(width: 105, child: Text(entry.value.name, overflow: TextOverflow.ellipsis)),
                                       onDeleted: () => setSheetState(() => pendingLoanImages.removeAt(entry.key)),
+                                    )).toList())),
+                                  if (pendingLoanPdfs.isNotEmpty)
+                                    Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 6, runSpacing: 4, children: pendingLoanPdfs.asMap().entries.map((entry) => Chip(
+                                      avatar: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                                      label: SizedBox(width: 105, child: Text(entry.value.name, overflow: TextOverflow.ellipsis)),
+                                      onDeleted: () => setSheetState(() => pendingLoanPdfs.removeAt(entry.key)),
                                     )).toList())),
                                 ]),
                               ),
@@ -576,6 +600,16 @@ class _LoansScreenState extends State<LoansScreen> {
           ownerId: loanId,
           sourcePath: image.path,
           originalFileName: image.name,
+        );
+      }
+      for (final pdf in pendingLoanPdfs) {
+        final path = pdf.path;
+        if (path == null) continue;
+        await AttachmentService.addAttachment(
+          ownerType: AttachmentOwnerTypes.loan,
+          ownerId: loanId,
+          sourcePath: path,
+          originalFileName: pdf.name,
         );
       }
       _selectedWalletId = walletId;

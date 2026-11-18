@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -1975,177 +1978,206 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
   Future<void> _editParty([Map<String, dynamic>? party]) async {
     final name = TextEditingController(text: party?['name']?.toString() ?? '');
     final phone = TextEditingController(text: party?['phone']?.toString() ?? '');
-    final address = TextEditingController(text: party?['address']?.toString() ?? '');
     final email = TextEditingController(text: party?['email']?.toString() ?? '');
+    final businessName = TextEditingController(text: party?['business_name']?.toString() ?? '');
+    final cnic = TextEditingController(text: party?['cnic']?.toString() ?? '');
+    final taxNumber = TextEditingController(text: party?['tax_number']?.toString() ?? '');
+    final referencePerson = TextEditingController(text: party?['reference_person']?.toString() ?? '');
     final country = TextEditingController(text: party?['country']?.toString() ?? '');
     final city = TextEditingController(text: party?['city']?.toString() ?? '');
+    final address = TextEditingController(text: party?['address']?.toString() ?? '');
     final postalCode = TextEditingController(text: party?['postal_code']?.toString() ?? '');
     final openingBalance = TextEditingController(text: (party?['opening_balance'] ?? 0).toString());
     final creditLimit = TextEditingController(text: (party?['credit_limit'] ?? 0).toString());
-    final cnic = TextEditingController(text: party?['cnic']?.toString() ?? '');
-    final businessName = TextEditingController(text: party?['business_name']?.toString() ?? '');
-    final taxNumber = TextEditingController(text: party?['tax_number']?.toString() ?? '');
-    final referencePerson = TextEditingController(text: party?['reference_person']?.toString() ?? '');
     final notes = TextEditingController(text: party?['notes']?.toString() ?? '');
-    final configuredBaseCurrency = await FinanceDB.instance.getBaseCurrency();
-    String selectedCurrency = (party?['currency']?.toString() ?? configuredBaseCurrency).toUpperCase();
-    String selectedPartyType = party?['party_type']?.toString() ?? 'Individual';
-    String selectedPaymentTerms = party?['payment_terms']?.toString() ?? 'Due on Receipt';
-    const paymentTermsOptions = ['Due on Receipt', '7 Days', '15 Days', '30 Days'];
-    final currencies = CurrencyCatalog.supported;
+    final baseCurrency = await FinanceDB.instance.getBaseCurrency();
+    String currency = (party?['currency']?.toString() ?? baseCurrency).toUpperCase();
+    String partyType = party?['party_type']?.toString() ?? 'Individual';
+    String paymentTerms = party?['payment_terms']?.toString() ?? 'Due on Receipt';
+    String profilePath = party?['profile_image_path']?.toString() ?? '';
+    XFile? pickedPhoto;
+    const terms = ['Due on Receipt', '7 Days', '15 Days', '30 Days'];
     final formKey = GlobalKey<FormState>();
+    final picker = ImagePicker();
 
-    Widget field(TextEditingController controller, String label, {TextInputType? keyboardType, int maxLines = 1}) {
-      return TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        decoration: InputDecoration(labelText: label),
-      );
-    }
+    InputDecoration inputDecoration(String label, IconData icon) => InputDecoration(
+      labelText: label, prefixIcon: Icon(icon, size: 18), isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE1E9E4))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.4)),
+    );
+    Widget field(TextEditingController c, String label, IconData icon, {TextInputType? type, int lines = 1, String? Function(String?)? validator}) => TextFormField(
+      controller: c, keyboardType: type, maxLines: lines, validator: validator,
+      decoration: inputDecoration(label, icon),
+    );
+    Widget section(String label, IconData icon) => Padding(
+      padding: const EdgeInsets.only(top: 17, bottom: 9),
+      child: Row(children: [
+        Icon(icon, color: const Color(0xFF147D59), size: 17),
+        const SizedBox(width: 7),
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF263B32))),
+      ]),
+    );
+    Widget pair(Widget a, Widget b) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(child: a), const SizedBox(width: 9), Expanded(child: b),
+    ]);
 
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(party == null ? 'Add New Party' : 'Edit Party'),
-        content: Form(
-          key: formKey,
-          child: SizedBox(
-            width: 420,
-            child: SingleChildScrollView(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                TextFormField(
-                  controller: name,
-                  autofocus: true,
-                  decoration: const InputDecoration(labelText: 'Party Name *'),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'Party name is required'
-                      : null,
-                ),
-                field(phone, 'Phone Number', keyboardType: TextInputType.phone),
-                field(email, 'Email Address', keyboardType: TextInputType.emailAddress),
-                StatefulBuilder(builder: (context, setTypeState) => DropdownButtonFormField<String>(
-                  value: selectedPartyType,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Party Type'),
-                  items: const [
-                    DropdownMenuItem(value: 'Individual', child: Text('Individual')),
-                    DropdownMenuItem(value: 'Business', child: Text('Business')),
-                  ],
-                  onChanged: (value) { if (value != null) setTypeState(() => selectedPartyType = value); },
-                )),
-                field(businessName, 'Business Name'),
-                field(cnic, 'CNIC / ID Number'),
-                field(taxNumber, 'Tax Number'),
-                field(referencePerson, 'Reference Person'),
-                const SizedBox(height: 8),
-                const Align(alignment: Alignment.centerLeft, child: Text('Address Information', style: TextStyle(fontWeight: FontWeight.w700))),
-                field(country, 'Country'),
-                field(city, 'City'),
-                field(address, 'Complete Address', maxLines: 2),
-                field(postalCode, 'Postal Code'),
-                const SizedBox(height: 8),
-                const Align(alignment: Alignment.centerLeft, child: Text('Financial Settings', style: TextStyle(fontWeight: FontWeight.w700))),
-                StatefulBuilder(builder: (context, setCurrencyState) => DropdownButtonFormField<String>(
-                  value: currencies.contains(selectedCurrency) ? selectedCurrency : 'PKR',
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Party Currency *'),
-                  items: currencies.map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
-                  onChanged: (value) { if (value != null) setCurrencyState(() => selectedCurrency = value); },
-                )),
-                field(openingBalance, 'Opening Balance', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-                field(creditLimit, 'Credit Limit', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-                StatefulBuilder(builder: (context, setTermsState) => DropdownButtonFormField<String>(
-                  value: paymentTermsOptions.contains(selectedPaymentTerms) ? selectedPaymentTerms : paymentTermsOptions.first,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Payment Terms'),
-                  items: paymentTermsOptions.map((term) => DropdownMenuItem(value: term, child: Text(term))).toList(),
-                  onChanged: (value) { if (value != null) setTermsState(() => selectedPaymentTerms = value); },
-                )),
-                const SizedBox(height: 8),
-                field(notes, 'Notes', maxLines: 3),
-              ]),
+    final saved = await showModalBottomSheet<bool>(
+      context: context, isScrollControlled: true, useSafeArea: true,
+      showDragHandle: true, backgroundColor: Colors.white,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+          final screen = MediaQuery.sizeOf(context).height;
+          final photo = pickedPhoto?.path ?? profilePath;
+          final photoExists = photo.isNotEmpty && File(photo).existsSync();
+          Future<void> choosePhoto(ImageSource source) async {
+            try {
+              final selected = await picker.pickImage(source: source, imageQuality: 82, maxWidth: 900);
+              if (selected != null) setSheetState(() => pickedPhoto = selected);
+            } catch (e) {
+              if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Photo select error: $e')));
+            }
+          }
+          return Padding(
+            padding: EdgeInsets.only(bottom: keyboard),
+            child: SizedBox(
+              height: (screen - keyboard).clamp(300.0, screen) * .94,
+              child: Form(
+                key: formKey,
+                child: Column(children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 12, 10),
+                    child: Row(children: [
+                      Expanded(child: Text(party == null ? 'Add New Party' : 'Edit Party', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
+                      IconButton(onPressed: () => Navigator.pop(sheetContext, false), icon: const Icon(Icons.close_rounded)),
+                    ]),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Center(child: Column(children: [
+                          Stack(alignment: Alignment.bottomRight, children: [
+                            CircleAvatar(radius: 42, backgroundColor: const Color(0xFFEAF3EE),
+                              backgroundImage: photoExists ? FileImage(File(photo)) : null,
+                              child: photoExists ? null : const Icon(Icons.person_outline_rounded, size: 42, color: Color(0xFF147D59))),
+                            Container(
+                              decoration: const BoxDecoration(color: Color(0xFF147D59), shape: BoxShape.circle),
+                              child: IconButton(
+                                visualDensity: VisualDensity.compact,
+                                constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+                                icon: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                                onPressed: () => showModalBottomSheet<void>(
+                                  context: context, showDragHandle: true,
+                                  builder: (photoContext) => SafeArea(child: Wrap(children: [
+                                    ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Choose from Gallery'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.gallery); }),
+                                    ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Take Photo'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.camera); }),
+                                    if (photoExists) ListTile(leading: const Icon(Icons.delete_outline, color: Colors.red), title: const Text('Remove Photo'), onTap: () { Navigator.pop(photoContext); setSheetState(() { pickedPhoto = null; profilePath = ''; }); }),
+                                  ])),
+                                ),
+                              ),
+                            ),
+                          ]),
+                          const SizedBox(height: 5),
+                          const Text('Party Profile Photo', style: TextStyle(fontSize: 11, color: Color(0xFF718078))),
+                        ])),
+                        section('Basic Information', Icons.person_outline_rounded),
+                        field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
+                        const SizedBox(height: 10),
+                        pair(field(phone, 'Phone Number', Icons.phone_outlined, type: TextInputType.phone), field(email, 'Email Address', Icons.email_outlined, type: TextInputType.emailAddress)),
+                        const SizedBox(height: 10),
+                        pair(
+                          DropdownButtonFormField<String>(
+                            value: partyType, isExpanded: true, decoration: inputDecoration('Party Type', Icons.category_outlined),
+                            items: const [DropdownMenuItem(value: 'Individual', child: Text('Individual')), DropdownMenuItem(value: 'Business', child: Text('Business'))],
+                            onChanged: (v) { if (v != null) setSheetState(() => partyType = v); },
+                          ),
+                          field(businessName, 'Business Name', Icons.storefront_outlined),
+                        ),
+                        const SizedBox(height: 10),
+                        pair(field(cnic, 'CNIC / ID Number', Icons.credit_card_outlined), field(taxNumber, 'Tax Number', Icons.receipt_long_outlined)),
+                        const SizedBox(height: 10),
+                        field(referencePerson, 'Reference Person', Icons.contacts_outlined),
+                        section('Address Information', Icons.location_on_outlined),
+                        pair(field(country, 'Country', Icons.public_outlined), field(city, 'City', Icons.location_city_outlined)),
+                        const SizedBox(height: 10),
+                        pair(field(address, 'Complete Address', Icons.home_outlined, lines: 2), field(postalCode, 'Postal Code', Icons.markunread_mailbox_outlined)),
+                        section('Financial Settings', Icons.account_balance_wallet_outlined),
+                        pair(
+                          DropdownButtonFormField<String>(
+                            value: CurrencyCatalog.supported.contains(currency) ? currency : 'PKR',
+                            isExpanded: true, decoration: inputDecoration('Currency *', Icons.currency_exchange_rounded),
+                            items: CurrencyCatalog.supported.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                            onChanged: (v) { if (v != null) setSheetState(() => currency = v); },
+                          ),
+                          DropdownButtonFormField<String>(
+                            value: terms.contains(paymentTerms) ? paymentTerms : terms.first,
+                            isExpanded: true, decoration: inputDecoration('Payment Terms', Icons.event_note_outlined),
+                            items: terms.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                            onChanged: (v) { if (v != null) setSheetState(() => paymentTerms = v); },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        pair(field(openingBalance, 'Opening Balance', Icons.account_balance_outlined, type: const TextInputType.numberWithOptions(decimal: true)), field(creditLimit, 'Credit Limit', Icons.speed_outlined, type: const TextInputType.numberWithOptions(decimal: true))),
+                        section('Additional Information', Icons.notes_rounded),
+                        field(notes, 'Notes', Icons.sticky_note_2_outlined, lines: 3),
+                      ]),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(18, 10, 18, 12 + MediaQuery.paddingOf(context).bottom),
+                    child: SizedBox(width: double.infinity, child: FilledButton.icon(
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF147D59), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13))),
+                      onPressed: () { if (formKey.currentState!.validate()) Navigator.pop(sheetContext, true); },
+                      icon: const Icon(Icons.check_rounded),
+                      label: Text(party == null ? 'Save Party' : 'Update Party', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    )),
+                  ),
+                ]),
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(dialogContext, true);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
+          );
+        },
       ),
     );
+
     if (saved == true) {
       try {
         final opening = double.tryParse(openingBalance.text.trim()) ?? 0;
         final limit = double.tryParse(creditLimit.text.trim()) ?? 0;
-        if (opening < 0 || limit < 0) throw Exception('Opening balance and credit limit cannot be negative.');
+        if (!opening.isFinite || !limit.isFinite || opening < 0 || limit < 0) throw Exception('Opening balance and credit limit must be valid non-negative amounts.');
+        var storedPhoto = profilePath;
+        if (pickedPhoto != null) {
+          final docs = await getApplicationDocumentsDirectory();
+          final folder = Directory(p.join(docs.path, 'party_profiles'));
+          if (!await folder.exists()) await folder.create(recursive: true);
+          final ext = p.extension(pickedPhoto!.path);
+          final fileName = 'party_${party?['id'] ?? DateTime.now().microsecondsSinceEpoch}${ext.isEmpty ? '.jpg' : ext}';
+          storedPhoto = (await File(pickedPhoto!.path).copy(p.join(folder.path, fileName))).path;
+        }
         if (party == null) {
-          await LoansService.addParty(
-            name: name.text,
-            phone: phone.text,
-            address: address.text,
-            currency: selectedCurrency,
-            email: email.text,
-            partyType: selectedPartyType,
-            country: country.text,
-            city: city.text,
-            postalCode: postalCode.text,
-            openingBalance: opening,
-            creditLimit: limit,
-            paymentTerms: selectedPaymentTerms,
-            cnic: cnic.text,
-            businessName: businessName.text,
-            taxNumber: taxNumber.text,
-            referencePerson: referencePerson.text,
-            notes: notes.text,
-          );
+          await LoansService.addParty(name: name.text, phone: phone.text, address: address.text, currency: currency,
+            email: email.text, partyType: partyType, country: country.text, city: city.text, postalCode: postalCode.text,
+            openingBalance: opening, creditLimit: limit, paymentTerms: paymentTerms, cnic: cnic.text,
+            businessName: businessName.text, taxNumber: taxNumber.text, referencePerson: referencePerson.text,
+            notes: notes.text, profileImagePath: storedPhoto);
         } else {
-          await LoansService.updateParty(
-            id: (party['id'] as num).toInt(),
-            name: name.text,
-            phone: phone.text,
-            address: address.text,
-            currency: selectedCurrency,
-            email: email.text,
-            partyType: selectedPartyType,
-            country: country.text,
-            city: city.text,
-            postalCode: postalCode.text,
-            openingBalance: opening,
-            creditLimit: limit,
-            paymentTerms: selectedPaymentTerms,
-            cnic: cnic.text,
-            businessName: businessName.text,
-            taxNumber: taxNumber.text,
-            referencePerson: referencePerson.text,
-            notes: notes.text,
-          );
+          await LoansService.updateParty(id: (party['id'] as num).toInt(), name: name.text, phone: phone.text,
+            address: address.text, currency: currency, email: email.text, partyType: partyType, country: country.text,
+            city: city.text, postalCode: postalCode.text, openingBalance: opening, creditLimit: limit,
+            paymentTerms: paymentTerms, cnic: cnic.text, businessName: businessName.text, taxNumber: taxNumber.text,
+            referencePerson: referencePerson.text, notes: notes.text, profileImagePath: storedPhoto);
         }
         await _loadParties();
       } catch (error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not save party: $error')),
-          );
-        }
+        if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Could not save party: $error')));
       }
     }
-    for (final controller in [
-      name, phone, address, email, country, city, postalCode,
-      openingBalance, creditLimit, cnic, businessName, taxNumber,
-      referencePerson, notes,
-    ]) {
-      controller.dispose();
+    for (final c in [name, phone, email, businessName, cnic, taxNumber, referencePerson, country, city, address, postalCode, openingBalance, creditLimit, notes]) {
+      c.dispose();
     }
   }
 

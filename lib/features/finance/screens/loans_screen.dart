@@ -1954,6 +1954,9 @@ class PartyManagementPage extends StatefulWidget {
 
 class _PartyManagementPageState extends State<PartyManagementPage> {
   List<Map<String, dynamic>> _parties = [];
+  Map<String, double> _receivableByCurrency = {};
+  Map<String, double> _payableByCurrency = {};
+  int _partiesWithBalance = 0;
   bool _loading = true;
   bool _searchVisible = false;
   String _search = '';
@@ -1966,12 +1969,109 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
 
   Future<void> _loadParties() async {
     final parties = await LoansService.getParties();
+    final receivable = <String, double>{};
+    final payable = <String, double>{};
+    var partiesWithBalance = 0;
+    for (final party in parties) {
+      final summary = await LoansService.getPartySummary((party['id'] as num).toInt());
+      final balances = (summary['balances'] as List<dynamic>?) ?? [];
+      var hasBalance = false;
+      for (final item in balances) {
+        final currency = item['currency']?.toString().toUpperCase() ?? 'PKR';
+        final amount = (item['outstanding'] as num?)?.toDouble() ?? 0;
+        if (amount <= 0) continue;
+        hasBalance = true;
+        final target = item['loan_type'] == 'given' ? receivable : payable;
+        target[currency] = (target[currency] ?? 0) + amount;
+      }
+      if (hasBalance) partiesWithBalance++;
+    }
     if (!mounted) return;
     setState(() {
       _parties = parties;
+      _receivableByCurrency = receivable;
+      _payableByCurrency = payable;
+      _partiesWithBalance = partiesWithBalance;
       _loading = false;
     });
   }
+
+  Widget _overviewAmount(String label, Map<String, double> values, Color color, Color background) {
+    final entries = values.entries.where((entry) => entry.value > 0).toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+        decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(13)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 5),
+          if (entries.isEmpty)
+            Text('—', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color))
+          else
+            ...entries.map((entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text('${entry.key} ${_money(entry.value)}',
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: color)),
+            )),
+        ]),
+      ),
+    );
+  }
+
+  Widget _partyOverviewCard() {
+    final individuals = _parties.where((p) => (p['party_type']?.toString() ?? 'Individual').toLowerCase() != 'business').length;
+    final businesses = _parties.length - individuals;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [Color(0xFF126B4B), Color(0xFF20966A)]),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: const Color(0xFF126B4B).withValues(alpha: .17), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(width: 38, height: 38,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.groups_2_rounded, color: Colors.white, size: 21)),
+          const SizedBox(width: 10),
+          const Expanded(child: Text('Parties Overview', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800))),
+          Text('${_parties.length} Total', style: TextStyle(color: Colors.white.withValues(alpha: .9), fontSize: 11, fontWeight: FontWeight.w700)),
+        ]),
+        const SizedBox(height: 13),
+        Row(children: [
+          Expanded(child: _overviewCount('Individuals', individuals, Icons.person_outline_rounded)),
+          const SizedBox(width: 8),
+          Expanded(child: _overviewCount('Businesses', businesses, Icons.business_outlined)),
+          const SizedBox(width: 8),
+          Expanded(child: _overviewCount('With Balance', _partiesWithBalance, Icons.account_balance_wallet_outlined)),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          _overviewAmount('RECEIVABLE', _receivableByCurrency, const Color(0xFF167447), const Color(0xFFE7F5EC)),
+          const SizedBox(width: 8),
+          _overviewAmount('PAYABLE', _payableByCurrency, const Color(0xFF9A5726), const Color(0xFFFFF0E3)),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _overviewCount(String label, int value, IconData icon) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(12)),
+    child: Row(children: [
+      Icon(icon, color: Colors.white, size: 15),
+      const SizedBox(width: 5),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('$value', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: Colors.white.withValues(alpha: .85), fontSize: 9, fontWeight: FontWeight.w600)),
+      ])),
+    ]),
+  );
 
   String _money(num value) =>
       widget.hideBalances ? '••••••' : value.toStringAsFixed(2);
@@ -2340,6 +2440,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                 ),
               ),
             ),
+          if (!_loading && _parties.isNotEmpty) _partyOverviewCard(),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())

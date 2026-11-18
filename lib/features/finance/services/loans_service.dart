@@ -138,6 +138,7 @@ class LoansService {
       'business_name': "TEXT NOT NULL DEFAULT ''",
       'tax_number': "TEXT NOT NULL DEFAULT ''",
       'reference_person': "TEXT NOT NULL DEFAULT ''",
+      'profile_image_path': "TEXT NOT NULL DEFAULT ''",
     };
     for (final entry in partyMigrations.entries) {
       if (!existingPartyColumns.contains(entry.key)) {
@@ -194,6 +195,7 @@ class LoansService {
     String businessName = '',
     String taxNumber = '',
     String referencePerson = '',
+    String profileImagePath = '',
   }) async {
     final db = await _database;
     final normalizedName = name.trim();
@@ -235,6 +237,7 @@ class LoansService {
       'business_name': businessName.trim(),
       'tax_number': taxNumber.trim(),
       'reference_person': referencePerson.trim(),
+      'profile_image_path': profileImagePath,
       'created_at': DateTime.now().toIso8601String(),
     });
   }
@@ -258,6 +261,7 @@ class LoansService {
     String businessName = '',
     String taxNumber = '',
     String referencePerson = '',
+    String profileImagePath = '',
   }) async {
     final db = await _database;
     final normalizedName = name.trim();
@@ -292,6 +296,7 @@ class LoansService {
         'business_name': businessName.trim(),
         'tax_number': taxNumber.trim(),
         'reference_person': referencePerson.trim(),
+        'profile_image_path': profileImagePath,
       },
       where: 'id = ?',
       whereArgs: [id],

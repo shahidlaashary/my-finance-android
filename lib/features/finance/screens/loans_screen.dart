@@ -1395,6 +1395,13 @@ class _LoansScreenState extends State<LoansScreen> {
   @override
   Widget build(BuildContext context) {
     final overdueCount = _loans.where((loan) => loan.isOverdue).length;
+    final receivableByCurrency = <String, double>{};
+    final payableByCurrency = <String, double>{};
+    for (final loan in _loans.where((item) => item.remainingAmount > 0)) {
+      final currency = loan.currency.toUpperCase();
+      final balances = loan.loanType == 'given' ? receivableByCurrency : payableByCurrency;
+      balances[currency] = (balances[currency] ?? 0) + loan.remainingAmount;
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -1498,39 +1505,86 @@ class _LoansScreenState extends State<LoansScreen> {
                           )
                         else
                           ..._outstandingByCurrency.entries.map((entry) {
+                            final receivable = receivableByCurrency[entry.key] ?? 0;
+                            final payable = payableByCurrency[entry.key] ?? 0;
                             return Padding(
-                              padding: const EdgeInsets.only(bottom: 7),
+                              padding: const EdgeInsets.only(bottom: 8),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                                padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.10),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(13),
                                   border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                                 ),
-                                child: Row(
+                                child: Column(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.14),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(entry.key,
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
-                                    ),
-                                    const Spacer(),
-                                    Flexible(
-                                      child: Text(
-                                        _money(entry.value),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.right,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.14),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(entry.key,
+                                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
                                         ),
-                                      ),
+                                        const Spacer(),
+                                        Text(
+                                          'Total: ${_money(entry.value)}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 9),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFB9F2D5).withValues(alpha: 0.16),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('You Will Receive',
+                                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(color: Color(0xFFB9F2D5), fontSize: 10, fontWeight: FontWeight.w700)),
+                                                const SizedBox(height: 3),
+                                                Text(_money(receivable),
+                                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFFFD18A).withValues(alpha: 0.14),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('You Need to Pay',
+                                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(color: Color(0xFFFFD18A), fontSize: 10, fontWeight: FontWeight.w700)),
+                                                const SizedBox(height: 3),
+                                                Text(_money(payable),
+                                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),

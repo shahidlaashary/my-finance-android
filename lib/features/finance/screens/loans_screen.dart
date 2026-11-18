@@ -872,6 +872,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         AttachmentSection(
                           ownerType: AttachmentOwnerTypes.loan,
                           ownerId: loan.id!,
+                          readOnly: true,
                         ),
                         if (!loan.isPaid) ...[
                           const SizedBox(height: 12),

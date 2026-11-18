@@ -668,6 +668,26 @@ class _LoansScreenState extends State<LoansScreen> {
     return '$name • $type';
   }
 
+  Future<void> _showRepaymentAttachments(int repaymentId) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 20),
+          child: SingleChildScrollView(
+            child: AttachmentSection(
+              ownerType: AttachmentOwnerTypes.repayment,
+              ownerId: repaymentId,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<bool> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return false;
     await _loadData();
@@ -779,10 +799,11 @@ class _LoansScreenState extends State<LoansScreen> {
         notes: _repaymentNotesController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       );
-      await LoansService.addRepayment(repayment);
+      final repaymentId = await LoansService.addRepayment(repayment);
       _selectedRepaymentWalletId = walletId;
       await _loadData();
       _showMessage('Repayment saved successfully.');
+      if (mounted) await _showRepaymentAttachments(repaymentId);
       return true;
     } catch (error) {
       _showMessage('Could not save repayment: $error');
@@ -1239,6 +1260,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                               size: 19,
                                             ),
                                             onSelected: (value) async {
+                                              if (value == 'edit') {
+                                                await _showRepaymentAttachments(repayment.id!);
+                                                return;
+                                              }
                                               if (value != 'delete') return;
                                               final confirm = await showDialog<bool>(
                                                 context: pageContext,
@@ -1271,6 +1296,16 @@ class _LoansScreenState extends State<LoansScreen> {
                                             },
                                             itemBuilder: (context) => const [
                                               PopupMenuItem(
+                                                value: 'edit',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.edit_outlined, size: 18),
+                                                    SizedBox(width: 9),
+                                                    Text('Edit Entry / Attachments'),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuItem(
                                                 value: 'delete',
                                                 child: Row(
                                                   children: [
@@ -1286,14 +1321,6 @@ class _LoansScreenState extends State<LoansScreen> {
                                     ),
                                   ],
                                 ),
-                                if (repayment.id != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 49, top: 3),
-                                    child: AttachmentSection(
-                                      ownerType: AttachmentOwnerTypes.repayment,
-                                      ownerId: repayment.id!,
-                                    ),
-                                  ),
                               ],
                             ),
                           ),

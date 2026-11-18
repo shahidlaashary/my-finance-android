@@ -93,6 +93,18 @@ class LoansService {
         address TEXT NOT NULL DEFAULT '',
         currency TEXT NOT NULL DEFAULT 'PKR',
         notes TEXT NOT NULL DEFAULT '',
+        email TEXT NOT NULL DEFAULT '',
+        party_type TEXT NOT NULL DEFAULT 'Individual',
+        country TEXT NOT NULL DEFAULT '',
+        city TEXT NOT NULL DEFAULT '',
+        postal_code TEXT NOT NULL DEFAULT '',
+        opening_balance REAL NOT NULL DEFAULT 0,
+        credit_limit REAL NOT NULL DEFAULT 0,
+        payment_terms TEXT NOT NULL DEFAULT 'Due on Receipt',
+        cnic TEXT NOT NULL DEFAULT '',
+        business_name TEXT NOT NULL DEFAULT '',
+        tax_number TEXT NOT NULL DEFAULT '',
+        reference_person TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL
       )
     ''' );
@@ -111,8 +123,26 @@ class LoansService {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_loans_source ON loans(source_type, source_id)');
 
     final partyColumns = await db.rawQuery('PRAGMA table_info(loan_parties)');
-    if (!partyColumns.any((column) => column['name'] == 'currency')) {
-      await db.execute("ALTER TABLE loan_parties ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'");
+    final existingPartyColumns = partyColumns.map((column) => column['name']).toSet();
+    const partyMigrations = <String, String>{
+      'currency': "TEXT NOT NULL DEFAULT 'PKR'",
+      'email': "TEXT NOT NULL DEFAULT ''",
+      'party_type': "TEXT NOT NULL DEFAULT 'Individual'",
+      'country': "TEXT NOT NULL DEFAULT ''",
+      'city': "TEXT NOT NULL DEFAULT ''",
+      'postal_code': "TEXT NOT NULL DEFAULT ''",
+      'opening_balance': 'REAL NOT NULL DEFAULT 0',
+      'credit_limit': 'REAL NOT NULL DEFAULT 0',
+      'payment_terms': "TEXT NOT NULL DEFAULT 'Due on Receipt'",
+      'cnic': "TEXT NOT NULL DEFAULT ''",
+      'business_name': "TEXT NOT NULL DEFAULT ''",
+      'tax_number': "TEXT NOT NULL DEFAULT ''",
+      'reference_person': "TEXT NOT NULL DEFAULT ''",
+    };
+    for (final entry in partyMigrations.entries) {
+      if (!existingPartyColumns.contains(entry.key)) {
+        await db.execute('ALTER TABLE loan_parties ADD COLUMN ${entry.key} ${entry.value}');
+      }
     }
 
     await db.execute('''
@@ -152,6 +182,18 @@ class LoansService {
     String address = '',
     String notes = '',
     String currency = 'PKR',
+    String email = '',
+    String partyType = 'Individual',
+    String country = '',
+    String city = '',
+    String postalCode = '',
+    double openingBalance = 0,
+    double creditLimit = 0,
+    String paymentTerms = 'Due on Receipt',
+    String cnic = '',
+    String businessName = '',
+    String taxNumber = '',
+    String referencePerson = '',
   }) async {
     final db = await _database;
     final normalizedName = name.trim();
@@ -181,6 +223,18 @@ class LoansService {
       'address': address.trim(),
       'currency': currency.trim().toUpperCase(),
       'notes': notes.trim(),
+      'email': email.trim(),
+      'party_type': partyType,
+      'country': country.trim(),
+      'city': city.trim(),
+      'postal_code': postalCode.trim(),
+      'opening_balance': openingBalance,
+      'credit_limit': creditLimit,
+      'payment_terms': paymentTerms,
+      'cnic': cnic.trim(),
+      'business_name': businessName.trim(),
+      'tax_number': taxNumber.trim(),
+      'reference_person': referencePerson.trim(),
       'created_at': DateTime.now().toIso8601String(),
     });
   }
@@ -191,6 +245,19 @@ class LoansService {
     String? phone,
     String address = '',
     String currency = 'PKR',
+    String notes = '',
+    String email = '',
+    String partyType = 'Individual',
+    String country = '',
+    String city = '',
+    String postalCode = '',
+    double openingBalance = 0,
+    double creditLimit = 0,
+    String paymentTerms = 'Due on Receipt',
+    String cnic = '',
+    String businessName = '',
+    String taxNumber = '',
+    String referencePerson = '',
   }) async {
     final db = await _database;
     final normalizedName = name.trim();
@@ -212,6 +279,19 @@ class LoansService {
         'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
         'address': address.trim(),
         'currency': currency.trim().toUpperCase(),
+        'notes': notes.trim(),
+        'email': email.trim(),
+        'party_type': partyType,
+        'country': country.trim(),
+        'city': city.trim(),
+        'postal_code': postalCode.trim(),
+        'opening_balance': openingBalance,
+        'credit_limit': creditLimit,
+        'payment_terms': paymentTerms,
+        'cnic': cnic.trim(),
+        'business_name': businessName.trim(),
+        'tax_number': taxNumber.trim(),
+        'reference_person': referencePerson.trim(),
       },
       where: 'id = ?',
       whereArgs: [id],

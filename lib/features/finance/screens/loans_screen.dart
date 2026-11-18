@@ -1219,7 +1219,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(22),
                           onTap: () => _showLoanDetails(loan),
                           child: SizedBox(
-                            height: 250,
+                            height: 220,
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -1337,7 +1337,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 6),
                                   Expanded(
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1464,7 +1464,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 'Start Date',
                                                 loan.lendingDate,
                                               ),
-                                              const SizedBox(height: 13),
+                                              const SizedBox(height: 8),
                                               _loanDateInfo(
                                                 Icons.event_available_rounded,
                                                 'Next Due',
@@ -1478,7 +1478,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   const Divider(height: 1, color: Color(0xFFE7EDF4)),
                                   SizedBox(
-                                    height: 30,
+                                    height: 26,
                                     child: Row(
                                       children: [
                                         if (!loan.isPaid)

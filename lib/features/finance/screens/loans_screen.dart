@@ -2106,9 +2106,13 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final picker = ImagePicker();
 
     InputDecoration inputDecoration(String label, IconData icon) => InputDecoration(
-      labelText: label, prefixIcon: Icon(icon, size: 18), isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      labelText: label, prefixIcon: Icon(icon, size: 16), isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+      isCollapsed: false,
+      filled: true,
+      fillColor: const Color(0xFFFBFDFC),
+      constraints: const BoxConstraints(minHeight: 42),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE1E9E4))),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.4)),
     );
@@ -2117,15 +2121,15 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       decoration: inputDecoration(label, icon),
     );
     Widget section(String label, IconData icon) => Padding(
-      padding: const EdgeInsets.only(top: 17, bottom: 9),
+      padding: const EdgeInsets.only(top: 11, bottom: 6),
       child: Row(children: [
         Icon(icon, color: const Color(0xFF147D59), size: 17),
         const SizedBox(width: 7),
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF263B32))),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF263B32))),
       ]),
     );
     Widget pair(Widget a, Widget b) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(child: a), const SizedBox(width: 9), Expanded(child: b),
+      Expanded(child: a), const SizedBox(width: 7), Expanded(child: b),
     ]);
 
     final saved = await showModalBottomSheet<bool>(
@@ -2153,28 +2157,28 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                 key: formKey,
                 child: Column(children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 0, 12, 10),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 10, 6),
                     child: Row(children: [
-                      Expanded(child: Text(party == null ? 'Add New Party' : 'Edit Party', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
+                      Expanded(child: Text(party == null ? 'Add New Party' : 'Edit Party', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
                       IconButton(onPressed: () => Navigator.pop(sheetContext, false), icon: const Icon(Icons.close_rounded)),
                     ]),
                   ),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Center(child: Column(children: [
                           Stack(alignment: Alignment.bottomRight, children: [
-                            CircleAvatar(radius: 42, backgroundColor: const Color(0xFFEAF3EE),
+                            CircleAvatar(radius: 32, backgroundColor: const Color(0xFFEAF3EE),
                               backgroundImage: photoExists ? FileImage(File(photo)) : null,
-                              child: photoExists ? null : const Icon(Icons.person_outline_rounded, size: 42, color: Color(0xFF147D59))),
+                              child: photoExists ? null : const Icon(Icons.person_outline_rounded, size: 32, color: Color(0xFF147D59))),
                             Container(
                               decoration: const BoxDecoration(color: Color(0xFF147D59), shape: BoxShape.circle),
                               child: IconButton(
                                 visualDensity: VisualDensity.compact,
-                                constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-                                icon: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                                constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                                icon: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
                                 onPressed: () => showModalBottomSheet<void>(
                                   context: context, showDragHandle: true,
                                   builder: (photoContext) => SafeArea(child: Wrap(children: [
@@ -2186,12 +2190,12 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                               ),
                             ),
                           ]),
-                          const SizedBox(height: 5),
-                          const Text('Party Profile Photo', style: TextStyle(fontSize: 11, color: Color(0xFF718078))),
+                          const SizedBox(height: 3),
+                          const Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Color(0xFF718078))),
                         ])),
                         section('Basic Information', Icons.person_outline_rounded),
                         field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 7),
                         pair(field(phone, 'Phone Number', Icons.phone_outlined, type: TextInputType.phone), field(email, 'Email Address', Icons.email_outlined, type: TextInputType.emailAddress)),
                         const SizedBox(height: 10),
                         pair(
@@ -2209,7 +2213,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                         section('Address Information', Icons.location_on_outlined),
                         pair(field(country, 'Country', Icons.public_outlined), field(city, 'City', Icons.location_city_outlined)),
                         const SizedBox(height: 10),
-                        pair(field(address, 'Complete Address', Icons.home_outlined, lines: 2), field(postalCode, 'Postal Code', Icons.markunread_mailbox_outlined)),
+                        pair(field(address, 'Complete Address', Icons.home_outlined, lines: 1), field(postalCode, 'Postal Code', Icons.markunread_mailbox_outlined)),
                         section('Financial Settings', Icons.account_balance_wallet_outlined),
                         pair(
                           DropdownButtonFormField<String>(
@@ -2228,16 +2232,16 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                         const SizedBox(height: 10),
                         pair(field(openingBalance, 'Opening Balance', Icons.account_balance_outlined, type: const TextInputType.numberWithOptions(decimal: true)), field(creditLimit, 'Credit Limit', Icons.speed_outlined, type: const TextInputType.numberWithOptions(decimal: true))),
                         section('Additional Information', Icons.notes_rounded),
-                        field(notes, 'Notes', Icons.sticky_note_2_outlined, lines: 3),
+                        field(notes, 'Notes', Icons.sticky_note_2_outlined, lines: 2),
                       ]),
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(18, 10, 18, 12 + MediaQuery.paddingOf(context).bottom),
+                    padding: EdgeInsets.fromLTRB(16, 7, 16, 9 + MediaQuery.paddingOf(context).bottom),
                     child: SizedBox(width: double.infinity, child: FilledButton.icon(
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF147D59), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13))),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF147D59), padding: const EdgeInsets.symmetric(vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
                       onPressed: () { if (formKey.currentState!.validate()) Navigator.pop(sheetContext, true); },
-                      icon: const Icon(Icons.check_rounded),
+                      icon: const Icon(Icons.check_rounded, size: 18),
                       label: Text(party == null ? 'Save Party' : 'Update Party', style: const TextStyle(fontWeight: FontWeight.w700)),
                     )),
                   ),

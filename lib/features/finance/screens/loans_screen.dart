@@ -1410,7 +1410,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(22),
                           onTap: () => _showLoanDetails(loan),
                           child: SizedBox(
-                            height: 202,
+                            height: 182,
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(

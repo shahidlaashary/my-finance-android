@@ -1505,7 +1505,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
-                                          flex: 6,
+                                          flex: 7,
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
@@ -1586,21 +1586,21 @@ class _LoansScreenState extends State<LoansScreen> {
                                                   Text(
                                                     'Repaid: ${_money(loan.repaidAmount)}',
                                                     style: const TextStyle(
-                                                      fontSize: 10,
+                                                      fontSize: 11,
                                                       color: Color(0xFF536987),
                                                     ),
                                                   ),
                                                   const Text(
                                                     '|',
                                                     style: TextStyle(
-                                                      fontSize: 10,
+                                                      fontSize: 11,
                                                       color: Color(0xFFB2BECE),
                                                     ),
                                                   ),
                                                   Text(
                                                     'Remaining: ${_money(loan.remainingAmount)}',
                                                     style: const TextStyle(
-                                                      fontSize: 10,
+                                                      fontSize: 11,
                                                       color: Color(0xFF536987),
                                                     ),
                                                   ),
@@ -1640,9 +1640,11 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   const Divider(height: 1, color: Color(0xFFE7EDF4)),
                                   SizedBox(
-                                    height: 24,
-                                    child: Row(
-                                      children: [
+                                     height: 27,
+                                     child: Align(
+                                       alignment: Alignment.bottomLeft,
+                                       child: Row(
+                                         children: [
                                         if (!loan.isPaid)
                                           TextButton.icon(
                                             style: TextButton.styleFrom(
@@ -1660,14 +1662,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                             ),
                                           ),
                                         const Spacer(),
-
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                                         ],
+                                       ),
+                                     ),
+                                   ),
                         ),
                       );
                     }),

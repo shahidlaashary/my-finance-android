@@ -1955,6 +1955,7 @@ class PartyManagementPage extends StatefulWidget {
 class _PartyManagementPageState extends State<PartyManagementPage> {
   List<Map<String, dynamic>> _parties = [];
   bool _loading = true;
+  bool _searchVisible = false;
   String _search = '';
 
   @override
@@ -2280,211 +2281,233 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
+    final query = _search.trim().toLowerCase();
     final filtered = _parties.where((party) {
-      final query = _search.trim().toLowerCase();
-      return query.isEmpty ||
-          (party['name']?.toString().toLowerCase().contains(query) ?? false) ||
-          (party['phone']?.toString().toLowerCase().contains(query) ?? false);
+      if (query.isEmpty) return true;
+      final searchable = [
+        party['name'], party['phone'], party['email'], party['business_name'],
+        party['city'], party['country'], party['cnic'], party['tax_number'],
+      ].map((value) => value?.toString().toLowerCase() ?? '').join(' ');
+      return searchable.contains(query);
     }).toList();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F8F6),
       appBar: AppBar(
         title: const Text('Manage Parties'),
         actions: [
           IconButton(
-            onPressed: () => _editParty(),
-            tooltip: 'Add Party',
-            icon: const Icon(Icons.person_add_alt_1),
+            tooltip: _searchVisible ? 'Close search' : 'Search parties',
+            onPressed: () => setState(() {
+              _searchVisible = !_searchVisible;
+              if (!_searchVisible) _search = '';
+            }),
+            icon: Icon(_searchVisible ? Icons.close_rounded : Icons.search_rounded),
           ),
+          IconButton(
+            tooltip: 'Add Party',
+            onPressed: () => _editParty(),
+            icon: const Icon(Icons.person_add_alt_1_rounded),
+          ),
+          const SizedBox(width: 4),
         ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              onChanged: (value) => setState(() => _search = value),
-              decoration: InputDecoration(
-                hintText: 'Search parties',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _search.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: () => setState(() => _search = ''),
-                        icon: const Icon(Icons.close),
-                      ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+          if (_searchVisible)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              child: TextField(
+                autofocus: true,
+                onChanged: (value) => setState(() => _search = value),
+                decoration: InputDecoration(
+                  hintText: 'Search name, phone, email or city',
+                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF147D59)),
+                  suffixIcon: _search.isEmpty ? null : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: () => setState(() => _search = ''),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFE2EBE5))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.3)),
                 ),
               ),
             ),
-          ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
                     ? Center(
-                        child: Text(_search.isEmpty
-                            ? 'No parties added yet.'
-                            : 'No matching parties found.'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(_search.isEmpty ? Icons.people_outline_rounded : Icons.search_off_rounded,
+                                size: 42, color: const Color(0xFF9AA9A0)),
+                            const SizedBox(height: 10),
+                            Text(_search.isEmpty ? 'No parties added yet.' : 'No matching parties found.',
+                                style: const TextStyle(color: Color(0xFF748279), fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 20),
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 100),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final party = filtered[index];
                           return FutureBuilder<Map<String, dynamic>>(
-                            future: LoansService.getPartySummary(
-                              (party['id'] as num).toInt(),
-                            ),
+                            future: LoansService.getPartySummary((party['id'] as num).toInt()),
                             builder: (context, snapshot) {
-                              final balances = (snapshot.data?['balances']
-                                      as List<dynamic>?) ??
-                                  [];
-                              final summary = balances.isEmpty
-                                  ? 'No loan history yet'
-                                  : balances.map((item) {
-                                      final amount =
-                                          (item['outstanding'] as num?) ?? 0;
-                                      final type = item['loan_type'] == 'given'
-                                          ? 'Receivable'
-                                          : 'Payable';
-                                      return '${item['currency']} $type: ${_money(amount)}';
-                                    }).join('  •  ');
+                              final balances = (snapshot.data?['balances'] as List<dynamic>?) ?? [];
                               final phone = (party['phone'] ?? '').toString().trim();
+                              final email = (party['email'] ?? '').toString().trim();
+                              final city = (party['city'] ?? '').toString().trim();
+                              final country = (party['country'] ?? '').toString().trim();
                               final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-                              final partyPhoto = party['profile_image_path']?.toString() ?? '';
-                              final hasPartyPhoto = partyPhoto.isNotEmpty && File(partyPhoto).existsSync();
+                              final partyType = (party['party_type']?.toString() ?? 'Individual');
+                              final business = (party['business_name'] ?? '').toString().trim();
+                              final photo = party['profile_image_path']?.toString() ?? '';
+                              final hasPhoto = photo.isNotEmpty && File(photo).existsSync();
+                              final opening = (party['opening_balance'] as num?)?.toDouble() ?? 0;
+                              final creditLimit = (party['credit_limit'] as num?)?.toDouble() ?? 0;
                               return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 5),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(color: const Color(0xFFE5ECE8)),
+                                  borderRadius: BorderRadius.circular(19),
+                                  border: Border.all(color: const Color(0xFFE3ECE6)),
                                   boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF173F30).withValues(alpha: .035),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
+                                    BoxShadow(color: const Color(0xFF173F30).withValues(alpha: .055),
+                                      blurRadius: 14, offset: const Offset(0, 5)),
                                   ],
                                 ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(15),
-                                  onTap: () => _openLedger(party),
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(12, 11, 5, 11),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 21,
-                                          backgroundColor: const Color(0xFFEAF5EF),
-                                          backgroundImage: hasPartyPhoto ? FileImage(File(partyPhoto)) : null,
-                                          child: hasPartyPhoto ? null : const Icon(
-                                            Icons.person_outline_rounded,
-                                            color: Color(0xFF147D59), size: 22,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 11),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(19),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(19),
+                                    onTap: () => _openLedger(party),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(14, 13, 8, 13),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
                                             children: [
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      party['name']?.toString() ?? '',
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                        fontSize: 13,
-                                                        fontWeight: FontWeight.w800,
-                                                        color: Color(0xFF24362E),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(0xFFF0F5F2),
-                                                      borderRadius: BorderRadius.circular(7),
-                                                    ),
-                                                    child: Text(currency,
-                                                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
-                                                        color: Color(0xFF527064))),
-                                                  ),
+                                              Container(
+                                                padding: const EdgeInsets.all(2),
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  gradient: LinearGradient(colors: [Color(0xFF16865D), Color(0xFFB9E2CB)]),
+                                                ),
+                                                child: CircleAvatar(
+                                                  radius: 23,
+                                                  backgroundColor: const Color(0xFFEAF5EF),
+                                                  backgroundImage: hasPhoto ? FileImage(File(photo)) : null,
+                                                  child: hasPhoto ? null : const Icon(Icons.person_rounded, color: Color(0xFF147D59), size: 24),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 11),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(party['name']?.toString() ?? '',
+                                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF20352B))),
+                                                    const SizedBox(height: 4),
+                                                    Row(children: [
+                                                      Flexible(child: Text(business.isNotEmpty ? business : partyType,
+                                                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                        style: const TextStyle(fontSize: 10, color: Color(0xFF78877E), fontWeight: FontWeight.w500))),
+                                                      const SizedBox(width: 6),
+                                                      Container(width: 3, height: 3, decoration: const BoxDecoration(color: Color(0xFFB4C0B8), shape: BoxShape.circle)),
+                                                      const SizedBox(width: 6),
+                                                      Text(currency, style: const TextStyle(fontSize: 10, color: Color(0xFF147D59), fontWeight: FontWeight.w800)),
+                                                    ]),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuButton<String>(
+                                                padding: EdgeInsets.zero,
+                                                onSelected: (value) {
+                                                  if (value == 'edit') _editParty(party);
+                                                  if (value == 'delete') _deleteParty(party);
+                                                },
+                                                itemBuilder: (_) => const [
+                                                  PopupMenuItem(value: 'edit', child: ListTile(dense: true, leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
+                                                  PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Delete'))),
                                                 ],
                                               ),
-                                              if (phone.isNotEmpty) ...[
-                                                const SizedBox(height: 3),
-                                                Row(children: [
-                                                  const Icon(Icons.phone_outlined, size: 11, color: Color(0xFF87958D)),
-                                                  const SizedBox(width: 4),
-                                                  Expanded(child: Text(phone, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(fontSize: 10, color: Color(0xFF718078)))),
-                                                ]),
-                                              ],
-                                              const SizedBox(height: 7),
-                                              if (balances.isEmpty)
-                                                const Text('No loan history yet',
-                                                  style: TextStyle(fontSize: 10, color: Color(0xFF8A9790)))
-                                              else
-                                                Wrap(
-                                                  spacing: 5,
-                                                  runSpacing: 4,
-                                                  children: balances.map((item) {
-                                                    final amount = (item['outstanding'] as num?) ?? 0;
-                                                    final isReceivable = item['loan_type'] == 'given';
-                                                    final label = isReceivable ? 'Receive' : 'Pay';
-                                                    final color = isReceivable
-                                                        ? const Color(0xFF168451)
-                                                        : const Color(0xFFB66A35);
-                                                    final bg = isReceivable
-                                                        ? const Color(0xFFEAF6EF)
-                                                        : const Color(0xFFFFF2E9);
-                                                    return Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                                                      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(7)),
-                                                      child: Text(
-                                                        '${item['currency']} $label: ${_money(amount)}',
-                                                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color),
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                                ),
                                             ],
                                           ),
-                                        ),
-                                        PopupMenuButton<String>(
-                                          padding: EdgeInsets.zero,
-                                          onSelected: (value) {
-                                            if (value == 'edit') _editParty(party);
-                                            if (value == 'delete') _deleteParty(party);
-                                          },
-                                          itemBuilder: (_) => const [
-                                            PopupMenuItem(
-                                              value: 'edit',
-                                              child: ListTile(
-                                                dense: true,
-                                                leading: Icon(Icons.edit_outlined),
-                                                title: Text('Edit'),
-                                              ),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'delete',
-                                              child: ListTile(
-                                                dense: true,
-                                                leading: Icon(Icons.delete_outline, color: Colors.red),
-                                                title: Text('Delete'),
-                                              ),
+                                          if (phone.isNotEmpty || email.isNotEmpty || city.isNotEmpty || country.isNotEmpty) ...[
+                                            const SizedBox(height: 11),
+                                            Wrap(
+                                              spacing: 13, runSpacing: 6,
+                                              children: [
+                                                if (phone.isNotEmpty) _partyInfo(Icons.phone_outlined, phone),
+                                                if (email.isNotEmpty) _partyInfo(Icons.mail_outline_rounded, email),
+                                                if (city.isNotEmpty || country.isNotEmpty) _partyInfo(Icons.location_on_outlined, [city, country].where((v) => v.isNotEmpty).join(', ')),
+                                              ],
                                             ),
                                           ],
-                                        ),
-                                      ],
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF5F8F6),
+                                              borderRadius: BorderRadius.circular(13),
+                                            ),
+                                            child: balances.isEmpty
+                                                ? Row(children: const [
+                                                    Icon(Icons.receipt_long_outlined, size: 16, color: Color(0xFF87958D)),
+                                                    SizedBox(width: 7),
+                                                    Text('No loan history yet', style: TextStyle(fontSize: 11, color: Color(0xFF78877E), fontWeight: FontWeight.w600)),
+                                                  ])
+                                                : Wrap(
+                                                    spacing: 7, runSpacing: 7,
+                                                    children: balances.map((item) {
+                                                      final isReceivable = item['loan_type'] == 'given';
+                                                      final amount = (item['outstanding'] as num?) ?? 0;
+                                                      final color = isReceivable ? const Color(0xFF168451) : const Color(0xFFB66A35);
+                                                      final bg = isReceivable ? const Color(0xFFE6F4EB) : const Color(0xFFFFF0E5);
+                                                      final label = isReceivable ? 'Receivable' : 'Payable';
+                                                      return Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                                                        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(9)),
+                                                        child: Text(item['currency'].toString() + ' ' + label + '  ' + _money(amount),
+                                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color)),
+                                                      );
+                                                    }).toList(),
+                                                  ),
+                                          ),
+                                          if (opening > 0 || creditLimit > 0) ...[
+                                            const SizedBox(height: 9),
+                                            Row(children: [
+                                              if (opening > 0) Expanded(child: _partyMeta('Opening balance', currency + ' ' + _money(opening))),
+                                              if (opening > 0 && creditLimit > 0) const SizedBox(width: 8),
+                                              if (creditLimit > 0) Expanded(child: _partyMeta('Credit limit', currency + ' ' + _money(creditLimit))),
+                                            ]),
+                                          ],
+                                          const SizedBox(height: 7),
+                                          Row(children: const [
+                                            Icon(Icons.menu_book_outlined, size: 13, color: Color(0xFF87958D)),
+                                            SizedBox(width: 5),
+                                            Text('Tap to view ledger', style: TextStyle(fontSize: 9, color: Color(0xFF87958D), fontWeight: FontWeight.w600)),
+                                            Spacer(),
+                                            Text('PARTY', style: TextStyle(fontSize: 9, letterSpacing: 1.0, color: Color(0xFFA1AEA6), fontWeight: FontWeight.w800)),
+                                            SizedBox(width: 7),
+                                          ]),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -2498,9 +2521,39 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _editParty(),
-        icon: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF147D59),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Add Party'),
       ),
     );
   }
+
+  Widget _partyInfo(IconData icon, String value) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 12, color: const Color(0xFF84938A)),
+      const SizedBox(width: 4),
+      ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 190),
+        child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 10, color: Color(0xFF6F7E75))),
+      ),
+    ],
+  );
+
+  Widget _partyMeta(String label, String value) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFAFBFA),
+      border: Border.all(color: const Color(0xFFE9EFEB)),
+      borderRadius: BorderRadius.circular(9),
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: const TextStyle(fontSize: 9, color: Color(0xFF87958D))),
+      const SizedBox(height: 2),
+      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 10, color: Color(0xFF42564B), fontWeight: FontWeight.w800)),
+    ]),
+  );
+
 }

@@ -1059,7 +1059,9 @@ class _LoansScreenState extends State<LoansScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(19),
                           onTap: () => _showLoanDetails(loan),
-                          child: Padding(
+                          child: SizedBox(
+                            height: 250,
+                            child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1184,6 +1186,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               ]),
                             ],
                           ),
+                            ),
                           ),
                         ),
                       );

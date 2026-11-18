@@ -100,6 +100,27 @@ jobs:
           cache-provider: basic
       - name: Install dependencies
         run: flutter pub get
+      - name: Align printing plugin with host Android Gradle Plugin
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          cache = Path(os.environ.get("PUB_CACHE", str(Path.home() / ".pub-cache")))
+          candidates = list(cache.glob("hosted/pub.dev/printing-*/android/build.gradle"))
+          candidates += list(cache.glob("hosted/pub.dartlang.org/printing-*/android/build.gradle"))
+          if not candidates:
+              raise SystemExit("Could not locate the resolved printing Android Gradle file")
+          for gradle_file in candidates:
+              source = gradle_file.read_text()
+              updated, count = re.subn(r"\\nbuildscript\\s*\\{.*?\\n\\}\\s*\\n", "\\n", source, count=1, flags=re.DOTALL)
+              if count:
+                  gradle_file.write_text(updated)
+                  print(f"Removed legacy plugin AGP classpath from {gradle_file}")
+              else:
+                  print(f"No legacy buildscript block found in {gradle_file}")
+          PY
       - name: Run Flutter tests
         run: flutter test
       - name: Build APK with increasing version code

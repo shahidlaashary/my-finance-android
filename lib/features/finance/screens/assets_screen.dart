@@ -1619,16 +1619,22 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
-                      OutlinedButton.icon(
+                      OutlinedButton(
                         onPressed: _showParties,
-                        icon: const Icon(Icons.people_alt_outlined, size: 16),
-                        label: Text('Manage Party (${_parties.length})'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
                           textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.people_alt_outlined, size: 16),
+                            const SizedBox(width: 3),
+                            Text('Manage Party (${_parties.length})'),
+                          ],
                         ),
                       ),
                     ],

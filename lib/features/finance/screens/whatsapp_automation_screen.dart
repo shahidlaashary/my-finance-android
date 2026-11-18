@@ -107,7 +107,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.whatsapp, color: Colors.white, size: 27),
+                          Icon(Icons.chat_rounded, color: Colors.white, size: 27),
                           SizedBox(width: 9),
                           Expanded(
                             child: Text('Automatic Party Reminders',

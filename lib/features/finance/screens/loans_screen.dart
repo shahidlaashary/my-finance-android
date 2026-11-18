@@ -833,6 +833,33 @@ class _LoansScreenState extends State<LoansScreen> {
                               color: statusColor, fontSize: 11,
                               fontWeight: FontWeight.w700)),
                           ),
+                          const SizedBox(width: 4),
+                          PopupMenuButton<String>(
+                            tooltip: 'Loan options',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                            icon: const Icon(Icons.more_vert_rounded, size: 21, color: Color(0xFF536987)),
+                            onSelected: (value) async {
+                              if (value == 'edit') {
+                                await _editLoan(loan);
+                              } else if (value == 'delete') {
+                                await _deleteLoan(loan);
+                                if (pageContext.mounted && !mounted) return;
+                                if (pageContext.mounted && loan.id != null) {
+                                  final stillExists = _loans.any((item) => item.id == loan.id);
+                                  if (!stillExists) Navigator.pop(pageContext);
+                                }
+                              }
+                            },
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(value: 'edit', child: Row(
+                                children: [Icon(Icons.edit_outlined, size: 18), SizedBox(width: 10), Text('Edit')],
+                              )),
+                              PopupMenuItem(value: 'delete', child: Row(
+                                children: [Icon(Icons.delete_outline, size: 18, color: Colors.red), SizedBox(width: 10), Text('Delete')],
+                              )),
+                            ],
+                          ),
                         ]),
                         const SizedBox(height: 5),
                         Text(
@@ -1254,7 +1281,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(22),
                           onTap: () => _showLoanDetails(loan),
                           child: SizedBox(
-                            height: 220,
+                            height: 202,
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -1372,8 +1399,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 6),
-                                  Expanded(
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    height: 96,
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
@@ -1485,7 +1513,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         const SizedBox(width: 10),
                                         Container(
                                           width: 1,
-                                          height: 112,
+                                          height: 88,
                                           color: const Color(0xFFE0E8F1),
                                         ),
                                         const SizedBox(width: 10),
@@ -1513,7 +1541,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   const Divider(height: 1, color: Color(0xFFE7EDF4)),
                                   SizedBox(
-                                    height: 26,
+                                    height: 24,
                                     child: Row(
                                       children: [
                                         if (!loan.isPaid)
@@ -1533,15 +1561,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             ),
                                           ),
                                         const Spacer(),
-                                        if (!loan.isAssetLinked)
-                                          IconButton(
-                                            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                            padding: EdgeInsets.zero,
-                                            visualDensity: VisualDensity.compact,
-                                            onPressed: () => _deleteLoan(loan),
-                                            icon: const Icon(Icons.delete_outline, color: Color(0xFFD94858), size: 18),
-                                            tooltip: 'Delete loan',
-                                          ),
+
                                       ],
                                     ),
                                   ),

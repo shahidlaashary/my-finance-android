@@ -668,13 +668,13 @@ class _LoansScreenState extends State<LoansScreen> {
     return '$name • $type';
   }
 
-  Future<void> _addRepayment(LoansModel loan) async {
-    if (loan.id == null) return;
+  Future<bool> _addRepayment(LoansModel loan) async {
+    if (loan.id == null) return false;
     await _loadData();
-    if (!mounted) return;
+    if (!mounted) return false;
     if (_wallets.isEmpty) {
       _showMessage('Please create an wallet first.');
-      return;
+      return false;
     }
     _repaymentAmountController.clear();
     _repaymentNotesController.clear();
@@ -751,23 +751,23 @@ class _LoansScreenState extends State<LoansScreen> {
         ),
       ),
     );
-    if (result != true) return;
+    if (result != true) return false;
     final amount = double.tryParse(_repaymentAmountController.text.trim());
     if (amount == null || !amount.isFinite || amount <= 0) {
       _showMessage('Enter a valid repayment amount.');
-      return;
+      return false;
     }
     if (amount > loan.remainingAmount + 0.000001) {
       _showMessage('Amount exceeds outstanding balance.');
-      return;
+      return false;
     }
     if (walletId == null) {
       _showMessage('Please select a receiving wallet.');
-      return;
+      return false;
     }
     if (_currencyForWallet(walletId!) != loan.currency.toUpperCase()) {
       _showMessage('Receiving wallet must use the same currency as the loan.');
-      return;
+      return false;
     }
     try {
       final repayment = RepaymentModel(
@@ -783,8 +783,10 @@ class _LoansScreenState extends State<LoansScreen> {
       _selectedRepaymentWalletId = walletId;
       await _loadData();
       _showMessage('Repayment saved successfully.');
+      return true;
     } catch (error) {
       _showMessage('Could not save repayment: $error');
+      return false;
     }
   }
   Future<bool> _editLoan(LoansModel loan) async {
@@ -1062,9 +1064,16 @@ class _LoansScreenState extends State<LoansScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(pageContext);
-                                _addRepayment(loan);
+                              onPressed: () async {
+                                final saved = await _addRepayment(loan);
+                                if (!saved || !pageContext.mounted || !mounted) return;
+                                final refreshedLoans = _loans.where(
+                                  (item) => item.id == loan.id,
+                                );
+                                if (refreshedLoans.isNotEmpty) {
+                                  Navigator.pop(pageContext);
+                                  await _showLoanDetails(refreshedLoans.first);
+                                }
                               },
                               icon: const Icon(Icons.payments_outlined),
                               label: Text(loan.loanType == 'given'

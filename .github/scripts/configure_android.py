@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import re
 
 APP_ID = "com.example.my_finance"
@@ -29,6 +30,27 @@ if 'create("release")' not in text:
 if f'applicationId = "{APP_ID}"' not in text or f'namespace = "{APP_ID}"' not in text:
     raise SystemExit("Could not enforce stable Android application ID")
 gradle.write_text(text)
+
+# The printing plugin ships an obsolete AGP 7.3.0 buildscript classpath.
+# The host app already provides AGP 9.3.1 through settings.gradle.kts.
+# Remove only that redundant plugin-local classpath so the plugin uses the
+# same Android Gradle Plugin as the host app instead of resolving old AGP
+# transitive artifacts (Kotlin 1.5.31 / ASM 9.1) during configuration.
+pub_cache = Path(os.environ.get("PUB_CACHE", str(Path.home() / ".pub-cache")))
+printing_gradle_files = list(pub_cache.glob("hosted/pub.dev/printing-*/android/build.gradle"))
+printing_gradle_files += list(pub_cache.glob("hosted/pub.dartlang.org/printing-*/android/build.gradle"))
+for printing_gradle in printing_gradle_files:
+    plugin_text = printing_gradle.read_text()
+    plugin_text, removed = re.subn(
+        r"\\nbuildscript\\s*\\{.*?\\n\\}\\s*\\n",
+        "\\n",
+        plugin_text,
+        count=1,
+        flags=re.DOTALL,
+    )
+    if removed:
+        printing_gradle.write_text(plugin_text)
+        print(f"Aligned {printing_gradle.parent.parent.name} with the host Android Gradle Plugin.")
 
 activities = list(Path("android/app/src/main/kotlin").rglob("MainActivity.kt"))
 if not activities:

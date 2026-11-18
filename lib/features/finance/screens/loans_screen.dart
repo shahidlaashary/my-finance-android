@@ -1959,6 +1959,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
   int _partiesWithBalance = 0;
   bool _loading = true;
   bool _searchVisible = false;
+  bool _showArchived = false;
   String _search = '';
 
   @override
@@ -1968,11 +1969,12 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
   }
 
   Future<void> _loadParties() async {
-    final parties = await LoansService.getParties();
+    final parties = await LoansService.getParties(includeArchived: true);
     final receivable = <String, double>{};
     final payable = <String, double>{};
     var partiesWithBalance = 0;
     for (final party in parties) {
+      if ((party['is_archived'] as num?)?.toInt() == 1) continue;
       final summary = await LoansService.getPartySummary((party['id'] as num).toInt());
       final balances = (summary['balances'] as List<dynamic>?) ?? [];
       var hasBalance = false;
@@ -2021,8 +2023,10 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
   }
 
   Widget _partyOverviewCard() {
-    final individuals = _parties.where((p) => (p['party_type']?.toString() ?? 'Individual').toLowerCase() != 'business').length;
-    final businesses = _parties.length - individuals;
+    final activeParties = _parties.where((p) => (p['is_archived'] as num?)?.toInt() != 1).toList();
+    final archivedCount = _parties.length - activeParties.length;
+    final individuals = activeParties.where((p) => (p['party_type']?.toString() ?? 'Individual').toLowerCase() != 'business').length;
+    final businesses = activeParties.length - individuals;
     return Container(
       margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
       padding: const EdgeInsets.all(14),
@@ -2039,7 +2043,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
             child: const Icon(Icons.groups_2_rounded, color: Colors.white, size: 21)),
           const SizedBox(width: 10),
           const Expanded(child: Text('Parties Overview', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800))),
-          Text('${_parties.length} Total', style: TextStyle(color: Colors.white.withValues(alpha: .9), fontSize: 11, fontWeight: FontWeight.w700)),
+          Text('${activeParties.length} Active • $archivedCount Archived', style: TextStyle(color: Colors.white.withValues(alpha: .9), fontSize: 11, fontWeight: FontWeight.w700)),
         ]),
         const SizedBox(height: 13),
         Row(children: [
@@ -2282,6 +2286,24 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     }
   }
 
+  Future<void> _togglePartyArchive(Map<String, dynamic> party, {required bool archive}) async {
+    try {
+      await LoansService.setPartyArchived((party['id'] as num).toInt(), archived: archive);
+      await _loadParties();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(archive ? 'Party moved to Archived.' : 'Party restored to Active.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    }
+  }
+
   Future<void> _deleteParty(Map<String, dynamic> party) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -2385,7 +2407,9 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
   @override
   Widget build(BuildContext context) {
     final query = _search.trim().toLowerCase();
-    final filtered = _parties.where((party) {
+    final tabParties = _parties.where((party) =>
+      ((party['is_archived'] as num?)?.toInt() == 1) == _showArchived).toList();
+    final filtered = tabParties.where((party) {
       if (query.isEmpty) return true;
       final searchable = [
         party['name'], party['phone'], party['email'], party['business_name'],
@@ -2441,6 +2465,22 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
               ),
             ),
           if (!_loading && _parties.isNotEmpty) _partyOverviewCard(),
+          if (!_loading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE3ECE6))),
+                child: Row(children: [
+                  Expanded(child: _partyTabButton('Active', _parties.where((p) => (p['is_archived'] as num?)?.toInt() != 1).length, !_showArchived,
+                    () => setState(() => _showArchived = false))),
+                  const SizedBox(width: 4),
+                  Expanded(child: _partyTabButton('Archived', _parties.where((p) => (p['is_archived'] as num?)?.toInt() == 1).length, _showArchived,
+                    () => setState(() => _showArchived = true))),
+                ]),
+              ),
+            ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -2452,7 +2492,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                             Icon(_search.isEmpty ? Icons.people_outline_rounded : Icons.search_off_rounded,
                                 size: 42, color: const Color(0xFF9AA9A0)),
                             const SizedBox(height: 10),
-                            Text(_search.isEmpty ? 'No parties added yet.' : 'No matching parties found.',
+                            Text(_search.isNotEmpty ? 'No matching parties found.' : (_showArchived ? 'No archived parties.' : 'No active parties added yet.'),
                                 style: const TextStyle(color: Color(0xFF748279), fontWeight: FontWeight.w600)),
                           ],
                         ),
@@ -2539,11 +2579,17 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                 padding: EdgeInsets.zero,
                                                 onSelected: (value) {
                                                   if (value == 'edit') _editParty(party);
+                                                  if (value == 'archive') _togglePartyArchive(party, archive: true);
+                                                  if (value == 'restore') _togglePartyArchive(party, archive: false);
                                                   if (value == 'delete') _deleteParty(party);
                                                 },
-                                                itemBuilder: (_) => const [
-                                                  PopupMenuItem(value: 'edit', child: ListTile(dense: true, leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
-                                                  PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Delete'))),
+                                                itemBuilder: (_) => [
+                                                  const PopupMenuItem(value: 'edit', child: ListTile(dense: true, leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
+                                                  if (_showArchived)
+                                                    const PopupMenuItem(value: 'restore', child: ListTile(dense: true, leading: Icon(Icons.unarchive_outlined, color: Color(0xFF147D59)), title: Text('Restore to Active')))
+                                                  else
+                                                    const PopupMenuItem(value: 'archive', child: ListTile(dense: true, leading: Icon(Icons.archive_outlined), title: Text('Archive'))),
+                                                  const PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Delete'))),
                                                 ],
                                               ),
                                             ],
@@ -2628,6 +2674,32 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       ),
     );
   }
+
+  Widget _partyTabButton(String label, int count, bool selected, VoidCallback onTap) => InkWell(
+    borderRadius: BorderRadius.circular(11),
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF147D59) : Colors.transparent,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
+          color: selected ? Colors.white : const Color(0xFF65756C))),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: selected ? Colors.white.withValues(alpha: .18) : const Color(0xFFF0F4F1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text('$count', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+            color: selected ? Colors.white : const Color(0xFF65756C))),
+        ),
+      ]),
+    ),
+  );
 
   Widget _partyInfo(IconData icon, String value) => Row(
     mainAxisSize: MainAxisSize.min,

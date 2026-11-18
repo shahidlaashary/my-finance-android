@@ -1056,7 +1056,10 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(19),
                           side: const BorderSide(color: Color(0xFFE7ECE9)),
                         ),
-                        child: Padding(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(19),
+                          onTap: () => _showLoanDetails(loan),
+                          child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1075,6 +1078,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                   child: Text(statusLabel, style: TextStyle(
                                     color: statusColor, fontSize: 11,
                                     fontWeight: FontWeight.w700))),
+                                const SizedBox(width: 7),
+                                Icon(Icons.arrow_forward_ios_rounded,
+                                  size: 15, color: Color(0xFF82918A)),
                               ]),
                               const SizedBox(height: 3),
                               Row(children: [
@@ -1158,14 +1164,6 @@ class _LoansScreenState extends State<LoansScreen> {
                               const Divider(height: 1, color: Color(0xFFE9EEEB)),
                               const SizedBox(height: 3),
                               Row(children: [
-                                TextButton.icon(
-                                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                                    minimumSize: const Size(0, 30),
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                  onPressed: () => _showLoanDetails(loan),
-                                  icon: const Icon(Icons.visibility_outlined, size: 16),
-                                  label: Text(appText(context, 'Details', 'تفصیلات'))),
                                 if (!loan.isPaid)
                                   TextButton.icon(
                                     style: TextButton.styleFrom(visualDensity: VisualDensity.compact,
@@ -1185,6 +1183,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                     tooltip: 'Delete loan'),
                               ]),
                             ],
+                          ),
                           ),
                         ),
                       );

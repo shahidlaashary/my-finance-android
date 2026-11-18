@@ -41,7 +41,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   bool _loading = true;
   bool _hideBalances = false;
-  bool _showSold = true;
+  bool _showSold = false;
   String? _selectedCategory;
 
   final NumberFormat _numberFormat =
@@ -1650,14 +1650,27 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   ),
                   if (currencies.isNotEmpty)
                     ...currencies.where((c) => c != primaryCurrency).map(_currencySummary),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(appText(context, "Show Sold Assets", "Show Sold Assets"), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    value: _showSold,
-                    onChanged: (value) {
-                      setState(() => _showSold = value);
-                      _loadData();
-                    },
+                  SizedBox(
+                    height: 38,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          appText(context, "Show Sold Assets", "Show Sold Assets"),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                        Transform.scale(
+                          scale: 0.82,
+                          child: Switch(
+                            value: _showSold,
+                            onChanged: (value) {
+                              setState(() => _showSold = value);
+                              _loadData();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (_visibleAssets.isEmpty)
                     Container(

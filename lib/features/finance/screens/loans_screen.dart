@@ -1587,16 +1587,22 @@ class _LoansScreenState extends State<LoansScreen> {
                       Text(appText(context, "All Loans", "All Loans"),
                         style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
                       ),
-                      OutlinedButton.icon(
+                      OutlinedButton(
                         onPressed: _showParties,
-                        icon: const Icon(Icons.people_alt_outlined, size: 17),
-                        label: Text('Manage Party (${_parties.length})'),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
-                          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.people_alt_outlined, size: 16),
+                            const SizedBox(width: 3),
+                            Text('Manage Party (${_parties.length})'),
+                          ],
                         ),
                       ),
                     ],

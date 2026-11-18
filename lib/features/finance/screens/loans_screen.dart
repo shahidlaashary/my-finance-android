@@ -1277,20 +1277,6 @@ class _LoansScreenState extends State<LoansScreen> {
                                     ),
                                   ],
                                 ),
-                                if (repayment.notes.trim().isNotEmpty)
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 49, right: 8, top: 4),
-                                      child: Text(
-                                        repayment.notes.trim(),
-                                        style: const TextStyle(
-                                          fontSize: 11.5,
-                                          color: Color(0xFF7B8781),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
                                 if (repayment.id != null)
                                   Padding(
                                     padding: const EdgeInsets.only(left: 49, top: 3),

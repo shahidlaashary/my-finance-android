@@ -85,6 +85,26 @@ class LoansService {
       )
     ''');
 
+    // Testing-mode reset: discard old party test data and start with the current schema.
+    const partyResetKey = 'party_archive_tabs_test_reset_v1';
+    final partyResetRows = await db.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: [partyResetKey],
+      limit: 1,
+    );
+    if (partyResetRows.isEmpty) {
+      await db.transaction((txn) async {
+        await txn.execute('UPDATE loans SET party_id = NULL WHERE party_id IS NOT NULL');
+        await txn.execute('DROP TABLE IF EXISTS loan_parties');
+        await txn.insert('app_settings', {
+          'setting_key': partyResetKey,
+          'setting_value': '1',
+        });
+      });
+    }
+
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loan_parties (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,6 +125,8 @@ class LoansService {
         business_name TEXT NOT NULL DEFAULT '',
         tax_number TEXT NOT NULL DEFAULT '',
         reference_person TEXT NOT NULL DEFAULT '',
+        profile_image_path TEXT NOT NULL DEFAULT '',
+        is_archived INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
       )
     ''' );
@@ -121,31 +143,6 @@ class LoansService {
       await db.execute("ALTER TABLE loans ADD COLUMN source_id INTEGER");
     }
     await db.execute('CREATE INDEX IF NOT EXISTS idx_loans_source ON loans(source_type, source_id)');
-
-    final partyColumns = await db.rawQuery('PRAGMA table_info(loan_parties)');
-    final existingPartyColumns = partyColumns.map((column) => column['name']).toSet();
-    const partyMigrations = <String, String>{
-      'currency': "TEXT NOT NULL DEFAULT 'PKR'",
-      'email': "TEXT NOT NULL DEFAULT ''",
-      'party_type': "TEXT NOT NULL DEFAULT 'Individual'",
-      'country': "TEXT NOT NULL DEFAULT ''",
-      'city': "TEXT NOT NULL DEFAULT ''",
-      'postal_code': "TEXT NOT NULL DEFAULT ''",
-      'opening_balance': 'REAL NOT NULL DEFAULT 0',
-      'credit_limit': 'REAL NOT NULL DEFAULT 0',
-      'payment_terms': "TEXT NOT NULL DEFAULT 'Due on Receipt'",
-      'cnic': "TEXT NOT NULL DEFAULT ''",
-      'business_name': "TEXT NOT NULL DEFAULT ''",
-      'tax_number': "TEXT NOT NULL DEFAULT ''",
-      'reference_person': "TEXT NOT NULL DEFAULT ''",
-      'profile_image_path': "TEXT NOT NULL DEFAULT ''",
-      'is_archived': 'INTEGER NOT NULL DEFAULT 0',
-    };
-    for (final entry in partyMigrations.entries) {
-      if (!existingPartyColumns.contains(entry.key)) {
-        await db.execute('ALTER TABLE loan_parties ADD COLUMN ${entry.key} ${entry.value}');
-      }
-    }
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loan_repayments (
@@ -172,31 +169,6 @@ class LoansService {
       ON loan_repayments(loan_id)
     ''');
 
-    // Development cleanup: purge the old test parties exactly once.
-    // Keep existing loan history, but detach it from the parties being removed.
-    const resetKey = 'party_test_records_reset_v1';
-    final resetRows = await db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [resetKey],
-      limit: 1,
-    );
-    if (resetRows.isEmpty) {
-      await db.transaction((txn) async {
-        await txn.execute(
-          'UPDATE loans SET party_id = NULL WHERE party_id IS NOT NULL',
-        );
-        await txn.delete('loan_parties');
-        await txn.insert(
-          'app_settings',
-          {
-            'setting_key': resetKey,
-            'setting_value': '1',
-          },
-        );
-      });
-    }
   }
 
   static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {

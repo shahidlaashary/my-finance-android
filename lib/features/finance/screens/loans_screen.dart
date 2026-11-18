@@ -1469,7 +1469,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                           ],
                                         ),
                                       ),
-                                      Container(
+                                      Transform.translate(
+                                        offset: const Offset(0, -2),
+                                        child: Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
                                           vertical: 6,
@@ -1513,11 +1515,15 @@ class _LoansScreenState extends State<LoansScreen> {
                                           ],
                                         ),
                                       ),
+                                      ),
                                       const SizedBox(width: 7),
-                                      const Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 23,
-                                        color: Color(0xFF536987),
+                                      Transform.translate(
+                                        offset: const Offset(0, -2),
+                                        child: const Icon(
+                                          Icons.chevron_right_rounded,
+                                          size: 23,
+                                          color: Color(0xFF536987),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -1570,7 +1576,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                   ),
                                                 ],
                                               ),
-                                              const SizedBox(height: 10),
+                                              const SizedBox(height: 7),
                                               Row(
                                                 children: [
                                                   Expanded(
@@ -1601,10 +1607,9 @@ class _LoansScreenState extends State<LoansScreen> {
                                                   ),
                                                 ],
                                               ),
-                                              const SizedBox(height: 8),
-                                              Wrap(
-                                                spacing: 7,
-                                                runSpacing: 2,
+                                              const SizedBox(height: 5),
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     'Repaid: ${_money(loan.repaidAmount)}',
@@ -1613,13 +1618,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                       color: Color(0xFF536987),
                                                     ),
                                                   ),
-                                                  const Text(
-                                                    '|',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      color: Color(0xFFB2BECE),
-                                                    ),
-                                                  ),
+                                                  const SizedBox(height: 2),
                                                   Text(
                                                     'Remaining: ${_money(loan.remainingAmount)}',
                                                     style: const TextStyle(

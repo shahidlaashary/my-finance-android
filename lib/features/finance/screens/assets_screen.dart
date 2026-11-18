@@ -11,6 +11,8 @@ import 'package:my_finance/core/services/attachment_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
+import 'package:my_finance/features/finance/models/loans_model.dart';
+import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
@@ -30,6 +32,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   List<AssetsModel> _assets = [];
   List<Map<String, dynamic>> _wallets = [];
   List<Map<String, dynamic>> _parties = [];
+  Map<int, LoansModel> _linkedLoans = {};
 
   Map<String, double> _currentValues = {};
   Map<String, double> _purchaseValues = {};
@@ -95,6 +98,17 @@ class _AssetsScreenState extends State<AssetsScreen> {
         orderBy: 'name ASC',
       );
       final parties = await LoansService.getParties();
+      final linkedLoanIds = <int>{
+        for (final asset in assets)
+          if (asset.linkedLoanId != null) asset.linkedLoanId!,
+        for (final asset in assets)
+          if (asset.saleLinkedLoanId != null) asset.saleLinkedLoanId!,
+      };
+      final linkedLoans = <int, LoansModel>{};
+      for (final loanId in linkedLoanIds) {
+        final loan = await LoansService.getLoanById(loanId);
+        if (loan != null) linkedLoans[loanId] = loan;
+      }
 
       if (!mounted) return;
 
@@ -103,6 +117,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         _assets = assets;
         _wallets = wallets;
         _parties = parties;
+        _linkedLoans = linkedLoans;
         _currentValues = current;
         _purchaseValues = purchase;
         _realizedProfitLoss = realized;
@@ -935,75 +950,332 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
-  Widget _assetCard(AssetsModel asset) {
-    final purchaseCurrency = asset.currency.toUpperCase();
-    final saleCurrency = asset.currency.toUpperCase();
-    final currency = asset.isSold ? saleCurrency : purchaseCurrency;
-    final value = asset.isSold && asset.salePrice != null ? asset.salePrice! : asset.currentValue;
-    final profitLoss = asset.isSold && asset.salePrice != null ? asset.salePrice! - asset.purchasePrice : asset.currentValue - asset.purchasePrice;
-    final categoryIcon = <String, IconData>{
-      'Property': Icons.home_work_outlined, 'Vehicles': Icons.directions_car_outlined,
-      'Gold': Icons.diamond_outlined, 'Jewellery': Icons.watch_outlined,
-      'Electronics': Icons.devices_other_outlined, 'Investments': Icons.trending_up_rounded,
-      'Livestock': Icons.pets_outlined, 'Business': Icons.storefront_outlined,
-    }[asset.category] ?? Icons.inventory_2_outlined;
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: const BorderSide(color: Color(0xFFE7EEEA))),
-      clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
-          leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFE8F4EE), borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 21)),
-          title: Row(children: [
-            Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
-            if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFFFE9E9), borderRadius: BorderRadius.circular(7)), child: const Text('SOLD', style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.w800))),
-          ]),
-          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
-          trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-            Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
-            const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
-          ]),
-          children: [
-            const Divider(height: 8),
-            _detailRow('Purchase Price', '$purchaseCurrency ${_money(asset.purchasePrice)}'),
-            const SizedBox(height: 6),
-            if (!asset.isSold) _detailRow('Current Value', '$currency ${_money(asset.currentValue)}', bold: true),
-            if (asset.isSold && asset.salePrice != null) _detailRow('Sale Price', '$saleCurrency ${_money(asset.salePrice!)}', bold: true),
-            const SizedBox(height: 6),
-            _detailRow(asset.isSold ? 'Realized Profit/Loss' : 'Unrealized Profit/Loss', '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Colors.green : Colors.red, bold: true),
-            const SizedBox(height: 6),
-            _detailRow('Purchase Payment Type', asset.paymentType),
-            if (asset.paymentType.toLowerCase() == 'loan') _detailRow('Payable Party', _partyName(asset.partyId)),
-            _detailRow('Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
-            if (asset.isSold) _detailRow('Sale Payment Type', asset.salePaymentType),
-            if (asset.isSold && asset.salePaymentType.toLowerCase() == 'loan') _detailRow('Receivable Party', _partyName(asset.salePartyId)),
-            if (asset.isSold && asset.salePaymentType.toLowerCase() != 'loan') _detailRow('Sale Wallet', _walletName(asset.saleWalletId ?? asset.walletId)),
-            const SizedBox(height: 6),
-            _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
-            if (asset.isSold && asset.saleDate != null) _detailRow('Sale Date', DateFormat('dd MMM yyyy').format(asset.saleDate!)),
-            if (asset.notes.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Align(alignment: Alignment.centerLeft, child: Text(asset.notes, style: const TextStyle(color: Colors.black54, fontSize: 11)))),
-            Align(alignment: Alignment.centerRight, child: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit' && !asset.isSold) { _showAssetDialog(asset: asset); }
-                else if (value == 'valuation' && !asset.isSold) { _updateValuation(asset); }
-                else if (value == 'sell' && !asset.isSold) { _sellAsset(asset); }
-                else if (value == 'delete') { _deleteAsset(asset); }
-              },
-              itemBuilder: (context) => [
-                if (!asset.isSold) PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Asset', 'اثاثے میں ترمیم کریں'))),
-                if (!asset.isSold) PopupMenuItem(value: 'valuation', child: Text(appText(context, 'Update Valuation', 'قیمت اپ ڈیٹ کریں'))),
-                if (!asset.isSold) PopupMenuItem(value: 'sell', child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں'))),
-                PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں'))),
-              ],
-              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFF1F7F3), borderRadius: BorderRadius.circular(9)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Color(0xFF147D59)), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF147D59)))])),
-            )),
-          ],
+  Future<void> _openAssetDetails(AssetsModel asset) async {
+    final purchaseLoan = asset.linkedLoanId == null
+        ? null
+        : _linkedLoans[asset.linkedLoanId!];
+    final saleLoan = asset.saleLinkedLoanId == null
+        ? null
+        : _linkedLoans[asset.saleLinkedLoanId!];
+    final purchaseRepayments = purchaseLoan?.id == null
+        ? <RepaymentModel>[]
+        : await LoansService.getRepayments(purchaseLoan!.id!);
+    final saleRepayments = saleLoan?.id == null
+        ? <RepaymentModel>[]
+        : await LoansService.getRepayments(saleLoan!.id!);
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AssetDetailsScreen(
+          asset: asset,
+          purchaseLoan: purchaseLoan,
+          saleLoan: saleLoan,
+          purchaseRepayments: purchaseRepayments,
+          saleRepayments: saleRepayments,
+          wallets: _wallets,
+          parties: _parties,
+          hideBalances: _hideBalances,
         ),
       ),
+    );
+    if (mounted) await _loadData();
+  }
+
+  Future<void> _addAssetRepayment(LoansModel loan) async {
+    if (loan.id == null || loan.remainingAmount <= 0) return;
+    final amountController = TextEditingController();
+    final notesController = TextEditingController();
+    final matchingWallets = _wallets.where((wallet) =>
+      (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == loan.currency.toUpperCase()
+    ).toList();
+    if (matchingWallets.isEmpty) {
+      _message('Create a ${loan.currency} wallet first.');
+      return;
+    }
+    int selectedWalletId = (matchingWallets.first['id'] as num).toInt();
+    DateTime paymentDate = DateTime.now();
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(18, 8, 18, MediaQuery.viewInsetsOf(context).bottom + 20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(loan.loanType == 'given' ? 'Receive Payment' : 'Pay Back',
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text('Remaining: ${loan.currency} ${_money(loan.remainingAmount)}',
+                  style: const TextStyle(color: Color(0xFF65736C), fontSize: 12)),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: amountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'Amount',
+                    prefixText: '${loan.currency} ',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: selectedWalletId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: loan.loanType == 'given' ? 'Receiving Wallet' : 'Payment Wallet',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: matchingWallets.map((wallet) => DropdownMenuItem<int>(
+                    value: (wallet['id'] as num).toInt(),
+                    child: Text('${wallet['name']} (${wallet['currency']})', overflow: TextOverflow.ellipsis),
+                  )).toList(),
+                  onChanged: (value) { if (value != null) setSheetState(() => selectedWalletId = value); },
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Payment Date'),
+                  subtitle: Text(DateFormat('dd MMM yyyy').format(paymentDate)),
+                  trailing: const Icon(Icons.calendar_month_rounded),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: paymentDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) setSheetState(() => paymentDate = picked);
+                  },
+                ),
+                TextField(
+                  controller: notesController,
+                  decoration: InputDecoration(
+                    labelText: 'Notes (Optional)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      final amount = double.tryParse(amountController.text.trim());
+                      if (amount == null || !amount.isFinite || amount <= 0 || amount > loan.remainingAmount) {
+                        _message('Enter a valid amount not greater than the remaining balance.');
+                        return;
+                      }
+                      Navigator.pop(sheetContext, true);
+                    },
+                    child: Text(loan.loanType == 'given' ? 'Save Received Payment' : 'Save Repayment'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (saved == true) {
+      try {
+        final amount = double.parse(amountController.text.trim());
+        await LoansService.addRepayment(RepaymentModel(
+          loanId: loan.id!,
+          amount: amount,
+          walletId: selectedWalletId,
+          repaymentDate: paymentDate.toIso8601String().split('T').first,
+          paymentMethod: 'wallet',
+          notes: notesController.text.trim(),
+          createdAt: DateTime.now().toIso8601String(),
+        ));
+        await _loadData();
+        _message(loan.loanType == 'given' ? 'Payment received successfully.' : 'Repayment saved successfully.');
+      } catch (error) {
+        _message(error.toString().replaceFirst('Exception: ', ''));
+      }
+    }
+    amountController.dispose();
+    notesController.dispose();
+  }
+
+  Widget _assetCard(AssetsModel asset) {
+    final currency = asset.currency.toUpperCase();
+    final displayedValue = asset.isSold && asset.salePrice != null
+        ? asset.salePrice!
+        : asset.currentValue;
+    final profitLoss = asset.isSold && asset.salePrice != null
+        ? asset.salePrice! - asset.purchasePrice
+        : asset.currentValue - asset.purchasePrice;
+    final purchaseLoan = asset.linkedLoanId == null ? null : _linkedLoans[asset.linkedLoanId!];
+    final saleLoan = asset.saleLinkedLoanId == null ? null : _linkedLoans[asset.saleLinkedLoanId!];
+    final payableOutstanding = purchaseLoan != null && purchaseLoan.remainingAmount > 0;
+    final receivableOutstanding = saleLoan != null && saleLoan.remainingAmount > 0;
+    final categoryIcon = <String, IconData>{
+      'Property': Icons.home_work_outlined,
+      'Vehicles': Icons.directions_car_outlined,
+      'Gold': Icons.diamond_outlined,
+      'Jewellery': Icons.watch_outlined,
+      'Electronics': Icons.devices_other_outlined,
+      'Investments': Icons.trending_up_rounded,
+      'Livestock': Icons.pets_outlined,
+      'Business': Icons.storefront_outlined,
+    }[asset.category] ?? Icons.inventory_2_outlined;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE1EAE5)),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF173F30).withValues(alpha: .055), blurRadius: 12, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _openAssetDetails(asset),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F4EE),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 22),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
+                            const SizedBox(height: 3),
+                            Text('${asset.category}  •  ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF718078), fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('$currency ${_money(displayedValue)}',
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
+                          const SizedBox(height: 2),
+                          Text(asset.isSold ? 'Sale Value' : 'Current Value',
+                            style: const TextStyle(fontSize: 9.5, color: Color(0xFF7A8981))),
+                        ],
+                      ),
+                      const SizedBox(width: 3),
+                      const Icon(Icons.chevron_right_rounded, size: 19, color: Color(0xFF87968E)),
+                    ],
+                  ),
+                  const SizedBox(height: 13),
+                  Row(
+                    children: [
+                      Expanded(child: _assetCardMetric('Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
+                      Container(width: 1, height: 30, color: const Color(0xFFE5ECE8)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _assetCardMetric(asset.isSold ? 'Sale Value' : 'Current Value', '$currency ${_money(displayedValue)}')),
+                      Container(width: 1, height: 30, color: const Color(0xFFE5ECE8)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _assetCardMetric(asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
+                        '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? const Color(0xFF15945D) : const Color(0xFFD94747))),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _assetStatusChip(asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
+                        asset.isSold ? const Color(0xFFFFEEEE) : const Color(0xFFEAF5EF),
+                        asset.isSold ? const Color(0xFFC23D3D) : const Color(0xFF147D59)),
+                      const Spacer(),
+                      Text('View Entries', style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF147D59))),
+                      const SizedBox(width: 3),
+                      const Icon(Icons.arrow_forward_rounded, size: 13, color: Color(0xFF147D59)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (payableOutstanding || receivableOutstanding)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 11),
+              child: Row(
+                children: [
+                  if (payableOutstanding)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _addAssetRepayment(purchaseLoan!),
+                        icon: const Icon(Icons.payments_outlined, size: 16),
+                        label: const Text('Pay Back', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF1763A8),
+                          side: const BorderSide(color: Color(0xFFBBD5EA)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                  if (payableOutstanding && receivableOutstanding) const SizedBox(width: 8),
+                  if (receivableOutstanding)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _addAssetRepayment(saleLoan!),
+                        icon: const Icon(Icons.call_received_rounded, size: 16),
+                        label: const Text('Receive', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF168451),
+                          side: const BorderSide(color: Color(0xFFB9E2CB)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _assetCardMetric(String label, String value, {Color valueColor = const Color(0xFF24362E)}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 9.5, color: Color(0xFF819087), fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: valueColor)),
+      ],
+    );
+  }
+
+  Widget _assetStatusChip(String label, Color background, Color foreground) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(7)),
+      child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: foreground, letterSpacing: .3)),
     );
   }
 
@@ -1261,4 +1533,204 @@ class _AssetsScreenState extends State<AssetsScreen> {
             ),
     );
   }
+}
+
+
+class AssetDetailsScreen extends StatelessWidget {
+  final AssetsModel asset;
+  final LoansModel? purchaseLoan;
+  final LoansModel? saleLoan;
+  final List<RepaymentModel> purchaseRepayments;
+  final List<RepaymentModel> saleRepayments;
+  final List<Map<String, dynamic>> wallets;
+  final List<Map<String, dynamic>> parties;
+  final bool hideBalances;
+
+  const AssetDetailsScreen({
+    super.key,
+    required this.asset,
+    required this.purchaseLoan,
+    required this.saleLoan,
+    required this.purchaseRepayments,
+    required this.saleRepayments,
+    required this.wallets,
+    required this.parties,
+    required this.hideBalances,
+  });
+
+  String _money(double value) => hideBalances ? '••••••' : NumberFormat('#,##0.00').format(value);
+
+  String _walletName(int? id) {
+    if (id == null) return 'Wallet';
+    for (final wallet in wallets) {
+      if ((wallet['id'] as num).toInt() == id) return wallet['name'].toString();
+    }
+    return 'Wallet';
+  }
+
+  String _partyName(int? id) {
+    if (id == null) return 'Party';
+    for (final party in parties) {
+      if ((party['id'] as num).toInt() == id) return party['name'].toString();
+    }
+    return 'Party';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = asset.currency.toUpperCase();
+    final events = <Map<String, dynamic>>[
+      {
+        'date': asset.purchaseDate,
+        'title': 'Asset Purchased',
+        'subtitle': asset.paymentType.toLowerCase() == 'loan'
+            ? 'Loan taken from ${_partyName(asset.partyId)}'
+            : 'Paid from ${_walletName(asset.walletId)}',
+        'amount': asset.purchasePrice,
+        'type': 'debit',
+        'icon': Icons.shopping_bag_outlined,
+      },
+      if (asset.isSold && asset.saleDate != null)
+        {
+          'date': asset.saleDate!,
+          'title': 'Asset Sold',
+          'subtitle': asset.salePaymentType.toLowerCase() == 'loan'
+              ? 'Sold on credit to ${_partyName(asset.salePartyId)}'
+              : 'Received in ${_walletName(asset.saleWalletId ?? asset.walletId)}',
+          'amount': asset.salePrice ?? 0.0,
+          'type': 'credit',
+          'icon': Icons.sell_outlined,
+        },
+      ...purchaseRepayments.map((payment) => {
+        'date': DateTime.tryParse(payment.repaymentDate) ?? DateTime.now(),
+        'title': 'Loan Repayment',
+        'subtitle': '${_walletName(payment.walletId)} • ${payment.notes.isEmpty ? 'Payment to ${_partyName(purchaseLoan?.partyId)}' : payment.notes}',
+        'amount': payment.amount,
+        'type': 'debit',
+        'icon': Icons.payments_outlined,
+      }),
+      ...saleRepayments.map((payment) => {
+        'date': DateTime.tryParse(payment.repaymentDate) ?? DateTime.now(),
+        'title': 'Payment Received',
+        'subtitle': '${_walletName(payment.walletId)} • ${payment.notes.isEmpty ? 'Received from ${_partyName(saleLoan?.partyId)}' : payment.notes}',
+        'amount': payment.amount,
+        'type': 'credit',
+        'icon': Icons.call_received_rounded,
+      }),
+    ];
+    events.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+    final currentValue = asset.isSold && asset.salePrice != null ? asset.salePrice! : asset.currentValue;
+    final profitLoss = currentValue - asset.purchasePrice;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7F6),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF202A26),
+        elevation: 0,
+        title: const Text('Asset Details', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(17),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF123F35), Color(0xFF176B52), Color(0xFF218565)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [BoxShadow(color: const Color(0xFF123F35).withValues(alpha: .14), blurRadius: 14, offset: const Offset(0, 6))],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Container(width: 42, height: 42,
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(13)),
+                    child: const Icon(Icons.inventory_2_outlined, color: Colors.white, size: 23)),
+                  const SizedBox(width: 11),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
+                    Text('${asset.category} • ${asset.isSold ? 'Sold' : 'Active'}',
+                      style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11)),
+                  ])),
+                ]),
+                const SizedBox(height: 16),
+                const Text('CURRENT ASSET VALUE', style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .5)),
+                const SizedBox(height: 4),
+                Text('$currency ${_money(currentValue)}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 13),
+                Row(children: [
+                  Expanded(child: _metric('Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
+                  Container(width: 1, height: 30, color: Colors.white24),
+                  const SizedBox(width: 14),
+                  Expanded(child: _metric(asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
+                    '$currency ${_money(profitLoss)}', color: profitLoss >= 0 ? const Color(0xFFB9F6D3) : const Color(0xFFFFC5C5))),
+                ]),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(children: [
+            const Expanded(child: Text('Related Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF172B25)))),
+            Text('${events.length} entries', style: const TextStyle(fontSize: 11, color: Color(0xFF7A8981), fontWeight: FontWeight.w600)),
+          ]),
+          const SizedBox(height: 9),
+          if (events.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: const Center(child: Text('No entries found for this asset.')),
+            )
+          else
+            ...events.map((event) {
+              final isCredit = event['type'] == 'credit';
+              final amount = event['amount'] as double;
+              final date = event['date'] as DateTime;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: const Color(0xFFE7EEEA))),
+                child: Row(children: [
+                  Container(width: 40, height: 40,
+                    decoration: BoxDecoration(color: isCredit ? const Color(0xFFE9F6EF) : const Color(0xFFFFF1E9), borderRadius: BorderRadius.circular(12)),
+                    child: Icon(event['icon'] as IconData, color: isCredit ? const Color(0xFF168451) : const Color(0xFFB96A35), size: 20)),
+                  const SizedBox(width: 11),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(event['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF24362E))),
+                    const SizedBox(height: 3),
+                    Text(event['subtitle'] as String, maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10.5, color: Color(0xFF7A8981))),
+                    const SizedBox(height: 3),
+                    Text(DateFormat('dd MMM yyyy').format(date),
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF929D97))),
+                  ])),
+                  const SizedBox(width: 8),
+                  Text('${isCredit ? '+' : '−'}$currency ${_money(amount)}',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
+                      color: isCredit ? const Color(0xFF168451) : const Color(0xFFB96A35))),
+                ]),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _metric(String label, String value, {Color color = Colors.white}) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 10)),
+      const SizedBox(height: 4),
+      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800)),
+    ],
+  );
 }

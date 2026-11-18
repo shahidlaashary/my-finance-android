@@ -725,171 +725,305 @@ class _LoansScreenState extends State<LoansScreen> {
   }
   Future<void> _showLoanDetails(LoansModel loan) async {
     if (loan.id == null) return;
-    final currency = loan.currency.toUpperCase();
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        child: SizedBox(
-          width: 600,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(appText(context, "Loan Details", "Loan Details"),
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    final progress = loan.amount <= 0
+        ? 0.0
+        : (loan.repaidAmount / loan.amount).clamp(0.0, 1.0).toDouble();
+    final statusColor = loan.isOverdue
+        ? const Color(0xFFD94841)
+        : const Color(0xFF147D59);
+    final statusLabel = loan.isPaid
+        ? 'Paid'
+        : loan.isOverdue
+            ? 'Overdue'
+            : 'Active';
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (pageContext) => Scaffold(
+          appBar: AppBar(
+            title: Text(appText(context, 'Loan Details', 'Loan Details')),
+          ),
+          body: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                Card(
+                  elevation: 2,
+                  shadowColor: const Color(0xFF173D2E).withValues(alpha: 0.08),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: const BorderSide(color: Color(0xFFE7ECE9)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Expanded(
+                            child: Text(_partyNameForLoan(loan),
+                              style: const TextStyle(fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF172B25))),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(20)),
+                            child: Text(statusLabel, style: TextStyle(
+                              color: statusColor, fontSize: 11,
+                              fontWeight: FontWeight.w700)),
+                          ),
+                        ]),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.currency.toUpperCase()}',
+                          style: const TextStyle(fontSize: 12,
+                            color: Color(0xFF65736C), fontWeight: FontWeight.w600),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
+                        if (_partyPhoneForLoan(loan) != '-')
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(_partyPhoneForLoan(loan),
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF7B8781))),
+                          ),
+                        if (loan.isAssetLinked)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text('Asset: ${_assetReferenceLabel(loan)}',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF65736C))),
+                          ),
+                        const SizedBox(height: 16),
+                        Text(_moneyWithLoanCurrency(loan.amount, loan),
+                          style: const TextStyle(fontSize: 25,
+                            fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
+                        const SizedBox(height: 4),
+                        Text('Total Loan Amount',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                        const SizedBox(height: 14),
+                        Row(children: [
+                          Expanded(child: _loanDetailMetric(
+                            'Repaid', _moneyWithLoanCurrency(loan.repaidAmount, loan))),
+                          const SizedBox(width: 12),
+                          Expanded(child: _loanDetailMetric(
+                            'Remaining', _moneyWithLoanCurrency(loan.remainingAmount, loan))),
+                        ]),
+                        const SizedBox(height: 14),
+                        Row(children: [
+                          const Expanded(child: Text('Repayment Progress',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+                          Text('${(progress * 100).round()}%',
+                            style: TextStyle(fontSize: 12, color: statusColor,
+                              fontWeight: FontWeight.w800)),
+                        ]),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: progress, minHeight: 9,
+                            backgroundColor: const Color(0xFFE8EFEB),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              loan.isOverdue ? const Color(0xFFE34D59) : const Color(0xFF28B879)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
+                        Row(children: [
+                          Expanded(child: _loanDetailMetric(
+                            loan.loanType == 'given' ? 'Lending Date' : 'Borrowing Date',
+                            loan.lendingDate)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _loanDetailMetric('Due Date', loan.dueDate ?? '-')),
+                        ]),
+                        if (loan.notes.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text('Notes', style: TextStyle(fontSize: 11,
+                            color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 3),
+                          Text(loan.notes),
+                        ],
+                        const SizedBox(height: 14),
+                        AttachmentSection(
+                          ownerType: AttachmentOwnerTypes.loan,
+                          ownerId: loan.id!,
+                        ),
+                        if (!loan.isPaid) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(pageContext);
+                                _addRepayment(loan);
+                              },
+                              icon: const Icon(Icons.payments_outlined),
+                              label: Text(loan.loanType == 'given'
+                                ? 'Receive Repayment' : 'Pay Back Loan'),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 8),
-                  Text('${loan.loanType == 'given' ? 'Borrower' : 'Lender'}: ${_partyNameForLoan(loan)}'),
-                  Text('${appText(context, 'Phone:', 'فون:')} ${_partyPhoneForLoan(loan)}'),
-                  Text('${appText(context, 'Currency:', 'کرنسی:')} $currency'),
-                  if (loan.isAssetLinked) Text('Linked Asset Reference: ${_assetReferenceLabel(loan)} • ID ${loan.sourceId}'),
-                  Text('${appText(context, 'Original Amount:', 'اصل رقم:')} ${_moneyWithLoanCurrency(loan.amount, loan)}'),
-                  Text('${appText(context, 'Repaid:', 'واپس ادا شدہ:')} ${_moneyWithLoanCurrency(loan.repaidAmount, loan)}'),
-                  Text('${appText(context, 'Outstanding:', 'بقایا:')} ${_moneyWithLoanCurrency(loan.remainingAmount, loan)}'),
-                  Text('${appText(context, 'Lending Date:', 'قرض دینے کی تاریخ:')} ${loan.lendingDate}'),
-                  Text('Due Date: ${loan.dueDate ?? '-'}'),
-                  Text('${appText(context, 'Notes:', 'نوٹس:')} ${loan.notes.isEmpty ? '-' : loan.notes}'),
-                  const Divider(height: 28),
-                  Text(appText(context, "Loan Attachments", "Loan Attachments"),
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  AttachmentSection(
-                    ownerType: AttachmentOwnerTypes.loan,
-                    ownerId: loan.id!,
-                  ),
-                  const Divider(height: 28),
-                  Text(appText(context, "Repayment History", "Repayment History"),
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(children: [
+                  Expanded(child: Text(
+                    appText(context, 'Payment Entries', 'Payment Entries'),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  )),
                   FutureBuilder<List<RepaymentModel>>(
                     future: LoansService.getRepayments(loan.id!),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Could not load repayments: ${snapshot.error}');
-                      }
-                      final repayments = snapshot.data ?? [];
-                      if (repayments.isEmpty) {
-                        return Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text(appText(context, "No repayments recorded yet.", "No repayments recorded yet.")),
-                        );
-                      }
-                      return Column(
-                        children: repayments.map((repayment) {
-                          return Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(
-                                      _moneyWithLoanCurrency(repayment.amount, loan),
-                                    ),
-                                    subtitle: Text(
-                                      'Date: ${repayment.repaymentDate}\n'
-                                      'Notes: ${repayment.notes.isEmpty ? '-' : repayment.notes}',
-                                    ),
-                                    trailing: IconButton(
-                                      tooltip: 'Delete repayment',
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        color: Colors.red,
-                                      ),
-                                      onPressed: () async {
-                                        final confirm = await showDialog<bool>(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: Text(appText(context, "Delete Repayment?", "Delete Repayment?")),
-                                            content: Text(appText(context, "This will reverse the wallet balance and loan balance.", "This will reverse the wallet balance and loan balance."),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(context, false),
-                                                child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
-                                              ),
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(context, true),
-                                                child: Text(appText(context, "Delete", "Delete")),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                        if (confirm == true && repayment.id != null) {
-                                          try {
-                                            await LoansService.deleteRepayment(repayment.id!);
-                                            await AttachmentService.deleteOwnerAttachments(
-                                              ownerType: AttachmentOwnerTypes.repayment,
-                                              ownerId: repayment.id!,
-                                            );
-                                            if (dialogContext.mounted) {
-                                              Navigator.pop(dialogContext);
-                                            }
-                                            await _loadData();
-                                            if (mounted) {
-                                              _showMessage('Repayment deleted.');
-                                            }
-                                          } catch (error) {
-                                            _showMessage('Delete failed: $error');
-                                          }
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  if (repayment.id != null)
-                                    AttachmentSection(
-                                      ownerType: AttachmentOwnerTypes.repayment,
-                                      ownerId: repayment.id!,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
-                  SizedBox(height: 12),
-                  if (!loan.isPaid)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          _addRepayment(loan);
-                        },
-                        icon: const Icon(Icons.payments),
-                        label: Text(loan.loanType == 'given' ? 'Receive Repayment' : 'Pay Back Loan'),
-                      ),
+                    builder: (context, snapshot) => Text(
+                      snapshot.hasData ? '${snapshot.data!.length} entries' : '',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
-                ],
-              ),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                FutureBuilder<List<RepaymentModel>>(
+                  future: LoansService.getRepayments(loan.id!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Text('Could not load payment entries: ${snapshot.error}');
+                    }
+                    final repayments = snapshot.data ?? [];
+                    if (repayments.isEmpty) {
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Color(0xFFE7ECE9))),
+                        child: Padding(
+                          padding: const EdgeInsets.all(22),
+                          child: Column(children: [
+                            Icon(Icons.receipt_long_outlined,
+                              size: 32, color: Colors.grey.shade500),
+                            const SizedBox(height: 8),
+                            const Text('No payment entries yet',
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          ]),
+                        ),
+                      );
+                    }
+                    return Column(
+                      children: repayments.map((repayment) => Card(
+                        margin: const EdgeInsets.only(bottom: 9),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: const BorderSide(color: Color(0xFFE7ECE9))),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              Row(children: [
+                                Container(
+                                  width: 38, height: 38,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF147D59).withValues(alpha: 0.10),
+                                    borderRadius: BorderRadius.circular(12)),
+                                  child: const Icon(Icons.payments_outlined,
+                                    color: Color(0xFF147D59), size: 20),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_moneyWithLoanCurrency(repayment.amount, loan),
+                                      style: const TextStyle(fontSize: 15,
+                                        fontWeight: FontWeight.w800)),
+                                    Text('Payment • ${repayment.repaymentDate}',
+                                      style: TextStyle(fontSize: 11,
+                                        color: Colors.grey.shade600)),
+                                  ],
+                                )),
+                                if (repayment.id != null)
+                                  IconButton(
+                                    tooltip: 'Delete payment entry',
+                                    visualDensity: VisualDensity.compact,
+                                    icon: const Icon(Icons.delete_outline,
+                                      color: Colors.red, size: 20),
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: pageContext,
+                                        builder: (dialogContext) => AlertDialog(
+                                          title: const Text('Delete Payment?'),
+                                          content: const Text(
+                                            'This will reverse the wallet balance and loan balance.'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(dialogContext, false),
+                                              child: const Text('Cancel')),
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(dialogContext, true),
+                                              child: const Text('Delete')),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm == true && repayment.id != null) {
+                                        await LoansService.deleteRepayment(repayment.id!);
+                                        await AttachmentService.deleteOwnerAttachments(
+                                          ownerType: AttachmentOwnerTypes.repayment,
+                                          ownerId: repayment.id!,
+                                        );
+                                        await _loadData();
+                                        if (pageContext.mounted) Navigator.pop(pageContext);
+                                        if (mounted) _showMessage('Payment entry deleted.');
+                                      }
+                                    },
+                                  ),
+                              ]),
+                              if (repayment.notes.isNotEmpty)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 48, top: 3),
+                                    child: Text(repayment.notes,
+                                      style: TextStyle(fontSize: 12,
+                                        color: Colors.grey.shade700)),
+                                  ),
+                                ),
+                              if (repayment.id != null)
+                                AttachmentSection(
+                                  ownerType: AttachmentOwnerTypes.repayment,
+                                  ownerId: repayment.id!,
+                                ),
+                            ],
+                          ),
+                        ),
+                      )).toList(),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _loanDetailMetric(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600,
+          fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(value, maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+            color: Color(0xFF172B25))),
+      ],
+    );
+  }
+
   Future<void> _deleteLoan(LoansModel loan) async {
     if (loan.id == null) return;
     final confirm = await showDialog<bool>(

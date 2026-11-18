@@ -748,7 +748,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final dailyNetByCurrency = <String, double>{};
       for (final item in entry.value) {
         final type = normalizeType(item['type']?.toString() ?? '');
-        if (type != 'income' && type != 'expense') continue;
+        if (item['is_scheduled'] == true || (type != 'income' && type != 'expense')) continue;
         final currency = item['wallet_currency']?.toString().trim().toUpperCase() ?? '';
         if (currency.isEmpty) continue;
         final amount = (item['amount'] as num?)?.toDouble() ?? 0;
@@ -927,7 +927,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                transactions.isEmpty
+                                filteredTransactions.isEmpty
                                     ? appText(context, "No transactions available", "No transactions available")
                                     : 'No ${selectedFilter == 'all' ? '' : selectedFilter} transactions',
                                 style: const TextStyle(
@@ -1138,9 +1138,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   ? displayDate(item['date'])
                                   : DateFormat('dd MMM yyyy  •  hh:mm a').format(parsedDate);
 
+                              final isScheduled = item['is_scheduled'] == true;
                               return InkWell(
                                 borderRadius: BorderRadius.circular(16),
-                                onTap: () {
+                                onTap: isScheduled ? null : () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -1195,8 +1196,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             const SizedBox(height: 2),
                                             Text(
                                               [
-                                                isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
-                                                if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
+                                                if (!isScheduled) isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
+                                                if (isScheduled) 'Scheduled',
+                                                 if (isScheduled && item['frequency'] != null) item['frequency'].toString(),
+                                                 if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
                                               ].join('  •  '),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -1233,7 +1236,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             ),
                                           ),
                                           const SizedBox(height: 1),
-                                          PopupMenuButton<String>(
+                                          if (isScheduled)
+                                             Container(
+                                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                               decoration: BoxDecoration(color: const Color(0xFFEAF5EF), borderRadius: BorderRadius.circular(8)),
+                                               child: const Text('Scheduled', style: TextStyle(color: Color(0xFF147D59), fontSize: 9.5, fontWeight: FontWeight.w800)),
+                                             )
+                                           else
+                                           PopupMenuButton<String>(
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(minWidth: 150),
                                             iconSize: 19,

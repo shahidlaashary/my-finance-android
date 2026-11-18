@@ -796,7 +796,7 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 18),
             Text(appText(context, 'This Month', 'اس ماہ'),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
             SizedBox(height: 10),
             Row(

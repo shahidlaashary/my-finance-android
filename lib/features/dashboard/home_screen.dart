@@ -717,10 +717,10 @@ class _HomePageState extends State<HomePage> {
                       ])),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.13),
                       borderRadius: BorderRadius.circular(12)),
                     child: Row(children: [

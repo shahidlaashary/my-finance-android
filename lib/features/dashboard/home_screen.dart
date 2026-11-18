@@ -918,7 +918,7 @@ class _HomePageState extends State<HomePage> {
             Text(appText(context, 'Overview', 'جائزہ'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                     color: AppColors.text)),
-            SizedBox(height: 12),
+            SizedBox(height: 10),
             _overviewCard(
               icon: Icons.real_estate_agent_outlined,
               title: appText(context, 'Assets Overview', 'اثاثوں کا جائزہ'),

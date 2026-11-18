@@ -1304,38 +1304,40 @@ class _AssetsScreenState extends State<AssetsScreen> {
           ),
           if (payableOutstanding || receivableOutstanding)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 11),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   if (payableOutstanding)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _addAssetRepayment(purchaseLoan!),
-                        icon: const Icon(Icons.payments_outlined, size: 16),
-                        label: const Text('Pay Back', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF1763A8),
-                          side: const BorderSide(color: Color(0xFFBBD5EA)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
+                    OutlinedButton.icon(
+                      onPressed: () => _addAssetRepayment(purchaseLoan!),
+                      icon: const Icon(Icons.payments_outlined, size: 14),
+                      label: const Text('Pay Back', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1763A8),
+                        side: const BorderSide(color: Color(0xFFBBD5EA)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                       ),
                     ),
                   if (payableOutstanding && receivableOutstanding) const SizedBox(width: 8),
                   if (receivableOutstanding)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _addAssetRepayment(saleLoan!),
-                        icon: const Icon(Icons.call_received_rounded, size: 16),
-                        label: const Text('Receive', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF168451),
-                          side: const BorderSide(color: Color(0xFFB9E2CB)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
+                    OutlinedButton.icon(
+                      onPressed: () => _addAssetRepayment(saleLoan!),
+                      icon: const Icon(Icons.call_received_rounded, size: 14),
+                      label: const Text('Receive', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF168451),
+                        side: const BorderSide(color: Color(0xFFB9E2CB)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                       ),
                     ),
                 ],

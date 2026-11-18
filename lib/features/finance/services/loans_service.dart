@@ -170,6 +170,32 @@ class LoansService {
       CREATE INDEX IF NOT EXISTS idx_repayments_loan
       ON loan_repayments(loan_id)
     ''');
+
+    // Development cleanup: purge the old test parties exactly once.
+    // Keep existing loan history, but detach it from the parties being removed.
+    const resetKey = 'party_test_records_reset_v1';
+    final resetRows = await db.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: [resetKey],
+      limit: 1,
+    );
+    if (resetRows.isEmpty) {
+      await db.transaction((txn) async {
+        await txn.execute(
+          'UPDATE loans SET party_id = NULL WHERE party_id IS NOT NULL',
+        );
+        await txn.delete('loan_parties');
+        await txn.insert(
+          'app_settings',
+          {
+            'setting_key': resetKey,
+            'setting_value': '1',
+          },
+        );
+      });
+    }
   }
 
   static Future<List<Map<String, dynamic>>> getParties() async {

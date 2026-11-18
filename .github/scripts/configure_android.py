@@ -42,8 +42,8 @@ printing_gradle_files += list(pub_cache.glob("hosted/pub.dartlang.org/printing-*
 for printing_gradle in printing_gradle_files:
     plugin_text = printing_gradle.read_text()
     plugin_text, removed = re.subn(
-        r"\\nbuildscript\\s*\\{.*?\\n\\}\\s*\\n",
-        "\\n",
+        r"\nbuildscript\s*\{.*?\n\}\s*\n",
+        "\n",
         plugin_text,
         count=1,
         flags=re.DOTALL,

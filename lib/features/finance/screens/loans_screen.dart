@@ -828,6 +828,11 @@ class _LoansScreenState extends State<LoansScreen> {
                     if (dueDate != null) Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => setSheetState(() => dueDate = null), child: const Text('Clear Due Date'))),
                     const SizedBox(height: 8),
                     TextField(controller: notesController, maxLines: 3, decoration: const InputDecoration(labelText: 'Notes')),
+                    const SizedBox(height: 10),
+                    AttachmentSection(
+                      ownerType: AttachmentOwnerTypes.loan,
+                      ownerId: loan.id!,
+                    ),
                     const SizedBox(height: 16),
                     Row(children: [
                       Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: const Text('Cancel'))),
@@ -943,13 +948,15 @@ class _LoansScreenState extends State<LoansScreen> {
                                 }
                               }
                             },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(value: 'edit', child: Row(
-                                children: [Icon(Icons.edit_outlined, size: 18), SizedBox(width: 10), Text('Edit')],
-                              )),
-                              PopupMenuItem(value: 'delete', child: Row(
-                                children: [Icon(Icons.delete_outline, size: 18, color: Colors.red), SizedBox(width: 10), Text('Delete')],
-                              )),
+                            itemBuilder: (context) => [
+                              if (!loan.isAssetLinked)
+                                const PopupMenuItem(value: 'edit', child: Row(
+                                  children: [Icon(Icons.edit_outlined, size: 18), SizedBox(width: 10), Text('Edit')],
+                                )),
+                              if (!loan.isAssetLinked)
+                                const PopupMenuItem(value: 'delete', child: Row(
+                                  children: [Icon(Icons.delete_outline, size: 18, color: Colors.red), SizedBox(width: 10), Text('Delete')],
+                                )),
                             ],
                           ),
                         ]),

@@ -1103,6 +1103,94 @@ class _AssetsScreenState extends State<AssetsScreen> {
     notesController.dispose();
   }
 
+  Widget _assetDesignLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 8, 2, 0),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: .8,
+          color: Color(0xFF829087),
+        ),
+      ),
+    );
+  }
+
+  Widget _legacyAssetCard(AssetsModel asset) {
+    final purchaseCurrency = asset.currency.toUpperCase();
+    final saleCurrency = asset.currency.toUpperCase();
+    final currency = asset.isSold ? saleCurrency : purchaseCurrency;
+    final value = asset.isSold && asset.salePrice != null ? asset.salePrice! : asset.currentValue;
+    final profitLoss = asset.isSold && asset.salePrice != null ? asset.salePrice! - asset.purchasePrice : asset.currentValue - asset.purchasePrice;
+    final categoryIcon = <String, IconData>{
+      'Property': Icons.home_work_outlined, 'Vehicles': Icons.directions_car_outlined,
+      'Gold': Icons.diamond_outlined, 'Jewellery': Icons.watch_outlined,
+      'Electronics': Icons.devices_other_outlined, 'Investments': Icons.trending_up_rounded,
+      'Livestock': Icons.pets_outlined, 'Business': Icons.storefront_outlined,
+    }[asset.category] ?? Icons.inventory_2_outlined;
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: const BorderSide(color: Color(0xFFE7EEEA))),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+          leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFE8F4EE), borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 21)),
+          title: Row(children: [
+            Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
+            if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFFFE9E9), borderRadius: BorderRadius.circular(7)), child: const Text('SOLD', style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.w800))),
+          ]),
+          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
+          trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+            Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
+            const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
+          ]),
+          children: [
+            const Divider(height: 8),
+            _detailRow('Purchase Price', '$purchaseCurrency ${_money(asset.purchasePrice)}'),
+            const SizedBox(height: 6),
+            if (!asset.isSold) _detailRow('Current Value', '$currency ${_money(asset.currentValue)}', bold: true),
+            if (asset.isSold && asset.salePrice != null) _detailRow('Sale Price', '$saleCurrency ${_money(asset.salePrice!)}', bold: true),
+            const SizedBox(height: 6),
+            _detailRow(asset.isSold ? 'Realized Profit/Loss' : 'Unrealized Profit/Loss', '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Colors.green : Colors.red, bold: true),
+            const SizedBox(height: 6),
+            _detailRow('Purchase Payment Type', asset.paymentType),
+            if (asset.paymentType.toLowerCase() == 'loan') _detailRow('Payable Party', _partyName(asset.partyId)),
+            _detailRow('Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
+            if (asset.isSold) _detailRow('Sale Payment Type', asset.salePaymentType),
+            if (asset.isSold && asset.salePaymentType.toLowerCase() == 'loan') _detailRow('Receivable Party', _partyName(asset.salePartyId)),
+            if (asset.isSold && asset.salePaymentType.toLowerCase() != 'loan') _detailRow('Sale Wallet', _walletName(asset.saleWalletId ?? asset.walletId)),
+            const SizedBox(height: 6),
+            _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
+            if (asset.isSold && asset.saleDate != null) _detailRow('Sale Date', DateFormat('dd MMM yyyy').format(asset.saleDate!)),
+            if (asset.notes.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Align(alignment: Alignment.centerLeft, child: Text(asset.notes, style: const TextStyle(color: Colors.black54, fontSize: 11)))),
+            Align(alignment: Alignment.centerRight, child: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit' && !asset.isSold) { _showAssetDialog(asset: asset); }
+                else if (value == 'valuation' && !asset.isSold) { _updateValuation(asset); }
+                else if (value == 'sell' && !asset.isSold) { _sellAsset(asset); }
+                else if (value == 'delete') { _deleteAsset(asset); }
+              },
+              itemBuilder: (context) => [
+                if (!asset.isSold) PopupMenuItem(value: 'edit', child: Text(appText(context, 'Edit Asset', 'اثاثے میں ترمیم کریں'))),
+                if (!asset.isSold) PopupMenuItem(value: 'valuation', child: Text(appText(context, 'Update Valuation', 'قیمت اپ ڈیٹ کریں'))),
+                if (!asset.isSold) PopupMenuItem(value: 'sell', child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں'))),
+                PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں'))),
+              ],
+              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFF1F7F3), borderRadius: BorderRadius.circular(9)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Color(0xFF147D59)), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF147D59)))])),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+
   Widget _assetCard(AssetsModel asset) {
     final currency = asset.currency.toUpperCase();
     final displayedValue = asset.isSold && asset.salePrice != null
@@ -1527,7 +1615,13 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       ]),
                     )
                   else
-                    ..._visibleAssets.map(_assetCard),
+                    ..._visibleAssets.expand((asset) => [
+                      _assetDesignLabel('NEW DESIGN'),
+                      _assetCard(asset),
+                      _assetDesignLabel('PREVIOUS DESIGN'),
+                      _legacyAssetCard(asset),
+                      const SizedBox(height: 8),
+                    ]),
                 ],
               ),
             ),

@@ -728,6 +728,68 @@ class LoansService {
     });
   }
 
+  /// Existing non-asset loan ki amount aur descriptive details update karta hai.
+  static Future<void> updateLoanDetails({
+    required int loanId,
+    required double amount,
+    required String lendingDate,
+    required String? dueDate,
+    required String notes,
+  }) async {
+    if (!amount.isFinite || amount <= 0) {
+      throw Exception('Loan amount must be greater than zero.');
+    }
+    final db = await _database;
+    await db.transaction((txn) async {
+      final rows = await txn.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
+      if (rows.isEmpty) throw Exception('Loan not found.');
+      final loan = LoansModel.fromMap(rows.first);
+      if (loan.isAssetLinked) {
+        throw Exception('Asset-linked loans must be edited from Asset Section.');
+      }
+      final repayments = await txn.query(
+        'loan_repayments',
+        columns: ['amount'],
+        where: 'loan_id = ?',
+        whereArgs: [loanId],
+      );
+      final repaid = repayments.fold<double>(
+        0,
+        (total, row) => total + (row['amount'] as num).toDouble(),
+      );
+      if (amount < repaid) {
+        throw Exception('Loan amount cannot be less than the amount already repaid.');
+      }
+      final difference = amount - loan.amount;
+      if (difference != 0) {
+        final balance = await _getWalletBalance(txn, loan.walletId);
+        if (loan.loanType == 'given' && difference > 0 && balance < difference) {
+          throw Exception('Insufficient wallet balance for the increased loan amount.');
+        }
+        await _changeWalletBalance(
+          txn,
+          walletId: loan.walletId,
+          amount: loan.loanType == 'given' ? -difference : difference,
+        );
+      }
+      final remaining = amount - repaid;
+      await txn.update(
+        'loans',
+        {
+          'amount': amount,
+          'remaining_amount': remaining,
+          'lending_date': lendingDate,
+          'due_date': dueDate,
+          'notes': notes,
+          'status': remaining <= 0 ? 'paid' : 'active',
+        },
+        where: 'id = ?',
+        whereArgs: [loanId],
+      );
+    });
+    AppRefreshController.notifyChanged();
+  }
+
   /// Loan delete karta hai aur us se mutaliq wallet balance changes wapas karta hai.
   static Future<void> deleteLoan(int loanId, {bool fromAssetDelete = false}) async {
     final db = await _database;

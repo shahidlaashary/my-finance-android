@@ -2231,44 +2231,138 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                           : 'Payable';
                                       return '${item['currency']} $type: ${_money(amount)}';
                                     }).join('  •  ');
-                              return ListTile(
-                                leading: const CircleAvatar(
-                                  child: Icon(Icons.person_outline),
-                                ),
-                                title: Text(party['name']?.toString() ?? ''),
-                                subtitle: Text(
-                                  [
-                                    'Currency: ${(party['currency']?.toString() ?? 'PKR').toUpperCase()}',
-                                    if ((party['phone'] ?? '').toString().isNotEmpty)
-                                      party['phone'].toString(),
-                                    summary,
-                                  ].join('\n'),
-                                ),
-                                isThreeLine: true,
-                                onTap: () => _openLedger(party),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (value) {
-                                    if (value == 'edit') _editParty(party);
-                                    if (value == 'delete') _deleteParty(party);
-                                  },
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: ListTile(
-                                        dense: true,
-                                        leading: Icon(Icons.edit_outlined),
-                                        title: Text('Edit'),
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: ListTile(
-                                        dense: true,
-                                        leading: Icon(Icons.delete_outline, color: Colors.red),
-                                        title: Text('Delete'),
-                                      ),
+                              final phone = (party['phone'] ?? '').toString().trim();
+                              final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+                              return Container(
+                                margin: const EdgeInsets.symmetric(vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: const Color(0xFFE5ECE8)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF173F30).withValues(alpha: .035),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(15),
+                                  onTap: () => _openLedger(party),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(12, 11, 5, 11),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 42,
+                                          height: 42,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEAF5EF),
+                                            borderRadius: BorderRadius.circular(13),
+                                          ),
+                                          child: const Icon(Icons.person_outline_rounded,
+                                            color: Color(0xFF147D59), size: 22),
+                                        ),
+                                        const SizedBox(width: 11),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      party['name']?.toString() ?? '',
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.w800,
+                                                        color: Color(0xFF24362E),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFF0F5F2),
+                                                      borderRadius: BorderRadius.circular(7),
+                                                    ),
+                                                    child: Text(currency,
+                                                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                                                        color: Color(0xFF527064))),
+                                                  ),
+                                                ],
+                                              ),
+                                              if (phone.isNotEmpty) ...[
+                                                const SizedBox(height: 3),
+                                                Row(children: [
+                                                  const Icon(Icons.phone_outlined, size: 11, color: Color(0xFF87958D)),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(child: Text(phone, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(fontSize: 10, color: Color(0xFF718078)))),
+                                                ]),
+                                              ],
+                                              const SizedBox(height: 7),
+                                              if (balances.isEmpty)
+                                                const Text('No loan history yet',
+                                                  style: TextStyle(fontSize: 10, color: Color(0xFF8A9790)))
+                                              else
+                                                Wrap(
+                                                  spacing: 5,
+                                                  runSpacing: 4,
+                                                  children: balances.map((item) {
+                                                    final amount = (item['outstanding'] as num?) ?? 0;
+                                                    final isReceivable = item['loan_type'] == 'given';
+                                                    final label = isReceivable ? 'Receive' : 'Pay';
+                                                    final color = isReceivable
+                                                        ? const Color(0xFF168451)
+                                                        : const Color(0xFFB66A35);
+                                                    final bg = isReceivable
+                                                        ? const Color(0xFFEAF6EF)
+                                                        : const Color(0xFFFFF2E9);
+                                                    return Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                                      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(7)),
+                                                      child: Text(
+                                                        '${item['currency']} $label: ${_money(amount)}',
+                                                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          padding: EdgeInsets.zero,
+                                          onSelected: (value) {
+                                            if (value == 'edit') _editParty(party);
+                                            if (value == 'delete') _deleteParty(party);
+                                          },
+                                          itemBuilder: (_) => const [
+                                            PopupMenuItem(
+                                              value: 'edit',
+                                              child: ListTile(
+                                                dense: true,
+                                                leading: Icon(Icons.edit_outlined),
+                                                title: Text('Edit'),
+                                              ),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'delete',
+                                              child: ListTile(
+                                                dense: true,
+                                                leading: Icon(Icons.delete_outline, color: Colors.red),
+                                                title: Text('Delete'),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               );
                             },

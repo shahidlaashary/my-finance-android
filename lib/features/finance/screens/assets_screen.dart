@@ -1609,14 +1609,23 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          _selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '(${_visibleAssets.where((a) => !a.isSold).length} ${appText(context, 'Active', 'فعال')})',
+                              style: const TextStyle(color: Color(0xFF147D59), fontSize: 11, fontWeight: FontWeight.w700),
+                            ),
+                          ],
                         ),
-                      ),
-                      Text(
-                        '${_visibleAssets.where((a) => !a.isSold).length} ${appText(context, 'Active', 'فعال')}',
-                        style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
                       OutlinedButton(

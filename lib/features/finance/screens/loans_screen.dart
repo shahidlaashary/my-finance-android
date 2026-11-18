@@ -1660,7 +1660,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 Icons.event_available_rounded,
                                                 'Next Due',
                                                 loan.dueDate ?? 'Not set',
-                                               const SizedBox(height: 5),
+                                              ),
+                                              const SizedBox(height: 5),
                                                if (!loan.isPaid)
                                                  TextButton.icon(
                                                    style: TextButton.styleFrom(
@@ -1677,7 +1678,6 @@ class _LoansScreenState extends State<LoansScreen> {
                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
                                                    ),
                                                  ),
-                                              ),
                                             ],
                                           ),
                                         ),

@@ -68,6 +68,30 @@ class _LoansScreenState extends State<LoansScreen> {
         .trim()
         .toUpperCase();
   }
+  String _currencyFlag(String currency) {
+    switch (currency.trim().toUpperCase()) {
+      case 'PKR':
+        return '🇵🇰';
+      case 'AED':
+        return '🇦🇪';
+      case 'USD':
+        return '🇺🇸';
+      case 'GBP':
+        return '🇬🇧';
+      case 'EUR':
+        return '🇪🇺';
+      case 'SAR':
+        return '🇸🇦';
+      case 'INR':
+        return '🇮🇳';
+      case 'CAD':
+        return '🇨🇦';
+      case 'AUD':
+        return '🇦🇺';
+      default:
+        return '🌐';
+    }
+  }
   String _moneyWithLoanCurrency(double amount, LoansModel loan) {
     return '${loan.currency.toUpperCase()} ${_money(amount)}';
   }
@@ -1185,141 +1209,309 @@ class _LoansScreenState extends State<LoansScreen> {
                       return Card(
                         elevation: 2,
                         margin: const EdgeInsets.only(bottom: 12),
-                        shadowColor: const Color(0xFF173D2E).withValues(alpha: 0.08),
+                        color: Colors.white,
+                        shadowColor: const Color(0xFF173D2E).withValues(alpha: 0.10),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(19),
-                          side: const BorderSide(color: Color(0xFFE7ECE9)),
+                          borderRadius: BorderRadius.circular(22),
+                          side: const BorderSide(color: Color(0xFFE5ECF3)),
                         ),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(19),
+                          borderRadius: BorderRadius.circular(22),
                           onTap: () => _showLoanDetails(loan),
                           child: SizedBox(
                             height: 250,
                             child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                Expanded(child: Text(_partyNameForLoan(loan),
-                                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF172B25)))),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: statusColor.withValues(alpha: 0.10),
-                                    borderRadius: BorderRadius.circular(20)),
-                                  child: Text(statusLabel, style: TextStyle(
-                                    color: statusColor, fontSize: 11,
-                                    fontWeight: FontWeight.w700))),
-                                const SizedBox(width: 7),
-                                Icon(Icons.arrow_forward_ios_rounded,
-                                  size: 15, color: Color(0xFF82918A)),
-                              ]),
-                              const SizedBox(height: 3),
-                              Row(children: [
-                                Text(loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken',
-                                  style: const TextStyle(fontSize: 11,
-                                    color: Color(0xFF65736C), fontWeight: FontWeight.w600)),
-                                const SizedBox(width: 6),
-                                Text('• ${loan.currency.toUpperCase()}',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF65736C))),
-                                if (_partyPhoneForLoan(loan) != '-') ...[
-                                  const SizedBox(width: 7),
-                                  Expanded(child: Text(_partyPhoneForLoan(loan),
-                                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 11, color: Color(0xFF7B8781)))),
-                                ],
-                              ]),
-                              if (loan.isAssetLinked) ...[
-                                const SizedBox(height: 3),
-                                Text('Asset: ${_assetReferenceLabel(loan)}',
-                                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 10, color: Color(0xFF7B8781))),
-                              ],
-                              const SizedBox(height: 11),
-                              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Expanded(flex: 6, child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(loan.currency.toUpperCase(),
-                                      style: const TextStyle(fontSize: 11,
-                                        color: Color(0xFF65736C), fontWeight: FontWeight.w700)),
-                                    const SizedBox(height: 2),
-                                    FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-                                      child: Text(_moneyWithLoanCurrency(loan.amount, loan),
-                                        style: const TextStyle(fontSize: 18,
-                                          fontWeight: FontWeight.w800, color: Color(0xFF172B25)))),
-                                    const SizedBox(height: 10),
-                                    Row(children: [
-                                      Expanded(child: Text(appText(context,
-                                        'Repayment progress', 'واپسی کی پیش رفت'),
-                                        style: const TextStyle(fontSize: 10,
-                                          color: Color(0xFF65736C), fontWeight: FontWeight.w600))),
-                                      Text('${(progress * 100).round()}%',
-                                        style: TextStyle(fontSize: 11,
-                                          color: statusColor, fontWeight: FontWeight.w800)),
-                                    ]),
-                                    const SizedBox(height: 5),
-                                    ClipRRect(borderRadius: BorderRadius.circular(10),
-                                      child: LinearProgressIndicator(
-                                        value: progress, minHeight: 8,
-                                        backgroundColor: const Color(0xFFE8EFEB),
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          loan.isOverdue ? const Color(0xFFE34D59)
-                                            : const Color(0xFF28B879)))),
-                                    const SizedBox(height: 8),
-                                    Wrap(spacing: 8, runSpacing: 3, children: [
-                                      Text('Repaid: ${_moneyWithLoanCurrency(loan.repaidAmount, loan)}',
-                                        style: const TextStyle(fontSize: 10, color: Color(0xFF52645B))),
-                                      Text('Remaining: ${_moneyWithLoanCurrency(loan.remainingAmount, loan)}',
-                                        style: const TextStyle(fontSize: 10, color: Color(0xFF52645B))),
-                                    ]),
-                                  ],
-                                )),
-                                const SizedBox(width: 10),
-                                Container(width: 1, height: 126, color: const Color(0xFFE5EBE7)),
-                                const SizedBox(width: 10),
-                                Expanded(flex: 4, child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _loanDateInfo(Icons.calendar_today_outlined,
-                                      loan.loanType == 'given' ? 'Lending Date' : 'Borrowing Date',
-                                      loan.lendingDate),
-                                    if (loan.dueDate != null) ...[
-                                      const SizedBox(height: 13),
-                                      _loanDateInfo(Icons.event_available_outlined,
-                                        'Due Date', loan.dueDate!),
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: loan.isAssetLinked
+                                              ? const Color(0xFFFFE8ED)
+                                              : loan.loanType == 'taken'
+                                                  ? const Color(0xFFE4F0FF)
+                                                  : const Color(0xFFF0E9FF),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          loan.isAssetLinked
+                                              ? Icons.home_rounded
+                                              : loan.loanType == 'taken'
+                                                  ? Icons.account_balance_rounded
+                                                  : Icons.person_rounded,
+                                          color: loan.isAssetLinked
+                                              ? const Color(0xFFD92D48)
+                                              : loan.loanType == 'taken'
+                                                  ? const Color(0xFF1763A8)
+                                                  : const Color(0xFF7252C7),
+                                          size: 23,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _partyNameForLoan(loan),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w800,
+                                                color: Color(0xFF101D3A),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              loan.isAssetLinked
+                                                  ? 'Asset • ${_assetReferenceLabel(loan)}'
+                                                  : loan.loanType == 'given'
+                                                      ? 'Loan Given'
+                                                      : 'Loan Taken',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Color(0xFF5B6F91),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: loan.isPaid
+                                              ? const Color(0xFFE8F1FF)
+                                              : loan.isOverdue
+                                                  ? const Color(0xFFFFE9ED)
+                                                  : const Color(0xFFE7F8ED),
+                                          borderRadius: BorderRadius.circular(22),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 7,
+                                              height: 7,
+                                              decoration: BoxDecoration(
+                                                color: loan.isPaid
+                                                    ? const Color(0xFF2674E8)
+                                                    : loan.isOverdue
+                                                        ? const Color(0xFFEA263F)
+                                                        : const Color(0xFF159B55),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              statusLabel,
+                                              style: TextStyle(
+                                                color: loan.isPaid
+                                                    ? const Color(0xFF2674E8)
+                                                    : loan.isOverdue
+                                                        ? const Color(0xFFDA233C)
+                                                        : const Color(0xFF11864A),
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 7),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 23,
+                                        color: Color(0xFF536987),
+                                      ),
                                     ],
-                                  ],
-                                )),
-                              ]),
-                              const SizedBox(height: 7),
-                              const Divider(height: 1, color: Color(0xFFE9EEEB)),
-                              const SizedBox(height: 3),
-                              Row(children: [
-                                if (!loan.isPaid)
-                                  TextButton.icon(
-                                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact,
-                                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                                      minimumSize: const Size(0, 30),
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                    onPressed: () => _addRepayment(loan),
-                                    icon: const Icon(Icons.payments_outlined, size: 16),
-                                    label: Text(appText(context, 'Repayment', 'واپسی'))),
-                                const Spacer(),
-                                if (!loan.isAssetLinked)
-                                  IconButton(
-                                    constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                                    padding: EdgeInsets.zero, visualDensity: VisualDensity.compact,
-                                    onPressed: () => _deleteLoan(loan),
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 19),
-                                    tooltip: 'Delete loan'),
-                              ]),
-                            ],
-                          ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Expanded(
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          flex: 6,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    _currencyFlag(loan.currency),
+                                                    style: const TextStyle(fontSize: 21),
+                                                  ),
+                                                  const SizedBox(width: 7),
+                                                  Text(
+                                                    loan.currency.toUpperCase(),
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Color(0xFF526987),
+                                                      fontWeight: FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 9),
+                                                  Container(
+                                                    width: 1,
+                                                    height: 22,
+                                                    color: const Color(0xFFCAD5E3),
+                                                  ),
+                                                  const SizedBox(width: 9),
+                                                  Expanded(
+                                                    child: FittedBox(
+                                                      fit: BoxFit.scaleDown,
+                                                      alignment: Alignment.centerLeft,
+                                                      child: Text(
+                                                        _money(loan.amount),
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight: FontWeight.w800,
+                                                          color: Color(0xFF101D3A),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: ClipRRect(
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      child: LinearProgressIndicator(
+                                                        value: progress,
+                                                        minHeight: 9,
+                                                        backgroundColor: const Color(0xFFE8EDF4),
+                                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                                          loan.isOverdue
+                                                              ? const Color(0xFFEF3155)
+                                                              : const Color(0xFF25B875),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    '${(progress * 100).round()}%',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: loan.isOverdue
+                                                          ? const Color(0xFFEF3155)
+                                                          : const Color(0xFF159E61),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Wrap(
+                                                spacing: 7,
+                                                runSpacing: 2,
+                                                children: [
+                                                  Text(
+                                                    'Repaid: ${_money(loan.repaidAmount)}',
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(0xFF536987),
+                                                    ),
+                                                  ),
+                                                  const Text(
+                                                    '|',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(0xFFB2BECE),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Remaining: ${_money(loan.remainingAmount)}',
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(0xFF536987),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Container(
+                                          width: 1,
+                                          height: 112,
+                                          color: const Color(0xFFE0E8F1),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          flex: 4,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _loanDateInfo(
+                                                Icons.calendar_month_rounded,
+                                                'Start Date',
+                                                loan.lendingDate,
+                                              ),
+                                              const SizedBox(height: 13),
+                                              _loanDateInfo(
+                                                Icons.event_available_rounded,
+                                                'Next Due',
+                                                loan.dueDate ?? 'Not set',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Divider(height: 1, color: Color(0xFFE7EDF4)),
+                                  SizedBox(
+                                    height: 30,
+                                    child: Row(
+                                      children: [
+                                        if (!loan.isPaid)
+                                          TextButton.icon(
+                                            style: TextButton.styleFrom(
+                                              visualDensity: VisualDensity.compact,
+                                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                                              minimumSize: const Size(0, 28),
+                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              foregroundColor: const Color(0xFF1763A8),
+                                            ),
+                                            onPressed: () => _addRepayment(loan),
+                                            icon: const Icon(Icons.payments_outlined, size: 15),
+                                            label: Text(
+                                              loan.loanType == 'given' ? 'Receive' : 'Pay Back',
+                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                                            ),
+                                          ),
+                                        const Spacer(),
+                                        if (!loan.isAssetLinked)
+                                          IconButton(
+                                            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                            padding: EdgeInsets.zero,
+                                            visualDensity: VisualDensity.compact,
+                                            onPressed: () => _deleteLoan(loan),
+                                            icon: const Icon(Icons.delete_outline, color: Color(0xFFD94858), size: 18),
+                                            tooltip: 'Delete loan',
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),

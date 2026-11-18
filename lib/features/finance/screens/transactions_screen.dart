@@ -9,6 +9,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/finance_category.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -64,10 +65,43 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final result = await TransactionsService.getTransactions(walletId: widget.walletId);
       final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
 
+      // Upcoming recurring schedules are display-only; they do not affect balances.
+      final recurringItems = await RecurringTransactionService().getRecurringTransactions(activeOnly: true);
+      final db = FinanceDB.instance.db;
+      final walletRows = await db.query('wallets', columns: ['id', 'currency']);
+      final currencyByWallet = <int, String>{
+        for (final row in walletRows)
+          (row['id'] as num).toInt(): row['currency']?.toString() ?? '',
+      };
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final scheduledRows = <Map<String, dynamic>>[];
+      for (final schedule in recurringItems) {
+        final nextDate = schedule.nextRunDate;
+        if (nextDate == null) continue;
+        final scheduledDate = DateTime(nextDate.year, nextDate.month, nextDate.day);
+        if (!scheduledDate.isAfter(today)) continue;
+        if (widget.walletId != null && schedule.walletId != widget.walletId && schedule.toWalletId != widget.walletId) continue;
+        scheduledRows.add({
+          'id': schedule.id,
+          'is_scheduled': true,
+          'type': schedule.type[0].toUpperCase() + schedule.type.substring(1).toLowerCase(),
+          'amount': schedule.amount,
+          'transfer_fee': schedule.transferFee,
+          'wallet_id': schedule.walletId,
+          'to_wallet_id': schedule.toWalletId,
+          'category': schedule.category ?? '',
+          'note': schedule.note.trim().isNotEmpty ? schedule.note : schedule.title,
+          'date': DateFormat('yyyy-MM-dd').format(scheduledDate),
+          'wallet_currency': currencyByWallet[schedule.walletId] ?? '',
+          'frequency': schedule.frequency,
+        });
+      }
+
       if (!mounted) return;
 
       setState(() {
-        transactions = result;
+        transactions = [...result, ...scheduledRows];
         walletInfo = wallet;
         hideBalances = hide;
         numberFormat = number;

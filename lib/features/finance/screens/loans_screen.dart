@@ -1419,53 +1419,164 @@ class _LoansScreenState extends State<LoansScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(appText(context, "Total Outstanding by Currency", "Total Outstanding by Currency"),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 2),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF123F35), Color(0xFF176B52), Color(0xFF218565)],
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFF2B8B6D).withValues(alpha: 0.35)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF123F35).withValues(alpha: 0.16),
+                          blurRadius: 16,
+                          offset: const Offset(0, 7),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(Icons.account_balance_wallet_rounded,
+                                color: Colors.white, size: 22),
                             ),
-                          ),
-                          SizedBox(height: 12),
-                          if (_outstandingByCurrency.isEmpty)
-                            Text(appText(context, "No outstanding loans.", "No outstanding loans."),
-                              style: TextStyle(color: Colors.grey),
-                            )
-                          else
-                            ..._outstandingByCurrency.entries.map((entry) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 5),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      entry.key,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                            const SizedBox(width: 11),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    appText(context, 'Total Outstanding', 'Total Outstanding'),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
                                     ),
-                                    Text(
-                                      _money(entry.value),
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Across all currencies',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.72),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.trending_up_rounded,
+                              color: Colors.white.withValues(alpha: 0.8), size: 22),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        if (_outstandingByCurrency.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.09),
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: Text(
+                              appText(context, 'No outstanding loans.', 'No outstanding loans.'),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.82), fontSize: 13),
+                            ),
+                          )
+                        else
+                          ..._outstandingByCurrency.entries.map((entry) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 7),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.14),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(entry.key,
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                                    ),
+                                    const Spacer(),
+                                    Flexible(
+                                      child: Text(
+                                        _money(entry.value),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              );
-                            }),
-                          const Divider(height: 24),
-                          Text('Total loans: ${_loans.length}'),
-                          Text('Overdue loans: $overdueCount'),
-                        ],
-                      ),
+                              ),
+                            );
+                          }),
+                        const SizedBox(height: 5),
+                        Container(
+                          padding: const EdgeInsets.only(top: 12),
+                          decoration: BoxDecoration(
+                            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.22))),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.receipt_long_rounded, color: Color(0xFFBCEBD7), size: 16),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text('Total Loans  ${_loans.length}',
+                                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD18A), size: 16),
+                                    const SizedBox(width: 5),
+                                    Flexible(
+                                      child: Text('Overdue  $overdueCount',
+                                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),

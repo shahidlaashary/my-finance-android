@@ -82,6 +82,57 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
       await _refreshSelectedRate();
       await GeneralPreferences.instance.setYourName(name);
       await FinanceDB.instance.setBaseCurrency(_currency);
+
+      // Fresh-install defaults: create only missing standard wallets, all
+      // using the base currency selected during first-time setup.
+      final walletDb = FinanceDB.instance.db;
+      await walletDb.transaction((txn) async {
+        const defaults = <Map<String, dynamic>>[
+          {
+            'name': 'Bank',
+            'type': 'Bank',
+            'icon_code': Icons.account_balance_outlined,
+          },
+          {
+            'name': 'Cash',
+            'type': 'Cash',
+            'icon_code': Icons.payments_outlined,
+          },
+          {
+            'name': 'Digital Wallet',
+            'type': 'Digital Wallet',
+            'icon_code': Icons.account_balance_wallet_outlined,
+          },
+        ];
+
+        for (final wallet in defaults) {
+          final existing = await txn.query(
+            'wallets',
+            columns: ['id'],
+            where: 'LOWER(name) = ? AND type = ?',
+            whereArgs: [
+              (wallet['name'] as String).toLowerCase(),
+              wallet['type'],
+            ],
+            limit: 1,
+          );
+          if (existing.isNotEmpty) continue;
+
+          await txn.insert('wallets', {
+            'name': wallet['name'],
+            'type': wallet['type'],
+            'custom_type': null,
+            'currency': _currency,
+            'balance': 0.0,
+            'opening_balance': 0.0,
+            'wallet_number': null,
+            'icon_code': (wallet['icon_code'] as IconData).codePoint,
+            'exclude_total': 0,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
+      });
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_completedKey, true);
       if (!mounted) return;

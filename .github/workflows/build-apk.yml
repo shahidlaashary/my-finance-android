@@ -114,7 +114,7 @@ jobs:
               raise SystemExit("Could not locate the resolved printing Android Gradle file")
           for gradle_file in candidates:
               source = gradle_file.read_text()
-              updated, count = re.subn(r"\\nbuildscript\\s*\\{.*?\\n\\}\\s*\\n", "\\n", source, count=1, flags=re.DOTALL)
+              updated, count = re.subn(r"\nbuildscript\s*\{.*?\n\}\s*\n", "\n", source, count=1, flags=re.DOTALL)
               if count:
                   gradle_file.write_text(updated)
                   print(f"Removed legacy plugin AGP classpath from {gradle_file}")

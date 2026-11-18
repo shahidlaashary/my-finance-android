@@ -15,6 +15,7 @@ import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
+import 'package:my_finance/features/finance/screens/loans_screen.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -48,6 +49,21 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   String _money(double value) {
     return _hideBalances ? '••••••' : _numberFormat.format(value);
+  }
+
+  Future<void> _showParties() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PartyManagementPage(
+          hideBalances: _hideBalances,
+          onLoanTap: (_) {
+            _message('Open loan details from the Loans section.');
+          },
+        ),
+      ),
+    );
+    await _loadData();
   }
 
   void _message(String message) {
@@ -1586,9 +1602,29 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: Text(_selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
-                      Text('${_visibleAssets.where((a) => !a.isSold).length} ${appText(context, 'Active', 'فعال')}',
-                        style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700)),
+                      Expanded(
+                        child: Text(
+                          _selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      Text(
+                        '${_visibleAssets.where((a) => !a.isSold).length} ${appText(context, 'Active', 'فعال')}',
+                        style: const TextStyle(color: Color(0xFF147D59), fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        onPressed: _showParties,
+                        icon: const Icon(Icons.people_alt_outlined, size: 16),
+                        label: Text('Manage Party (${_parties.length})'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ],
                   ),
                   if (currencies.isNotEmpty)

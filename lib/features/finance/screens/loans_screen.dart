@@ -781,6 +781,91 @@ class _LoansScreenState extends State<LoansScreen> {
       _showMessage('Could not save repayment: $error');
     }
   }
+  Future<bool> _editLoan(LoansModel loan) async {
+    if (loan.id == null || loan.isAssetLinked) {
+      _showMessage('Asset-linked loans must be edited from Asset Section.');
+      return false;
+    }
+    final amountController = TextEditingController(text: loan.amount.toStringAsFixed(2));
+    final notesController = TextEditingController(text: loan.notes);
+    DateTime lendingDate = DateTime.tryParse(loan.lendingDate) ?? DateTime.now();
+    DateTime? dueDate = loan.dueDate == null ? null : DateTime.tryParse(loan.dueDate!);
+    bool saved = false;
+    try {
+      saved = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, setSheetState) => Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+            child: Container(
+              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Edit Loan', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 14),
+                    TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Loan Amount (${loan.currency})')),
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Expanded(child: OutlinedButton.icon(
+                        onPressed: () async { final date = await _pickDate(lendingDate); if (date != null) setSheetState(() => lendingDate = date); },
+                        icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                        label: Text('Start: ${_dateString(lendingDate)}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      )),
+                      const SizedBox(width: 8),
+                      Expanded(child: OutlinedButton.icon(
+                        onPressed: () async { final date = await _pickDate(dueDate ?? lendingDate); if (date != null) setSheetState(() => dueDate = date); },
+                        icon: const Icon(Icons.event_outlined, size: 18),
+                        label: Text(dueDate == null ? 'Set Due Date' : 'Due: ${_dateString(dueDate!)}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      )),
+                    ]),
+                    if (dueDate != null) Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => setSheetState(() => dueDate = null), child: const Text('Clear Due Date'))),
+                    const SizedBox(height: 8),
+                    TextField(controller: notesController, maxLines: 3, decoration: const InputDecoration(labelText: 'Notes')),
+                    const SizedBox(height: 16),
+                    Row(children: [
+                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: const Text('Cancel'))),
+                      const SizedBox(width: 10),
+                      Expanded(child: ElevatedButton(onPressed: () => Navigator.pop(sheetContext, true), child: const Text('Save Changes'))),
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ) ?? false;
+      if (!saved) return false;
+      final amount = double.tryParse(amountController.text.trim());
+      if (amount == null || !amount.isFinite || amount <= 0) {
+        _showMessage('Enter a valid loan amount.');
+        return false;
+      }
+      await LoansService.updateLoanDetails(
+        loanId: loan.id!,
+        amount: amount,
+        lendingDate: _dateString(lendingDate),
+        dueDate: dueDate == null ? null : _dateString(dueDate!),
+        notes: notesController.text.trim(),
+      );
+      await _loadData();
+      _showMessage('Loan updated successfully.');
+      return true;
+    } catch (error) {
+      _showMessage('Could not update loan: $error');
+      return false;
+    } finally {
+      amountController.dispose();
+      notesController.dispose();
+    }
+  }
+
   Future<void> _showLoanDetails(LoansModel loan) async {
     if (loan.id == null) return;
     final progress = loan.amount <= 0
@@ -841,7 +926,14 @@ class _LoansScreenState extends State<LoansScreen> {
                             icon: const Icon(Icons.more_vert_rounded, size: 21, color: Color(0xFF536987)),
                             onSelected: (value) async {
                               if (value == 'edit') {
-                                await _editLoan(loan);
+                                final updated = await _editLoan(loan);
+                                if (updated && pageContext.mounted) {
+                                  Navigator.pop(pageContext);
+                                  final refreshed = _loans.where((item) => item.id == loan.id);
+                                  if (refreshed.isNotEmpty && mounted) {
+                                    await _showLoanDetails(refreshed.first);
+                                  }
+                                }
                               } else if (value == 'delete') {
                                 await _deleteLoan(loan);
                                 if (pageContext.mounted && !mounted) return;

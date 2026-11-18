@@ -1976,44 +1976,96 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final name = TextEditingController(text: party?['name']?.toString() ?? '');
     final phone = TextEditingController(text: party?['phone']?.toString() ?? '');
     final address = TextEditingController(text: party?['address']?.toString() ?? '');
+    final email = TextEditingController(text: party?['email']?.toString() ?? '');
+    final country = TextEditingController(text: party?['country']?.toString() ?? '');
+    final city = TextEditingController(text: party?['city']?.toString() ?? '');
+    final postalCode = TextEditingController(text: party?['postal_code']?.toString() ?? '');
+    final openingBalance = TextEditingController(text: (party?['opening_balance'] ?? 0).toString());
+    final creditLimit = TextEditingController(text: (party?['credit_limit'] ?? 0).toString());
+    final cnic = TextEditingController(text: party?['cnic']?.toString() ?? '');
+    final businessName = TextEditingController(text: party?['business_name']?.toString() ?? '');
+    final taxNumber = TextEditingController(text: party?['tax_number']?.toString() ?? '');
+    final referencePerson = TextEditingController(text: party?['reference_person']?.toString() ?? '');
+    final notes = TextEditingController(text: party?['notes']?.toString() ?? '');
     final configuredBaseCurrency = await FinanceDB.instance.getBaseCurrency();
     String selectedCurrency = (party?['currency']?.toString() ?? configuredBaseCurrency).toUpperCase();
+    String selectedPartyType = party?['party_type']?.toString() ?? 'Individual';
+    String selectedPaymentTerms = party?['payment_terms']?.toString() ?? 'Due on Receipt';
+    const paymentTermsOptions = ['Due on Receipt', '7 Days', '15 Days', '30 Days'];
     final currencies = CurrencyCatalog.supported;
     final formKey = GlobalKey<FormState>();
+
+    Widget field(TextEditingController controller, String label, {TextInputType? keyboardType, int maxLines = 1}) {
+      return TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(labelText: label),
+      );
+    }
+
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(party == null ? 'Add New Party' : 'Edit Party'),
         content: Form(
           key: formKey,
-          child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextFormField(
-                controller: name,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Party Name *'),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Party name is required'
-                    : null,
-              ),
-              TextFormField(
-                controller: phone,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-              ),
-              TextFormField(
-                controller: address,
-                decoration: const InputDecoration(labelText: 'Address'),
-              ),
-              const SizedBox(height: 12),
-              StatefulBuilder(builder: (context, setCurrencyState) => DropdownButtonFormField<String>(
-                value: currencies.contains(selectedCurrency) ? selectedCurrency : 'PKR',
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Party Currency *'),
-                items: currencies.map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
-                onChanged: (value) { if (value != null) setCurrencyState(() => selectedCurrency = value); },
-              )),
-            ]),
+          child: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                TextFormField(
+                  controller: name,
+                  autofocus: true,
+                  decoration: const InputDecoration(labelText: 'Party Name *'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Party name is required'
+                      : null,
+                ),
+                field(phone, 'Phone Number', keyboardType: TextInputType.phone),
+                field(email, 'Email Address', keyboardType: TextInputType.emailAddress),
+                StatefulBuilder(builder: (context, setTypeState) => DropdownButtonFormField<String>(
+                  value: selectedPartyType,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Party Type'),
+                  items: const [
+                    DropdownMenuItem(value: 'Individual', child: Text('Individual')),
+                    DropdownMenuItem(value: 'Business', child: Text('Business')),
+                  ],
+                  onChanged: (value) { if (value != null) setTypeState(() => selectedPartyType = value); },
+                )),
+                field(businessName, 'Business Name'),
+                field(cnic, 'CNIC / ID Number'),
+                field(taxNumber, 'Tax Number'),
+                field(referencePerson, 'Reference Person'),
+                const SizedBox(height: 8),
+                const Align(alignment: Alignment.centerLeft, child: Text('Address Information', style: TextStyle(fontWeight: FontWeight.w700))),
+                field(country, 'Country'),
+                field(city, 'City'),
+                field(address, 'Complete Address', maxLines: 2),
+                field(postalCode, 'Postal Code'),
+                const SizedBox(height: 8),
+                const Align(alignment: Alignment.centerLeft, child: Text('Financial Settings', style: TextStyle(fontWeight: FontWeight.w700))),
+                StatefulBuilder(builder: (context, setCurrencyState) => DropdownButtonFormField<String>(
+                  value: currencies.contains(selectedCurrency) ? selectedCurrency : 'PKR',
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Party Currency *'),
+                  items: currencies.map((currency) => DropdownMenuItem(value: currency, child: Text(currency))).toList(),
+                  onChanged: (value) { if (value != null) setCurrencyState(() => selectedCurrency = value); },
+                )),
+                field(openingBalance, 'Opening Balance', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                field(creditLimit, 'Credit Limit', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                StatefulBuilder(builder: (context, setTermsState) => DropdownButtonFormField<String>(
+                  value: paymentTermsOptions.contains(selectedPaymentTerms) ? selectedPaymentTerms : paymentTermsOptions.first,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Payment Terms'),
+                  items: paymentTermsOptions.map((term) => DropdownMenuItem(value: term, child: Text(term))).toList(),
+                  onChanged: (value) { if (value != null) setTermsState(() => selectedPaymentTerms = value); },
+                )),
+                const SizedBox(height: 8),
+                field(notes, 'Notes', maxLines: 3),
+              ]),
+            ),
           ),
         ),
         actions: [
@@ -2034,12 +2086,28 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     );
     if (saved == true) {
       try {
+        final opening = double.tryParse(openingBalance.text.trim()) ?? 0;
+        final limit = double.tryParse(creditLimit.text.trim()) ?? 0;
+        if (opening < 0 || limit < 0) throw Exception('Opening balance and credit limit cannot be negative.');
         if (party == null) {
           await LoansService.addParty(
             name: name.text,
             phone: phone.text,
             address: address.text,
             currency: selectedCurrency,
+            email: email.text,
+            partyType: selectedPartyType,
+            country: country.text,
+            city: city.text,
+            postalCode: postalCode.text,
+            openingBalance: opening,
+            creditLimit: limit,
+            paymentTerms: selectedPaymentTerms,
+            cnic: cnic.text,
+            businessName: businessName.text,
+            taxNumber: taxNumber.text,
+            referencePerson: referencePerson.text,
+            notes: notes.text,
           );
         } else {
           await LoansService.updateParty(
@@ -2048,6 +2116,19 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
             phone: phone.text,
             address: address.text,
             currency: selectedCurrency,
+            email: email.text,
+            partyType: selectedPartyType,
+            country: country.text,
+            city: city.text,
+            postalCode: postalCode.text,
+            openingBalance: opening,
+            creditLimit: limit,
+            paymentTerms: selectedPaymentTerms,
+            cnic: cnic.text,
+            businessName: businessName.text,
+            taxNumber: taxNumber.text,
+            referencePerson: referencePerson.text,
+            notes: notes.text,
           );
         }
         await _loadParties();
@@ -2059,9 +2140,13 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
         }
       }
     }
-    name.dispose();
-    phone.dispose();
-    address.dispose();
+    for (final controller in [
+      name, phone, address, email, country, city, postalCode,
+      openingBalance, creditLimit, cnic, businessName, taxNumber,
+      referencePerson, notes,
+    ]) {
+      controller.dispose();
+    }
   }
 
   Future<void> _deleteParty(Map<String, dynamic> party) async {

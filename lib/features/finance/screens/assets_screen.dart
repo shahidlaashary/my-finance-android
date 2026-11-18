@@ -1292,39 +1292,46 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       _assetStatusChip(asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
                         asset.isSold ? const Color(0xFFFFEEEE) : const Color(0xFFEAF5EF),
                         asset.isSold ? const Color(0xFFC23D3D) : const Color(0xFF147D59)),
-                      const SizedBox(width: 6),
-                      if (payableOutstanding)
-                        OutlinedButton.icon(
-                          onPressed: () => _addAssetRepayment(purchaseLoan!),
-                          icon: const Icon(Icons.payments_outlined, size: 12),
-                          label: const Text('Pay Back', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF1763A8),
-                            side: const BorderSide(color: Color(0xFFBBD5EA)),
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (payableOutstanding)
+                              OutlinedButton.icon(
+                                onPressed: () => _addAssetRepayment(purchaseLoan!),
+                                icon: const Icon(Icons.payments_outlined, size: 12),
+                                label: const Text('Pay Back', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF1763A8),
+                                  side: const BorderSide(color: Color(0xFFBBD5EA)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            if (payableOutstanding && receivableOutstanding) const SizedBox(width: 4),
+                            if (receivableOutstanding)
+                              OutlinedButton.icon(
+                                onPressed: () => _addAssetRepayment(saleLoan!),
+                                icon: const Icon(Icons.call_received_rounded, size: 12),
+                                label: const Text('Receive', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF168451),
+                                  side: const BorderSide(color: Color(0xFFB9E2CB)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                          ],
                         ),
-                      if (payableOutstanding && receivableOutstanding) const SizedBox(width: 4),
-                      if (receivableOutstanding)
-                        OutlinedButton.icon(
-                          onPressed: () => _addAssetRepayment(saleLoan!),
-                          icon: const Icon(Icons.call_received_rounded, size: 12),
-                          label: const Text('Receive', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF168451),
-                            side: const BorderSide(color: Color(0xFFB9E2CB)),
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                        ),
-                      const Spacer(),
+                      ),
+                      const SizedBox(width: 4),
                       Text('View Entries', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF147D59))),
                       const SizedBox(width: 2),
                       const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF147D59)),

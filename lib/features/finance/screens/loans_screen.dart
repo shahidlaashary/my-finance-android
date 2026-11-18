@@ -2356,6 +2356,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                     }).join('  •  ');
                               final phone = (party['phone'] ?? '').toString().trim();
                               final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+                              final partyPhoto = party['profile_image_path']?.toString() ?? '';
+                              final hasPartyPhoto = partyPhoto.isNotEmpty && File(partyPhoto).existsSync();
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 5),
                                 decoration: BoxDecoration(
@@ -2377,15 +2379,14 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                     padding: const EdgeInsets.fromLTRB(12, 11, 5, 11),
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: 42,
-                                          height: 42,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFEAF5EF),
-                                            borderRadius: BorderRadius.circular(13),
+                                        CircleAvatar(
+                                          radius: 21,
+                                          backgroundColor: const Color(0xFFEAF5EF),
+                                          backgroundImage: hasPartyPhoto ? FileImage(File(partyPhoto)) : null,
+                                          child: hasPartyPhoto ? null : const Icon(
+                                            Icons.person_outline_rounded,
+                                            color: Color(0xFF147D59), size: 22,
                                           ),
-                                          child: const Icon(Icons.person_outline_rounded,
-                                            color: Color(0xFF147D59), size: 22),
                                         ),
                                         const SizedBox(width: 11),
                                         Expanded(

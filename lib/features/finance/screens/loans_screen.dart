@@ -1952,7 +1952,7 @@ class PartyManagementPage extends StatefulWidget {
   State<PartyManagementPage> createState() => _PartyManagementPageState();
 }
 
-class _PartyManagementPageState extends State<PartyManagementPage> with SingleTickerProviderStateMixin {
+class _PartyManagementPageState extends State<PartyManagementPage> {
   List<Map<String, dynamic>> _parties = [];
   Map<String, double> _receivableByCurrency = {};
   Map<String, double> _payableByCurrency = {};
@@ -1961,24 +1961,11 @@ class _PartyManagementPageState extends State<PartyManagementPage> with SingleTi
   bool _searchVisible = false;
   bool _showArchived = false;
   String _search = '';
-  late final TabController _tabs;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
-    _tabs.addListener(() {
-      if (_showArchived != (_tabs.index == 1) && mounted) {
-        setState(() => _showArchived = _tabs.index == 1);
-      }
-    });
     _loadParties();
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
   }
 
   Future<void> _loadParties() async {
@@ -2456,16 +2443,6 @@ class _PartyManagementPageState extends State<PartyManagementPage> with SingleTi
           ),
           const SizedBox(width: 4),
         ],
-        bottom: TabBar(
-          controller: _tabs,
-          labelColor: const Color(0xFF147D59),
-          unselectedLabelColor: const Color(0xFF87958D),
-          indicatorColor: const Color(0xFF147D59),
-          tabs: [
-            Tab(text: 'Active Parties (${_parties.where((p) => (p['is_archived'] as num?)?.toInt() != 1).length})'),
-            Tab(text: 'Archived Parties (${_parties.where((p) => (p['is_archived'] as num?)?.toInt() == 1).length})'),
-          ],
-        ),
       ),
       body: Column(
         children: [
@@ -2493,6 +2470,22 @@ class _PartyManagementPageState extends State<PartyManagementPage> with SingleTi
               ),
             ),
           if (!_loading && _parties.isNotEmpty) _partyOverviewCard(),
+          if (!_loading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE3ECE6))),
+                child: Row(children: [
+                  Expanded(child: _partyTabButton('Active', _parties.where((p) => (p['is_archived'] as num?)?.toInt() != 1).length, !_showArchived,
+                    () => setState(() => _showArchived = false))),
+                  const SizedBox(width: 4),
+                  Expanded(child: _partyTabButton('Archived', _parties.where((p) => (p['is_archived'] as num?)?.toInt() == 1).length, _showArchived,
+                    () => setState(() => _showArchived = true))),
+                ]),
+              ),
+            ),
 
           Expanded(
             child: _loading

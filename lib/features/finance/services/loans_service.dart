@@ -373,8 +373,12 @@ class LoansService {
       FROM loans
       INNER JOIN wallets ON wallets.id = loans.wallet_id
       WHERE loans.party_id = ?
-      GROUP BY currency, loans.loan_type
-      ORDER BY currency, loans.loan_type
+      GROUP BY
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
+        loans.loan_type
+      ORDER BY
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
+        loans.loan_type
     ''', [partyId]);
     return {
       'loan_count': rows.fold<int>(0, (sum, row) => sum + ((row['loan_count'] as num?)?.toInt() ?? 0)),

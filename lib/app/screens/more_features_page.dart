@@ -12,6 +12,7 @@ import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart'
 import 'package:my_finance/features/installments/screens/installments_screen.dart';
 import 'package:my_finance/features/committee/screens/committee_screen.dart';
 import 'package:my_finance/features/partners/screens/my_partner_screen.dart';
+import 'package:my_finance/features/finance/screens/whatsapp_automation_screen.dart';
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -21,6 +22,10 @@ class MoreFeaturesPage extends StatelessWidget {
     // Budgets, Goals aur Stats ab bottom navigation mein mojood hain.
     // Is liye yahan unki dobara entries nahi rakhi gayin.
     final features = [
+      {
+        'title': 'WhatsApp Automation',
+        'icon': Icons.chat_rounded,
+      },
       {
         'title': 'Exchange Rates',
         'icon': Icons.currency_exchange_rounded,
@@ -104,7 +109,7 @@ class MoreFeaturesPage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) {
-                            if (feature['title'] == 'Settings') {
+                            if (feature['title'] == 'WhatsApp Automation') {\n                              return const WhatsAppAutomationScreen();\n                            }\n                            if (feature['title'] == 'Settings') {
                               return const AppSettingsScreen();
                             }
                             if (feature['title'] == 'Vehicle Manager') {

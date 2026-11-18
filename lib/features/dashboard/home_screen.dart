@@ -680,13 +680,13 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('$baseCurrency Wallets Total',
-                          style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
+                          style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
+                        const SizedBox(height: 5),
                         loading ? const SizedBox(height: 25, width: 25,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
                             child: Text(_currencyAmount(baseCurrency, baseCurrencyWalletTotal),
-                              style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w800))),
+                              style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800))),
                       ])),
                       const SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

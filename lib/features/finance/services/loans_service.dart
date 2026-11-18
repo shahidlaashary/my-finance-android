@@ -139,6 +139,7 @@ class LoansService {
       'tax_number': "TEXT NOT NULL DEFAULT ''",
       'reference_person': "TEXT NOT NULL DEFAULT ''",
       'profile_image_path': "TEXT NOT NULL DEFAULT ''",
+      'is_archived': 'INTEGER NOT NULL DEFAULT 0',
     };
     for (final entry in partyMigrations.entries) {
       if (!existingPartyColumns.contains(entry.key)) {
@@ -198,9 +199,24 @@ class LoansService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getParties() async {
+  static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {
     final db = await _database;
-    return db.query('loan_parties', orderBy: 'name COLLATE NOCASE ASC');
+    return db.query(
+      'loan_parties',
+      where: includeArchived ? null : 'COALESCE(is_archived, 0) = 0',
+      orderBy: 'name COLLATE NOCASE ASC',
+    );
+  }
+
+  static Future<void> setPartyArchived(int partyId, {required bool archived}) async {
+    final db = await _database;
+    final changed = await db.update(
+      'loan_parties',
+      {'is_archived': archived ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [partyId],
+    );
+    if (changed == 0) throw Exception('Party was not found.');
   }
 
   static Future<int> addParty({

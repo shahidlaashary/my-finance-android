@@ -811,7 +811,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         final selected = selectedFilter == filter.$1;
                         final chipFlex = switch (filter.$1) {
                           'all' => 5,
-                          'income' => 7,
+                          'income' => 8,
                           'expense' => 8,
                           'transfer' => 8,
                           _ => 7,
@@ -863,7 +863,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       }),
                       const SizedBox(width: 3),
                       Expanded(
-                        flex: 13,
+                        flex: 11,
                         child: ActionChip(
                           label: SizedBox(
                             width: double.infinity,

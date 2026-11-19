@@ -370,7 +370,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxHeight),
                 child: Container(
-                  decoration: const BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
                   padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
                   child: Form(
                     key: formKey,
@@ -1376,7 +1376,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             _assetStatusChip(
                               asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
                               asset.isSold ? const Color(0xFFFFEEEE) : const Color(0xFFEAF5EF),
-                              asset.isSold ? const Color(0xFFC23D3D) : Theme.of(context).colorScheme.primary,
+                              asset.isSold ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
                             ),
                             const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1667,7 +1667,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         borderRadius: BorderRadius.circular(14),
                         onTap: () => setState(() => _selectedCategory = _selectedCategory == item['name'] ? null : item['name'] as String),
                         child: Container(
-                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant, width: _selectedCategory == item['name'] ? 1.5 : 1)),
+                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant, width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Icon(item['icon'] as IconData, color: Theme.of(context).colorScheme.primary, size: 19),
                             SizedBox(height: 2),

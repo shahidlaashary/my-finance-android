@@ -1,0 +1,507 @@
+{
+  "countryCode": "IN",
+  "registry": "Reserve Bank of India",
+  "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+  "records": [
+    {
+      "countryCode": "IN",
+      "institutionName": "State Bank of India",
+      "institutionType": "bank",
+      "officialWebsite": "https://sbi.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://sbi.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Bank of Baroda",
+      "institutionType": "bank",
+      "officialWebsite": "https://bankofbaroda.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://bankofbaroda.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Bank of India",
+      "institutionType": "bank",
+      "officialWebsite": "https://bankofindia.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://bankofindia.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Bank of Maharashtra",
+      "institutionType": "bank",
+      "officialWebsite": "https://bankofmaharashtra.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://bankofmaharashtra.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Canara Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.canarabank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.canarabank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Central Bank of India",
+      "institutionType": "bank",
+      "officialWebsite": "https://centralbank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://centralbank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Indian Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://indianbank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://indianbank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Indian Overseas Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.iob.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.iob.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Punjab & Sind Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://punjabandsind.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://punjabandsind.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Punjab National Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://pnb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://pnb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "UCO Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.uco.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.uco.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Union Bank of India",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.unionbankonline.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.unionbankonline.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Axis Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.axis.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.axis.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Bandhan Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bandhan.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.bandhan.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "CSB Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.csb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.csb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "City Union Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://cityunionbank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://cityunionbank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "DCB Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.dcb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.dcb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Dhanlaxmi Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.dhan.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.dhan.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Federal Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.federal.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.federal.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "HDFC Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.hdfc.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.hdfc.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "ICICI Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.icici.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.icici.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "IndusInd Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.indusind.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.indusind.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "IDFC FIRST Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.idfcfirst.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.idfcfirst.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Jammu & Kashmir Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://jkb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://jkb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Karnataka Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.karnatakabank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.karnatakabank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Karur Vysya Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.kvb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.kvb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Kotak Mahindra Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.kotak.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.kotak.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Nainital Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.nainitalbank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.nainitalbank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "RBL Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.rbl.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.rbl.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "South Indian Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.southindianbank.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.southindianbank.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Tamilnad Mercantile Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.tmb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.tmb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "YES Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.yes.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.yes.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "IDBI Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.idbi.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.idbi.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "AU Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://www.au.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.au.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Capital Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://www.capital.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.capital.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Equitas Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://equitas.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://equitas.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "ESAF Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://www.esaf.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.esaf.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Suryoday Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://suryoday.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://suryoday.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Ujjivan Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://www.ujjivansfb.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.ujjivansfb.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Utkarsh Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://www.utkarsh.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.utkarsh.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Slice Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://slice.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://slice.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Jana Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://www.jana.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.jana.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Shivalik Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://shivalik.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://shivalik.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Unity Small Finance Bank Limited",
+      "institutionType": "small_finance_bank",
+      "officialWebsite": "https://unity.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://unity.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Airtel Payments Bank Limited",
+      "institutionType": "payments_bank",
+      "officialWebsite": "https://www.airtelpayments.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.airtelpayments.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "India Post Payments Bank Limited",
+      "institutionType": "payments_bank",
+      "officialWebsite": "https://ippbonline.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://ippbonline.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Fino Payments Bank Limited",
+      "institutionType": "payments_bank",
+      "officialWebsite": "https://fino.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://fino.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Paytm Payments Bank Limited",
+      "institutionType": "payments_bank",
+      "officialWebsite": "https://www.paytm.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.paytm.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "Jio Payments Bank Limited",
+      "institutionType": "payments_bank",
+      "officialWebsite": "https://www.jiopayments.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://www.jiopayments.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "IN",
+      "institutionName": "NSDL Payments Bank Limited",
+      "institutionType": "payments_bank",
+      "officialWebsite": "https://nsdlpayments.bank.in",
+      "registrySourceUrl": "https://rbi.org.in/scripts/banklinks.aspx",
+      "sourceUrl": "https://nsdlpayments.bank.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

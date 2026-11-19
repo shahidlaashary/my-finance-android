@@ -9,6 +9,7 @@ import 'package:open_filex/open_filex.dart';
 
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 
 class AttachmentSection extends StatefulWidget {
   final String ownerType;
@@ -36,7 +37,26 @@ class _AttachmentSectionState extends State<AttachmentSection> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadAttachments();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) _loadAttachments();
+  }
+
+  @override
+  void didUpdateWidget(covariant AttachmentSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.ownerType != widget.ownerType || oldWidget.ownerId != widget.ownerId) {
+      _loadAttachments();
+    }
+  }
+
+  @override
+  void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
+    super.dispose();
   }
 
   Future<void> _loadAttachments() async {

@@ -225,16 +225,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
           IconButton(
             tooltip: 'Export PDF Report',
             onPressed: _exportPdfReport,
-            icon: const Icon(Icons.picture_as_pdf_outlined),
+            icon: Icon(Icons.picture_as_pdf_outlined),
           ),
           IconButton(
             tooltip: 'Share PDF Statement',
             onPressed: _sharePdfStatement,
-            icon: const Icon(Icons.share_outlined),
+            icon: Icon(Icons.share_outlined),
           ),
           IconButton(
             onPressed: _loadReports,
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
             tooltip: 'Refresh reports',
           ),
         ],
@@ -253,19 +253,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Export / Share PDF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text('Export / Share PDF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                     const SizedBox(height: 10),
                     Row(children: [
                       Expanded(child: FilledButton.icon(
                         onPressed: _exportPdfReport,
-                        icon: const Icon(Icons.picture_as_pdf_rounded),
-                        label: const Text('PDF Report'),
+                        icon: Icon(Icons.picture_as_pdf_rounded),
+                        label: Text('PDF Report'),
                       )),
                       const SizedBox(width: 10),
                       Expanded(child: OutlinedButton.icon(
                         onPressed: _sharePdfStatement,
-                        icon: const Icon(Icons.share_rounded),
-                        label: const Text('PDF Statement'),
+                        icon: Icon(Icons.share_rounded),
+                        label: Text('PDF Statement'),
                       )),
                     ]),
                   ],
@@ -390,7 +390,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 48,
               color: Theme.of(context).colorScheme.error,
@@ -410,7 +410,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _loadReports,
-              icon: const Icon(Icons.refresh),
+              icon: Icon(Icons.refresh),
               label: Text(appText(context, 'Try Again', 'دوبارہ کوشش کریں')),
             ),
           ],
@@ -468,7 +468,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _pickStartDate,
-                    icon: const Icon(Icons.calendar_today),
+                    icon: Icon(Icons.calendar_today),
                     label: Text(
                       _dateFormat(_startDate),
                       overflow: TextOverflow.ellipsis,
@@ -479,7 +479,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _pickEndDate,
-                    icon: const Icon(Icons.event),
+                    icon: Icon(Icons.event),
                     label: Text(
                       _dateFormat(_endDate),
                       overflow: TextOverflow.ellipsis,
@@ -549,7 +549,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ),
                 child: Text(
                   'Currency: $currency',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -652,7 +652,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
           return Card(
             child: ListTile(
-              leading: const CircleAvatar(
+              leading: CircleAvatar(
                 child: Icon(Icons.account_balance),
               ),
               title: Text(currency),
@@ -664,7 +664,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   item['total_balance'],
                   currency,
                 ),
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -743,7 +743,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             currency.isEmpty
                                 ? 'Currency'
                                 : currency,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),
@@ -764,7 +764,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               children: [
                                 Text(
                                   item['month']?.toString() ?? '',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -834,7 +834,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           width: 65,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 12),
+            style: TextStyle(fontSize: 12),
           ),
         ),
         Expanded(
@@ -851,7 +851,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         SizedBox(width: 8),
         Text(
           NumberFormat.compact().format(amount),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -881,7 +881,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
           return Card(
             child: ListTile(
-              leading: const CircleAvatar(
+              leading: CircleAvatar(
                 child: Icon(Icons.category),
               ),
               title: Text(
@@ -893,7 +893,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               trailing: Text(
                 _money(item['total'], currency),
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -942,7 +942,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Text(
                     item['wallet_name']?.toString() ??
                         'Wallet',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),

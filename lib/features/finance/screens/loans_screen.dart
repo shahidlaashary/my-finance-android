@@ -247,7 +247,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 constraints: BoxConstraints(maxHeight: maxSheetHeight),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                   ),
                   child: Column(
@@ -846,7 +846,7 @@ class _LoansScreenState extends State<LoansScreen> {
           builder: (context, setSheetState) => Padding(
             padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
             child: Container(
-              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
               child: SingleChildScrollView(
                 child: Column(
@@ -1172,7 +1172,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                             boxShadow: [
@@ -1407,7 +1407,7 @@ class _LoansScreenState extends State<LoansScreen> {
     final overdueCount = _loans.where((loan) => loan.isOverdue).length;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
@@ -1418,7 +1418,7 @@ class _LoansScreenState extends State<LoansScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addLoan,
         backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: const Icon(Icons.add_rounded),
         label: Text(appText(context, 'New Loan', 'نیا قرض')),
       ),
@@ -1433,16 +1433,16 @@ class _LoansScreenState extends State<LoansScreen> {
                     margin: const EdgeInsets.only(bottom: 2),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF123F35), Color(0xFF176B52), Color(0xFF218565)],
+                        colors: [Theme.of(context).colorScheme.primary, Color.lerp(Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.surface, .20)!, Theme.of(context).colorScheme.primaryContainer],
                       ),
                       borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0xFF2B8B6D).withValues(alpha: 0.35)),
+                      border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.35)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF123F35).withValues(alpha: 0.16),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.16),
                           blurRadius: 16,
                           offset: const Offset(0, 7),
                         ),
@@ -1457,11 +1457,11 @@ class _LoansScreenState extends State<LoansScreen> {
                               width: 42,
                               height: 42,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.14),
+                                color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Icon(Icons.account_balance_wallet_rounded,
-                                color: Colors.white, size: 22),
+                              child: Icon(Icons.account_balance_wallet_rounded,
+                                color: Theme.of(context).colorScheme.onPrimary, size: 22),
                             ),
                             const SizedBox(width: 11),
                             Expanded(
@@ -1470,8 +1470,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                 children: [
                                   Text(
                                     appText(context, 'Total Outstanding', 'Total Outstanding'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onPrimary,
                                       fontSize: 17,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -1480,7 +1480,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   Text(
                                     'Across all currencies',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.72),
+                                      color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.72),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -1489,7 +1489,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               ),
                             ),
                             Icon(Icons.trending_up_rounded,
-                              color: Colors.white.withValues(alpha: 0.8), size: 22),
+                              color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8), size: 22),
                           ],
                         ),
                         const SizedBox(height: 14),
@@ -1498,12 +1498,12 @@ class _LoansScreenState extends State<LoansScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.09),
+                              color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.09),
                               borderRadius: BorderRadius.circular(13),
                             ),
                             child: Text(
                               appText(context, 'No outstanding loans.', 'No outstanding loans.'),
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.82), fontSize: 13),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.82), fontSize: 13),
                             ),
                           )
                         else
@@ -1513,20 +1513,20 @@ class _LoansScreenState extends State<LoansScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.10),
+                                  color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                  border: Border.all(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.08)),
                                 ),
                                 child: Row(
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.14),
+                                        color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(entry.key,
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
                                     ),
                                     const Spacer(),
                                     Flexible(
@@ -1536,7 +1536,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.right,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: Theme.of(context).colorScheme.onPrimary,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
                                         ),
@@ -1551,7 +1551,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         Container(
                           padding: const EdgeInsets.only(top: 12),
                           decoration: BoxDecoration(
-                            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.22))),
+                            border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.22))),
                           ),
                           child: Row(
                             children: [
@@ -1563,7 +1563,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                     Flexible(
                                       child: Text('Total Loans  ${_loans.length}',
                                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
                                     ),
                                   ],
                                 ),
@@ -1578,7 +1578,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                     Flexible(
                                       child: Text('Overdue  $overdueCount',
                                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
                                     ),
                                   ],
                                 ),
@@ -1646,7 +1646,7 @@ class _LoansScreenState extends State<LoansScreen> {
                       return Card(
                         elevation: 2,
                         margin: const EdgeInsets.only(bottom: 12),
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         shadowColor: const Color(0xFF173D2E).withValues(alpha: 0.10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(22),
@@ -2055,11 +2055,11 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(width: 38, height: 38,
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.groups_2_rounded, color: Colors.white, size: 21)),
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .16), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.groups_2_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 21)),
           const SizedBox(width: 10),
-          const Expanded(child: Text('Parties Overview', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800))),
-          Text('${activeParties.length} Active • $archivedCount Archived', style: TextStyle(color: Colors.white.withValues(alpha: .9), fontSize: 11, fontWeight: FontWeight.w700)),
+          const Expanded(child: Text('Parties Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 15, fontWeight: FontWeight.w800))),
+          Text('${activeParties.length} Active • $archivedCount Archived', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .9), fontSize: 11, fontWeight: FontWeight.w700)),
         ]),
         const SizedBox(height: 13),
         Row(children: [
@@ -2081,14 +2081,14 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
 
   Widget _overviewCount(String label, int value, IconData icon) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
-    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(12)),
+    decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .13), borderRadius: BorderRadius.circular(12)),
     child: Row(children: [
-      Icon(icon, color: Colors.white, size: 15),
+      Icon(icon, color: Theme.of(context).colorScheme.onPrimary, size: 15),
       const SizedBox(width: 5),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('$value', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+        Text('$value', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 14, fontWeight: FontWeight.w900)),
         Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: Colors.white.withValues(alpha: .85), fontSize: 9, fontWeight: FontWeight.w600)),
+          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .85), fontSize: 9, fontWeight: FontWeight.w600)),
       ])),
     ]),
   );
@@ -2151,7 +2151,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
 
     final saved = await showModalBottomSheet<bool>(
       context: context, isScrollControlled: true, useSafeArea: true,
-      showDragHandle: false, backgroundColor: Colors.white,
+      showDragHandle: false, backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           final keyboard = MediaQuery.viewInsetsOf(context).bottom;
@@ -2490,7 +2490,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onPrimary,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                                   boxShadow: [
@@ -2632,7 +2632,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
               child: Container(
                 padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14),
+                decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary, borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFFE3ECE6))),
                 child: Row(children: [
                   Expanded(child: _partyTabButton('Active', _parties.where((p) => (p['is_archived'] as num?)?.toInt() != 1).length, !_showArchived,
@@ -2683,7 +2683,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                               final creditLimit = (party['credit_limit'] as num?)?.toDouble() ?? 0;
                               return Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onPrimary,
                                   borderRadius: BorderRadius.circular(19),
                                   border: Border.all(color: const Color(0xFFE3ECE6)),
                                   boxShadow: [

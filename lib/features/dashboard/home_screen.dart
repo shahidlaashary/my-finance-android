@@ -109,6 +109,8 @@ class _HomePageState extends State<HomePage> {
       }
 
       final balance = await FinanceDB.instance.getTotalBalanceInBaseCurrency();
+      final includedAssetValues = await AssetsService().getConsolidatedIncludedCurrentValueByCurrency();
+      final includedAssetsInBaseCurrency = await _convertValuesToPKR(includedAssetValues, baseRate);
       final walletCurrencyRows = await db.rawQuery('''
         SELECT UPPER(currency) AS currency, COALESCE(SUM(balance), 0) AS total
         FROM wallets
@@ -154,7 +156,7 @@ class _HomePageState extends State<HomePage> {
         hideBalances = hide;
         numberFormat = format;
         baseCurrency = selectedBaseCurrency;
-        totalBalance = balance;
+        totalBalance = balance + includedAssetsInBaseCurrency;
         baseCurrencyWalletTotal = baseCurrencyBalance;
         otherCurrencyTotals = foreignBalances;
         monthlyIncome = income;

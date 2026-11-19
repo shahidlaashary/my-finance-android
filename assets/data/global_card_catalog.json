@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogId": "my-finance-global-card-catalog",
-  "updatedAt": "2026-11-19T21:16:22+00:00",
+  "updatedAt": "2026-11-19T21:16:47+00:00",
   "policy": {
     "officialCardVerified": "Exact card artwork/product page is confirmed on an issuer-controlled official domain.",
     "bankBrandingVerified": "Issuer identity and brand palette are confirmed, but exact card artwork is not.",

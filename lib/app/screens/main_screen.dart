@@ -133,7 +133,7 @@ class _MainScreenState extends State<MainScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.add_rounded,
                           color: Theme.of(context).colorScheme.onPrimary,
                           size: 29,

@@ -42,8 +42,9 @@ class _CategoriesPageState extends State<CategoriesPage> {
     Icons.more_horiz_rounded,
   ];
 
-  Color get categoryColor =>
-      selectedType == 'Income' ? AppColors.income : const Color(0xFFD58B36);
+  Color get categoryColor => selectedType == 'Income'
+      ? Theme.of(context).colorScheme.secondary
+      : Theme.of(context).colorScheme.tertiary;
 
   @override
   void initState() {
@@ -147,18 +148,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           decoration: BoxDecoration(
                             color: selected
                                 ? categoryColor.withValues(alpha: 0.16)
-                                : AppColors.background,
+                                : Theme.of(context).scaffoldBackgroundColor,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: selected
                                   ? categoryColor
-                                  : const Color(0xFFE5EBE7),
+                                  : Theme.of(context).colorScheme.outlineVariant,
                             ),
                           ),
                           child: Icon(
                             icon,
                             size: 21,
-                            color: selected ? categoryColor : AppColors.muted,
+                            color: selected ? categoryColor : Theme.of(context).hintColor,
                           ),
                         ),
                       );
@@ -182,7 +183,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   });
                 },
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
                 child: Text(editing ? 'Save' : 'Add'),
               ),
@@ -231,7 +232,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             child: Text(appText(context, "Delete", "Delete")),
           ),
         ],
@@ -254,9 +255,9 @@ class _CategoriesPageState extends State<CategoriesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: Text(
           appText(context, 'Categories', 'زمرے'),
@@ -278,7 +279,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -296,7 +297,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     ? Center(
                         child: Text(
                           appText(context, 'No categories yet. Tap + to add one.', 'ابھی کوئی زمرہ نہیں۔ شامل کرنے کے لیے + دبائیں۔'),
-                          style: TextStyle(color: AppColors.muted),
+                          style: TextStyle(color: Theme.of(context).hintColor),
                         ),
                       )
                     : ReorderableListView.builder(
@@ -311,10 +312,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
                             key: ValueKey(
                               '${selectedType}_${category['name']}_$index',
                             ),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
                               border: Border(
-                                bottom: BorderSide(color: Color(0xFFE9EEEB)),
+                                bottom: BorderSide(color: Theme.of(context).dividerColor),
                               ),
                             ),
                             child: SizedBox(
@@ -327,7 +328,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                       width: 28,
                                       child: Icon(
                                         Icons.drag_indicator_rounded,
-                                        color: Color(0xFF9AA49F),
+                                        color: Theme.of(context).hintColor,
                                         size: 22,
                                       ),
                                     ),
@@ -351,28 +352,28 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                       category['name'] as String,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.text,
+                                        color: Theme.of(context).colorScheme.onSurface,
                                       ),
                                     ),
                                   ),
                                   IconButton(
                                     tooltip: 'Edit',
                                     onPressed: () => showCategoryDialog(index: index),
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.edit_outlined,
-                                      color: AppColors.muted,
+                                      color: Theme.of(context).hintColor,
                                       size: 23,
                                     ),
                                   ),
                                   IconButton(
                                     tooltip: 'Delete',
                                     onPressed: () => deleteCategory(index),
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.delete_outline_rounded,
-                                      color: AppColors.muted,
+                                      color: Theme.of(context).hintColor,
                                       size: 23,
                                     ),
                                   ),
@@ -391,8 +392,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
   Widget _categoryTab(String type, IconData icon) {
     final selected = selectedType == type;
     final color = type == 'Income'
-        ? AppColors.income
-        : const Color(0xFFD58B36);
+        ? Theme.of(context).colorScheme.secondary
+        : Theme.of(context).colorScheme.tertiary;
     return InkWell(
       borderRadius: BorderRadius.circular(13),
       onTap: () => changeType(type),
@@ -406,14 +407,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: selected ? Colors.white : AppColors.text),
+            Icon(icon, size: 20, color: selected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface),
             SizedBox(width: 8),
             Text(
               type,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : AppColors.text,
+                color: selected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],

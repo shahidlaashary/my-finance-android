@@ -342,9 +342,7 @@ class _WalletsPageState extends State<WalletsPage> {
           }
         }
       } finally { client.close(force: true); }
-    } catch (_) {
-      // Offline or remote host unavailable: use the last known catalog below.
-    }
+    } catch (_) { }
     if (raw == null) {
       try { raw = (await SharedPreferences.getInstance()).getString(cacheKey); } catch (_) {}
     }
@@ -379,9 +377,7 @@ class _WalletsPageState extends State<WalletsPage> {
       }
       if (!mounted || loaded.isEmpty) return;
       setState(() { _globalVerifiedCardThemes..clear()..addAll(loaded); });
-    } catch (_) {
-      // Keep existing curated local themes if the downloaded catalog is malformed.
-    }
+    } catch (_) { }
   }
 
   // Bank-specific ATM-card themes. Names and aliases cover SBP-regulated

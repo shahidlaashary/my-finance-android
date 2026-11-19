@@ -128,7 +128,7 @@ class _RecurringTransactionsScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : null,
+        backgroundColor: isError ? Theme.of(context).colorScheme.error : null,
       ),
     );
   }
@@ -188,7 +188,7 @@ class _RecurringTransactionsScreenState
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(appText(context, "Delete", "Delete")),
@@ -251,7 +251,7 @@ class _RecurringTransactionsScreenState
             Icon(
               Icons.repeat,
               size: 65,
-              color: Colors.grey.shade400,
+              color: Theme.of(context).hintColor,
             ),
             SizedBox(height: 15),
             Text(appText(context, "No recurring transactions yet", "No recurring transactions yet"),
@@ -275,10 +275,10 @@ class _RecurringTransactionsScreenState
     final isTransfer = item.isTransfer;
 
     final color = isIncome
-        ? Colors.green
+        ? Theme.of(context).colorScheme.secondary
         : isTransfer
-            ? Colors.blue
-            : Colors.red;
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.error;
 
     final icon = isIncome
         ? Icons.arrow_downward
@@ -395,16 +395,16 @@ class _RecurringTransactionsScreenState
                   ),
                   decoration: BoxDecoration(
                     color: item.isActive
-                        ? Colors.green.withOpacity(0.12)
-                        : Colors.grey.withOpacity(0.15),
+                        ? Theme.of(context).colorScheme.secondary.withOpacity(0.12)
+                        : Theme.of(context).hintColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     item.isActive ? 'Active' : 'Paused',
                     style: TextStyle(
                       color: item.isActive
-                          ? Colors.green
-                          : Colors.grey,
+                          ? Theme.of(context).colorScheme.secondary
+                          : Theme.of(context).hintColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -430,7 +430,7 @@ class _RecurringTransactionsScreenState
                   onPressed: () => _deleteItem(item),
                   icon: const Icon(
                     Icons.delete_outline,
-                    color: Colors.red,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                 ),
               ],
@@ -450,11 +450,11 @@ class _RecurringTransactionsScreenState
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(icon, size: 17, color: Colors.grey),
+          Icon(icon, size: 17, color: Theme.of(context).hintColor),
           SizedBox(width: 9),
           Text(
             '$label: ',
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(color: Theme.of(context).hintColor),
           ),
           Expanded(
             child: Text(
@@ -520,7 +520,7 @@ class _RecurringTransactionsScreenState
                                 const Icon(
                                   Icons.repeat,
                                   size: 32,
-                                  color: Colors.blue,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                                 SizedBox(width: 14),
                                 Expanded(
@@ -547,7 +547,7 @@ class _RecurringTransactionsScreenState
                                       style: const TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.green,
+                                        color: Theme.of(context).colorScheme.secondary,
                                       ),
                                     ),
                                     Text(appText(context, "Active", "Active"),
@@ -848,9 +848,9 @@ class _RecurringTransactionDialogState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAF9),
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: const Color(0xFFE2E9E5)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,

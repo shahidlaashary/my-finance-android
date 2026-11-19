@@ -174,6 +174,13 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
     messageController.dispose();
   }
 
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Widget _sectionTitle(String title) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
         child: Text(title,

@@ -111,8 +111,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
     int? walletId = goal?.walletId;
     InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13), isDense: true);
 
     await showModalBottomSheet(context: context, isScrollControlled: true, useSafeArea: true,
@@ -124,14 +124,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
         return AnimatedPadding(duration: const Duration(milliseconds: 220), curve: Curves.easeOut,
           padding: EdgeInsets.only(bottom: keyboardHeight),
           child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: maxHeight),
-            child: Container(decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+            child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
               padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
               child: Form(key: formKey, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+                  Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
                   SizedBox(height: 12),
-                  Row(children: [Expanded(child: Text(goal == null ? 'New Goal' : 'Edit Goal', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
-                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
+                  Row(children: [Expanded(child: Text(goal == null ? 'New Goal' : 'Edit Goal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
+                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor)]),
                   SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Goal Name', Icons.flag_outlined),
                     validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter goal name', 'ہدف کا نام درج کریں') : null),
@@ -193,7 +193,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   SizedBox(height: 16),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
+                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
                         if (startDate.isAfter(targetDate)) {
@@ -335,7 +335,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
               child: Text(appText(context, "Delete", "Delete")),
             ),
@@ -370,7 +370,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
               title,
               style: const TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: Theme.of(context).hintColor,
               ),
             ),
             SizedBox(height: 5),
@@ -436,7 +436,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       'Total Saved ($currency)',
                       saved,
                       Icons.savings,
-                      Colors.green,
+                      Theme.of(context).colorScheme.secondary,
                     ),
                     _summaryCard(
                       'Total Target ($currency)',
@@ -484,10 +484,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Row(
               children: [
                 const CircleAvatar(
-                  backgroundColor: Color(0xFFE4F3EC),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                   child: Icon(
                     Icons.savings,
-                    color: Color(0xFF147D59),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 SizedBox(width: 12),
@@ -505,7 +505,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       Text(
                         '${DateFormat('dd MMM yyyy').format(goal.startDate ?? goal.createdAt ?? targetDate)}  →  ${DateFormat('dd MMM yyyy').format(targetDate)}',
                         style: const TextStyle(
-                          color: Colors.grey,
+                          color: Theme.of(context).hintColor,
                           fontSize: 12,
                         ),
                       ),
@@ -537,7 +537,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Text(
               'Wallet: $walletLabel',
               style: const TextStyle(
-                color: Colors.grey,
+                color: Theme.of(context).hintColor,
                 fontSize: 12,
               ),
             ),
@@ -558,8 +558,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 10,
-                backgroundColor: Colors.grey.shade200,
-                color: completed ? Colors.green : const Color(0xFF147D59),
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                color: completed ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.primary,
               ),
             ),
             SizedBox(height: 8),
@@ -577,14 +577,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   : 'Remaining: ${_money(remaining)} $currency',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: completed ? Colors.green : Colors.blueGrey,
+                color: completed ? Theme.of(context).colorScheme.secondary : Colors.blueGrey,
               ),
             ),
             if (goal.notes.isNotEmpty) ...[
               SizedBox(height: 8),
               Text(
                 goal.notes,
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(color: Theme.of(context).hintColor),
               ),
             ],
             SizedBox(height: 12),
@@ -619,20 +619,20 @@ class _GoalsScreenState extends State<GoalsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: const Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26)))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showGoalDialog(),
-        backgroundColor: const Color(0xFF147D59),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: const Icon(Icons.add),
         label: Text(appText(context, 'New Goal', 'نیا ہدف')),
       ),
@@ -652,11 +652,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           Icon(
                             Icons.savings_outlined,
                             size: 55,
-                            color: const Color(0xFF147D59),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           SizedBox(height: 12),
                           Text(appText(context, "No savings goals yet.", "No savings goals yet."),
-                            style: TextStyle(color: Color(0xFF7B8781)),
+                            style: TextStyle(color: Theme.of(context).hintColor),
                           ),
                         ],
                       ),

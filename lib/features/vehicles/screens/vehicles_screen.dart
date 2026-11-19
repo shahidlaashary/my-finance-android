@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
@@ -45,12 +46,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     super.initState();
     _tabs = TabController(length: 6, vsync: this)..addListener(_tabChanged);
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _load();
   }
 
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     _tabs.removeListener(_tabChanged);
     _tabs.dispose();
     super.dispose();
@@ -59,6 +62,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   void _tabChanged() {
     if (mounted) setState(() {});
   }
+
+  void _onAppDataChanged() { if (mounted) _load(); }
 
   void _onPreferencesChanged() async {
     final hidden = await GeneralPreferences.instance.hideBalances;

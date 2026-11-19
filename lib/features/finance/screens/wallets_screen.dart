@@ -1956,11 +1956,17 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
   void initState() {
     super.initState();
     _tabs = TabController(length: 2, vsync: this);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _load();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) _load();
   }
 
   @override
   void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     _tabs.dispose();
     super.dispose();
   }

@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/features/finance/services/reports_service.dart';
@@ -84,7 +85,12 @@ class _StatsScreenState extends State<StatsScreen> {
   void initState() {
     super.initState();
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadData();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) _loadData();
   }
 
   void _onPreferencesChanged() async {
@@ -97,6 +103,7 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     super.dispose();
   }
 

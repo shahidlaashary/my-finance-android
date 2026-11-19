@@ -5,6 +5,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 
@@ -30,6 +31,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
   @override
   void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     _convertAmount.dispose();
     super.dispose();
   }
@@ -46,7 +48,12 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadData(autoUpdateIfStale: true);
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) _loadData();
   }
 
   Future<void> _loadData({bool autoUpdateIfStale = false}) async {

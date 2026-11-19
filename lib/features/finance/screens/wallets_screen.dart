@@ -950,23 +950,23 @@ class _WalletsPageState extends State<WalletsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.text,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
         title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(
           appText(context, 'My Wallets', 'میرے والٹس'),
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
         )),
         actions: [...buildMainSectionAppBarActions(context)],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => openWalletForm(),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: const Icon(Icons.add),
         label: Text(appText(context, 'Add Wallet', 'والٹ شامل کریں')),
       ),
@@ -980,7 +980,7 @@ class _WalletsPageState extends State<WalletsPage> {
                     children: [
                       Expanded(child: Text(
                         appText(context, 'My Wallets', 'میرے والٹس'),
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                       )),
                       SegmentedButton<bool>(
                         showSelectedIcon: false,
@@ -1031,11 +1031,11 @@ class _WalletsPageState extends State<WalletsPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.account_balance_wallet_outlined,
-                                  size: 58, color: AppColors.primary),
+                                  size: 58, color: Theme.of(context).colorScheme.primary),
                               SizedBox(height: 12),
                               Text(appText(context, 'No wallets added yet',
                                   'ابھی کوئی والٹ شامل نہیں کیا گیا'),
-                                  style: TextStyle(color: AppColors.muted)),
+                                  style: TextStyle(color: Theme.of(context).hintColor)),
                             ],
                           ),
                         )
@@ -2053,7 +2053,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       visualDensity: const VisualDensity(horizontal: -2, vertical: -3),
       minVerticalPadding: 2,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-      leading: Icon(icon,color:AppColors.primary,size:21),
+      leading: Icon(icon,color:Theme.of(context).colorScheme.primary,size:21),
       title: Text(w['name']?.toString() ?? 'Wallet',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w700)),
       subtitle: Text(_money(w),style: const TextStyle(fontSize:11)),
       trailing: Row(mainAxisSize:MainAxisSize.min,children:[
@@ -2067,7 +2067,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
           tooltip: 'Delete Wallet',
           visualDensity: VisualDensity.compact,
           onPressed: () => _delete(w),
-          icon: const Icon(Icons.delete_outline, color: AppColors.expense),
+          icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
         ),
         IconButton(
           tooltip: hidden ? 'Unhide Wallet' : 'Hide Wallet',
@@ -2097,7 +2097,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       itemBuilder: (context,index) {
         final w=_active[index];
         return Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
-          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.reorder_rounded,color:AppColors.muted))),
+          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.reorder_rounded,color:Theme.of(context).hintColor))),
           Expanded(child:_walletTile(w,hidden:false)),
         ]));
       },
@@ -2112,16 +2112,16 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor:AppColors.background,
+    backgroundColor:Theme.of(context).scaffoldBackgroundColor,
     appBar:AppBar(
       title:Text(appText(context,'Manage Wallets','والٹس کا انتظام')),
       backgroundColor:Colors.white,
-      foregroundColor:AppColors.text,
+      foregroundColor:Theme.of(context).colorScheme.onSurface,
       bottom:TabBar(
         controller:_tabs,
-        labelColor:AppColors.primary,
-        unselectedLabelColor:AppColors.muted,
-        indicatorColor:AppColors.primary,
+        labelColor:Theme.of(context).colorScheme.primary,
+        unselectedLabelColor:Theme.of(context).hintColor,
+        indicatorColor:Theme.of(context).colorScheme.primary,
         tabs:[
           Tab(text:'Active Wallets (${_active.length})'),
           Tab(text:'Hidden Wallets (${_hidden.length})'),

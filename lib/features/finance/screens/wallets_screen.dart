@@ -92,6 +92,24 @@ class _BankCardPatternPainter extends CustomPainter {
     final w = size.width, h = size.height;
     final path = Path();
     switch (design) {
+      case 'ubl':
+        // UBL's deep-blue face, white wordmark area and curved cyan sweep.
+        final cyan=Paint()..color=const Color(0xFF00A6E8).withValues(alpha:.95);
+        path..reset()..moveTo(0,h*.38)..cubicTo(w*.28,h*.56,w*.62,h*.48,w,h*.62)..lineTo(w,h*.78)..cubicTo(w*.62,h*.62,w*.28,h*.74,0,h*.55)..close();
+        canvas.drawPath(path,cyan);
+        canvas.drawLine(Offset(w*.08,h*.17),Offset(w*.48,h*.17),stroke);
+        break;
+      case 'mcb':
+        // MCB's Visa family: black city-silhouette premium face with gold/silver variants.
+        final skyline=Paint()..color=const Color(0xFFE3E6EA).withValues(alpha:.7);
+        final buildings=[(0.40,.48,.06,.30),(0.47,.40,.08,.38),(0.56,.51,.06,.27),(0.63,.35,.08,.43),(0.72,.45,.07,.33),(0.81,.39,.06,.39),(0.89,.50,.07,.28)];
+        for(final b in buildings) {
+          final rect=Rect.fromLTWH(w*b.$1,h*b.$2,w*b.$3,h*b.$4);
+          canvas.drawRect(rect,skyline);
+          for(var y=rect.top+5;y<rect.bottom-3;y+=8) canvas.drawLine(Offset(rect.left+3,y),Offset(rect.right-3,y),stroke);
+        }
+        canvas.drawRect(Rect.fromLTWH(w*.37,h*.81,w*.58,h*.012),skyline);
+        break;
       case 'hbl':
         // HBL's dark World/Gold card family: fine interlocking geometric lattice.
         for (var x = -h; x < w + h; x += 19) {
@@ -518,9 +536,9 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ALLIED', 'design': 'allied', 'colors': [const Color(0xFFD9DADD), const Color(0xFF7F858D)]},
       {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'design': 'hbl', 'colors': [const Color(0xFF090B10), const Color(0xFF34302A)]},
       {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'MEEZAN', 'design': 'meezan', 'colors': [const Color(0xFF11131B), const Color(0xFF302C28)]},
-      {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'design': 'jsbank', 'colors': [const Color(0xFF292C35), const Color(0xFF5C6069)]},
+      {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'design': 'ubl', 'colors': [const Color(0xFF06265B), const Color(0xFF07549A)]},
       {'keys': ['mcbislamicbank', 'mcbislamic'], 'brand': 'MCB ISLAMIC', 'mark': 'MCB', 'colors': [const Color(0xFF087B65), const Color(0xFF42B99B)]},
-      {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'design': 'sc', 'colors': [const Color(0xFF123F73), const Color(0xFF1C7896)]},
+      {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'design': 'mcb', 'colors': [const Color(0xFF111B2B), const Color(0xFF303D50)]},
       {'keys': ['bankalfalah', 'alfalah'], 'brand': 'BANK ALFALAH', 'mark': 'ALFALAH', 'design': 'alfalah', 'colors': [const Color(0xFF333438), const Color(0xFF85878A)]},
       {'keys': ['bankalhabib', 'alhabib', 'bahl'], 'brand': 'BANK AL HABIB', 'mark': 'BAH', 'colors': [const Color(0xFF7B202B), const Color(0xFFBD4D54)]},
       {'keys': ['askaribank', 'askari'], 'brand': 'ASKARI BANK', 'mark': 'ASKARI', 'design': 'askari', 'colors': [const Color(0xFF080F35), const Color(0xFF222A57)]},
@@ -535,7 +553,7 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['albarakabank', 'albaraka'], 'brand': 'AL BARAKA BANK', 'mark': 'AB', 'colors': [const Color(0xFF245B48), const Color(0xFF70A77A)]},
       {'keys': ['habibmetropolitan', 'habibmetro', 'hmb'], 'brand': 'HABIBMETRO', 'mark': 'HABIBMETRO', 'design': 'habibmetro', 'colors': [const Color(0xFF062E2A), const Color(0xFF155C4A)]},
       {'keys': ['jsbank', 'jsbl'], 'brand': 'JS BANK', 'mark': 'JS BANK', 'design': 'jsbank', 'colors': [const Color(0xFF24262C), const Color(0xFF5D6066)]},
-      {'keys': ['soneribank', 'soneri'], 'brand': 'SONERI BANK', 'mark': 'SONERI', 'design': 'soneri', 'colors': [const Color(0xFF24462D), const Color(0xFF64823C)]},
+      {'keys': ['soneribank', 'soneri'], 'brand': 'SONERI BANK', 'mark': 'SONERI', 'design': 'soneri', 'colors': [const Color(0xFF151A23), const Color(0xFF414C5D)]},
       {'keys': ['standardchartered', 'scpakistan'], 'brand': 'STANDARD CHARTERED', 'mark': 'SC', 'design': 'sc', 'colors': [const Color(0xFF006B68), const Color(0xFF42A69A)]},
       {'keys': ['sambabank', 'samba'], 'brand': 'SAMBA BANK', 'mark': 'SAM', 'colors': [const Color(0xFF174D86), const Color(0xFF4D91C9)]},
       {'keys': ['bankmakramah', 'makramah', 'summitbank'], 'brand': 'BANK MAKRAMAH', 'mark': 'BM', 'colors': [const Color(0xFF633B80), const Color(0xFFA77BC0)]},

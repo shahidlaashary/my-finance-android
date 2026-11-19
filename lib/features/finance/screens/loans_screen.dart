@@ -999,8 +999,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                   children: [Icon(Icons.edit_outlined, size: 18), SizedBox(width: 10), Text('Edit')],
                                 )),
                               if (!loan.isAssetLinked)
-                                const PopupMenuItem(value: 'delete', child: Row(
-                                  children: [Icon(Icons.delete_outline, size: 18, color: Colors.red), SizedBox(width: 10), Text('Delete')],
+                                PopupMenuItem(value: 'delete', child: Row(
+                                  children: [Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error), SizedBox(width: 10), Text('Delete')],
                                 )),
                             ],
                           ),
@@ -1319,7 +1319,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 value: 'delete',
                                                 child: Row(
                                                   children: [
-                                                    Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                                    Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
                                                     SizedBox(width: 9),
                                                     Text('Delete'),
                                                   ],
@@ -2201,7 +2201,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                   builder: (photoContext) => SafeArea(child: Wrap(children: [
                                     ListTile(leading: Icon(Icons.photo_library_outlined), title: Text('Choose from Gallery'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.gallery); }),
                                     ListTile(leading: Icon(Icons.camera_alt_outlined), title: Text('Take Photo'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.camera); }),
-                                    if (photoExists) ListTile(leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Remove Photo'), onTap: () { Navigator.pop(photoContext); setSheetState(() { pickedPhoto = null; profilePath = ''; }); }),
+                                    if (photoExists) ListTile(leading: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error), title: Text('Remove Photo'), onTap: () { Navigator.pop(photoContext); setSheetState(() { pickedPhoto = null; profilePath = ''; }); }),
                                   ])),
                                 ),
                               ),
@@ -2412,7 +2412,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
             child: Text('Delete'),
           ),
         ],
@@ -2752,7 +2752,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                     PopupMenuItem(value: 'restore', child: ListTile(dense: true, leading: Icon(Icons.unarchive_outlined, color: Theme.of(context).colorScheme.primary), title: Text('Restore to Active')))
                                                   else
                                                     const PopupMenuItem(value: 'archive', child: ListTile(dense: true, leading: Icon(Icons.archive_outlined), title: Text('Archive'))),
-                                                  const PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Delete'))),
+                                                  PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error), title: Text('Delete'))),
                                                 ],
                                               ),
                                             ],

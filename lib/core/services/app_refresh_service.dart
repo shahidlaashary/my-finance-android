@@ -13,7 +13,7 @@ class AppRefreshController {
   /// before screens start reloading their data.
   static void notifyChanged() {
     _pendingRefresh?.cancel();
-    _pendingRefresh = Timer(const Duration(milliseconds: 300), () {
+    _pendingRefresh = Timer(const Duration(milliseconds: 60), () {
       revision.value++;
       _pendingRefresh = null;
     });

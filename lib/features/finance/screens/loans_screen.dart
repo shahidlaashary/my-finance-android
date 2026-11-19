@@ -651,7 +651,7 @@ class _LoansScreenState extends State<LoansScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor,
+              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor,
                 fontWeight: FontWeight.w600)),
             const SizedBox(height: 3),
             Text(_displayLoanDate(value), maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1015,13 +1015,13 @@ class _LoansScreenState extends State<LoansScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 3),
                             child: Text(_partyPhoneForLoan(loan),
-                              style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+                              style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
                           ),
                         if (loan.isAssetLinked)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text('Asset: ${_assetReferenceLabel(loan)}',
-                              style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+                              style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
                           ),
                         const SizedBox(height: 3),
                         Text(_moneyWithLoanCurrency(loan.amount, loan),
@@ -2189,9 +2189,9 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                           Stack(alignment: Alignment.bottomRight, children: [
                             CircleAvatar(radius: 32, backgroundColor: const Color(0xFFEAF3EE),
                               backgroundImage: photoExists ? FileImage(File(photo)) : null,
-                              child: photoExists ? null : const Icon(Icons.person_outline_rounded, size: 32, color: Theme.of(context).colorScheme.primary)),
+                              child: photoExists ? null : Icon(Icons.person_outline_rounded, size: 32, color: Theme.of(context).colorScheme.primary)),
                             Container(
-                              decoration: const BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
                               child: IconButton(
                                 visualDensity: VisualDensity.compact,
                                 constraints: const BoxConstraints.tightFor(width: 28, height: 28),
@@ -2208,7 +2208,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                             ),
                           ]),
                           const SizedBox(height: 3),
-                          const Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                          Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                         ])),
                         section('Basic Information', Icons.person_outline_rounded),
                         field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
@@ -2532,14 +2532,14 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                             'Outstanding: ${loan.currency.toUpperCase()} ${_money(loan.remainingAmount)}',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 11.5, color: Theme.of(context).hintColor),
+                                            style: TextStyle(fontSize: 11.5, color: Theme.of(context).hintColor),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
                                             loan.lendingDate,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor),
+                                            style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor),
                                           ),
                                         ],
                                       ),
@@ -2611,7 +2611,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                 onChanged: (value) => setState(() => _search = value),
                 decoration: InputDecoration(
                   hintText: 'Search name, phone, email or city',
-                  prefixIcon: const Icon(Icons.search_rounded, color: Theme.of(context).colorScheme.primary),
+                  prefixIcon: Icon(Icons.search_rounded, color: Theme.of(context).colorScheme.primary),
                   suffixIcon: _search.isEmpty ? null : IconButton(
                     tooltip: 'Clear search',
                     onPressed: () => setState(() => _search = ''),
@@ -2714,7 +2714,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                   radius: 23,
                                                   backgroundColor: const Color(0xFFEAF5EF),
                                                   backgroundImage: hasPhoto ? FileImage(File(photo)) : null,
-                                                  child: hasPhoto ? null : const Icon(Icons.person_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
+                                                  child: hasPhoto ? null : Icon(Icons.person_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
                                                 ),
                                               ),
                                               const SizedBox(width: 11),
@@ -2733,7 +2733,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                       const SizedBox(width: 6),
                                                       Container(width: 3, height: 3, decoration: const BoxDecoration(color: Color(0xFFB4C0B8), shape: BoxShape.circle)),
                                                       const SizedBox(width: 6),
-                                                      Text(currency, style: const TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w800)),
+                                                      Text(currency, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w800)),
                                                     ]),
                                                   ],
                                                 ),
@@ -2749,7 +2749,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                 itemBuilder: (_) => [
                                                   const PopupMenuItem(value: 'edit', child: ListTile(dense: true, leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
                                                   if (_showArchived)
-                                                    const PopupMenuItem(value: 'restore', child: ListTile(dense: true, leading: Icon(Icons.unarchive_outlined, color: Theme.of(context).colorScheme.primary), title: Text('Restore to Active')))
+                                                    PopupMenuItem(value: 'restore', child: ListTile(dense: true, leading: Icon(Icons.unarchive_outlined, color: Theme.of(context).colorScheme.primary), title: Text('Restore to Active')))
                                                   else
                                                     const PopupMenuItem(value: 'archive', child: ListTile(dense: true, leading: Icon(Icons.archive_outlined), title: Text('Archive'))),
                                                   const PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Delete'))),

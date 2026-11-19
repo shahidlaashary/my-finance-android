@@ -1285,8 +1285,32 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             style: const TextStyle(fontSize: 9.5, color: Color(0xFF7A8981))),
                         ],
                       ),
-                      const SizedBox(width: 3),
-                      const Icon(Icons.chevron_right_rounded, size: 19, color: Color(0xFF87968E)),
+                      PopupMenuButton<String>(
+                        tooltip: 'Manage Asset',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 160),
+                        icon: const Icon(Icons.more_vert_rounded, size: 20, color: Color(0xFF87968E)),
+                        onSelected: (value) {
+                          if (value == 'edit' && !asset.isSold) {
+                            _showAssetDialog(asset: asset);
+                          } else if (value == 'valuation' && !asset.isSold) {
+                            _updateValuation(asset);
+                          } else if (value == 'sell' && !asset.isSold) {
+                            _sellAsset(asset);
+                          } else if (value == 'delete') {
+                            _deleteAsset(asset);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          if (!asset.isSold)
+                            const PopupMenuItem(value: 'edit', child: Text('Edit Asset')),
+                          if (!asset.isSold)
+                            const PopupMenuItem(value: 'valuation', child: Text('Update Valuation')),
+                          if (!asset.isSold)
+                            const PopupMenuItem(value: 'sell', child: Text('Sell Asset')),
+                          const PopupMenuItem(value: 'delete', child: Text('Delete Asset')),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 13),
@@ -1303,15 +1327,31 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _assetStatusChip(asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
-                        asset.isSold ? const Color(0xFFFFEEEE) : const Color(0xFFEAF5EF),
-                        asset.isSold ? const Color(0xFFC23D3D) : const Color(0xFF147D59)),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                  SizedBox(
+                    width: double.infinity,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _assetStatusChip(
+                              asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
+                              asset.isSold ? const Color(0xFFFFEEEE) : const Color(0xFFEAF5EF),
+                              asset.isSold ? const Color(0xFFC23D3D) : const Color(0xFF147D59),
+                            ),
+                            const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF147D59))),
+                                SizedBox(width: 2),
+                                Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF147D59)),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             if (payableOutstanding)
                               OutlinedButton(
@@ -1319,8 +1359,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFF1763A8),
                                   side: const BorderSide(color: Color(0xFFBBD5EA)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
-                                  minimumSize: const Size(0, 38),
+                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                  minimumSize: const Size(0, 30),
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1338,8 +1378,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFF168451),
                                   side: const BorderSide(color: Color(0xFFB9E2CB)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
-                                  minimumSize: const Size(0, 38),
+                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                  minimumSize: const Size(0, 30),
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1352,12 +1392,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text('View Entries', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF147D59))),
-                      const SizedBox(width: 2),
-                      const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF147D59)),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),

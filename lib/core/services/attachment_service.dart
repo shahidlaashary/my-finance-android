@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/models/attachment_model.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 
 /// My Finance ke tamam modules ke liye attachment owner types.
 class AttachmentOwnerTypes {
@@ -208,6 +209,7 @@ class AttachmentService {
         _tableName,
         attachment.toMap()..remove('id'),
       );
+      AppRefreshController.notifyChanged();
 
       return attachment.copyWith(id: id);
     } catch (error) {
@@ -302,6 +304,7 @@ class AttachmentService {
       where: 'id = ?',
       whereArgs: [id],
     );
+    AppRefreshController.notifyChanged();
 
     final file = File(attachment.filePath);
 

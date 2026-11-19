@@ -494,7 +494,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     final visibleRecords = _visibleRecords;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Global Search',
@@ -555,12 +555,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                   labelStyle: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: selected ? Colors.white : AppColors.text,
+                    color: selected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface,
                   ),
-                  selectedColor: AppColors.primary,
+                  selectedColor: Theme.of(context).colorScheme.primary,
                   backgroundColor: Theme.of(context).cardColor,
                   side: BorderSide(
-                    color: selected ? AppColors.primary : const Color(0xFFE5ECE8),
+                    color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant,
                   ),
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -579,14 +579,14 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.05,
-                    color: AppColors.muted,
+                    color: Theme.of(context).hintColor,
                   ),
                 ),
                 const Spacer(),
                 if (query.length >= 2 && !_searching)
                   Text(
                     '${visibleRecords.length} found',
-                    style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                    style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
                   ),
               ],
             ),
@@ -617,12 +617,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                                     width: 40,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: .09),
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: .09),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       record.icon,
-                                      color: AppColors.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                       size: 21,
                                     ),
                                   ),
@@ -644,7 +644,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                                   trailing: const Icon(
                                     Icons.arrow_forward_ios_rounded,
                                     size: 14,
-                                    color: AppColors.muted,
+                                    color: Theme.of(context).hintColor,
                                   ),
                                   onTap: () => _openRecord(record),
                                 ),
@@ -672,7 +672,7 @@ class _SearchHint extends StatelessWidget {
             Icon(
               Icons.manage_search_rounded,
               size: 48,
-              color: AppColors.muted.withValues(alpha: .65),
+              color: Theme.of(context).hintColor.withValues(alpha: .65),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -683,7 +683,7 @@ class _SearchHint extends StatelessWidget {
             const Text(
               'Type at least 2 characters to find transactions, wallets, categories and other records.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.muted, height: 1.45),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor, height: 1.45),
             ),
           ],
         ),
@@ -708,7 +708,7 @@ class _NoSearchResults extends StatelessWidget {
             Icon(
               Icons.search_off_rounded,
               size: 46,
-              color: AppColors.muted.withValues(alpha: .65),
+              color: Theme.of(context).hintColor.withValues(alpha: .65),
             ),
             const SizedBox(height: 10),
             Text(
@@ -719,7 +719,7 @@ class _NoSearchResults extends StatelessWidget {
             const Text(
               'Try another name, amount, number or detail.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
             ),
           ],
         ),
@@ -773,7 +773,7 @@ class _SearchRecordDetailScreen extends StatelessWidget {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           record.title,
@@ -797,10 +797,10 @@ class _SearchRecordDetailScreen extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: .10),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: .10),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(record.icon, color: AppColors.primary, size: 25),
+                    child: Icon(record.icon, color: Theme.of(context).colorScheme.primary, size: 25),
                   ),
                   const SizedBox(width: 13),
                   Expanded(
@@ -810,7 +810,7 @@ class _SearchRecordDetailScreen extends StatelessWidget {
                         Text(
                           record.type,
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                           ),
@@ -824,7 +824,7 @@ class _SearchRecordDetailScreen extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             record.subtitle,
-                            style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                            style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
                           ),
                         ],
                       ],
@@ -860,7 +860,7 @@ class _SearchRecordDetailScreen extends StatelessWidget {
                                   _label(details[index].key),
                                   style: const TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.muted,
+                                    color: Theme.of(context).hintColor,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

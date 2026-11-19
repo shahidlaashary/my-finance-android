@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -44,11 +45,13 @@ class _LoansScreenState extends State<LoansScreen> {
   void initState() {
     super.initState();
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadData();
   }
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
@@ -99,6 +102,10 @@ class _LoansScreenState extends State<LoansScreen> {
   String _moneyWithLoanCurrency(double amount, LoansModel loan) {
     return '${loan.currency.toUpperCase()} ${_money(amount)}';
   }
+  void _onAppDataChanged() {
+    if (mounted) _loadData();
+  }
+
   void _onPreferencesChanged() async {
     final hidden = await GeneralPreferences.instance.hideBalances;
     if (mounted && hidden != _hideBalances) {

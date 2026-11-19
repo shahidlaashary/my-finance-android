@@ -187,7 +187,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Create Party'),
+          title: Text('Create Party'),
           content: Form(
             key: formKey,
             child: SingleChildScrollView(
@@ -233,7 +233,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -241,7 +241,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   Navigator.pop(dialogContext, true);
                 }
               },
-              child: const Text('Save'),
+              child: Text('Save'),
             ),
           ],
         ),
@@ -385,7 +385,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-                            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
+                            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
                           ]),
                           SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
@@ -545,7 +545,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                         Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
                                         const SizedBox(height: 3),
-                                        Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                        Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                                       ])),
                                       Icon(Icons.edit_calendar, size: 18, color: Theme.of(context).colorScheme.primary),
                                     ]),
@@ -555,7 +555,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Row(children: [
-                                  Expanded(child: Text('Include in Consolidated Balance', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600), maxLines: 2)),
+                                  Expanded(child: Text('Include in Consolidated Balance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600), maxLines: 2)),
                                   Transform.scale(
                                     scale: 0.85,
                                     child: Switch(
@@ -578,7 +578,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               Row(children: [
                                 Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary, size: 19),
                                 const SizedBox(width: 7),
-                                const Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
+                                Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
                                 Text('${pendingFiles.length} selected', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w700)),
                               ]),
                               const SizedBox(height: 4),
@@ -594,7 +594,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 ...pendingFiles.asMap().entries.map((entry) => Row(children: [
                                   Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: Theme.of(context).colorScheme.primary),
                                   const SizedBox(width: 7),
-                                  Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11))),
+                                  Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11))),
                                   IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: Icon(Icons.close, size: 17, color: Theme.of(context).colorScheme.error)),
                                 ])),
                               ],
@@ -609,7 +609,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
                             SizedBox(width: 10),
                             Expanded(child: ElevatedButton.icon(
-                              icon: const Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
+                              icon: Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
                               style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                               onPressed: () async {
                                 if (!formKey.currentState!.validate()) return;
@@ -801,8 +801,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             _message('Buyer party currency must match ' + asset.currency + '.');
                           }
                         },
-                        icon: const Icon(Icons.person_add_alt_1, size: 18),
-                        label: const Text('Create Party'),
+                        icon: Icon(Icons.person_add_alt_1, size: 18),
+                        label: Text('Create Party'),
                       ),
                     )
                   else
@@ -825,7 +825,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           .format(saleDate),
                     ),
                     trailing:
-                        const Icon(Icons.calendar_month),
+                        Icon(Icons.calendar_month),
                     onTap: () async {
                       final selected = await showDatePicker(
                         context: context,
@@ -997,7 +997,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 17),
-      label: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+      label: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
         side: BorderSide(color: color.withValues(alpha: .35)),
@@ -1066,7 +1066,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(loan.loanType == 'given' ? 'Receive Payment' : 'Pay Back',
-                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
                 Text('Remaining: ${loan.currency} ${_money(loan.remainingAmount)}',
                   style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
@@ -1097,9 +1097,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Payment Date'),
+                  title: Text('Payment Date'),
                   subtitle: Text(DateFormat('dd MMM yyyy').format(paymentDate)),
-                  trailing: const Icon(Icons.calendar_month_rounded),
+                  trailing: Icon(Icons.calendar_month_rounded),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
@@ -1165,7 +1165,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       padding: const EdgeInsets.fromLTRB(2, 8, 2, 0),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w800,
           letterSpacing: .8,
@@ -1199,13 +1199,13 @@ class _AssetsScreenState extends State<AssetsScreen> {
           childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
           leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: Theme.of(context).colorScheme.primary, size: 21)),
           title: Row(children: [
-            Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
+            Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
             if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: Theme.of(context).colorScheme.errorContainer, borderRadius: BorderRadius.circular(7)), child: Text('SOLD', style: TextStyle(fontSize: 9, color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w800))),
           ]),
-          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? '${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor))),
+          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? '${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor))),
           trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
             Text('$currency ${_money(value)}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
-            const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
+            Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
           ]),
           children: [
             const Divider(height: 8),
@@ -1311,7 +1311,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             const SizedBox(height: 3),
                             Text('${asset.category}  •  ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan  •  ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                               maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 color: Theme.of(context).hintColor,
                                 fontWeight: FontWeight.w500,
@@ -1378,7 +1378,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               asset.isSold ? Theme.of(context).colorScheme.errorContainer : Theme.of(context).colorScheme.primaryContainer,
                               asset.isSold ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
                             ),
-                            const Row(
+                            Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary)),
@@ -1508,7 +1508,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Text(
             currency,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
@@ -1608,7 +1608,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         onPressed: _showAssetDialog,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: const Icon(Icons.add_rounded),
+        icon: Icon(Icons.add_rounded),
         label: Text(appText(context, 'Add Asset', 'اثاثہ شامل کریں')),
       ),
       body: _loading
@@ -1673,7 +1673,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             SizedBox(height: 2),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 2),
-                              child: Text(item['name'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700)),
+                              child: Text(item['name'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700)),
                             ),
                           ]),
                         ),
@@ -1691,7 +1691,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 _selectedCategory == null ? 'My Assets' : '${_selectedCategory!} Assets',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                               ),
                             ),
                             const SizedBox(width: 5),
@@ -1710,12 +1710,12 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
-                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                          textStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.people_alt_outlined, size: 16),
+                            Icon(Icons.people_alt_outlined, size: 16),
                             const SizedBox(width: 3),
                             Text('Manage Party (${_parties.length})'),
                           ],
@@ -1732,7 +1732,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       children: [
                         Text(
                           appText(context, "Show Sold Assets", "Show Sold Assets"),
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                         Transform.scale(
                           scale: 0.82,
@@ -1754,7 +1754,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       child: Column(children: [
                         Icon(Icons.inventory_2_outlined, size: 48, color: Theme.of(context).hintColor),
                         SizedBox(height: 10),
-                        Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: TextStyle(fontWeight: FontWeight.w700)),
                         SizedBox(height: 4),
                         Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
                       ]),
@@ -1878,7 +1878,7 @@ class AssetDetailsScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
-        title: const Text('Asset Details', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        title: Text('Asset Details', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -1900,7 +1900,7 @@ class AssetDetailsScreen extends StatelessWidget {
                 Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Container(width: 42, height: 42,
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .14), borderRadius: BorderRadius.circular(13)),
-                    child: const Icon(Icons.inventory_2_outlined, color: Theme.of(context).colorScheme.surface, size: 23)),
+                    child: Icon(Icons.inventory_2_outlined, color: Theme.of(context).colorScheme.surface, size: 23)),
                   const SizedBox(width: 11),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1949,7 +1949,7 @@ class AssetDetailsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(16)),
-              child: const Center(child: Text('No entries found for this asset.')),
+              child: Center(child: Text('No entries found for this asset.')),
             )
           else
             ...events.map((event) {

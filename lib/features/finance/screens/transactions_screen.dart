@@ -98,19 +98,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         }
       }
       for (final loan in loanModels) {
-        // Asset-linked loans are represented by the asset purchase/sale row.
-        if (loan.sourceType == 'asset_purchase' || loan.sourceType == 'asset_sale') continue;
-        otherRows.add({
-          'id': 'loan_${loan.id}',
-          'source_record': true,
-          'type': 'loan',
-          'amount': loan.amount,
-          'wallet_id': loan.walletId,
-          'category': loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken',
-          'note': loan.notes.trim().isNotEmpty ? loan.notes : (loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'),
-          'date': loan.lendingDate,
-          'wallet_currency': loan.currency,
-        });
+        // Asset-linked loans are represented by their asset purchase/sale row,
+        // but their repayments must still appear in the Others transaction filter.
+        final isAssetLinked =
+            loan.sourceType == 'asset_purchase' || loan.sourceType == 'asset_sale';
+        if (!isAssetLinked) {
+          otherRows.add({
+            'id': 'loan_${loan.id}',
+            'source_record': true,
+            'type': 'loan',
+            'amount': loan.amount,
+            'wallet_id': loan.walletId,
+            'category': loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken',
+            'note': loan.notes.trim().isNotEmpty ? loan.notes : (loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'),
+            'date': loan.lendingDate,
+            'wallet_currency': loan.currency,
+          });
+        }
         if (loan.id != null) {
           final repayments = await LoansService.getRepayments(loan.id!);
           for (final repayment in repayments) {

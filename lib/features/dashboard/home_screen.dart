@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
   int overviewCompletedGoalCount = 0;
   int overviewRecurringCount = 0;
   int overviewActiveRecurringCount = 0;
-  bool loading = true;
+  bool loading = false;
   bool hideBalances = false;
   String numberFormat = '1,234.56';
 

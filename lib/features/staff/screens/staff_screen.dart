@@ -58,7 +58,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
           child: Container(height: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * .88,
             decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
             child: Column(children: [
-              const SizedBox(height: 12), Container(width: 42, height: 4, decoration: BoxDecoration(color: AppColors.muted.withOpacity(.4), borderRadius: BorderRadius.circular(8))),
+              const SizedBox(height: 12), Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).hintColor.withOpacity(.4), borderRadius: BorderRadius.circular(8))),
               Padding(padding: const EdgeInsets.all(18), child: Row(children: [Expanded(child: Text(member == null ? tr('Add Staff') : tr('Edit Staff'), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: () => Navigator.pop(sheet), icon: const Icon(Icons.close))])),
               Expanded(child: Form(key: key, child: ListView(padding: const EdgeInsets.fromLTRB(18, 0, 18, 22), children: [
                 _field(name, 'Staff Name', Icons.person_outline, requiredField: true),
@@ -97,7 +97,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
         child: Container(height: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * .82, padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
           child: Form(key: key, child: ListView(children: [
-            Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: AppColors.muted.withOpacity(.4), borderRadius: BorderRadius.circular(8)))),
+            Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).hintColor.withOpacity(.4), borderRadius: BorderRadius.circular(8)))),
             const SizedBox(height: 18), Text(tr('Pay Salary'), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
             const SizedBox(height: 18), DropdownButtonFormField<int>(value: staffId, decoration: InputDecoration(labelText: tr('Staff Member'), border: const OutlineInputBorder()), items: _staff.map((s) => DropdownMenuItem(value: s['id'] as int, child: Text(s['name'].toString()))).toList(), onChanged: (v) { if (v != null) refresh(() { staffId = v; amount.text = _staff.firstWhere((s) => s['id'] == v)['salary'].toString(); }); }),
             const SizedBox(height: 12), TextFormField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) { final parsed = double.tryParse((v ?? '').trim()); return parsed == null || !parsed.isFinite || parsed <= 0 ? tr('Enter a valid amount') : null; }, decoration: InputDecoration(labelText: tr('Amount'), prefixIcon: const Icon(Icons.payments_outlined), border: const OutlineInputBorder())),
@@ -120,7 +120,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
         child: Container(height: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom) * .72, padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
           child: ListView(children: [
-            Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: AppColors.muted.withOpacity(.4), borderRadius: BorderRadius.circular(8)))),
+            Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).hintColor.withOpacity(.4), borderRadius: BorderRadius.circular(8)))),
             const SizedBox(height: 18), Text(tr('Mark Attendance'), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
             const SizedBox(height: 18), DropdownButtonFormField<int>(value: staffId, decoration: InputDecoration(labelText: tr('Staff Member'), border: const OutlineInputBorder()), items: _staff.map((s) => DropdownMenuItem(value: s['id'] as int, child: Text(s['name'].toString()))).toList(), onChanged: (v) { if (v != null) refresh(() => staffId = v); }),
             const SizedBox(height: 12), DropdownButtonFormField<String>(value: status, decoration: InputDecoration(labelText: tr('Status'), border: const OutlineInputBorder()), items: ['Present','Absent','Late','Leave','Half Day'].map((s) => DropdownMenuItem(value: s, child: Text(tr(s)))).toList(), onChanged: (v) { if (v != null) refresh(() => status = v); }),

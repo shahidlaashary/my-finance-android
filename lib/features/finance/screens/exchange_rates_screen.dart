@@ -222,7 +222,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(appText(context, 'Exchange Rates', 'زرِ مبادلہ کی شرحیں'),
             style: TextStyle(fontWeight: FontWeight.w800)),
@@ -269,7 +269,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           SizedBox(height: 6),
                           const Text(
                             'Rates open.er-api.com se milte hain. Screen khulne par 24 ghantay se puranay rates auto-refresh hotay hain.',
-                            style: TextStyle(fontSize: 11, color: AppColors.muted),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
                           ),
                         ],
                       ),
@@ -317,11 +317,11 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                 ? 'Rate unavailable. Update exchange rates first.'
                                 : _convertTo + ' ' + NumberFormat('#,##0.####').format(_convertedAmount),
                             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                              color: _convertedAmount == null ? AppColors.muted : AppColors.primary),
+                              color: _convertedAmount == null ? Theme.of(context).hintColor : Theme.of(context).colorScheme.primary),
                           ),
                           const SizedBox(height: 4),
                           const Text('Calculated from the latest saved PKR-based rates.',
-                            style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
                         ],
                       ),
                     ),
@@ -332,13 +332,13 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     Material(
                       color: _messageIsError
                           ? Colors.red.withValues(alpha: 0.08)
-                          : AppColors.primary.withValues(alpha: 0.08),
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Text(_message!,
                             style: TextStyle(
-                              color: _messageIsError ? Colors.red.shade700 : AppColors.primary,
+                              color: _messageIsError ? Colors.red.shade700 : Theme.of(context).colorScheme.primary,
                             )),
                       ),
                     ),
@@ -364,7 +364,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                             children: [
                               ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: AppColors.primary.withValues(alpha: 0.10),
+                                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                                   child: Text(currency,
                                       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
                                 ),

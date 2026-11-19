@@ -131,7 +131,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
                   SizedBox(height: 12),
                   Row(children: [Expanded(child: Text(goal == null ? 'New Goal' : 'Edit Goal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor)]),
+                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor)]),
                   SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Goal Name', Icons.flag_outlined),
                     validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter goal name', 'ہدف کا نام درج کریں') : null),
@@ -166,7 +166,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       child: InputDecorator(
                         decoration: decoration('Start Date', Icons.calendar_today_outlined),
                         child: Text(DateFormat('dd MMM yyyy').format(startDate),
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     )),
                     SizedBox(width: 10),
@@ -184,7 +184,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       child: InputDecorator(
                         decoration: decoration('Target Date', Icons.event_outlined),
                         child: Text(DateFormat('dd MMM yyyy').format(targetDate),
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     )),
                   ]),
@@ -192,7 +192,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
                   SizedBox(height: 16),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
-                    Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
+                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
@@ -368,7 +368,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             SizedBox(height: 9),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).hintColor,
               ),
@@ -418,7 +418,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Text(
                   currency,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Colors.blueGrey,
                   ),
@@ -483,7 +483,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                   child: Icon(
                     Icons.savings,
@@ -497,14 +497,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     children: [
                       Text(
                         goal.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       Text(
                         '${DateFormat('dd MMM yyyy').format(goal.startDate ?? goal.createdAt ?? targetDate)}  →  ${DateFormat('dd MMM yyyy').format(targetDate)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Theme.of(context).hintColor,
                           fontSize: 12,
                         ),
@@ -536,7 +536,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             SizedBox(height: 14),
             Text(
               'Wallet: $walletLabel',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Theme.of(context).hintColor,
                 fontSize: 12,
               ),
@@ -548,7 +548,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 Text(appText(context, 'Saved Amount', 'محفوظ شدہ رقم')),
                 Text(
                   '${_money(goal.savedAmount)} $currency',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -594,12 +594,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
               children: [
                 FilledButton.tonalIcon(
                   onPressed: () => _showContributionDialog(goal),
-                  icon: const Icon(Icons.add),
+                  icon: Icon(Icons.add),
                   label: Text(appText(context, 'Add Savings', 'بچت شامل کریں')),
                 ),
                 OutlinedButton.icon(
                   onPressed: () => _withdraw(goal),
-                  icon: const Icon(Icons.remove),
+                  icon: Icon(Icons.remove),
                   label: Text(appText(context, 'Withdraw', 'نکالیں')),
                 ),
               ],
@@ -633,7 +633,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         onPressed: () => _showGoalDialog(),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: const Icon(Icons.add),
+        icon: Icon(Icons.add),
         label: Text(appText(context, 'New Goal', 'نیا ہدف')),
       ),
       body: _loading

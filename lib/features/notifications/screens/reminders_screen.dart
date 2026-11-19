@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
 
@@ -18,7 +19,18 @@ class _RemindersScreenState extends State<RemindersScreen> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _load();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) _load();
+  }
+
+  @override
+  void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
+    super.dispose();
   }
 
   Future<void> _load() async {

@@ -420,7 +420,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   currency,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.blueGrey,
+                    color: Theme.of(context).hintColor,
                   ),
                 ),
               ),
@@ -442,7 +442,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       'Total Target ($currency)',
                       target,
                       Icons.flag,
-                      Colors.blue,
+                      Theme.of(context).colorScheme.primary,
                     ),
                   ],
                 ),
@@ -577,7 +577,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   : 'Remaining: ${_money(remaining)} $currency',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: completed ? Theme.of(context).colorScheme.secondary : Colors.blueGrey,
+                color: completed ? Theme.of(context).colorScheme.secondary : Theme.of(context).hintColor,
               ),
             ),
             if (goal.notes.isNotEmpty) ...[

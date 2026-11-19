@@ -1716,7 +1716,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         ),
                                       ),
                                       Transform.translate(
-                                        offset: const Offset(0, -5),
+                                        offset: const Offset(0, -9),
                                         child: Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
@@ -1764,7 +1764,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       ),
                                       const SizedBox(width: 7),
                                       Transform.translate(
-                                        offset: const Offset(0, -5),
+                                        offset: const Offset(0, -9),
                                         child: const Icon(
                                           Icons.chevron_right_rounded,
                                           size: 23,

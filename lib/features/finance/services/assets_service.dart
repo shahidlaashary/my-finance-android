@@ -25,6 +25,7 @@ class AssetsService {
         linked_loan_id INTEGER,
         notes TEXT NOT NULL DEFAULT '',
         is_sold INTEGER NOT NULL DEFAULT 0,
+        include_in_consolidated_balance INTEGER NOT NULL DEFAULT 0,
         sale_date TEXT,
         sale_price REAL,
         sale_wallet_id INTEGER,
@@ -49,6 +50,7 @@ class AssetsService {
     final existing = columns.map((row) => row['name']).toSet();
     final migrations = <String, String>{
       'payment_type': "ALTER TABLE assets ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'Wallet'",
+      'include_in_consolidated_balance': 'ALTER TABLE assets ADD COLUMN include_in_consolidated_balance INTEGER NOT NULL DEFAULT 0',
       'party_id': 'ALTER TABLE assets ADD COLUMN party_id INTEGER',
       'currency': "ALTER TABLE assets ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'",
       'linked_loan_id': 'ALTER TABLE assets ADD COLUMN linked_loan_id INTEGER',
@@ -402,6 +404,22 @@ class AssetsService {
     return {
       for (final row in rows)
         (row['currency'] ?? 'PKR').toString():
+            (row['total'] as num).toDouble(),
+    };
+  }
+  Future<Map<String, double>> getConsolidatedIncludedCurrentValueByCurrency() async {
+    final db = await _database;
+    await _ensureTables(db);
+    final rows = await db.rawQuery('''
+      SELECT currency AS currency,
+             COALESCE(SUM(current_value), 0) AS total
+      FROM assets
+      WHERE is_sold = 0 AND include_in_consolidated_balance = 1
+      GROUP BY currency
+    ''');
+    return {
+      for (final row in rows)
+        (row['currency'] ?? 'PKR').toString().toUpperCase():
             (row['total'] as num).toDouble(),
     };
   }

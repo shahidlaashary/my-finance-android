@@ -117,8 +117,8 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final days = DateTime(expiry.year, expiry.month, expiry.day)
         .difference(today).inDays;
-    if (days < 0) return Colors.red;
-    if (days <= document.reminderDays) return Colors.orange.shade800;
+    if (days < 0) return Theme.of(context).colorScheme.error;
+    if (days <= document.reminderDays) return Theme.of(context).colorScheme.tertiary;
     return Theme.of(context).colorScheme.primary;
   }
 
@@ -264,7 +264,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                     value == null ? 'Not set' : DateFormat('dd MMM yyyy').format(value),
                     style: TextStyle(
                       fontSize: 13,
-                      color: value == null ? Colors.grey : const Color(0xFF202B25),
+                      color: value == null ? Theme.of(context).hintColor : const Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -282,7 +282,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                 constraints: BoxConstraints(maxHeight: maxHeight),
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                   ),
                   padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
@@ -312,14 +312,14 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                                   document == null ? 'Add Document' : 'Edit Document',
                                   style: const TextStyle(
                                     fontSize: 20, fontWeight: FontWeight.w800,
-                                    color: Color(0xFF202B25),
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                               ),
                               IconButton(
                                 onPressed: () => Navigator.pop(sheetContext),
                                 icon: const Icon(Icons.close_rounded),
-                                color: Colors.grey,
+                                color: Theme.of(context).hintColor,
                               ),
                             ],
                           ),
@@ -432,7 +432,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                                   label: Text(document == null ? 'Save Document' : 'Update Document'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Colors.white,
+                                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                                     padding: const EdgeInsets.symmetric(vertical: 13),
                                   ),
                                   onPressed: () async {
@@ -526,7 +526,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             child: Text(appText(context, "Delete", "Delete")),
           ),
         ],
@@ -566,7 +566,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       child: Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -667,7 +667,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showDocumentForm(),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: const Icon(Icons.add_rounded),
         label: Text(appText(context, 'Add Document', 'دستاویز شامل کریں')),
       ),
@@ -676,7 +676,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         child: Container(
           height: 58,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             border: Border(top: BorderSide(color: const Color(0xFFE5EBE7))),
             boxShadow: [
               BoxShadow(
@@ -738,7 +738,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               children: [
                 _summaryCard('Documents', _documents.length, Icons.folder_copy_outlined, Theme.of(context).colorScheme.primary),
                 SizedBox(width: 10),
-                _summaryCard('Expiring Soon', _expiringCount, Icons.event_busy_outlined, Colors.orange),
+                _summaryCard('Expiring Soon', _expiringCount, Icons.event_busy_outlined, Theme.of(context).colorScheme.tertiary),
               ],
             ),
           ),
@@ -754,7 +754,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                   icon: const Icon(Icons.close_rounded),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
               ),
             ),
@@ -771,7 +771,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.folder_open_rounded, size: 54, color: Colors.grey.shade400),
+                              Icon(Icons.folder_open_rounded, size: 54, color: Theme.of(context).hintColor),
                               SizedBox(height: 12),
                               Text(appText(context, "No documents found", "No documents found"), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                               SizedBox(height: 5),

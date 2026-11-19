@@ -639,7 +639,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           ],
           child: Icon(
             document.isFavorite ? Icons.star_rounded : Icons.more_vert_rounded,
-            color: document.isFavorite ? Colors.amber.shade700 : Theme.of(context).hintColor,
+            color: document.isFavorite ? Theme.of(context).colorScheme.tertiary : Theme.of(context).hintColor,
           ),
         ),
         onTap: () => _openDetails(document),

@@ -2453,23 +2453,91 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                 child: loans.isEmpty
                     ? const Center(child: Text('No loan history for this party.'))
                     : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
                         itemCount: loans.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, __) => const SizedBox(height: 2),
                         itemBuilder: (_, index) {
                           final loan = loans[index];
-                          return ListTile(
-                            title: Text(
-                              '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.currency} ${loan.amount.toStringAsFixed(2)}',
+                          final isGiven = loan.loanType == 'given';
+                          final color = isGiven ? const Color(0xFF168451) : const Color(0xFFB66A35);
+                          final icon = isGiven ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded;
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () {
+                                Navigator.pop(sheetContext);
+                                Navigator.pop(context);
+                                widget.onLoanTap(loan);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFE9EFEB)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF183D2D).withValues(alpha: 0.035),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.11),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(icon, color: color, size: 21),
+                                    ),
+                                    const SizedBox(width: 9),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            isGiven ? 'Loan Given' : 'Loan Taken',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF25332C),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Outstanding: ${loan.currency.toUpperCase()} ${_money(loan.remainingAmount)}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF7B8781)),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            loan.lendingDate,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 10.5, color: Color(0xFF9AA49F)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${isGiven ? '+' : '-'} ${loan.currency.toUpperCase()} ${_money(loan.amount)}',
+                                      maxLines: 1,
+                                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: color),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            subtitle: Text(
-                              'Outstanding: ${loan.currency} ${_money(loan.remainingAmount)} • ${loan.lendingDate}',
-                            ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              Navigator.pop(context);
-                              widget.onLoanTap(loan);
-                            },
                           );
                         },
                       ),

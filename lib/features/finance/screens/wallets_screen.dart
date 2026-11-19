@@ -91,6 +91,7 @@ class _WalletsPageState extends State<WalletsPage> {
   String numberFormat = '1,234.56';
   Set<int> _hiddenWalletIds = {}; 
   List<int> _walletOrder = [];
+  bool _usePremiumCards = false;
 
   @override
   void initState() {
@@ -232,6 +233,137 @@ class _WalletsPageState extends State<WalletsPage> {
     }
   }
 
+  Widget _buildPremiumWalletCard({
+    required Map<String, dynamic> wallet,
+    required double balance,
+    required String currency,
+    required String walletType,
+    required bool excluded,
+  }) {
+    final type = walletType.toLowerCase();
+    final isDebit = type.contains('debit');
+    final isCredit = type.contains('credit');
+    final isBank = type == 'bank' || type.contains('bank');
+    final isCash = type == 'cash';
+    final isDigital = type.contains('digital');
+    final isInvestment = type.contains('investment');
+    final colors = isDebit
+        ? const [Color(0xFF073B66), Color(0xFF087E9B)]
+        : isCredit
+            ? const [Color(0xFF30205F), Color(0xFF8B3D83)]
+            : isBank
+                ? const [Color(0xFF075B4B), Color(0xFF16A085)]
+                : isCash
+                    ? const [Color(0xFF8A5A16), Color(0xFFD69B36)]
+                    : isDigital
+                        ? const [Color(0xFF263B85), Color(0xFF4779D5)]
+                        : isInvestment
+                            ? const [Color(0xFF174B38), Color(0xFF68A65B)]
+                            : const [Color(0xFF34445A), Color(0xFF71839A)];
+    final iconCode = (wallet['icon_code'] as num?)?.toInt() ?? Icons.wallet_outlined.codePoint;
+    final walletNumber = wallet['wallet_number']?.toString().trim() ?? '';
+    final maskedNumber = walletNumber.isEmpty
+        ? '••••  ••••  ••••  ••••'
+        : '••••  ••••  ••••  ${walletNumber.length > 4 ? walletNumber.substring(walletNumber.length - 4) : walletNumber}';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(17),
+        onTap: () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => TransactionsScreen(
+            walletId: wallet['id'] as int,
+            walletName: wallet['name'] as String,
+          ),
+        )),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: colors,
+            ),
+            borderRadius: BorderRadius.circular(17),
+            boxShadow: [
+              BoxShadow(color: colors.first.withValues(alpha: 0.22),
+                blurRadius: 9, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(17),
+            child: Stack(
+              children: [
+                Positioned(right: -23, top: -35,
+                  child: Container(width: 125, height: 125,
+                    decoration: BoxDecoration(shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.10), width: 18)))),
+                Positioned(right: 24, bottom: -57,
+                  child: Container(width: 145, height: 145,
+                    decoration: BoxDecoration(shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.055)))),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 9),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 19),
+                        const Spacer(),
+                        if (excluded) const Icon(Icons.visibility_off_outlined, color: Colors.white70, size: 14),
+                        if (isDebit || isCredit) ...[
+                          const SizedBox(width: 5),
+                          SizedBox(width: 35, height: 23,
+                            child: Stack(children: [
+                              Positioned(left: 0, child: Container(width: 21, height: 21,
+                                decoration: BoxDecoration(color: const Color(0xFFE53935).withValues(alpha: 0.95), shape: BoxShape.circle))),
+                              Positioned(right: 0, child: Container(width: 21, height: 21,
+                                decoration: BoxDecoration(color: const Color(0xFFFFB300).withValues(alpha: 0.95), shape: BoxShape.circle))),
+                            ])),
+                        ] else
+                          Icon(IconData(iconCode, fontFamily: 'MaterialIcons'), color: Colors.white, size: 20),
+                      ]),
+                      const SizedBox(height: 3),
+                      Text(maskedNumber, maxLines: 1,
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.88),
+                          fontSize: 10, letterSpacing: 1.25, fontWeight: FontWeight.w600)),
+                      const Spacer(),
+                      Text(formatMoney(balance, currency), maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white, fontSize: 15,
+                          fontWeight: FontWeight.w900, letterSpacing: -0.35)),
+                      const SizedBox(height: 2),
+                      Row(children: [
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text((wallet['name'] ?? 'Wallet').toString().toUpperCase(),
+                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white, fontSize: 9.5,
+                              fontWeight: FontWeight.w800, letterSpacing: 0.45)),
+                          Text(walletType.toUpperCase(), maxLines: 1,
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.72),
+                              fontSize: 8, fontWeight: FontWeight.w700, letterSpacing: 0.7)),
+                        ])),
+                        if (isDebit || isCredit)
+                          const Text('mastercard', style: TextStyle(color: Colors.white,
+                            fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: -0.3))
+                        else
+                          Icon(isCash ? Icons.payments_outlined : isBank
+                              ? Icons.account_balance_outlined
+                              : isDigital ? Icons.phone_android_rounded
+                              : isInvestment ? Icons.trending_up_rounded
+                              : Icons.wallet_outlined,
+                            color: Colors.white.withValues(alpha: 0.9), size: 19),
+                      ]),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -267,6 +399,21 @@ class _WalletsPageState extends State<WalletsPage> {
                         appText(context, 'My Wallets', 'میرے والٹس'),
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text),
                       )),
+                      SegmentedButton<bool>(
+                        showSelectedIcon: false,
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                        segments: const [
+                          ButtonSegment(value: false, label: Text('Classic')),
+                          ButtonSegment(value: true, label: Text('Bank Cards')),
+                        ],
+                        selected: {_usePremiumCards},
+                        onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),
+                      ),
+                      const SizedBox(width: 5),
                       TextButton.icon(
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
@@ -328,6 +475,15 @@ class _WalletsPageState extends State<WalletsPage> {
                           : rawWalletType;
                       final excluded = (wallet['exclude_total'] as int) == 1;
 
+                      if (_usePremiumCards) {
+                        return _buildPremiumWalletCard(
+                          wallet: wallet,
+                          balance: balance,
+                          currency: currency,
+                          walletType: walletType,
+                          excluded: excluded,
+                        );
+                      }
                       return Card(
                         color: Colors.white,
                         elevation: 0,

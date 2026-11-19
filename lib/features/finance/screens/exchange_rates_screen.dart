@@ -236,7 +236,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.sync_rounded),
+                : Icon(Icons.sync_rounded),
           ),
         ],
       ),
@@ -256,18 +256,18 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           Text(appText(context, 'Base Currency: PKR', 'بنیادی کرنسی: PKR'),
                               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                           SizedBox(height: 6),
-                          const Text('Har rate 1 foreign currency unit ki PKR value hai.'),
+                          Text('Har rate 1 foreign currency unit ki PKR value hai.'),
                           SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton.icon(
                               onPressed: _updating ? null : () => _refreshRates(),
-                              icon: const Icon(Icons.cloud_download_outlined),
+                              icon: Icon(Icons.cloud_download_outlined),
                               label: Text(_updating ? 'Updating rates...' : 'Update Rates Online'),
                             ),
                           ),
                           SizedBox(height: 6),
-                          const Text(
+                          Text(
                             'Rates open.er-api.com se milte hain. Screen khulne par 24 ghantay se puranay rates auto-refresh hotay hain.',
                             style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
                           ),
@@ -320,7 +320,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               color: _convertedAmount == null ? Theme.of(context).hintColor : Theme.of(context).colorScheme.primary),
                           ),
                           const SizedBox(height: 4),
-                          const Text('Calculated from the latest saved PKR-based rates.',
+                          Text('Calculated from the latest saved PKR-based rates.',
                             style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
                         ],
                       ),
@@ -351,11 +351,11 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     child: Column(
                       children: [
                         ListTile(
-                          leading: const CircleAvatar(child: Text('PKR')),
+                          leading: CircleAvatar(child: Text('PKR')),
                           title: Text(appText(context, 'Pakistani Rupee', 'پاکستانی روپیہ'),
                               style: TextStyle(fontWeight: FontWeight.w700)),
-                          subtitle: const Text('Base currency'),
-                          trailing: const Text('1.0000 PKR',
+                          subtitle: Text('Base currency'),
+                          trailing: Text('1.0000 PKR',
                               style: TextStyle(fontWeight: FontWeight.w800)),
                         ),
                         const Divider(height: 1),
@@ -366,10 +366,10 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                 leading: CircleAvatar(
                                   backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                                   child: Text(currency,
-                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
                                 ),
                                 title: Text('1 $currency',
-                                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                                    style: TextStyle(fontWeight: FontWeight.w700)),
                                 subtitle: Text(_rateFor(currency) == null
                                     ? 'Rate not set'
                                     : 'Updated: ${_dateLabel(_rates.firstWhere((r) => r['currency'].toString().toUpperCase() == currency)['updated_at'])}'),
@@ -380,12 +380,12 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                       _rateFor(currency) == null
                                           ? '—'
                                           : 'PKR ${_numberFormat.format(_rateFor(currency)!)}',
-                                      style: const TextStyle(fontWeight: FontWeight.w800),
+                                      style: TextStyle(fontWeight: FontWeight.w800),
                                     ),
                                     IconButton(
                                       tooltip: 'Edit rate',
                                       onPressed: () => _editRate(currency),
-                                      icon: const Icon(Icons.edit_outlined, size: 19),
+                                      icon: Icon(Icons.edit_outlined, size: 19),
                                     ),
                                   ],
                                 ),

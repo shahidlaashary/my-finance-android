@@ -30,9 +30,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   List<Map<String, dynamic>> _reminders = [];
   List<Map<String, dynamic>> _wallets = [];
 
-  static const _green = Theme.of(context).colorScheme.primary;
-  static const _ink = Theme.of(context).colorScheme.onSurface;
-  static const _muted = Theme.of(context).hintColor;
+  Color get _green => Theme.of(context).colorScheme.primary;
+  Color get _ink => Theme.of(context).colorScheme.onSurface;
+  Color get _muted => Theme.of(context).hintColor;
   static const _expenseCategories = [
     'Oil Change', 'Mechanical Repair', 'Tyres & Puncture', 'Battery',
     'Car Wash', 'Service & Tuning', 'AC Maintenance', 'Spare Parts',
@@ -572,7 +572,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   }
 
   Widget _metric(String title, String value, IconData icon, Color color, {String? subtitle}) => Expanded(child: Container(
-    padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
+    padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(15), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Icon(icon, color: color, size: 21), SizedBox(height: 8),
       Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink), maxLines: 2, overflow: TextOverflow.ellipsis),

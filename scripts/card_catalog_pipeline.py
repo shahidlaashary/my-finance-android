@@ -5,6 +5,7 @@ Input import format: JSON array of records or {"records": [...]}.
 No third-party dependencies. Never infers official artwork or auto-promotes trust.
 """
 import argparse, hashlib, json, re, sys, urllib.error, urllib.request
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,7 +39,9 @@ def normalize(record):
     record.setdefault("sourceUrl", record.get("officialProductUrl") or record["officialWebsite"])
     record.setdefault("lastCheckedAt", None)
     record.setdefault("sourceContentSha256", None)
+    record.setdefault("imageContentSha256", None)
     record.setdefault("sourceChangedAt", None)
+    record.setdefault("verificationEvidence", [])
     return record
 
 def key(record):
@@ -57,43 +60,57 @@ def import_records(catalog, paths):
             old = merged.get(k, {})
             # Preserve prior verification history only when the source URL is unchanged.
             if old.get("sourceUrl") == r.get("sourceUrl"):
-                for field in ("verificationStatus","lastCheckedAt","sourceContentSha256","sourceChangedAt"):
+                for field in ("verificationStatus","lastCheckedAt","sourceContentSha256","imageContentSha256","sourceChangedAt"):
                     r[field] = old.get(field, r.get(field))
             merged[k] = r
             count += 1
     catalog["records"] = sorted(merged.values(), key=lambda x:(x["countryCode"],x["institutionName"].casefold(),str(x.get("cardType",""))))
     return count
 
+def fetch_digest(url, limit):
+    parsed = urlparse(url or '')
+    if parsed.scheme != 'https' or not parsed.netloc:
+        raise ValueError('Only absolute HTTPS URLs are allowed')
+    req = urllib.request.Request(url, headers={'User-Agent':'MyFinance-CardCatalogVerifier/1.1'})
+    with urllib.request.urlopen(req, timeout=25) as response:
+        final = urlparse(response.geturl())
+        if final.scheme != 'https': raise ValueError('Redirect left HTTPS')
+        body = response.read(limit + 1)
+        if len(body) > limit: raise ValueError('Source exceeds size limit')
+        return response.status, hashlib.sha256(body).hexdigest(), response.geturl()
+
 def check_sources(catalog):
     results=[]
-    for r in catalog["records"]:
-        url = r.get("sourceUrl") or r.get("officialProductUrl") or r.get("officialWebsite")
-        item={"countryCode":r["countryCode"],"institutionName":r["institutionName"],"sourceUrl":url}
+    for r in catalog['records']:
+        url = r.get('sourceUrl') or r.get('officialProductUrl') or r.get('officialWebsite')
+        item={'countryCode':r['countryCode'],'institutionName':r['institutionName'],'sourceUrl':url}
         if not url:
-            r["verificationStatus"]="needs_source"; item["result"]="needs_source"
+            r['verificationStatus']='needs_source'; item['result']='needs_source'
         else:
             try:
-                req=urllib.request.Request(url, headers={"User-Agent":"MyFinance-CardCatalogVerifier/1.0 (+official-source-check)"})
-                with urllib.request.urlopen(req, timeout=20) as response:
-                    body=response.read(2_000_000)
-                    digest=hashlib.sha256(body).hexdigest()
-                    changed=bool(r.get("sourceContentSha256") and r["sourceContentSha256"] != digest)
-                    r["lastCheckedAt"]=now()
-                    if changed:
-                        r["verificationStatus"]="review_required"
-                        r["sourceChangedAt"]=r["lastCheckedAt"]
-                        item["result"]="source_changed_review_required"
-                    else:
-                        # Reachability is not proof of card artwork; preserve trust status.
-                        item["result"]="reachable"
-                    r["sourceContentSha256"]=digest
-                    item["httpStatus"]=response.status
-                    item["sha256"]=digest
-            except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-                r["verificationStatus"]="source_unreachable"
-                r["lastCheckedAt"]=now()
-                item["result"]="unreachable"
-                item["error"]=str(exc)[:240]
+                status,digest,final_url=fetch_digest(url,2000000)
+                changed=bool(r.get('sourceContentSha256') and r['sourceContentSha256'] != digest)
+                r['lastCheckedAt']=now(); r['sourceContentSha256']=digest
+                item.update({'httpStatus':status,'finalUrl':final_url,'sourceSha256':digest,'sourceChanged':changed})
+                if changed:
+                    r['verificationStatus']='review_required'; r['sourceChangedAt']=r['lastCheckedAt']
+                item['result']='source_changed_review_required' if changed else 'reachable'
+            except (urllib.error.URLError,TimeoutError,ValueError) as exc:
+                r['verificationStatus']='source_unreachable'; r['lastCheckedAt']=now()
+                item.update({'result':'unreachable','error':str(exc)[:240]})
+        image_url=r.get('officialImageUrl')
+        if image_url:
+            try:
+                status,digest,final_url=fetch_digest(image_url,8000000)
+                changed=bool(r.get('imageContentSha256') and r['imageContentSha256'] != digest)
+                r['imageContentSha256']=digest
+                item.update({'imageHttpStatus':status,'imageFinalUrl':final_url,'imageSha256':digest,'imageChanged':changed})
+                if changed:
+                    r['verificationStatus']='review_required'; r['sourceChangedAt']=now()
+                    item['result']='card_art_changed_review_required'
+            except (urllib.error.URLError,TimeoutError,ValueError) as exc:
+                item.update({'imageResult':'unreachable_or_invalid','imageError':str(exc)[:240]})
+                if r.get('verificationStatus') == 'official_card_verified': r['verificationStatus']='review_required'
         results.append(item)
     return results
 
@@ -109,7 +126,7 @@ def main():
     CATALOG.parent.mkdir(parents=True,exist_ok=True)
     CATALOG.write_text(json.dumps(catalog,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if args.check:
-        REPORT.write_text(json.dumps({"checkedAt":now(),"total":len(results),"results":results},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+        REPORT.write_text(json.dumps({"checkedAt":now(),"total":len(results),"sourceChanged":sum(1 for x in results if x.get("sourceChanged")),"imageChanged":sum(1 for x in results if x.get("imageChanged")),"results":results},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"imported":imported,"totalRecords":len(catalog["records"]),"checked":len(results),"report":str(REPORT.relative_to(ROOT)) if args.check else None}))
 if __name__=="__main__":
     try: main()

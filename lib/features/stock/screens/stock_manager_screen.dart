@@ -58,7 +58,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
   Future<void> _history(StockItem item) async {
     await showDialog<void>(context:context,builder:(ctx)=>Dialog(child:SizedBox(width:480,child:Padding(padding:const EdgeInsets.all(16),child:Column(mainAxisSize:MainAxisSize.min,children:[
       Row(children:[Expanded(child:Text('${item.name} • Movement History',style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold))),IconButton(onPressed:()=>Navigator.pop(ctx),icon:const Icon(Icons.close))]),
-      Flexible(child:FutureBuilder<List<StockMovement>>(future:StockService.getMovements(item.id!),builder:(context,s){if(s.connectionState==ConnectionState.waiting)return const Center(child:CircularProgressIndicator());if(s.hasError)return Text('Error: ${s.error}');final rows=s.data??[];if(rows.isEmpty)return Padding(padding:EdgeInsets.all(20),child:Text(appText(context, "No stock movements yet.", "No stock movements yet.")));return ListView(shrinkWrap:true,children:rows.map((m)=>ListTile(leading:Icon(m.type=='IN'?Icons.south_west:Icons.north_east,color:m.type=='IN'?Colors.green:Colors.orange),title:Text('${m.type=='IN'?'Stock In':'Stock Out'} • ${_qty(m.quantity)} ${item.unit}'),subtitle:Text('${m.date} • ${m.note}'),trailing:Text(m.unitPrice.toStringAsFixed(2)))).toList());})),
+      Flexible(child:FutureBuilder<List<StockMovement>>(future:StockService.getMovements(item.id!),builder:(context,s){if(s.connectionState==ConnectionState.waiting)return const Center(child:CircularProgressIndicator());if(s.hasError)return Text('Error: ${s.error}');final rows=s.data??[];if(rows.isEmpty)return Padding(padding:EdgeInsets.all(20),child:Text(appText(context, "No stock movements yet.", "No stock movements yet.")));return ListView(shrinkWrap:true,children:rows.map((m)=>ListTile(leading:Icon(m.type=='IN'?Icons.south_west:Icons.north_east,color:m.type=='IN'?Theme.of(context).colorScheme.secondary:Theme.of(context).colorScheme.tertiary),title:Text('${m.type=='IN'?'Stock In':'Stock Out'} • ${_qty(m.quantity)} ${item.unit}'),subtitle:Text('${m.date} • ${m.note}'),trailing:Text(m.unitPrice.toStringAsFixed(2)))).toList());})),
     ])))));
   }
   @override Widget build(BuildContext context){
@@ -68,7 +68,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
     return Scaffold(appBar:AppBar(title:Text(appText(context, "Stock Manager", "Stock Manager"),style:TextStyle(fontWeight:FontWeight.w800)),actions:[IconButton(onPressed:_load,icon:const Icon(Icons.refresh))]),
       floatingActionButton:FloatingActionButton.extended(onPressed:()=>_edit(),icon:const Icon(Icons.add),label:Text(appText(context, "Add Item", "Add Item"))),
       body:_loading?const Center(child:CircularProgressIndicator()):RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.fromLTRB(14,12,14,100),children:[
-        Row(children:[Expanded(child:_summary('Total Items','${_items.length}',Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:_summary('Low Stock','$lowCount',Icons.warning_amber_rounded,color:lowCount>0?Colors.orange:null))]),
+        Row(children:[Expanded(child:_summary('Total Items','${_items.length}',Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:_summary('Low Stock','$lowCount',Icons.warning_amber_rounded,color:lowCount>0?Theme.of(context).colorScheme.tertiary:null))]),
         const SizedBox(height:12),
         TextField(onChanged:(v)=>setState(()=>_search=v),decoration:InputDecoration(prefixIcon:Icon(Icons.search),hintText: appText(context, "Search item, SKU or category", "Search item, SKU or category"),border:OutlineInputBorder())),
         const SizedBox(height:10),
@@ -76,17 +76,17 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
         const SizedBox(height:8),
         if(visible.isEmpty)Padding(padding:const EdgeInsets.all(28),child:Center(child:Text(_items.isEmpty?'No stock items yet. Add your first item.':query.isNotEmpty?'No matching stock items.':_lowOnly?'No low-stock items. Everything is above its alert level.':'No stock items to show.'))),
         ...visible.map((i)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Row(children:[Expanded(child:Text(i.name,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),if(i.isLowStock)Chip(label:Text(appText(context, "Low Stock", "Low Stock")),backgroundColor:Color(0xFFFFE0B2))]),
+          Row(children:[Expanded(child:Text(i.name,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800))),if(i.isLowStock)Chip(label:Text(appText(context, "Low Stock", "Low Stock")),backgroundColor:Theme.of(context).colorScheme.tertiaryContainer)]),
           Text('${i.category} • ${i.sku.isEmpty?'No SKU':i.sku}'),
           const SizedBox(height:8),
           Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text('Available: ${_qty(i.quantity)} ${i.unit}',style:const TextStyle(fontWeight:FontWeight.w700)),Text('Alert at: ${_qty(i.lowStockAt)} ${i.unit}')]),
-          if(i.lowStockAt>0)Padding(padding:const EdgeInsets.only(top:6),child:LinearProgressIndicator(value:(i.quantity/i.lowStockAt).clamp(0,1).toDouble(),color:i.isLowStock?Colors.orange:null)),
+          if(i.lowStockAt>0)Padding(padding:const EdgeInsets.only(top:6),child:LinearProgressIndicator(value:(i.quantity/i.lowStockAt).clamp(0,1).toDouble(),color:i.isLowStock?Theme.of(context).colorScheme.tertiary:null)),
           Wrap(spacing:2,children:[
             TextButton.icon(onPressed:()=>_movement(i,'IN'),icon:const Icon(Icons.add_circle_outline),label:Text(appText(context, "Stock In", "Stock In"))),
             TextButton.icon(onPressed:()=>_movement(i,'OUT'),icon:const Icon(Icons.remove_circle_outline),label:Text(appText(context, "Stock Out", "Stock Out"))),
             IconButton(tooltip:'History',onPressed:()=>_history(i),icon:const Icon(Icons.history)),
             IconButton(tooltip:'Edit',onPressed:()=>_edit(i),icon:const Icon(Icons.edit_outlined)),
-            IconButton(tooltip:'Delete',onPressed:()async{final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text(appText(context, "Delete item?", "Delete item?")),content:Text(appText(context, "This also deletes its stock movement history.", "This also deletes its stock movement history.")),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:Text(appText(context, "Cancel", "Cancel"))),FilledButton(onPressed:()=>Navigator.pop(c,true),child:Text(appText(context, "Delete", "Delete")))]));if(ok==true){await StockService.deleteItem(i.id!);await _load();}},icon:const Icon(Icons.delete_outline,color:Colors.red)),
+            IconButton(tooltip:'Delete',onPressed:()async{final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text(appText(context, "Delete item?", "Delete item?")),content:Text(appText(context, "This also deletes its stock movement history.", "This also deletes its stock movement history.")),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:Text(appText(context, "Cancel", "Cancel"))),FilledButton(onPressed:()=>Navigator.pop(c,true),child:Text(appText(context, "Delete", "Delete")))]));if(ok==true){await StockService.deleteItem(i.id!);await _load();}},icon:const Icon(Icons.delete_outline,color:Theme.of(context).colorScheme.error)),
           ]),
         ])))),
       ])));

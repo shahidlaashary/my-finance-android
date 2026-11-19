@@ -238,8 +238,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(option),
                   trailing: selectedRecurring == option
-                      ? const Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
-                      : const Icon(Icons.circle_outlined, color: Theme.of(context).hintColor),
+                      ? Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
+                      : Icon(Icons.circle_outlined, color: Theme.of(context).hintColor),
                   onTap: () => Navigator.pop(sheetContext, option),
                 ),
               ),
@@ -492,7 +492,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       decoration: decoration('Notes (Optional)', icon: Icons.notes_rounded).copyWith(
         suffixIcon: PopupMenuButton<String>(
           tooltip: 'Add attachment',
-          icon: const Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary),
+          icon: Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary),
           onSelected: (value) {
             if (value == 'camera') {
               _pickNoteImage(ImageSource.camera);

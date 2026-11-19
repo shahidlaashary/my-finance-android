@@ -314,7 +314,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                   height: math.max(3.0, 112 * incomeFactor),
                                   decoration: BoxDecoration(
                                     borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
                                       colors: [Theme.of(context).colorScheme.secondary, Theme.of(context).colorScheme.secondary],
@@ -331,7 +331,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                   height: math.max(3.0, 112 * expenseFactor),
                                   decoration: BoxDecoration(
                                     borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
                                       colors: [Theme.of(context).colorScheme.error, Theme.of(context).colorScheme.tertiary],
@@ -508,7 +508,7 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Widget _buildCashFlowWave() {
-    if (_trend.isEmpty) return const Text('Add transactions to see your cash-flow wave.');
+    if (_trend.isEmpty) return Text('Add transactions to see your cash-flow wave.');
     final points = _trend.map((row) => (
       (row['income'] as num?)?.toDouble() ?? 0,
       (row['expense'] as num?)?.toDouble() ?? 0,
@@ -731,7 +731,7 @@ class _StatsScreenState extends State<StatsScreen> {
         actions: buildSharedAppBarActions(context),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -740,7 +740,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     const SizedBox(height: 10),
                     Text('Could not load stats: $_error', textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    ElevatedButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh), label: Text(appText(context, 'Try Again', 'دوبارہ کوشش کریں'))),
+                    ElevatedButton.icon(onPressed: _loadData, icon: Icon(Icons.refresh), label: Text(appText(context, 'Try Again', 'دوبارہ کوشش کریں'))),
                   ]),
                 ))
               : RefreshIndicator(
@@ -754,19 +754,19 @@ class _StatsScreenState extends State<StatsScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            const Text('Export / Share PDF', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                            Text('Export / Share PDF', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                             const SizedBox(height: 10),
                             Row(children: [
                               Expanded(child: FilledButton.icon(
                                 onPressed: _exportPdfReport,
-                                icon: const Icon(Icons.picture_as_pdf_rounded),
-                                label: const Text('PDF Report'),
+                                icon: Icon(Icons.picture_as_pdf_rounded),
+                                label: Text('PDF Report'),
                               )),
                               const SizedBox(width: 10),
                               Expanded(child: OutlinedButton.icon(
                                 onPressed: _sharePdfStatement,
-                                icon: const Icon(Icons.share_rounded),
-                                label: const Text('PDF Statement'),
+                                icon: Icon(Icons.share_rounded),
+                                label: Text('PDF Statement'),
                               )),
                             ]),
                           ]),

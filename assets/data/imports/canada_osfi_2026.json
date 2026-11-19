@@ -1,0 +1,157 @@
+{
+  "countryCode": "CA",
+  "registry": "Office of the Superintendent of Financial Institutions",
+  "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+  "records": [
+    {
+      "countryCode": "CA",
+      "institutionName": "Royal Bank of Canada",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.rbcroyalbank.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.rbcroyalbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Toronto-Dominion Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.td.com/ca/en/personal-banking",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.td.com/ca/en/personal-banking",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Bank of Montreal",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bmo.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.bmo.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Bank of Nova Scotia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.scotiabank.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.scotiabank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Canadian Imperial Bank of Commerce",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.cibc.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.cibc.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "National Bank of Canada",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.nbc.ca",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.nbc.ca",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Canadian Western Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.cwbank.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.cwbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Laurentian Bank of Canada",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.laurentianbank.ca",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.laurentianbank.ca",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "EQ Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.eqbank.ca",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.eqbank.ca",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Tangerine Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.tangerine.ca",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.tangerine.ca",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Simplii Financial",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.simplii.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.simplii.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Motive Financial",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.motivefinancial.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.motivefinancial.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "Bridgewater Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bridgewaterbank.ca",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.bridgewaterbank.ca",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "VersaBank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.versabank.com",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.versabank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "CA",
+      "institutionName": "First Nations Bank of Canada",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.fnbc.ca",
+      "registrySourceUrl": "https://www.osfi-bsif.gc.ca/en/supervision/financial-institutions",
+      "sourceUrl": "https://www.fnbc.ca",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

@@ -320,6 +320,17 @@ class _WalletsPageState extends State<WalletsPage> {
   // commercial, Islamic, digital, foreign and specialized banks in Pakistan.
   Map<String, dynamic> _bankCardTheme(String bankName) {
     final name = bankName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    // Easypaisa Digital Bank is a licensed bank; keep it distinct from the
+    // Easypaisa wallet brand when the user enters the full bank name.
+    if (name.contains('easypaisadigitalbank') || name.contains('easypaisabank')) {
+      return {
+        'brand': 'EASYPAISA BANK',
+        'mark': 'EP',
+        'colors': [const Color(0xFF16864B), const Color(0xFF75B843)],
+        'pattern': 3,
+        'isKnown': true,
+      };
+    }
     final themes = <Map<String, dynamic>>[
       {'keys': ['easypaisa', 'easypaisadigitalbank'], 'brand': 'EASYPAISA', 'mark': 'EASYPAISA', 'design': 'easypaisa', 'colors': [const Color(0xFF087A3E), const Color(0xFF62B447)]},
       {'keys': ['jazzcash', 'mobilinkwallet'], 'brand': 'JAZZCASH', 'mark': 'JAZZ', 'design': 'jazzcash', 'colors': [const Color(0xFF8B1238), const Color(0xFFE04462)]},

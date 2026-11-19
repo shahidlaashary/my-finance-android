@@ -947,7 +947,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 color: Color(0xFF172B25))),
                           ),
                           Transform.translate(
-                            offset: const Offset(9, 0),
+                            offset: const Offset(22, 0),
                             child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
@@ -958,9 +958,9 @@ class _LoansScreenState extends State<LoansScreen> {
                               fontWeight: FontWeight.w700)),
                           ),
                           ),
-                          const SizedBox(width: 1),
+                          const SizedBox(width: 0),
                           Transform.translate(
-                            offset: const Offset(5, 0),
+                            offset: const Offset(20, 0),
                             child: PopupMenuButton<String>(
                             tooltip: 'Loan options',
                             padding: EdgeInsets.zero,
@@ -1649,7 +1649,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(22),
                           onTap: () => _showLoanDetails(loan),
                           child: SizedBox(
-                            height: 174,
+                            height: 182,
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(

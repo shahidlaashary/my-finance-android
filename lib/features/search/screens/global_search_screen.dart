@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart';
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
@@ -69,6 +70,16 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     return data.values.any(
       (value) => value != null && value.toString().toLowerCase().contains(query),
     );
+  }
+
+  void initState() {
+    super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
+  }
+
+  void _onAppDataChanged() {
+    final query = _controller.text.trim();
+    if (mounted && query.length >= 2) _scheduleSearch(query);
   }
 
   void _scheduleSearch(String value) {
@@ -471,6 +482,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
 
   @override
   void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     _searchDebounce?.cancel();
     _controller.dispose();
     super.dispose();

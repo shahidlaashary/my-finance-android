@@ -313,7 +313,7 @@ class _RecurringTransactionsScreenState
                     children: [
                       Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -414,7 +414,7 @@ class _RecurringTransactionsScreenState
                 IconButton(
                   tooltip: 'Edit',
                   onPressed: () => _openForm(existing: item),
-                  icon: const Icon(Icons.edit_outlined),
+                  icon: Icon(Icons.edit_outlined),
                 ),
                 IconButton(
                   tooltip: item.isActive ? 'Pause' : 'Resume',
@@ -428,7 +428,7 @@ class _RecurringTransactionsScreenState
                 IconButton(
                   tooltip: 'Delete',
                   onPressed: () => _deleteItem(item),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.delete_outline,
                     color: Theme.of(context).colorScheme.error,
                   ),
@@ -460,7 +460,7 @@ class _RecurringTransactionsScreenState
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -489,10 +489,10 @@ class _RecurringTransactionsScreenState
               onPressed: () => _openForm(),
               tooltip: 'Add Schedule',
               elevation: 4,
-              icon: const Icon(Icons.add_rounded),
+              icon: Icon(Icons.add_rounded),
               label: Text(
                 appText(context, 'Add Schedule', 'شیڈول شامل کریں'),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -517,7 +517,7 @@ class _RecurringTransactionsScreenState
                             padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.repeat,
                                   size: 32,
                                   color: Theme.of(context).colorScheme.primary,
@@ -544,7 +544,7 @@ class _RecurringTransactionsScreenState
                                   children: [
                                     Text(
                                       '$activeCount',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                         color: Theme.of(context).colorScheme.secondary,
@@ -829,7 +829,7 @@ class _RecurringTransactionDialogState
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       clipBehavior: Clip.antiAlias,
       child: Column(children: [
-        Padding(padding: const EdgeInsets.fromLTRB(18, 12, 18, 8), child: Row(children: [Expanded(child: Text(widget.existing == null ? 'Add Schedule' : 'Edit Schedule', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: _saving ? null : () => Navigator.pop(context, false), icon: const Icon(Icons.close))])),
+        Padding(padding: const EdgeInsets.fromLTRB(18, 12, 18, 8), child: Row(children: [Expanded(child: Text(widget.existing == null ? 'Add Schedule' : 'Edit Schedule', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800))), IconButton(onPressed: _saving ? null : () => Navigator.pop(context, false), icon: Icon(Icons.close))])),
         Container(width: 42, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
         Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 18, 18, 20), child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           SegmentedButton<String>(segments: [ButtonSegment(value: 'income', label: Text(appText(context, "Income", "Income"))), ButtonSegment(value: 'expense', label: Text(appText(context, "Expense", "Expense"))), ButtonSegment(value: 'transfer', label: Text(appText(context, "Transfer", "Transfer")))], selected: {_type}, onSelectionChanged: _saving ? null : (value) => setState(() { _type = value.first; _category = null; _toWalletId = null; })),
@@ -854,8 +854,8 @@ class _RecurringTransactionDialogState
               ),
               child: SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: Text('Transfer Fee', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                subtitle: Text('Add an optional fee to this recurring transfer', style: const TextStyle(fontSize: 11)),
+                title: Text('Transfer Fee', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                subtitle: Text('Add an optional fee to this recurring transfer', style: TextStyle(fontSize: 11)),
                 value: _transferFeeEnabled,
                 onChanged: _saving ? null : (value) => setState(() {
                   _transferFeeEnabled = value;
@@ -896,7 +896,7 @@ class _RecurringTransactionDialogState
           Row(children: [
             Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: false), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('Start Date', icon: Icons.calendar_month_outlined), child: Text(_formatDate(_startDate))))),
             SizedBox(width: 10),
-            Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: true), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('End Date (Optional)', icon: Icons.event_outlined).copyWith(suffixIcon: _endDate == null ? null : IconButton(onPressed: () => setState(() => _endDate = null), icon: const Icon(Icons.close))), child: Text(_endDate == null ? 'No end date' : _formatDate(_endDate!))))),
+            Expanded(child: InkWell(onTap: () => _pickDate(isEndDate: true), borderRadius: BorderRadius.circular(12), child: InputDecorator(decoration: _decoration('End Date (Optional)', icon: Icons.event_outlined).copyWith(suffixIcon: _endDate == null ? null : IconButton(onPressed: () => setState(() => _endDate = null), icon: Icon(Icons.close))), child: Text(_endDate == null ? 'No end date' : _formatDate(_endDate!))))),
           ]),
         ])))),
         Padding(padding: EdgeInsets.fromLTRB(18, 10, 18, 14 + MediaQuery.of(context).padding.bottom), child: Row(children: [

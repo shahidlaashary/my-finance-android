@@ -240,7 +240,7 @@ class _WalletsPageState extends State<WalletsPage> {
     final themes = <Map<String, dynamic>>[
       {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'design': 'allied', 'colors': [const Color(0xFF063B70), const Color(0xFF087F9B)]},
       {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'colors': [const Color(0xFF087A45), const Color(0xFF18A66A)]},
-      {'keys': ['meezanbank', 'meezan', 'meehan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF064B3B), const Color(0xFF168B68)]},
+      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF064B3B), const Color(0xFF168B68)]},
       {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'colors': [const Color(0xFF54247A), const Color(0xFF9A4CBA)]},
       {'keys': ['mcbislamicbank', 'mcbislamic'], 'brand': 'MCB ISLAMIC', 'mark': 'MCB', 'colors': [const Color(0xFF087B65), const Color(0xFF42B99B)]},
       {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'colors': [const Color(0xFF07529B), const Color(0xFF1596D2)]},
@@ -280,15 +280,28 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['finca'], 'brand': 'FINCA MICROFINANCE', 'mark': 'F', 'colors': [const Color(0xFF6B4C2B), const Color(0xFFB58A50)]},
       {'keys': ['nrsp'], 'brand': 'NRSP MICROFINANCE', 'mark': 'NR', 'colors': [const Color(0xFF35633D), const Color(0xFF86AD5E)]},
       {'keys': ['advans'], 'brand': 'ADVANS MICROFINANCE', 'mark': 'A', 'colors': [const Color(0xFF315A84), const Color(0xFF77A5C8)]},
+      {'keys': ['hblmicrofinance', 'firstmicrofinance'], 'brand': 'HBL MICROFINANCE', 'mark': 'HBL MFB', 'colors': [const Color(0xFF075C48), const Color(0xFF269B76)]},
+      {'keys': ['apnamicrofinance', 'apnabank'], 'brand': 'APNA MICROFINANCE', 'mark': 'APNA', 'colors': [const Color(0xFF176A91), const Color(0xFF4AADD0)]},
+      {'keys': ['halanmicrofinance', 'halan'], 'brand': 'HALAN BANK', 'mark': 'HALAN', 'colors': [const Color(0xFF252B58), const Color(0xFF5969A9)]},
+      {'keys': ['lolcmicrofinance', 'lolc', 'pakomanmicrofinance'], 'brand': 'LOLC MICROFINANCE', 'mark': 'LOLC', 'colors': [const Color(0xFF174F83), const Color(0xFF4E91C5)]},
+      {'keys': ['sindhmicrofinance'], 'brand': 'SINDH MICROFINANCE', 'mark': 'SMB', 'colors': [const Color(0xFF14577B), const Color(0xFF4A9DC1)]},
+      {'keys': ['abhibank', 'abhimicrofinance', 'fincamicrofinance', 'finca'], 'brand': 'ABHI MICROFINANCE', 'mark': 'ABHI', 'colors': [const Color(0xFF4B2B71), const Color(0xFF9364B5)]},
+      {'keys': ['asamicrofinance', 'asa'], 'brand': 'ASA MICROFINANCE', 'mark': 'ASA', 'colors': [const Color(0xFF146B69), const Color(0xFF4AA7A0)]},
+      {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
     ];
-    for (final theme in themes) {
+    for (var i = 0; i < themes.length; i++) {
+      final theme = themes[i];
       final aliases = theme['keys'] as List<String>;
-      if (aliases.any((alias) => name.contains(alias))) return theme;
+      if (aliases.any((alias) => name.contains(alias))) {
+        return {...theme, 'pattern': i % 6, 'isKnown': true};
+      }
     }
     return {
       'brand': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase(),
       'mark': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase().split(RegExp(r'\s+')).take(3).map((part) => part.isEmpty ? '' : part[0]).join(),
       'colors': [const Color(0xFF075B4B), const Color(0xFF16A085)],
+      'pattern': 0,
+      'isKnown': false,
     };
   }
 
@@ -302,11 +315,12 @@ class _WalletsPageState extends State<WalletsPage> {
     final type = walletType.toLowerCase();
     final isDebit = type.contains('debit');
     final isCredit = type.contains('credit');
-    final isBank = type == 'bank' || type.contains('bank');
+    final bankTheme = _bankCardTheme((wallet['name'] ?? '').toString());
+    final isBank = type == 'bank' || type.contains('bank') ||
+        (type.contains('debit') && bankTheme['isKnown'] == true);
     final isCash = type == 'cash';
     final isDigital = type.contains('digital');
     final isInvestment = type.contains('investment');
-    final bankTheme = isBank ? _bankCardTheme((wallet['name'] ?? '').toString()) : null;
     final colors = isDebit
         ? const [Color(0xFF073B66), Color(0xFF087E9B)]
         : isCredit

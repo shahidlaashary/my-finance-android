@@ -283,8 +283,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
     SizedBox(height: 12),
     Row(children: [
-      Expanded(child: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink))),
-      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
+      Expanded(child: Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink))),
+      IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
     ]),
     SizedBox(height: 8),
   ]);
@@ -321,7 +321,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             Row(children: [
               Expanded(child: TextFormField(controller: price, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Purchase Price (optional)', Icons.payments_outlined), validator: (v) { if ((v ?? '').trim().isEmpty) return null; final n = double.tryParse(v!); return n == null || !n.isFinite || n < 0 ? 'Enter a valid price' : null; })),
               SizedBox(width: 10),
-              Expanded(child: InkWell(borderRadius: BorderRadius.circular(12), onTap: () async { final d = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime(2100)); if (d != null) setSheet(() => purchaseDate = d); }, child: InputDecorator(decoration: _decoration('Purchase Date', Icons.calendar_month_outlined), child: Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 13))))),
+              Expanded(child: InkWell(borderRadius: BorderRadius.circular(12), onTap: () async { final d = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime(2100)); if (d != null) setSheet(() => purchaseDate = d); }, child: InputDecorator(decoration: _decoration('Purchase Date', Icons.calendar_month_outlined), child: Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: TextStyle(fontSize: 13))))),
             ]),
             SizedBox(height: 12),
             TextFormField(controller: notes, maxLines: 2, decoration: _decoration('Notes', Icons.notes_rounded)),
@@ -345,7 +345,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                   _message(vehicle == null ? 'Vehicle added.' : 'Vehicle updated.');
                 } catch (e) { _message('Unable to save vehicle: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: Text(vehicle == null ? 'Save Vehicle' : 'Update Vehicle'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: Icon(Icons.check_rounded), label: Text(vehicle == null ? 'Save Vehicle' : 'Update Vehicle'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -379,7 +379,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             Row(children: [
               Expanded(child: TextFormField(controller: odo, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Odometer (KM)', Icons.speed_rounded), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter KM reading' : null; })),
               SizedBox(width: 10),
-              Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => date = d); }, child: InputDecorator(decoration: _decoration('Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(date), style: const TextStyle(fontSize: 13))))),
+              Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => date = d); }, child: InputDecorator(decoration: _decoration('Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(date), style: TextStyle(fontSize: 13))))),
             ]),
             SizedBox(height: 12),
             Row(children: [
@@ -389,7 +389,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             ]),
             SizedBox(height: 8),
             Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
-              child: Text('Total Fuel Cost: ${_amount((double.tryParse(quantity.text) ?? 0) * (double.tryParse(unitPrice.text) ?? 0))}', style: const TextStyle(color: _green, fontWeight: FontWeight.w800))),
+              child: Text('Total Fuel Cost: ${_amount((double.tryParse(quantity.text) ?? 0) * (double.tryParse(unitPrice.text) ?? 0))}', style: TextStyle(color: _green, fontWeight: FontWeight.w800))),
             CheckboxListTile(contentPadding: EdgeInsets.zero, value: fullTank, onChanged: (v) => setSheet(() => fullTank = v ?? false), title: Text(unit == 'kWh' ? 'Full charge' : 'Full tank fill-up'), controlAffinity: ListTileControlAffinity.leading, dense: true),
             TextFormField(controller: station, decoration: _decoration('Fuel Station (optional)', Icons.storefront_outlined)),
             SizedBox(height: 12),
@@ -420,7 +420,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                   Navigator.pop(sheet); await _load(); _message(record == null ? 'Fuel entry saved and linked to Finance expenses.' : 'Fuel entry updated.');
                 } catch (e) { _message('Unable to save fuel entry: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: Text(record == null ? 'Save Fuel Entry' : 'Update Fuel Entry'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: Icon(Icons.check_rounded), label: Text(record == null ? 'Save Fuel Entry' : 'Update Fuel Entry'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -458,7 +458,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             Row(children: [
               Expanded(child: TextFormField(controller: odo, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Odometer (KM)', Icons.speed_rounded), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter KM' : null; })),
               SizedBox(width: 10),
-              Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => date = d); }, child: InputDecorator(decoration: _decoration('Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(date), style: const TextStyle(fontSize: 13))))),
+              Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => date = d); }, child: InputDecorator(decoration: _decoration('Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(date), style: TextStyle(fontSize: 13))))),
             ]),
             SizedBox(height: 12),
             TextFormField(controller: vendor, decoration: _decoration('Workshop / Vendor', Icons.storefront_outlined)),
@@ -489,7 +489,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                   Navigator.pop(sheet); await _load(); _message(record == null ? 'Expense saved and linked to Finance transactions.' : 'Vehicle expense updated.');
                 } catch (e) { _message('Unable to save expense: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: Text(record == null ? 'Save Expense' : 'Update Expense'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: Icon(Icons.check_rounded), label: Text(record == null ? 'Save Expense' : 'Update Expense'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -517,7 +517,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             TextFormField(controller: title, decoration: _decoration('Reminder Title', Icons.notifications_active_outlined), validator: (v) => v == null || v.trim().isEmpty ? 'Enter reminder title' : null),
             SizedBox(height: 12),
             Row(children: [
-              Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: dueDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => dueDate = d); }, child: InputDecorator(decoration: _decoration('Due Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(dueDate), style: const TextStyle(fontSize: 13))))),
+              Expanded(child: InkWell(onTap: () async { final d = await showDatePicker(context: context, initialDate: dueDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setSheet(() => dueDate = d); }, child: InputDecorator(decoration: _decoration('Due Date', Icons.calendar_month), child: Text(DateFormat('dd MMM yyyy').format(dueDate), style: TextStyle(fontSize: 13))))),
               SizedBox(width: 10),
               Expanded(child: TextFormField(controller: dueOdo, keyboardType: TextInputType.number, decoration: _decoration('Due at KM (optional)', Icons.speed_rounded), validator: (v) { if ((v ?? '').trim().isEmpty) return null; final n = double.tryParse(v!); return n == null || !n.isFinite || n <= 0 ? 'Enter valid KM' : null; })),
             ]),
@@ -538,7 +538,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                   Navigator.pop(sheet); await _load(); _message('Reminder saved.');
                 } catch (e) { _message('Unable to save reminder: $e'); }
                 finally { if (mounted) setState(() => _saving = false); }
-              }, icon: const Icon(Icons.check_rounded), label: Text(reminder == null ? 'Save Reminder' : 'Update Reminder'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
+              }, icon: Icon(Icons.check_rounded), label: Text(reminder == null ? 'Save Reminder' : 'Update Reminder'), style: ElevatedButton.styleFrom(backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)))),
             ]),
           ]),
         )),
@@ -575,17 +575,17 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(15), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Icon(icon, color: color, size: 21), SizedBox(height: 8),
-      Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink), maxLines: 2, overflow: TextOverflow.ellipsis),
-      SizedBox(height: 3), Text(title, style: const TextStyle(fontSize: 11, color: _muted)),
-      if (subtitle != null) Text(subtitle, style: const TextStyle(fontSize: 10, color: _muted)),
+      Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink), maxLines: 2, overflow: TextOverflow.ellipsis),
+      SizedBox(height: 3), Text(title, style: TextStyle(fontSize: 11, color: _muted)),
+      if (subtitle != null) Text(subtitle, style: TextStyle(fontSize: 10, color: _muted)),
     ]),
   ));
 
   Widget _empty(String title, String detail, IconData icon) => Center(child: Padding(
     padding: const EdgeInsets.all(30), child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, size: 48, color: _green.withOpacity(.65)), SizedBox(height: 12),
-      Text(title, style: const TextStyle(fontWeight: FontWeight.w700, color: _ink)),
-      SizedBox(height: 5), Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: _muted, fontSize: 12)),
+      Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: _ink)),
+      SizedBox(height: 5), Text(detail, textAlign: TextAlign.center, style: TextStyle(color: _muted, fontSize: 12)),
     ]),
   ));
 
@@ -628,9 +628,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       if (due.isEmpty) Card(child: ListTile(leading: Icon(Icons.check_circle_outline, color: _green), title: Text(appText(context, 'No overdue reminders', 'کوئی تاخیر شدہ یاددہانی نہیں')), subtitle: Text(appText(context, 'Your service schedule is up to date.', 'آپ کی سروس کا شیڈول اپ ڈیٹ ہے۔'))))
       else ...due.map((r) => Card(child: ListTile(
         leading: Icon(Icons.notifications_active_outlined, color: Theme.of(context).colorScheme.error),
-        title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(r['title'].toString(), style: TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text('${_vehicleName(r['vehicle_id'])} • Due ${_date(r['due_date'])}'),
-        trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder')),
+        trailing: IconButton(icon: Icon(Icons.delete_outline), onPressed: () => _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder')),
       ))),
       SizedBox(height: 14),
       Text(appText(context, "Your Vehicles", "Your Vehicles"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
@@ -648,7 +648,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     return Card(margin: const EdgeInsets.only(bottom: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ExpansionTile(
         leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Icon(v['type'] == 'Bike' ? Icons.two_wheeler_rounded : Icons.directions_car_rounded, color: _green)),
-        title: Text(v['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800, color: _ink)),
+        title: Text(v['name'].toString(), style: TextStyle(fontWeight: FontWeight.w800, color: _ink)),
         subtitle: Text('${v['model'] ?? ''} • ${v['registration'] ?? 'No registration'} • ${v['fuel_type']}'),
         children: [
           Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -661,9 +661,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
               _smallStat('Fuel used', '${_amount(fuel.fold<double>(0, (s, f) => s + ((f['quantity'] as num?)?.toDouble() ?? 0)))} ${v['fuel_type'] == 'Electric' ? 'kWh' : 'L'}'),
               _smallStat('Service costs', '${expenses.length}'),
             ]),
-            if ((v['notes'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(v['notes'].toString(), style: const TextStyle(color: _muted, fontSize: 12))),
+            if ((v['notes'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(v['notes'].toString(), style: TextStyle(color: _muted, fontSize: 12))),
             Row(children: [
-              TextButton.icon(onPressed: () => _showVehicleForm(vehicle: v), icon: const Icon(Icons.edit_outlined), label: Text(appText(context, "Edit", "Edit"))),
+              TextButton.icon(onPressed: () => _showVehicleForm(vehicle: v), icon: Icon(Icons.edit_outlined), label: Text(appText(context, "Edit", "Edit"))),
               TextButton.icon(onPressed: () => _deleteRecord(() async { await VehicleService.deleteVehicle(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle', ownerId: id); }, 'vehicle'), icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error), label: Text(appText(context, "Delete", "Delete"), style: TextStyle(color: Theme.of(context).colorScheme.error))),
             ]),
             AttachmentSection(ownerType: 'vehicle', ownerId: id),
@@ -677,8 +677,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(10)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, style: const TextStyle(color: _muted, fontSize: 10)),
-      SizedBox(height: 2), Text(value, style: const TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w700)),
+      Text(title, style: TextStyle(color: _muted, fontSize: 10)),
+      SizedBox(height: 2), Text(value, style: TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w700)),
     ]),
   );
 
@@ -692,7 +692,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _fuel.map((f) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.tertiaryContainer, child: Icon(Icons.local_gas_station_outlined, color: Theme.of(context).colorScheme.tertiary)),
-        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['total'])}', style: TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showFuelForm(record: f);
@@ -716,7 +716,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _expenses.map((e) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
         leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.errorContainer, child: Icon(Icons.build_outlined, color: Theme.of(context).colorScheme.error)),
-        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_moneyAmount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_moneyAmount(e['amount'])}', style: TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showExpenseForm(record: e);
@@ -743,7 +743,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       final overdue = dueByDate || (dueKm != null && dueKm > 0 && _latestOdometer((r['vehicle_id'] as num).toInt()) >= dueKm);
       return Card(margin: const EdgeInsets.only(bottom: 9), child: ListTile(
         leading: Icon(Icons.notifications_active_outlined, color: overdue ? Theme.of(context).colorScheme.error : _green),
-        title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(r['title'].toString(), style: TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text('${_vehicleName(r['vehicle_id'])} • ${_date(r['due_date'])}${r['due_odometer'] == null ? '' : ' • ${_amount(r['due_odometer'])} km'}'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
           if (v == 'edit') _showReminderForm(reminder: r);
@@ -786,7 +786,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         final id = v['id'] as int; final mileage = _averageMileage(id);
         final distance = _distanceFor(id);
         return Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(v['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          Text(v['name'].toString(), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
           SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: [
             _smallStat('Distance', '${_amount(distance)} km'),
@@ -811,9 +811,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       Text(appText(context, "Export Reports", "Export Reports"), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
       SizedBox(height: 8),
       Card(child: Column(children: [
-        ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: Text(appText(context, "Vehicles, fuel log, expenses and reminders", "Vehicles, fuel log, expenses and reminders")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
+        ListTile(leading: Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: Text(appText(context, "Vehicles, fuel log, expenses and reminders", "Vehicles, fuel log, expenses and reminders")), trailing: Icon(Icons.download_rounded), onTap: () => _export(true)),
         const Divider(height: 1),
-        ListTile(leading: Icon(Icons.picture_as_pdf_rounded, color: Theme.of(context).colorScheme.error), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: Text(appText(context, "Shareable summary of all vehicle records", "Shareable summary of all vehicle records")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
+        ListTile(leading: Icon(Icons.picture_as_pdf_rounded, color: Theme.of(context).colorScheme.error), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: Text(appText(context, "Shareable summary of all vehicle records", "Shareable summary of all vehicle records")), trailing: Icon(Icons.download_rounded), onTap: () => _export(false)),
       ])),
       SizedBox(height: 8),
       Text(appText(context, "Reports are saved in the app documents folder and opened with a compatible app.", "Reports are saved in the app documents folder and opened with a compatible app."), style: TextStyle(color: _muted, fontSize: 11)),
@@ -923,7 +923,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _fabAction(), backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: const Icon(Icons.add_rounded), label: Text(_fabLabel()),
+        icon: Icon(Icons.add_rounded), label: Text(_fabLabel()),
       ),
       body: _loading
           ? Center(child: CircularProgressIndicator())

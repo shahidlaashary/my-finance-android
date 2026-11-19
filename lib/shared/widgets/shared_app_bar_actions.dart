@@ -40,8 +40,8 @@ void _showBudgetAlerts(BuildContext context) {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.72,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
@@ -54,22 +54,22 @@ void _showBudgetAlerts(BuildContext context) {
               width: 38,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFD9E0DC),
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          const Row(
+          Row(
             children: [
               Icon(Icons.notifications_active_outlined,
-                  color: Color(0xFF147D59)),
+                  color: Theme.of(context).colorScheme.primary),
               SizedBox(width: 9),
               Text('Budget Notifications',
                   style: TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF202A26))),
+                      color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
           const SizedBox(height: 14),
@@ -107,17 +107,17 @@ void _showBudgetAlerts(BuildContext context) {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.check_circle_outline_rounded,
-                              size: 38, color: Color(0xFF16865B)),
+                              size: 38, color: Theme.of(context).colorScheme.secondary),
                           SizedBox(height: 10),
                           Text('You are all caught up',
                               style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF202A26))),
+                                  color: Theme.of(context).colorScheme.onSurface)),
                           SizedBox(height: 4),
                           Text('No active budget has reached 50% usage.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  fontSize: 12, color: Color(0xFF7B8781))),
+                                  fontSize: 12, color: Theme.of(context).hintColor)),
                         ],
                       ),
                     ),
@@ -133,12 +133,12 @@ void _showBudgetAlerts(BuildContext context) {
                     final ratio = budget.spentAmount / budget.limitAmount;
                     final percent = ratio * 100;
                     final color = ratio >= 1
-                        ? const Color(0xFFD9534F)
+                        ? Theme.of(context).colorScheme.error
                         : ratio >= 0.9
-                            ? const Color(0xFFE18A35)
+                            ? Theme.of(context).colorScheme.tertiary
                             : ratio >= 0.75
-                                ? const Color(0xFFCC9A35)
-                                : const Color(0xFF147D59);
+                                ? Theme.of(context).colorScheme.tertiary
+                                : Theme.of(context).colorScheme.primary;
                     final status = ratio >= 1
                         ? 'Budget limit reached'
                         : ratio >= 0.9
@@ -150,7 +150,7 @@ void _showBudgetAlerts(BuildContext context) {
                     return Container(
                       padding: const EdgeInsets.all(13),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAF9),
+                        color: Theme.of(context).colorScheme.surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                             color: color.withValues(alpha: 0.22)),
@@ -162,9 +162,9 @@ void _showBudgetAlerts(BuildContext context) {
                             children: [
                               Expanded(
                                 child: Text(budget.name,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontWeight: FontWeight.w800,
-                                        color: Color(0xFF202A26))),
+                                        color: Theme.of(context).colorScheme.onSurface)),
                               ),
                               Text('${percent.toStringAsFixed(0)}%',
                                   style: TextStyle(
@@ -184,7 +184,7 @@ void _showBudgetAlerts(BuildContext context) {
                             child: LinearProgressIndicator(
                               value: ratio.clamp(0.0, 1.0).toDouble(),
                               minHeight: 6,
-                              backgroundColor: const Color(0xFFE8EEEA),
+                              backgroundColor: Theme.of(context).colorScheme.outlineVariant,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(color),
                             ),
@@ -198,9 +198,9 @@ void _showBudgetAlerts(BuildContext context) {
                                 hidden
                                     ? '${budget.currency} •••••• / ••••••'
                                     : '${budget.currency} ${format.format(budget.spentAmount)} / ${format.format(budget.limitAmount)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 10,
-                                  color: Color(0xFF7B8781),
+                                  color: Theme.of(context).hintColor,
                                 ),
                               );
                             },

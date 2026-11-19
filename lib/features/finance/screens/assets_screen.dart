@@ -322,8 +322,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
       labelText: label,
       prefixIcon: Icon(icon, size: 19),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
       isDense: true,
     );
@@ -381,11 +381,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+                          Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
                           SizedBox(height: 12),
                           Row(children: [
-                            Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
-                            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey),
+                            Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
+                            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
                           ]),
                           SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
@@ -495,7 +495,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   alignment: Alignment.centerLeft,
                                   child: Text(
                                     'Loan currency: ${asset?.currency ?? _parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
-                                    style: const TextStyle(fontSize: 12, color: Color(0xFF147D59), fontWeight: FontWeight.w600),
+                                    style: const TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ),
@@ -540,14 +540,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     child: Row(children: [
-                                      const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
+                                      const Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 10),
                                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                         Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: const TextStyle(fontSize: 12, color: Color(0xFF66736C))),
                                         const SizedBox(height: 3),
                                         Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                                       ])),
-                                      const Icon(Icons.edit_calendar, size: 18, color: Color(0xFF147D59)),
+                                      const Icon(Icons.edit_calendar, size: 18, color: Theme.of(context).colorScheme.primary),
                                     ]),
                                   ),
                                 ),
@@ -560,7 +560,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                     scale: 0.85,
                                     child: Switch(
                                       value: includeInConsolidatedBalance,
-                                      activeColor: const Color(0xFF147D59),
+                                      activeColor: Theme.of(context).colorScheme.primary,
                                       onChanged: (value) => setSheetState(() => includeInConsolidatedBalance = value),
                                     ),
                                   ),
@@ -576,23 +576,23 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             decoration: BoxDecoration(color: const Color(0xFFF4FAF6), borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFDCEBE2))),
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Row(children: [
-                                const Icon(Icons.attach_file_rounded, color: Color(0xFF147D59), size: 19),
+                                const Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary, size: 19),
                                 const SizedBox(width: 7),
                                 const Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
-                                Text('${pendingFiles.length} selected', style: const TextStyle(color: Color(0xFF147D59), fontSize: 11, fontWeight: FontWeight.w700)),
+                                Text('${pendingFiles.length} selected', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w700)),
                               ]),
                               const SizedBox(height: 4),
                               const Text('Add photos or PDF documents while entering this asset.', style: TextStyle(color: Colors.black54, fontSize: 11)),
                               const SizedBox(height: 10),
                               Wrap(spacing: 8, runSpacing: 8, children: [
-                                _assetAttachmentButton(Icons.camera_alt_outlined, 'Camera', pickCamera, const Color(0xFF147D59)),
+                                _assetAttachmentButton(Icons.camera_alt_outlined, 'Camera', pickCamera, Theme.of(context).colorScheme.primary),
                                 _assetAttachmentButton(Icons.photo_library_outlined, 'Gallery', pickGallery, const Color(0xFF3978C5)),
                                 _assetAttachmentButton(Icons.picture_as_pdf_outlined, 'PDFs', pickPdfs, const Color(0xFFD34D4D)),
                               ]),
                               if (pendingFiles.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 ...pendingFiles.asMap().entries.map((entry) => Row(children: [
-                                  Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: const Color(0xFF147D59)),
+                                  Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: Theme.of(context).colorScheme.primary),
                                   const SizedBox(width: 7),
                                   Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11))),
                                   IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: const Icon(Icons.close, size: 17, color: Colors.redAccent)),
@@ -610,7 +610,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             SizedBox(width: 10),
                             Expanded(child: ElevatedButton.icon(
                               icon: const Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
+                              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
                               onPressed: () async {
                                 if (!formKey.currentState!.validate()) return;
                                 try {
@@ -961,7 +961,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     String currency,
     double amount,
     IconData icon, {
-    Color color = const Color(0xFF147D59),
+    Color color = Theme.of(context).colorScheme.primary,
   }) {
     return Card(
       child: Padding(
@@ -974,7 +974,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             Text(
               title,
               style: const TextStyle(
-                color: Colors.grey,
+                color: Theme.of(context).hintColor,
                 fontSize: 12,
               ),
             ),
@@ -1069,7 +1069,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
                 Text('Remaining: ${loan.currency} ${_money(loan.remainingAmount)}',
-                  style: const TextStyle(color: Color(0xFF65736C), fontSize: 12)),
+                  style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
                 const SizedBox(height: 14),
                 TextField(
                   controller: amountController,
@@ -1169,7 +1169,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           fontSize: 9,
           fontWeight: FontWeight.w800,
           letterSpacing: .8,
-          color: Color(0xFF829087),
+          color: Theme.of(context).hintColor,
         ),
       ),
     );
@@ -1197,14 +1197,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
-          leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFE8F4EE), borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 21)),
+          leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: Theme.of(context).colorScheme.primary, size: 21)),
           title: Row(children: [
             Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
             if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFFFE9E9), borderRadius: BorderRadius.circular(7)), child: const Text('SOLD', style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.w800))),
           ]),
           subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? '${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
           trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-            Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
+            Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
             const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
           ]),
           children: [
@@ -1239,7 +1239,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 if (!asset.isSold) PopupMenuItem(value: 'sell', child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں'))),
                 PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں'))),
               ],
-              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFF1F7F3), borderRadius: BorderRadius.circular(9)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Color(0xFF147D59)), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF147D59)))])),
+              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFF1F7F3), borderRadius: BorderRadius.circular(9)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Theme.of(context).colorScheme.primary), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary))])),
             )),
           ],
         ),
@@ -1296,10 +1296,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F4EE),
+                          color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(13),
                         ),
-                        child: Icon(categoryIcon, color: const Color(0xFF147D59), size: 22),
+                        child: Icon(categoryIcon, color: Theme.of(context).colorScheme.primary, size: 22),
                       ),
                       const SizedBox(width: 11),
                       Expanded(
@@ -1307,7 +1307,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                             const SizedBox(height: 3),
                             Text('${asset.category}  •  ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan  •  ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                               maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1376,14 +1376,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             _assetStatusChip(
                               asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
                               asset.isSold ? const Color(0xFFFFEEEE) : const Color(0xFFEAF5EF),
-                              asset.isSold ? const Color(0xFFC23D3D) : const Color(0xFF147D59),
+                              asset.isSold ? const Color(0xFFC23D3D) : Theme.of(context).colorScheme.primary,
                             ),
                             const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF147D59))),
+                                Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary)),
                                 SizedBox(width: 2),
-                                Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF147D59)),
+                                Icon(Icons.arrow_forward_rounded, size: 12, color: Theme.of(context).colorScheme.primary),
                               ],
                             ),
                           ],
@@ -1590,14 +1590,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Assets", "My Assets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26)))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Assets", "My Assets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -1606,7 +1606,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAssetDialog,
-        backgroundColor: const Color(0xFF147D59),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: Text(appText(context, 'Add Asset', 'اثاثہ شامل کریں')),
@@ -1622,7 +1622,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF147D59), Color(0xFF0B6245)],
+                        colors: [Theme.of(context).colorScheme.primary, Color(0xFF0B6245)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1667,9 +1667,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         borderRadius: BorderRadius.circular(14),
                         onTap: () => setState(() => _selectedCategory = _selectedCategory == item['name'] ? null : item['name'] as String),
                         child: Container(
-                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? const Color(0xFF147D59) : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
+                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? Theme.of(context).colorScheme.primary : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            Icon(item['icon'] as IconData, color: const Color(0xFF147D59), size: 19),
+                            Icon(item['icon'] as IconData, color: Theme.of(context).colorScheme.primary, size: 19),
                             SizedBox(height: 2),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -1697,7 +1697,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             const SizedBox(width: 5),
                             Text(
                               '(${_visibleAssets.where((a) => !a.isSold).length} ${appText(context, 'Active', 'فعال')})',
-                              style: const TextStyle(color: Color(0xFF147D59), fontSize: 11, fontWeight: FontWeight.w700),
+                              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w700),
                             ),
                           ],
                         ),
@@ -1752,11 +1752,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
                       child: Column(children: [
-                        const Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
+                        const Icon(Icons.inventory_2_outlined, size: 48, color: Theme.of(context).hintColor),
                         SizedBox(height: 10),
                         Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: const TextStyle(fontWeight: FontWeight.w700)),
                         SizedBox(height: 4),
-                        Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text(_selectedCategory == null ? 'Add your first asset to start tracking its value.' : 'Add an asset in this category to see it here.', textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
                       ]),
                     )
                   else
@@ -1873,10 +1873,10 @@ class AssetDetailsScreen extends StatelessWidget {
     final profitLoss = currentValue - asset.purchasePrice;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text('Asset Details', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
       ),
@@ -1941,7 +1941,7 @@ class AssetDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Row(children: [
-            const Expanded(child: Text('Related Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF172B25)))),
+            const Expanded(child: Text('Related Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
             Text('${events.length} entries', style: const TextStyle(fontSize: 11, color: Color(0xFF7A8981), fontWeight: FontWeight.w600)),
           ]),
           const SizedBox(height: 9),

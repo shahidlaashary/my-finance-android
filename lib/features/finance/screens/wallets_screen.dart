@@ -322,8 +322,8 @@ class _WalletsPageState extends State<WalletsPage> {
     final name = bankName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     final themes = <Map<String, dynamic>>[
       {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'design': 'allied', 'colors': [const Color(0xFF063B70), const Color(0xFF087F9B)]},
-      {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'colors': [const Color(0xFF087A45), const Color(0xFF18A66A)]},
-      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF064B3B), const Color(0xFF168B68)]},
+      {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'design': 'hbl', 'colors': [const Color(0xFF171A20), const Color(0xFF5A513E)]},
+      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF202448), const Color(0xFF514078)]},
       {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'colors': [const Color(0xFF54247A), const Color(0xFF9A4CBA)]},
       {'keys': ['mcbislamicbank', 'mcbislamic'], 'brand': 'MCB ISLAMIC', 'mark': 'MCB', 'colors': [const Color(0xFF087B65), const Color(0xFF42B99B)]},
       {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'colors': [const Color(0xFF07529B), const Color(0xFF1596D2)]},
@@ -358,11 +358,10 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['silkbank', 'silk'], 'brand': 'SILKBANK', 'mark': 'SB', 'colors': [const Color(0xFF6B397E), const Color(0xFFB17BBE)]},
       {'keys': ['khushhalimicrofinance', 'khushhali'], 'brand': 'KHUSHHALI BANK', 'mark': 'KB', 'colors': [const Color(0xFF176C4C), const Color(0xFF65A96C)]},
       {'keys': ['mobilinkmicrofinance', 'jazzcash', 'mobilink'], 'brand': 'MOBILINK MICROFINANCE', 'mark': 'MM', 'colors': [const Color(0xFF8C1D48), const Color(0xFFD84B73)]},
-      {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
       {'keys': ['ubank', 'umicrofinance'], 'brand': 'U MICROFINANCE BANK', 'mark': 'U', 'colors': [const Color(0xFF385E9B), const Color(0xFF78A6D5)]},
       {'keys': ['nrsp'], 'brand': 'NRSP MICROFINANCE', 'mark': 'NR', 'colors': [const Color(0xFF35633D), const Color(0xFF86AD5E)]},
       {'keys': ['advans'], 'brand': 'ADVANS MICROFINANCE', 'mark': 'A', 'colors': [const Color(0xFF315A84), const Color(0xFF77A5C8)]},
-      {'keys': ['hblmicrofinance', 'firstmicrofinance'], 'brand': 'HBL MICROFINANCE', 'mark': 'HBL MFB', 'colors': [const Color(0xFF075C48), const Color(0xFF269B76)]},
+      {'keys': ['hblmicrofinance', 'hblmfb', 'firstmicrofinance'], 'brand': 'HBL MICROFINANCE', 'mark': 'HBL MFB', 'colors': [const Color(0xFF075C48), const Color(0xFF269B76)]},
       {'keys': ['apnamicrofinance', 'apnabank'], 'brand': 'APNA MICROFINANCE', 'mark': 'APNA', 'colors': [const Color(0xFF176A91), const Color(0xFF4AADD0)]},
       {'keys': ['halanmicrofinance', 'halan'], 'brand': 'HALAN BANK', 'mark': 'HALAN', 'colors': [const Color(0xFF252B58), const Color(0xFF5969A9)]},
       {'keys': ['lolcmicrofinance', 'lolc', 'pakomanmicrofinance'], 'brand': 'LOLC MICROFINANCE', 'mark': 'LOLC', 'colors': [const Color(0xFF174F83), const Color(0xFF4E91C5)]},
@@ -449,7 +448,9 @@ class _WalletsPageState extends State<WalletsPage> {
                   child: IgnorePointer(child: CustomPaint(
                     painter: _BankCardPatternPainter(
                       pattern: (bankTheme?['pattern'] as int?) ?? 0,
-                      color: Colors.white,
+                      color: (bankTheme?['design'] == 'meezan' || bankTheme?['design'] == 'hbl')
+                          ? const Color(0xFFD9BD82)
+                          : Colors.white,
                     ),
                   )),
                 ),

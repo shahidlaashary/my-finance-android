@@ -15,6 +15,7 @@ on:
   push:
     paths:
       - "assets/data/global_card_catalog.json"
+      - "assets/data/imports/**/*.json"
       - "scripts/card_catalog_pipeline.py"
       - "scripts/test_card_catalog_pipeline.py"
       - ".github/workflows/global-card-catalog.yml"
@@ -36,6 +37,9 @@ jobs:
         env:
           IMPORT_FILE: ${{ inputs.import_file }}
         run: python scripts/card_catalog_pipeline.py --import "$IMPORT_FILE"
+      - name: Import committed country registry batches
+        if: ${{ github.event_name == 'push' }}
+        run: python scripts/card_catalog_pipeline.py --import-dir assets/data/imports
       - name: Test catalog import and verification safeguards
         run: python -m unittest discover -s scripts -p 'test_*.py' -v
       - name: Bulk import all country files from directory

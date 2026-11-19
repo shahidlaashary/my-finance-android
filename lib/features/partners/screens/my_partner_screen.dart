@@ -58,7 +58,7 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
         child: SafeArea(top: false, child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
-            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
             child: Column(children: [
               const SizedBox(height: 10),
               Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
@@ -130,14 +130,14 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('My Partner', style: TextStyle(fontWeight: FontWeight.w800))),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editPartner(), backgroundColor: AppColors.primary, foregroundColor: Colors.white, icon: const Icon(Icons.person_add_alt_1), label: const Text('Add Partner')),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editPartner(), backgroundColor: AppColors.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: const Icon(Icons.person_add_alt_1), label: const Text('Add Partner')),
       body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
         onRefresh: _load,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 100), children: [
           Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Partner Overview', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+            const Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.surface70, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(_partners.length.toString() + ' Partners', style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
+            Text(_partners.length.toString() + ' Partners', style: const TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 25, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
             Row(children: [
               Expanded(child: _overview('Business', businesses, Icons.business_center_outlined)),
@@ -154,7 +154,7 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
             SizedBox(height: 5),
             Text('Add a business or personal partner to get started.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.muted)),
           ])) else ...visible.map((p) => Card(
-            color: Colors.white, margin: const EdgeInsets.only(bottom: 9),
+            color: Theme.of(context).colorScheme.surface, margin: const EdgeInsets.only(bottom: 9),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               leading: CircleAvatar(backgroundColor: AppColors.primary.withValues(alpha: .11), child: Icon(p['type'] == 'Business' ? Icons.business_center_outlined : Icons.person_outline, color: AppColors.primary)),
@@ -174,10 +174,10 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
   }
 
   Widget _overview(String label, int value, IconData icon) => Row(children: [
-    Icon(icon, color: Colors.white, size: 20), const SizedBox(width: 7),
+    Icon(icon, color: Theme.of(context).colorScheme.surface, size: 20), const SizedBox(width: 7),
     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(value.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
-      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+      Text(value.toString(), style: const TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w800, fontSize: 18)),
+      Text(label, style: const TextStyle(color: Theme.of(context).colorScheme.surface70, fontSize: 11)),
     ]),
   ]);
 }
@@ -225,7 +225,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
     showModalBottomSheet<T>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: Colors.transparent, builder: (sc) => StatefulBuilder(builder: (context, setS) {
       final keyboard = MediaQuery.viewInsetsOf(context).bottom;
       final h = MediaQuery.sizeOf(context).height;
-      return AnimatedPadding(duration: const Duration(milliseconds: 220), padding: EdgeInsets.only(bottom: keyboard), child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: keyboard > 0 ? (h-keyboard).clamp(180.0,h)*.96 : h*.82), child: Container(decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))), child: Column(children: [
+      return AnimatedPadding(duration: const Duration(milliseconds: 220), padding: EdgeInsets.only(bottom: keyboard), child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: keyboard > 0 ? (h-keyboard).clamp(180.0,h)*.96 : h*.82), child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(25))), child: Column(children: [
         const SizedBox(height: 10), Container(width: 38,height: 4,decoration: BoxDecoration(color: Theme.of(context).dividerColor,borderRadius: BorderRadius.circular(8))),
         Padding(padding: const EdgeInsets.fromLTRB(18,10,10,8), child: Row(children: [Expanded(child: Text(title,style: const TextStyle(fontSize:19,fontWeight:FontWeight.w800))),IconButton(onPressed:()=>Navigator.pop(sc),icon:const Icon(Icons.close_rounded))])),
         Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,padding: const EdgeInsets.fromLTRB(18,4,18,18),child: body(context,setS))),
@@ -352,9 +352,9 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       appBar: AppBar(title: Text(p?['name']?.toString() ?? 'Partner Details', style: const TextStyle(fontWeight: FontWeight.w800)), actions: [
         PopupMenuButton<String>(onSelected: (v) async { if (v == 'active') { await _service.setActive(widget.partnerId, (p?['is_active'] as int? ?? 1) == 0); await _load(); } }, itemBuilder: (_) => [PopupMenuItem(value: 'active', child: Text((p?['is_active'] as int? ?? 1) == 1 ? 'Deactivate Partner' : 'Activate Partner'))]),
       ]),
-      floatingActionButton: FloatingActionButton.extended(onPressed: _addTransaction, backgroundColor: AppColors.primary, foregroundColor: Colors.white, icon: const Icon(Icons.add), label: const Text('Add Transaction')),
+      floatingActionButton: FloatingActionButton.extended(onPressed: _addTransaction, backgroundColor: AppColors.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: const Icon(Icons.add), label: const Text('Add Transaction')),
       body: _loading ? const Center(child: CircularProgressIndicator()) : p == null ? const Center(child: Text('Partner not found')) : RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.fromLTRB(16,12,16,100), children: [
-        Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(17)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(p['type'].toString() + ' Partner', style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600)),
           const SizedBox(height: 5),
           Text(_money(p['current_balance']), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.text)),
@@ -363,8 +363,8 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
           if (p['type'] == 'Business') Padding(padding: const EdgeInsets.only(top: 6), child: Text('Profit share: ' + p['profit_share'].toString() + '%')),
         ])),
         const SizedBox(height: 12),
-        Card(color: Colors.white, child: ListTile(leading: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary), title: const Text('Linked Wallets', style: TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(_linked.isEmpty ? 'No wallets linked' : _linked.length.toString() + ' wallet(s) linked'), trailing: const Icon(Icons.chevron_right_rounded), onTap: _manageWallets)),
-        Card(color: Colors.white, child: ListTile(
+        Card(color: Theme.of(context).colorScheme.surface, child: ListTile(leading: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary), title: const Text('Linked Wallets', style: TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(_linked.isEmpty ? 'No wallets linked' : _linked.length.toString() + ' wallet(s) linked'), trailing: const Icon(Icons.chevron_right_rounded), onTap: _manageWallets)),
+        Card(color: Theme.of(context).colorScheme.surface, child: ListTile(
           leading: const Icon(Icons.swap_horiz_rounded, color: AppColors.primary),
           title: const Text('Transfer Between Wallet & Partner', style: TextStyle(fontWeight: FontWeight.w700)),
           subtitle: const Text('Move money in either direction'),
@@ -397,7 +397,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                   ? false
                   : ((t['balance_delta'] as num?)?.toDouble() ?? 0) < 0;
           final currency = t['currency']?.toString() ?? 'PKR';
-          return Card(color: Colors.white, margin: const EdgeInsets.only(bottom: 8), child: ListTile(
+          return Card(color: Theme.of(context).colorScheme.surface, margin: const EdgeInsets.only(bottom: 8), child: ListTile(
             leading: CircleAvatar(backgroundColor: (incoming ? AppColors.income : AppColors.expense).withValues(alpha: .12), child: Icon(incoming ? Icons.south_west_rounded : Icons.north_east_rounded, color: incoming ? AppColors.income : AppColors.expense)),
             title: Text(t['type'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
             subtitle: Text((t['wallet_name'] ?? 'No wallet').toString() + ' • ' + (t['date'] ?? '').toString().split('T').first),

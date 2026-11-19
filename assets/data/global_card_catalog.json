@@ -25,8 +25,9 @@
       "officialImageUrl",
       "primaryColor",
       "secondaryColor",
-      "accentColor"
+      "accentColor",
+      "verificationEvidence"
     ],
-    "verification": "Only HTTPS official issuer/regulator/network source URLs are eligible. Source changes are flagged for review; automation never upgrades an unverified record to verified."
+    "verification": "Only HTTPS official issuer/regulator/network source URLs are eligible. Source changes are flagged for review; automation never upgrades an unverified record to verified. Official card image bytes are hashed separately; any artwork change or loss of a previously verified image moves the record to review_required."
   }
 }

@@ -131,9 +131,10 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   int get id=>(committeeData['id'] as num).toInt();
 
   @override
-  void initState(){super.initState();committeeData=Map<String,dynamic>.from(widget.committee);tabs=TabController(length:4,vsync:this);_load();}
+  void initState(){super.initState();committeeData=Map<String,dynamic>.from(widget.committee);tabs=TabController(length:4,vsync:this);AppRefreshController.revision.addListener(_onAppDataChanged);_load();}
+  void _onAppDataChanged(){if(mounted)_load();}
   @override
-  void dispose(){tabs.dispose();super.dispose();}
+  void dispose(){AppRefreshController.revision.removeListener(_onAppDataChanged);tabs.dispose();super.dispose();}
 
   Future<void> _load() async {
     try{

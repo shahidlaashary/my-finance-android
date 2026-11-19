@@ -233,6 +233,65 @@ class _WalletsPageState extends State<WalletsPage> {
     }
   }
 
+  // Bank-specific ATM-card themes. Names and aliases cover SBP-regulated
+  // commercial, Islamic, digital, foreign and specialized banks in Pakistan.
+  Map<String, dynamic> _bankCardTheme(String bankName) {
+    final name = bankName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final themes = <Map<String, dynamic>>[
+      {'keys': ['alliedbank', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'colors': [const Color(0xFF063B70), const Color(0xFF1685C5)]},
+      {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'colors': [const Color(0xFF087A45), const Color(0xFF18A66A)]},
+      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'colors': [const Color(0xFF006B4F), const Color(0xFF23A477)]},
+      {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'colors': [const Color(0xFF54247A), const Color(0xFF9A4CBA)]},
+      {'keys': ['mcbislamicbank', 'mcbislamic'], 'brand': 'MCB ISLAMIC', 'mark': 'MCB', 'colors': [const Color(0xFF087B65), const Color(0xFF42B99B)]},
+      {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'colors': [const Color(0xFF07529B), const Color(0xFF1596D2)]},
+      {'keys': ['bankalfalah', 'alfalah'], 'brand': 'BANK ALFALAH', 'mark': 'BAF', 'colors': [const Color(0xFF8D1828), const Color(0xFFD44A55)]},
+      {'keys': ['bankalhabib', 'alhabib', 'bahl'], 'brand': 'BANK AL HABIB', 'mark': 'BAH', 'colors': [const Color(0xFF7B202B), const Color(0xFFBD4D54)]},
+      {'keys': ['askaribank', 'askari'], 'brand': 'ASKARI BANK', 'mark': 'ASK', 'colors': [const Color(0xFF174B37), const Color(0xFF4A9164)]},
+      {'keys': ['faysalbank', 'faysal'], 'brand': 'FAYSAL BANK', 'mark': 'FBL', 'colors': [const Color(0xFF4A205E), const Color(0xFF9A4C9F)]},
+      {'keys': ['nationalbankofpakistan', 'nationalbank', 'nbp'], 'brand': 'NBP', 'mark': 'NBP', 'colors': [const Color(0xFF005B45), const Color(0xFF219B6A)]},
+      {'keys': ['bankofpunjab', 'bop'], 'brand': 'THE BANK OF PUNJAB', 'mark': 'BOP', 'colors': [const Color(0xFF8D1E2D), const Color(0xFFD54A56)]},
+      {'keys': ['sindhbank'], 'brand': 'SINDH BANK', 'mark': 'SB', 'colors': [const Color(0xFF164A7A), const Color(0xFF368CC2)]},
+      {'keys': ['bankofkhyber', 'bok'], 'brand': 'BANK OF KHYBER', 'mark': 'BOK', 'colors': [const Color(0xFF7A4A16), const Color(0xFFC58A32)]},
+      {'keys': ['firstwomenbank', 'fwb'], 'brand': 'FIRST WOMEN BANK', 'mark': 'FWB', 'colors': [const Color(0xFF813D78), const Color(0xFFC16AA8)]},
+      {'keys': ['bankislami', 'bankislamiPakistan'], 'brand': 'BANKISLAMI', 'mark': 'BI', 'colors': [const Color(0xFF087C70), const Color(0xFF35B7A0)]},
+      {'keys': ['dubaiislamicbank', 'dibpak', 'dib'], 'brand': 'DUBAI ISLAMIC BANK', 'mark': 'DIB', 'colors': [const Color(0xFF087E78), const Color(0xFF45B8A7)]},
+      {'keys': ['albarakabank', 'albaraka'], 'brand': 'AL BARAKA BANK', 'mark': 'AB', 'colors': [const Color(0xFF245B48), const Color(0xFF70A77A)]},
+      {'keys': ['habibmetropolitan', 'habibmetro', 'hmb'], 'brand': 'HABIBMETRO', 'mark': 'HM', 'colors': [const Color(0xFF174B83), const Color(0xFF4A91C8)]},
+      {'keys': ['jsbank', 'jsbl'], 'brand': 'JS BANK', 'mark': 'JS', 'colors': [const Color(0xFF6B263D), const Color(0xFFB94D68)]},
+      {'keys': ['soneribank', 'soneri'], 'brand': 'SONERI BANK', 'mark': 'SON', 'colors': [const Color(0xFF315D3A), const Color(0xFF82A84D)]},
+      {'keys': ['standardchartered', 'scpakistan'], 'brand': 'STANDARD CHARTERED', 'mark': 'SC', 'colors': [const Color(0xFF006B68), const Color(0xFF42A69A)]},
+      {'keys': ['sambabank', 'samba'], 'brand': 'SAMBA BANK', 'mark': 'SAM', 'colors': [const Color(0xFF174D86), const Color(0xFF4D91C9)]},
+      {'keys': ['bankmakramah', 'makramah', 'summitbank'], 'brand': 'BANK MAKRAMAH', 'mark': 'BM', 'colors': [const Color(0xFF633B80), const Color(0xFFA77BC0)]},
+      {'keys': ['easypaisabank', 'easypaisa'], 'brand': 'EASYPAISA BANK', 'mark': 'EP', 'colors': [const Color(0xFF16864B), const Color(0xFF75B843)]},
+      {'keys': ['mashreqbank', 'mashreq'], 'brand': 'MASHREQ', 'mark': 'MB', 'colors': [const Color(0xFF1B4C91), const Color(0xFF4A8BD0)]},
+      {'keys': ['raqami', 'raqamidigital'], 'brand': 'RAQAMI', 'mark': 'RD', 'colors': [const Color(0xFF007A75), const Color(0xFF43B5A2)]},
+      {'keys': ['zaraitaraqiati', 'ztbl'], 'brand': 'ZTBL', 'mark': 'ZT', 'colors': [const Color(0xFF28613D), const Color(0xFF75A85B)]},
+      {'keys': ['punjabprovincialcooperative', 'ppcbl'], 'brand': 'PUNJAB PROVINCIAL CO-OP', 'mark': 'PPC', 'colors': [const Color(0xFF245A8C), const Color(0xFF5A9CC7)]},
+      {'keys': ['smebank'], 'brand': 'SME BANK', 'mark': 'SME', 'colors': [const Color(0xFF3C536D), const Color(0xFF7895B0)]},
+      {'keys': ['bankofchina', 'boc'], 'brand': 'BANK OF CHINA', 'mark': 'BOC', 'colors': [const Color(0xFF9D1828), const Color(0xFFE04B50)]},
+      {'keys': ['citibank', 'citi'], 'brand': 'CITI', 'mark': 'CITI', 'colors': [const Color(0xFF07539A), const Color(0xFF3989C9)]},
+      {'keys': ['deutschebank', 'deutsche'], 'brand': 'DEUTSCHE BANK', 'mark': 'DB', 'colors': [const Color(0xFF173B78), const Color(0xFF547BB7)]},
+      {'keys': ['icbc', 'industrialcommercialbankofchina'], 'brand': 'ICBC', 'mark': 'ICBC', 'colors': [const Color(0xFF9A1725), const Color(0xFFD64B4E)]},
+      {'keys': ['silkbank', 'silk'], 'brand': 'SILKBANK', 'mark': 'SB', 'colors': [const Color(0xFF6B397E), const Color(0xFFB17BBE)]},
+      {'keys': ['khushhalimicrofinance', 'khushhali'], 'brand': 'KHUSHHALI BANK', 'mark': 'KB', 'colors': [const Color(0xFF176C4C), const Color(0xFF65A96C)]},
+      {'keys': ['mobilinkmicrofinance', 'jazzcash', 'mobilink'], 'brand': 'MOBILINK MICROFINANCE', 'mark': 'MM', 'colors': [const Color(0xFF8C1D48), const Color(0xFFD84B73)]},
+      {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
+      {'keys': ['ubank', 'umicrofinance'], 'brand': 'U MICROFINANCE BANK', 'mark': 'U', 'colors': [const Color(0xFF385E9B), const Color(0xFF78A6D5)]},
+      {'keys': ['finca'], 'brand': 'FINCA MICROFINANCE', 'mark': 'F', 'colors': [const Color(0xFF6B4C2B), const Color(0xFFB58A50)]},
+      {'keys': ['nrsp'], 'brand': 'NRSP MICROFINANCE', 'mark': 'NR', 'colors': [const Color(0xFF35633D), const Color(0xFF86AD5E)]},
+      {'keys': ['advans'], 'brand': 'ADVANS MICROFINANCE', 'mark': 'A', 'colors': [const Color(0xFF315A84), const Color(0xFF77A5C8)]},
+    ];
+    for (final theme in themes) {
+      final aliases = theme['keys'] as List<String>;
+      if (aliases.any((alias) => name.contains(alias))) return theme;
+    }
+    return {
+      'brand': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase(),
+      'mark': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase().split(RegExp(r'\\s+')).take(3).map((part) => part.isEmpty ? '' : part[0]).join(),
+      'colors': [const Color(0xFF075B4B), const Color(0xFF16A085)],
+    };
+  }
+
   Widget _buildPremiumWalletCard({
     required Map<String, dynamic> wallet,
     required double balance,
@@ -247,12 +306,13 @@ class _WalletsPageState extends State<WalletsPage> {
     final isCash = type == 'cash';
     final isDigital = type.contains('digital');
     final isInvestment = type.contains('investment');
+    final bankTheme = isBank ? _bankCardTheme((wallet['name'] ?? '').toString()) : null;
     final colors = isDebit
         ? const [Color(0xFF073B66), Color(0xFF087E9B)]
         : isCredit
             ? const [Color(0xFF30205F), Color(0xFF8B3D83)]
             : isBank
-                ? const [Color(0xFF075B4B), Color(0xFF16A085)]
+                ? (bankTheme!['colors'] as List<Color>)
                 : isCash
                     ? const [Color(0xFF8A5A16), Color(0xFFD69B36)]
                     : isDigital
@@ -303,8 +363,24 @@ class _WalletsPageState extends State<WalletsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 17),
+                        if (isBank)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                            ),
+                            child: Text(bankTheme!['mark'] as String,
+                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                          )
+                        else
+                          Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 17),
                         const Spacer(),
+                        if (isBank) ...[
+                          Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 17),
+                          const SizedBox(width: 7),
+                        ],
                         if (excluded) const Icon(Icons.visibility_off_outlined, color: Colors.white70, size: 14),
                         if (isDebit || isCredit) ...[
                           const SizedBox(width: 5),
@@ -326,7 +402,7 @@ class _WalletsPageState extends State<WalletsPage> {
                       const SizedBox(height: 1),
                       Row(children: [
                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text((wallet['name'] ?? 'Wallet').toString().toUpperCase(),
+                          Text(isBank ? (bankTheme!['brand'] as String) : (wallet['name'] ?? 'Wallet').toString().toUpperCase(),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                             style: const TextStyle(color: Colors.white, fontSize: 9,
                               fontWeight: FontWeight.w800, letterSpacing: 0.5)),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
-import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/dashboard/home_screen.dart' show HomePage;
 import 'package:my_finance/features/finance/screens/assets_screen.dart';
@@ -24,40 +23,17 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   // Plus button alag page nahi, is liye pages mein sirf 8 screens hain.
   int selectedIndex = 0;
-  int _refreshVersion = 0;
 
   List<Widget> get pages => [
-    KeyedSubtree(
-      key: ValueKey('home-$_refreshVersion'),
-      child: HomePage(
-        featurePageBuilder: (title) => SimpleFeaturePage(title: title),
-      ),
-    ),
-    KeyedSubtree(key: ValueKey('assets-$_refreshVersion'), child: const AssetsScreen()),
-    KeyedSubtree(key: ValueKey('budgets-$_refreshVersion'), child: const BudgetsScreen()),
-    KeyedSubtree(key: ValueKey('goals-$_refreshVersion'), child: const GoalsScreen()),
-    KeyedSubtree(key: ValueKey('loans-$_refreshVersion'), child: const LoansScreen()),
-    KeyedSubtree(key: ValueKey('stats-$_refreshVersion'), child: const StatsScreen()),
-    KeyedSubtree(key: ValueKey('transactions-$_refreshVersion'), child: const TransactionsScreen()),
-    KeyedSubtree(key: ValueKey('wallets-$_refreshVersion'), child: const WalletsPage()),
+    HomePage(featurePageBuilder: (title) => SimpleFeaturePage(title: title)),
+    const AssetsScreen(),
+    const BudgetsScreen(),
+    const GoalsScreen(),
+    const LoansScreen(),
+    const StatsScreen(),
+    const TransactionsScreen(),
+    const WalletsPage(),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    AppRefreshController.revision.addListener(_handleDataChanged);
-  }
-
-  @override
-  void dispose() {
-    AppRefreshController.revision.removeListener(_handleDataChanged);
-    super.dispose();
-  }
-
-  void _handleDataChanged() {
-    if (!mounted) return;
-    setState(() => _refreshVersion++);
-  }
 
   void selectPage(int index) {
     if (index < 0 || index >= pages.length) return;

@@ -1769,6 +1769,17 @@ class AssetDetailsScreen extends StatelessWidget {
     return 'Party';
   }
 
+  Widget _detailRow(String title, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: Text(title, style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11))),
+        const SizedBox(width: 12),
+        Expanded(child: Text(value, textAlign: TextAlign.end, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600))),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currency = asset.currency.toUpperCase();

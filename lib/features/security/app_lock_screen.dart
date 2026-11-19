@@ -116,7 +116,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         error!,
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       ),
                     ),
                 ],

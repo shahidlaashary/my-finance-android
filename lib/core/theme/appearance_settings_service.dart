@@ -5,8 +5,6 @@ enum AppThemePreset {
   lightMode,
   darkMode,
   midnightGold,
-  oceanBlue,
-  carbonBlack,
 }
 
 class AppearanceSettingsService {
@@ -39,8 +37,6 @@ class AppearanceSettingsService {
         'lightMode' => AppThemePreset.lightMode,
         'darkMode' => AppThemePreset.darkMode,
         'midnightGold' => AppThemePreset.midnightGold,
-        'oceanBlue' => AppThemePreset.oceanBlue,
-        'carbonBlack' => AppThemePreset.carbonBlack,
         'emeraldGreen' => AppThemePreset.emeraldGreen,
         _ => AppThemePreset.emeraldGreen,
       };

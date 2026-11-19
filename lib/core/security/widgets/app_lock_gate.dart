@@ -279,12 +279,12 @@ class _AppLockGateState extends State<AppLockGate>
                     child: FilledButton(
                       onPressed: _checkingPin ? null : _unlockWithPin,
                       child: _checkingPin
-                          ? const SizedBox(
+                          ? SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             )
                           : const Text('Unlock'),

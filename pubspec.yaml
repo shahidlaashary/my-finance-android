@@ -61,6 +61,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/data/global_card_catalog.json
+    - assets/data/card_verification_report.json
   fonts:
     - family: JameelNooriNastaleeq
       fonts:

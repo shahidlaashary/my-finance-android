@@ -209,7 +209,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final newBalance = await showDialog<double>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Adjust Balance'),
+        title: Text('Adjust Balance'),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -223,7 +223,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton(
             onPressed: () {
@@ -231,7 +231,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               if (value == null || !value.isFinite) return;
               Navigator.pop(dialogContext, value);
             },
-            child: const Text('Save'),
+            child: Text('Save'),
           ),
         ],
       ),
@@ -274,7 +274,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       margin: const EdgeInsets.fromLTRB(14, 8, 14, 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Theme.of(context).colorScheme.primaryContainer, Theme.of(context).colorScheme.surfaceContainerLowest],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -301,10 +301,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               children: [
                 Text(wallet['name']?.toString() ?? 'Wallet',
                     maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
                 Text(hideBalances ? '${currency} ••••••' : '${currency} ${money(balance, conceal: false)}',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.primary)),
               ],
             ),
@@ -317,7 +317,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
               visualDensity: VisualDensity.compact,
             ),
-            child: const Text('Adjust Balance', style: TextStyle(fontSize: 11.5)),
+            child: Text('Adjust Balance', style: TextStyle(fontSize: 11.5)),
           ),
         ],
       ),
@@ -349,7 +349,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, updateDialog) => AlertDialog(
-          title: const Text('Edit Adjustment'),
+          title: Text('Edit Adjustment'),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               TextField(
@@ -369,9 +369,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               const SizedBox(height: 8),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Transaction Date'),
+                title: Text('Transaction Date'),
                 subtitle: Text(DateFormat(dateFormat).format(selectedDate)),
-                trailing: const Icon(Icons.calendar_month),
+                trailing: Icon(Icons.calendar_month),
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
@@ -386,7 +386,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text('Cancel')),
             FilledButton(
               onPressed: () async {
                 final delta = double.tryParse(controller.text.trim());
@@ -410,7 +410,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   }
                 }
               },
-              child: const Text('Save Changes'),
+              child: Text('Save Changes'),
             ),
           ],
         ),
@@ -625,7 +625,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       subtitle: Text(
                         DateFormat(dateFormat).format(selectedDate),
                       ),
-                      trailing: const Icon(Icons.calendar_month),
+                      trailing: Icon(Icons.calendar_month),
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
@@ -949,7 +949,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.settings_outlined,
                                   size: 14,
@@ -977,7 +977,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               ),
                             ).then((_) => loadTransactions());
                           },
-                          labelStyle: const TextStyle(
+                          labelStyle: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: Theme.of(context).hintColor,
@@ -1009,7 +1009,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 filteredTransactions.isEmpty
                                     ? appText(context, "No transactions available", "No transactions available")
                                     : 'No ${selectedFilter == 'all' ? '' : selectedFilter} transactions',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Theme.of(context).hintColor,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -1037,8 +1037,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             showAllTransactions: true,
                                           ),
                                         )),
-                                        icon: const Icon(Icons.view_list_rounded),
-                                        label: const Text('View All Transactions'),
+                                        icon: Icon(Icons.view_list_rounded),
+                                        label: Text('View All Transactions'),
                                       ),
                                     ),
                                   );
@@ -1051,7 +1051,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                       children: [
                                         OutlinedButton(
                                           onPressed: safePage > 0 ? () => setState(() => currentPage--) : null,
-                                          child: const Text('Previous'),
+                                          child: Text('Previous'),
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -1059,7 +1059,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                         ),
                                         OutlinedButton(
                                           onPressed: safePage < pageCount - 1 ? () => setState(() => currentPage++) : null,
-                                          child: const Text('Next'),
+                                          child: Text('Next'),
                                         ),
                                       ],
                                     ),
@@ -1095,7 +1095,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     children: [
                                       Text(
                                         dayNumber,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 34,
                                           height: 1,
                                           fontWeight: FontWeight.w900,
@@ -1113,7 +1113,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               dayName,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 13,
                                                 height: 1.15,
                                                 fontWeight: FontWeight.w800,
@@ -1125,7 +1125,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               monthYear,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11.5,
                                                 height: 1.1,
                                                 fontWeight: FontWeight.w600,
@@ -1278,7 +1278,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               title,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w700,
                                                 color: Theme.of(context).colorScheme.onSurface,
@@ -1294,7 +1294,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               ].join('  •  '),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11.5,
                                                 color: Theme.of(context).hintColor,
                                               ),
@@ -1304,7 +1304,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               dateLabel,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 10.5,
                                                 color: Color(0xFF9AA49F),
                                               ),
@@ -1346,7 +1346,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               padding: EdgeInsets.zero,
                                               visualDensity: VisualDensity.compact,
                                             ),
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.more_horiz,
                                               color: Color(0xFF89958E),
                                               size: 19,
@@ -1492,7 +1492,7 @@ class TransactionDetailScreen extends StatelessWidget {
                     if (isTransfer && toAmount != null) ...[
                       const SizedBox(height: 2),
                       Text('Received: ${toAmount.toStringAsFixed(2)}',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF65736B))),
+                          style: TextStyle(fontSize: 12, color: Color(0xFF65736B))),
                     ],
                   ],
                 ),
@@ -1536,7 +1536,7 @@ class TransactionDetailScreen extends StatelessWidget {
           Row(children: [
             Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
           ]),
           const SizedBox(height: 10),
           ...children,
@@ -1559,7 +1559,7 @@ class TransactionDetailScreen extends StatelessWidget {
           Expanded(
             flex: 6,
             child: Text(value, textAlign: TextAlign.end,
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
           ),
         ],
       ),

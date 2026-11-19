@@ -1080,7 +1080,7 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(height: 7),
           Text('${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
-              style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
         ],
       ),
     );

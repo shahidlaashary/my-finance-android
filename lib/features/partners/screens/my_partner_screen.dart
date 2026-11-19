@@ -128,13 +128,13 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
     final businesses = _partners.where((p) => p['type'] == 'Business').length;
     final personals = _partners.where((p) => p['type'] == 'Personal').length;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text('My Partner', style: TextStyle(fontWeight: FontWeight.w800))),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editPartner(), backgroundColor: AppColors.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: const Icon(Icons.person_add_alt_1), label: const Text('Add Partner')),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editPartner(), backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: const Icon(Icons.person_add_alt_1), label: const Text('Add Partner')),
       body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
         onRefresh: _load,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 100), children: [
-          Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text(_partners.length.toString() + ' Partners', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 25, fontWeight: FontWeight.w800)),
@@ -148,16 +148,16 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
           Wrap(spacing: 8, children: ['All', 'Business', 'Personal'].map((v) => ChoiceChip(label: Text(v), selected: _filter == v, onSelected: (_) => setState(() => _filter = v))).toList()),
           const SizedBox(height: 8),
           if (visible.isEmpty) const Padding(padding: EdgeInsets.only(top: 55), child: Column(children: [
-            Icon(Icons.handshake_outlined, size: 56, color: AppColors.primary),
+            Icon(Icons.handshake_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
             SizedBox(height: 12),
             Text('No partners added yet', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             SizedBox(height: 5),
-            Text('Add a business or personal partner to get started.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.muted)),
+            Text('Add a business or personal partner to get started.', textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor)),
           ])) else ...visible.map((p) => Card(
             color: Theme.of(context).colorScheme.surface, margin: const EdgeInsets.only(bottom: 9),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              leading: CircleAvatar(backgroundColor: AppColors.primary.withValues(alpha: .11), child: Icon(p['type'] == 'Business' ? Icons.business_center_outlined : Icons.person_outline, color: AppColors.primary)),
+              leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .11), child: Icon(p['type'] == 'Business' ? Icons.business_center_outlined : Icons.person_outline, color: Theme.of(context).colorScheme.primary)),
               title: Text(p['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
               subtitle: Text(p['type'].toString() + ' Partner • ' + p['transaction_count'].toString() + ' transactions'),
               trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -236,7 +236,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
   Future<void> _manageWallets() async {
     final selected = _linked.map((w) => w['id'] as int).toSet();
     final result = await _sheet<bool>(title: 'Link Wallets', save: 'Save Wallet Links', onSave: () => Navigator.pop(context, true), body: (context, setS) => Column(children: [
-      const Align(alignment: Alignment.centerLeft, child: Text('Select wallets used for this partner.', style: TextStyle(color: AppColors.muted))),
+      Align(alignment: Alignment.centerLeft, child: Text('Select wallets used for this partner.', style: TextStyle(color: Theme.of(context).hintColor))),
       const SizedBox(height: 8),
       ..._wallets.map((w) => CheckboxListTile(contentPadding: EdgeInsets.zero, value: selected.contains(w['id']), title: Text(w['name'].toString()), subtitle: Text(w['currency'].toString()), onChanged: (v) => setS(() { if (v == true) { selected.add(w['id'] as int); } else { selected.remove(w['id']); } }))),
       if (_wallets.isEmpty) const Text('Create a wallet first.'),
@@ -348,31 +348,31 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
   Widget build(BuildContext context) {
     final p = _partner;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: Text(p?['name']?.toString() ?? 'Partner Details', style: const TextStyle(fontWeight: FontWeight.w800)), actions: [
         PopupMenuButton<String>(onSelected: (v) async { if (v == 'active') { await _service.setActive(widget.partnerId, (p?['is_active'] as int? ?? 1) == 0); await _load(); } }, itemBuilder: (_) => [PopupMenuItem(value: 'active', child: Text((p?['is_active'] as int? ?? 1) == 1 ? 'Deactivate Partner' : 'Activate Partner'))]),
       ]),
-      floatingActionButton: FloatingActionButton.extended(onPressed: _addTransaction, backgroundColor: AppColors.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: const Icon(Icons.add), label: const Text('Add Transaction')),
+      floatingActionButton: FloatingActionButton.extended(onPressed: _addTransaction, backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: const Icon(Icons.add), label: const Text('Add Transaction')),
       body: _loading ? const Center(child: CircularProgressIndicator()) : p == null ? const Center(child: Text('Partner not found')) : RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.fromLTRB(16,12,16,100), children: [
         Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(17)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(p['type'].toString() + ' Partner', style: const TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600)),
+          Text(p['type'].toString() + ' Partner', style: TextStyle(color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 5),
-          Text(_money(p['current_balance']), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.text)),
-          const Text('Net partner balance', style: TextStyle(color: AppColors.muted, fontSize: 11)),
+          Text(_money(p['current_balance']), style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+          Text('Net partner balance', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11)),
           if ((p['phone'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(p['phone'].toString())),
           if (p['type'] == 'Business') Padding(padding: const EdgeInsets.only(top: 6), child: Text('Profit share: ' + p['profit_share'].toString() + '%')),
         ])),
         const SizedBox(height: 12),
-        Card(color: Theme.of(context).colorScheme.surface, child: ListTile(leading: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary), title: const Text('Linked Wallets', style: TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(_linked.isEmpty ? 'No wallets linked' : _linked.length.toString() + ' wallet(s) linked'), trailing: const Icon(Icons.chevron_right_rounded), onTap: _manageWallets)),
+        Card(color: Theme.of(context).colorScheme.surface, child: ListTile(leading: Icon(Icons.account_balance_wallet_outlined, color: Theme.of(context).colorScheme.primary), title: const Text('Linked Wallets', style: TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(_linked.isEmpty ? 'No wallets linked' : _linked.length.toString() + ' wallet(s) linked'), trailing: const Icon(Icons.chevron_right_rounded), onTap: _manageWallets)),
         Card(color: Theme.of(context).colorScheme.surface, child: ListTile(
-          leading: const Icon(Icons.swap_horiz_rounded, color: AppColors.primary),
+          leading: Icon(Icons.swap_horiz_rounded, color: Theme.of(context).colorScheme.primary),
           title: const Text('Transfer Between Wallet & Partner', style: TextStyle(fontWeight: FontWeight.w700)),
           subtitle: const Text('Move money in either direction'),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: _transfer,
         )),
         const Padding(padding: EdgeInsets.fromLTRB(4,16,4,8), child: Text('Transaction History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
-        if (_transactions.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No transactions yet', style: TextStyle(color: AppColors.muted)))),
+        if (_transactions.isEmpty) Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No transactions yet', style: TextStyle(color: Theme.of(context).hintColor)))),
         ..._transactions.map((t) {
           // History direction is CASH movement, not partner receivable balance.
           // A received payment reduces the partner's outstanding ledger (negative
@@ -398,10 +398,10 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                   : ((t['balance_delta'] as num?)?.toDouble() ?? 0) < 0;
           final currency = t['currency']?.toString() ?? 'PKR';
           return Card(color: Theme.of(context).colorScheme.surface, margin: const EdgeInsets.only(bottom: 8), child: ListTile(
-            leading: CircleAvatar(backgroundColor: (incoming ? AppColors.income : AppColors.expense).withValues(alpha: .12), child: Icon(incoming ? Icons.south_west_rounded : Icons.north_east_rounded, color: incoming ? AppColors.income : AppColors.expense)),
+            leading: CircleAvatar(backgroundColor: (incoming ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error).withValues(alpha: .12), child: Icon(incoming ? Icons.south_west_rounded : Icons.north_east_rounded, color: incoming ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error)),
             title: Text(t['type'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
             subtitle: Text((t['wallet_name'] ?? 'No wallet').toString() + ' • ' + (t['date'] ?? '').toString().split('T').first),
-            trailing: Text((incoming ? '+' : '−') + _money(t['amount'], currency), style: TextStyle(fontWeight: FontWeight.w800, color: incoming ? AppColors.income : AppColors.expense)),
+            trailing: Text((incoming ? '+' : '−') + _money(t['amount'], currency), style: TextStyle(fontWeight: FontWeight.w800, color: incoming ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error)),
           ));
         }),
       ])),

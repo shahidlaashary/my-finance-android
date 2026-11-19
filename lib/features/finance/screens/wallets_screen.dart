@@ -77,6 +77,89 @@ class _WalletWavePainter extends CustomPainter {
   bool shouldRepaint(covariant _WalletWavePainter oldDelegate) => oldDelegate.color != color;
 }
 
+class _BankCardPatternPainter extends CustomPainter {
+  final int pattern;
+  final Color color;
+  const _BankCardPatternPainter({required this.pattern, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.13)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.15;
+    final fill = Paint()
+      ..color = color.withValues(alpha: 0.075)
+      ..style = PaintingStyle.fill;
+    switch (pattern % 6) {
+      case 0:
+        for (var i = -size.height; i < size.width + size.height; i += 18) {
+          canvas.drawLine(Offset(i.toDouble(), 0),
+              Offset(i + size.height, size.height), paint);
+        }
+        break;
+      case 1:
+        for (var i = 0; i < 5; i++) {
+          final rect = Rect.fromLTWH(size.width * 0.48 + i * 13,
+              -size.height * 0.45 + i * 13, size.height * 0.9, size.height * 0.9);
+          final path = Path()
+            ..moveTo(rect.center.dx, rect.top)
+            ..lineTo(rect.right, rect.center.dy)
+            ..lineTo(rect.center.dx, rect.bottom)
+            ..lineTo(rect.left, rect.center.dy)
+            ..close();
+          canvas.drawPath(path, paint);
+        }
+        break;
+      case 2:
+        for (var i = 0; i < 7; i++) {
+          canvas.drawCircle(Offset(size.width * 0.82, size.height * 0.48),
+              18.0 + i * 12, paint);
+        }
+        break;
+      case 3:
+        final side = 22.0;
+        for (var row = -1; row < 5; row++) {
+          for (var col = 0; col < 8; col++) {
+            final x = col * side * 1.5 + (row.isOdd ? side * 0.75 : 0);
+            final y = row * side * 1.3;
+            final path = Path()
+              ..moveTo(x + side * 0.5, y)
+              ..lineTo(x + side, y + side * 0.25)
+              ..lineTo(x + side, y + side * 0.75)
+              ..lineTo(x + side * 0.5, y + side)
+              ..lineTo(x, y + side * 0.75)
+              ..lineTo(x, y + side * 0.25)
+              ..close();
+            canvas.drawPath(path, paint);
+          }
+        }
+        break;
+      case 4:
+        for (var i = 0; i < 6; i++) {
+          final path = Path()
+            ..moveTo(size.width * 0.35, size.height * (0.15 + i * 0.16))
+            ..cubicTo(size.width * 0.58, size.height * (0.02 + i * 0.16),
+                size.width * 0.72, size.height * (0.28 + i * 0.16),
+                size.width * 1.05, size.height * (0.10 + i * 0.16));
+          canvas.drawPath(path, paint);
+        }
+        break;
+      case 5:
+        for (var row = 0; row < 8; row++) {
+          for (var col = 0; col < 13; col++) {
+            canvas.drawCircle(Offset(col * 18.0 + 5, row * 15.0 + 5), 1.7, fill);
+          }
+        }
+        break;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BankCardPatternPainter oldDelegate) =>
+      oldDelegate.pattern != pattern || oldDelegate.color != color;
+}
+
 class WalletsPage extends StatefulWidget {
   const WalletsPage({super.key});
 
@@ -277,7 +360,6 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['mobilinkmicrofinance', 'jazzcash', 'mobilink'], 'brand': 'MOBILINK MICROFINANCE', 'mark': 'MM', 'colors': [const Color(0xFF8C1D48), const Color(0xFFD84B73)]},
       {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
       {'keys': ['ubank', 'umicrofinance'], 'brand': 'U MICROFINANCE BANK', 'mark': 'U', 'colors': [const Color(0xFF385E9B), const Color(0xFF78A6D5)]},
-      {'keys': ['finca'], 'brand': 'FINCA MICROFINANCE', 'mark': 'F', 'colors': [const Color(0xFF6B4C2B), const Color(0xFFB58A50)]},
       {'keys': ['nrsp'], 'brand': 'NRSP MICROFINANCE', 'mark': 'NR', 'colors': [const Color(0xFF35633D), const Color(0xFF86AD5E)]},
       {'keys': ['advans'], 'brand': 'ADVANS MICROFINANCE', 'mark': 'A', 'colors': [const Color(0xFF315A84), const Color(0xFF77A5C8)]},
       {'keys': ['hblmicrofinance', 'firstmicrofinance'], 'brand': 'HBL MICROFINANCE', 'mark': 'HBL MFB', 'colors': [const Color(0xFF075C48), const Color(0xFF269B76)]},
@@ -363,7 +445,15 @@ class _WalletsPageState extends State<WalletsPage> {
             borderRadius: BorderRadius.circular(17),
             child: Stack(
               children: [
-                Positioned(right: -23, top: -35,
+                if (isBank) Positioned.fill(
+                  child: IgnorePointer(child: CustomPaint(
+                    painter: _BankCardPatternPainter(
+                      pattern: (bankTheme?['pattern'] as int?) ?? 0,
+                      color: Colors.white,
+                    ),
+                  )),
+                ),
+                if (!isBank) Positioned(right: -23, top: -35,
                   child: Container(width: 125, height: 125,
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       border: Border.all(color: Colors.white.withValues(alpha: 0.10), width: 18)))),
@@ -395,7 +485,7 @@ class _WalletsPageState extends State<WalletsPage> {
                     child: Container(width: 72, height: 72,
                       decoration: BoxDecoration(shape: BoxShape.circle,
                         border: Border.all(color: const Color(0xFFF28C28).withValues(alpha: 0.55), width: 5)))),
-                Positioned(right: 24, bottom: -57,
+                if (!isBank) Positioned(right: 24, bottom: -57,
                   child: Container(width: 145, height: 145,
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       color: Colors.white.withValues(alpha: 0.055)))),

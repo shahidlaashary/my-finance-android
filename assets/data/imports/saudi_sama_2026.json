@@ -1,0 +1,207 @@
+{
+  "countryCode": "SA",
+  "registry": "Saudi Central Bank",
+  "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+  "records": [
+    {
+      "countryCode": "SA",
+      "institutionName": "Saudi National Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.alahli.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.alahli.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Saudi Awwal Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.sab.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.sab.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Saudi Investment Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.saib.com.sa",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.saib.com.sa",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Alinma Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.alinma.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.alinma.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Banque Saudi Fransi",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.alfransi.com.sa",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.alfransi.com.sa",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Riyad Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.riyadbank.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.riyadbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Al Rajhi Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.alrajhibank.com.sa",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.alrajhibank.com.sa",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Arab National Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.anb.com.sa",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.anb.com.sa",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Bank Albilad",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankalbilad.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.bankalbilad.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Bank AlJazira",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.baj.com.sa",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.baj.com.sa",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Gulf International Bank Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.gib.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.gib.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Emirates NBD Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.emiratesnbd.com.sa",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.emiratesnbd.com.sa",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "National Bank of Kuwait Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.nbk.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.nbk.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Deutsche Bank Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.db.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.db.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "BNP Paribas Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://group.bnpparibas",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://group.bnpparibas",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "JPMorgan Chase Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.jpmorganchase.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.jpmorganchase.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Industrial and Commercial Bank of China Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.icbc.com.cn",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.icbc.com.cn",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "Qatar National Bank Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.qnb.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.qnb.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "MUFG Bank Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.mufg.jp",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.mufg.jp",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "SA",
+      "institutionName": "First Abu Dhabi Bank Saudi Arabia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankfab.com",
+      "registrySourceUrl": "https://www.sama.gov.sa/en-US/Supervision/LicenseEntities/Pages/LocalBanks.aspx",
+      "sourceUrl": "https://www.bankfab.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

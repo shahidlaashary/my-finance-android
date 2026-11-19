@@ -446,7 +446,6 @@ class LoansService {
       ''',
       [amount, walletId],
     );
-    AppRefreshController.notifyChanged();
   }
 
   /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.
@@ -466,7 +465,7 @@ class LoansService {
       throw Exception('Please select a valid wallet.');
     }
 
-    return db.transaction((txn) async {
+    final loanId = await db.transaction((txn) async {
       final party = await txn.query(
         'loan_parties',
         columns: ['id', 'currency'],
@@ -509,6 +508,8 @@ class LoansService {
 
       return loanId;
     });
+    AppRefreshController.notifyChanged();
+    return loanId;
   }
 
   /// Asset purchase/sale ke liye loan create karta hai, bina kisi wallet ko debit/credit kiye.
@@ -527,7 +528,7 @@ class LoansService {
       throw Exception('Invalid asset loan reference.');
     }
     final db = await _database;
-    return db.transaction((txn) async {
+    final id = await db.transaction((txn) async {
       final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [partyId], limit: 1);
       if (parties.isEmpty) throw Exception('Selected party was not found.');
       final currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
@@ -558,6 +559,8 @@ class LoansService {
         'created_at': DateTime.now().toIso8601String(),
       });
     });
+    AppRefreshController.notifyChanged();
+    return id;
   }
 
   /// Asset-linked loan ko uski repayments ke baghair edit karta hai.
@@ -588,6 +591,7 @@ class LoansService {
         'notes': notes, 'status': 'active',
       }, where: 'id = ?', whereArgs: [loanId]);
     });
+    AppRefreshController.notifyChanged();
   }
 
   /// Loan ki currency wale wallet mein repayment ka record banata hai.
@@ -608,7 +612,7 @@ class LoansService {
       throw Exception('Invalid loan selected.');
     }
 
-    return db.transaction((txn) async {
+    final repaymentId = await db.transaction((txn) async {
       final loans = await txn.query(
         'loans',
         where: 'id = ?',
@@ -676,6 +680,8 @@ class LoansService {
 
       return repaymentId;
     });
+    AppRefreshController.notifyChanged();
+    return repaymentId;
   }
 
   /// Tamam loans naye se purane order mein deta hai.
@@ -972,5 +978,6 @@ class LoansService {
         whereArgs: [loanId],
       );
     });
+    AppRefreshController.notifyChanged();
   }
 }

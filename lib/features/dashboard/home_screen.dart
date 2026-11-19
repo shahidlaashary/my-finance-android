@@ -466,7 +466,7 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Container(
                 width: 42,
                 height: 4,
@@ -481,7 +481,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Icon(Icons.currency_exchange_rounded,
                         color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         appText(context, 'Foreign Currencies Summary',
@@ -496,7 +496,7 @@ class _HomePageState extends State<HomePage> {
                     IconButton(
                       tooltip: appText(context, 'Close', 'بند کریں'),
                       onPressed: () => Navigator.pop(sheetContext),
-                      icon: const Icon(Icons.close_rounded),
+                      icon: Icon(Icons.close_rounded),
                     ),
                   ],
                 ),
@@ -540,10 +540,10 @@ class _HomePageState extends State<HomePage> {
                                   width: 22,
                                   child: Text(
                                     _currencyFlag(entry.key),
-                                    style: const TextStyle(fontSize: 18),
+                                    style: TextStyle(fontSize: 18),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                SizedBox(width: 6),
                                 Expanded(
                                   flex: 3,
                                   child: Text(
@@ -558,7 +558,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 0),
+                                SizedBox(width: 0),
                                 Expanded(
                                   flex: 8,
                                   child: Row(
@@ -584,7 +584,7 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 2),
+                                      SizedBox(width: 2),
                                       Expanded(
                                         flex: 7,
                                         child: FittedBox(
@@ -635,7 +635,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         hideBalances
                             ? '$baseCurrency ******'
@@ -709,20 +709,20 @@ class _HomePageState extends State<HomePage> {
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('$baseCurrency Wallets Total',
                           style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
-                        const SizedBox(height: 5),
-                        loading ? const SizedBox(height: 25, width: 25,
+                        SizedBox(height: 5),
+                        loading ? SizedBox(height: 25, width: 25,
                           child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
                           : FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
                             child: Text(_currencyAmount(baseCurrency, baseCurrencyWalletTotal),
                               style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 25, fontWeight: FontWeight.w800))),
                       ])),
-                      const SizedBox(width: 14),
+                      SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(appText(context, 'Other Currencies', 'دیگر کرنسیاں'),
                           style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 7),
+                        SizedBox(height: 7),
                         if (loading)
-                          const SizedBox(height: 25, width: 25,
+                          SizedBox(height: 25, width: 25,
                             child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
                         else if (firstOtherCurrency == null)
                           Text(appText(context, 'No other currencies', 'کوئی دوسری کرنسی نہیں'),
@@ -740,12 +740,12 @@ class _HomePageState extends State<HomePage> {
                               padding: const EdgeInsets.symmetric(vertical: 4), minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                             child: Text(appText(context, 'View All Currencies', 'تمام کرنسیاں دیکھیں'),
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
                         ],
                       ])),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
@@ -754,8 +754,8 @@ class _HomePageState extends State<HomePage> {
                     child: Row(children: [
                       Expanded(child: Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
                         style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, fontWeight: FontWeight.w600))),
-                      const SizedBox(width: 8),
-                      loading ? const SizedBox(height: 18, width: 18,
+                      SizedBox(width: 8),
+                      loading ? SizedBox(height: 18, width: 18,
                         child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
                         : Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight,
                             child: Text(money(totalBalance),
@@ -814,7 +814,7 @@ class _HomePageState extends State<HomePage> {
                       fit: BoxFit.scaleDown,
                       child: Text(
                         loading ? '...' : money(estimatedNetWorth),
-                        style: const TextStyle(fontWeight: FontWeight.w800,
+                        style: TextStyle(fontWeight: FontWeight.w800,
                             color: Theme.of(context).colorScheme.primary, fontSize: 17),
                       ),
                     ),
@@ -865,7 +865,7 @@ class _HomePageState extends State<HomePage> {
                       color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(13),
                     ),
-                    child: const Icon(Icons.savings_outlined,
+                    child: Icon(Icons.savings_outlined,
                         color: Theme.of(context).colorScheme.primary),
                   ),
                   SizedBox(width: 12),
@@ -889,7 +889,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Text(
                     '${savingsRate.toStringAsFixed(1)}%',
-                    style: const TextStyle(fontSize: 17,
+                    style: TextStyle(fontSize: 17,
                         fontWeight: FontWeight.w800,
                         color: Theme.of(context).colorScheme.primary),
                   ),
@@ -1007,7 +1007,7 @@ class _HomePageState extends State<HomePage> {
           Row(children: [
             Icon(icon, color: color, size: 18),
             SizedBox(width: 7),
-            Text(title, style: const TextStyle(fontSize: 12,
+            Text(title, style: TextStyle(fontSize: 12,
                 color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
           ]),
           SizedBox(height: 9),
@@ -1058,7 +1058,7 @@ class _HomePageState extends State<HomePage> {
           Row(children: [
             Expanded(
               child: Text(budget.name,
-                  style: const TextStyle(fontWeight: FontWeight.w800,
+                  style: TextStyle(fontWeight: FontWeight.w800,
                       fontSize: 13, color: Theme.of(context).colorScheme.onSurface)),
             ),
             Text('${percent.toStringAsFixed(0)}%',
@@ -1112,18 +1112,18 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Icon(icon, color: color, size: 23),
           ),
-          const SizedBox(width: 13),
+          SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(
+                Text(title, style: TextStyle(
                     fontWeight: FontWeight.w800, fontSize: 14)),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(summary, style: TextStyle(
                     color: color, fontSize: 12, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 2),
-                Text(detail, style: const TextStyle(
+                SizedBox(height: 2),
+                Text(detail, style: TextStyle(
                     color: Theme.of(context).hintColor, fontSize: 11)),
               ],
             ),

@@ -180,7 +180,7 @@ class _BankCardPatternPainter extends CustomPainter {
         break;
       case 'bankislami':
         // Minimal matte-black titanium face with restrained curved silver lines.
-        final silver=Paint()..color=const Color(0xFFE6E6E6).withValues(alpha:.18)..style=PaintingStyle.stroke..strokeWidth:1.1;
+        final silver=Paint()..color=const Color(0xFFE6E6E6).withValues(alpha:.18)..style=PaintingStyle.stroke..strokeWidth=1.1;
         for(var i=0;i<6;i++) {
           path..reset()..moveTo(-w*.1,h*(.12+i*.14))..cubicTo(w*.25,h*(.02+i*.14),w*.42,h*(.28+i*.14),w*.7,h*(.12+i*.14));
           canvas.drawPath(path,silver);
@@ -199,10 +199,10 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'bop':
-        final orange=Paint()..color=const Color(0xFFF58220).withValues(alpha:.72)..style=PaintingStyle.stroke..strokeWidth:5;
+        final orange=Paint()..color=const Color(0xFFF58220).withValues(alpha:.72)..style=PaintingStyle.stroke..strokeWidth=5;
         for(var i=0;i<5;i++) canvas.drawCircle(Offset(w*.88,h*.48),18+i*17,orange);
         path..reset()..moveTo(w*.42,h)..cubicTo(w*.62,h*.55,w*.78,h*.9,w*1.08,h*.3);
-        canvas.drawPath(path,Paint()..color=const Color(0xFFF58220).withValues(alpha:.38)..style=PaintingStyle.stroke..strokeWidth:8);
+        canvas.drawPath(path,Paint()..color=const Color(0xFFF58220).withValues(alpha:.38)..style=PaintingStyle.stroke..strokeWidth=8);
         break;
       case 'bok':
         final blue=Paint()..color=const Color(0xFF1F4E79).withValues(alpha:.18);
@@ -219,7 +219,7 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'nbp':
-        final silver=Paint()..color=const Color(0xFFD5DADF).withValues(alpha:.2)..style=PaintingStyle.stroke..strokeWidth:1;
+        final silver=Paint()..color=const Color(0xFFD5DADF).withValues(alpha:.2)..style=PaintingStyle.stroke..strokeWidth=1;
         for(var i=0;i<8;i++) {
           path..reset()..moveTo(w*.42+i*13.0,0)..lineTo(w*.82+i*13.0,h*.5)..lineTo(w*.42+i*13.0,h);
           canvas.drawPath(path,silver);

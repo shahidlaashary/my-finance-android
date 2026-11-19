@@ -1270,7 +1270,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             const SizedBox(height: 3),
                             Text('${asset.category}  •  ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan  •  ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                               maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF718078), fontWeight: FontWeight.w500)),
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF718078), fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),

@@ -1276,7 +1276,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       ),
                       const SizedBox(width: 8),
                       Transform.translate(
-                        offset: const Offset(22, 0),
+                        offset: const Offset(28, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -1289,7 +1289,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         ),
                       ),
                       Transform.translate(
-                        offset: const Offset(19, -5),
+                        offset: const Offset(19, -9),
                         child: PopupMenuButton<String>(
                         tooltip: 'Manage Asset',
                         padding: EdgeInsets.zero,

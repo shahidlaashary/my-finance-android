@@ -566,14 +566,17 @@ class _WalletsPageState extends State<WalletsPage> {
     final isDebit = type.contains('debit');
     final isCredit = type.contains('credit');
     final bankTheme = _bankCardTheme((wallet['name'] ?? '').toString());
+    // Treat every bank/debit/credit/digital-card entry as institution-branded.
+    // Unknown institutions use the deterministic name-based fallback theme;
+    // known institutions use their curated brand palette.
     final isBank = type == 'bank' || type.contains('bank') ||
-        ((type.contains('debit') || type.contains('digital')) && bankTheme['isKnown'] == true);
+        type.contains('debit') || type.contains('credit') || type.contains('digital');
     final isCash = type == 'cash';
     final isDigital = type.contains('digital');
     final isInvestment = type.contains('investment');
-    final colors = isDebit && bankTheme['isKnown'] != true
+    final colors = isDebit && !isBank
         ? const [Color(0xFF073B66), Color(0xFF087E9B)]
-        : isCredit && bankTheme['isKnown'] != true
+        : isCredit && !isBank
             ? const [Color(0xFF30205F), Color(0xFF8B3D83)]
             : isBank
                 ? (bankTheme!['colors'] as List<Color>)

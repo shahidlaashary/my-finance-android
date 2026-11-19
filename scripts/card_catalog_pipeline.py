@@ -123,10 +123,14 @@ def check_sources(catalog):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--import", dest="imports", action="append", default=[], help="JSON file to merge; repeatable")
+    parser.add_argument("--import-dir", dest="import_dirs", action="append", default=[], help="Import every JSON file in a directory tree")
     parser.add_argument("--check", action="store_true", help="recheck every official source URL")
     args=parser.parse_args()
     catalog=load_json(CATALOG, {"schemaVersion":1,"catalogId":"my-finance-global-card-catalog","updatedAt":None,"policy":{},"records":[]})
-    imported=import_records(catalog,args.imports) if args.imports else 0
+    import_paths = list(args.imports)
+    for directory in args.import_dirs:
+        import_paths.extend(str(path) for path in sorted(Path(directory).rglob("*.json")) if path.resolve() not in (CATALOG.resolve(), REPORT.resolve()))
+    imported=import_records(catalog,import_paths) if import_paths else 0
     results=check_sources(catalog) if args.check else []
     catalog["updatedAt"]=now()
     CATALOG.parent.mkdir(parents=True,exist_ok=True)

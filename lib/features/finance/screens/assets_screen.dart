@@ -1276,19 +1276,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       ),
                       const SizedBox(width: 8),
                       Transform.translate(
-                        offset: const Offset(28, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text('$currency ${_money(displayedValue)}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
-                            const SizedBox(height: 2),
-                            Text(asset.isSold ? 'Sale Value' : 'Current Value',
-                              style: const TextStyle(fontSize: 9.5, color: Color(0xFF7A8981))),
-                          ],
-                        ),
-                      ),
-                      Transform.translate(
                         offset: const Offset(19, -9),
                         child: PopupMenuButton<String>(
                         tooltip: 'Manage Asset',

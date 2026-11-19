@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 
 class CategoriesPage extends StatefulWidget {
   final String initialType;
@@ -48,7 +49,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
   void initState() {
     super.initState();
     selectedType = widget.initialType == 'Expense' ? 'Expense' : 'Income';
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     loadCategories();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) loadCategories();
+  }
+
+  @override
+  void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
+    super.dispose();
   }
 
   Future<void> loadCategories() async {

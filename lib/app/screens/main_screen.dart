@@ -72,7 +72,7 @@ class _MainScreenState extends State<MainScreen> {
       // Nau jagah: aath navigation tabs aur darmiyan mein Plus.
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.055),
@@ -123,11 +123,11 @@ class _MainScreenState extends State<MainScreen> {
                         width: 43,
                         height: 43,
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.22),
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.22),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -135,7 +135,7 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                         child: const Icon(
                           Icons.add_rounded,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           size: 29,
                         ),
                       ),
@@ -208,8 +208,8 @@ class _MainScreenState extends State<MainScreen> {
                           isSelected ? activeIcon : icon,
                           size: 22,
                           color: isSelected
-                              ? AppColors.primary
-                              : AppColors.muted,
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).hintColor,
                         ),
                       ),
                     ),
@@ -229,8 +229,8 @@ class _MainScreenState extends State<MainScreen> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.muted,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).hintColor,
                               ),
                             ),
                           ),
@@ -280,8 +280,8 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxSheetHeight),
           child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
             ),
             child: Column(
@@ -292,7 +292,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     width: 38,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD9E0DC),
+                      color: Theme.of(context).dividerColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -307,7 +307,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.text,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -315,7 +315,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                         visualDensity: VisualDensity.compact,
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close_rounded),
-                        color: AppColors.muted,
+                        color: Theme.of(context).hintColor,
                       ),
                     ],
                   ),
@@ -328,21 +328,21 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                         title: appText(context, 'Income', 'آمدنی'),
                         subtitle: appText(context, 'Money received', 'وصول شدہ رقم'),
                         icon: Icons.south_west_rounded,
-                        color: AppColors.income,
+                        color: Theme.of(context).extension<FinanceThemeColors>()?.income ?? Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
                         title: appText(context, 'Expense', 'اخراجات'),
                         subtitle: appText(context, 'Money spent', 'خرچ کی گئی رقم'),
                         icon: Icons.north_east_rounded,
-                        color: AppColors.expense,
+                        color: Theme.of(context).extension<FinanceThemeColors>()?.expense ?? Theme.of(context).colorScheme.error,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
                         title: appText(context, 'Transfer', 'منتقلی'),
                         subtitle: appText(context, 'Between wallets', 'والٹس کے درمیان'),
                         icon: Icons.swap_horiz_rounded,
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ],
                   ),
@@ -388,10 +388,10 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
           decoration: BoxDecoration(
-            color: selected ? color.withValues(alpha: 0.11) : const Color(0xFFF5F7F6),
+            color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(13),
             border: Border.all(
-              color: selected ? color : const Color(0xFFE8EEEA),
+              color: selected ? color : Theme.of(context).colorScheme.outlineVariant,
               width: selected ? 1.4 : 1,
             ),
           ),
@@ -416,11 +416,11 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 maxLines: 2,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 9,
                   height: 1.15,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.muted,
+                  color: Theme.of(context).hintColor,
                 ),
               ),
             ],

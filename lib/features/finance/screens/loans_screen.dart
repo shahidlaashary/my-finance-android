@@ -2757,7 +2757,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     borderRadius: BorderRadius.circular(11),
     onTap: onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       decoration: BoxDecoration(
         color: selected ? const Color(0xFF147D59) : Colors.transparent,
         borderRadius: BorderRadius.circular(11),

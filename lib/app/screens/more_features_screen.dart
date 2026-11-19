@@ -259,8 +259,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           (AppThemePreset.lightMode, 'Light Mode', Icons.light_mode_outlined),
           (AppThemePreset.darkMode, 'Dark Mode', Icons.dark_mode_outlined),
           (AppThemePreset.midnightGold, 'Midnight Gold', Icons.nights_stay_outlined),
-          (AppThemePreset.oceanBlue, 'Ocean Blue', Icons.water_outlined),
-          (AppThemePreset.carbonBlack, 'Carbon Black', Icons.contrast_rounded),
         ];
 
         return Column(

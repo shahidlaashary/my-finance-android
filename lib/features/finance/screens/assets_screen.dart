@@ -1285,7 +1285,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             style: const TextStyle(fontSize: 9.5, color: Color(0xFF7A8981))),
                         ],
                       ),
-                      PopupMenuButton<String>(
+                      Transform.translate(
+                        offset: const Offset(4, -5),
+                        child: PopupMenuButton<String>(
                         tooltip: 'Manage Asset',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(minWidth: 160),
@@ -1310,6 +1312,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             const PopupMenuItem(value: 'sell', child: Text('Sell Asset')),
                           const PopupMenuItem(value: 'delete', child: Text('Delete Asset')),
                         ],
+                      ),
                       ),
                     ],
                   ),
@@ -1359,7 +1362,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFF1763A8),
                                   side: const BorderSide(color: Color(0xFFBBD5EA)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                                   minimumSize: const Size(0, 30),
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
@@ -1378,7 +1381,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFF168451),
                                   side: const BorderSide(color: Color(0xFFB9E2CB)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                                   minimumSize: const Size(0, 30),
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
@@ -1834,7 +1837,7 @@ class AssetDetailsScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
           Container(
-            padding: const EdgeInsets.all(17),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF123F35), Color(0xFF176B52), Color(0xFF218565)],
@@ -1859,11 +1862,11 @@ class AssetDetailsScreen extends StatelessWidget {
                       style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11)),
                   ])),
                 ]),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 const Text('CURRENT ASSET VALUE', style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .5)),
                 const SizedBox(height: 4),
                 Text('$currency ${_money(currentValue)}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 13),
+                const SizedBox(height: 9),
                 Row(children: [
                   Expanded(child: _metric('Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
                   Container(width: 1, height: 30, color: Colors.white24),

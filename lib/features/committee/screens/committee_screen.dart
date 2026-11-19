@@ -87,7 +87,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
       floatingActionButton: FloatingActionButton.extended(onPressed:_create, icon:const Icon(Icons.add), label:const Text('New Committee')),
       body: loading ? const Center(child:CircularProgressIndicator()) :
         committees.isEmpty ? Center(child:Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisSize:MainAxisSize.min,children:[
-          const Icon(Icons.groups_outlined,size:56,color:Theme.of(context).hintColor), const SizedBox(height:12),
+          Icon(Icons.groups_outlined,size:56,color:Theme.of(context).hintColor), const SizedBox(height:12),
           const Text('No committees yet',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
           const SizedBox(height:6), const Text('Create a fixed-turn committee and add its members.',textAlign:TextAlign.center),
           const SizedBox(height:16), FilledButton.icon(onPressed:_create,icon:const Icon(Icons.add),label:const Text('Create Committee')),
@@ -257,7 +257,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     final next=members.where((m)=>(m['received'] as num).toDouble()<(c['installment_amount'] as num).toDouble()*members.length-0.000001).toList();
     return ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text(c['status'].toString().toUpperCase(),style:const TextStyle(fontWeight:FontWeight.bold,color:Theme.of(context).colorScheme.secondary)),
+        Text(c['status'].toString().toUpperCase(),style:TextStyle(fontWeight:FontWeight.bold,color:Theme.of(context).colorScheme.secondary)),
         const SizedBox(height:8),Text('${c['frequency']} • ${members.length} members'),
         Text('Installment: ${money.format(c['installment_amount'])} ${c['currency'] ?? 'PKR'}'),
         Text('Start: ${DateFormat('dd MMM yyyy').format(DateTime.parse(c['start_date']))}'),

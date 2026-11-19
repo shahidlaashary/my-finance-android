@@ -328,14 +328,14 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                         title: appText(context, 'Income', 'آمدنی'),
                         subtitle: appText(context, 'Money received', 'وصول شدہ رقم'),
                         icon: Icons.south_west_rounded,
-                        color: Theme.of(context).extension<FinanceThemeColors>()?.income ?? Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(
                         title: appText(context, 'Expense', 'اخراجات'),
                         subtitle: appText(context, 'Money spent', 'خرچ کی گئی رقم'),
                         icon: Icons.north_east_rounded,
-                        color: Theme.of(context).extension<FinanceThemeColors>()?.expense ?? Theme.of(context).colorScheme.error,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                       const SizedBox(width: 8),
                       _transactionTab(

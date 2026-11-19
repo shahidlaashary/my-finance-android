@@ -5,6 +5,7 @@ Input import format: JSON array of records or {"records": [...]}.
 No third-party dependencies. Never infers official artwork or auto-promotes trust.
 """
 import argparse, hashlib, json, re, sys, urllib.error, urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 from datetime import datetime, timezone
 from pathlib import Path
@@ -85,40 +86,42 @@ def fetch_digest(url, limit):
         if len(body) > limit: raise ValueError('Source exceeds size limit')
         return response.status, hashlib.sha256(body).hexdigest(), response.geturl()
 
+def check_one_record(r):
+    url = r.get('sourceUrl') or r.get('officialProductUrl') or r.get('officialWebsite')
+    item={'countryCode':r['countryCode'],'institutionName':r['institutionName'],'sourceUrl':url}
+    if not url:
+        r['verificationStatus']='needs_source'; item['result']='needs_source'
+    else:
+        try:
+            status,digest,final_url=fetch_digest(url,2000000)
+            changed=bool(r.get('sourceContentSha256') and r['sourceContentSha256'] != digest)
+            r['lastCheckedAt']=now(); r['sourceContentSha256']=digest
+            item.update({'httpStatus':status,'finalUrl':final_url,'sourceSha256':digest,'sourceChanged':changed})
+            if changed:
+                r['verificationStatus']='review_required'; r['sourceChangedAt']=r['lastCheckedAt']
+            item['result']='source_changed_review_required' if changed else 'reachable'
+        except (urllib.error.URLError,TimeoutError,ValueError) as exc:
+            r['verificationStatus']='source_unreachable'; r['lastCheckedAt']=now()
+            item.update({'result':'unreachable','error':str(exc)[:240]})
+    image_url=r.get('officialImageUrl')
+    if image_url:
+        try:
+            status,digest,final_url=fetch_digest(image_url,8000000)
+            changed=bool(r.get('imageContentSha256') and r['imageContentSha256'] != digest)
+            r['imageContentSha256']=digest
+            item.update({'imageHttpStatus':status,'imageFinalUrl':final_url,'imageSha256':digest,'imageChanged':changed})
+            if changed:
+                r['verificationStatus']='review_required'; r['sourceChangedAt']=now()
+                item['result']='card_art_changed_review_required'
+        except (urllib.error.URLError,TimeoutError,ValueError) as exc:
+            item.update({'imageResult':'unreachable_or_invalid','imageError':str(exc)[:240]})
+            if r.get('verificationStatus') == 'official_card_verified': r['verificationStatus']='review_required'
+    return item
+
 def check_sources(catalog):
-    results=[]
-    for r in catalog['records']:
-        url = r.get('sourceUrl') or r.get('officialProductUrl') or r.get('officialWebsite')
-        item={'countryCode':r['countryCode'],'institutionName':r['institutionName'],'sourceUrl':url}
-        if not url:
-            r['verificationStatus']='needs_source'; item['result']='needs_source'
-        else:
-            try:
-                status,digest,final_url=fetch_digest(url,2000000)
-                changed=bool(r.get('sourceContentSha256') and r['sourceContentSha256'] != digest)
-                r['lastCheckedAt']=now(); r['sourceContentSha256']=digest
-                item.update({'httpStatus':status,'finalUrl':final_url,'sourceSha256':digest,'sourceChanged':changed})
-                if changed:
-                    r['verificationStatus']='review_required'; r['sourceChangedAt']=r['lastCheckedAt']
-                item['result']='source_changed_review_required' if changed else 'reachable'
-            except (urllib.error.URLError,TimeoutError,ValueError) as exc:
-                r['verificationStatus']='source_unreachable'; r['lastCheckedAt']=now()
-                item.update({'result':'unreachable','error':str(exc)[:240]})
-        image_url=r.get('officialImageUrl')
-        if image_url:
-            try:
-                status,digest,final_url=fetch_digest(image_url,8000000)
-                changed=bool(r.get('imageContentSha256') and r['imageContentSha256'] != digest)
-                r['imageContentSha256']=digest
-                item.update({'imageHttpStatus':status,'imageFinalUrl':final_url,'imageSha256':digest,'imageChanged':changed})
-                if changed:
-                    r['verificationStatus']='review_required'; r['sourceChangedAt']=now()
-                    item['result']='card_art_changed_review_required'
-            except (urllib.error.URLError,TimeoutError,ValueError) as exc:
-                item.update({'imageResult':'unreachable_or_invalid','imageError':str(exc)[:240]})
-                if r.get('verificationStatus') == 'official_card_verified': r['verificationStatus']='review_required'
-        results.append(item)
-    return results
+    # Bound concurrency so a few slow issuer sites do not stall the global run.
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        return list(pool.map(check_one_record, catalog['records']))
 
 def main():
     parser=argparse.ArgumentParser()

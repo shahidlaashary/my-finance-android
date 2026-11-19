@@ -992,7 +992,7 @@ class _WalletsPageState extends State<WalletsPage> {
                         onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),
                       ),
                       const SizedBox(width: 5),
-                      TextButton.icon(
+                      TextButton(
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: const Size(0, 32),
@@ -1008,8 +1008,11 @@ class _WalletsPageState extends State<WalletsPage> {
                           ));
                           await loadWallets();
                         },
-                        icon: const Icon(Icons.tune_rounded, size: 18),
-                        label: Text(appText(context, 'Manage', 'انتظام کریں')),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.tune_rounded, size: 18),
+                          const SizedBox(width: 2),
+                          Text(appText(context, 'Manage', 'انتظام کریں')),
+                        ]),
                       ),
                     ],
                   ),

@@ -157,6 +157,12 @@ class AppTheme {
         backgroundColor: p.surface, foregroundColor: p.text,
         surfaceTintColor: Colors.transparent, elevation: 0,
         centerTitle: false, iconTheme: IconThemeData(color: p.primary),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: p.brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+          systemNavigationBarColor: p.background,
+          systemNavigationBarIconBrightness: p.brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        ),
         titleTextStyle: TextStyle(color: p.text, fontSize: 20,
           fontWeight: FontWeight.w700, fontFamily: fontFamily),
       ),
@@ -288,15 +294,7 @@ class AppTheme {
         textStyle: TextStyle(color: p.surface),
       ),
       dividerTheme: DividerThemeData(color: p.outline.withOpacity(.55), thickness: 1),
-      systemOverlayStyle: p.brightness == Brightness.dark
-        ? const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.light,
-            systemNavigationBarColor: Color(0xFF101419),
-            systemNavigationBarIconBrightness: Brightness.light)
-        : const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark,
-            systemNavigationBarColor: Color(0xFFF3F5FB),
-            systemNavigationBarIconBrightness: Brightness.dark),
+
     );
   }
 }

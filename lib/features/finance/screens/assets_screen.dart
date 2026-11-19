@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:intl/intl.dart';
@@ -74,6 +75,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
+  void _onAppDataChanged() {
+    if (mounted) _loadData();
+  }
+
   void _onPreferencesChanged() async {
     final hidden = await GeneralPreferences.instance.hideBalances;
     if (mounted && hidden != _hideBalances) {
@@ -84,6 +89,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     super.dispose();
   }
 
@@ -1558,6 +1564,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
   void initState() {
     super.initState();
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadData();
   }
 

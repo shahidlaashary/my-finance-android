@@ -28,7 +28,9 @@ jobs:
           python-version: "3.x"
       - name: Import optional bulk data
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.import_file != '' }}
-        run: python scripts/card_catalog_pipeline.py --import "${{ inputs.import_file }}"
+        env:
+          IMPORT_FILE: ${{ inputs.import_file }}
+        run: python scripts/card_catalog_pipeline.py --import "$IMPORT_FILE"
       - name: Recheck official sources
         run: python scripts/card_catalog_pipeline.py --check
       - name: Commit catalog verification report

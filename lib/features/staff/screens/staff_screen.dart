@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/staff/services/staff_service.dart';
@@ -16,9 +17,10 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
   List<Map<String, dynamic>> _staff = [], _salaries = [], _attendance = [], _wallets = [];
   bool _loading = true;
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); AppRefreshController.revision.addListener(_onAppDataChanged); _load(); }
+  void _onAppDataChanged() { if (mounted) _load(); }
   @override
-  void dispose() { _tabs.dispose(); super.dispose(); }
+  void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); _tabs.dispose(); super.dispose(); }
 
   String tr(String value) => appText(context, value, value);
   Future<void> _load() async {

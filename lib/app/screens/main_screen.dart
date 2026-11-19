@@ -21,25 +21,32 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Plus button alag page nahi, is liye pages mein sirf 8 screens hain.
+  // Build only the Home tab at startup. Other tabs are created on first visit.
   int selectedIndex = 0;
+  final Set<int> _visitedPages = {0};
+  late final List<Widget> _pages;
 
-  List<Widget> get pages => [
-    HomePage(featurePageBuilder: (title) => SimpleFeaturePage(title: title)),
-    const AssetsScreen(),
-    const BudgetsScreen(),
-    const GoalsScreen(),
-    const LoansScreen(),
-    const StatsScreen(),
-    const TransactionsScreen(),
-    const WalletsPage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomePage(featurePageBuilder: (title) => SimpleFeaturePage(title: title)),
+      const AssetsScreen(),
+      const BudgetsScreen(),
+      const GoalsScreen(),
+      const LoansScreen(),
+      const StatsScreen(),
+      const TransactionsScreen(),
+      const WalletsPage(),
+    ];
+  }
 
   void selectPage(int index) {
-    if (index < 0 || index >= pages.length) return;
+    if (index < 0 || index >= _pages.length) return;
 
     setState(() {
       selectedIndex = index;
+      _visitedPages.add(index);
     });
   }
 
@@ -59,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: IndexedStack(
         index: selectedIndex,
-        children: pages,
+        children: List<Widget>.generate(\n          _pages.length,\n          (index) => _visitedPages.contains(index)\n              ? _pages[index]\n              : const SizedBox.shrink(),\n        ),
       ),
 
       // Nau jagah: aath navigation tabs aur darmiyan mein Plus.

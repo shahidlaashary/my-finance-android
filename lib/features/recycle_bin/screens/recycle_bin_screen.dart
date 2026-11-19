@@ -88,10 +88,10 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
           itemBuilder: (context, i) {
             final item = _items[i];
             final date = DateTime.tryParse(item['deleted_at']?.toString() ?? '');
-            final color = item['source_table'] == 'transactions' ? const Color(0xFF3979C6) : const Color(0xFF147D59);
+            final color = item['source_table'] == 'transactions' ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary;
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE8EEE9)), boxShadow: [BoxShadow(color: const Color(0xFF183D2D).withValues(alpha: 0.035), blurRadius: 12, offset: const Offset(0, 3))]),
+              decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant), boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.035), blurRadius: 12, offset: const Offset(0, 3))]),
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RecycleBinDetailScreen(item: item))),
@@ -103,19 +103,19 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(item['entity_title']?.toString() ?? tr('Deleted item'), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 3),
-                      Text(tr(item['entity_type']?.toString() ?? 'Item'), style: const TextStyle(fontSize: 11.5, color: Color(0xFF7B8781))),
+                      Text(tr(item['entity_type']?.toString() ?? 'Item'), style: TextStyle(fontSize: 11.5, color: Theme.of(context).hintColor)),
                       const SizedBox(height: 4),
-                      Text(date == null ? tr('Unknown date') : DateFormat('dd MMM yyyy  •  hh:mm a').format(date), style: const TextStyle(fontSize: 10.5, color: Color(0xFF9AA49F))),
+                      Text(date == null ? tr('Unknown date') : DateFormat('dd MMM yyyy  •  hh:mm a').format(date), style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor)),
                       const SizedBox(height: 4),
-                      Text('${tr('Auto-delete in')}: ${_remaining(item)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5, color: Color(0xFFD18A32), fontWeight: FontWeight.w600)),
+                      Text('${tr('Auto-delete in')}: ${_remaining(item)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, color: Theme.of(context).colorScheme.tertiary, fontWeight: FontWeight.w600)),
                     ])),
                     PopupMenuButton<String>(
                       padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.more_horiz, color: Color(0xFF89958E)),
+                      icon: Icon(Icons.more_horiz, color: Theme.of(context).hintColor),
                       onSelected: (v) { if (v == 'restore') _restore(item); if (v == 'delete') _delete(item); },
                       itemBuilder: (_) => [PopupMenuItem(value: 'restore', child: Text(tr('Restore'))), PopupMenuItem(value: 'delete', child: Text(tr('Delete permanently')))],
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF9AA49F)),
+                    Icon(Icons.chevron_right_rounded, color: Theme.of(context).hintColor),
                   ]),
                 ),
               ),
@@ -147,11 +147,11 @@ class RecycleBinDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Deleted Item Details'))),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: const Color(0xFF3979C6).withValues(alpha: 0.08), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF3979C6).withValues(alpha: 0.2))), child: Column(children: [
+        Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(18), border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2))), child: Column(children: [
           const CircleAvatar(radius: 25, backgroundColor: Color(0x1F3979C6), child: Icon(Icons.delete_outline_rounded, color: Color(0xFF3979C6))),
           const SizedBox(height: 10),
           Text(item['entity_title']?.toString() ?? tr('Deleted item'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-          Text(tr(item['entity_type']?.toString() ?? 'Item'), style: const TextStyle(color: Color(0xFF718078))),
+          Text(tr(item['entity_type']?.toString() ?? 'Item'), style: TextStyle(color: Theme.of(context).hintColor)),
         ])),
         const SizedBox(height: 16),
         _section(context, tr('Deletion Information'), [
@@ -171,14 +171,14 @@ class RecycleBinDetailScreen extends StatelessWidget {
 
   Widget _section(BuildContext context, String title, List<Widget> children) => Container(
     padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE8EEE9))),
+    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(17), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)), const SizedBox(height: 9), ...children]),
   );
 
   Widget _row(String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(flex: 4, child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF7B8781)))),
+      Expanded(flex: 4, child: Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor))),
       const SizedBox(width: 10),
       Expanded(flex: 6, child: Text(value, textAlign: TextAlign.end, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
     ]),

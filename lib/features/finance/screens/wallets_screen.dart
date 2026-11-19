@@ -302,19 +302,19 @@ class _WalletsPageState extends State<WalletsPage> {
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       color: Colors.white.withValues(alpha: 0.055)))),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 9),
+                  padding: const EdgeInsets.fromLTRB(11, 7, 11, 7),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 19),
+                        Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 17),
                         const Spacer(),
                         if (excluded) const Icon(Icons.visibility_off_outlined, color: Colors.white70, size: 14),
                         if (isDebit || isCredit) ...[
                           const SizedBox(width: 5),
-                          SizedBox(width: 35, height: 23,
+                          SizedBox(width: 32, height: 20,
                             child: Stack(children: [
-                              Positioned(left: 0, child: Container(width: 21, height: 21,
+                              Positioned(left: 0, child: Container(width: 19, height: 19,
                                 decoration: BoxDecoration(color: const Color(0xFFE53935).withValues(alpha: 0.95), shape: BoxShape.circle))),
                               Positioned(right: 0, child: Container(width: 21, height: 21,
                                 decoration: BoxDecoration(color: const Color(0xFFFFB300).withValues(alpha: 0.95), shape: BoxShape.circle))),
@@ -322,25 +322,25 @@ class _WalletsPageState extends State<WalletsPage> {
                         ] else
                           Icon(IconData(iconCode, fontFamily: 'MaterialIcons'), color: Colors.white, size: 20),
                       ]),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 1),
                       Text(maskedNumber, maxLines: 1,
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.88),
-                          fontSize: 10, letterSpacing: 1.25, fontWeight: FontWeight.w600)),
+                          fontSize: 9, letterSpacing: 1.1, fontWeight: FontWeight.w600)),
                       const Spacer(),
                       Text(formatMoney(balance, currency), maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontSize: 15,
+                        style: const TextStyle(color: Colors.white, fontSize: 14,
                           fontWeight: FontWeight.w900, letterSpacing: -0.35)),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Row(children: [
                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text((wallet['name'] ?? 'Wallet').toString().toUpperCase(),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white, fontSize: 9.5,
+                            style: const TextStyle(color: Colors.white, fontSize: 8.5,
                               fontWeight: FontWeight.w800, letterSpacing: 0.45)),
                           Text(walletType.toUpperCase(), maxLines: 1,
                             style: TextStyle(color: Colors.white.withValues(alpha: 0.72),
-                              fontSize: 8, fontWeight: FontWeight.w700, letterSpacing: 0.7)),
+                              fontSize: 7, fontWeight: FontWeight.w700, letterSpacing: 0.7)),
                         ])),
                         if (isDebit || isCredit)
                           const Text('mastercard', style: TextStyle(color: Colors.white,

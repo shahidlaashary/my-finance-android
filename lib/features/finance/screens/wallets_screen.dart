@@ -238,9 +238,9 @@ class _WalletsPageState extends State<WalletsPage> {
   Map<String, dynamic> _bankCardTheme(String bankName) {
     final name = bankName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     final themes = <Map<String, dynamic>>[
-      {'keys': ['alliedbank', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'colors': [const Color(0xFF063B70), const Color(0xFF1685C5)]},
+      {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'design': 'allied', 'colors': [const Color(0xFF063B70), const Color(0xFF087F9B)]},
       {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'colors': [const Color(0xFF087A45), const Color(0xFF18A66A)]},
-      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'colors': [const Color(0xFF006B4F), const Color(0xFF23A477)]},
+      {'keys': ['meezanbank', 'meezan', 'meehan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF064B3B), const Color(0xFF168B68)]},
       {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'colors': [const Color(0xFF54247A), const Color(0xFF9A4CBA)]},
       {'keys': ['mcbislamicbank', 'mcbislamic'], 'brand': 'MCB ISLAMIC', 'mark': 'MCB', 'colors': [const Color(0xFF087B65), const Color(0xFF42B99B)]},
       {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'colors': [const Color(0xFF07529B), const Color(0xFF1596D2)]},
@@ -249,7 +249,7 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['askaribank', 'askari'], 'brand': 'ASKARI BANK', 'mark': 'ASK', 'colors': [const Color(0xFF174B37), const Color(0xFF4A9164)]},
       {'keys': ['faysalbank', 'faysal'], 'brand': 'FAYSAL BANK', 'mark': 'FBL', 'colors': [const Color(0xFF4A205E), const Color(0xFF9A4C9F)]},
       {'keys': ['nationalbankofpakistan', 'nationalbank', 'nbp'], 'brand': 'NBP', 'mark': 'NBP', 'colors': [const Color(0xFF005B45), const Color(0xFF219B6A)]},
-      {'keys': ['bankofpunjab', 'bop'], 'brand': 'THE BANK OF PUNJAB', 'mark': 'BOP', 'colors': [const Color(0xFF8D1E2D), const Color(0xFFD54A56)]},
+      {'keys': ['bankofpunjab', 'thebankofpunjab', 'bop'], 'brand': 'THE BANK OF PUNJAB', 'mark': 'BOP', 'design': 'bop', 'colors': [const Color(0xFF101F36), const Color(0xFF263D5C)]},
       {'keys': ['sindhbank'], 'brand': 'SINDH BANK', 'mark': 'SB', 'colors': [const Color(0xFF164A7A), const Color(0xFF368CC2)]},
       {'keys': ['bankofkhyber', 'bok'], 'brand': 'BANK OF KHYBER', 'mark': 'BOK', 'colors': [const Color(0xFF7A4A16), const Color(0xFFC58A32)]},
       {'keys': ['firstwomenbank', 'fwb'], 'brand': 'FIRST WOMEN BANK', 'mark': 'FWB', 'colors': [const Color(0xFF813D78), const Color(0xFFC16AA8)]},
@@ -353,6 +353,34 @@ class _WalletsPageState extends State<WalletsPage> {
                   child: Container(width: 125, height: 125,
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       border: Border.all(color: Colors.white.withValues(alpha: 0.10), width: 18)))),
+                if (isBank && bankTheme?['design'] == 'allied')
+                  Positioned(right: -8, top: 4,
+                    child: Icon(Icons.account_balance_rounded,
+                      size: 132, color: Colors.white.withValues(alpha: 0.12))),
+                if (isBank && bankTheme?['design'] == 'meezan')
+                  Positioned(right: 4, top: 8,
+                    child: SizedBox(width: 112, height: 112,
+                      child: Stack(alignment: Alignment.center, children: [
+                        Icon(Icons.auto_awesome_rounded, size: 106,
+                          color: Colors.white.withValues(alpha: 0.10)),
+                        Icon(Icons.star_rounded, size: 66,
+                          color: Colors.white.withValues(alpha: 0.08)),
+                        Transform.rotate(angle: 0.785,
+                          child: Container(width: 58, height: 58,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.13), width: 1.4),
+                              borderRadius: BorderRadius.circular(9)))),
+                      ]))),
+                if (isBank && bankTheme?['design'] == 'bop')
+                  Positioned(right: -14, bottom: -4,
+                    child: SizedBox(width: 190, height: 105,
+                      child: CustomPaint(
+                        painter: _WalletWavePainter(const Color(0xFFF28C28)))),
+                if (isBank && bankTheme?['design'] == 'bop')
+                  Positioned(right: 18, top: 14,
+                    child: Container(width: 72, height: 72,
+                      decoration: BoxDecoration(shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFF28C28).withValues(alpha: 0.55), width: 5)))),
                 Positioned(right: 24, bottom: -57,
                   child: Container(width: 145, height: 145,
                     decoration: BoxDecoration(shape: BoxShape.circle,

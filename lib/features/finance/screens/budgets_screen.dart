@@ -115,7 +115,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
                   SizedBox(height: 12),
                   Row(children: [Expanded(child: Text(budget == null ? 'Create Budget' : 'Edit Budget', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor)]),
+                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor)]),
                   SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
                     validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter budget name', 'بجٹ کا نام درج کریں') : null),
@@ -148,7 +148,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     Expanded(child: DropdownButtonFormField<String>(
                       value: period, isExpanded: true,
                       decoration: decoration('Budget Period', Icons.calendar_view_month),
-                      items: const ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      items: ['Daily','Weekly','Monthly','Yearly','Custom'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                       onChanged: (v) { if (v != null) setSheetState(() => period = v); },
                     )),
                   ]),
@@ -180,7 +180,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   ]),
                   SizedBox(height: 12),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
-                    Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
+                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
                       style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
@@ -276,7 +276,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                   child: Icon(
                     Icons.pie_chart,
@@ -290,14 +290,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                     children: [
                       Text(
                         budget.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         '${budget.period} • ${_categoryName(budget.category)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).hintColor,
                         ),
@@ -340,7 +340,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               children: [
                 Text(
                   'Spent: ${budget.currency} ${_money(spent)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 Text(
                   'Limit: ${budget.currency} ${_money(limit)}',
@@ -382,7 +382,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             SizedBox(height: 10),
             Text(
               '${DateFormat('dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).hintColor,
               ),
@@ -422,7 +422,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         onPressed: () => _showBudgetDialog(),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: const Icon(Icons.add),
+        icon: Icon(Icons.add),
         label: Text(appText(context, 'New Budget', 'نیا بجٹ')),
       ),
       body: _loading

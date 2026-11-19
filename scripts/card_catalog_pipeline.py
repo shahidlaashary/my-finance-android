@@ -4,7 +4,7 @@
 Input import format: JSON array of records or {"records": [...]}.
 No third-party dependencies. Never infers official artwork or auto-promotes trust.
 """
-import argparse, hashlib, json, re, sys, urllib.error, urllib.request
+import argparse, hashlib, json, re, sys, time, urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 from datetime import datetime, timezone
@@ -78,13 +78,24 @@ def fetch_digest(url, limit):
     parsed = urlparse(url or '')
     if parsed.scheme != 'https' or not parsed.netloc:
         raise ValueError('Only absolute HTTPS URLs are allowed')
-    req = urllib.request.Request(url, headers={'User-Agent':'MyFinance-CardCatalogVerifier/1.1'})
-    with urllib.request.urlopen(req, timeout=25) as response:
-        final = urlparse(response.geturl())
-        if final.scheme != 'https': raise ValueError('Redirect left HTTPS')
-        body = response.read(limit + 1)
-        if len(body) > limit: raise ValueError('Source exceeds size limit')
-        return response.status, hashlib.sha256(body).hexdigest(), response.geturl()
+    req = urllib.request.Request(url, headers={'User-Agent':'MyFinance-CardCatalogVerifier/1.2'})
+    # Retry transient connection resets, timeouts and temporary server errors.
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as response:
+                final = urlparse(response.geturl())
+                if final.scheme != 'https': raise ValueError('Redirect left HTTPS')
+                body = response.read(limit + 1)
+                if len(body) > limit: raise ValueError('Source exceeds size limit')
+                return response.status, hashlib.sha256(body).hexdigest(), response.geturl()
+        except urllib.error.HTTPError as exc:
+            if attempt == 2 or not (exc.code in (408, 429) or exc.code >= 500):
+                raise
+            time.sleep(attempt + 1)
+        except (urllib.error.URLError, TimeoutError, OSError):
+            if attempt == 2:
+                raise
+            time.sleep(attempt + 1)
 
 def check_one_record(r):
     url = r.get('sourceUrl') or r.get('officialProductUrl') or r.get('officialWebsite')
@@ -100,7 +111,7 @@ def check_one_record(r):
             if changed:
                 r['verificationStatus']='review_required'; r['sourceChangedAt']=r['lastCheckedAt']
             item['result']='source_changed_review_required' if changed else 'reachable'
-        except (urllib.error.URLError,TimeoutError,ValueError) as exc:
+        except (urllib.error.URLError,TimeoutError,OSError,ValueError) as exc:
             r['verificationStatus']='source_unreachable'; r['lastCheckedAt']=now()
             item.update({'result':'unreachable','error':str(exc)[:240]})
     image_url=r.get('officialImageUrl')
@@ -120,7 +131,7 @@ def check_one_record(r):
 
 def check_sources(catalog):
     # Bound concurrency so a few slow issuer sites do not stall the global run.
-    with ThreadPoolExecutor(max_workers=12) as pool:
+    with ThreadPoolExecutor(max_workers=6) as pool:
         return list(pool.map(check_one_record, catalog['records']))
 
 def main():

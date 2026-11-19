@@ -233,7 +233,7 @@ class _StatsScreenState extends State<StatsScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+          Expanded(child: Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
           if (subtitle != null) Text(subtitle, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
         ],
       ),
@@ -343,7 +343,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(label, style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor, fontWeight: FontWeight.w700)),
+                      Text(label, style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor, fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
@@ -370,7 +370,7 @@ class _StatsScreenState extends State<StatsScreen> {
       children: [
         Container(width: 9, height: 9, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
+        Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -395,7 +395,7 @@ class _StatsScreenState extends State<StatsScreen> {
           children: [
             Text(
               _showAllCategories ? 'All categories' : 'Top 5 categories',
-              style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600),
             ),
             TextButton(
               onPressed: () => setState(() => _showAllCategories = !_showAllCategories),
@@ -426,9 +426,9 @@ class _StatsScreenState extends State<StatsScreen> {
                         _money(total),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                       ),
-                      Text(_currency, style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                      Text(_currency, style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                     ],
                   ),
                 ],
@@ -452,11 +452,11 @@ class _StatsScreenState extends State<StatsScreen> {
                             row['category_name'].toString(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                           ),
                         ),
                         const SizedBox(width: 3),
-                        Text('${percent.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor, fontWeight: FontWeight.w700)),
+                        Text('${percent.toStringAsFixed(0)}%', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   );
@@ -472,8 +472,8 @@ class _StatsScreenState extends State<StatsScreen> {
             padding: const EdgeInsets.symmetric(vertical: 3),
             child: Row(
               children: [
-                Expanded(child: Text(row['category_name'].toString(), style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor))),
-                Text('$_currency ${_money(values[index])}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                Expanded(child: Text(row['category_name'].toString(), style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor))),
+                Text('$_currency ${_money(values[index])}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               ],
             ),
           );
@@ -490,7 +490,7 @@ class _StatsScreenState extends State<StatsScreen> {
       SizedBox(width: 142, height: 142, child: CustomPaint(
         painter: _DonutChartPainter(values: [income, expense], colors: [Theme.of(context).colorScheme.secondary, Theme.of(context).colorScheme.error]),
         child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(total > 0 ? '100%' : '0%', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          Text(total > 0 ? '100%' : '0%', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const Text('Total', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
         ])),
       )),
@@ -498,11 +498,11 @@ class _StatsScreenState extends State<StatsScreen> {
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _chartLegend(Theme.of(context).colorScheme.secondary, 'Income'),
         const SizedBox(height: 10),
-        Text('$_currency ${_money(income)}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        Text('$_currency ${_money(income)}', style: TextStyle(fontWeight: FontWeight.w800)),
         const SizedBox(height: 14),
         _chartLegend(Theme.of(context).colorScheme.error, 'Expenses'),
         const SizedBox(height: 10),
-        Text('$_currency ${_money(expense)}', style: const TextStyle(fontWeight: FontWeight.w800)),
+        Text('$_currency ${_money(expense)}', style: TextStyle(fontWeight: FontWeight.w800)),
       ])),
     ]);
   }
@@ -515,7 +515,7 @@ class _StatsScreenState extends State<StatsScreen> {
     )).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SizedBox(height: 150, width: double.infinity, child: CustomPaint(
-        painter: _CashFlowWavePainter(points: points),
+        painter: _CashFlowWavePainter(points: points, gridColor: Theme.of(context).colorScheme.outlineVariant, incomeColor: Theme.of(context).colorScheme.secondary, expenseColor: Theme.of(context).colorScheme.error),
       )),
       const SizedBox(height: 8),
       Wrap(spacing: 16, children: [
@@ -543,8 +543,8 @@ class _StatsScreenState extends State<StatsScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(row['currency'].toString(), style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 5),
-            Text(_money(row['total_balance']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            Text('${row['wallet_count']} wallet(s)', style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
+            Text(_money(row['total_balance']), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            Text('${row['wallet_count']} wallet(s)', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
           ]),
         );
       }).toList(),
@@ -553,7 +553,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildOverviewSection(String title, IconData icon, List<Widget> details) {
     return Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [Icon(icon, color: Theme.of(context).colorScheme.primary, size: 21), const SizedBox(width: 9), Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))]),
+      Row(children: [Icon(icon, color: Theme.of(context).colorScheme.primary, size: 21), const SizedBox(width: 9), Expanded(child: Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))]),
       const SizedBox(height: 12),
       ...details,
     ])));
@@ -563,7 +563,7 @@ class _StatsScreenState extends State<StatsScreen> {
     return Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(children: [
       Expanded(child: Text(label, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 13))),
       const SizedBox(width: 8),
-      Text(value, textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+      Text(value, textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
     ]));
   }
 
@@ -736,7 +736,7 @@ class _StatsScreenState extends State<StatsScreen> {
               ? Center(child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.error_outline, size: 42, color: Theme.of(context).colorScheme.error),
+                    Icon(Icons.error_outline, size: 42, color: Theme.of(context).colorScheme.error),
                     const SizedBox(height: 10),
                     Text('Could not load stats: $_error', textAlign: TextAlign.center),
                     const SizedBox(height: 12),
@@ -792,7 +792,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         )),
                       ]),
                       const SizedBox(height: 14),
-                      Text('$_currency overview', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                      Text('$_currency overview', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 9),
                       Row(children: [
                         _metricCard(title: 'Income', amount: _money(_totals['income']), icon: Icons.trending_up_rounded, color: Theme.of(context).colorScheme.secondary),
@@ -879,7 +879,8 @@ class _DonutChartPainter extends CustomPainter {
 
 class _CashFlowWavePainter extends CustomPainter {
   final List<(double, double)> points;
-  const _CashFlowWavePainter({required this.points});
+  final Color gridColor, incomeColor, expenseColor;
+  const _CashFlowWavePainter({required this.points, required this.gridColor, required this.incomeColor, required this.expenseColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -903,15 +904,15 @@ class _CashFlowWavePainter extends CustomPainter {
       }
       return path;
     }
-    final grid = Paint()..color = Theme.of(context).colorScheme.outlineVariant..strokeWidth = 1;
+    final grid = Paint()..color = gridColor..strokeWidth = 1;
     for (var i = 1; i <= 3; i++) {
       final y = size.height * i / 4;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
     }
-    canvas.drawPath(makePath(true), Paint()..color = Theme.of(context).colorScheme.secondary..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
-    canvas.drawPath(makePath(false), Paint()..color = Theme.of(context).colorScheme.error..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+    canvas.drawPath(makePath(true), Paint()..color = incomeColor..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+    canvas.drawPath(makePath(false), Paint()..color = expenseColor..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
   }
 
   @override
-  bool shouldRepaint(covariant _CashFlowWavePainter oldDelegate) => oldDelegate.points != points;
+  bool shouldRepaint(covariant _CashFlowWavePainter oldDelegate) => oldDelegate.points != points || oldDelegate.gridColor != gridColor || oldDelegate.incomeColor != incomeColor || oldDelegate.expenseColor != expenseColor;
 }

@@ -87,7 +87,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxSheetHeight),
                 child: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                   ),
@@ -98,7 +98,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
                         width: 38,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD9E0DC),
+                          color: Theme.of(context).dividerColor,
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -112,7 +112,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
                                 style: const TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF202A26),
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -120,7 +120,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
                               visualDensity: VisualDensity.compact,
                               onPressed: () => Navigator.pop(sheetContext, false),
                               icon: const Icon(Icons.close_rounded),
-                              color: const Color(0xFF718078),
+                              color: Theme.of(context).hintColor,
                             ),
                           ],
                         ),

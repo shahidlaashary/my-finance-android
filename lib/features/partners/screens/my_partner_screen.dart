@@ -198,7 +198,10 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
   bool _loading = true;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); AppRefreshController.revision.addListener(_onAppDataChanged); _load(); }
+  void _onAppDataChanged() { if (mounted) _load(); }
+  @override
+  void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); super.dispose(); }
 
   Future<void> _load() async {
     try {

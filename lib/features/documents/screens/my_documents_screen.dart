@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
@@ -41,12 +42,18 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadDocuments();
     _searchController.addListener(_loadDocuments);
   }
 
+  void _onAppDataChanged() {
+    if (mounted) _loadDocuments();
+  }
+
   @override
   void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     _searchController.removeListener(_loadDocuments);
     _searchController.dispose();
     super.dispose();

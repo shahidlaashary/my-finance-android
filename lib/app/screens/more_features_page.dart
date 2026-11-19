@@ -70,7 +70,7 @@ class MoreFeaturesPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           appText(context, 'More Features', 'مزید خصوصیات'),
@@ -153,7 +153,7 @@ class MoreFeaturesPage extends StatelessWidget {
                         children: [
                           Icon(
                             feature['icon'] as IconData,
-                            color: AppColors.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 23,
                           ),
                           const SizedBox(width: 8),
@@ -173,9 +173,9 @@ class MoreFeaturesPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.chevron_right_rounded,
-                            color: AppColors.muted,
+                            color: Theme.of(context).hintColor,
                             size: 24,
                           ),
                         ],

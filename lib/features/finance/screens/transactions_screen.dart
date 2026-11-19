@@ -983,7 +983,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             color: Theme.of(context).hintColor,
                           ),
                           backgroundColor: Theme.of(context).cardColor,
-                          side: const BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
@@ -1331,7 +1331,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                              Container(
                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                                                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(8)),
-                                               child: const Text('Scheduled', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 9.5, fontWeight: FontWeight.w800)),
+                                               child: Text('Scheduled', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 9.5, fontWeight: FontWeight.w800)),
                                              )
                                            else if (isSourceRecord)
                                             const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF9AA49F)))
@@ -1553,7 +1553,7 @@ class TransactionDetailScreen extends StatelessWidget {
         children: [
           Expanded(
             flex: 4,
-            child: Text(label, style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+            child: Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
           ),
           const SizedBox(width: 10),
           Expanded(

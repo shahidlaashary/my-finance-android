@@ -1161,7 +1161,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
             if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFFFE9E9), borderRadius: BorderRadius.circular(7)), child: const Text('SOLD', style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.w800))),
           ]),
-          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
+          subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan: ${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
           trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
             Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF147D59))),
             const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),

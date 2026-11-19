@@ -393,7 +393,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const Icon(
               Icons.error_outline,
               size: 48,
-              color: Colors.red,
+              color: Theme.of(context).colorScheme.error,
             ),
             SizedBox(height: 12),
             Text(appText(context, "Unable to load reports", "Unable to load reports"),
@@ -560,7 +560,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 title: appText(context, 'Total Income', 'کل آمدنی'),
                 amount: income,
                 currency: currency,
-                color: Colors.green,
+                color: Theme.of(context).colorScheme.secondary,
                 icon: Icons.trending_up,
               ),
 
@@ -568,7 +568,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 title: appText(context, 'Total Expenses', 'کل اخراجات'),
                 amount: expense,
                 currency: currency,
-                color: Colors.red,
+                color: Theme.of(context).colorScheme.error,
                 icon: Icons.trending_down,
               ),
 
@@ -577,8 +577,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 amount: net,
                 currency: currency,
                 color: net >= 0
-                    ? Colors.blue
-                    : Colors.orange,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.tertiary,
                 icon: Icons.account_balance_wallet,
               ),
 
@@ -704,9 +704,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
               children: [
                 Row(
                   children: [
-                    _legend('Income', Colors.green),
+                    _legend('Income', Theme.of(context).colorScheme.secondary),
                     SizedBox(width: 20),
-                    _legend('Expense', Colors.red),
+                    _legend('Expense', Theme.of(context).colorScheme.error),
                   ],
                 ),
                 SizedBox(height: 20),
@@ -774,7 +774,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   label: 'Income',
                                   amount: income,
                                   maximum: maximum,
-                                  color: Colors.green,
+                                  color: Theme.of(context).colorScheme.secondary,
                                 ),
 
                                 SizedBox(height: 6),
@@ -783,7 +783,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   label: 'Expense',
                                   amount: expense,
                                   maximum: maximum,
-                                  color: Colors.red,
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
                               ],
                             ),
@@ -953,14 +953,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     'Income',
                     item['income'],
                     currency,
-                    Colors.green,
+                    Theme.of(context).colorScheme.secondary,
                   ),
 
                   _walletValue(
                     'Expense',
                     item['expense'],
                     currency,
-                    Colors.red,
+                    Theme.of(context).colorScheme.error,
                   ),
 
                   _walletValue(
@@ -976,7 +976,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     'Net',
                     item['net'],
                     currency,
-                    Colors.blue,
+                    Theme.of(context).colorScheme.primary,
                   ),
 
                   SizedBox(height: 4),
@@ -984,7 +984,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Text(
                     '${item['transaction_count']} transactions',
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).hintColor,
                       fontSize: 12,
                     ),
                   ),
@@ -1045,9 +1045,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
           final isExpense = normalized == 'expense';
 
           final color = isIncome
-              ? Colors.green
+              ? Theme.of(context).colorScheme.secondary
               : isExpense
-                  ? Colors.red
+                  ? Theme.of(context).colorScheme.error
                   : Colors.purple;
 
           final icon = isIncome
@@ -1128,14 +1128,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
       padding: const EdgeInsets.all(18),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.08),
+        color: Theme.of(context).hintColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         message,
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: Theme.of(context).hintColor,
         ),
       ),
     );

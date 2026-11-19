@@ -1,6 +1,7 @@
 import importlib.util
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "card_catalog_pipeline.py"
@@ -33,6 +34,16 @@ class CatalogPipelineTests(unittest.TestCase):
         self.assertEqual(catalog["records"][0]["verificationStatus"],"review_required")
         self.assertEqual(catalog["records"][0]["sourceContentSha256"],"oldhash")
 
+    def test_connection_reset_marks_source_unreachable_without_crashing(self):
+        record = {
+            "countryCode":"PK", "institutionName":"Example Bank",
+            "institutionType":"bank", "officialWebsite":"https://example.com",
+            "sourceUrl":"https://example.com", "verificationStatus":"unverified"
+        }
+        with patch.object(pipeline, "fetch_digest", side_effect=ConnectionResetError(104, "Connection reset by peer")):
+            result = pipeline.check_one_record(record)
+        self.assertEqual(result["result"], "unreachable")
+        self.assertEqual(record["verificationStatus"], "source_unreachable")
     def test_changed_source_resets_verification_history(self):
         catalog = {"records":[{
             "countryCode":"PK", "institutionName":"Example Bank",

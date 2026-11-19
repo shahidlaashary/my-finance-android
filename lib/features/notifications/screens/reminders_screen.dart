@@ -222,7 +222,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               child: _items.isEmpty
                   ? ListView(children: const [
                       SizedBox(height: 100),
-                      Icon(Icons.notifications_none, size: 58, color: Colors.grey),
+                      Icon(Icons.notifications_none, size: 58, color: Theme.of(context).hintColor),
                       SizedBox(height: 12),
                       Center(child: Text('No reminders scheduled yet.')),
                       SizedBox(height: 8),

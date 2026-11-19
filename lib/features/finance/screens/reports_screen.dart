@@ -586,7 +586,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 title: appText(context, 'Transfers', 'منتقلی'),
                 amount: transfers,
                 currency: currency,
-                color: Colors.purple,
+                color: Theme.of(context).colorScheme.tertiary,
                 icon: Icons.swap_horiz,
               ),
             ],
@@ -967,7 +967,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     'Transfers',
                     item['transfers'],
                     currency,
-                    Colors.purple,
+                    Theme.of(context).colorScheme.tertiary,
                   ),
 
                   const Divider(),
@@ -1048,7 +1048,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ? Theme.of(context).colorScheme.secondary
               : isExpense
                   ? Theme.of(context).colorScheme.error
-                  : Colors.purple;
+                  : Theme.of(context).colorScheme.tertiary;
 
           final icon = isIncome
               ? Icons.arrow_downward

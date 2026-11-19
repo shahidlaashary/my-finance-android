@@ -55,13 +55,13 @@ class FinanceThemeColors extends ThemeExtension<FinanceThemeColors> {
 }
 
 class _AppThemePalette {
-  final Color primary, secondary, background, surface, surfaceContainer;
+  final Color primary, secondary, onSecondary, background, surface, surfaceContainer;
   final Color text, input, onPrimary, outline, muted;
   final Color income, expense, warning, success;
   final Brightness brightness;
 
   const _AppThemePalette({
-    required this.primary, required this.secondary,
+    required this.primary, required this.secondary, required this.onSecondary,
     required this.background, required this.surface,
     required this.surfaceContainer, required this.text,
     required this.input, required this.onPrimary, required this.outline,
@@ -78,7 +78,7 @@ class AppTheme {
   static ThemeData forPreset(AppThemePreset preset, {String? fontFamily}) {
     final p = switch (preset) {
       AppThemePreset.emeraldGreen => const _AppThemePalette(
-        primary: Color(0xFF087A55), secondary: Color(0xFFB5DCC9),
+        primary: Color(0xFF087A55), secondary: Color(0xFF16865B), onSecondary: Colors.white,
         background: Color(0xFFF1F7F3), surface: Color(0xFFFFFFFF),
         surfaceContainer: Color(0xFFE7F1EA), text: Color(0xFF183328),
         input: Color(0xFFF6FAF7), onPrimary: Colors.white,
@@ -88,7 +88,7 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       AppThemePreset.lightMode => const _AppThemePalette(
-        primary: Color(0xFF315FC4), secondary: Color(0xFFD9E4FF),
+        primary: Color(0xFF315FC4), secondary: Color(0xFF16865B), onSecondary: Colors.white,
         background: Color(0xFFF3F6FC), surface: Color(0xFFFFFFFF),
         surfaceContainer: Color(0xFFE9EFF9), text: Color(0xFF202B40),
         input: Color(0xFFF8FAFE), onPrimary: Colors.white,
@@ -98,7 +98,7 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       AppThemePreset.darkMode => const _AppThemePalette(
-        primary: Color(0xFF8AB4F8), secondary: Color(0xFF354B68),
+        primary: Color(0xFF8AB4F8), secondary: Color(0xFF5DD39E), onSecondary: Color(0xFF10271B),
         background: Color(0xFF101419), surface: Color(0xFF1A2129),
         surfaceContainer: Color(0xFF242D37), text: Color(0xFFEAF0F6),
         input: Color(0xFF252E38), onPrimary: Color(0xFF10243D),
@@ -108,7 +108,7 @@ class AppTheme {
         brightness: Brightness.dark,
       ),
       AppThemePreset.midnightGold => const _AppThemePalette(
-        primary: Color(0xFFE0BC63), secondary: Color(0xFF695832),
+        primary: Color(0xFFE0BC63), secondary: Color(0xFF66C99B), onSecondary: Color(0xFF10271B),
         background: Color(0xFF0D1420), surface: Color(0xFF172231),
         surfaceContainer: Color(0xFF202D3D), text: Color(0xFFF6F1E5),
         input: Color(0xFF243141), onPrimary: Color(0xFF17130A),
@@ -124,7 +124,7 @@ class AppTheme {
       surface: p.surface,
     ).copyWith(
       primary: p.primary, onPrimary: p.onPrimary,
-      secondary: p.secondary, onSecondary: p.text,
+      secondary: p.secondary, onSecondary: p.onSecondary,
       surface: p.surface, onSurface: p.text,
       surfaceContainer: p.surfaceContainer,
       surfaceContainerHighest: p.surfaceContainer,

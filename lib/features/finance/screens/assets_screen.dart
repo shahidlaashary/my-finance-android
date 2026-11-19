@@ -1246,7 +1246,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             borderRadius: BorderRadius.circular(18),
             onTap: () => _openAssetDetails(asset),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 11),
               child: Column(
                 children: [
                   Row(
@@ -1276,7 +1276,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       ),
                       const SizedBox(width: 8),
                       Transform.translate(
-                        offset: const Offset(15, 0),
+                        offset: const Offset(22, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -1289,7 +1289,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         ),
                       ),
                       Transform.translate(
-                        offset: const Offset(12, -5),
+                        offset: const Offset(19, -5),
                         child: PopupMenuButton<String>(
                         tooltip: 'Manage Asset',
                         padding: EdgeInsets.zero,

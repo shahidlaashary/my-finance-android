@@ -135,9 +135,9 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
         onRefresh: _load,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 100), children: [
           Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.surface70, fontWeight: FontWeight.w600)),
+            Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(_partners.length.toString() + ' Partners', style: const TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 25, fontWeight: FontWeight.w800)),
+            Text(_partners.length.toString() + ' Partners', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 25, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
             Row(children: [
               Expanded(child: _overview('Business', businesses, Icons.business_center_outlined)),
@@ -176,8 +176,8 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
   Widget _overview(String label, int value, IconData icon) => Row(children: [
     Icon(icon, color: Theme.of(context).colorScheme.surface, size: 20), const SizedBox(width: 7),
     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(value.toString(), style: const TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w800, fontSize: 18)),
-      Text(label, style: const TextStyle(color: Theme.of(context).colorScheme.surface70, fontSize: 11)),
+      Text(value.toString(), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
+      Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11)),
     ]),
   ]);
 }

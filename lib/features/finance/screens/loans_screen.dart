@@ -2003,19 +2003,19 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       ..sort((a, b) => a.key.compareTo(b.key));
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
         decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(13)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(height: 5),
+          Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 2),
           if (entries.isEmpty)
-            Text('—', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color))
+            Text('—', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color))
           else
             ...entries.map((entry) => Padding(
               padding: const EdgeInsets.only(bottom: 2),
               child: Text('${entry.key} ${_money(entry.value)}',
                 maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: color)),
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color)),
             )),
         ]),
       ),

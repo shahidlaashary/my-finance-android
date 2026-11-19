@@ -275,12 +275,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFEAF5EF), Color(0xFFF7FBF8)],
+          colors: [Theme.of(context).colorScheme.primaryContainer, Theme.of(context).colorScheme.surfaceContainerLowest],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFDCEBE2)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -288,11 +288,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFF147D59).withValues(alpha: 0.11),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.11),
               borderRadius: BorderRadius.circular(13),
             ),
             child: Icon(IconData(iconCode, fontFamily: 'MaterialIcons'),
-                color: const Color(0xFF147D59), size: 25),
+                color: Theme.of(context).colorScheme.primary, size: 25),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -305,7 +305,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 const SizedBox(height: 4),
                 Text(hideBalances ? '${currency} ••••••' : '${currency} ${money(balance, conceal: false)}',
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                        color: Color(0xFF147D59))),
+                        color: Theme.of(context).colorScheme.primary)),
               ],
             ),
           ),
@@ -313,7 +313,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           FilledButton.tonal(
             onPressed: adjustWalletBalance,
             style: FilledButton.styleFrom(
-              foregroundColor: const Color(0xFF147D59),
+              foregroundColor: Theme.of(context).colorScheme.primary,
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
               visualDensity: VisualDensity.compact,
             ),
@@ -857,7 +857,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
@@ -866,12 +866,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 context,
                 Text(
                   appText(context, "Transactions", "Transactions"),
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202A26)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                 ),
               )
             : Text(
                 widget.walletName ?? appText(context, "Transactions", "Transactions"),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202A26)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
               ),
         actions: buildSharedAppBarActions(context),
       ),
@@ -922,15 +922,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: selected
-                                    ? Colors.white
-                                    : const Color(0xFF52615A),
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : Theme.of(context).hintColor,
                               ),
-                              selectedColor: const Color(0xFF147D59),
+                              selectedColor: Theme.of(context).colorScheme.primary,
                               backgroundColor: Theme.of(context).cardColor,
                               side: BorderSide(
                                 color: selected
-                                    ? const Color(0xFF147D59)
-                                    : const Color(0xFFE5ECE8),
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.outlineVariant,
                               ),
                               visualDensity: VisualDensity.compact,
                               materialTapTargetSize:
@@ -953,7 +953,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 Icon(
                                   Icons.settings_outlined,
                                   size: 14,
-                                  color: Color(0xFF52615A),
+                                  color: Theme.of(context).hintColor,
                                 ),
                                 SizedBox(width: 2),
                                 Flexible(
@@ -980,10 +980,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           labelStyle: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF52615A),
+                            color: Theme.of(context).hintColor,
                           ),
                           backgroundColor: Theme.of(context).cardColor,
-                          side: const BorderSide(color: Color(0xFFE5ECE8)),
+                          side: const BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
@@ -1002,7 +1002,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               Icon(
                                 Icons.receipt_long_outlined,
                                 size: 52,
-                                color: const Color(0xFF147D59).withValues(alpha: 0.65),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.65),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -1010,7 +1010,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     ? appText(context, "No transactions available", "No transactions available")
                                     : 'No ${selectedFilter == 'all' ? '' : selectedFilter} transactions',
                                 style: const TextStyle(
-                                  color: Color(0xFF7B8781),
+                                  color: Theme.of(context).hintColor,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -1087,9 +1087,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   margin: const EdgeInsets.fromLTRB(0, 12, 0, 9),
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF2F7F4),
+                                    color: Theme.of(context).colorScheme.surfaceContainerLowest,
                                     borderRadius: BorderRadius.circular(15),
-                                    border: Border.all(color: const Color(0xFFE2ECE5)),
+                                    border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                                   ),
                                   child: Row(
                                     children: [
@@ -1100,7 +1100,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                           height: 1,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: -1.2,
-                                          color: Color(0xFF147D59),
+                                          color: Theme.of(context).colorScheme.primary,
                                         ),
                                       ),
                                       const SizedBox(width: 10),
@@ -1117,7 +1117,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                 fontSize: 13,
                                                 height: 1.15,
                                                 fontWeight: FontWeight.w800,
-                                                color: Color(0xFF25332C),
+                                                color: Theme.of(context).colorScheme.onSurface,
                                               ),
                                             ),
                                             const SizedBox(height: 3),
@@ -1129,7 +1129,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                 fontSize: 11.5,
                                                 height: 1.1,
                                                 fontWeight: FontWeight.w600,
-                                                color: Color(0xFF7B8781),
+                                                color: Theme.of(context).hintColor,
                                               ),
                                             ),
                                           ],
@@ -1143,10 +1143,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                           children: netEntries.map((entry) {
                                             final net = entry.value;
                                             final netColor = net > 0
-                                                ? const Color(0xFF159B65)
+                                                ? Theme.of(context).colorScheme.secondary
                                                 : net < 0
-                                                    ? const Color(0xFFE45B5B)
-                                                    : const Color(0xFF68766F);
+                                                    ? Theme.of(context).colorScheme.error
+                                                    : Theme.of(context).hintColor;
                                             return Padding(
                                               padding: const EdgeInsets.symmetric(vertical: 1),
                                               child: Text(
@@ -1181,18 +1181,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final isCommitteeTransfer = item['category']?.toString() == 'Committee Transfer';
                               final isAdjustment = type == 'adjustment';
                               final color = isAssetRecord
-                                  ? const Color(0xFF0F8B8D)
+                                  ? Theme.of(context).colorScheme.tertiary
                                   : isLoanRecord
-                                      ? const Color(0xFFB7791F)
+                                      ? Theme.of(context).colorScheme.tertiary
                                       : isCommittee
-                                  ? const Color(0xFF7653B5)
+                                  ? Theme.of(context).colorScheme.secondary
                                   : isAdjustment
-                                      ? const Color(0xFF8A6D3B)
+                                      ? Theme.of(context).colorScheme.tertiary
                                       : isIncome
-                                  ? const Color(0xFF159B65)
+                                  ? Theme.of(context).colorScheme.secondary
                                   : isExpense
-                                      ? const Color(0xFFE45B5B)
-                                      : const Color(0xFF3979C6);
+                                      ? Theme.of(context).colorScheme.error
+                                      : Theme.of(context).colorScheme.primary;
                               final icon = isAssetRecord
                                   ? Icons.real_estate_agent_outlined
                                   : isLoanRecord
@@ -1245,7 +1245,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 child: Container(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(color: const Color(0xFFE9EFEB)),
                                   boxShadow: [
@@ -1281,7 +1281,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               style: const TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF25332C),
+                                                color: Theme.of(context).colorScheme.onSurface,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
@@ -1296,7 +1296,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               overflow: TextOverflow.ellipsis,
                                               style: const TextStyle(
                                                 fontSize: 11.5,
-                                                color: Color(0xFF7B8781),
+                                                color: Theme.of(context).hintColor,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
@@ -1330,8 +1330,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                           if (isScheduled)
                                              Container(
                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                                               decoration: BoxDecoration(color: const Color(0xFFEAF5EF), borderRadius: BorderRadius.circular(8)),
-                                               child: const Text('Scheduled', style: TextStyle(color: Color(0xFF147D59), fontSize: 9.5, fontWeight: FontWeight.w800)),
+                                               decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(8)),
+                                               child: const Text('Scheduled', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 9.5, fontWeight: FontWeight.w800)),
                                              )
                                            else if (isSourceRecord)
                                             const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF9AA49F)))
@@ -1403,14 +1403,14 @@ class TransactionDetailScreen extends StatelessWidget {
     final isCommittee = normalized == 'committee';
     final isCommitteeTransfer = transaction['category']?.toString() == 'Committee Transfer';
     final color = isCommittee
-        ? const Color(0xFF7653B5)
+        ? Theme.of(context).colorScheme.secondary
         : isAdjustment
-        ? const Color(0xFF8A6D3B)
+        ? Theme.of(context).colorScheme.tertiary
         : isIncome
-        ? const Color(0xFF159B65)
+        ? Theme.of(context).colorScheme.secondary
         : isExpense
-            ? const Color(0xFFE45B5B)
-            : const Color(0xFF3979C6);
+            ? Theme.of(context).colorScheme.error
+            : Theme.of(context).colorScheme.primary;
     final icon = isCommittee
         ? Icons.groups_2_outlined
         : isIncome
@@ -1534,7 +1534,7 @@ class TransactionDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Icon(icon, size: 19, color: const Color(0xFF147D59)),
+            Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
           ]),
@@ -1553,7 +1553,7 @@ class TransactionDetailScreen extends StatelessWidget {
         children: [
           Expanded(
             flex: 4,
-            child: Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF7B8781))),
+            child: Text(label, style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
           ),
           const SizedBox(width: 10),
           Expanded(

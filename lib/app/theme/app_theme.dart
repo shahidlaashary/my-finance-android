@@ -69,24 +69,7 @@ class AppTheme {
           onPrimary: Color(0xFF17130A),
           brightness: Brightness.dark,
         ),
-      AppThemePreset.oceanBlue => const _AppThemePalette(
-          primary: Color(0xFF176FAE),
-          background: Color(0xFFEDF4F9),
-          surface: Color(0xFFFFFFFF),
-          text: Color(0xFF173247),
-          input: Color(0xFFF4F8FC),
-          onPrimary: Colors.white,
-          brightness: Brightness.light,
-        ),
-      AppThemePreset.carbonBlack => const _AppThemePalette(
-          primary: Color(0xFFFFA34D),
-          background: Color(0xFF101010),
-          surface: Color(0xFF1D1D1D),
-          text: Color(0xFFF2F2F2),
-          input: Color(0xFF292929),
-          onPrimary: Color(0xFF201307),
-          brightness: Brightness.dark,
-        ),
+
     };
 
     final scheme = ColorScheme.fromSeed(

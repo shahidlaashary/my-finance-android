@@ -34,8 +34,8 @@ def normalize(record):
         if value and not str(value).startswith("https://"): raise ValueError(key + " must use HTTPS")
     record["countryCode"] = code
     record.setdefault("aliases", [])
-    record.setdefault("verificationStatus", "unverified")
-    if record["verificationStatus"] not in ALLOWED: raise ValueError("Invalid verificationStatus")
+    # Imports cannot self-assert verification; only reviewed existing records retain it.
+    record["verificationStatus"] = "unverified"
     record.setdefault("sourceUrl", record.get("officialProductUrl") or record["officialWebsite"])
     record.setdefault("lastCheckedAt", None)
     record.setdefault("sourceContentSha256", None)
@@ -60,8 +60,14 @@ def import_records(catalog, paths):
             old = merged.get(k, {})
             # Preserve prior verification history only when the source URL is unchanged.
             if old.get("sourceUrl") == r.get("sourceUrl"):
-                for field in ("verificationStatus","lastCheckedAt","sourceContentSha256","imageContentSha256","sourceChangedAt"):
+                for field in ("verificationStatus","lastCheckedAt","sourceContentSha256","imageContentSha256","sourceChangedAt","verificationEvidence"):
                     r[field] = old.get(field, r.get(field))
+            else:
+                r["verificationStatus"] = "unverified"
+                r["lastCheckedAt"] = None
+                r["sourceContentSha256"] = None
+                r["imageContentSha256"] = None
+                r["sourceChangedAt"] = None
             merged[k] = r
             count += 1
     catalog["records"] = sorted(merged.values(), key=lambda x:(x["countryCode"],x["institutionName"].casefold(),str(x.get("cardType",""))))

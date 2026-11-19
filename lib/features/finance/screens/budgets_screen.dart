@@ -93,8 +93,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     DateTime endDate = budget == null ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0) : budget.endDate;
     InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13), isDense: true);
 
     await showModalBottomSheet(
@@ -107,15 +107,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         return AnimatedPadding(duration: const Duration(milliseconds: 220), curve: Curves.easeOut,
           padding: EdgeInsets.only(bottom: keyboardHeight),
           child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: maxHeight),
-            child: Container(decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+            child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
               padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
               child: Form(key: formKey, child: SingleChildScrollView(primary: false,
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+                  Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
                   SizedBox(height: 12),
-                  Row(children: [Expanded(child: Text(budget == null ? 'Create Budget' : 'Edit Budget', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF202B25)))),
-                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Colors.grey)]),
+                  Row(children: [Expanded(child: Text(budget == null ? 'Create Budget' : 'Edit Budget', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
+                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor)]),
                   SizedBox(height: 10),
                   TextFormField(controller: nameController, decoration: decoration('Budget Name', Icons.pie_chart_outline),
                     validator: (v) => v == null || v.trim().isEmpty ? appText(context, 'Enter budget name', 'بجٹ کا نام درج کریں') : null),
@@ -161,8 +161,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() { startDate = v; if (endDate.isBefore(startDate)) endDate = startDate; });
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [Icon(Icons.calendar_month, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(appText(context, "Start Date", "Start Date"), style: TextStyle(fontWeight: FontWeight.w600))]),
-                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(color: Color(0xFF147D59))),
+                        Row(children: [Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary, size: 18), SizedBox(width: 6), Text(appText(context, "Start Date", "Start Date"), style: TextStyle(fontWeight: FontWeight.w600))]),
+                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(startDate), style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                       ])),
                     )),
                     SizedBox(width: 12),
@@ -173,15 +173,15 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         if (v != null) setSheetState(() => endDate = v);
                       },
                       child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [Icon(Icons.event, color: Color(0xFF147D59), size: 18), SizedBox(width: 6), Text(appText(context, "End Date", "End Date"), style: TextStyle(fontWeight: FontWeight.w600))]),
-                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(color: Color(0xFF147D59))),
+                        Row(children: [Icon(Icons.event, color: Theme.of(context).colorScheme.primary, size: 18), SizedBox(width: 6), Text(appText(context, "End Date", "End Date"), style: TextStyle(fontWeight: FontWeight.w600))]),
+                        SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(endDate), style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                       ])),
                     )),
                   ]),
                   SizedBox(height: 12),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
                     Expanded(child: ElevatedButton.icon(icon: const Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF147D59), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13)),
+                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
                         if (endDate.isBefore(startDate)) { _message('End date cannot be before start date.'); return; }
@@ -234,7 +234,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
               child: Text(appText(context, "Delete", "Delete")),
             ),
@@ -260,10 +260,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     final exceeded = spent > limit;
     final remaining = limit - spent;
     final color = exceeded
-        ? Colors.red
+        ? Theme.of(context).colorScheme.error
         : progress >= 0.8
-            ? Colors.orange
-            : Colors.green;
+            ? Theme.of(context).colorScheme.tertiary
+            : Theme.of(context).colorScheme.secondary;
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 12,
@@ -277,10 +277,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             Row(
               children: [
                 const CircleAvatar(
-                  backgroundColor: Color(0xFFE6F1EC),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                   child: Icon(
                     Icons.pie_chart,
-                    color: Color(0xFF147D59),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 SizedBox(width: 12),
@@ -299,7 +299,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                         '${budget.period} • ${_categoryName(budget.category)}',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                     ],
@@ -353,7 +353,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 10,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 color: color,
               ),
             ),
@@ -384,7 +384,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               '${DateFormat('dd MMM yyyy').format(budget.startDate)}  —  ${DateFormat('dd MMM yyyy').format(budget.endDate)}',
               style: const TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: Theme.of(context).hintColor,
               ),
             ),
             if (!budget.isActive)
@@ -392,7 +392,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 padding: EdgeInsets.only(top: 8),
                 child: Chip(
                   label: Text(appText(context, 'Paused', 'روکا گیا')),
-                  backgroundColor: Color(0xFFFFF0D9),
+                  backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
                 ),
               ),
           ],
@@ -408,20 +408,20 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       return true;
     }).toList();
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: const Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Budgets", "My Budgets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26)))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Budgets", "My Budgets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showBudgetDialog(),
-        backgroundColor: const Color(0xFF147D59),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: const Icon(Icons.add),
         label: Text(appText(context, 'New Budget', 'نیا بجٹ')),
       ),
@@ -465,11 +465,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                           Icon(
                             Icons.pie_chart_outline,
                             size: 55,
-                            color: const Color(0xFF147D59),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           SizedBox(height: 12),
                           Text(appText(context, "No budgets found.", "No budgets found."),
-                            style: TextStyle(color: Color(0xFF7B8781)),
+                            style: TextStyle(color: Theme.of(context).hintColor),
                           ),
                         ],
                       ),

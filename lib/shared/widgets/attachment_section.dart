@@ -439,9 +439,9 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                                     ? Icons.picture_as_pdf
                                     : Icons.insert_drive_file,
                             color: isImage
-                                ? Colors.blue
+                                ? Theme.of(context).colorScheme.primary
                                 : attachment.fileType == 'pdf'
-                                    ? Colors.red
+                                    ? Theme.of(context).colorScheme.error
                                     : null,
                           ),
                     title: Text(

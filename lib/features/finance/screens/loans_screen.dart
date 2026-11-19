@@ -2199,14 +2199,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                         const SizedBox(height: 7),
                         pair(field(phone, 'Phone Number', Icons.phone_outlined, type: TextInputType.phone), field(email, 'Email Address', Icons.email_outlined, type: TextInputType.emailAddress)),
                         const SizedBox(height: 10),
-                        pair(
-                          DropdownButtonFormField<String>(
-                            value: partyType, isExpanded: true, decoration: inputDecoration('Party Type', Icons.category_outlined),
-                            items: const [DropdownMenuItem(value: 'Individual', child: Text('Individual')), DropdownMenuItem(value: 'Business', child: Text('Business'))],
-                            onChanged: (v) { if (v != null) setSheetState(() => partyType = v); },
-                          ),
-                          const SizedBox.shrink(),
-                        ),
+
                         const SizedBox(height: 10),
                         field(cnic, 'CNIC / ID Number', Icons.credit_card_outlined),
                         const SizedBox(height: 10),

@@ -3,7 +3,11 @@ on:
   workflow_dispatch:
     inputs:
       import_file:
-        description: Optional repository path to a JSON issuer/card import file
+        description: Optional path to one JSON issuer/card import file
+        required: false
+        type: string
+      import_directory:
+        description: Optional folder containing country JSON import files
         required: false
         type: string
   schedule:
@@ -12,6 +16,7 @@ on:
     paths:
       - "assets/data/global_card_catalog.json"
       - "scripts/card_catalog_pipeline.py"
+      - "scripts/test_card_catalog_pipeline.py"
       - ".github/workflows/global-card-catalog.yml"
 permissions:
   contents: write
@@ -33,6 +38,11 @@ jobs:
         run: python scripts/card_catalog_pipeline.py --import "$IMPORT_FILE"
       - name: Test catalog import and verification safeguards
         run: python -m unittest discover -s scripts -p 'test_*.py' -v
+      - name: Bulk import all country files from directory
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.import_directory != '' }}
+        env:
+          IMPORT_DIRECTORY: ${{ inputs.import_directory }}
+        run: python scripts/card_catalog_pipeline.py --import-dir "$IMPORT_DIRECTORY"
       - name: Recheck official sources
         run: python scripts/card_catalog_pipeline.py --check
       - name: Commit catalog verification report

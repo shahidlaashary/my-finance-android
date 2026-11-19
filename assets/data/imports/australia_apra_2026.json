@@ -1,0 +1,207 @@
+{
+  "countryCode": "AU",
+  "registry": "Australian Prudential Regulation Authority",
+  "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+  "records": [
+    {
+      "countryCode": "AU",
+      "institutionName": "Commonwealth Bank of Australia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.commbank.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.commbank.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Australia and New Zealand Banking Group",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.anz.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.anz.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "National Australia Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.nab.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.nab.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Westpac Banking Corporation",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.westpac.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.westpac.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Macquarie Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.macquarie.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.macquarie.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Bendigo and Adelaide Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bendigobank.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.bendigobank.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Bank of Queensland",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.boq.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.boq.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Bank Australia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankaust.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.bankaust.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Suncorp Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.suncorp.com.au/banking",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.suncorp.com.au/banking",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "ING Bank Australia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.ing.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.ing.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "HSBC Bank Australia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.hsbc.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.hsbc.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Rabobank Australia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.rabobank.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.rabobank.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Great Southern Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.greatsouthernbank.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.greatsouthernbank.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Beyond Bank Australia",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.beyondbank.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.beyondbank.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "AMP Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.amp.com.au/banking",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.amp.com.au/banking",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Judo Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.judo.bank",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.judo.bank",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "MyState Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.mystate.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.mystate.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "Heritage Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.heritage.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.heritage.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "People First Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.peoplefirstbank.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.peoplefirstbank.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AU",
+      "institutionName": "IMB Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.imb.com.au",
+      "registrySourceUrl": "https://www.apra.gov.au/registers/list-registered-authorised-deposit-taking-institutions",
+      "sourceUrl": "https://www.imb.com.au",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

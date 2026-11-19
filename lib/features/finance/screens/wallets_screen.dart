@@ -150,7 +150,7 @@ class _BankCardPatternPainter extends CustomPainter {
         break;
       case 'faysal':
         // Faysal Islami: deep teal field with interlocking Islamic geometry.
-        final teal=Paint()..color=const Color(0xFF4DB7A7).withValues(alpha:.32)..style=PaintingStyle.stroke..strokeWidth:1.2;
+        final teal=Paint()..color=const Color(0xFF4DB7A7).withValues(alpha:.32)..style=PaintingStyle.stroke..strokeWidth=1.2;
         for(var row=-1;row<6;row++) {
           for(var col=0;col<9;col++) {
             final x=col*25.0+(row.isOdd?12.5:0)+w*.34, y=row*22.0;

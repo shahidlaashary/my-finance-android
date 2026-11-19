@@ -87,7 +87,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
       floatingActionButton: FloatingActionButton.extended(onPressed:_create, icon:const Icon(Icons.add), label:const Text('New Committee')),
       body: loading ? const Center(child:CircularProgressIndicator()) :
         committees.isEmpty ? Center(child:Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisSize:MainAxisSize.min,children:[
-          const Icon(Icons.groups_outlined,size:56,color:Colors.grey), const SizedBox(height:12),
+          const Icon(Icons.groups_outlined,size:56,color:Theme.of(context).hintColor), const SizedBox(height:12),
           const Text('No committees yet',style:TextStyle(fontSize:18,fontWeight:FontWeight.bold)),
           const SizedBox(height:6), const Text('Create a fixed-turn committee and add its members.',textAlign:TextAlign.center),
           const SizedBox(height:16), FilledButton.icon(onPressed:_create,icon:const Icon(Icons.add),label:const Text('Create Committee')),
@@ -257,18 +257,18 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     final next=members.where((m)=>(m['received'] as num).toDouble()<(c['installment_amount'] as num).toDouble()*members.length-0.000001).toList();
     return ListView(padding:const EdgeInsets.all(16),children:[
       Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-        Text(c['status'].toString().toUpperCase(),style:const TextStyle(fontWeight:FontWeight.bold,color:Colors.green)),
+        Text(c['status'].toString().toUpperCase(),style:const TextStyle(fontWeight:FontWeight.bold,color:Theme.of(context).colorScheme.secondary)),
         const SizedBox(height:8),Text('${c['frequency']} • ${members.length} members'),
         Text('Installment: ${money.format(c['installment_amount'])} ${c['currency'] ?? 'PKR'}'),
         Text('Start: ${DateFormat('dd MMM yyyy').format(DateTime.parse(c['start_date']))}'),
       ]))),
       Row(children:[
-        Expanded(child:_stat('Total collected',collected,Colors.green)),const SizedBox(width:8),
-        Expanded(child:_stat('Total payouts',payout,Colors.deepPurple)),
+        Expanded(child:_stat('Total collected',collected,Theme.of(context).colorScheme.secondary)),const SizedBox(width:8),
+        Expanded(child:_stat('Total payouts',payout,Theme.of(context).colorScheme.tertiary)),
       ]),
       Row(children:[
-        Expanded(child:_stat('Available balance',balance,Colors.blue)),const SizedBox(width:8),
-        Expanded(child:_stat('Pending collection',pending,Colors.orange)),
+        Expanded(child:_stat('Available balance',balance,Theme.of(context).colorScheme.primary)),const SizedBox(width:8),
+        Expanded(child:_stat('Pending collection',pending,Theme.of(context).colorScheme.tertiary)),
       ]),
       Card(child:ListTile(title:const Text('Next payout turn'),subtitle:Text(next.isEmpty?'All members have received a payout':next.first['name'].toString()),leading:const Icon(Icons.event_available))),
       const SizedBox(height:8),
@@ -333,10 +333,10 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
                 : 'Without Wallet';
               return ListTile(
                 contentPadding:EdgeInsets.zero,
-                leading:Icon(deposit?Icons.call_received:Icons.call_made,color:deposit?Colors.green:Colors.deepPurple),
+                leading:Icon(deposit?Icons.call_received:Icons.call_made,color:deposit?Theme.of(context).colorScheme.secondary:Theme.of(context).colorScheme.tertiary),
                 title:Text('${e['entry_type']} • ${committeeData['currency']??'PKR'} ${money.format(e['amount'])}'),
                 subtitle:Text('${date==null?'':DateFormat('dd MMM yyyy').format(date)} • $method${(e['note']??'').toString().isEmpty?'':' • ${e['note']}'}'),
-                trailing:Icon(deposit?Icons.add:Icons.remove,color:deposit?Colors.green:Colors.deepPurple),
+                trailing:Icon(deposit?Icons.add:Icons.remove,color:deposit?Theme.of(context).colorScheme.secondary:Theme.of(context).colorScheme.tertiary),
               );
             })),
         ]),
@@ -376,10 +376,10 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   Widget _history()=>entries.isEmpty?const Center(child:Text('No committee entries yet.')):ListView.builder(
     padding:const EdgeInsets.all(12),itemCount:entries.length,itemBuilder:(context,i){
       final e=entries[i];final deposit=e['entry_type']=='Installment';
-      return Card(child:ListTile(leading:CircleAvatar(child:Icon(deposit?Icons.south_west:Icons.north_east,color:deposit?Colors.green:Colors.deepPurple)),
+      return Card(child:ListTile(leading:CircleAvatar(child:Icon(deposit?Icons.south_west:Icons.north_east,color:deposit?Theme.of(context).colorScheme.secondary:Theme.of(context).colorScheme.tertiary)),
         title:Text('${e['member_name']} • ${e['entry_type']}'),
         subtitle:Text('${DateFormat('dd MMM yyyy').format(DateTime.parse(e['entry_date']))} • ${e['payment_method']=='Wallet' ? 'Wallet: ${e['wallet_name'] ?? 'Unavailable'} • ${money.format(e['wallet_amount'])} ${e['wallet_currency']}' : 'Without Wallet'}'),
-        trailing:Text('${deposit?'+':'−'} ${e['committee_currency'] ?? committeeData['currency'] ?? 'PKR'} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Colors.green:Colors.deepPurple)),
+        trailing:Text('${deposit?'+':'−'} ${e['committee_currency'] ?? committeeData['currency'] ?? 'PKR'} ${money.format(e['amount'])}',style:TextStyle(fontWeight:FontWeight.bold,color:deposit?Theme.of(context).colorScheme.secondary:Theme.of(context).colorScheme.tertiary)),
       ));
     });
 

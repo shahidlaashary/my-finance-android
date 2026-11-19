@@ -1,0 +1,42 @@
+name: Global card catalog verification
+on:
+  workflow_dispatch:
+    inputs:
+      import_file:
+        description: Optional repository path to a JSON issuer/card import file
+        required: false
+        type: string
+  schedule:
+    - cron: "23 3 * * 1"
+  push:
+    paths:
+      - "assets/data/global_card_catalog.json"
+      - "scripts/card_catalog_pipeline.py"
+      - ".github/workflows/global-card-catalog.yml"
+permissions:
+  contents: write
+concurrency:
+  group: global-card-catalog
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Import optional bulk data
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.import_file != '' }}
+        run: python scripts/card_catalog_pipeline.py --import "${{ inputs.import_file }}"
+      - name: Recheck official sources
+        run: python scripts/card_catalog_pipeline.py --check
+      - name: Commit catalog verification report
+        run: |
+          if [[ -n "$(git status --porcelain assets/data)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add assets/data/global_card_catalog.json assets/data/card_verification_report.json
+            git commit -m "Refresh global card source verification"
+            git push
+          fi

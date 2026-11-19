@@ -479,7 +479,7 @@ class _WalletsPageState extends State<WalletsPage> {
                   Positioned(right: -14, bottom: -4,
                     child: SizedBox(width: 190, height: 105,
                       child: CustomPaint(
-                        painter: _WalletWavePainter(const Color(0xFFF28C28)))),
+                        painter: _WalletWavePainter(const Color(0xFFF28C28))))),
                 if (isBank && bankTheme?['design'] == 'bop')
                   Positioned(right: 18, top: 14,
                     child: Container(width: 72, height: 72,

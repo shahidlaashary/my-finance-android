@@ -600,7 +600,7 @@ class _HomePageState extends State<HomePage> {
                                               fontWeight: FontWeight.w800,
                                               color: converted == null
                                                   ? Theme.of(context).colorScheme.error
-                                                  : AppColors.primary,
+                                                  : Theme.of(context).colorScheme.primary,
                                             ),
                                           ),
                                         ),
@@ -726,15 +726,15 @@ class _HomePageState extends State<HomePage> {
                             child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
                         else if (firstOtherCurrency == null)
                           Text(appText(context, 'No other currencies', 'کوئی دوسری کرنسی نہیں'),
-                            style: const TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12))
+                            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12))
                         else ...[
                           FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
                             child: Text(_currencyAmount(firstOtherCurrency!.key, firstOtherCurrency!.value),
-                              style: const TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 19, fontWeight: FontWeight.w800))),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 19, fontWeight: FontWeight.w800))),
                           if (otherCurrencyTotals.length > 1)
                             Padding(padding: const EdgeInsets.only(top: 3),
                               child: Text('+${otherCurrencyTotals.length - 1} ${appText(context, 'more currencies', 'مزید کرنسیاں')}',
-                                style: const TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11))),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11))),
                           TextButton(onPressed: _showAllCurrencies,
                             style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 4), minimumSize: Size.zero,
@@ -753,13 +753,13 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(12)),
                     child: Row(children: [
                       Expanded(child: Text('${appText(context, 'Consolidated in', 'میں مجموعی حساب')} $baseCurrency',
-                        style: const TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, fontWeight: FontWeight.w600))),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, fontWeight: FontWeight.w600))),
                       const SizedBox(width: 8),
                       loading ? const SizedBox(height: 18, width: 18,
                         child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
                         : Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight,
                             child: Text(money(totalBalance),
-                              style: const TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 20, fontWeight: FontWeight.w900)))),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 20, fontWeight: FontWeight.w900)))),
                     ]),
                   ),
                 ],
@@ -834,7 +834,7 @@ class _HomePageState extends State<HomePage> {
                     title: appText(context, 'Income', 'آمدنی'),
                     value: monthlyIncome,
                     icon: Icons.south_west_rounded,
-                    color: AppColors.income,
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
                 SizedBox(width: 10),
@@ -862,7 +862,7 @@ class _HomePageState extends State<HomePage> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF147D59).withValues(alpha: 0.10),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(13),
                     ),
                     child: const Icon(Icons.savings_outlined,
@@ -882,7 +882,7 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(fontSize: 17,
                                 fontWeight: FontWeight.w800,
                                 color: monthlySavings >= 0
-                                    ? AppColors.income
+                                    ? Theme.of(context).colorScheme.secondary
                                     : Theme.of(context).colorScheme.error)),
                       ],
                     ),
@@ -930,7 +930,7 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   children: [
                     Icon(Icons.check_circle_outline_rounded,
-                        color: AppColors.income),
+                        color: Theme.of(context).colorScheme.secondary),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(appText(context, 'No budget alerts. Your active budgets are below 50%.', 'کوئی بجٹ الرٹ نہیں۔ آپ کے فعال بجٹ 50 فیصد سے کم ہیں۔'),
@@ -966,21 +966,21 @@ class _HomePageState extends State<HomePage> {
               title: appText(context, 'Budgets Overview', 'بجٹ کا جائزہ'),
               summary: loading ? 'Loading budget summary...' : '$overviewBudgetCount active budget(s)',
               detail: budgetAlerts.isEmpty ? 'No budget alerts' : '${budgetAlerts.length} budget(s) need attention',
-              color: const Color(0xFFDB9840),
+              color: Theme.of(context).colorScheme.tertiary,
             ),
             _overviewCard(
               icon: Icons.flag_outlined,
               title: appText(context, 'Goals Overview', 'اہداف کا جائزہ'),
               summary: loading ? 'Loading goals summary...' : '$overviewGoalCount active goal(s)',
               detail: '$overviewCompletedGoalCount completed',
-              color: const Color(0xFF279C83),
+              color: Theme.of(context).colorScheme.secondary,
             ),
             _overviewCard(
               icon: Icons.repeat_rounded,
               title: appText(context, 'Recurring Txns', 'مقررہ لین دین'),
               summary: loading ? 'Loading schedules...' : '$overviewActiveRecurringCount active schedule(s)',
               detail: '$overviewRecurringCount total schedule(s)',
-              color: const Color(0xFF6C78C7),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ],
         ),
@@ -1033,10 +1033,10 @@ class _HomePageState extends State<HomePage> {
     final color = exceeded
         ? Theme.of(context).colorScheme.error
         : ratio >= 0.9
-            ? const Color(0xFFE18A35)
+            ? Theme.of(context).colorScheme.tertiary
             : ratio >= 0.75
-                ? const Color(0xFFCC9A35)
-                : AppColors.primary;
+                ? Theme.of(context).colorScheme.tertiary
+                : Theme.of(context).colorScheme.primary;
     final status = exceeded
         ? 'Budget limit reached'
         : ratio >= 0.9
@@ -1074,7 +1074,7 @@ class _HomePageState extends State<HomePage> {
             child: LinearProgressIndicator(
               value: ratio.clamp(0.0, 1.0).toDouble(),
               minHeight: 7,
-              backgroundColor: const Color(0xFFEDF1EE),
+              backgroundColor: Theme.of(context).dividerColor,
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),

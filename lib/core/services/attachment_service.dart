@@ -19,6 +19,7 @@ class AttachmentOwnerTypes {
   static const String vehicleFuel = 'vehicle_fuel';
   static const String vehicleExpense = 'vehicle_expense';
   static const String document = 'document';
+  static const String party = 'party';
 
   static const List<String> all = [
     transaction,
@@ -30,6 +31,7 @@ class AttachmentOwnerTypes {
     vehicleFuel,
     vehicleExpense,
     document,
+    party,
   ];
 }
 

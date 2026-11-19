@@ -189,6 +189,7 @@ class LoansService {
       whereArgs: [partyId],
     );
     if (changed == 0) throw Exception('Party was not found.');
+    AppRefreshController.notifyChanged();
   }
 
   static Future<int> addParty({
@@ -233,7 +234,7 @@ class LoansService {
       }
       return existing.first['id'] as int;
     }
-    return db.insert('loan_parties', {
+    final id = await db.insert('loan_parties', {
       'name': normalizedName,
       'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
       'address': address.trim(),
@@ -254,6 +255,8 @@ class LoansService {
       'profile_image_path': profileImagePath,
       'created_at': DateTime.now().toIso8601String(),
     });
+    AppRefreshController.notifyChanged();
+    return id;
   }
 
   static Future<void> updateParty({
@@ -316,6 +319,7 @@ class LoansService {
       whereArgs: [id],
     );
     if (changed == 0) throw Exception('Party was not found.');
+    AppRefreshController.notifyChanged();
   }
 
   /// Party sirf tab delete hoti hai jab us ke sath koi loan linked na ho.
@@ -348,6 +352,7 @@ class LoansService {
       record: rows.first,
     );
     await db.delete('loan_parties', where: 'id = ?', whereArgs: [partyId]);
+    AppRefreshController.notifyChanged();
   }
 
   static Future<Map<String, dynamic>?> getPartyById(int id) async {

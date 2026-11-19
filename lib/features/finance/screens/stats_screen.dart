@@ -491,7 +491,7 @@ class _StatsScreenState extends State<StatsScreen> {
         painter: _DonutChartPainter(values: [income, expense], colors: [Theme.of(context).colorScheme.secondary, Theme.of(context).colorScheme.error]),
         child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(total > 0 ? '100%' : '0%', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          const Text('Total', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
+          Text('Total', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
         ])),
       )),
       const SizedBox(width: 18),

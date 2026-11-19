@@ -78,7 +78,7 @@ void _showBudgetAlerts(BuildContext context) {
               future: BudgetsService.getBudgets(activeOnly: true),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(28),
                       child: CircularProgressIndicator(strokeWidth: 2),
@@ -100,7 +100,7 @@ void _showBudgetAlerts(BuildContext context) {
                       .compareTo(a.spentAmount / a.limitAmount));
 
                 if (alerts.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(28),
                       child: Column(

@@ -15,7 +15,7 @@ class SimpleFeaturePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           title,
@@ -32,7 +32,7 @@ class SimpleFeaturePage extends StatelessWidget {
               Icon(
                 _getIcon(),
                 size: 55,
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 16),
               Text(
@@ -45,7 +45,7 @@ class SimpleFeaturePage extends StatelessWidget {
               const SizedBox(height: 8),
               Text(appText(context, "This section is ready for its feature implementation.", "This section is ready for its feature implementation."),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.muted),
+                style: TextStyle(color: Theme.of(context).hintColor),
               ),
             ],
           ),

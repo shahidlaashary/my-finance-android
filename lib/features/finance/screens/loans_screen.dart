@@ -268,7 +268,7 @@ class _LoansScreenState extends State<LoansScreen> {
                             Expanded(
                               child: Text(
                                 appText(context, 'New Loan', 'نیا قرض'),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
                                   color: Theme.of(context).colorScheme.onSurface,
@@ -278,7 +278,7 @@ class _LoansScreenState extends State<LoansScreen> {
                             IconButton(
                               visualDensity: VisualDensity.compact,
                               onPressed: () => Navigator.pop(sheetContext, false),
-                              icon: const Icon(Icons.close_rounded),
+                              icon: Icon(Icons.close_rounded),
                               color: Theme.of(context).hintColor,
                             ),
                           ],
@@ -456,7 +456,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       if (date != null) setSheetState(() => lendingDate = date);
                                     },
                                     child: InputDecorator(
-                                      decoration: InputDecoration(labelText: appText(context, 'Lending Date', 'قرض دینے کی تاریخ'), suffixIcon: const Icon(Icons.calendar_month)),
+                                      decoration: InputDecoration(labelText: appText(context, 'Lending Date', 'قرض دینے کی تاریخ'), suffixIcon: Icon(Icons.calendar_month)),
                                       child: Text(_dateString(lendingDate), maxLines: 1, overflow: TextOverflow.ellipsis),
                                     ),
                                   )),
@@ -468,7 +468,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       if (date != null) setSheetState(() => dueDate = date);
                                     },
                                     child: InputDecorator(
-                                      decoration: InputDecoration(labelText: appText(context, 'Due Date', 'واپسی کی تاریخ'), suffixIcon: const Icon(Icons.event)),
+                                      decoration: InputDecoration(labelText: appText(context, 'Due Date', 'واپسی کی تاریخ'), suffixIcon: Icon(Icons.event)),
                                       child: Text(dueDate == null ? 'Not selected' : _dateString(dueDate!), maxLines: 1, overflow: TextOverflow.ellipsis),
                                     ),
                                   )),
@@ -498,16 +498,16 @@ class _LoansScreenState extends State<LoansScreen> {
                                         final photos = await loanImagePicker.pickMultiImage(imageQuality: 85);
                                         if (photos.isNotEmpty) setSheetState(() => pendingLoanImages.addAll(photos));
                                       },
-                                      icon: const Icon(Icons.photo_library_outlined),
-                                      label: const Text('Gallery'),
+                                      icon: Icon(Icons.photo_library_outlined),
+                                      label: Text('Gallery'),
                                     ),
                                     TextButton.icon(
                                       onPressed: () async {
                                         final photo = await loanImagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
                                         if (photo != null) setSheetState(() => pendingLoanImages.add(photo));
                                       },
-                                      icon: const Icon(Icons.camera_alt_outlined),
-                                      label: const Text('Camera'),
+                                      icon: Icon(Icons.camera_alt_outlined),
+                                      label: Text('Camera'),
                                     ),
                                     TextButton.icon(
                                       onPressed: () async {
@@ -522,19 +522,19 @@ class _LoansScreenState extends State<LoansScreen> {
                                           ));
                                         }
                                       },
-                                      icon: const Icon(Icons.picture_as_pdf_outlined),
-                                      label: const Text('PDF'),
+                                      icon: Icon(Icons.picture_as_pdf_outlined),
+                                      label: Text('PDF'),
                                     ),
                                   ]),
                                   if (pendingLoanImages.isNotEmpty)
                                     Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 6, runSpacing: 4, children: pendingLoanImages.asMap().entries.map((entry) => Chip(
-                                      avatar: const Icon(Icons.image_outlined, size: 16),
+                                      avatar: Icon(Icons.image_outlined, size: 16),
                                       label: SizedBox(width: 105, child: Text(entry.value.name, overflow: TextOverflow.ellipsis)),
                                       onDeleted: () => setSheetState(() => pendingLoanImages.removeAt(entry.key)),
                                     )).toList())),
                                   if (pendingLoanPdfs.isNotEmpty)
                                     Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 6, runSpacing: 4, children: pendingLoanPdfs.asMap().entries.map((entry) => Chip(
-                                      avatar: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                                      avatar: Icon(Icons.picture_as_pdf_outlined, size: 16),
                                       label: SizedBox(width: 105, child: Text(entry.value.name, overflow: TextOverflow.ellipsis)),
                                       onDeleted: () => setSheetState(() => pendingLoanPdfs.removeAt(entry.key)),
                                     )).toList())),
@@ -655,7 +655,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 fontWeight: FontWeight.w600)),
             const SizedBox(height: 3),
             Text(_displayLoanDate(value), maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF263B32),
+              style: TextStyle(fontSize: 11, color: Color(0xFF263B32),
                 fontWeight: FontWeight.w700)),
           ],
         )),
@@ -758,7 +758,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(appText(context, 'Repayment Date', 'واپسی کی تاریخ')),
                   subtitle: Text(_dateString(repaymentDate)),
-                  trailing: const Icon(Icons.calendar_month),
+                  trailing: Icon(Icons.calendar_month),
                   onTap: () async {
                     final date = await _pickDate(repaymentDate);
                     if (date != null) {
@@ -853,24 +853,24 @@ class _LoansScreenState extends State<LoansScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Edit Loan', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                    Text('Edit Loan', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 14),
                     TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Loan Amount (${loan.currency})')),
                     const SizedBox(height: 12),
                     Row(children: [
                       Expanded(child: OutlinedButton.icon(
                         onPressed: () async { final date = await _pickDate(lendingDate); if (date != null) setSheetState(() => lendingDate = date); },
-                        icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                        icon: Icon(Icons.calendar_month_outlined, size: 18),
                         label: Text('Start: ${_dateString(lendingDate)}', maxLines: 1, overflow: TextOverflow.ellipsis),
                       )),
                       const SizedBox(width: 8),
                       Expanded(child: OutlinedButton.icon(
                         onPressed: () async { final date = await _pickDate(dueDate ?? lendingDate); if (date != null) setSheetState(() => dueDate = date); },
-                        icon: const Icon(Icons.event_outlined, size: 18),
+                        icon: Icon(Icons.event_outlined, size: 18),
                         label: Text(dueDate == null ? 'Set Due Date' : 'Due: ${_dateString(dueDate!)}', maxLines: 1, overflow: TextOverflow.ellipsis),
                       )),
                     ]),
-                    if (dueDate != null) Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => setSheetState(() => dueDate = null), child: const Text('Clear Due Date'))),
+                    if (dueDate != null) Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => setSheetState(() => dueDate = null), child: Text('Clear Due Date'))),
                     const SizedBox(height: 8),
                     TextField(controller: notesController, maxLines: 3, decoration: const InputDecoration(labelText: 'Notes')),
                     const SizedBox(height: 10),
@@ -880,9 +880,9 @@ class _LoansScreenState extends State<LoansScreen> {
                     ),
                     const SizedBox(height: 16),
                     Row(children: [
-                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: const Text('Cancel'))),
+                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext, false), child: Text('Cancel'))),
                       const SizedBox(width: 10),
-                      Expanded(child: ElevatedButton(onPressed: () => Navigator.pop(sheetContext, true), child: const Text('Save Changes'))),
+                      Expanded(child: ElevatedButton(onPressed: () => Navigator.pop(sheetContext, true), child: Text('Save Changes'))),
                     ]),
                   ],
                 ),
@@ -955,7 +955,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         Row(children: [
                           Expanded(
                             child: Text(_partyNameForLoan(loan),
-                              style: const TextStyle(fontSize: 18,
+                              style: TextStyle(fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: Theme.of(context).colorScheme.onSurface)),
                           ),
@@ -973,7 +973,7 @@ class _LoansScreenState extends State<LoansScreen> {
                             tooltip: 'Loan options',
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            icon: const Icon(Icons.more_vert_rounded, size: 21, color: Color(0xFF536987)),
+                            icon: Icon(Icons.more_vert_rounded, size: 21, color: Color(0xFF536987)),
                             onSelected: (value) async {
                               if (value == 'edit') {
                                 final updated = await _editLoan(loan);
@@ -1008,7 +1008,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         const SizedBox(height: 2),
                         Text(
                           '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.currency.toUpperCase()}',
-                          style: const TextStyle(fontSize: 12,
+                          style: TextStyle(fontSize: 12,
                             color: Theme.of(context).hintColor, fontWeight: FontWeight.w600),
                         ),
                         if (_partyPhoneForLoan(loan) != '-')
@@ -1025,7 +1025,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           ),
                         const SizedBox(height: 3),
                         Text(_moneyWithLoanCurrency(loan.amount, loan),
-                          style: const TextStyle(fontSize: 25,
+                          style: TextStyle(fontSize: 25,
                             fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                         const SizedBox(height: 4),
                         Text('Total Loan Amount',
@@ -1040,7 +1040,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         ]),
                         const SizedBox(height: 3),
                         Row(children: [
-                          const Expanded(child: Text('Repayment Progress',
+                          Expanded(child: Text('Repayment Progress',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
                           Text('${(progress * 100).round()}%',
                             style: TextStyle(fontSize: 12, color: statusColor,
@@ -1106,7 +1106,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   await _showLoanDetails(refreshedLoans.first);
                                 }
                               },
-                              icon: const Icon(Icons.payments_outlined),
+                              icon: Icon(Icons.payments_outlined),
                               label: Text(loan.loanType == 'given'
                                 ? 'Receive Repayment' : 'Pay Back Loan'),
                             ),
@@ -1120,7 +1120,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 Row(children: [
                   Expanded(child: Text(
                     appText(context, 'Payment Entries', 'Payment Entries'),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                   )),
                   FutureBuilder<List<RepaymentModel>>(
                     future: LoansService.getRepayments(loan.id!),
@@ -1155,7 +1155,7 @@ class _LoansScreenState extends State<LoansScreen> {
                             Icon(Icons.receipt_long_outlined,
                               size: 32, color: Theme.of(context).hintColor),
                             const SizedBox(height: 8),
-                            const Text('No payment entries yet',
+                            Text('No payment entries yet',
                               style: TextStyle(fontWeight: FontWeight.w600)),
                           ]),
                         ),
@@ -1210,14 +1210,14 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 : 'Loan Repayment',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
                                               color: Theme.of(context).colorScheme.onSurface,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
-                                          const Text(
+                                          Text(
                                             'Payment',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -1231,7 +1231,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             repayment.repaymentDate,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 10.5,
                                               color: Theme.of(context).hintColor,
                                             ),
@@ -1264,7 +1264,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                               padding: EdgeInsets.zero,
                                               visualDensity: VisualDensity.compact,
                                             ),
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.more_horiz,
                                               color: Theme.of(context).hintColor,
                                               size: 19,
@@ -1278,17 +1278,17 @@ class _LoansScreenState extends State<LoansScreen> {
                                               final confirm = await showDialog<bool>(
                                                 context: pageContext,
                                                 builder: (dialogContext) => AlertDialog(
-                                                  title: const Text('Delete Payment?'),
-                                                  content: const Text(
+                                                  title: Text('Delete Payment?'),
+                                                  content: Text(
                                                     'This will reverse the wallet balance and loan balance.'),
                                                   actions: [
                                                     TextButton(
                                                       onPressed: () => Navigator.pop(dialogContext, false),
-                                                      child: const Text('Cancel'),
+                                                      child: Text('Cancel'),
                                                     ),
                                                     TextButton(
                                                       onPressed: () => Navigator.pop(dialogContext, true),
-                                                      child: const Text('Delete'),
+                                                      child: Text('Delete'),
                                                     ),
                                                   ],
                                                 ),
@@ -1355,7 +1355,7 @@ class _LoansScreenState extends State<LoansScreen> {
           fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(value, maxLines: 2, overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
             color: Theme.of(context).colorScheme.onSurface)),
       ],
     );
@@ -1419,7 +1419,7 @@ class _LoansScreenState extends State<LoansScreen> {
         onPressed: _addLoan,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: const Icon(Icons.add_rounded),
+        icon: Icon(Icons.add_rounded),
         label: Text(appText(context, 'New Loan', 'نیا قرض')),
       ),
       body: _loading
@@ -1535,7 +1535,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.right,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: Theme.of(context).colorScheme.onPrimary,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
@@ -1558,7 +1558,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               Expanded(
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.receipt_long_rounded, color: Color(0xFFBCEBD7), size: 16),
+                                    Icon(Icons.receipt_long_rounded, color: Color(0xFFBCEBD7), size: 16),
                                     const SizedBox(width: 6),
                                     Flexible(
                                       child: Text('Total Loans  ${_loans.length}',
@@ -1573,7 +1573,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    const Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD18A), size: 16),
+                                    Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD18A), size: 16),
                                     const SizedBox(width: 5),
                                     Flexible(
                                       child: Text('Overdue  $overdueCount',
@@ -1604,12 +1604,12 @@ class _LoansScreenState extends State<LoansScreen> {
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
-                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                          textStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.people_alt_outlined, size: 16),
+                            Icon(Icons.people_alt_outlined, size: 16),
                             const SizedBox(width: 3),
                             Text('Manage Party (${_parties.length})'),
                           ],
@@ -1698,7 +1698,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                               _partyNameForLoan(loan),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.w800,
                                                 color: Color(0xFF101D3A),
@@ -1713,7 +1713,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                       : 'Loan Taken',
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11,
                                                 color: Color(0xFF5B6F91),
                                                 fontWeight: FontWeight.w500,
@@ -1772,7 +1772,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       const SizedBox(width: 4),
                                       Transform.translate(
                                         offset: const Offset(0, -9),
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.chevron_right_rounded,
                                           size: 23,
                                           color: Color(0xFF536987),
@@ -1795,12 +1795,12 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 children: [
                                                   Text(
                                                     _currencyFlag(loan.currency),
-                                                    style: const TextStyle(fontSize: 21),
+                                                    style: TextStyle(fontSize: 21),
                                                   ),
                                                   const SizedBox(width: 7),
                                                   Text(
                                                     loan.currency.toUpperCase(),
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 12,
                                                       color: Color(0xFF526987),
                                                       fontWeight: FontWeight.w700,
@@ -1819,7 +1819,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                       alignment: Alignment.centerLeft,
                                                       child: Text(
                                                         _money(loan.amount),
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontSize: 18,
                                                           fontWeight: FontWeight.w800,
                                                           color: Color(0xFF101D3A),
@@ -1866,7 +1866,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 children: [
                                                   Text(
                                                     'Repaid: ${_money(loan.repaidAmount)}',
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 12,
                                                       color: Color(0xFF536987),
                                                     ),
@@ -1874,7 +1874,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                                   const SizedBox(height: 2),
                                                   Text(
                                                     'Remaining: ${_money(loan.remainingAmount)}',
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 12,
                                                       color: Color(0xFF536987),
                                                     ),
@@ -1918,10 +1918,10 @@ class _LoansScreenState extends State<LoansScreen> {
                                                      foregroundColor: const Color(0xFF1763A8),
                                                    ),
                                                    onPressed: () => _addRepayment(loan),
-                                                   icon: const Icon(Icons.payments_outlined, size: 17),
+                                                   icon: Icon(Icons.payments_outlined, size: 17),
                                                    label: Text(
                                                      loan.loanType == 'given' ? 'Receive' : 'Pay Back',
-                                                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
                                                    ),
                                                  ),
                                             ],
@@ -2047,7 +2047,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
           colors: [Color(0xFF126B4B), Color(0xFF20966A)]),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: const Color(0xFF126B4B).withValues(alpha: .17), blurRadius: 16, offset: const Offset(0, 6))],
@@ -2142,7 +2142,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       child: Row(children: [
         Icon(icon, color: Theme.of(context).colorScheme.primary, size: 17),
         const SizedBox(width: 7),
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF263B32))),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF263B32))),
       ]),
     );
     Widget pair(Widget a, Widget b) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -2176,8 +2176,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 10, 6),
                     child: Row(children: [
-                      Expanded(child: Text(party == null ? 'Add New Party' : 'Edit Party', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
-                      IconButton(onPressed: () => Navigator.pop(sheetContext, false), icon: const Icon(Icons.close_rounded)),
+                      Expanded(child: Text(party == null ? 'Add New Party' : 'Edit Party', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+                      IconButton(onPressed: () => Navigator.pop(sheetContext, false), icon: Icon(Icons.close_rounded)),
                     ]),
                   ),
                   Expanded(
@@ -2195,13 +2195,13 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                               child: IconButton(
                                 visualDensity: VisualDensity.compact,
                                 constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-                                icon: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
+                                icon: Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
                                 onPressed: () => showModalBottomSheet<void>(
                                   context: context, showDragHandle: true,
                                   builder: (photoContext) => SafeArea(child: Wrap(children: [
-                                    ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Choose from Gallery'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.gallery); }),
-                                    ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Take Photo'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.camera); }),
-                                    if (photoExists) ListTile(leading: const Icon(Icons.delete_outline, color: Colors.red), title: const Text('Remove Photo'), onTap: () { Navigator.pop(photoContext); setSheetState(() { pickedPhoto = null; profilePath = ''; }); }),
+                                    ListTile(leading: Icon(Icons.photo_library_outlined), title: Text('Choose from Gallery'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.gallery); }),
+                                    ListTile(leading: Icon(Icons.camera_alt_outlined), title: Text('Take Photo'), onTap: () { Navigator.pop(photoContext); choosePhoto(ImageSource.camera); }),
+                                    if (photoExists) ListTile(leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Remove Photo'), onTap: () { Navigator.pop(photoContext); setSheetState(() { pickedPhoto = null; profilePath = ''; }); }),
                                   ])),
                                 ),
                               ),
@@ -2270,8 +2270,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                 if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Attachment select error: $error')));
                               }
                             },
-                            icon: const Icon(Icons.attach_file_rounded, size: 17),
-                            label: const Text('Attach Files'),
+                            icon: Icon(Icons.attach_file_rounded, size: 17),
+                            label: Text('Attach Files'),
                           ),
                         ),
                         if (existingPartyAttachments.isNotEmpty || pendingNoteAttachments.isNotEmpty)
@@ -2285,16 +2285,16 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                 ...existingPartyAttachments.map((item) => Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 3),
                                   child: Row(children: [
-                                    const Icon(Icons.attach_file, size: 15),
+                                    Icon(Icons.attach_file, size: 15),
                                     const SizedBox(width: 6),
                                     Expanded(child: Text(item.fileName, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                    const Text('Saved', style: TextStyle(fontSize: 10, color: Color(0xFF16865B))),
+                                    Text('Saved', style: TextStyle(fontSize: 10, color: Color(0xFF16865B))),
                                   ]),
                                 )),
                                 ...pendingNoteAttachments.asMap().entries.map((entry) => Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 3),
                                   child: Row(children: [
-                                    const Icon(Icons.insert_drive_file_outlined, size: 15),
+                                    Icon(Icons.insert_drive_file_outlined, size: 15),
                                     const SizedBox(width: 6),
                                     Expanded(child: Text(entry.value.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
                                     IconButton(
@@ -2302,7 +2302,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                       constraints: const BoxConstraints.tightFor(width: 28, height: 28),
                                       padding: EdgeInsets.zero,
                                       onPressed: () => setSheetState(() => pendingNoteAttachments.removeAt(entry.key)),
-                                      icon: const Icon(Icons.close_rounded, size: 16),
+                                      icon: Icon(Icons.close_rounded, size: 16),
                                     ),
                                   ]),
                                 )),
@@ -2317,8 +2317,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                     child: SizedBox(width: double.infinity, child: FilledButton.icon(
                       style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, padding: const EdgeInsets.symmetric(vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
                       onPressed: () { if (formKey.currentState!.validate()) Navigator.pop(sheetContext, true); },
-                      icon: const Icon(Icons.check_rounded, size: 18),
-                      label: Text(party == null ? 'Save Party' : 'Update Party', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      icon: Icon(Icons.check_rounded, size: 18),
+                      label: Text(party == null ? 'Save Party' : 'Update Party', style: TextStyle(fontWeight: FontWeight.w700)),
                     )),
                   ),
                 ]),
@@ -2401,19 +2401,19 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Party?'),
+        title: Text('Delete Party?'),
         content: Text(
           'Delete "${party['name']}"? Parties linked to any loan cannot be deleted, so loan history remains safe.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -2461,13 +2461,13 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(sheetContext),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close),
                   ),
                 ]),
               ),
               Expanded(
                 child: loans.isEmpty
-                    ? const Center(child: Text('No loan history for this party.'))
+                    ? Center(child: Text('No loan history for this party.'))
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
                         itemCount: loans.length,
@@ -2521,7 +2521,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                             isGiven ? 'Loan Given' : 'Loan Taken',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
                                               color: Theme.of(context).colorScheme.onSurface,
@@ -2583,7 +2583,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8F6),
       appBar: AppBar(
-        title: const Text('Manage Parties'),
+        title: Text('Manage Parties'),
         actions: [
           IconButton(
             tooltip: _searchVisible ? 'Close search' : 'Search parties',
@@ -2596,7 +2596,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
           IconButton(
             tooltip: 'Add Party',
             onPressed: () => _editParty(),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
+            icon: Icon(Icons.person_add_alt_1_rounded),
           ),
           const SizedBox(width: 4),
         ],
@@ -2615,7 +2615,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                   suffixIcon: _search.isEmpty ? null : IconButton(
                     tooltip: 'Clear search',
                     onPressed: () => setState(() => _search = ''),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded),
                   ),
                   filled: true,
                   fillColor: Colors.white,
@@ -2646,7 +2646,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
 
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
                     ? Center(
                         child: Column(
@@ -2656,7 +2656,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                 size: 42, color: const Color(0xFF9AA9A0)),
                             const SizedBox(height: 10),
                             Text(_search.isNotEmpty ? 'No matching parties found.' : (_showArchived ? 'No archived parties.' : 'No active parties added yet.'),
-                                style: const TextStyle(color: Color(0xFF748279), fontWeight: FontWeight.w600)),
+                                style: TextStyle(color: Color(0xFF748279), fontWeight: FontWeight.w600)),
                           ],
                         ),
                       )
@@ -2724,14 +2724,14 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                   children: [
                                                     Text(party['name']?.toString() ?? '',
                                                       maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF20352B))),
+                                                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF20352B))),
                                                     const SizedBox(height: 4),
                                                     Row(children: [
                                                       Flexible(child: Text(business.isNotEmpty ? business : partyType,
                                                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                        style: const TextStyle(fontSize: 10, color: Color(0xFF78877E), fontWeight: FontWeight.w500))),
+                                                        style: TextStyle(fontSize: 10, color: Color(0xFF78877E), fontWeight: FontWeight.w500))),
                                                       const SizedBox(width: 6),
-                                                      Container(width: 3, height: 3, decoration: const BoxDecoration(color: Color(0xFFB4C0B8), shape: BoxShape.circle)),
+                                                      Container(width: 3, height: 3, decoration: BoxDecoration(color: Color(0xFFB4C0B8), shape: BoxShape.circle)),
                                                       const SizedBox(width: 6),
                                                       Text(currency, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w800)),
                                                     ]),
@@ -2832,8 +2832,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _editParty(),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Party'),
+        icon: Icon(Icons.add_rounded),
+        label: Text('Add Party'),
       ),
     );
   }
@@ -2872,7 +2872,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 190),
         child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 10, color: Color(0xFF6F7E75))),
+          style: TextStyle(fontSize: 10, color: Color(0xFF6F7E75))),
       ),
     ],
   );
@@ -2885,10 +2885,10 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       borderRadius: BorderRadius.circular(9),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(fontSize: 9, color: Color(0xFF87958D))),
+      Text(label, style: TextStyle(fontSize: 9, color: Color(0xFF87958D))),
       const SizedBox(height: 2),
       Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 10, color: Color(0xFF42564B), fontWeight: FontWeight.w800)),
+        style: TextStyle(fontSize: 10, color: Color(0xFF42564B), fontWeight: FontWeight.w800)),
     ]),
   );
 

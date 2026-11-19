@@ -287,7 +287,7 @@ class _WalletsPageState extends State<WalletsPage> {
     }
     return {
       'brand': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase(),
-      'mark': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase().split(RegExp(r'\\s+')).take(3).map((part) => part.isEmpty ? '' : part[0]).join(),
+      'mark': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase().split(RegExp(r'\s+')).take(3).map((part) => part.isEmpty ? '' : part[0]).join(),
       'colors': [const Color(0xFF075B4B), const Color(0xFF16A085)],
     };
   }
@@ -376,6 +376,23 @@ class _WalletsPageState extends State<WalletsPage> {
                           )
                         else
                           Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 17),
+                        if (isBank) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 25,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFE9D49A), Color(0xFFB89550)],
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.55), width: 0.6),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.memory_rounded, size: 14, color: Color(0xFF70572C)),
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         if (isBank) ...[
                           Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.9), size: 17),

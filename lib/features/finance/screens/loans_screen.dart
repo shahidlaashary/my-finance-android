@@ -2427,14 +2427,15 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
+      showDragHandle: false,
       builder: (sheetContext) => SafeArea(
+        top: false,
         child: SizedBox(
           height: MediaQuery.sizeOf(sheetContext).height * 0.72,
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                 child: Row(children: [
                   Expanded(
                     child: Text(

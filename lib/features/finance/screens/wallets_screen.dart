@@ -82,86 +82,182 @@ class _WalletWavePainter extends CustomPainter {
 class _BankCardPatternPainter extends CustomPainter {
   final int pattern;
   final Color color;
-  const _BankCardPatternPainter({required this.pattern, required this.color});
+  final String design;
+  const _BankCardPatternPainter({required this.pattern, required this.color, this.design = ''});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.13)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.15;
-    final fill = Paint()
-      ..color = color.withValues(alpha: 0.075)
-      ..style = PaintingStyle.fill;
-    switch (pattern % 6) {
-      case 0:
-        for (var i = -size.height; i < size.width + size.height; i += 18) {
-          canvas.drawLine(Offset(i.toDouble(), 0),
-              Offset(i + size.height, size.height), paint);
+    final stroke = Paint()..color = color.withValues(alpha: 0.25)..style = PaintingStyle.stroke..strokeWidth = 1.15;
+    final fill = Paint()..color = color.withValues(alpha: 0.12)..style = PaintingStyle.fill;
+    final w = size.width, h = size.height;
+    final path = Path();
+    switch (design) {
+      case 'hbl':
+        // HBL's dark World/Gold card family: fine interlocking geometric lattice.
+        for (var x = -h; x < w + h; x += 19) {
+          path.reset();
+          path.moveTo(x, 0); path.lineTo(x + h * .48, h * .5); path.lineTo(x, h);
+          path.moveTo(x + 9, 0); path.lineTo(x + h * .48 + 9, h * .5); path.lineTo(x + 9, h);
+          canvas.drawPath(path, stroke);
         }
         break;
-      case 1:
-        for (var i = 0; i < 5; i++) {
-          final rect = Rect.fromLTWH(size.width * 0.48 + i * 13,
-              -size.height * 0.45 + i * 13, size.height * 0.9, size.height * 0.9);
-          final path = Path()
-            ..moveTo(rect.center.dx, rect.top)
-            ..lineTo(rect.right, rect.center.dy)
-            ..lineTo(rect.center.dx, rect.bottom)
-            ..lineTo(rect.left, rect.center.dy)
-            ..close();
-          canvas.drawPath(path, paint);
-        }
+      case 'allied':
+        // Brushed silver field with layered angular graphite panels and orange edge.
+        final p = Paint()..color = const Color(0xFF263442).withValues(alpha: .16);
+        final p2 = Paint()..color = const Color(0xFFF58220).withValues(alpha: .92);
+        path..moveTo(w*.42,0)..lineTo(w,0)..lineTo(w,h*.45)..lineTo(w*.62,h)..lineTo(w*.15,h)..close();
+        canvas.drawPath(path,p);
+        path..reset()..moveTo(w*.55,0)..lineTo(w,0)..lineTo(w,h*.18)..lineTo(w*.72,h*.42)..close();
+        canvas.drawPath(path,stroke);
+        path..reset()..moveTo(0,h*.78)..lineTo(w*.42,h*.16)..lineTo(w*.58,h*.2)..lineTo(w*.12,h)..lineTo(0,h)..close();
+        canvas.drawPath(path,p);
+        canvas.drawRect(Rect.fromLTWH(0,h*.84, w*.035,h*.16),p2);
         break;
-      case 2:
-        for (var i = 0; i < 7; i++) {
-          canvas.drawCircle(Offset(size.width * 0.82, size.height * 0.48),
-              18.0 + i * 12, paint);
-        }
-        break;
-      case 3:
-        final side = 22.0;
-        for (var row = -1; row < 5; row++) {
-          for (var col = 0; col < 8; col++) {
-            final x = col * side * 1.5 + (row.isOdd ? side * 0.75 : 0);
-            final y = row * side * 1.3;
-            final path = Path()
-              ..moveTo(x + side * 0.5, y)
-              ..lineTo(x + side, y + side * 0.25)
-              ..lineTo(x + side, y + side * 0.75)
-              ..lineTo(x + side * 0.5, y + side)
-              ..lineTo(x, y + side * 0.75)
-              ..lineTo(x, y + side * 0.25)
-              ..close();
-            canvas.drawPath(path, paint);
+      case 'meezan':
+        // Dark premium face with fine gold Islamic star-and-tessellation motif.
+        final gold = Paint()..color = const Color(0xFFD5B66B).withValues(alpha:.34)..style=PaintingStyle.stroke..strokeWidth=1;
+        for (var row=-1; row<5; row++) {
+          for (var col=0; col<8; col++) {
+            final x=col*28.0+(row.isOdd?14:0)+w*.38, y=row*25.0;
+            path..reset()..moveTo(x+14,y)..lineTo(x+28,y+12.5)..lineTo(x+14,y+25)..lineTo(x,y+12.5)..close();
+            canvas.drawPath(path,gold);
+            canvas.drawCircle(Offset(x+14,y+12.5),5,gold);
           }
         }
         break;
-      case 4:
-        for (var i = 0; i < 6; i++) {
-          final path = Path()
-            ..moveTo(size.width * 0.35, size.height * (0.15 + i * 0.16))
-            ..cubicTo(size.width * 0.58, size.height * (0.02 + i * 0.16),
-                size.width * 0.72, size.height * (0.28 + i * 0.16),
-                size.width * 1.05, size.height * (0.10 + i * 0.16));
-          canvas.drawPath(path, paint);
+      case 'alfalah':
+        // Bank Alfalah grey/black world-map-inspired face and red folded geometry.
+        final map = Paint()..color=const Color(0xFFBFC2C5).withValues(alpha:.16);
+        for (var i=0;i<5;i++) {
+          canvas.drawOval(Rect.fromCenter(center:Offset(w*.35+i*9,h*.54),width:48+i*8,height:25+i*5),map);
         }
+        final red=Paint()..color=const Color(0xFFD71935).withValues(alpha:.94);
+        path..reset()..moveTo(w*.54,0)..lineTo(w,0)..lineTo(w,h*.72)..lineTo(w*.69,h*.44)..close();
+        canvas.drawPath(path,red);
+        path..reset()..moveTo(w*.48,h*.1)..lineTo(w*.7,h*.44)..lineTo(w*.55,h*.51)..lineTo(w*.36,h*.22)..close();
+        canvas.drawPath(path,red);
         break;
-      case 5:
-        for (var row = 0; row < 8; row++) {
-          for (var col = 0; col < 13; col++) {
-            canvas.drawCircle(Offset(col * 18.0 + 5, row * 15.0 + 5), 1.7, fill);
+      case 'askari':
+        // Askari's navy constellation / connected-dot visual.
+        final dot=Paint()..color=const Color(0xFFB7D9E8).withValues(alpha:.72);
+        for(var row=0;row<7;row++) {
+          for(var col=0;col<12;col++) {
+            final x=w*.48+col*14.0+(row.isOdd?7:0), y=row*13.0+3;
+            canvas.drawCircle(Offset(x,y),1.5+(col%3)*.45,dot);
+            if(col<11) canvas.drawLine(Offset(x,y),Offset(x+14,y+7),stroke);
           }
         }
         break;
+      case 'faysal':
+        // Faysal Islami: deep teal field with interlocking Islamic geometry.
+        final teal=Paint()..color=const Color(0xFF4DB7A7).withValues(alpha:.32)..style=PaintingStyle.stroke..strokeWidth:1.2;
+        for(var row=-1;row<6;row++) {
+          for(var col=0;col<9;col++) {
+            final x=col*25.0+(row.isOdd?12.5:0)+w*.34, y=row*22.0;
+            path..reset()..moveTo(x+12.5,y)..lineTo(x+25,y+11)..lineTo(x+12.5,y+22)..lineTo(x,y+11)..close();
+            canvas.drawPath(path,teal);
+            canvas.drawLine(Offset(x,y+11),Offset(x+25,y+11),teal);
+          }
+        }
+        break;
+      case 'bankislami':
+        // Minimal matte-black titanium face with restrained curved silver lines.
+        final silver=Paint()..color=const Color(0xFFE6E6E6).withValues(alpha:.18)..style=PaintingStyle.stroke..strokeWidth:1.1;
+        for(var i=0;i<6;i++) {
+          path..reset()..moveTo(-w*.1,h*(.12+i*.14))..cubicTo(w*.25,h*(.02+i*.14),w*.42,h*(.28+i*.14),w*.7,h*(.12+i*.14));
+          canvas.drawPath(path,silver);
+        }
+        break;
+      case 'habibmetro':
+        // HabibMetro's emerald/gold/black faceted triangular tessellation.
+        final colors=[const Color(0xFF00A078),const Color(0xFFD2A63B),const Color(0xFF101820)];
+        for(var row=0;row<5;row++) {
+          for(var col=0;col<9;col++) {
+            final x=col*35.0+(row.isOdd?17.5:0)+w*.36,y=row*28.0;
+            path..reset()..moveTo(x,y)..lineTo(x+35,y+14)..lineTo(x,y+28)..close();
+            canvas.drawPath(path,Paint()..color=colors[(row+col)%3].withValues(alpha:.28));
+            canvas.drawPath(path,stroke);
+          }
+        }
+        break;
+      case 'bop':
+        final orange=Paint()..color=const Color(0xFFF58220).withValues(alpha:.72)..style=PaintingStyle.stroke..strokeWidth:5;
+        for(var i=0;i<5;i++) canvas.drawCircle(Offset(w*.88,h*.48),18+i*17,orange);
+        path..reset()..moveTo(w*.42,h)..cubicTo(w*.62,h*.55,w*.78,h*.9,w*1.08,h*.3);
+        canvas.drawPath(path,Paint()..color=const Color(0xFFF58220).withValues(alpha:.38)..style=PaintingStyle.stroke..strokeWidth:8);
+        break;
+      case 'bok':
+        final blue=Paint()..color=const Color(0xFF1F4E79).withValues(alpha:.18);
+        path..moveTo(w*.6,0)..lineTo(w,0)..lineTo(w,h)..lineTo(w*.28,h)..close();
+        canvas.drawPath(path,blue);
+        canvas.drawCircle(Offset(w*.78,h*.52),h*.35,stroke);
+        break;
+      case 'jsbank':
+        final gold=Paint()..color=const Color(0xFFD5A64A).withValues(alpha:.8);
+        for(var i=0;i<4;i++) {
+          path..reset()..moveTo(w*(.44+i*.1),0)..lineTo(w*(.58+i*.1),0)..lineTo(w*(.2+i*.1),h)..lineTo(w*(.06+i*.1),h)..close();
+          canvas.drawPath(path,Paint()..color=gold.color.withValues(alpha:.12));
+          canvas.drawPath(path,stroke);
+        }
+        break;
+      case 'nbp':
+        final silver=Paint()..color=const Color(0xFFD5DADF).withValues(alpha:.2)..style=PaintingStyle.stroke..strokeWidth:1;
+        for(var i=0;i<8;i++) {
+          path..reset()..moveTo(w*.42+i*13.0,0)..lineTo(w*.82+i*13.0,h*.5)..lineTo(w*.42+i*13.0,h);
+          canvas.drawPath(path,silver);
+        }
+        break;
+      case 'sc':
+        final blue=Paint()..color=const Color(0xFF00A6A0).withValues(alpha:.25);
+        path..moveTo(w*.55,0)..lineTo(w,0)..lineTo(w,h)..lineTo(w*.75,h)..close();
+        canvas.drawPath(path,blue);
+        path..reset()..moveTo(w*.72,h*.1)..lineTo(w*.95,h*.5)..lineTo(w*.72,h*.9)..lineTo(w*.57,h*.5)..close();
+        canvas.drawPath(path,stroke);
+        break;
+      case 'soneri':
+        final green=Paint()..color=const Color(0xFFB3C86B).withValues(alpha:.28);
+        for(var i=0;i<5;i++) {
+          path..reset()..moveTo(w*.48+i*16,0)..lineTo(w*.72+i*16,h*.5)..lineTo(w*.48+i*16,h)..lineTo(w*.24+i*16,h*.5)..close();
+          canvas.drawPath(path,green);
+          canvas.drawPath(path,stroke);
+        }
+        break;
+      default:
+        switch (pattern % 6) {
+          case 0:
+            for (var i=-h;i<w+h;i+=18) canvas.drawLine(Offset(i.toDouble(),0),Offset(i+h,h),stroke);
+            break;
+          case 1:
+            for(var i=0;i<5;i++) {
+              final r=Rect.fromLTWH(w*.48+i*13,-h*.45+i*13,h*.9,h*.9);
+              path..reset()..moveTo(r.center.dx,r.top)..lineTo(r.right,r.center.dy)..lineTo(r.center.dx,r.bottom)..lineTo(r.left,r.center.dy)..close();
+              canvas.drawPath(path,stroke);
+            }
+            break;
+          case 2:
+            for(var i=0;i<7;i++) canvas.drawCircle(Offset(w*.82,h*.48),18.0+i*12,stroke);
+            break;
+          case 3:
+            for(var row=-1;row<5;row++) for(var col=0;col<8;col++) {
+              final side=22.0,x=col*side*1.5+(row.isOdd?side*.75:0),y=row*side*1.3;
+              path..reset()..moveTo(x+side*.5,y)..lineTo(x+side,y+side*.25)..lineTo(x+side,y+side*.75)..lineTo(x+side*.5,y+side)..lineTo(x,y+side*.75)..lineTo(x,y+side*.25)..close();
+              canvas.drawPath(path,stroke);
+            }
+            break;
+          case 4:
+            for(var i=0;i<6;i++) { path..reset()..moveTo(w*.35,h*(.15+i*.16))..cubicTo(w*.58,h*(.02+i*.16),w*.72,h*(.28+i*.16),w*1.05,h*(.1+i*.16)); canvas.drawPath(path,stroke); }
+            break;
+          case 5:
+            for(var row=0;row<8;row++) for(var col=0;col<13;col++) canvas.drawCircle(Offset(col*18.0+5,row*15.0+5),1.7,fill);
+            break;
+        }
     }
   }
 
   @override
   bool shouldRepaint(covariant _BankCardPatternPainter oldDelegate) =>
-      oldDelegate.pattern != pattern || oldDelegate.color != color;
+      oldDelegate.pattern != pattern || oldDelegate.color != color || oldDelegate.design != design;
 }
-
 class WalletsPage extends StatefulWidget {
   const WalletsPage({super.key});
 
@@ -419,28 +515,28 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['alfalahalfa', 'alfadigital', 'alfaapp'], 'brand': 'ALFA BY BANK ALFALAH', 'mark': 'ALFA', 'colors': [const Color(0xFF8D1828), const Color(0xFFD44A55)]},
       {'keys': ['keenu'], 'brand': 'KEENU', 'mark': 'KEENU', 'colors': [const Color(0xFF176B9B), const Color(0xFF53A5C8)]},
       {'keys': ['simsim'], 'brand': 'SIMSIM', 'mark': 'SIMSIM', 'colors': [const Color(0xFF087A4B), const Color(0xFF63B487)]},
-      {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'design': 'allied', 'colors': [const Color(0xFF063B70), const Color(0xFF087F9B)]},
-      {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'design': 'hbl', 'colors': [const Color(0xFF171A20), const Color(0xFF5A513E)]},
-      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF202448), const Color(0xFF514078)]},
-      {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'colors': [const Color(0xFF54247A), const Color(0xFF9A4CBA)]},
+      {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ALLIED', 'design': 'allied', 'colors': [const Color(0xFFD9DADD), const Color(0xFF7F858D)]},
+      {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'design': 'hbl', 'colors': [const Color(0xFF090B10), const Color(0xFF34302A)]},
+      {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'MEEZAN', 'design': 'meezan', 'colors': [const Color(0xFF11131B), const Color(0xFF302C28)]},
+      {'keys': ['unitedbank', 'ubl'], 'brand': 'UBL', 'mark': 'UBL', 'design': 'jsbank', 'colors': [const Color(0xFF292C35), const Color(0xFF5C6069)]},
       {'keys': ['mcbislamicbank', 'mcbislamic'], 'brand': 'MCB ISLAMIC', 'mark': 'MCB', 'colors': [const Color(0xFF087B65), const Color(0xFF42B99B)]},
-      {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'colors': [const Color(0xFF07529B), const Color(0xFF1596D2)]},
-      {'keys': ['bankalfalah', 'alfalah'], 'brand': 'BANK ALFALAH', 'mark': 'BAF', 'colors': [const Color(0xFF8D1828), const Color(0xFFD44A55)]},
+      {'keys': ['mcb', 'muslimcommercialbank'], 'brand': 'MCB BANK', 'mark': 'MCB', 'design': 'sc', 'colors': [const Color(0xFF123F73), const Color(0xFF1C7896)]},
+      {'keys': ['bankalfalah', 'alfalah'], 'brand': 'BANK ALFALAH', 'mark': 'ALFALAH', 'design': 'alfalah', 'colors': [const Color(0xFF333438), const Color(0xFF85878A)]},
       {'keys': ['bankalhabib', 'alhabib', 'bahl'], 'brand': 'BANK AL HABIB', 'mark': 'BAH', 'colors': [const Color(0xFF7B202B), const Color(0xFFBD4D54)]},
-      {'keys': ['askaribank', 'askari'], 'brand': 'ASKARI BANK', 'mark': 'ASK', 'colors': [const Color(0xFF174B37), const Color(0xFF4A9164)]},
-      {'keys': ['faysalbank', 'faysal'], 'brand': 'FAYSAL BANK', 'mark': 'FBL', 'colors': [const Color(0xFF4A205E), const Color(0xFF9A4C9F)]},
-      {'keys': ['nationalbankofpakistan', 'nationalbank', 'nbp'], 'brand': 'NBP', 'mark': 'NBP', 'colors': [const Color(0xFF005B45), const Color(0xFF219B6A)]},
-      {'keys': ['bankofpunjab', 'thebankofpunjab', 'bop'], 'brand': 'THE BANK OF PUNJAB', 'mark': 'BOP', 'design': 'bop', 'colors': [const Color(0xFF101F36), const Color(0xFF263D5C)]},
-      {'keys': ['sindhbank'], 'brand': 'SINDH BANK', 'mark': 'SB', 'colors': [const Color(0xFF164A7A), const Color(0xFF368CC2)]},
-      {'keys': ['bankofkhyber', 'bok'], 'brand': 'BANK OF KHYBER', 'mark': 'BOK', 'colors': [const Color(0xFF7A4A16), const Color(0xFFC58A32)]},
+      {'keys': ['askaribank', 'askari'], 'brand': 'ASKARI BANK', 'mark': 'ASKARI', 'design': 'askari', 'colors': [const Color(0xFF080F35), const Color(0xFF222A57)]},
+      {'keys': ['faysalbank', 'faysal'], 'brand': 'FAYSAL BANK', 'mark': 'FAYSAL', 'design': 'faysal', 'colors': [const Color(0xFF062D35), const Color(0xFF075B5B)]},
+      {'keys': ['nationalbankofpakistan', 'nationalbank', 'nbp'], 'brand': 'NBP', 'mark': 'NBP', 'design': 'nbp', 'colors': [const Color(0xFF11151B), const Color(0xFF414951)]},
+      {'keys': ['bankofpunjab', 'thebankofpunjab', 'bop'], 'brand': 'THE BANK OF PUNJAB', 'mark': 'BOP', 'design': 'bop', 'colors': [const Color(0xFF111E32), const Color(0xFF253B58)]},
+      {'keys': ['sindhbank'], 'brand': 'SINDH BANK', 'mark': 'SINDH', 'design': 'sc', 'colors': [const Color(0xFF123B68), const Color(0xFF247A94)]},
+      {'keys': ['bankofkhyber', 'bok'], 'brand': 'BANK OF KHYBER', 'mark': 'BOK', 'design': 'bok', 'colors': [const Color(0xFFE1E4E8), const Color(0xFFB7C0CB)]},
       {'keys': ['firstwomenbank', 'fwb'], 'brand': 'FIRST WOMEN BANK', 'mark': 'FWB', 'colors': [const Color(0xFF813D78), const Color(0xFFC16AA8)]},
-      {'keys': ['bankislami', 'bankislamiPakistan'], 'brand': 'BANKISLAMI', 'mark': 'BI', 'colors': [const Color(0xFF087C70), const Color(0xFF35B7A0)]},
+      {'keys': ['bankislami', 'bankislamiPakistan'], 'brand': 'BANKISLAMI', 'mark': 'BANKISLAMI', 'design': 'bankislami', 'colors': [const Color(0xFF08090B), const Color(0xFF292B2F)]},
       {'keys': ['dubaiislamicbank', 'dibpak', 'dib'], 'brand': 'DUBAI ISLAMIC BANK', 'mark': 'DIB', 'colors': [const Color(0xFF087E78), const Color(0xFF45B8A7)]},
       {'keys': ['albarakabank', 'albaraka'], 'brand': 'AL BARAKA BANK', 'mark': 'AB', 'colors': [const Color(0xFF245B48), const Color(0xFF70A77A)]},
-      {'keys': ['habibmetropolitan', 'habibmetro', 'hmb'], 'brand': 'HABIBMETRO', 'mark': 'HM', 'colors': [const Color(0xFF174B83), const Color(0xFF4A91C8)]},
-      {'keys': ['jsbank', 'jsbl'], 'brand': 'JS BANK', 'mark': 'JS', 'colors': [const Color(0xFF6B263D), const Color(0xFFB94D68)]},
-      {'keys': ['soneribank', 'soneri'], 'brand': 'SONERI BANK', 'mark': 'SON', 'colors': [const Color(0xFF315D3A), const Color(0xFF82A84D)]},
-      {'keys': ['standardchartered', 'scpakistan'], 'brand': 'STANDARD CHARTERED', 'mark': 'SC', 'colors': [const Color(0xFF006B68), const Color(0xFF42A69A)]},
+      {'keys': ['habibmetropolitan', 'habibmetro', 'hmb'], 'brand': 'HABIBMETRO', 'mark': 'HABIBMETRO', 'design': 'habibmetro', 'colors': [const Color(0xFF062E2A), const Color(0xFF155C4A)]},
+      {'keys': ['jsbank', 'jsbl'], 'brand': 'JS BANK', 'mark': 'JS BANK', 'design': 'jsbank', 'colors': [const Color(0xFF24262C), const Color(0xFF5D6066)]},
+      {'keys': ['soneribank', 'soneri'], 'brand': 'SONERI BANK', 'mark': 'SONERI', 'design': 'soneri', 'colors': [const Color(0xFF24462D), const Color(0xFF64823C)]},
+      {'keys': ['standardchartered', 'scpakistan'], 'brand': 'STANDARD CHARTERED', 'mark': 'SC', 'design': 'sc', 'colors': [const Color(0xFF006B68), const Color(0xFF42A69A)]},
       {'keys': ['sambabank', 'samba'], 'brand': 'SAMBA BANK', 'mark': 'SAM', 'colors': [const Color(0xFF174D86), const Color(0xFF4D91C9)]},
       {'keys': ['bankmakramah', 'makramah', 'summitbank'], 'brand': 'BANK MAKRAMAH', 'mark': 'BM', 'colors': [const Color(0xFF633B80), const Color(0xFFA77BC0)]},
       {'keys': ['easypaisabank', 'easypaisa'], 'brand': 'EASYPAISA BANK', 'mark': 'EP', 'colors': [const Color(0xFF16864B), const Color(0xFF75B843)]},
@@ -721,9 +817,8 @@ class _WalletsPageState extends State<WalletsPage> {
                   child: IgnorePointer(child: CustomPaint(
                     painter: _BankCardPatternPainter(
                       pattern: (bankTheme?['pattern'] as int?) ?? 0,
-                      color: (bankTheme?['design'] == 'meezan' || bankTheme?['design'] == 'hbl')
-                          ? const Color(0xFFD9BD82)
-                          : Colors.white,
+                      design: (bankTheme?['design'] ?? '').toString(),
+                      color: const Color(0xFFD9BD82),
                     ),
                   )),
                 ),
@@ -731,35 +826,7 @@ class _WalletsPageState extends State<WalletsPage> {
                   child: Container(width: 125, height: 125,
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       border: Border.all(color: Colors.white.withValues(alpha: 0.10), width: 18)))),
-                if (isBank && bankTheme?['design'] == 'allied')
-                  Positioned(right: -8, top: 4,
-                    child: Icon(Icons.account_balance_rounded,
-                      size: 132, color: Colors.white.withValues(alpha: 0.12))),
-                if (isBank && bankTheme?['design'] == 'meezan')
-                  Positioned(right: 4, top: 8,
-                    child: SizedBox(width: 112, height: 112,
-                      child: Stack(alignment: Alignment.center, children: [
-                        Icon(Icons.auto_awesome_rounded, size: 106,
-                          color: Colors.white.withValues(alpha: 0.10)),
-                        Icon(Icons.star_rounded, size: 66,
-                          color: Colors.white.withValues(alpha: 0.08)),
-                        Transform.rotate(angle: 0.785,
-                          child: Container(width: 58, height: 58,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.13), width: 1.4),
-                              borderRadius: BorderRadius.circular(9)))),
-                      ]))),
-                if (isBank && bankTheme?['design'] == 'bop')
-                  Positioned(right: -14, bottom: -4,
-                    child: SizedBox(width: 190, height: 105,
-                      child: CustomPaint(
-                        painter: _WalletWavePainter(const Color(0xFFF28C28))))),
-                if (isBank && bankTheme?['design'] == 'bop')
-                  Positioned(right: 18, top: 14,
-                    child: Container(width: 72, height: 72,
-                      decoration: BoxDecoration(shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFF28C28).withValues(alpha: 0.55), width: 5)))),
-                if (!isBank) Positioned(right: 24, bottom: -57,
+                                if (!isBank) Positioned(right: 24, bottom: -57,
                   child: Container(width: 145, height: 145,
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       color: Colors.white.withValues(alpha: 0.055)))),

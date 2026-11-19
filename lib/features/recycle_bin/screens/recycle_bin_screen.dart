@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
@@ -21,13 +22,15 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _load();
     _countdownTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
   }
   @override
-  void dispose() { _countdownTimer?.cancel(); super.dispose(); }
+  void _onAppDataChanged() { if (mounted) _load(); }
+  void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); _countdownTimer?.cancel(); super.dispose(); }
   String _remaining(Map<String, dynamic> item) {
     final deletedAt = DateTime.tryParse(item['deleted_at']?.toString() ?? '');
     final expiresAt = DateTime.tryParse(item['expires_at']?.toString() ?? '') ??

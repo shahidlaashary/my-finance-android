@@ -1,0 +1,227 @@
+{
+  "countryCode": "AE",
+  "registry": "Central Bank of the United Arab Emirates",
+  "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+  "records": [
+    {
+      "countryCode": "AE",
+      "institutionName": "Emirates NBD Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.emiratesnbd.com",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.emiratesnbd.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "First Abu Dhabi Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankfab.com",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.bankfab.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Abu Dhabi Commercial Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.adcb.com",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.adcb.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Mashreq Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.mashreq.com",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.mashreq.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Dubai Islamic Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.dib.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.dib.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Emirates Islamic Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.emiratesislamic.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.emiratesislamic.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Abu Dhabi Islamic Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.adib.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.adib.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "RAKBANK",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.rakbank.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.rakbank.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Commercial Bank of Dubai",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.cbd.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.cbd.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Sharjah Islamic Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.sib.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.sib.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "United Arab Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.uab.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.uab.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Ajman Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.ajmanbank.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.ajmanbank.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "National Bank of Fujairah",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.nbf.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.nbf.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Wio Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.wio.io",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.wio.io",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Zand Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.zand.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.zand.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Al Maryah Community Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.mbank.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.mbank.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "HSBC Bank Middle East",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.hsbc.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.hsbc.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Standard Chartered UAE",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.sc.com/ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.sc.com/ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Citibank UAE",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.citibank.ae",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.citibank.ae",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Habib Bank AG Zurich",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.habibbank.com",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.habibbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Bank of Baroda UAE",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankofbaroda.in",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.bankofbaroda.in",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "AE",
+      "institutionName": "Bank Alfalah UAE",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankalfalah.com",
+      "registrySourceUrl": "https://centralbank.ae/en/licensing/",
+      "sourceUrl": "https://www.bankalfalah.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

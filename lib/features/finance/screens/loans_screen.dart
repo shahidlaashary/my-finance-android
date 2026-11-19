@@ -1972,7 +1972,16 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadParties();
+  }
+
+  void _onAppDataChanged() { if (mounted) _loadParties(); }
+
+  @override
+  void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
+    super.dispose();
   }
 
   Future<void> _loadParties() async {

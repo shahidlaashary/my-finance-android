@@ -2097,7 +2097,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       itemBuilder: (context,index) {
         final w=_active[index];
         return Container(key:ValueKey('wallet_${w['id']}'),child:Row(children:[
-          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:const Icon(Icons.reorder_rounded,color:Theme.of(context).hintColor))),
+          Padding(padding:const EdgeInsets.only(left:8),child:ReorderableDragStartListener(index:index,child:Icon(Icons.reorder_rounded,color:Theme.of(context).hintColor))),
           Expanded(child:_walletTile(w,hidden:false)),
         ]));
       },

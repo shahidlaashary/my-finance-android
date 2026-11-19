@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class MyDocumentModel {
@@ -178,6 +179,9 @@ class MyDocumentsService {
       records.add(document.copyWith(id: id).toMap());
       await _writeMaps(txn, records);
       return id;
+    }).then((id) {
+      AppRefreshController.notifyChanged();
+      return id;
     });
   }
 
@@ -191,6 +195,7 @@ class MyDocumentsService {
       records[index] = document.toMap();
       await _writeMaps(txn, records);
     });
+    AppRefreshController.notifyChanged();
   }
 
   Future<void> toggleFavorite(MyDocumentModel document) async {
@@ -204,6 +209,7 @@ class MyDocumentsService {
       records[index]['updated_at'] = DateTime.now().toIso8601String();
       await _writeMaps(txn, records);
     });
+    AppRefreshController.notifyChanged();
   }
 
   Future<void> deleteDocument(int id) async {
@@ -220,4 +226,5 @@ class MyDocumentsService {
       records.removeWhere((item) => (item['id'] as num?)?.toInt() == id);
       await _writeMaps(txn, records);
     });
+    AppRefreshController.notifyChanged();
   }}

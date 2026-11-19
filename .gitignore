@@ -52,3 +52,9 @@ android/.gradle/
 android/local.properties
 android/key.properties
 android/app/*.jks
+
+# Firebase Functions
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase-debug.log
+.firestore/

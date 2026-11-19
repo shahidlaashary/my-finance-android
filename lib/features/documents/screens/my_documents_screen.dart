@@ -153,11 +153,11 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE2E9E5)),
+        borderSide: const BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.5),
+        borderSide: const BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
       isDense: true,
@@ -408,7 +408,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             ...selectedFiles.asMap().entries.map((entry) => ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.insert_drive_file_outlined, color: Color(0xFF147D59)),
+                              leading: const Icon(Icons.insert_drive_file_outlined, color: Theme.of(context).colorScheme.primary),
                               title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
                               trailing: IconButton(
                                 icon: const Icon(Icons.close_rounded, size: 19),
@@ -431,7 +431,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                                   icon: const Icon(Icons.check_rounded),
                                   label: Text(document == null ? 'Save Document' : 'Update Document'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF147D59),
+                                    backgroundColor: Theme.of(context).colorScheme.primary,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(vertical: 13),
                                   ),
@@ -862,7 +862,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
 }
 
 class AppColorsForDocuments {
-  static const Color primary = Color(0xFF147D59);
+  static const Color primary = Theme.of(context).colorScheme.primary;
   static const Color background = Color(0xFFF5F7F6);
-  static const Color muted = Color(0xFF7B8781);
+  static const Color muted = Theme.of(context).hintColor;
 }

@@ -459,7 +459,7 @@ class _HomePageState extends State<HomePage> {
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(sheetContext).size.height * 0.72,
           ),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.onPrimary,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -479,7 +479,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.currency_exchange_rounded,
+                    Icon(Icons.currency_exchange_rounded,
                         color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 10),
                     Expanded(
@@ -517,7 +517,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 8),
                         itemCount: entries.length,
-                        separatorBuilder: (_, __) => const Divider(
+                        separatorBuilder: (_, __) => Divider(
                             height: 1, color: Theme.of(context).dividerColor),
                         itemBuilder: (context, index) {
                           final entry = entries[index];

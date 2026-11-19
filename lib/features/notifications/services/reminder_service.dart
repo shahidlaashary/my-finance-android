@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:my_finance/core/services/app_refresh_service.dart';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -94,6 +96,7 @@ class ReminderService {
     );
     reminders.add(item);
     await _save(reminders);
+    AppRefreshController.notifyChanged();
     return id;
   }
 
@@ -103,5 +106,6 @@ class ReminderService {
     final reminders = await getReminders();
     reminders.removeWhere((item) => item['id'] == id);
     await _save(reminders);
+    AppRefreshController.notifyChanged();
   }
 }

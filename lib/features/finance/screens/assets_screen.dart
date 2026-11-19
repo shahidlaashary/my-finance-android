@@ -543,7 +543,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                       Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 10),
                                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
+                                        Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
                                         const SizedBox(height: 3),
                                         Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                                       ])),
@@ -595,7 +595,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: Theme.of(context).colorScheme.primary),
                                   const SizedBox(width: 7),
                                   Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11))),
-                                  IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: const Icon(Icons.close, size: 17, color: Theme.of(context).colorScheme.error)),
+                                  IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: Icon(Icons.close, size: 17, color: Theme.of(context).colorScheme.error)),
                                 ])),
                               ],
                               if (asset?.id != null) ...[
@@ -1200,7 +1200,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           leading: Container(width: 40, height: 40, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)), child: Icon(categoryIcon, color: Theme.of(context).colorScheme.primary, size: 21)),
           title: Row(children: [
             Expanded(child: Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800))),
-            if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: Theme.of(context).colorScheme.errorContainer, borderRadius: BorderRadius.circular(7)), child: const Text('SOLD', style: TextStyle(fontSize: 9, color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w800))),
+            if (asset.isSold) Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), decoration: BoxDecoration(color: Theme.of(context).colorScheme.errorContainer, borderRadius: BorderRadius.circular(7)), child: Text('SOLD', style: TextStyle(fontSize: 9, color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w800))),
           ]),
           subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? '${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
           trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
@@ -1326,7 +1326,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         tooltip: 'Manage Asset',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(minWidth: 160),
-                        icon: const Icon(Icons.more_vert_rounded, size: 20, color: Theme.of(context).hintColor),
+                        icon: Icon(Icons.more_vert_rounded, size: 20, color: Theme.of(context).hintColor),
                         onSelected: (value) {
                           if (value == 'edit' && !asset.isSold) {
                             _showAssetDialog(asset: asset);
@@ -1442,15 +1442,15 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
-  Widget _assetCardMetric(String label, String value, {Color valueColor = Theme.of(context).colorScheme.onSurface}) {
+  Widget _assetCardMetric(String label, String value, {Color? valueColor}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 9.5, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
+          style: TextStyle(fontSize: 9.5, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: valueColor)),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: valueColor ?? Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }
@@ -1915,17 +1915,17 @@ class AssetDetailsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                     decoration: BoxDecoration(
-                      color: asset.isSold ? Colors.white.withValues(alpha: .16) : Theme.of(context).colorScheme.onPrimary,
+                      color: asset.isSold ? Theme.of(context).colorScheme.onPrimary.withValues(alpha: .16) : Theme.of(context).colorScheme.onPrimary,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(asset.isSold ? 'Sold' : 'Active',
-                      style: TextStyle(color: asset.isSold ? Colors.white : Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w700)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w700)),
                   ),
                 ]),
                 const SizedBox(height: 10),
-                const Text('CURRENT ASSET VALUE', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .5)),
+                Text('CURRENT ASSET VALUE', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .5)),
                 const SizedBox(height: 4),
-                Text('$currency ${_money(currentValue)}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+                Text('$currency ${_money(currentValue)}', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 24, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 9),
                 Row(children: [
                   Expanded(child: _metric('Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
@@ -1968,13 +1968,13 @@ class AssetDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 11),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(event['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                     const SizedBox(height: 3),
                     Text(event['subtitle'] as String, maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor)),
+                      style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor)),
                     const SizedBox(height: 3),
                     Text(DateFormat('dd MMM yyyy').format(date),
-                      style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                      style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                   ])),
                   const SizedBox(width: 8),
                   Text('${isCredit ? '+' : '−'}$currency ${_money(amount)}',

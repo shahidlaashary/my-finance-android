@@ -2108,7 +2108,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     InputDecoration inputDecoration(String label, IconData icon) => InputDecoration(
       labelText: label, prefixIcon: Icon(icon, size: 16), isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
-      prefixIconConstraints: const BoxConstraints(minWidth: 34, minHeight: 40),
+      prefixIconConstraints: const BoxConstraints(minWidth: 29, minHeight: 40),
       isCollapsed: false,
       filled: true,
       fillColor: const Color(0xFFFBFDFC),

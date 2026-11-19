@@ -381,14 +381,7 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['asamicrofinance', 'asa'], 'brand': 'ASA MICROFINANCE', 'mark': 'ASA', 'colors': [const Color(0xFF146B69), const Color(0xFF4AA7A0)]},
       {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
 
-      // Pakistani digital wallets and their physical / virtual card families.
-      {'keys': ['easypaisa', 'easypaisadigitalbank'], 'brand': 'EASYPAISA', 'mark': 'EASYPAISA', 'design': 'easypaisa', 'colors': [const Color(0xFF087A3E), const Color(0xFF62B447)]},
-      {'keys': ['jazzcash', 'mobilinkwallet'], 'brand': 'JAZZCASH', 'mark': 'JAZZ', 'design': 'jazzcash', 'colors': [const Color(0xFF8B1238), const Color(0xFFE04462)]},
-      {'keys': ['nayapay', 'naya'], 'brand': 'NAYAPAY', 'mark': 'NAYA', 'design': 'nayapay', 'colors': [const Color(0xFF143D79), const Color(0xFF3C8FD0)]},
-      {'keys': ['sadapay', 'sada'], 'brand': 'SADAPAY', 'mark': 'SADA', 'design': 'sadapay', 'colors': [const Color(0xFF24272D), const Color(0xFF68717C)]},
-      {'keys': ['zindigi', 'jszindigi'], 'brand': 'ZINDIGI', 'mark': 'ZINDIGI', 'design': 'zindigi', 'colors': [const Color(0xFF39206D), const Color(0xFF8D55D6)]},
-      {'keys': ['upaisa', 'u paisa'], 'brand': 'UPAISA', 'mark': 'UPAISA', 'design': 'upaisa', 'colors': [const Color(0xFF542B83), const Color(0xFF9A68C5)]},
-      {'keys': ['easypaisa', 'jazzcash', 'nayapay', 'sadapay', 'zindigi', 'upaisa'], 'brand': 'PAKISTANI DIGITAL WALLET', 'mark': 'WALLET', 'colors': [const Color(0xFF244B72), const Color(0xFF4D83B5)]},
+      // International bank themes follow the Pakistan-specific registry above.
       // Major international banks, grouped across the Americas, Europe, Middle East, Africa and Asia-Pacific.
       {'keys': ['jpmorganchase', 'chasebank', 'chase'], 'brand': 'CHASE', 'mark': 'CHASE', 'colors': [const Color(0xFF073B75), const Color(0xFF2784C7)]},
       {'keys': ['bankofamerica', 'bofa'], 'brand': 'BANK OF AMERICA', 'mark': 'BOA', 'colors': [const Color(0xFF092B61), const Color(0xFFB9273D)]},

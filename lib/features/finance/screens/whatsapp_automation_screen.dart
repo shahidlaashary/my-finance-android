@@ -59,7 +59,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
     final number = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Connect WhatsApp'),
+        title: Text('Connect WhatsApp'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.phone,
@@ -73,7 +73,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton(
             onPressed: () {
@@ -82,7 +82,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
               if (digits.length < 10 || digits.length > 15) return;
               Navigator.pop(dialogContext, value);
             },
-            child: const Text('Continue'),
+            child: Text('Continue'),
           ),
         ],
       ),
@@ -96,14 +96,14 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Verification setup required'),
-        content: const Text(
+        title: Text('Verification setup required'),
+        content: Text(
           'Your number has been saved as pending. The official Meta verification service is not connected yet, so an OTP or WhatsApp connection cannot be started from this app build. Your number will not be marked Connected until Meta confirms it.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('OK'),
+            child: Text('OK'),
           ),
         ],
       ),
@@ -118,7 +118,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Send WhatsApp Reminder'),
+        title: Text('Send WhatsApp Reminder'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -149,12 +149,12 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton.icon(
             onPressed: () => Navigator.pop(dialogContext, true),
-            icon: const Icon(Icons.open_in_new_rounded),
-            label: const Text('Open WhatsApp'),
+            icon: Icon(Icons.open_in_new_rounded),
+            label: Text('Open WhatsApp'),
           ),
         ],
       ),
@@ -184,7 +184,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
   Widget _sectionTitle(String title) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
         child: Text(title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
       );
 
   Widget _toggle({
@@ -205,8 +205,8 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
             : null,
         secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
         title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        subtitle: Text(subtitle, style: TextStyle(fontSize: 12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       ),
     );
@@ -216,7 +216,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WhatsApp Automation',
+        title: Text('WhatsApp Automation',
             style: TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: _loading
@@ -276,12 +276,12 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                             Expanded(
                               child: Text(
                                 _connected ? 'Connected' : (_phoneNumber.isEmpty ? 'Not connected' : 'Number saved — verification pending'),
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                               ),
                             ),
                             Chip(
                               label: Text(_connected ? 'Connected' : 'Not connected',
-                                  style: const TextStyle(fontSize: 10)),
+                                  style: TextStyle(fontSize: 10)),
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -289,14 +289,14 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                         if (_phoneNumber.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Text('WhatsApp number: $_phoneNumber',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                         ],
                         const SizedBox(height: 8),
                         Text(
                           _connected
                               ? 'Your WhatsApp number is ready for automatic reminders.'
                               : 'Connect your own WhatsApp number. Number verification will be completed securely through Meta.',
-                          style: const TextStyle(fontSize: 12, height: 1.45),
+                          style: TextStyle(fontSize: 12, height: 1.45),
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
@@ -308,7 +308,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                           ),
                         ),
                         const SizedBox(height: 7),
-                        const Text(
+                        Text(
                           'Real verification and sending require the secure Meta connection service. This screen will not mark a number as connected until the backend confirms it.',
                           style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor, height: 1.4),
                         ),
@@ -324,9 +324,9 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                       setState(() => _enabled = value);
                       await _save(_enabledKey, value);
                     } : null,
-                    secondary: const Icon(Icons.auto_awesome,
+                    secondary: Icon(Icons.auto_awesome,
                         color: Theme.of(context).colorScheme.primary),
-                    title: const Text('Enable Auto Reminders',
+                    title: Text('Enable Auto Reminders',
                         style: TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: Text(
                         _connected ? 'Automatic reminders are available.' : 'Connect and verify WhatsApp first.',
@@ -380,15 +380,15 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Payment due reminder',
+                        Text('Payment due reminder',
                             style: TextStyle(fontWeight: FontWeight.w800)),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Assalam-o-Alaikum {Party Name}, aapki {Currency} {Outstanding Amount} payment {Due Date} ko due hai. Meharbani farma kar payment clear kar dein. Shukriya!',
                           style: TextStyle(fontSize: 13, height: 1.5),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Placeholders actual party aur loan details se automatically replace honge.',
                           style: TextStyle(
                               fontSize: 11, color: Theme.of(context).hintColor),
@@ -398,12 +398,12 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                           width: double.infinity,
                           child: FilledButton.icon(
                             onPressed: _showManualSendDialog,
-                            icon: const Icon(Icons.send_rounded),
-                            label: const Text('Send Reminder on WhatsApp'),
+                            icon: Icon(Icons.send_rounded),
+                            label: Text('Send Reminder on WhatsApp'),
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           'WhatsApp mein message khulega. Aap review karke khud Send press karein.',
                           style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
                         ),

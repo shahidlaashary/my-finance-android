@@ -221,7 +221,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 width: 38,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.muted.withValues(alpha: 0.35),
+                  color: Theme.of(context).hintColor.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -238,8 +238,8 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(option),
                   trailing: selectedRecurring == option
-                      ? const Icon(Icons.check_circle, color: AppColors.primary)
-                      : const Icon(Icons.circle_outlined, color: AppColors.muted),
+                      ? const Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
+                      : const Icon(Icons.circle_outlined, color: Theme.of(context).hintColor),
                   onTap: () => Navigator.pop(sheetContext, option),
                 ),
               ),
@@ -274,7 +274,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(appText(context, "Date", "Date"), style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    Text(appText(context, "Date", "Date"), style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                     SizedBox(height: 3),
                     Row(
                       children: [
@@ -305,7 +305,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(appText(context, "Time", "Time"), style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    Text(appText(context, "Time", "Time"), style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                     SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -337,7 +337,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(appText(context, "Recurring", "Recurring"), style: TextStyle(fontSize: 10, color: AppColors.muted)),
+                    Text(appText(context, "Recurring", "Recurring"), style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                     SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -466,7 +466,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
               Icon(
                 IconData(iconCode, fontFamily: 'MaterialIcons'),
                 size: 19,
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
               SizedBox(width: 8),
               Expanded(
@@ -492,7 +492,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
       decoration: decoration('Notes (Optional)', icon: Icons.notes_rounded).copyWith(
         suffixIcon: PopupMenuButton<String>(
           tooltip: 'Add attachment',
-          icon: const Icon(Icons.attach_file_rounded, color: AppColors.primary),
+          icon: const Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary),
           onSelected: (value) {
             if (value == 'camera') {
               _pickNoteImage(ImageSource.camera);
@@ -678,10 +678,10 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   Widget build(BuildContext context) {
     final isIncome = widget.transactionType == 'Income';
     final accentColor = isIncome
-        ? AppColors.income
+        ? Theme.of(context).colorScheme.secondary
         : isTransfer
-            ? AppColors.primary
-            : AppColors.expense;
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.error;
 
     if (loading) {
       return Center(child: CircularProgressIndicator());
@@ -735,7 +735,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAF9),
                           borderRadius: BorderRadius.circular(13),
-                          border: Border.all(color: const Color(0xFFE2E9E5)),
+                          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                         ),
                         child: Row(
                           children: [
@@ -756,7 +756,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                                     appText(context, "Add fee (Optional)", "Add fee (Optional)"),
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: AppColors.muted,
+                                      color: Theme.of(context).hintColor,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -768,7 +768,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
                               scale: 0.8,
                               child: Switch.adaptive(
                                 value: transferFeeEnabled,
-                                activeColor: AppColors.primary,
+                                activeColor: Theme.of(context).colorScheme.primary,
                                 onChanged: (value) => setState(() {
                                   transferFeeEnabled = value;
                                   if (!value) transferFeeController.clear();

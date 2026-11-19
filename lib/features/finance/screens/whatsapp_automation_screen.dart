@@ -203,7 +203,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                 setState(() => onChanged(next));
               }
             : null,
-        secondary: Icon(icon, color: AppColors.primary),
+        secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
         title: Text(title,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
@@ -270,7 +270,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                           children: [
                             Icon(
                               _connected ? Icons.check_circle_rounded : Icons.link_rounded,
-                              color: _connected ? Colors.green : AppColors.primary,
+                              color: _connected ? Colors.green : Theme.of(context).colorScheme.primary,
                             ),
                             const SizedBox(width: 9),
                             Expanded(
@@ -310,7 +310,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                         const SizedBox(height: 7),
                         const Text(
                           'Real verification and sending require the secure Meta connection service. This screen will not mark a number as connected until the backend confirms it.',
-                          style: TextStyle(fontSize: 11, color: AppColors.muted, height: 1.4),
+                          style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor, height: 1.4),
                         ),
                       ],
                     ),
@@ -325,7 +325,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                       await _save(_enabledKey, value);
                     } : null,
                     secondary: const Icon(Icons.auto_awesome,
-                        color: AppColors.primary),
+                        color: Theme.of(context).colorScheme.primary),
                     title: const Text('Enable Auto Reminders',
                         style: TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: Text(
@@ -391,7 +391,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                         const Text(
                           'Placeholders actual party aur loan details se automatically replace honge.',
                           style: TextStyle(
-                              fontSize: 11, color: AppColors.muted),
+                              fontSize: 11, color: Theme.of(context).hintColor),
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
@@ -405,7 +405,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                         const SizedBox(height: 6),
                         const Text(
                           'WhatsApp mein message khulega. Aap review karke khud Send press karein.',
-                          style: TextStyle(fontSize: 11, color: AppColors.muted),
+                          style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
                         ),
                       ],
                     ),

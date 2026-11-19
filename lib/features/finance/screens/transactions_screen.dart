@@ -9,6 +9,8 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/finance_category.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/features/finance/services/assets_service.dart';
+import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
@@ -63,6 +65,72 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final date = await GeneralPreferences.instance.dateFormat;
       final week = await GeneralPreferences.instance.weekStart;
       final result = await TransactionsService.getTransactions(walletId: widget.walletId);
+
+      // Include asset and loan activity in the existing Others filter.
+      // These are read-only source records; wallet transactions remain editable.
+      final assetModels = await AssetsService().getAssets();
+      final loanModels = await LoansService.getLoans();
+      final otherRows = <Map<String, dynamic>>[];
+      for (final asset in assetModels) {
+        otherRows.add({
+          'id': 'asset_purchase_${asset.id}',
+          'source_record': true,
+          'type': 'asset',
+          'amount': asset.purchasePrice,
+          'wallet_id': asset.walletId,
+          'category': 'Asset Purchase • ${asset.category}',
+          'note': 'Purchased: ${asset.name}',
+          'date': asset.purchaseDate.toIso8601String(),
+          'wallet_currency': asset.currency,
+        });
+        if (asset.isSold && asset.salePrice != null && asset.saleDate != null) {
+          otherRows.add({
+            'id': 'asset_sale_${asset.id}',
+            'source_record': true,
+            'type': 'asset',
+            'amount': asset.salePrice,
+            'wallet_id': asset.saleWalletId ?? asset.walletId,
+            'category': 'Asset Sale',
+            'note': 'Sold: ${asset.name}',
+            'date': asset.saleDate!.toIso8601String(),
+            'wallet_currency': asset.currency,
+          });
+        }
+      }
+      for (final loan in loanModels) {
+        // Asset-linked loans are represented by the asset purchase/sale row.
+        if (loan.sourceType == 'asset_purchase' || loan.sourceType == 'asset_sale') continue;
+        otherRows.add({
+          'id': 'loan_${loan.id}',
+          'source_record': true,
+          'type': 'loan',
+          'amount': loan.amount,
+          'wallet_id': loan.walletId,
+          'category': loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken',
+          'note': loan.notes.trim().isNotEmpty ? loan.notes : (loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'),
+          'date': loan.lendingDate,
+          'wallet_currency': loan.currency,
+        });
+        if (loan.id != null) {
+          final repayments = await LoansService.getRepayments(loan.id!);
+          for (final repayment in repayments) {
+            otherRows.add({
+              'id': 'loan_repayment_${repayment.id}',
+              'source_record': true,
+              'type': 'loan',
+              'amount': repayment.amount,
+              'wallet_id': repayment.walletId,
+              'category': 'Loan Repayment',
+              'note': loan.loanType == 'given' ? 'Received loan repayment' : 'Paid loan repayment',
+              'date': repayment.repaymentDate,
+              'wallet_currency': loan.currency,
+            });
+          }
+        }
+      }
+      if (widget.walletId != null) {
+        otherRows.removeWhere((row) => row['wallet_id'] != widget.walletId);
+      }
       final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
 
       // Upcoming recurring schedules are display-only; they do not affect balances.
@@ -101,7 +169,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       if (!mounted) return;
 
       setState(() {
-        transactions = [...result, ...scheduledRows];
+        transactions = [...result, ...scheduledRows, ...otherRows];
         walletInfo = wallet;
         hideBalances = hide;
         numberFormat = number;
@@ -1096,9 +1164,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final isExpense = type == 'expense';
                               final isTransfer = type == 'transfer';
                               final isCommittee = type == 'committee';
+                              final isSourceRecord = item['source_record'] == true;
+                              final isAssetRecord = type == 'asset';
+                              final isLoanRecord = type == 'loan';
                               final isCommitteeTransfer = item['category']?.toString() == 'Committee Transfer';
                               final isAdjustment = type == 'adjustment';
-                              final color = isCommittee
+                              final color = isAssetRecord
+                                  ? const Color(0xFF0F8B8D)
+                                  : isLoanRecord
+                                      ? const Color(0xFFB7791F)
+                                      : isCommittee
                                   ? const Color(0xFF7653B5)
                                   : isAdjustment
                                       ? const Color(0xFF8A6D3B)
@@ -1107,7 +1182,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   : isExpense
                                       ? const Color(0xFFE45B5B)
                                       : const Color(0xFF3979C6);
-                              final icon = isCommittee
+                              final icon = isAssetRecord
+                                  ? Icons.real_estate_agent_outlined
+                                  : isLoanRecord
+                                      ? Icons.handshake_outlined
+                                      : isCommittee
                                   ? Icons.groups_2_outlined
                                   : isIncome
                                   ? Icons.south_west_rounded
@@ -1139,9 +1218,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                    : DateFormat(item['is_scheduled'] == true ? 'dd MMM yyyy' : 'dd MMM yyyy  •  hh:mm a').format(parsedDate);
 
                               final isScheduled = item['is_scheduled'] == true;
+                              final isReadOnlySource = isScheduled || isSourceRecord;
                               return InkWell(
                                 borderRadius: BorderRadius.circular(16),
-                                onTap: isScheduled ? null : () {
+                                onTap: isReadOnlySource ? null : () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -1196,7 +1276,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             const SizedBox(height: 2),
                                             Text(
                                               [
-                                                if (!isScheduled) isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
+                                                if (isSourceRecord) (category.isEmpty ? (isAssetRecord ? 'Asset' : 'Loan') : category),
+                                                if (!isScheduled && !isSourceRecord) isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
                                                                                                  if (isScheduled && item['frequency'] != null) item['frequency'].toString(),
                                                  if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
                                               ].join('  •  '),
@@ -1241,6 +1322,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                decoration: BoxDecoration(color: const Color(0xFFEAF5EF), borderRadius: BorderRadius.circular(8)),
                                                child: const Text('Scheduled', style: TextStyle(color: Color(0xFF147D59), fontSize: 9.5, fontWeight: FontWeight.w800)),
                                              )
+                                           else if (isSourceRecord)
+                                            const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF9AA49F)))
                                            else
                                            PopupMenuButton<String>(
                                             padding: EdgeInsets.zero,

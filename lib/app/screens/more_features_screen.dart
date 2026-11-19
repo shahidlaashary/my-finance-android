@@ -153,7 +153,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         children: [
           Icon(
             Icons.palette_rounded,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             size: 34,
           ),
           SizedBox(width: 13),
@@ -164,7 +164,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 Text(
                   appText(context, 'Personalize Your App', 'اپنی ایپ کو اپنی پسند کے مطابق بنائیں'),
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 17,
                   ),
@@ -173,7 +173,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 Text(
                   appText(context, 'Customize the look and feel of My Finance.', 'My Finance ایپ کی شکل و صورت تبدیل کریں۔'),
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78),
                     fontSize: 12,
                   ),
                 ),
@@ -239,7 +239,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                     ],
                   ),
                 ),
-                const Icon(Icons.check_circle, color: Colors.green, size: 19),
+                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.secondary, size: 19),
               ],
             ),
             SizedBox(height: 14),
@@ -322,13 +322,13 @@ class _ComingSoonNotice extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.08),
+        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.25),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline_rounded, color: Colors.orange),
+          Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.tertiary),
           SizedBox(width: 10),
           Expanded(
             child: Text(

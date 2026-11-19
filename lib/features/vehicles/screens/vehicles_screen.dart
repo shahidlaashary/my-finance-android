@@ -388,7 +388,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
               Expanded(child: TextFormField(controller: unitPrice, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _decoration('Price per $unit (${_walletCurrency(walletId)})', Icons.price_change_outlined), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter price' : null; }, onChanged: (_) => setSheet(() {}))),
             ]),
             SizedBox(height: 8),
-            Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
+            Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
               child: Text('Total Fuel Cost: ${_amount((double.tryParse(quantity.text) ?? 0) * (double.tryParse(unitPrice.text) ?? 0))}', style: const TextStyle(color: _green, fontWeight: FontWeight.w800))),
             CheckboxListTile(contentPadding: EdgeInsets.zero, value: fullTank, onChanged: (v) => setSheet(() => fullTank = v ?? false), title: Text(unit == 'kWh' ? 'Full charge' : 'Full tank fill-up'), controlAffinity: ListTileControlAffinity.leading, dense: true),
             TextFormField(controller: station, decoration: _decoration('Fuel Station (optional)', Icons.storefront_outlined)),
@@ -627,7 +627,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       SizedBox(height: 8),
       if (due.isEmpty) Card(child: ListTile(leading: Icon(Icons.check_circle_outline, color: _green), title: Text(appText(context, 'No overdue reminders', 'کوئی تاخیر شدہ یاددہانی نہیں')), subtitle: Text(appText(context, 'Your service schedule is up to date.', 'آپ کی سروس کا شیڈول اپ ڈیٹ ہے۔'))))
       else ...due.map((r) => Card(child: ListTile(
-        leading: const Icon(Icons.notifications_active_outlined, color: Theme.of(context).colorScheme.error),
+        leading: Icon(Icons.notifications_active_outlined, color: Theme.of(context).colorScheme.error),
         title: Text(r['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text('${_vehicleName(r['vehicle_id'])} • Due ${_date(r['due_date'])}'),
         trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _deleteRecord(() => VehicleService.deleteReminder(r['id'] as int), 'reminder')),
@@ -647,7 +647,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     final fuel = _fuel.where((e) => e['vehicle_id'] == id).toList();
     return Card(margin: const EdgeInsets.only(bottom: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ExpansionTile(
-        leading: CircleAvatar(backgroundColor: const Theme.of(context).colorScheme.primaryContainer, child: Icon(v['type'] == 'Bike' ? Icons.two_wheeler_rounded : Icons.directions_car_rounded, color: _green)),
+        leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Icon(v['type'] == 'Bike' ? Icons.two_wheeler_rounded : Icons.directions_car_rounded, color: _green)),
         title: Text(v['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w800, color: _ink)),
         subtitle: Text('${v['model'] ?? ''} • ${v['registration'] ?? 'No registration'} • ${v['fuel_type']}'),
         children: [
@@ -664,7 +664,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             if ((v['notes'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text(v['notes'].toString(), style: const TextStyle(color: _muted, fontSize: 12))),
             Row(children: [
               TextButton.icon(onPressed: () => _showVehicleForm(vehicle: v), icon: const Icon(Icons.edit_outlined), label: Text(appText(context, "Edit", "Edit"))),
-              TextButton.icon(onPressed: () => _deleteRecord(() async { await VehicleService.deleteVehicle(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle', ownerId: id); }, 'vehicle'), icon: const Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error), label: Text(appText(context, "Delete", "Delete"), style: TextStyle(color: Theme.of(context).colorScheme.error))),
+              TextButton.icon(onPressed: () => _deleteRecord(() async { await VehicleService.deleteVehicle(id); await AttachmentService.deleteOwnerAttachments(ownerType: 'vehicle', ownerId: id); }, 'vehicle'), icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error), label: Text(appText(context, "Delete", "Delete"), style: TextStyle(color: Theme.of(context).colorScheme.error))),
             ]),
             AttachmentSection(ownerType: 'vehicle', ownerId: id),
           ])),
@@ -691,7 +691,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     ? _empty('No fuel records', 'Add a fuel fill-up to track consumption and cost per kilometre.', Icons.local_gas_station_outlined)
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _fuel.map((f) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
-        leading: const CircleAvatar(backgroundColor: Theme.of(context).colorScheme.tertiaryContainer, child: Icon(Icons.local_gas_station_outlined, color: Theme.of(context).colorScheme.tertiary)),
+        leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.tertiaryContainer, child: Icon(Icons.local_gas_station_outlined, color: Theme.of(context).colorScheme.tertiary)),
         title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['total'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_date(f['date'])} • ${_amount(f['quantity'])} ${f['unit']} • ${_amount(f['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
@@ -715,7 +715,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     ? _empty('No vehicle expenses', 'Record servicing, repairs, tyres, insurance and other costs.', Icons.build_outlined)
     : ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: _expenses.map((e) => Card(
       margin: const EdgeInsets.only(bottom: 9), child: ExpansionTile(
-        leading: const CircleAvatar(backgroundColor: Theme.of(context).colorScheme.errorContainer, child: Icon(Icons.build_outlined, color: Theme.of(context).colorScheme.error)),
+        leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.errorContainer, child: Icon(Icons.build_outlined, color: Theme.of(context).colorScheme.error)),
         title: Text('${e['category']} • ${_walletCurrency(e['wallet_id'])} ${_moneyAmount(e['amount'])}', style: const TextStyle(fontWeight: FontWeight.w800)),
         subtitle: Text('${_vehicleName(e['vehicle_id'])} • ${_date(e['date'])} • ${_amount(e['odometer'])} km'),
         trailing: PopupMenuButton<String>(onSelected: (v) {
@@ -802,7 +802,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       SizedBox(height: 8),
       if (sortedFuel.isEmpty) Card(child: ListTile(title: Text(appText(context, "No fuel price history yet.", "No fuel price history yet."))))
       else ...sortedFuel.take(30).map((f) => Card(child: ListTile(
-        dense: true, leading: const Icon(Icons.price_change_outlined, color: Theme.of(context).colorScheme.tertiary),
+        dense: true, leading: Icon(Icons.price_change_outlined, color: Theme.of(context).colorScheme.tertiary),
         title: Text('${_vehicleName(f['vehicle_id'])} • ${_walletCurrency(f['wallet_id'])} ${_moneyAmount(f['unit_price'])} / ${f['unit']}'),
         subtitle: Text('${_date(f['date'])} • ${f['station'] ?? 'Station not entered'}'),
         trailing: Text('${_amount(f['quantity'])} ${f['unit']}'),
@@ -813,7 +813,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       Card(child: Column(children: [
         ListTile(leading: const Icon(Icons.table_view_rounded, color: _green), title: Text(appText(context, 'Excel Workbook', 'ایکسل فائل')), subtitle: Text(appText(context, "Vehicles, fuel log, expenses and reminders", "Vehicles, fuel log, expenses and reminders")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(true)),
         const Divider(height: 1),
-        ListTile(leading: const Icon(Icons.picture_as_pdf_rounded, color: Theme.of(context).colorScheme.error), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: Text(appText(context, "Shareable summary of all vehicle records", "Shareable summary of all vehicle records")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
+        ListTile(leading: Icon(Icons.picture_as_pdf_rounded, color: Theme.of(context).colorScheme.error), title: Text(appText(context, 'PDF Report', 'پی ڈی ایف رپورٹ')), subtitle: Text(appText(context, "Shareable summary of all vehicle records", "Shareable summary of all vehicle records")), trailing: const Icon(Icons.download_rounded), onTap: () => _export(false)),
       ])),
       SizedBox(height: 8),
       Text(appText(context, "Reports are saved in the app documents folder and opened with a compatible app.", "Reports are saved in the app documents folder and opened with a compatible app."), style: TextStyle(color: _muted, fontSize: 11)),

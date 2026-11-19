@@ -456,6 +456,8 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['finopaymentsbank', 'finobank'], 'brand': 'FINO PAYMENTS BANK', 'mark': 'FINO', 'colors': [const Color(0xFF087A55), const Color(0xFF58B28C)]},
       {'keys': ['airtelpaymentsbank'], 'brand': 'AIRTEL PAYMENTS BANK', 'mark': 'AIRTEL', 'colors': [const Color(0xFFB51F2B), const Color(0xFFE46A72)]},
       {'keys': ['nsdlpaymentsbank'], 'brand': 'NSDL PAYMENTS BANK', 'mark': 'NSDL', 'colors': [const Color(0xFF174B85), const Color(0xFF69A1CE)]},
+      {'keys': ['northeasts small finance bank'.replaceAll(' ', ''), 'nesfbank'], 'brand': 'NORTH EAST SMALL FINANCE BANK', 'mark': 'NESFB', 'colors': [const Color(0xFF087A55), const Color(0xFF58B28C)]},
+      {'keys': ['slicesmallfinancebank', 'slice bank'], 'brand': 'SLICE SMALL FINANCE BANK', 'mark': 'SLICE', 'colors': [const Color(0xFF24272D), const Color(0xFF68717C)]},
 
       {'keys': ['emiratesnbd', 'enbd'], 'brand': 'EMIRATES NBD', 'mark': 'ENBD', 'colors': [const Color(0xFF007D83), const Color(0xFF4DB8AD)]},
       {'keys': ['firstabudhabibank', 'fabuae', 'fab'], 'brand': 'FIRST ABU DHABI BANK', 'mark': 'FAB', 'colors': [const Color(0xFF173D70), const Color(0xFF4F83B8)]},

@@ -408,12 +408,18 @@ class _LoansScreenState extends State<LoansScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 10),
-                                  Expanded(
-                                    flex: 1,
+                                  SizedBox(
+                                    width: 154,
+                                    height: 50,
                                     child: DropdownButtonFormField<int>(
                                       value: walletId,
                                       isExpanded: true,
-                                      decoration: InputDecoration(labelText: appText(context, "Payment Wallet *", "Payment Wallet *")),
+                                      decoration: InputDecoration(
+                                        labelText: appText(context, "Payment Wallet *", "Payment Wallet *"),
+                                        isDense: true,
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                                        constraints: const BoxConstraints(minHeight: 44, maxHeight: 50),
+                                      ),
                                       items: _wallets.where((wallet) {
                                         final party = _parties.where((p) => p['id'] == _selectedPartyId).isEmpty
                                             ? null : _parties.firstWhere((p) => p['id'] == _selectedPartyId);
@@ -2078,9 +2084,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final name = TextEditingController(text: party?['name']?.toString() ?? '');
     final phone = TextEditingController(text: party?['phone']?.toString() ?? '');
     final email = TextEditingController(text: party?['email']?.toString() ?? '');
-    final businessName = TextEditingController(text: party?['business_name']?.toString() ?? '');
     final cnic = TextEditingController(text: party?['cnic']?.toString() ?? '');
-    final taxNumber = TextEditingController(text: party?['tax_number']?.toString() ?? '');
     final referencePerson = TextEditingController(text: party?['reference_person']?.toString() ?? '');
     final country = TextEditingController(text: party?['country']?.toString() ?? '');
     final city = TextEditingController(text: party?['city']?.toString() ?? '');
@@ -2095,6 +2099,8 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     String paymentTerms = party?['payment_terms']?.toString() ?? 'Due on Receipt';
     String profilePath = party?['profile_image_path']?.toString() ?? '';
     XFile? pickedPhoto;
+    final List<PlatformFile> pendingNoteAttachments = [];
+    final existingPartyAttachments = party == null ? <dynamic>[] : await AttachmentService.getAttachments(ownerType: AttachmentOwnerTypes.party, ownerId: (party['id'] as num).toInt());
     const terms = ['Due on Receipt', '7 Days', '15 Days', '30 Days'];
     final formKey = GlobalKey<FormState>();
     final picker = ImagePicker();
@@ -2129,7 +2135,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
 
     final saved = await showModalBottomSheet<bool>(
       context: context, isScrollControlled: true, useSafeArea: true,
-      showDragHandle: true, backgroundColor: Colors.white,
+      showDragHandle: false, backgroundColor: Colors.white,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           final keyboard = MediaQuery.viewInsetsOf(context).bottom;
@@ -2199,10 +2205,10 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                             items: const [DropdownMenuItem(value: 'Individual', child: Text('Individual')), DropdownMenuItem(value: 'Business', child: Text('Business'))],
                             onChanged: (v) { if (v != null) setSheetState(() => partyType = v); },
                           ),
-                          field(businessName, 'Business Name', Icons.storefront_outlined),
+                          const SizedBox.shrink(),
                         ),
                         const SizedBox(height: 10),
-                        pair(field(cnic, 'CNIC / ID Number', Icons.credit_card_outlined), field(taxNumber, 'Tax Number', Icons.receipt_long_outlined)),
+                        field(cnic, 'CNIC / ID Number', Icons.credit_card_outlined),
                         const SizedBox(height: 10),
                         field(referencePerson, 'Reference Person', Icons.contacts_outlined),
                         section('Address Information', Icons.location_on_outlined),
@@ -2227,7 +2233,64 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                         const SizedBox(height: 10),
                         pair(field(openingBalance, 'Opening Balance', Icons.account_balance_outlined, type: const TextInputType.numberWithOptions(decimal: true)), field(creditLimit, 'Credit Limit', Icons.speed_outlined, type: const TextInputType.numberWithOptions(decimal: true))),
                         section('Additional Information', Icons.notes_rounded),
-                        field(notes, 'Notes', Icons.sticky_note_2_outlined, lines: 2),
+                        TextFormField(
+                          controller: notes,
+                          maxLines: 2,
+                          decoration: inputDecoration('Notes', Icons.sticky_note_2_outlined),
+                        ),
+                        const SizedBox(height: 7),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              try {
+                                final result = await FilePicker.platform.pickFiles(type: FileType.any, allowMultiple: true, withData: false);
+                                if (result != null) {
+                                  setSheetState(() => pendingNoteAttachments.addAll(result.files.where((file) => file.path != null)));
+                                }
+                              } catch (error) {
+                                if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Attachment select error: $error')));
+                              }
+                            },
+                            icon: const Icon(Icons.attach_file_rounded, size: 17),
+                            label: const Text('Attach Files'),
+                          ),
+                        ),
+                        if (existingPartyAttachments.isNotEmpty || pendingNoteAttachments.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(9),
+                            decoration: BoxDecoration(color: const Color(0xFFF5F8F6), borderRadius: BorderRadius.circular(10)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ...existingPartyAttachments.map((item) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 3),
+                                  child: Row(children: [
+                                    const Icon(Icons.attach_file, size: 15),
+                                    const SizedBox(width: 6),
+                                    Expanded(child: Text(item.fileName, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    const Text('Saved', style: TextStyle(fontSize: 10, color: Color(0xFF16865B))),
+                                  ]),
+                                )),
+                                ...pendingNoteAttachments.asMap().entries.map((entry) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 3),
+                                  child: Row(children: [
+                                    const Icon(Icons.insert_drive_file_outlined, size: 15),
+                                    const SizedBox(width: 6),
+                                    Expanded(child: Text(entry.value.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                                      padding: EdgeInsets.zero,
+                                      onPressed: () => setSheetState(() => pendingNoteAttachments.removeAt(entry.key)),
+                                      icon: const Icon(Icons.close_rounded, size: 16),
+                                    ),
+                                  ]),
+                                )),
+                              ],
+                            ),
+                          ),
                       ]),
                     ),
                   ),
@@ -2262,25 +2325,38 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
           final fileName = 'party_${party?['id'] ?? DateTime.now().microsecondsSinceEpoch}${ext.isEmpty ? '.jpg' : ext}';
           storedPhoto = (await File(pickedPhoto!.path).copy(p.join(folder.path, fileName))).path;
         }
+        int partyId;
         if (party == null) {
-          await LoansService.addParty(name: name.text, phone: phone.text, address: address.text, currency: currency,
+          partyId = await LoansService.addParty(name: name.text, phone: phone.text, address: address.text, currency: currency,
             email: email.text, partyType: partyType, country: country.text, city: city.text, postalCode: postalCode.text,
             openingBalance: opening, creditLimit: limit, paymentTerms: paymentTerms, cnic: cnic.text,
-            businessName: businessName.text, taxNumber: taxNumber.text, referencePerson: referencePerson.text,
+            businessName: '', taxNumber: '', referencePerson: referencePerson.text,
             notes: notes.text, profileImagePath: storedPhoto);
         } else {
-          await LoansService.updateParty(id: (party['id'] as num).toInt(), name: name.text, phone: phone.text,
+          partyId = (party['id'] as num).toInt();
+          await LoansService.updateParty(id: partyId, name: name.text, phone: phone.text,
             address: address.text, currency: currency, email: email.text, partyType: partyType, country: country.text,
             city: city.text, postalCode: postalCode.text, openingBalance: opening, creditLimit: limit,
-            paymentTerms: paymentTerms, cnic: cnic.text, businessName: businessName.text, taxNumber: taxNumber.text,
+            paymentTerms: paymentTerms, cnic: cnic.text,
+            businessName: party['business_name']?.toString() ?? '',
+            taxNumber: party['tax_number']?.toString() ?? '',
             referencePerson: referencePerson.text, notes: notes.text, profileImagePath: storedPhoto);
+        }
+        for (final attachment in pendingNoteAttachments) {
+          if (attachment.path == null) continue;
+          await AttachmentService.addAttachment(
+            ownerType: AttachmentOwnerTypes.party,
+            ownerId: partyId,
+            sourcePath: attachment.path!,
+            originalFileName: attachment.name,
+          );
         }
         await _loadParties();
       } catch (error) {
         if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Could not save party: $error')));
       }
     }
-    for (final c in [name, phone, email, businessName, cnic, taxNumber, referencePerson, country, city, address, postalCode, openingBalance, creditLimit, notes]) {
+    for (final c in [name, phone, email, cnic, referencePerson, country, city, address, postalCode, openingBalance, creditLimit, notes]) {
       c.dispose();
     }
   }

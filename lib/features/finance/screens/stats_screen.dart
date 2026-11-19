@@ -40,10 +40,15 @@ class _StatsScreenState extends State<StatsScreen> {
   String _currency = 'PKR';
   String _trendView = 'Both';
   bool _showAllCategories = false;
-  static const List<Color> _chartColors = [
-    Color(0xFF3978F6), Color(0xFF17B890), Color(0xFFFFA62B),
-    Color(0xFF9B6BDF), Color(0xFFFF6685), Color(0xFF20B8C9),
-    Color(0xFF6C9A45), Color(0xFFE07835),
+  List<Color> get _chartColors => [
+    Theme.of(context).colorScheme.primary,
+    Theme.of(context).colorScheme.secondary,
+    Theme.of(context).colorScheme.tertiary,
+    Theme.of(context).colorScheme.error,
+    Theme.of(context).colorScheme.primaryContainer,
+    Theme.of(context).colorScheme.secondaryContainer,
+    Theme.of(context).colorScheme.tertiaryContainer,
+    Theme.of(context).colorScheme.outline,
   ];
   List<String> _currencies = [];
   List<Map<String, dynamic>> _balances = [];
@@ -208,7 +213,7 @@ class _StatsScreenState extends State<StatsScreen> {
             children: [
               Icon(icon, color: color, size: 21),
               const SizedBox(height: 9),
-              Text(title, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+              Text(title, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
               const SizedBox(height: 4),
               Text(
                 amount,
@@ -229,7 +234,7 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Row(
         children: [
           Expanded(child: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
-          if (subtitle != null) Text(subtitle, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+          if (subtitle != null) Text(subtitle, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
         ],
       ),
     );
@@ -237,7 +242,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildTrend() {
     if (_trend.isEmpty) {
-      return Text(appText(context, "No income or expense trend available yet.", "No income or expense trend available yet."), style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "No income or expense trend available yet.", "No income or expense trend available yet."), style: TextStyle(color: Theme.of(context).hintColor));
     }
     final maxValue = _trend.fold<double>(0, (maxValue, row) {
       final income = (row['income'] as num?)?.toDouble() ?? 0;
@@ -264,10 +269,10 @@ class _StatsScreenState extends State<StatsScreen> {
               labelStyle: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : const Color(0xFF52645C),
+                color: selected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).hintColor,
               ),
-              selectedColor: const Color(0xFF246B52),
-              backgroundColor: const Color(0xFFF0F4F1),
+              selectedColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
               visualDensity: VisualDensity.compact,
               onSelected: (_) => setState(() => _trendView = view),
             );
@@ -278,7 +283,7 @@ class _StatsScreenState extends State<StatsScreen> {
           height: 174,
           padding: const EdgeInsets.fromLTRB(10, 12, 10, 8),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAF9),
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
@@ -312,7 +317,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                     gradient: const LinearGradient(
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
-                                      colors: [Color(0xFF16865B), Color(0xFF55D6A2)],
+                                      colors: [Theme.of(context).colorScheme.secondary, Theme.of(context).colorScheme.secondary],
                                     ),
                                   ),
                                 ),
@@ -329,7 +334,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                     gradient: const LinearGradient(
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
-                                      colors: [Color(0xFFE45D67), Color(0xFFFFA17A)],
+                                      colors: [Theme.of(context).colorScheme.error, Theme.of(context).colorScheme.tertiary],
                                     ),
                                   ),
                                 ),
@@ -338,7 +343,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF68766F), fontWeight: FontWeight.w700)),
+                      Text(label, style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor, fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
@@ -351,8 +356,8 @@ class _StatsScreenState extends State<StatsScreen> {
           spacing: 16,
           runSpacing: 6,
           children: [
-            if (_trendView != 'Expense') _chartLegend(const Color(0xFF20B987), 'Income'),
-            if (_trendView != 'Income') _chartLegend(const Color(0xFFEF7371), 'Expense'),
+            if (_trendView != 'Expense') _chartLegend(Theme.of(context).colorScheme.secondary, 'Income'),
+            if (_trendView != 'Income') _chartLegend(Theme.of(context).colorScheme.error, 'Expense'),
           ],
         ),
       ],
@@ -365,14 +370,14 @@ class _StatsScreenState extends State<StatsScreen> {
       children: [
         Container(width: 9, height: 9, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
       ],
     );
   }
 
   Widget _buildCategories() {
     if (_categories.isEmpty) {
-      return Text(appText(context, "No expense categories recorded for this period.", "No expense categories recorded for this period."), style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "No expense categories recorded for this period.", "No expense categories recorded for this period."), style: TextStyle(color: Theme.of(context).hintColor));
     }
     final visibleCategories = _showAllCategories ? _categories : _categories.take(5).toList();
     final total = visibleCategories.fold<double>(
@@ -390,7 +395,7 @@ class _StatsScreenState extends State<StatsScreen> {
           children: [
             Text(
               _showAllCategories ? 'All categories' : 'Top 5 categories',
-              style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600),
             ),
             TextButton(
               onPressed: () => setState(() => _showAllCategories = !_showAllCategories),
@@ -415,7 +420,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(appText(context, "Total", "Total"), style: TextStyle(fontSize: 10, color: Colors.black54)),
+                      Text(appText(context, "Total", "Total"), style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                       const SizedBox(height: 3),
                       Text(
                         _money(total),
@@ -423,7 +428,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                       ),
-                      Text(_currency, style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                      Text(_currency, style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                     ],
                   ),
                 ],
@@ -451,7 +456,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           ),
                         ),
                         const SizedBox(width: 3),
-                        Text('${percent.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w700)),
+                        Text('${percent.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   );
@@ -467,7 +472,7 @@ class _StatsScreenState extends State<StatsScreen> {
             padding: const EdgeInsets.symmetric(vertical: 3),
             child: Row(
               children: [
-                Expanded(child: Text(row['category_name'].toString(), style: const TextStyle(fontSize: 11, color: Colors.black54))),
+                Expanded(child: Text(row['category_name'].toString(), style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor))),
                 Text('$_currency ${_money(values[index])}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               ],
             ),
@@ -483,19 +488,19 @@ class _StatsScreenState extends State<StatsScreen> {
     final total = income + expense;
     return Row(children: [
       SizedBox(width: 142, height: 142, child: CustomPaint(
-        painter: _DonutChartPainter(values: [income, expense], colors: const [Color(0xFF20B987), Color(0xFFE45D67)]),
+        painter: _DonutChartPainter(values: [income, expense], colors: [Theme.of(context).colorScheme.secondary, Theme.of(context).colorScheme.error]),
         child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(total > 0 ? '100%' : '0%', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          const Text('Total', style: TextStyle(fontSize: 11, color: Colors.black54)),
+          const Text('Total', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
         ])),
       )),
       const SizedBox(width: 18),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _chartLegend(const Color(0xFF20B987), 'Income'),
+        _chartLegend(Theme.of(context).colorScheme.secondary, 'Income'),
         const SizedBox(height: 10),
         Text('$_currency ${_money(income)}', style: const TextStyle(fontWeight: FontWeight.w800)),
         const SizedBox(height: 14),
-        _chartLegend(const Color(0xFFE45D67), 'Expenses'),
+        _chartLegend(Theme.of(context).colorScheme.error, 'Expenses'),
         const SizedBox(height: 10),
         Text('$_currency ${_money(expense)}', style: const TextStyle(fontWeight: FontWeight.w800)),
       ])),
@@ -514,15 +519,15 @@ class _StatsScreenState extends State<StatsScreen> {
       )),
       const SizedBox(height: 8),
       Wrap(spacing: 16, children: [
-        _chartLegend(const Color(0xFF20B987), 'Income wave'),
-        _chartLegend(const Color(0xFFE45D67), 'Expense wave'),
+        _chartLegend(Theme.of(context).colorScheme.secondary, 'Income wave'),
+        _chartLegend(Theme.of(context).colorScheme.error, 'Expense wave'),
       ]),
     ]);
   }
 
   Widget _buildBalances() {
     if (_balances.isEmpty) {
-      return Text(appText(context, "Create a wallet to see wallet balances here.", "Create a wallet to see wallet balances here."), style: TextStyle(color: Colors.black54));
+      return Text(appText(context, "Create a wallet to see wallet balances here.", "Create a wallet to see wallet balances here."), style: TextStyle(color: Theme.of(context).hintColor));
     }
     return Wrap(
       spacing: 9,
@@ -532,14 +537,14 @@ class _StatsScreenState extends State<StatsScreen> {
           width: 145,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F8F5),
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(13),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(row['currency'].toString(), style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w700)),
+            Text(row['currency'].toString(), style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12, fontWeight: FontWeight.w700)),
             const SizedBox(height: 5),
             Text(_money(row['total_balance']), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-            Text('${row['wallet_count']} wallet(s)', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+            Text('${row['wallet_count']} wallet(s)', style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
           ]),
         );
       }).toList(),
@@ -548,7 +553,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildOverviewSection(String title, IconData icon, List<Widget> details) {
     return Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [Icon(icon, color: const Color(0xFF147D59), size: 21), const SizedBox(width: 9), Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))]),
+      Row(children: [Icon(icon, color: Theme.of(context).colorScheme.primary, size: 21), const SizedBox(width: 9), Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)))]),
       const SizedBox(height: 12),
       ...details,
     ])));
@@ -556,7 +561,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _overviewLine(String label, String value) {
     return Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(children: [
-      Expanded(child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13))),
+      Expanded(child: Text(label, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 13))),
       const SizedBox(width: 8),
       Text(value, textAlign: TextAlign.end, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
     ]));
@@ -717,12 +722,12 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "Reports & Analytics", "Reports & Analytics"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26)))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "Reports & Analytics", "Reports & Analytics"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
       body: _loading
@@ -731,7 +736,7 @@ class _StatsScreenState extends State<StatsScreen> {
               ? Center(child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.error_outline, size: 42, color: Colors.redAccent),
+                    const Icon(Icons.error_outline, size: 42, color: Theme.of(context).colorScheme.error),
                     const SizedBox(height: 10),
                     Text('Could not load stats: $_error', textAlign: TextAlign.center),
                     const SizedBox(height: 12),
@@ -790,13 +795,13 @@ class _StatsScreenState extends State<StatsScreen> {
                       Text('$_currency overview', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 9),
                       Row(children: [
-                        _metricCard(title: 'Income', amount: _money(_totals['income']), icon: Icons.trending_up_rounded, color: const Color(0xFF16865B)),
+                        _metricCard(title: 'Income', amount: _money(_totals['income']), icon: Icons.trending_up_rounded, color: Theme.of(context).colorScheme.secondary),
                         const SizedBox(width: 9),
                         _metricCard(title: 'Expenses', amount: _money(_totals['expense']), icon: Icons.trending_down_rounded, color: const Color(0xFFD9534F)),
                       ]),
                       const SizedBox(height: 9),
                       Row(children: [
-                        _metricCard(title: 'Net Savings', amount: _money(_totals['net']), icon: Icons.account_balance_wallet_outlined, color: const Color(0xFF147D59)),
+                        _metricCard(title: 'Net Savings', amount: _money(_totals['net']), icon: Icons.account_balance_wallet_outlined, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 9),
                         _metricCard(title: 'Transactions', amount: _transactionCount.toString(), icon: Icons.receipt_long_outlined, color: const Color(0xFF536B60)),
                       ]),
@@ -898,13 +903,13 @@ class _CashFlowWavePainter extends CustomPainter {
       }
       return path;
     }
-    final grid = Paint()..color = const Color(0xFFE9EFEB)..strokeWidth = 1;
+    final grid = Paint()..color = Theme.of(context).colorScheme.outlineVariant..strokeWidth = 1;
     for (var i = 1; i <= 3; i++) {
       final y = size.height * i / 4;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
     }
-    canvas.drawPath(makePath(true), Paint()..color = const Color(0xFF20B987)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
-    canvas.drawPath(makePath(false), Paint()..color = const Color(0xFFE45D67)..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+    canvas.drawPath(makePath(true), Paint()..color = Theme.of(context).colorScheme.secondary..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
+    canvas.drawPath(makePath(false), Paint()..color = Theme.of(context).colorScheme.error..style = PaintingStyle.stroke..strokeWidth = 3..strokeCap = StrokeCap.round);
   }
 
   @override

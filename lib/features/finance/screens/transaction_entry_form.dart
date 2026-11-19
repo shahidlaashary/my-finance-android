@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
@@ -62,11 +63,17 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   @override
   void initState() {
     super.initState();
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     loadWallets();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) loadWallets();
   }
 
   @override
   void dispose() {
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     amountController.dispose();
     destinationAmountController.dispose();
     transferFeeController.dispose();

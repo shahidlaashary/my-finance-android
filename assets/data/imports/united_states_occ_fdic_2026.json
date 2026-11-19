@@ -1,0 +1,207 @@
+{
+  "countryCode": "US",
+  "registry": "Office of the Comptroller of the Currency and FDIC",
+  "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+  "records": [
+    {
+      "countryCode": "US",
+      "institutionName": "JPMorgan Chase Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.chase.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.chase.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Bank of America",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankofamerica.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.bankofamerica.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Wells Fargo Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.wellsfargo.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.wellsfargo.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Citibank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.citi.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.citi.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "U.S. Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.usbank.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.usbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "PNC Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.pnc.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.pnc.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Truist Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.truist.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.truist.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Capital One",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.capitalone.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.capitalone.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "TD Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.td.com/us/en/personal-banking",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.td.com/us/en/personal-banking",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Goldman Sachs Bank USA",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.goldmansachs.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.goldmansachs.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Citizens Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.citizensbank.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.citizensbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Fifth Third Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.53.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.53.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Huntington National Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.huntington.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.huntington.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Regions Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.regions.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.regions.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "KeyBank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.key.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.key.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "M&T Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.mtb.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.mtb.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "BMO Bank N.A.",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bmo.com/en-us/main/personal/",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.bmo.com/en-us/main/personal/",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "First Citizens Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.firstcitizens.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.firstcitizens.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Comerica Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.comerica.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.comerica.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "US",
+      "institutionName": "Ally Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.ally.com",
+      "registrySourceUrl": "https://www.occ.ustreas.gov/topics/charters-and-licensing/financial-institution-lists/index-financial-institution-lists.html",
+      "sourceUrl": "https://www.ally.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

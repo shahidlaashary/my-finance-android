@@ -596,12 +596,34 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['nordea'], 'brand': 'NORDEA', 'mark': 'NORDEA', 'colors': [const Color(0xFF174B85), const Color(0xFF69A1CE)]},
       {'keys': ['pkobankpolski', 'pkobp'], 'brand': 'PKO BANK POLSKI', 'mark': 'PKO', 'colors': [const Color(0xFF174B85), const Color(0xFF69A1CE)]},
     ];
-    for (var i = 0; i < themes.length; i++) {
-      final theme = themes[i];
+    // Resolve the most specific bank alias first. Short aliases such as
+    // "hbl", "ubl" and "abl" must never steal a match from a longer name.
+    var bankSeed = 0;
+    for (final unit in name.codeUnits) {
+      bankSeed = (bankSeed * 31 + unit) & 0x7fffffff;
+    }
+    final matchingThemes = themes.where((theme) {
       final aliases = theme['keys'] as List<String>;
-      if (aliases.any((alias) => name.contains(alias))) {
-        return theme;
+      return aliases.any((alias) => name == alias);
+    }).toList();
+    if (matchingThemes.isEmpty) {
+      final candidates = <({Map<String, dynamic> theme, String alias})>[];
+      for (final theme in themes) {
+        for (final alias in theme['keys'] as List<String>) {
+          if (alias.length >= 4 && name.contains(alias)) {
+            candidates.add((theme: theme, alias: alias));
+          }
+        }
       }
+      candidates.sort((a, b) => b.alias.length.compareTo(a.alias.length));
+      if (candidates.isNotEmpty) matchingThemes.add(candidates.first.theme);
+    }
+    if (matchingThemes.isNotEmpty) {
+      final selected = Map<String, dynamic>.from(matchingThemes.first);
+      // Each bank gets a repeatable card-face pattern instead of one generic
+      // diagonal background; official artwork remains separately verified.
+      selected['pattern'] ??= bankSeed % 6;
+      return selected;
     }
     // Global fallback: any bank name receives a stable, distinct card
     // treatment, even when its official card artwork is not curated yet.

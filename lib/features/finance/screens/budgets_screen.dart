@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -25,6 +26,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   void initState() {
     super.initState();
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadData();
   }
   void _message(String message) {
@@ -33,6 +35,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       SnackBar(content: Text(message)),
     );
   }
+  void _onAppDataChanged() {
+    if (mounted) _loadData();
+  }
+
   void _onPreferencesChanged() async {
     final hidden = await GeneralPreferences.instance.hideBalances;
     if (mounted && hidden != _hideBalances) {
@@ -43,6 +49,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     super.dispose();
   }
 

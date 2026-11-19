@@ -258,12 +258,6 @@ class _RecurringTransactionsScreenState
             Text(appText(context, "Create a schedule for regular income, expenses or transfers.", "Create a schedule for regular income, expenses or transfers."),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: () => _openForm(),
-              icon: const Icon(Icons.add),
-              label: Text(appText(context, 'Add Schedule', 'شیڈول شامل کریں')),
-            ),
           ],
         ),
       ),
@@ -289,17 +283,18 @@ class _RecurringTransactionsScreenState
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 CircleAvatar(
+                  radius: 18,
                   backgroundColor: color.withOpacity(0.12),
                   child: Icon(icon, color: color),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: 9),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,7 +302,7 @@ class _RecurringTransactionsScreenState
                       Text(
                         item.title,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -333,7 +328,7 @@ class _RecurringTransactionsScreenState
                 ),
               ],
             ),
-            const Divider(height: 24),
+            const Divider(height: 18, thickness: 0.7),
             _detailRow(
               Icons.account_balance_wallet,
               'Wallet',
@@ -378,13 +373,13 @@ class _RecurringTransactionsScreenState
                 'Note',
                 item.note,
               ),
-            SizedBox(height: 12),
+            SizedBox(height: 7),
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+                    horizontal: 9,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     color: item.isActive
@@ -440,7 +435,7 @@ class _RecurringTransactionsScreenState
     String value,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
           Icon(icon, size: 17, color: Colors.grey),
@@ -475,17 +470,7 @@ class _RecurringTransactionsScreenState
       appBar: AppBar(
         title: Text(appText(context, 'Recurring Transactions', 'بار بار ہونے والے لین دین')),
         actions: [
-          IconButton(
-            tooltip: 'Process Due Transactions',
-            onPressed: _processDue,
-            icon: const Icon(Icons.sync),
-          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openForm(),
-        icon: const Icon(Icons.add),
-        label: Text(appText(context, 'Add Schedule', 'شیڈول شامل کریں')),
       ),
       body: _loading
           ? Center(child: CircularProgressIndicator())

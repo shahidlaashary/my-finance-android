@@ -840,6 +840,7 @@ class LoansService {
         whereArgs: [repaymentId],
       );
     });
+    AppRefreshController.notifyChanged();
   }
 
   /// Existing non-asset loan ki amount aur descriptive details update karta hai.

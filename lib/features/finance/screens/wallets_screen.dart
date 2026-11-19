@@ -600,7 +600,10 @@ class _WalletsPageState extends State<WalletsPage> {
       final theme = themes[i];
       final aliases = theme['keys'] as List<String>;
       if (aliases.any((alias) => name.contains(alias))) {
-        // Global fallback: any bank name receives a stable, distinct card
+        return theme;
+      }
+    }
+    // Global fallback: any bank name receives a stable, distinct card
     // treatment, even when its official card artwork is not curated yet.
     final normalizedName = bankName.trim();
     var seed = 0;

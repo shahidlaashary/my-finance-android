@@ -264,7 +264,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                     value == null ? 'Not set' : DateFormat('dd MMM yyyy').format(value),
                     style: TextStyle(
                       fontSize: 13,
-                      color: value == null ? Theme.of(context).hintColor : const Theme.of(context).colorScheme.onSurface,
+                      color: value == null ? Theme.of(context).hintColor : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),

@@ -961,7 +961,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     String currency,
     double amount,
     IconData icon, {
-    Color color = Theme.of(context).colorScheme.primary,
+    Color? color,
   }) {
     return Card(
       child: Padding(
@@ -969,11 +969,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 25),
+            Icon(icon, color: color ?? Theme.of(context).colorScheme.primary, size: 25),
             SizedBox(height: 10),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Theme.of(context).hintColor,
                 fontSize: 12,
               ),
@@ -1375,7 +1375,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           children: [
                             _assetStatusChip(
                               asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
-                              asset.isSold ? const Color(0xFFFFEEEE) : Theme.of(context).colorScheme.primaryContainer,
+                              asset.isSold ? Theme.of(context).colorScheme.errorContainer : Theme.of(context).colorScheme.primaryContainer,
                               asset.isSold ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
                             ),
                             const Row(
@@ -1942,7 +1942,7 @@ class AssetDetailsScreen extends StatelessWidget {
           const SizedBox(height: 18),
           Row(children: [
             Expanded(child: Text('Related Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-            Text('${events.length} entries', style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
+            Text('${events.length} entries', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
           ]),
           const SizedBox(height: 9),
           if (events.isEmpty)

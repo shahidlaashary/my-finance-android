@@ -364,7 +364,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     final paid = (c['paid_amount'] as num).toDouble();
     final remaining = (total - paid).clamp(0.0, total);
     final progress = total <= 0 ? 0.0 : (paid / total).clamp(0.0, 1.0);
-    final color = sell ? Colors.teal : Colors.deepOrange;
+    final color = sell ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.tertiary;
     return Card(margin: const EdgeInsets.only(bottom: 11), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(borderRadius: BorderRadius.circular(16), onTap: () => _details(c),
         child: Padding(padding: const EdgeInsets.all(14), child: Column(children: [

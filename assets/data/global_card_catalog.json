@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "my-finance-global-card-catalog",
+  "updatedAt": "2026-11-20",
+  "policy": {
+    "officialCardVerified": "Exact card artwork/product page is confirmed on an issuer-controlled official domain.",
+    "bankBrandingVerified": "Issuer identity and brand palette are confirmed, but exact card artwork is not.",
+    "reviewRequired": "A previously checked official source changed; human review is required before promoting verification.",
+    "unverified": "No authoritative source has been checked. Never present generated artwork as official.",
+    "note": "Network directories identify issuers/products; they do not prove the issuer's exact card artwork."
+  },
+  "records": [],
+  "importContract": {
+    "required": [
+      "countryCode",
+      "institutionName",
+      "institutionType",
+      "officialWebsite"
+    ],
+    "optional": [
+      "aliases",
+      "cardNetwork",
+      "cardType",
+      "officialProductUrl",
+      "officialImageUrl",
+      "primaryColor",
+      "secondaryColor",
+      "accentColor"
+    ],
+    "verification": "Only HTTPS official issuer/regulator/network source URLs are eligible. Source changes are flagged for review; automation never upgrades an unverified record to verified."
+  }
+}

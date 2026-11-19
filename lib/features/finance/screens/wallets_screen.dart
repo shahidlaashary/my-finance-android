@@ -321,6 +321,12 @@ class _WalletsPageState extends State<WalletsPage> {
   Map<String, dynamic> _bankCardTheme(String bankName) {
     final name = bankName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     final themes = <Map<String, dynamic>>[
+      {'keys': ['easypaisa', 'easypaisadigitalbank'], 'brand': 'EASYPAISA', 'mark': 'EASYPAISA', 'design': 'easypaisa', 'colors': [const Color(0xFF087A3E), const Color(0xFF62B447)]},
+      {'keys': ['jazzcash', 'mobilinkwallet'], 'brand': 'JAZZCASH', 'mark': 'JAZZ', 'design': 'jazzcash', 'colors': [const Color(0xFF8B1238), const Color(0xFFE04462)]},
+      {'keys': ['nayapay', 'naya'], 'brand': 'NAYAPAY', 'mark': 'NAYA', 'design': 'nayapay', 'colors': [const Color(0xFF143D79), const Color(0xFF3C8FD0)]},
+      {'keys': ['sadapay', 'sada'], 'brand': 'SADAPAY', 'mark': 'SADA', 'design': 'sadapay', 'colors': [const Color(0xFF24272D), const Color(0xFF68717C)]},
+      {'keys': ['zindigi', 'jszindigi'], 'brand': 'ZINDIGI', 'mark': 'ZINDIGI', 'design': 'zindigi', 'colors': [const Color(0xFF39206D), const Color(0xFF8D55D6)]},
+      {'keys': ['upaisa'], 'brand': 'UPAISA', 'mark': 'UPAISA', 'design': 'upaisa', 'colors': [const Color(0xFF542B83), const Color(0xFF9A68C5)]},
       {'keys': ['alliedbank', 'allied', 'abl'], 'brand': 'ALLIED BANK', 'mark': 'ABL', 'design': 'allied', 'colors': [const Color(0xFF063B70), const Color(0xFF087F9B)]},
       {'keys': ['habibbanklimited', 'habibbank', 'hbl'], 'brand': 'HBL', 'mark': 'HBL', 'design': 'hbl', 'colors': [const Color(0xFF171A20), const Color(0xFF5A513E)]},
       {'keys': ['meezanbank', 'meezan'], 'brand': 'MEEZAN BANK', 'mark': 'M', 'design': 'meezan', 'colors': [const Color(0xFF202448), const Color(0xFF514078)]},

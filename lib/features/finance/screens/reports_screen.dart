@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart' as pdf;
 import 'package:printing/printing.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
@@ -46,7 +47,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void initState() {
     super.initState();
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadReports();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) _loadReports();
   }
 
   void _onPreferencesChanged() async {
@@ -59,6 +65,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     super.dispose();
   }
 

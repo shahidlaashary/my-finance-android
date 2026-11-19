@@ -935,7 +935,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     side: const BorderSide(color: Color(0xFFE7ECE9)),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -947,7 +947,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 color: Color(0xFF172B25))),
                           ),
                           Transform.translate(
-                            offset: const Offset(5, 0),
+                            offset: const Offset(9, 0),
                             child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
@@ -1016,14 +1016,14 @@ class _LoansScreenState extends State<LoansScreen> {
                             child: Text('Asset: ${_assetReferenceLabel(loan)}',
                               style: const TextStyle(fontSize: 12, color: Color(0xFF65736C))),
                           ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         Text(_moneyWithLoanCurrency(loan.amount, loan),
                           style: const TextStyle(fontSize: 25,
                             fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
                         const SizedBox(height: 4),
                         Text('Total Loan Amount',
                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         Row(children: [
                           Expanded(child: _loanDetailMetric(
                             'Repaid', _moneyWithLoanCurrency(loan.repaidAmount, loan))),
@@ -1031,7 +1031,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           Expanded(child: _loanDetailMetric(
                             'Remaining', _moneyWithLoanCurrency(loan.remainingAmount, loan))),
                         ]),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         Row(children: [
                           const Expanded(child: Text('Repayment Progress',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
@@ -1043,13 +1043,13 @@ class _LoansScreenState extends State<LoansScreen> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: LinearProgressIndicator(
-                            value: progress, minHeight: 9,
+                            value: progress, minHeight: 7,
                             backgroundColor: const Color(0xFFE8EFEB),
                             valueColor: AlwaysStoppedAnimation<Color>(
                               loan.isOverdue ? const Color(0xFFE34D59) : const Color(0xFF28B879)),
                           ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         const Divider(height: 1),
                         const SizedBox(height: 5),
                         Row(children: [
@@ -1649,7 +1649,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(22),
                           onTap: () => _showLoanDetails(loan),
                           child: SizedBox(
-                            height: 182,
+                            height: 174,
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -1716,7 +1716,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         ),
                                       ),
                                       Transform.translate(
-                                        offset: const Offset(0, -2),
+                                        offset: const Offset(0, -5),
                                         child: Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
@@ -1764,7 +1764,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       ),
                                       const SizedBox(width: 7),
                                       Transform.translate(
-                                        offset: const Offset(0, -2),
+                                        offset: const Offset(0, -5),
                                         child: const Icon(
                                           Icons.chevron_right_rounded,
                                           size: 23,

@@ -1,0 +1,428 @@
+{
+  "countryCode": "PK",
+  "registry": "State Bank of Pakistan",
+  "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+  "asOf": "2025-12-31",
+  "records": [
+    {
+      "countryCode": "PK",
+      "institutionName": "First Women Bank Ltd.",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.fwbl.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.fwbl.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "National Bank of Pakistan",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.nbp.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.nbp.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Sindh Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.sindhbank.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.sindhbank.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "The Bank of Khyber",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bok.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bok.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "The Bank of Punjab",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bop.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bop.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "SME Bank Limited",
+      "institutionType": "specialized_bank",
+      "officialWebsite": "https://www.smebank.org",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.smebank.org",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "The Punjab Provincial Cooperative Bank Ltd.",
+      "institutionType": "specialized_bank",
+      "officialWebsite": "https://www.ppcbl.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.ppcbl.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Zarai Taraqiati Bank Limited",
+      "institutionType": "specialized_bank",
+      "officialWebsite": "https://www.ztbl.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.ztbl.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Al-Baraka Bank (Pakistan) Ltd.",
+      "institutionType": "islamic_bank",
+      "officialWebsite": "https://www.albaraka.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.albaraka.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Allied Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.abl.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.abl.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Askari Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.askaribank.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.askaribank.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Bank Al-Falah Ltd.",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankalfalah.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bankalfalah.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Bank Al-Habib Ltd.",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankalhabib.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bankalhabib.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "BankIslami Pakistan Limited",
+      "institutionType": "islamic_bank",
+      "officialWebsite": "https://www.bankislami.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bankislami.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Dubai Islamic Bank Pakistan Limited",
+      "institutionType": "islamic_bank",
+      "officialWebsite": "https://www.dibpak.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.dibpak.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Faysal Bank Ltd.",
+      "institutionType": "islamic_bank",
+      "officialWebsite": "https://www.faysalbank.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.faysalbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Habib Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.hbl.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.hbl.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Habib Metropolitan Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.habibmetro.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.habibmetro.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "JS Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.jsbl.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.jsbl.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "MCB Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.mcb.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.mcb.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "MCB Islamic Bank Ltd.",
+      "institutionType": "islamic_bank",
+      "officialWebsite": "https://www.mcbislamicbank.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.mcbislamicbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Meezan Bank Limited",
+      "institutionType": "islamic_bank",
+      "officialWebsite": "https://www.meezanbank.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.meezanbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Samba Bank Ltd.",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.samba.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.samba.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Soneri Bank Ltd.",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.soneribank.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.soneribank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Standard Chartered Bank (Pakistan) Ltd.",
+      "institutionType": "foreign_bank",
+      "officialWebsite": "https://www.sc.com/pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.sc.com/pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Bank Makramah Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.bankmakramah.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bankmakramah.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "United Bank Limited",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.ubl.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.ubl.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Easypaisa Digital Bank",
+      "institutionType": "digital_bank",
+      "officialWebsite": "https://www.easypaisa.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.easypaisa.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Bank of China Pakistan",
+      "institutionType": "foreign_bank",
+      "officialWebsite": "https://www.bankofchina.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.bankofchina.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Citibank Pakistan",
+      "institutionType": "foreign_bank",
+      "officialWebsite": "https://www.citibank.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.citibank.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Deutsche Bank AG Pakistan",
+      "institutionType": "foreign_bank",
+      "officialWebsite": "https://www.db.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.db.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Industrial and Commercial Bank of China (ICBC) Pakistan",
+      "institutionType": "foreign_bank",
+      "officialWebsite": "https://www.icbc-ltd.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.icbc-ltd.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Apna Microfinance Bank",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.apnabank.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.apnabank.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "ABHI Microfinance Bank Limited",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.finca.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.finca.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Halan Microfinance Bank",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.advanspakistan.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.advanspakistan.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "HBL Microfinance Bank Ltd.",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.hblmfb.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.hblmfb.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Khushhali Microfinance Bank Ltd.",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.khushhalibank.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.khushhalibank.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "LOLC Microfinance Bank",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.pomicro.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.pomicro.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Mobilink Microfinance Bank Ltd.",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.mobilinkbank.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.mobilinkbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "NRSP Microfinance Bank Ltd.",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.nrspbank.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.nrspbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "Sindh Microfinance Bank",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.sindhmfb.com",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.sindhmfb.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "PK",
+      "institutionName": "U Microfinance Bank Ltd.",
+      "institutionType": "microfinance_bank",
+      "officialWebsite": "https://www.ubank.com.pk",
+      "registrySourceUrl": "https://www.sbp.org.pk/assets/document/publications/Appendices14_december2025.pdf",
+      "sourceUrl": "https://www.ubank.com.pk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

@@ -40,6 +40,8 @@ class _HomePageState extends State<HomePage> {
   double monthlyExpense = 0;
   double currentAssetsPKR = 0;
   double loansReceivablePKR = 0;
+  double loansPayablePKR = 0;
+  double consolidatedIncludedAssetsPKR = 0;
   String baseCurrency = 'PKR';
   List<BudgetsModel> budgetAlerts = [];
   int overviewAssetCount = 0;
@@ -131,10 +133,28 @@ class _HomePageState extends State<HomePage> {
       }
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
-      final loansByCurrency =
+      final outstandingLoans =
           await LoansService.getTotalOutstandingByCurrency();
+      final receivableByCurrency = <String, double>{};
+      final payableByCurrency = <String, double>{};
+      for (final entry in outstandingLoans.entries) {
+        final parts = entry.key.split(' • ');
+        if (parts.length != 2) continue;
+        final currency = parts.first.trim().toUpperCase();
+        final loanType = parts.last.trim().toLowerCase();
+        if (loanType == 'receivable') {
+          receivableByCurrency[currency] =
+              (receivableByCurrency[currency] ?? 0) + entry.value;
+        } else if (loanType == 'payable') {
+          payableByCurrency[currency] =
+              (payableByCurrency[currency] ?? 0) + entry.value;
+        }
+      }
       final assetsValue = await _convertValuesToPKR(assetsByCurrency, baseRate);
-      final loansValue = await _convertValuesToPKR(loansByCurrency, baseRate);
+      final receivableValue =
+          await _convertValuesToPKR(receivableByCurrency, baseRate);
+      final payableValue =
+          await _convertValuesToPKR(payableByCurrency, baseRate);
       final budgets = await BudgetsService.getBudgets(activeOnly: true);
       final assets = await AssetsService().getAssets(includeSold: false);
       final loans = await LoansService.getLoans();
@@ -162,7 +182,9 @@ class _HomePageState extends State<HomePage> {
         monthlyIncome = income;
         monthlyExpense = expense;
         currentAssetsPKR = assetsValue;
-        loansReceivablePKR = loansValue;
+        loansReceivablePKR = receivableValue;
+        loansPayablePKR = payableValue;
+        consolidatedIncludedAssetsPKR = includedAssetsInBaseCurrency;
         budgetAlerts = alerts;
         overviewAssetCount = assets.length;
         overviewLoanCount = loans.where((loan) => !loan.isPaid).length;
@@ -268,7 +290,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   double get estimatedNetWorth =>
-      totalBalance + currentAssetsPKR + loansReceivablePKR;
+      totalBalance +
+      currentAssetsPKR -
+      consolidatedIncludedAssetsPKR +
+      loansReceivablePKR -
+      loansPayablePKR;
 
   String money(double amount) {
     if (hideBalances) return '$baseCurrency ******';

@@ -112,14 +112,14 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
 
   Color _expiryColor(MyDocumentModel document) {
     final expiry = document.expiryDate;
-    if (expiry == null) return AppColorsForDocuments.muted;
+    if (expiry == null) return Theme.of(context).hintColor;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final days = DateTime(expiry.year, expiry.month, expiry.day)
         .difference(today).inDays;
     if (days < 0) return Colors.red;
     if (days <= document.reminderDays) return Colors.orange.shade800;
-    return AppColorsForDocuments.primary;
+    return Theme.of(context).colorScheme.primary;
   }
 
   String _expiryLabel(MyDocumentModel document) {
@@ -153,11 +153,11 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
       isDense: true,
@@ -408,7 +408,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             ...selectedFiles.asMap().entries.map((entry) => ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.insert_drive_file_outlined, color: Theme.of(context).colorScheme.primary),
+                              leading: Icon(Icons.insert_drive_file_outlined, color: Theme.of(context).colorScheme.primary),
                               title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
                               trailing: IconButton(
                                 icon: const Icon(Icons.close_rounded, size: 19),
@@ -585,7 +585,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('$value', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-                  Text(label, style: const TextStyle(fontSize: 10, color: AppColorsForDocuments.muted)),
+                  Text(label, style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                 ],
               ),
             ),
@@ -604,10 +604,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         leading: Container(
           width: 46, height: 46,
           decoration: BoxDecoration(
-            color: AppColorsForDocuments.primary.withValues(alpha: .10),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: .10),
             borderRadius: BorderRadius.circular(13),
           ),
-          child: Icon(_categoryIcon(document.category), color: AppColorsForDocuments.primary),
+          child: Icon(_categoryIcon(document.category), color: Theme.of(context).colorScheme.primary),
         ),
         title: Text(document.title, maxLines: 1, overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
@@ -639,7 +639,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           ],
           child: Icon(
             document.isFavorite ? Icons.star_rounded : Icons.more_vert_rounded,
-            color: document.isFavorite ? Colors.amber.shade700 : AppColorsForDocuments.muted,
+            color: document.isFavorite ? Colors.amber.shade700 : Theme.of(context).hintColor,
           ),
         ),
         onTap: () => _openDetails(document),
@@ -650,9 +650,9 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColorsForDocuments.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColorsForDocuments.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: Text(appText(context, "My Documents", "My Documents"), style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
@@ -666,7 +666,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showDocumentForm(),
-        backgroundColor: AppColorsForDocuments.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: Text(appText(context, 'Add Document', 'دستاویز شامل کریں')),
@@ -736,7 +736,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Row(
               children: [
-                _summaryCard('Documents', _documents.length, Icons.folder_copy_outlined, AppColorsForDocuments.primary),
+                _summaryCard('Documents', _documents.length, Icons.folder_copy_outlined, Theme.of(context).colorScheme.primary),
                 SizedBox(width: 10),
                 _summaryCard('Expiring Soon', _expiringCount, Icons.event_busy_outlined, Colors.orange),
               ],
@@ -776,7 +776,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               Text(appText(context, "No documents found", "No documents found"), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                               SizedBox(height: 5),
                               Text(appText(context, "Add your first document to keep important files in one place.", "Add your first document to keep important files in one place."),
-                                textAlign: TextAlign.center, style: TextStyle(color: AppColorsForDocuments.muted, fontSize: 12)),
+                                textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
                             ],
                           ),
                         ),
@@ -807,12 +807,12 @@ class _DocumentDetailsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 19, color: AppColorsForDocuments.primary),
+          Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
           SizedBox(width: 10),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: AppColorsForDocuments.muted)),
+              Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
               SizedBox(height: 3),
               Text(value.isEmpty ? 'Not provided' : value, style: const TextStyle(fontWeight: FontWeight.w600)),
             ],
@@ -822,9 +822,9 @@ class _DocumentDetailsScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: AppColorsForDocuments.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColorsForDocuments.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(appText(context, "Document Details", "Document Details"), style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined))],
       ),
@@ -839,7 +839,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
                 children: [
                   Text(document.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                   SizedBox(height: 5),
-                  Text(document.category, style: const TextStyle(color: AppColorsForDocuments.muted)),
+                  Text(document.category, style: TextStyle(color: Theme.of(context).hintColor)),
                   const Divider(height: 24),
                   detail('Document Number', document.documentNumber, Icons.numbers_rounded),
                   detail('Issue Date', document.issueDate == null ? '' : dateFormat.format(document.issueDate!), Icons.calendar_month_outlined),
@@ -861,8 +861,3 @@ class _DocumentDetailsScreen extends StatelessWidget {
   }
 }
 
-class AppColorsForDocuments {
-  static const Color primary = Theme.of(context).colorScheme.primary;
-  static const Color background = Color(0xFFF5F7F6);
-  static const Color muted = Theme.of(context).hintColor;
-}

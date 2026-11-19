@@ -38,7 +38,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _enabled = prefs.getBool(_enabledKey) ?? false;
+      _enabled = _connected && (prefs.getBool(_enabledKey) ?? false);
       _beforeDue = prefs.getBool(_beforeKey) ?? true;
       _onDue = prefs.getBool(_dueKey) ?? true;
       _afterDue = prefs.getBool(_overdueKey) ?? true;
@@ -256,7 +256,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                         color: AppColors.primary),
                     title: const Text('Enable Auto Reminders',
                         style: TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: const Text(
+                    subtitle: Text(
                         _connected ? 'Automatic reminders are available.' : 'Connect and verify WhatsApp first.',
                         style: TextStyle(fontSize: 12)),
                   ),

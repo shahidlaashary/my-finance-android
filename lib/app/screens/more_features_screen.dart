@@ -142,7 +142,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         gradient: LinearGradient(
           colors: [
             primary,
-            Color.lerp(primary, Colors.white, 0.25)!,
+            Color.lerp(primary, Theme.of(context).colorScheme.surface, 0.25)!,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

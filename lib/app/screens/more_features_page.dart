@@ -111,7 +111,8 @@ class MoreFeaturesPage extends StatelessWidget {
                           builder: (_) {
                             if (feature['title'] == 'WhatsApp Automation') {
                               return const WhatsAppAutomationScreen();
-                            }\n                            if (feature['title'] == 'Settings') {
+                            }
+                            if (feature['title'] == 'Settings') {
                               return const AppSettingsScreen();
                             }
                             if (feature['title'] == 'Vehicle Manager') {

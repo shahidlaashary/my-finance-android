@@ -246,7 +246,7 @@ class _LoansScreenState extends State<LoansScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxSheetHeight),
                 child: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                   ),
@@ -257,7 +257,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         width: 38,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD9E0DC),
+                          color: Theme.of(context).dividerColor,
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -271,7 +271,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 style: const TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF202A26),
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -279,7 +279,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               visualDensity: VisualDensity.compact,
                               onPressed: () => Navigator.pop(sheetContext, false),
                               icon: const Icon(Icons.close_rounded),
-                              color: const Color(0xFF718078),
+                              color: Theme.of(context).hintColor,
                             ),
                           ],
                         ),
@@ -645,13 +645,13 @@ class _LoansScreenState extends State<LoansScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 17, color: const Color(0xFF71877C)),
+        Icon(icon, size: 17, color: Theme.of(context).hintColor),
         const SizedBox(width: 6),
         Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF71877C),
+              style: const TextStyle(fontSize: 10, color: Theme.of(context).hintColor,
                 fontWeight: FontWeight.w600)),
             const SizedBox(height: 3),
             Text(_displayLoanDate(value), maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -923,7 +923,7 @@ class _LoansScreenState extends State<LoansScreen> {
         : (loan.repaidAmount / loan.amount).clamp(0.0, 1.0).toDouble();
     final statusColor = loan.isOverdue
         ? const Color(0xFFD94841)
-        : const Color(0xFF147D59);
+        : Theme.of(context).colorScheme.primary;
     final statusLabel = loan.isPaid
         ? 'Paid'
         : loan.isOverdue
@@ -945,7 +945,7 @@ class _LoansScreenState extends State<LoansScreen> {
                   shadowColor: const Color(0xFF173D2E).withValues(alpha: 0.08),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: const BorderSide(color: Color(0xFFE7ECE9)),
+                    side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
@@ -957,7 +957,7 @@ class _LoansScreenState extends State<LoansScreen> {
                             child: Text(_partyNameForLoan(loan),
                               style: const TextStyle(fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF172B25))),
+                                color: Theme.of(context).colorScheme.onSurface)),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1009,27 +1009,27 @@ class _LoansScreenState extends State<LoansScreen> {
                         Text(
                           '${loan.loanType == 'given' ? 'Loan Given' : 'Loan Taken'} • ${loan.currency.toUpperCase()}',
                           style: const TextStyle(fontSize: 12,
-                            color: Color(0xFF65736C), fontWeight: FontWeight.w600),
+                            color: Theme.of(context).hintColor, fontWeight: FontWeight.w600),
                         ),
                         if (_partyPhoneForLoan(loan) != '-')
                           Padding(
                             padding: const EdgeInsets.only(top: 3),
                             child: Text(_partyPhoneForLoan(loan),
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF7B8781))),
+                              style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
                           ),
                         if (loan.isAssetLinked)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text('Asset: ${_assetReferenceLabel(loan)}',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF65736C))),
+                              style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
                           ),
                         const SizedBox(height: 3),
                         Text(_moneyWithLoanCurrency(loan.amount, loan),
                           style: const TextStyle(fontSize: 25,
-                            fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
+                            fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                         const SizedBox(height: 4),
                         Text('Total Loan Amount',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
                         const SizedBox(height: 3),
                         Row(children: [
                           Expanded(child: _loanDetailMetric(
@@ -1051,7 +1051,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           borderRadius: BorderRadius.circular(10),
                           child: LinearProgressIndicator(
                             value: progress, minHeight: 7,
-                            backgroundColor: const Color(0xFFE8EFEB),
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             valueColor: AlwaysStoppedAnimation<Color>(
                               loan.isOverdue ? const Color(0xFFE34D59) : const Color(0xFF28B879)),
                           ),
@@ -1069,7 +1069,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         if (loan.notes.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text('Notes', style: TextStyle(fontSize: 11,
-                            color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                            color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 3),
                           Text(loan.notes),
                         ],
@@ -1126,7 +1126,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     future: LoansService.getRepayments(loan.id!),
                     builder: (context, snapshot) => Text(
                       snapshot.hasData ? '${snapshot.data!.length} entries' : '',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
                     ),
                   ),
                 ]),
@@ -1148,12 +1148,12 @@ class _LoansScreenState extends State<LoansScreen> {
                       return Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
-                          side: const BorderSide(color: Color(0xFFE7ECE9))),
+                          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
                         child: Padding(
                           padding: const EdgeInsets.all(22),
                           child: Column(children: [
                             Icon(Icons.receipt_long_outlined,
-                              size: 32, color: Colors.grey.shade500),
+                              size: 32, color: Theme.of(context).hintColor),
                             const SizedBox(height: 8),
                             const Text('No payment entries yet',
                               style: TextStyle(fontWeight: FontWeight.w600)),
@@ -1174,7 +1174,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE9EFEB)),
+                            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF183D2D).withValues(alpha: 0.035),
@@ -1213,7 +1213,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
-                                              color: Color(0xFF25332C),
+                                              color: Theme.of(context).colorScheme.onSurface,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
@@ -1223,7 +1223,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: 11.5,
-                                              color: Color(0xFF7B8781),
+                                              color: Theme.of(context).hintColor,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
@@ -1233,7 +1233,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontSize: 10.5,
-                                              color: Color(0xFF9AA49F),
+                                              color: Theme.of(context).hintColor,
                                             ),
                                           ),
                                         ],
@@ -1266,7 +1266,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             ),
                                             icon: const Icon(
                                               Icons.more_horiz,
-                                              color: Color(0xFF89958E),
+                                              color: Theme.of(context).hintColor,
                                               size: 19,
                                             ),
                                             onSelected: (value) async {
@@ -1351,12 +1351,12 @@ class _LoansScreenState extends State<LoansScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600,
+        Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor,
           fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(value, maxLines: 2, overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-            color: Color(0xFF172B25))),
+            color: Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }
@@ -1408,16 +1408,16 @@ class _LoansScreenState extends State<LoansScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF202A26),
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'Loans & Repayments', 'قرضے اور واپسی'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF202A26)))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'Loans & Repayments', 'قرضے اور واپسی'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addLoan,
-        backgroundColor: const Color(0xFF147D59),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: Text(appText(context, 'New Loan', 'نیا قرض')),
@@ -1625,9 +1625,9 @@ class _LoansScreenState extends State<LoansScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.handshake_outlined, size: 55, color: Color(0xFF147D59)),
+                            Icon(Icons.handshake_outlined, size: 55, color: Theme.of(context).colorScheme.primary),
                             SizedBox(height: 12),
-                            Text(appText(context, 'No loans added yet.', 'ابھی کوئی قرض شامل نہیں کیا گیا۔'), textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF7B8781))),
+                            Text(appText(context, 'No loans added yet.', 'ابھی کوئی قرض شامل نہیں کیا گیا۔'), textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor)),
                           ],
                         ),
                       ),
@@ -1637,7 +1637,7 @@ class _LoansScreenState extends State<LoansScreen> {
                       final progress = loan.amount <= 0 ? 0.0 :
                           (loan.repaidAmount / loan.amount).clamp(0.0, 1.0).toDouble();
                       final statusColor = loan.isOverdue
-                          ? const Color(0xFFD94841) : const Color(0xFF147D59);
+                          ? const Color(0xFFD94841) : Theme.of(context).colorScheme.primary;
                       final statusLabel = loan.isPaid
                           ? appText(context, 'Paid', 'ادا شدہ')
                           : loan.isOverdue
@@ -2131,7 +2131,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       constraints: const BoxConstraints(minHeight: 42),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE1E9E4))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.4)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.4)),
     );
     Widget field(TextEditingController c, String label, IconData icon, {TextInputType? type, int lines = 1, String? Function(String?)? validator}) => TextFormField(
       controller: c, keyboardType: type, maxLines: lines, validator: validator,
@@ -2140,7 +2140,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     Widget section(String label, IconData icon) => Padding(
       padding: const EdgeInsets.only(top: 11, bottom: 6),
       child: Row(children: [
-        Icon(icon, color: const Color(0xFF147D59), size: 17),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 17),
         const SizedBox(width: 7),
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF263B32))),
       ]),
@@ -2189,9 +2189,9 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                           Stack(alignment: Alignment.bottomRight, children: [
                             CircleAvatar(radius: 32, backgroundColor: const Color(0xFFEAF3EE),
                               backgroundImage: photoExists ? FileImage(File(photo)) : null,
-                              child: photoExists ? null : const Icon(Icons.person_outline_rounded, size: 32, color: Color(0xFF147D59))),
+                              child: photoExists ? null : const Icon(Icons.person_outline_rounded, size: 32, color: Theme.of(context).colorScheme.primary)),
                             Container(
-                              decoration: const BoxDecoration(color: Color(0xFF147D59), shape: BoxShape.circle),
+                              decoration: const BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
                               child: IconButton(
                                 visualDensity: VisualDensity.compact,
                                 constraints: const BoxConstraints.tightFor(width: 28, height: 28),
@@ -2208,7 +2208,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                             ),
                           ]),
                           const SizedBox(height: 3),
-                          const Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Color(0xFF718078))),
+                          const Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                         ])),
                         section('Basic Information', Icons.person_outline_rounded),
                         field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
@@ -2315,7 +2315,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(16, 7, 16, 9 + MediaQuery.paddingOf(context).bottom),
                     child: SizedBox(width: double.infinity, child: FilledButton.icon(
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF147D59), padding: const EdgeInsets.symmetric(vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
+                      style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, padding: const EdgeInsets.symmetric(vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))),
                       onPressed: () { if (formKey.currentState!.validate()) Navigator.pop(sheetContext, true); },
                       icon: const Icon(Icons.check_rounded, size: 18),
                       label: Text(party == null ? 'Save Party' : 'Update Party', style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -2492,7 +2492,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: const Color(0xFFE9EFEB)),
+                                  border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(0xFF183D2D).withValues(alpha: 0.035),
@@ -2524,7 +2524,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
-                                              color: Color(0xFF25332C),
+                                              color: Theme.of(context).colorScheme.onSurface,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
@@ -2532,14 +2532,14 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                             'Outstanding: ${loan.currency.toUpperCase()} ${_money(loan.remainingAmount)}',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF7B8781)),
+                                            style: const TextStyle(fontSize: 11.5, color: Theme.of(context).hintColor),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
                                             loan.lendingDate,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 10.5, color: Color(0xFF9AA49F)),
+                                            style: const TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor),
                                           ),
                                         ],
                                       ),
@@ -2611,7 +2611,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                 onChanged: (value) => setState(() => _search = value),
                 decoration: InputDecoration(
                   hintText: 'Search name, phone, email or city',
-                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF147D59)),
+                  prefixIcon: const Icon(Icons.search_rounded, color: Theme.of(context).colorScheme.primary),
                   suffixIcon: _search.isEmpty ? null : IconButton(
                     tooltip: 'Clear search',
                     onPressed: () => setState(() => _search = ''),
@@ -2622,7 +2622,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFE2EBE5))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF147D59), width: 1.3)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.3)),
                 ),
               ),
             ),
@@ -2706,7 +2706,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                             children: [
                                               Container(
                                                 padding: const EdgeInsets.all(2),
-                                                decoration: const BoxDecoration(
+                                                decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
                                                   gradient: LinearGradient(colors: [Color(0xFF16865D), Color(0xFFB9E2CB)]),
                                                 ),
@@ -2714,7 +2714,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                   radius: 23,
                                                   backgroundColor: const Color(0xFFEAF5EF),
                                                   backgroundImage: hasPhoto ? FileImage(File(photo)) : null,
-                                                  child: hasPhoto ? null : const Icon(Icons.person_rounded, color: Color(0xFF147D59), size: 24),
+                                                  child: hasPhoto ? null : const Icon(Icons.person_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
                                                 ),
                                               ),
                                               const SizedBox(width: 11),
@@ -2733,7 +2733,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                       const SizedBox(width: 6),
                                                       Container(width: 3, height: 3, decoration: const BoxDecoration(color: Color(0xFFB4C0B8), shape: BoxShape.circle)),
                                                       const SizedBox(width: 6),
-                                                      Text(currency, style: const TextStyle(fontSize: 10, color: Color(0xFF147D59), fontWeight: FontWeight.w800)),
+                                                      Text(currency, style: const TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w800)),
                                                     ]),
                                                   ],
                                                 ),
@@ -2749,7 +2749,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                                                 itemBuilder: (_) => [
                                                   const PopupMenuItem(value: 'edit', child: ListTile(dense: true, leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
                                                   if (_showArchived)
-                                                    const PopupMenuItem(value: 'restore', child: ListTile(dense: true, leading: Icon(Icons.unarchive_outlined, color: Color(0xFF147D59)), title: Text('Restore to Active')))
+                                                    const PopupMenuItem(value: 'restore', child: ListTile(dense: true, leading: Icon(Icons.unarchive_outlined, color: Theme.of(context).colorScheme.primary), title: Text('Restore to Active')))
                                                   else
                                                     const PopupMenuItem(value: 'archive', child: ListTile(dense: true, leading: Icon(Icons.archive_outlined), title: Text('Archive'))),
                                                   const PopupMenuItem(value: 'delete', child: ListTile(dense: true, leading: Icon(Icons.delete_outline, color: Colors.red), title: Text('Delete'))),
@@ -2831,7 +2831,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _editParty(),
-        backgroundColor: const Color(0xFF147D59),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add Party'),
       ),
@@ -2844,7 +2844,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFF147D59) : Colors.transparent,
+        color: selected ? Theme.of(context).colorScheme.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(11),
       ),
       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -2881,7 +2881,7 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
     decoration: BoxDecoration(
       color: const Color(0xFFFAFBFA),
-      border: Border.all(color: const Color(0xFFE9EFEB)),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       borderRadius: BorderRadius.circular(9),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 
@@ -107,6 +108,70 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _showManualSendDialog() async {
+    final phoneController = TextEditingController();
+    final messageController = TextEditingController(
+      text: 'Assalam-o-Alaikum, aapki payment reminder hai. Meharbani farma kar apni outstanding payment clear kar dein. Shukriya!',
+    );
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Send WhatsApp Reminder'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Party WhatsApp number',
+                  hintText: '923001234567',
+                  helperText: 'Country code ke sath number likhein',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: messageController,
+                minLines: 3,
+                maxLines: 6,
+                decoration: const InputDecoration(
+                  labelText: 'Message',
+                  alignLabelWithHint: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Open WhatsApp'),
+          ),
+        ],
+      ),
+    );
+    if (result == true) {
+      final digits = phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final message = messageController.text.trim();
+      if (digits.length < 10 || digits.length > 15 || message.isEmpty) {
+        _showMessage('Valid party number aur message enter karein.');
+      } else {
+        final uri = Uri.https('wa.me', '/$digits', {'text': message});
+        final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (!opened) _showMessage('WhatsApp open nahi ho saka. WhatsApp install/check karein.');
+      }
+    }
+    phoneController.dispose();
+    messageController.dispose();
   }
 
   Widget _sectionTitle(String title) => Padding(
@@ -320,6 +385,20 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                           'Placeholders actual party aur loan details se automatically replace honge.',
                           style: TextStyle(
                               fontSize: 11, color: AppColors.muted),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _showManualSendDialog,
+                            icon: const Icon(Icons.send_rounded),
+                            label: const Text('Send Reminder on WhatsApp'),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'WhatsApp mein message khulega. Aap review karke khud Send press karein.',
+                          style: TextStyle(fontSize: 11, color: AppColors.muted),
                         ),
                       ],
                     ),

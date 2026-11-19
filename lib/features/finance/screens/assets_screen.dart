@@ -370,7 +370,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxHeight),
                 child: Container(
-                  decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+                  decoration: const BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
                   padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
                   child: Form(
                     key: formKey,
@@ -384,7 +384,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
                           SizedBox(height: 12),
                           Row(children: [
-                            Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
+                            Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
                             IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
                           ]),
                           SizedBox(height: 10),
@@ -495,7 +495,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   alignment: Alignment.centerLeft,
                                   child: Text(
                                     'Loan currency: ${asset?.currency ?? _parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency'] ?? 'PKR'}',
-                                    style: const TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
+                                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ),
@@ -540,14 +540,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     child: Row(children: [
-                                      const Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary),
+                                      Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 10),
                                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                         Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: const TextStyle(fontSize: 12, color: Color(0xFF66736C))),
                                         const SizedBox(height: 3),
                                         Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                                       ])),
-                                      const Icon(Icons.edit_calendar, size: 18, color: Theme.of(context).colorScheme.primary),
+                                      Icon(Icons.edit_calendar, size: 18, color: Theme.of(context).colorScheme.primary),
                                     ]),
                                   ),
                                 ),
@@ -576,7 +576,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             decoration: BoxDecoration(color: const Color(0xFFF4FAF6), borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFDCEBE2))),
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Row(children: [
-                                const Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary, size: 19),
+                                Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary, size: 19),
                                 const SizedBox(width: 7),
                                 const Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
                                 Text('${pendingFiles.length} selected', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w700)),
@@ -1204,7 +1204,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
           ]),
           subtitle: Padding(padding: const EdgeInsets.only(top: 3), child: Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? '${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.black54))),
           trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-            Text('$currency ${_money(value)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
+            Text('$currency ${_money(value)}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
             const Text('Value', style: TextStyle(fontSize: 9, color: Colors.black45)),
           ]),
           children: [
@@ -1239,7 +1239,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 if (!asset.isSold) PopupMenuItem(value: 'sell', child: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں'))),
                 PopupMenuItem(value: 'delete', child: Text(appText(context, 'Delete Asset', 'اثاثہ حذف کریں'))),
               ],
-              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFF1F7F3), borderRadius: BorderRadius.circular(9)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Theme.of(context).colorScheme.primary), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary))])),
+              child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(9)), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.tune_rounded, size: 15, color: Theme.of(context).colorScheme.primary), SizedBox(width: 5), Text('Manage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary))])),
             )),
           ],
         ),
@@ -1307,7 +1307,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
                             const SizedBox(height: 3),
                             Text('${asset.category}  •  ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan  •  ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                               maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1403,7 +1403,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   visualDensity: VisualDensity.compact,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
-                                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                child: Row(mainAxisSize: MainAxisSize.min, children: [
                                   Icon(Icons.payments_outlined, size: 12),
                                   SizedBox(width: 3),
                                   Text('Pay Back', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
@@ -1422,7 +1422,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                   visualDensity: VisualDensity.compact,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
-                                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                child: Row(mainAxisSize: MainAxisSize.min, children: [
                                   Icon(Icons.call_received_rounded, size: 12),
                                   SizedBox(width: 3),
                                   Text('Receive', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
@@ -1601,7 +1601,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
         actions: buildSharedAppBarActions(context),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: const Color(0xFFE7EEEA)),
+          child: Container(height: 1, color: Theme.of(context).colorScheme.outlineVariant),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -1667,7 +1667,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         borderRadius: BorderRadius.circular(14),
                         onTap: () => setState(() => _selectedCategory = _selectedCategory == item['name'] ? null : item['name'] as String),
                         child: Container(
-                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? Theme.of(context).colorScheme.primary : const Color(0xFFE7EEEA), width: _selectedCategory == item['name'] ? 1.5 : 1)),
+                          decoration: BoxDecoration(color: _selectedCategory == item['name'] ? const Color(0xFFE5F4EC) : Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: _selectedCategory == item['name'] ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant, width: _selectedCategory == item['name'] ? 1.5 : 1)),
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Icon(item['icon'] as IconData, color: Theme.of(context).colorScheme.primary, size: 19),
                             SizedBox(height: 2),
@@ -1750,9 +1750,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   if (_visibleAssets.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(18)),
                       child: Column(children: [
-                        const Icon(Icons.inventory_2_outlined, size: 48, color: Theme.of(context).hintColor),
+                        Icon(Icons.inventory_2_outlined, size: 48, color: Theme.of(context).hintColor),
                         SizedBox(height: 10),
                         Text(_selectedCategory == null ? 'No assets added yet' : 'No ${_selectedCategory!} assets found', style: const TextStyle(fontWeight: FontWeight.w700)),
                         SizedBox(height: 4),
@@ -1941,14 +1941,14 @@ class AssetDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Row(children: [
-            const Expanded(child: Text('Related Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
+            Expanded(child: Text('Related Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
             Text('${events.length} entries', style: const TextStyle(fontSize: 11, color: Color(0xFF7A8981), fontWeight: FontWeight.w600)),
           ]),
           const SizedBox(height: 9),
           if (events.isEmpty)
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(16)),
               child: const Center(child: Text('No entries found for this asset.')),
             )
           else
@@ -1959,8 +1959,8 @@ class AssetDetailsScreen extends StatelessWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: const Color(0xFFE7EEEA))),
+                decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
                 child: Row(children: [
                   Container(width: 40, height: 40,
                     decoration: BoxDecoration(color: isCredit ? const Color(0xFFE9F6EF) : const Color(0xFFFFF1E9), borderRadius: BorderRadius.circular(12)),

@@ -60,7 +60,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
             trailing: const Icon(Icons.calendar_month), onTap: () async { final d=await showDatePicker(context: context, initialDate:start, firstDate:DateTime(2000), lastDate:DateTime(2100)); if(d!=null)setD(()=>start=d); }),
           ListTile(contentPadding: EdgeInsets.zero, title: const Text('First installment due'), subtitle: Text(DateFormat('dd MMM yyyy').format(due)),
             trailing: const Icon(Icons.event), onTap: () async { final d=await showDatePicker(context: context, initialDate:due, firstDate:DateTime(2000), lastDate:DateTime(2100)); if(d!=null)setD(()=>due=d); }),
-          const Text('Turn order follows the member order entered above.', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Turn order follows the member order entered above.', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
         ])),
         actions: [TextButton(onPressed:()=>Navigator.pop(dialogContext,false),child:const Text('Cancel')),
           FilledButton(onPressed:()=>Navigator.pop(dialogContext,true),child:const Text('Create'))],
@@ -98,7 +98,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
             final paid=(c['paid_out'] as num?)?.toDouble()??0;
             return Card(margin:const EdgeInsets.only(bottom:10),child:ListTile(
               contentPadding:const EdgeInsets.all(14), leading:const CircleAvatar(child:Icon(Icons.groups_2_outlined)),
-              title:Text(c['name'].toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+              title:Text(c['name'].toString(),style:TextStyle(fontWeight:FontWeight.w800)),
               subtitle:Padding(padding:const EdgeInsets.only(top:6),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
                 Text('${c['frequency']} • ${c['actual_members']} members • ${c['status']}'),
                 const SizedBox(height:5), Text('Installment: ${c['currency'] ?? 'PKR'} ${money.format(c['installment_amount'])}'),
@@ -216,7 +216,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         Text(type=='Installment'
           ? 'The committee ledger will receive this installment. A selected personal wallet is reduced only when you choose one.'
           : 'The committee ledger will pay this member. A selected personal wallet is increased only when you choose one.',
-          style:const TextStyle(fontSize:11,color:Colors.black54)),
+          style:TextStyle(fontSize:11,color:Theme.of(context).hintColor)),
       ])),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
         FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
@@ -277,12 +277,12 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         OutlinedButton(onPressed:()=>_record('Payout'),child:const Text('Record payout')),
         OutlinedButton(onPressed:()=>_changeStatus(),child:const Text('Change status')),
       ]),
-      const Padding(padding:EdgeInsets.only(top:12),child:Text('Committee funds are kept in this module and are separate from personal Wallet balances.',style:TextStyle(fontSize:12,color:Colors.black54))),
+      Padding(padding:EdgeInsets.only(top:12),child:Text('Committee funds are kept in this module and are separate from personal Wallet balances.',style:TextStyle(fontSize:12,color:Theme.of(context).hintColor))),
     ]);
   }
 
   Widget _stat(String title,double value,Color color)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    Text(title,style:const TextStyle(color:Colors.black54)),const SizedBox(height:5),
+    Text(title,style:TextStyle(color:Theme.of(context).hintColor)),const SizedBox(height:5),
     Text(money.format(value),style:TextStyle(fontWeight:FontWeight.w800,fontSize:18,color:color)),
   ])));
 
@@ -305,7 +305,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
           trailing:entries.isEmpty?Row(mainAxisSize:MainAxisSize.min,children:[
             IconButton(visualDensity:VisualDensity.compact,onPressed:()=>_moveMember(members.indexOf(m),-1),icon:const Icon(Icons.arrow_upward,size:18)),
             IconButton(visualDensity:VisualDensity.compact,onPressed:()=>_moveMember(members.indexOf(m),1),icon:const Icon(Icons.arrow_downward,size:18)),
-          ]):Text(m['phone']?.toString()??'',style:const TextStyle(fontSize:11))));
+          ]):Text(m['phone']?.toString()??'',style:TextStyle(fontSize:11))));
       }),
     ]);
   }
@@ -322,7 +322,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
           Text(member['name'].toString(),style:Theme.of(ctx).textTheme.titleLarge),
           const SizedBox(height:8),
           Text('Installments: ${money.format(paid)} • Payout received: ${money.format(received)}',
-            style:const TextStyle(fontWeight:FontWeight.w600)),
+            style:TextStyle(fontWeight:FontWeight.w600)),
           const Divider(height:20),
           Expanded(child:rows.isEmpty?const Center(child:Text('No entries for this member yet.')):
             ListView.builder(itemCount:rows.length,itemBuilder:(context,index){

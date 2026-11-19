@@ -109,7 +109,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
                             Expanded(
                               child: Text(
                                 direction == 'sell' ? 'Give / Sell on Installments' : 'Take / Buy on Installments',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
                                   color: Theme.of(context).colorScheme.onSurface,
@@ -327,14 +327,14 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
       body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(onRefresh: _load,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 90), children: [
           Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [primary, Color.lerp(primary, Colors.black, .24)!]),
+            gradient: LinearGradient(colors: [primary, Color.lerp(primary, Theme.of(context).colorScheme.surface, .24)!]),
             borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('INSTALLMENT OVERVIEW', style: TextStyle(color: Colors.white70, fontSize: 11, letterSpacing: 1)),
+              const Text('INSTALLMENT OVERVIEW', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, letterSpacing: 1)),
               const SizedBox(height: 14),
               Row(children: [Expanded(child: _whiteMetric('To Receive', receivable)), Expanded(child: _whiteMetric('To Pay', payable))]),
               const SizedBox(height: 14),
-              Text('${active.length} active plans • ${_contracts.length} total records', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text('${active.length} active plans • ${_contracts.length} total records', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 12)),
             ])),
           const SizedBox(height: 18),
           SegmentedButton<String>(segments: const [
@@ -354,8 +354,8 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
   }
 
   Widget _whiteMetric(String label, double value) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-    const SizedBox(height: 4), Text(_cash(value), style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold)),
+    Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 12)),
+    const SizedBox(height: 4), Text(_cash(value), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 19, fontWeight: FontWeight.bold)),
   ]);
 
   Widget _contractCard(Map<String, dynamic> c) {
@@ -374,7 +374,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
               Text(c['item_name'].toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
               Text('${c['party_name']} • ${sell ? 'Giving' : 'Taking'}', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
             ])),
-            Text(c['status'] == 'completed' ? 'PAID' : 'ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: c['status'] == 'completed' ? Colors.green : color)),
+            Text(c['status'] == 'completed' ? 'PAID' : 'ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: c['status'] == 'completed' ? Theme.of(context).colorScheme.secondary : color)),
           ]),
           const SizedBox(height: 13),
           Row(children: [Expanded(child: _metric('Total', '${_currency(c['wallet_id'] as int)} ${_cash(total)}')),

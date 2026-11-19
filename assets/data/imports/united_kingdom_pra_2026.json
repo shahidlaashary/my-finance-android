@@ -1,0 +1,209 @@
+{
+  "countryCode": "GB",
+  "registry": "Bank of England Prudential Regulation Authority",
+  "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+  "records": [
+    {
+      "countryCode": "GB",
+      "institutionName": "Barclays",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.barclays.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.barclays.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "HSBC UK",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.hsbc.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.hsbc.co.uk",
+      "aliases": [
+        "HSBC"
+      ],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Lloyds Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.lloydsbank.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.lloydsbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "NatWest",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.natwest.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.natwest.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Santander UK",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.santander.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.santander.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Nationwide Building Society",
+      "institutionType": "building_society",
+      "officialWebsite": "https://www.nationwide.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.nationwide.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "TSB Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.tsb.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.tsb.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Virgin Money",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.virginmoney.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.virginmoney.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Monzo Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://monzo.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://monzo.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Starling Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.starlingbank.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.starlingbank.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Metro Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.metrobankonline.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.metrobankonline.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "The Co-operative Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.co-operativebank.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.co-operativebank.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Coventry Building Society",
+      "institutionType": "building_society",
+      "officialWebsite": "https://www.coventrybuildingsociety.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.coventrybuildingsociety.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Skipton Building Society",
+      "institutionType": "building_society",
+      "officialWebsite": "https://www.skipton.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.skipton.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Yorkshire Building Society",
+      "institutionType": "building_society",
+      "officialWebsite": "https://www.ybs.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.ybs.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Allica Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.allica.bank",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.allica.bank",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Atom Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.atombank.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.atombank.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Close Brothers",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.closebrothers.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.closebrothers.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Handelsbanken UK",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.handelsbanken.co.uk",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.handelsbanken.co.uk",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    },
+    {
+      "countryCode": "GB",
+      "institutionName": "Zopa Bank",
+      "institutionType": "bank",
+      "officialWebsite": "https://www.zopa.com",
+      "registrySourceUrl": "https://www.bankofengland.co.uk/prudential-regulation/authorisations/which-firms-does-the-pra-regulate",
+      "sourceUrl": "https://www.zopa.com",
+      "aliases": [],
+      "verificationStatus": "unverified"
+    }
+  ]
+}

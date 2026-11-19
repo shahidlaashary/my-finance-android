@@ -27,6 +27,38 @@ Do not put Meta access tokens, app secrets or webhook secrets in Flutter assets,
 Dart source, Remote Config readable by clients, or Git. Store them in server-side
 Secret Manager / Firebase Functions secrets.
 
+## Flutter app integration
+
+The app now initializes Firebase silently during startup when the Firebase
+project values are supplied as Dart defines. It then signs in anonymously; no
+login or signup screen is displayed. If values are absent or Firebase is
+unavailable, the local Finance app continues to start normally and cloud
+features remain unavailable.
+
+Pass these values to the Flutter build (obtain them from Firebase Console →
+Project settings → Your apps → Android):
+
+- `FIREBASE_API_KEY`
+- `FIREBASE_APP_ID`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_PROJECT_ID`
+
+Example build arguments (replace placeholders with the values from your own
+Firebase project):
+
+```bash
+flutter build apk \\
+  --dart-define=FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY \\
+  --dart-define=FIREBASE_APP_ID=YOUR_ANDROID_FIREBASE_APP_ID \\
+  --dart-define=FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID \\
+  --dart-define=FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+```
+
+Enable Anonymous sign-in in Firebase Authentication. Restrict the Firebase
+API key to the app's Android package and signing certificate fingerprints.
+Firebase client API keys identify the project but are not authorization
+secrets; all access control remains in Authentication and Firestore rules.
+
 ## Current backend endpoints
 
 - `getWhatsAppAccount`: reads the authenticated installation's connection

@@ -261,15 +261,11 @@ class _WalletsPageState extends State<WalletsPage> {
                             ? const [Color(0xFF174B38), Color(0xFF68A65B)]
                             : const [Color(0xFF34445A), Color(0xFF71839A)];
     final iconCode = (wallet['icon_code'] as num?)?.toInt() ?? Icons.wallet_outlined.codePoint;
-    final walletNumber = wallet['wallet_number']?.toString().trim() ?? '';
-    final maskedNumber = walletNumber.isEmpty
-        ? '••••  ••••  ••••  ••••'
-        : '••••  ••••  ••••  ${walletNumber.length > 4 ? walletNumber.substring(walletNumber.length - 4) : walletNumber}';
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(19),
         onTap: () => Navigator.push(context, MaterialPageRoute(
           builder: (_) => TransactionsScreen(
             walletId: wallet['id'] as int,
@@ -302,7 +298,7 @@ class _WalletsPageState extends State<WalletsPage> {
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       color: Colors.white.withValues(alpha: 0.055)))),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(11, 7, 11, 7),
+                  padding: const EdgeInsets.fromLTRB(13, 9, 13, 9),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -322,25 +318,21 @@ class _WalletsPageState extends State<WalletsPage> {
                         ] else
                           Icon(IconData(iconCode, fontFamily: 'MaterialIcons'), color: Colors.white, size: 20),
                       ]),
-                      const SizedBox(height: 1),
-                      Text(maskedNumber, maxLines: 1,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.88),
-                          fontSize: 9, letterSpacing: 1.1, fontWeight: FontWeight.w600)),
                       const Spacer(),
                       Text(formatMoney(balance, currency), maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontSize: 14,
-                          fontWeight: FontWeight.w900, letterSpacing: -0.35)),
+                        style: const TextStyle(color: Colors.white, fontSize: 15,
+                          fontWeight: FontWeight.w900, letterSpacing: -0.4)),
                       const SizedBox(height: 1),
                       Row(children: [
                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text((wallet['name'] ?? 'Wallet').toString().toUpperCase(),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white, fontSize: 8.5,
-                              fontWeight: FontWeight.w800, letterSpacing: 0.45)),
+                            style: const TextStyle(color: Colors.white, fontSize: 9,
+                              fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                           Text(walletType.toUpperCase(), maxLines: 1,
                             style: TextStyle(color: Colors.white.withValues(alpha: 0.72),
-                              fontSize: 7, fontWeight: FontWeight.w700, letterSpacing: 0.7)),
+                              fontSize: 7.5, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
                         ])),
                         if (isDebit || isCredit)
                           const Text('mastercard', style: TextStyle(color: Colors.white,
@@ -402,9 +394,11 @@ class _WalletsPageState extends State<WalletsPage> {
                       SegmentedButton<bool>(
                         showSelectedIcon: false,
                         style: SegmentedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+                          visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(0, 27),
+                          textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                         ),
                         segments: const [
                           ButtonSegment(value: false, label: Text('Classic')),

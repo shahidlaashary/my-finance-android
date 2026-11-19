@@ -524,14 +524,30 @@ class _WalletsPageState extends State<WalletsPage> {
       final theme = themes[i];
       final aliases = theme['keys'] as List<String>;
       if (aliases.any((alias) => name.contains(alias))) {
-        return {...theme, 'pattern': i % 6, 'isKnown': true};
-      }
-    }
+        // Global fallback: any bank name receives a stable, distinct card
+    // treatment, even when its official card artwork is not curated yet.
+    final normalizedName = bankName.trim();
+    final seed = normalizedName.toLowerCase().hashCode & 0x7fffffff;
+    const fallbackPalettes = <List<Color>>[
+      [Color(0xFF123B67), Color(0xFF2676A8)],
+      [Color(0xFF174B3B), Color(0xFF4C9873)],
+      [Color(0xFF4B285F), Color(0xFF8B5AA6)],
+      [Color(0xFF71333A), Color(0xFFB65B61)],
+      [Color(0xFF80531D), Color(0xFFC18B3D)],
+      [Color(0xFF263746), Color(0xFF657D91)],
+      [Color(0xFF155C63), Color(0xFF3B9B9A)],
+      [Color(0xFF4B456E), Color(0xFF8580B0)],
+    ];
+    final fallbackMark = normalizedName.isEmpty
+        ? 'BANK'
+        : normalizedName.toUpperCase().split(RegExp(r'\\s+'))
+            .where((part) => part.isNotEmpty).take(3)
+            .map((part) => part[0]).join();
     return {
-      'brand': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase(),
-      'mark': bankName.trim().isEmpty ? 'BANK' : bankName.trim().toUpperCase().split(RegExp(r'\s+')).take(3).map((part) => part.isEmpty ? '' : part[0]).join(),
-      'colors': [const Color(0xFF075B4B), const Color(0xFF16A085)],
-      'pattern': 0,
+      'brand': normalizedName.isEmpty ? 'BANK' : normalizedName.toUpperCase(),
+      'mark': fallbackMark,
+      'colors': fallbackPalettes[seed % fallbackPalettes.length],
+      'pattern': seed % 6,
       'isKnown': false,
     };
   }

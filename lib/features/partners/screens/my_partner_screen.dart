@@ -61,7 +61,7 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
             decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
             child: Column(children: [
               const SizedBox(height: 10),
-              Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(8))),
+              Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(8))),
               Padding(padding: const EdgeInsets.fromLTRB(18, 10, 10, 8), child: Row(children: [
                 Expanded(child: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800))),
                 IconButton(onPressed: () => Navigator.pop(sc), icon: const Icon(Icons.close_rounded)),
@@ -226,7 +226,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       final keyboard = MediaQuery.viewInsetsOf(context).bottom;
       final h = MediaQuery.sizeOf(context).height;
       return AnimatedPadding(duration: const Duration(milliseconds: 220), padding: EdgeInsets.only(bottom: keyboard), child: SafeArea(top: false, child: ConstrainedBox(constraints: BoxConstraints(maxHeight: keyboard > 0 ? (h-keyboard).clamp(180.0,h)*.96 : h*.82), child: Container(decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))), child: Column(children: [
-        const SizedBox(height: 10), Container(width: 38,height: 4,decoration: BoxDecoration(color: const Color(0xFFD9E0DC),borderRadius: BorderRadius.circular(8))),
+        const SizedBox(height: 10), Container(width: 38,height: 4,decoration: BoxDecoration(color: Theme.of(context).dividerColor,borderRadius: BorderRadius.circular(8))),
         Padding(padding: const EdgeInsets.fromLTRB(18,10,10,8), child: Row(children: [Expanded(child: Text(title,style: const TextStyle(fontSize:19,fontWeight:FontWeight.w800))),IconButton(onPressed:()=>Navigator.pop(sc),icon:const Icon(Icons.close_rounded))])),
         Expanded(child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,padding: const EdgeInsets.fromLTRB(18,4,18,18),child: body(context,setS))),
         Padding(padding: const EdgeInsets.fromLTRB(18,8,18,14),child: Row(children: [Expanded(child: OutlinedButton(onPressed:()=>Navigator.pop(sc),child:const Text('Cancel'))),const SizedBox(width:10),Expanded(child:FilledButton(onPressed:onSave,child:Text(save)))])),

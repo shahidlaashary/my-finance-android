@@ -330,7 +330,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
             gradient: LinearGradient(colors: [primary, Color.lerp(primary, Theme.of(context).colorScheme.surface, .24)!]),
             borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('INSTALLMENT OVERVIEW', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, letterSpacing: 1)),
+              Text('INSTALLMENT OVERVIEW', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, letterSpacing: 1)),
               const SizedBox(height: 14),
               Row(children: [Expanded(child: _whiteMetric('To Receive', receivable)), Expanded(child: _whiteMetric('To Pay', payable))]),
               const SizedBox(height: 14),

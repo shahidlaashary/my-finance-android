@@ -398,7 +398,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: selected ? color : AppColors.muted),
+              Icon(icon, size: 18, color: selected ? color : Theme.of(context).hintColor),
               const SizedBox(height: 2),
               Text(
                 title,
@@ -407,7 +407,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w800,
-                  color: selected ? color : AppColors.muted,
+                  color: selected ? color : Theme.of(context).hintColor,
                 ),
               ),
               const SizedBox(height: 1),

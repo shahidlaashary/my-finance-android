@@ -935,7 +935,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     side: const BorderSide(color: Color(0xFFE7ECE9)),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -946,9 +946,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 fontWeight: FontWeight.w800,
                                 color: Color(0xFF172B25))),
                           ),
-                          Transform.translate(
-                            offset: const Offset(22, 0),
-                            child: Container(
+                          Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
                               color: statusColor.withValues(alpha: 0.10),
@@ -957,14 +955,11 @@ class _LoansScreenState extends State<LoansScreen> {
                               color: statusColor, fontSize: 11,
                               fontWeight: FontWeight.w700)),
                           ),
-                          ),
-                          const SizedBox(width: 0),
-                          Transform.translate(
-                            offset: const Offset(20, 0),
-                            child: PopupMenuButton<String>(
+                          const SizedBox(width: 2),
+                          PopupMenuButton<String>(
                             tooltip: 'Loan options',
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                             icon: const Icon(Icons.more_vert_rounded, size: 21, color: Color(0xFF536987)),
                             onSelected: (value) async {
                               if (value == 'edit') {
@@ -995,7 +990,6 @@ class _LoansScreenState extends State<LoansScreen> {
                                   children: [Icon(Icons.delete_outline, size: 18, color: Colors.red), SizedBox(width: 10), Text('Delete')],
                                 )),
                             ],
-                          ),
                           ),
                         ]),
                         const SizedBox(height: 2),
@@ -1720,7 +1714,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         child: Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
-                                          vertical: 6,
+                                          vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
                                           color: loan.isPaid
@@ -1762,7 +1756,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                         ),
                                       ),
                                       ),
-                                      const SizedBox(width: 7),
+                                      const SizedBox(width: 4),
                                       Transform.translate(
                                         offset: const Offset(0, -9),
                                         child: const Icon(
@@ -1775,7 +1769,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   SizedBox(
-                                    height: 96,
+                                    height: 102,
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [

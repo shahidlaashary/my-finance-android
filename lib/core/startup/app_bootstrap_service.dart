@@ -13,6 +13,7 @@ import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 import 'package:my_finance/core/startup/app_startup_service.dart';
 import 'package:my_finance/core/security/installation_identity_service.dart';
+import 'package:my_finance/core/security/firebase_installation_auth_service.dart';
 
 /// Prepares Flutter, the database platform and saved app preferences.
 class AppBootstrapService {
@@ -79,6 +80,9 @@ class AppBootstrapService {
     await initializeDatabasePlatform();
     await _clearPreviousTestingDataIfNeeded();
     await InstallationIdentityService.instance.initialize();
+    // Firebase auth is optional until the owner supplies project configuration.
+    // Missing configuration must never block local Finance app startup.
+    await FirebaseInstallationAuthService.instance.initialize();
     await FinanceDB.instance.init();
 
     // Database tayyar hone ke baad due recurring transactions process karta hai.

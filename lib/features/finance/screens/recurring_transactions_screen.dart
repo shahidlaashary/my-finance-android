@@ -282,6 +282,12 @@ class _RecurringTransactionsScreenState
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1.5,
+      shadowColor: color.withOpacity(0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: color.withOpacity(0.10)),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         child: Column(
@@ -469,9 +475,20 @@ class _RecurringTransactionsScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(appText(context, 'Recurring Transactions', 'بار بار ہونے والے لین دین')),
-        actions: [
-        ],
       ),
+      floatingActionButton: _loading
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _openForm(),
+              tooltip: 'Add Schedule',
+              elevation: 4,
+              icon: const Icon(Icons.add_rounded),
+              label: Text(
+                appText(context, 'Add Schedule', 'شیڈول شامل کریں'),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -486,7 +503,7 @@ class _RecurringTransactionsScreenState
                       ],
                     )
                   : ListView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                       children: [
                         Card(
                           child: Padding(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/partners/services/my_partner_service.dart';
@@ -16,7 +17,10 @@ class _MyPartnerScreenState extends State<MyPartnerScreen> {
   String _filter = 'All';
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); AppRefreshController.revision.addListener(_onAppDataChanged); _load(); }
+  void _onAppDataChanged() { if (mounted) _load(); }
+  @override
+  void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); super.dispose(); }
 
   Future<void> _load() async {
     try {

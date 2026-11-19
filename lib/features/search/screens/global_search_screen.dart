@@ -586,7 +586,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 if (query.length >= 2 && !_searching)
                   Text(
                     '${visibleRecords.length} found',
-                    style: const TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
+                    style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
                   ),
               ],
             ),
@@ -824,7 +824,7 @@ class _SearchRecordDetailScreen extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             record.subtitle,
-                            style: const TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
                           ),
                         ],
                       ],

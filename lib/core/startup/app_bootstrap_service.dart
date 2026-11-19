@@ -12,6 +12,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 import 'package:my_finance/core/startup/app_startup_service.dart';
+import 'package:my_finance/core/security/installation_identity_service.dart';
 
 /// Prepares Flutter, the database platform and saved app preferences.
 class AppBootstrapService {
@@ -77,6 +78,7 @@ class AppBootstrapService {
     WidgetsFlutterBinding.ensureInitialized();
     await initializeDatabasePlatform();
     await _clearPreviousTestingDataIfNeeded();
+    await InstallationIdentityService.instance.initialize();
     await FinanceDB.instance.init();
 
     // Database tayyar hone ke baad due recurring transactions process karta hai.

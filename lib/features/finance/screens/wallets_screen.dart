@@ -369,6 +369,63 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['abhibank', 'abhimicrofinance', 'fincamicrofinance', 'finca'], 'brand': 'ABHI MICROFINANCE', 'mark': 'ABHI', 'colors': [const Color(0xFF4B2B71), const Color(0xFF9364B5)]},
       {'keys': ['asamicrofinance', 'asa'], 'brand': 'ASA MICROFINANCE', 'mark': 'ASA', 'colors': [const Color(0xFF146B69), const Color(0xFF4AA7A0)]},
       {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
+
+      // Pakistani digital wallets and their physical / virtual card families.
+      {'keys': ['easypaisa', 'easypaisadigitalbank'], 'brand': 'EASYPAISA', 'mark': 'EASYPAISA', 'design': 'easypaisa', 'colors': [const Color(0xFF087A3E), const Color(0xFF62B447)]},
+      {'keys': ['jazzcash', 'mobilinkwallet'], 'brand': 'JAZZCASH', 'mark': 'JAZZ', 'design': 'jazzcash', 'colors': [const Color(0xFF8B1238), const Color(0xFFE04462)]},
+      {'keys': ['nayapay', 'naya'], 'brand': 'NAYAPAY', 'mark': 'NAYA', 'design': 'nayapay', 'colors': [const Color(0xFF143D79), const Color(0xFF3C8FD0)]},
+      {'keys': ['sadapay', 'sada'], 'brand': 'SADAPAY', 'mark': 'SADA', 'design': 'sadapay', 'colors': [const Color(0xFF24272D), const Color(0xFF68717C)]},
+      {'keys': ['zindigi', 'jszindigi'], 'brand': 'ZINDIGI', 'mark': 'ZINDIGI', 'design': 'zindigi', 'colors': [const Color(0xFF39206D), const Color(0xFF8D55D6)]},
+      {'keys': ['upaisa', 'u paisa'], 'brand': 'UPAISA', 'mark': 'UPAISA', 'design': 'upaisa', 'colors': [const Color(0xFF542B83), const Color(0xFF9A68C5)]},
+      {'keys': ['easypaisa', 'jazzcash', 'nayapay', 'sadapay', 'zindigi', 'upaisa'], 'brand': 'PAKISTANI DIGITAL WALLET', 'mark': 'WALLET', 'colors': [const Color(0xFF244B72), const Color(0xFF4D83B5)]},
+      // Major international banks, grouped across the Americas, Europe, Middle East, Africa and Asia-Pacific.
+      {'keys': ['jpmorganchase', 'chasebank', 'chase'], 'brand': 'CHASE', 'mark': 'CHASE', 'colors': [const Color(0xFF073B75), const Color(0xFF2784C7)]},
+      {'keys': ['bankofamerica', 'bofa'], 'brand': 'BANK OF AMERICA', 'mark': 'BOA', 'colors': [const Color(0xFF092B61), const Color(0xFFB9273D)]},
+      {'keys': ['wellsfargo'], 'brand': 'WELLS FARGO', 'mark': 'WF', 'colors': [const Color(0xFF9D1C28), const Color(0xFFE3A72F)]},
+      {'keys': ['citibank', 'citi'], 'brand': 'CITI', 'mark': 'CITI', 'colors': [const Color(0xFF07539A), const Color(0xFF3989C9)]},
+      {'keys': ['hsbc'], 'brand': 'HSBC', 'mark': 'HSBC', 'colors': [const Color(0xFFB51F2B), const Color(0xFF252B35)]},
+      {'keys': ['barclays'], 'brand': 'BARCLAYS', 'mark': 'BARCLAYS', 'colors': [const Color(0xFF0072A8), const Color(0xFF42A8D1)]},
+      {'keys': ['lloydsbank', 'lloyds'], 'brand': 'LLOYDS BANK', 'mark': 'LLOYDS', 'colors': [const Color(0xFF006A45), const Color(0xFF69A86B)]},
+      {'keys': ['natwest'], 'brand': 'NATWEST', 'mark': 'NW', 'colors': [const Color(0xFF4B246D), const Color(0xFF9A6BB4)]},
+      {'keys': ['royalbankofcanada', 'rbc'], 'brand': 'RBC', 'mark': 'RBC', 'colors': [const Color(0xFF0051A5), const Color(0xFF4A9BD8)]},
+      {'keys': ['tdcanadatrust', 'tdbank'], 'brand': 'TD', 'mark': 'TD', 'colors': [const Color(0xFF167A45), const Color(0xFF64B879)]},
+      {'keys': ['bankofmontreal', 'bmo'], 'brand': 'BMO', 'mark': 'BMO', 'colors': [const Color(0xFF0075A8), const Color(0xFF58A9CF)]},
+      {'keys': ['scotiabank'], 'brand': 'SCOTIABANK', 'mark': 'SCOTIA', 'colors': [const Color(0xFFB51F2B), const Color(0xFFE45A56)]},
+      {'keys': ['commonwealthbank', 'commbank'], 'brand': 'COMMONWEALTH BANK', 'mark': 'CBA', 'colors': [const Color(0xFFE2B500), const Color(0xFF292D35)]},
+      {'keys': ['westpac'], 'brand': 'WESTPAC', 'mark': 'WESTPAC', 'colors': [const Color(0xFFB52236), const Color(0xFFEA6871)]},
+      {'keys': ['anzbank', 'anz'], 'brand': 'ANZ', 'mark': 'ANZ', 'colors': [const Color(0xFF0072AC), const Color(0xFF56B4D7)]},
+      {'keys': ['nabnationalaustraliabank', 'nab'], 'brand': 'NAB', 'mark': 'NAB', 'colors': [const Color(0xFFC51F35), const Color(0xFFE66B70)]},
+      {'keys': ['statebankofindia', 'sbi'], 'brand': 'STATE BANK OF INDIA', 'mark': 'SBI', 'colors': [const Color(0xFF176B9B), const Color(0xFF65B5D4)]},
+      {'keys': ['hdfcbank', 'hdfc'], 'brand': 'HDFC BANK', 'mark': 'HDFC', 'colors': [const Color(0xFF004C8F), const Color(0xFF3E8BC5)]},
+      {'keys': ['icicibank', 'icici'], 'brand': 'ICICI BANK', 'mark': 'ICICI', 'colors': [const Color(0xFF9B2738), const Color(0xFFE18A36)]},
+      {'keys': ['axisbank', 'axis'], 'brand': 'AXIS BANK', 'mark': 'AXIS', 'colors': [const Color(0xFF6D1B70), const Color(0xFFB85CB2)]},
+      {'keys': ['emiratesnbd', 'enbd'], 'brand': 'EMIRATES NBD', 'mark': 'ENBD', 'colors': [const Color(0xFF007D83), const Color(0xFF4DB8AD)]},
+      {'keys': ['firstabudhabibank', 'fabuae', 'fab'], 'brand': 'FIRST ABU DHABI BANK', 'mark': 'FAB', 'colors': [const Color(0xFF173D70), const Color(0xFF4F83B8)]},
+      {'keys': ['adcb', 'abudhabi commercial'], 'brand': 'ADCB', 'mark': 'ADCB', 'colors': [const Color(0xFFB32135), const Color(0xFFE46A72)]},
+      {'keys': ['alrajhibank', 'alrajhi'], 'brand': 'AL RAJHI BANK', 'mark': 'ALRAJHI', 'colors': [const Color(0xFF08784E), const Color(0xFF62B58A)]},
+      {'keys': ['saudinationalbank', 'snb'], 'brand': 'SAUDI NATIONAL BANK', 'mark': 'SNB', 'colors': [const Color(0xFF006B4F), const Color(0xFF58A98A)]},
+      {'keys': ['riyadbank'], 'brand': 'RIYAD BANK', 'mark': 'RIYAD', 'colors': [const Color(0xFF006A50), const Color(0xFF65A98B)]},
+      {'keys': ['bankdhaka', 'dutchbanglabank', 'dbbl'], 'brand': 'DUTCH-BANGLA BANK', 'mark': 'DBBL', 'colors': [const Color(0xFF176B9B), const Color(0xFF53A5C8)]},
+      {'keys': ['bracbank', 'brac'], 'brand': 'BRAC BANK', 'mark': 'BRAC', 'colors': [const Color(0xFF8C1D35), const Color(0xFFD65B6B)]},
+      {'keys': ['ziraatbank', 'ziraat'], 'brand': 'ZIRAAT BANK', 'mark': 'ZIRAAT', 'colors': [const Color(0xFFB51F2B), const Color(0xFFE56B72)]},
+      {'keys': ['isbank', 'isbankasi'], 'brand': 'ISBANK', 'mark': 'IS', 'colors': [const Color(0xFF0075A8), const Color(0xFF55B0D1)]},
+      {'keys': ['bankofchina', 'boc'], 'brand': 'BANK OF CHINA', 'mark': 'BOC', 'colors': [const Color(0xFF9D1828), const Color(0xFFE04B50)]},
+      {'keys': ['icbc', 'industrialcommercialbankofchina'], 'brand': 'ICBC', 'mark': 'ICBC', 'colors': [const Color(0xFF9A1725), const Color(0xFFD64B4E)]},
+      {'keys': ['mufgbank', 'mitsubishiufj', 'mufg'], 'brand': 'MUFG BANK', 'mark': 'MUFG', 'colors': [const Color(0xFF8A1E2D), const Color(0xFFD65A62)]},
+      {'keys': ['sumitomomitsui', 'smbc'], 'brand': 'SMBC', 'mark': 'SMBC', 'colors': [const Color(0xFF087B55), const Color(0xFF55B48A)]},
+      {'keys': ['mizuhobank', 'mizuho'], 'brand': 'MIZUHO BANK', 'mark': 'MIZUHO', 'colors': [const Color(0xFF1E4B8F), const Color(0xFF6C91C5)]},
+      {'keys': ['dbsbank', 'dbs'], 'brand': 'DBS', 'mark': 'DBS', 'colors': [const Color(0xFFE02B35), const Color(0xFFEF777B)]},
+      {'keys': ['ocbcbank', 'ocbc'], 'brand': 'OCBC', 'mark': 'OCBC', 'colors': [const Color(0xFFB51F2B), const Color(0xFFE46A72)]},
+      {'keys': ['unitedoverseasbank', 'uob'], 'brand': 'UOB', 'mark': 'UOB', 'colors': [const Color(0xFF173B78), const Color(0xFF547BB7)]},
+      {'keys': ['maybank'], 'brand': 'MAYBANK', 'mark': 'MAYBANK', 'colors': [const Color(0xFFE2B500), const Color(0xFF333333)]},
+      {'keys': ['bangkokbank'], 'brand': 'BANGKOK BANK', 'mark': 'BBL', 'colors': [const Color(0xFF1E4D8C), const Color(0xFF6C9AC8)]},
+      {'keys': ['standardbank', 'standardbankgroup'], 'brand': 'STANDARD BANK', 'mark': 'SB', 'colors': [const Color(0xFF005A9C), const Color(0xFF55A0C9)]},
+      {'keys': ['ecobank'], 'brand': 'ECOBANK', 'mark': 'ECO', 'colors': [const Color(0xFF007B60), const Color(0xFF54B39A)]},
+      {'keys': ['bnpparibas', 'bnp'], 'brand': 'BNP PARIBAS', 'mark': 'BNP', 'colors': [const Color(0xFF087B55), const Color(0xFF58B28C)]},
+      {'keys': ['societegenerale', 'socgen'], 'brand': 'SOCIETE GENERALE', 'mark': 'SG', 'colors': [const Color(0xFFE33A42), const Color(0xFF9E1D2C)]},
+      {'keys': ['commerzbank'], 'brand': 'COMMERZBANK', 'mark': 'CB', 'colors': [const Color(0xFFE5A800), const Color(0xFF4A9B73)]},
+      {'keys': ['sberbank'], 'brand': 'SBERBANK', 'mark': 'SBER', 'colors': [const Color(0xFF087C4B), const Color(0xFF5DBB8A)]},
+      {'keys': ['vtbbank', 'vtb'], 'brand': 'VTB BANK', 'mark': 'VTB', 'colors': [const Color(0xFF1B4B85), const Color(0xFF6A96C4)]},
     ];
     for (var i = 0; i < themes.length; i++) {
       final theme = themes[i];
@@ -398,13 +455,13 @@ class _WalletsPageState extends State<WalletsPage> {
     final isCredit = type.contains('credit');
     final bankTheme = _bankCardTheme((wallet['name'] ?? '').toString());
     final isBank = type == 'bank' || type.contains('bank') ||
-        (type.contains('debit') && bankTheme['isKnown'] == true);
+        ((type.contains('debit') || type.contains('digital')) && bankTheme['isKnown'] == true);
     final isCash = type == 'cash';
     final isDigital = type.contains('digital');
     final isInvestment = type.contains('investment');
-    final colors = isDebit
+    final colors = isDebit && bankTheme['isKnown'] != true
         ? const [Color(0xFF073B66), Color(0xFF087E9B)]
-        : isCredit
+        : isCredit && bankTheme['isKnown'] != true
             ? const [Color(0xFF30205F), Color(0xFF8B3D83)]
             : isBank
                 ? (bankTheme!['colors'] as List<Color>)

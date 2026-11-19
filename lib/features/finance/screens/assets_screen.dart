@@ -305,6 +305,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     final newPartyNameController = TextEditingController();
     final newPartyPhoneController = TextEditingController();
     DateTime purchaseDate = asset?.purchaseDate ?? DateTime.now();
+    bool includeInConsolidatedBalance = asset?.includeInConsolidatedBalance ?? false;
     String selectedCategory = asset?.category ?? initialCategory ?? 'Property';
     const categories = ['Property', 'Vehicles', 'Gold', 'Jewellery', 'Electronics', 'Investments', 'Livestock', 'Business'];
     final pendingFiles = <Map<String, String>>[];
@@ -521,12 +522,46 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             )),
                           ]),
                           SizedBox(height: 8),
-                          ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
-                            title: Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ')), subtitle: Text(DateFormat('dd MMM yyyy').format(purchaseDate)),
-                            trailing: const Icon(Icons.edit_calendar), onTap: () async {
-                              final picked = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime.now());
-                              if (picked != null) setSheetState(() => purchaseDate = picked);
-                            }),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () async {
+                                    final picked = await showDatePicker(context: context, initialDate: purchaseDate, firstDate: DateTime(1950), lastDate: DateTime.now());
+                                    if (picked != null) setSheetState(() => purchaseDate = picked);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    child: Row(children: [
+                                      const Icon(Icons.calendar_month, color: Color(0xFF147D59)),
+                                      const SizedBox(width: 10),
+                                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                        Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: const TextStyle(fontSize: 12, color: Color(0xFF66736C))),
+                                        const SizedBox(height: 3),
+                                        Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                      ])),
+                                      const Icon(Icons.edit_calendar, size: 18, color: Color(0xFF147D59)),
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Row(children: [
+                                  Expanded(child: Text('Include in Consolidated Balance', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600), maxLines: 2)),
+                                  Transform.scale(
+                                    scale: 0.85,
+                                    child: Switch(
+                                      value: includeInConsolidatedBalance,
+                                      activeColor: const Color(0xFF147D59),
+                                      onChanged: (value) => setSheetState(() => includeInConsolidatedBalance = value),
+                                    ),
+                                  ),
+                                ]),
+                              ),
+                            ],
+                          ),
                           TextFormField(controller: notesController, maxLines: 2, decoration: fieldDecoration('Notes (optional)', Icons.notes_outlined)),
                           SizedBox(height: 14),
                           Container(
@@ -588,7 +623,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                     purchaseDate: purchaseDate, walletId: selectedWallet ?? 0, paymentType: selectedPaymentType, partyId: selectedPaymentType == 'Loan' ? selectedPartyId : null, currency: selectedPaymentType == 'Loan' && selectedPartyId != null
                                          ? (_parties.firstWhere((p) => (p['id'] as num).toInt() == selectedPartyId)['currency']?.toString() ?? defaultAssetCurrency).toUpperCase()
                                          : defaultAssetCurrency.toUpperCase(), linkedLoanId: asset?.linkedLoanId, notes: notesController.text.trim(),
-                                    isSold: asset?.isSold ?? false, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
+                                    isSold: asset?.isSold ?? false, includeInConsolidatedBalance: includeInConsolidatedBalance, saleDate: asset?.saleDate, salePrice: asset?.salePrice,
                                     createdAt: asset?.createdAt ?? DateTime.now());
                                   setSheetState(() => saving = true);
                                   final int assetId;

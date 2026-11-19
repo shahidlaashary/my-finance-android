@@ -1268,7 +1268,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF172B25))),
                             const SizedBox(height: 3),
-                            Text('${asset.category}  •  ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan  •  ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
+                            Text('${asset.category}  •  ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                               maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 11, color: Color(0xFF718078), fontWeight: FontWeight.w500)),
                           ],
@@ -1840,7 +1840,7 @@ class AssetDetailsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Container(width: 42, height: 42,
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(13)),
                     child: const Icon(Icons.inventory_2_outlined, color: Colors.white, size: 23)),
@@ -1848,9 +1848,20 @@ class AssetDetailsScreen extends StatelessWidget {
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
-                    Text('${asset.category} • ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan: ${_partyName(asset.partyId)} • ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)} • ${asset.isSold ? 'Sold' : 'Active'}',
+                    Text('${asset.category} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: Color(0xFFD6F5E7), fontSize: 11)),
                   ])),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: asset.isSold ? Colors.white.withValues(alpha: .16) : const Color(0xFFB9F6D3),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(asset.isSold ? 'Sold' : 'Active',
+                      style: TextStyle(color: asset.isSold ? Colors.white : const Color(0xFF145B43), fontSize: 10, fontWeight: FontWeight.w700)),
+                  ),
                 ]),
                 const SizedBox(height: 10),
                 const Text('CURRENT ASSET VALUE', style: TextStyle(color: Color(0xFFD6F5E7), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .5)),
@@ -1864,6 +1875,8 @@ class AssetDetailsScreen extends StatelessWidget {
                   Expanded(child: _metric(asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
                     '$currency ${_money(profitLoss)}', color: profitLoss >= 0 ? const Color(0xFFB9F6D3) : const Color(0xFFFFC5C5))),
                 ]),
+                const SizedBox(height: 10),
+                _detailRow('Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
               ],
             ),
           ),

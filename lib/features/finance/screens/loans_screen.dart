@@ -2056,9 +2056,9 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
         Row(children: [
           Container(width: 38, height: 38,
             decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .16), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.groups_2_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 21)),
+            child: Icon(Icons.groups_2_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 21)),
           const SizedBox(width: 10),
-          const Expanded(child: Text('Parties Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 15, fontWeight: FontWeight.w800))),
+          Expanded(child: Text('Parties Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 15, fontWeight: FontWeight.w800))),
           Text('${activeParties.length} Active • $archivedCount Archived', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .9), fontSize: 11, fontWeight: FontWeight.w700)),
         ]),
         const SizedBox(height: 13),

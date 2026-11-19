@@ -281,7 +281,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxHeight),
                 child: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                   ),
@@ -310,7 +310,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               Expanded(
                                 child: Text(
                                   document == null ? 'Add Document' : 'Edit Document',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20, fontWeight: FontWeight.w800,
                                     color: Theme.of(context).colorScheme.onSurface,
                                   ),
@@ -318,7 +318,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               ),
                               IconButton(
                                 onPressed: () => Navigator.pop(sheetContext),
-                                icon: const Icon(Icons.close_rounded),
+                                icon: Icon(Icons.close_rounded),
                                 color: Theme.of(context).hintColor,
                               ),
                             ],
@@ -388,17 +388,17 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                             children: [
                               OutlinedButton.icon(
                                 onPressed: chooseFiles,
-                                icon: const Icon(Icons.attach_file_rounded),
+                                icon: Icon(Icons.attach_file_rounded),
                                 label: Text(appText(context, 'Browse Files', 'فائلیں براؤز کریں')),
                               ),
                               OutlinedButton.icon(
                                 onPressed: takePhoto,
-                                icon: const Icon(Icons.camera_alt_outlined),
+                                icon: Icon(Icons.camera_alt_outlined),
                                 label: Text(appText(context, 'Scan / Camera', 'اسکین / کیمرہ')),
                               ),
                               OutlinedButton.icon(
                                 onPressed: chooseGallery,
-                                icon: const Icon(Icons.photo_library_outlined),
+                                icon: Icon(Icons.photo_library_outlined),
                                 label: Text(appText(context, 'Gallery', 'Gallery')),
                               ),
                             ],
@@ -411,7 +411,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               leading: Icon(Icons.insert_drive_file_outlined, color: Theme.of(context).colorScheme.primary),
                               title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
                               trailing: IconButton(
-                                icon: const Icon(Icons.close_rounded, size: 19),
+                                icon: Icon(Icons.close_rounded, size: 19),
                                 onPressed: () => setSheetState(() => selectedFiles.removeAt(entry.key)),
                               ),
                             )),
@@ -428,7 +428,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                               SizedBox(width: 10),
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.check_rounded),
+                                  icon: Icon(Icons.check_rounded),
                                   label: Text(document == null ? 'Save Document' : 'Update Document'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -584,7 +584,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$value', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                  Text('$value', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                   Text(label, style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                 ],
               ),
@@ -610,13 +610,13 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           child: Icon(_categoryIcon(document.category), color: Theme.of(context).colorScheme.primary),
         ),
         title: Text(document.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 5),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(document.category, style: const TextStyle(fontSize: 11)),
+              Text(document.category, style: TextStyle(fontSize: 11)),
               SizedBox(height: 3),
               Text(_expiryLabel(document), style: TextStyle(
                 fontSize: 11, color: expiryColor, fontWeight: FontWeight.w600,
@@ -659,7 +659,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
           IconButton(
             tooltip: 'Add Document',
             onPressed: () => _showDocumentForm(),
-            icon: const Icon(Icons.add_rounded, size: 29),
+            icon: Icon(Icons.add_rounded, size: 29),
           ),
           SizedBox(width: 5),
         ],
@@ -668,7 +668,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         onPressed: () => _showDocumentForm(),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: const Icon(Icons.add_rounded),
+        icon: Icon(Icons.add_rounded),
         label: Text(appText(context, 'Add Document', 'دستاویز شامل کریں')),
       ),
       bottomNavigationBar: SafeArea(
@@ -748,10 +748,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: appText(context, "Search documents...", "Search documents..."),
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isEmpty ? null : IconButton(
                   onPressed: () => _searchController.clear(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: Icon(Icons.close_rounded),
                 ),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surface,
@@ -814,7 +814,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
             children: [
               Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
               SizedBox(height: 3),
-              Text(value.isEmpty ? 'Not provided' : value, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(value.isEmpty ? 'Not provided' : value, style: TextStyle(fontWeight: FontWeight.w600)),
             ],
           )),
         ],
@@ -826,7 +826,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(appText(context, "Document Details", "Document Details"), style: TextStyle(fontWeight: FontWeight.w800)),
-        actions: [IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined))],
+        actions: [IconButton(onPressed: onEdit, icon: Icon(Icons.edit_outlined))],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -837,7 +837,7 @@ class _DocumentDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(document.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                  Text(document.title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
                   SizedBox(height: 5),
                   Text(document.category, style: TextStyle(color: Theme.of(context).hintColor)),
                   const Divider(height: 24),

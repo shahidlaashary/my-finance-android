@@ -527,7 +527,10 @@ class _WalletsPageState extends State<WalletsPage> {
         // Global fallback: any bank name receives a stable, distinct card
     // treatment, even when its official card artwork is not curated yet.
     final normalizedName = bankName.trim();
-    final seed = normalizedName.toLowerCase().hashCode & 0x7fffffff;
+    var seed = 0;
+    for (final unit in normalizedName.toLowerCase().codeUnits) {
+      seed = (seed * 31 + unit) & 0x7fffffff;
+    }
     const fallbackPalettes = <List<Color>>[
       [Color(0xFF123B67), Color(0xFF2676A8)],
       [Color(0xFF174B3B), Color(0xFF4C9873)],

@@ -622,11 +622,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: const Theme.of(context).colorScheme.onSurface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 16,
         toolbarHeight: 56,
-        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: const Theme.of(context).colorScheme.onSurface))),
+        title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
       floatingActionButton: FloatingActionButton.extended(

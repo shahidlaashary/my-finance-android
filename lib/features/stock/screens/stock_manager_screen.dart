@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/stock/services/stock_service.dart';
 
@@ -8,7 +9,9 @@ class StockManagerScreen extends StatefulWidget {
 }
 class _StockManagerScreenState extends State<StockManagerScreen>{
   List<StockItem> _items=[]; bool _loading=true; bool _lowOnly=false; String _search='';
-  @override void initState(){super.initState();_load();}
+  @override void initState(){super.initState();AppRefreshController.revision.addListener(_onAppDataChanged);_load();}
+  void _onAppDataChanged(){if(mounted)_load();}
+  @override void dispose(){AppRefreshController.revision.removeListener(_onAppDataChanged);super.dispose();}
   Future<void> _load() async {try{final v=await StockService.getItems();if(mounted)setState(()=>_items=v);}catch(e){_msg('Unable to load stock: $e');}finally{if(mounted)setState(()=>_loading=false);}}
   void _msg(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _qty(double n)=>n==n.roundToDouble()?n.toStringAsFixed(0):n.toStringAsFixed(2);

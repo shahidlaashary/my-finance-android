@@ -68,7 +68,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   }
 
   void _onAppDataChanged() {
-    if (mounted) loadWallets();
+    if (mounted) loadWallets(preserveSelections: true);
   }
 
   @override
@@ -81,7 +81,10 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     super.dispose();
   }
 
-  Future<void> loadWallets() async {
+  Future<void> loadWallets({bool preserveSelections = false}) async {
+    final previousWalletId = selectedWalletId;
+    final previousDestinationWalletId = selectedDestinationWalletId;
+    final previousDate = selectedDate;
     final prefs = await SharedPreferences.getInstance();
     final rememberWallet = await GeneralPreferences.instance.rememberWallet;
     final defaultDate = await GeneralPreferences.instance.defaultDate;
@@ -101,15 +104,21 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
       _dateFormat = prefs.getString('general_date_format') ?? 'dd/MM/yyyy';
       _weekStart = weekStart;
-      if (defaultDate == 'Last Selected Date' && savedDate != null) {
+      if (preserveSelections) {
+        selectedDate = previousDate;
+      } else if (defaultDate == 'Last Selected Date' && savedDate != null) {
         selectedDate = DateTime.tryParse(savedDate) ?? DateTime.now();
       }
       if (wallets.isNotEmpty) {
         final savedWalletId = rememberWallet ? prefs.getInt('general_last_wallet_id') : null;
-        selectedWalletId = wallets.any((w) => w['id'] == savedWalletId)
-            ? savedWalletId : wallets.first['id'] as int;
+        final preferredWalletId = preserveSelections ? previousWalletId : savedWalletId;
+        selectedWalletId = wallets.any((w) => w['id'] == preferredWalletId)
+            ? preferredWalletId : wallets.first['id'] as int;
         if (isTransfer && wallets.length > 1) {
-          selectedDestinationWalletId = wallets[1]['id'] as int;
+          final preferredDestinationId = preserveSelections
+              ? previousDestinationWalletId : wallets[1]['id'] as int;
+          selectedDestinationWalletId = wallets.any((w) => w['id'] == preferredDestinationId)
+              ? preferredDestinationId : wallets.firstWhere((w) => w['id'] != selectedWalletId)['id'] as int;
         }
       }
 

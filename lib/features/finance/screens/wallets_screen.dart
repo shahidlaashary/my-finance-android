@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:intl/intl.dart';
 
@@ -297,8 +298,13 @@ class _WalletsPageState extends State<WalletsPage> {
   void initState() {
     super.initState();
     GeneralPreferences.instance.revision.addListener(_onPreferencesChanged);
+    AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadGlobalCardCatalog();
     loadWallets();
+  }
+
+  void _onAppDataChanged() {
+    if (mounted) loadWallets();
   }
 
   void _onPreferencesChanged() {
@@ -308,6 +314,7 @@ class _WalletsPageState extends State<WalletsPage> {
   @override
   void dispose() {
     GeneralPreferences.instance.revision.removeListener(_onPreferencesChanged);
+    AppRefreshController.revision.removeListener(_onAppDataChanged);
     super.dispose();
   }
 

@@ -17,6 +17,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
   static const _dueKey = 'wa_reminder_on_due';
   static const _overdueKey = 'wa_reminder_after_due';
   static const _paymentKey = 'wa_payment_confirmation';
+  static const _phoneKey = 'wa_pending_phone_number';
 
   bool _loading = true;
   bool _enabled = false;
@@ -24,6 +25,8 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
   bool _onDue = true;
   bool _afterDue = true;
   bool _paymentConfirmation = false;
+  String _phoneNumber = '';
+  bool _connected = false; // Set true only after successful Meta backend verification.
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
       _onDue = prefs.getBool(_dueKey) ?? true;
       _afterDue = prefs.getBool(_overdueKey) ?? true;
       _paymentConfirmation = prefs.getBool(_paymentKey) ?? false;
+      _phoneNumber = prefs.getString(_phoneKey) ?? '';
       _loading = false;
     });
   }
@@ -47,6 +51,62 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
   Future<void> _save(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+  }
+
+  Future<void> _showConnectNumberDialog() async {
+    final controller = TextEditingController(text: _phoneNumber);
+    final number = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Connect WhatsApp'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'WhatsApp number',
+            hintText: '+92 300 1234567',
+            prefixIcon: Icon(Icons.phone_rounded),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+              if (digits.length < 10 || digits.length > 15) return;
+              Navigator.pop(dialogContext, value);
+            },
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (number == null || number.trim().isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_phoneKey, number.trim());
+    if (!mounted) return;
+    setState(() => _phoneNumber = number.trim());
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Verification setup required'),
+        content: const Text(
+          'Your number has been saved as pending. The official Meta verification service is not connected yet, so an OTP or WhatsApp connection cannot be started from this app build. Your number will not be marked Connected until Meta confirms it.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _sectionTitle(String title) => Padding(
@@ -66,7 +126,7 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       child: SwitchListTile(
         value: value,
-        onChanged: _enabled
+        onChanged: _enabled && _connected
             ? (next) {
                 setState(() => onChanged(next));
               }
@@ -134,36 +194,51 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.link_off_rounded,
-                                color: Color(0xFFB7791F)),
-                            SizedBox(width: 9),
+                            Icon(
+                              _connected ? Icons.check_circle_rounded : Icons.link_rounded,
+                              color: _connected ? Colors.green : AppColors.primary,
+                            ),
+                            const SizedBox(width: 9),
                             Expanded(
-                              child: Text('Not connected',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15)),
+                              child: Text(
+                                _connected ? 'Connected' : (_phoneNumber.isEmpty ? 'Not connected' : 'Number saved — verification pending'),
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                              ),
                             ),
                             Chip(
-                              label: Text('Setup required',
-                                  style: TextStyle(fontSize: 10)),
+                              label: Text(_connected ? 'Connected' : 'Not connected',
+                                  style: const TextStyle(fontSize: 10)),
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
                         ),
+                        if (_phoneNumber.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text('WhatsApp number: $_phoneNumber',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
                         const SizedBox(height: 8),
-                        const Text(
-                          'Your existing WhatsApp Business number will be connected through Meta Cloud API Coexistence. A secure backend, Meta onboarding and approved message templates are required before automatic sending can start.',
-                          style: TextStyle(fontSize: 12, height: 1.45),
+                        Text(
+                          _connected
+                              ? 'Your WhatsApp number is ready for automatic reminders.'
+                              : 'Connect your own WhatsApp number. Number verification will be completed securely through Meta.',
+                          style: const TextStyle(fontSize: 12, height: 1.45),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _connected ? null : _showConnectNumberDialog,
+                            icon: Icon(_phoneNumber.isEmpty ? Icons.message_rounded : Icons.verified_user_outlined),
+                            label: Text(_phoneNumber.isEmpty ? 'Connect WhatsApp' : 'Verify Number'),
+                          ),
+                        ),
+                        const SizedBox(height: 7),
                         const Text(
-                          'No number migration or messages will be initiated from this screen.',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.muted,
-                              fontWeight: FontWeight.w600),
+                          'Real verification and sending require the secure Meta connection service. This screen will not mark a number as connected until the backend confirms it.',
+                          style: TextStyle(fontSize: 11, color: AppColors.muted, height: 1.4),
                         ),
                       ],
                     ),
@@ -173,16 +248,16 @@ class _WhatsAppAutomationScreenState extends State<WhatsAppAutomationScreen> {
                 Card(
                   child: SwitchListTile(
                     value: _enabled,
-                    onChanged: (value) async {
+                    onChanged: _connected ? (value) async {
                       setState(() => _enabled = value);
                       await _save(_enabledKey, value);
-                    },
+                    } : null,
                     secondary: const Icon(Icons.auto_awesome,
                         color: AppColors.primary),
                     title: const Text('Enable Auto Reminders',
                         style: TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: const Text(
-                        'Will activate after WhatsApp connection is completed.',
+                        _connected ? 'Automatic reminders are available.' : 'Connect and verify WhatsApp first.',
                         style: TextStyle(fontSize: 12)),
                   ),
                 ),

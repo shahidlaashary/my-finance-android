@@ -52,7 +52,6 @@ class TransactionsService {
       [change, walletId],
     );
     if (changed == 0) throw Exception('Wallet not found: $walletId');
-    AppRefreshController.notifyChanged();
   }
 
   // Edit ya delete se pehle purani transaction ka balance impact reverse karta hai.
@@ -162,7 +161,7 @@ class TransactionsService {
   }) async {
     final db = await database;
     final normalized = _normalizeType(type);
-    return db.transaction((txn) async {
+    final transactionId = await db.transaction((txn) async {
       await _apply(txn, type: normalized, amount: amount, walletId: walletId,
         toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount,
         transferFee: transferFee);
@@ -188,6 +187,8 @@ class TransactionsService {
       }
       return transactionId;
     });
+    AppRefreshController.notifyChanged();
+    return transactionId;
   }
 
   static Future<void> updateTransaction({
@@ -241,6 +242,7 @@ class TransactionsService {
           whereArgs: ['transaction_transfer_fee_$id']);
       }
     });
+    AppRefreshController.notifyChanged();
   }
 
   static Future<void> updateAdjustmentTransaction({
@@ -315,6 +317,7 @@ class TransactionsService {
       await RecycleBinService.discardArchive(recycleId);
       rethrow;
     }
+    AppRefreshController.notifyChanged();
   }
   static Future<void> setCategory({required int transactionId, required String? category}) async {
     final db = await database;

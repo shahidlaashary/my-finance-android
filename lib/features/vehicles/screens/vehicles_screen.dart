@@ -30,9 +30,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   List<Map<String, dynamic>> _reminders = [];
   List<Map<String, dynamic>> _wallets = [];
 
-  static const _green = Color(0xFF147D59);
-  static const _ink = Color(0xFF202A26);
-  static const _muted = Color(0xFF7B8781);
+  static const _green = Theme.of(context).colorScheme.primary;
+  static const _ink = Theme.of(context).colorScheme.onSurface;
+  static const _muted = Theme.of(context).hintColor;
   static const _expenseCategories = [
     'Oil Change', 'Mechanical Repair', 'Tyres & Puncture', 'Battery',
     'Car Wash', 'Service & Tuning', 'AC Maintenance', 'Spare Parts',
@@ -256,7 +256,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   InputDecoration _decoration(String label, IconData icon) => InputDecoration(
     labelText: label, prefixIcon: Icon(icon, size: 19),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E9E5))),
+    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 1.5)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13), isDense: true,
   );
@@ -280,11 +280,11 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   }
 
   Widget _sheetHeader(String title, BuildContext context) => Column(children: [
-    Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: const Color(0xFFD9E0DC), borderRadius: BorderRadius.circular(10)))),
+    Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
     SizedBox(height: 12),
     Row(children: [
       Expanded(child: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _ink))),
-      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded), color: Colors.grey),
+      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
     ]),
     SizedBox(height: 8),
   ]);
@@ -572,7 +572,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   }
 
   Widget _metric(String title, String value, IconData icon, Color color, {String? subtitle}) => Expanded(child: Container(
-    padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFE8EEEA))),
+    padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Icon(icon, color: color, size: 21), SizedBox(height: 8),
       Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink), maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -675,7 +675,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   Widget _smallStat(String title, String value) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    decoration: BoxDecoration(color: const Color(0xFFF4F7F5), borderRadius: BorderRadius.circular(10)),
+    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(10)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title, style: const TextStyle(color: _muted, fontSize: 10)),
       SizedBox(height: 2), Text(value, style: const TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w700)),
@@ -886,7 +886,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white, foregroundColor: _ink, elevation: 0,
         titleSpacing: 16, toolbarHeight: 56,

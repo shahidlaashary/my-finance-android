@@ -66,7 +66,12 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: IndexedStack(
         index: selectedIndex,
-        children: List<Widget>.generate(\n          _pages.length,\n          (index) => _visitedPages.contains(index)\n              ? _pages[index]\n              : const SizedBox.shrink(),\n        ),
+        children: List<Widget>.generate(
+          _pages.length,
+          (index) => _visitedPages.contains(index)
+              ? _pages[index]
+              : const SizedBox.shrink(),
+        ),
       ),
 
       // Nau jagah: aath navigation tabs aur darmiyan mein Plus.

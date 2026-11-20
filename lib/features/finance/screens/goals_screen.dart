@@ -109,6 +109,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
       startDate = targetDate;
     }
     int? walletId = goal?.walletId;
+    int? attachmentGoalId = goal?.id;
+    bool goalCreated = goal != null;
     InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
@@ -190,9 +192,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   ]),
                   SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
+                  if (attachmentGoalId != null) ...[
+                    const SizedBox(height: 10),
+                    AttachmentSection(ownerType: 'goal', ownerId: attachmentGoalId!),
+                  ],
                   SizedBox(height: 16),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
-                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
+                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(goalCreated ? (goal == null ? 'Done' : 'Update Goal') : 'Create Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
@@ -201,12 +207,24 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           return;
                         }
                         try {
-                          final model = GoalsModel(id: goal?.id, name: nameController.text.trim(), targetAmount: double.parse(targetController.text),
+                          final model = GoalsModel(id: attachmentGoalId, name: nameController.text.trim(), targetAmount: double.parse(targetController.text),
                             savedAmount: goal?.savedAmount ?? 0, startDate: startDate, targetDate: targetDate, walletId: walletId, notes: notesController.text.trim(),
                             isCompleted: goal?.isCompleted ?? false, createdAt: goal?.createdAt ?? DateTime.now());
-                          if (goal == null) await GoalsService.addGoal(model); else await GoalsService.updateGoal(model);
+                          if (attachmentGoalId == null) {
+                            final newId = await GoalsService.addGoal(model);
+                            if (!sheetContext.mounted) return;
+                            setSheetState(() {
+                              attachmentGoalId = newId;
+                              goalCreated = true;
+                            });
+                            await _loadData();
+                            _message('Goal created. You can now add attachments.');
+                            return;
+                          }
+                          await GoalsService.updateGoal(model);
                           if (!sheetContext.mounted) return;
-                          Navigator.pop(sheetContext); await _loadData();
+                          Navigator.pop(sheetContext);
+                          await _loadData();
                           _message(goal == null ? 'Savings goal created.' : 'Savings goal updated.');
                         } catch (e) { _message('Error: $e'); }
                       }))]),
@@ -472,25 +490,21 @@ class _GoalsScreenState extends State<GoalsScreen> {
         ? 'Unassigned'
         : linkedWallet.first['currency']?.toString() ?? 'PKR';
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 CircleAvatar(
+                  radius: 19,
                   backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.savings,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  child: Icon(Icons.savings, color: Theme.of(context).colorScheme.primary, size: 20),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: 9),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,7 +547,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 14),
+            SizedBox(height: 8),
             Text(
               'Wallet: $walletLabel',
               style: TextStyle(
@@ -541,7 +555,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 fontSize: 12,
               ),
             ),
-            SizedBox(height: 14),
+            SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -570,7 +584,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 Text('${appText(context, 'Target:', 'ہدف:')} ${_money(goal.targetAmount)} $currency'),
               ],
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 7),
             Text(
               completed
                   ? 'Goal completed!'
@@ -587,9 +601,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 style: TextStyle(color: Theme.of(context).hintColor),
               ),
             ],
-            SizedBox(height: 12),
+            SizedBox(height: 9),
             Wrap(
-              spacing: 8,
+              spacing: 7,
               runSpacing: 8,
               children: [
                 FilledButton.tonalIcon(
@@ -604,13 +618,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 ),
               ],
             ),
-            if (goal.id != null) ...[
-              const Divider(height: 24),
+            if (goal.id != null)
               AttachmentSection(
                 ownerType: 'goal',
                 ownerId: goal.id!,
+                readOnly: true,
+                compact: true,
               ),
-            ],
           ],
         ),
       ),

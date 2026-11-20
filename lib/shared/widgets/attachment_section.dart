@@ -15,12 +15,14 @@ class AttachmentSection extends StatefulWidget {
   final String ownerType;
   final int ownerId;
   final bool readOnly;
+  final bool compact;
 
   const AttachmentSection({
     super.key,
     required this.ownerType,
     required this.ownerId,
     this.readOnly = false,
+    this.compact = false,
   });
 
   @override
@@ -341,9 +343,45 @@ class _AttachmentSectionState extends State<AttachmentSection> {
     );
   }
 
+  Widget _buildCompactAttachments(BuildContext context) {
+    if (_loading || _attachments.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 7,
+        runSpacing: 7,
+        children: _attachments.map((attachment) {
+          final isImage = attachment.fileType == 'image';
+          return InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => _openAttachment(attachment),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 190),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .55),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined,
+                  size: 16, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 6),
+                Flexible(child: Text(attachment.fileName, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600))),
+                const SizedBox(width: 4),
+                Icon(Icons.open_in_new_rounded, size: 12, color: Theme.of(context).hintColor),
+              ]),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
+    if (widget.compact) return _buildCompactAttachments(context);\n    return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),

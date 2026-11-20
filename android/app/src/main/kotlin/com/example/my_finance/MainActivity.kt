@@ -4,6 +4,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.os.Bundle
+import android.os.StatFs
 import android.speech.tts.TextToSpeech
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -31,6 +32,14 @@ class MainActivity : FlutterFragmentActivity(), TextToSpeech.OnInitListener {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
+                    "getStorageInfo" -> {
+                        try {
+                            val stats = StatFs(filesDir.absolutePath)
+                            result.success(mapOf("totalBytes" to stats.totalBytes, "freeBytes" to stats.availableBytes))
+                        } catch (error: Exception) {
+                            result.error("STORAGE_UNAVAILABLE", "Device storage information is unavailable.", null)
+                        }
+                    }
                     "playTone" -> {
                         val frequency = (call.argument<Number>("frequency")?.toInt() ?: 880).coerceIn(180, 1800)
                         val duration = (call.argument<Number>("durationMs")?.toInt() ?: 90).coerceIn(40, 500)

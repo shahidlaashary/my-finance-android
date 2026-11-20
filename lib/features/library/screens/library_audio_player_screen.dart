@@ -24,6 +24,11 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
   void initState() {
     super.initState();
     _prepare();
+    _player.onPlayerComplete.listen((_) {
+      if (!mounted) return;
+      setState(() => _position = _duration);
+      _saveProgress(Duration.zero);
+    });
     _player.onDurationChanged.listen((value) {
       if (mounted) setState(() => _duration = value);
     });

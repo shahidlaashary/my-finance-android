@@ -11,6 +11,7 @@ import 'package:my_finance/features/settings/language_settings_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
 import 'package:my_finance/app/screens/about_hub_screen.dart';
+import 'package:my_finance/features/finance/screens/whatsapp_automation_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -82,6 +83,15 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Notifications & Reminders',
             subtitle: 'Schedule bill, loan and personal finance reminders',
             onTap: () => _openScreen(context, const RemindersScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.chat_rounded,
+            title: 'WhatsApp Automation',
+            subtitle: 'Automate finance updates and messages on WhatsApp',
+            onTap: () => _openScreen(
+              context,
+              const WhatsAppAutomationScreen(),
+            ),
           ),
           _SettingsInfoTile(
             icon: Icons.delete_outline_rounded,

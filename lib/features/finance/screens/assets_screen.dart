@@ -55,7 +55,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => PartyManagementPage(
+        builder: (_) => ManageParties(
           hideBalances: _hideBalances,
           onLoanTap: (_) {
             _message('Open loan details from the Loans section.');

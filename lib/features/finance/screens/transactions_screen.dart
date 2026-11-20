@@ -1442,7 +1442,7 @@ class TransactionDetailScreen extends StatelessWidget {
 
           final sourceId = transaction['wallet_id'];
           final details = <Widget>[
-            _detailRow('Transaction ID', '#${transaction['id']}'),
+            _detailRow(context, 'Transaction ID', '#${transaction['id']}'),
             _detailRow('Type', type),
             _detailRow('Date & Time', date == null
                 ? (transaction['date']?.toString() ?? '—')
@@ -1545,7 +1545,7 @@ class TransactionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(

@@ -179,7 +179,7 @@ class _LoansScreenState extends State<LoansScreen> {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => PartyManagementPage(
+        builder: (_) => ManageParties(
           hideBalances: _hideBalances,
           onLoanTap: (loan) => _showLoanDetails(loan),
         ),
@@ -2045,21 +2045,21 @@ class _LoansScreenState extends State<LoansScreen> {
   }
 }
 
-class PartyManagementPage extends StatefulWidget {
+class ManageParties extends StatefulWidget {
   final bool hideBalances;
   final ValueChanged<LoansModel> onLoanTap;
 
-  const PartyManagementPage({
+  const ManageParties({
     super.key,
     required this.hideBalances,
     required this.onLoanTap,
   });
 
   @override
-  State<PartyManagementPage> createState() => _PartyManagementPageState();
+  State<ManageParties> createState() => _ManagePartiesState();
 }
 
-class _PartyManagementPageState extends State<PartyManagementPage> {
+class _ManagePartiesState extends State<ManageParties> {
   List<Map<String, dynamic>> _parties = [];
   Map<String, double> _receivableByCurrency = {};
   Map<String, double> _payableByCurrency = {};

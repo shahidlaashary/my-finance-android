@@ -77,114 +77,93 @@ class MoreFeaturesPage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          const horizontalPadding = 10.0;
-          const verticalPadding = 3.0;
-          const itemSpacing = 1.5;
-          final itemHeight = (constraints.maxHeight -
-                  verticalPadding * 2 -
-                  itemSpacing * (features.length - 1)) /
-              features.length;
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: features.length,
+        itemBuilder: (context, index) {
+          final feature = features[index];
 
-          return ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: verticalPadding,
+          return Card(
+            elevation: 1,
+            margin: const EdgeInsets.only(bottom: 7),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
-            itemCount: features.length,
-            itemExtent: itemHeight,
-            itemBuilder: (context, index) {
-              final feature = features[index];
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: itemSpacing),
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) {
-                            if (feature['title'] == 'WhatsApp Automation') {
-                              return const WhatsAppAutomationScreen();
-                            }
-                            if (feature['title'] == 'Settings') {
-                              return const AppSettingsScreen();
-                            }
-                            if (feature['title'] == 'Vehicle Manager') {
-                              return const VehiclesScreen();
-                            }
-                            if (feature['title'] == 'My Documents') {
-                              return const MyDocumentsScreen();
-                            }
-                            if (feature['title'] == 'Exchange Rates') {
-                              return const ExchangeRatesScreen();
-                            }
-                            if (feature['title'] == 'Staff Management') {
-                              return const StaffScreen();
-                            }
-                            if (feature['title'] == 'Installment Manager') {
-                              return const InstallmentsScreen();
-                            }
-                            if (feature['title'] == 'Committee') {
-                              return const CommitteeScreen();
-                            }
-                            if (feature['title'] == 'Recycle Bin') {
-                              return const RecycleBinScreen();
-                            }
-                            if (feature['title'] == 'Stock Manager') {
-                              return const StockManagerScreen();
-                            }
-                            if (feature['title'] == 'My Partner') {
-                              return const MyPartnerScreen();
-                            }
-                            return const MyDocumentsScreen();
-                          },
-                        ),
-                      );
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) {
+                      if (feature['title'] == 'WhatsApp Automation') {
+                        return const WhatsAppAutomationScreen();
+                      }
+                      if (feature['title'] == 'Settings') {
+                        return const AppSettingsScreen();
+                      }
+                      if (feature['title'] == 'Vehicle Manager') {
+                        return const VehiclesScreen();
+                      }
+                      if (feature['title'] == 'My Documents') {
+                        return const MyDocumentsScreen();
+                      }
+                      if (feature['title'] == 'Exchange Rates') {
+                        return const ExchangeRatesScreen();
+                      }
+                      if (feature['title'] == 'Staff Management') {
+                        return const StaffScreen();
+                      }
+                      if (feature['title'] == 'Installment Manager') {
+                        return const InstallmentsScreen();
+                      }
+                      if (feature['title'] == 'Committee') {
+                        return const CommitteeScreen();
+                      }
+                      if (feature['title'] == 'Recycle Bin') {
+                        return const RecycleBinScreen();
+                      }
+                      if (feature['title'] == 'Stock Manager') {
+                        return const StockManagerScreen();
+                      }
+                      if (feature['title'] == 'My Partner') {
+                        return const MyPartnerScreen();
+                      }
+                      return const MyDocumentsScreen();
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 1),
-                      child: Row(
-                        children: [
-                          Icon(
-                            feature['icon'] as IconData,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 23,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              appText(
-                                context,
-                                feature['title'] as String,
-                                feature['title'] as String,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                height: 1,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: Theme.of(context).hintColor,
-                            size: 24,
-                          ),
-                        ],
-                      ),
-                    ),
+                  ),
+                );
+              },
+              child: ListTile(
+                minTileHeight: 72,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 1,
+                ),
+                leading: Icon(
+                  feature['icon'] as IconData,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 23,
+                ),
+                title: Text(
+                  appText(
+                    context,
+                    feature['title'] as String,
+                    feature['title'] as String,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              );
-            },
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
+            ),
           );
         },
       ),

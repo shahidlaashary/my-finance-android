@@ -155,7 +155,7 @@ class RecycleBinDetailScreen extends StatelessWidget {
         ])),
         const SizedBox(height: 16),
         _section(context, tr('Deletion Information'), [
-          _row(tr('Deleted'), deleted == null ? '—' : DateFormat('dd MMM yyyy, hh:mm a').format(deleted)),
+          _row(context, tr('Deleted'), deleted == null ? '—' : DateFormat('dd MMM yyyy, hh:mm a').format(deleted)),
           _row(tr('Auto-delete date'), expiry == null ? '—' : DateFormat('dd MMM yyyy, hh:mm a').format(expiry)),
           _row(tr('Record ID'), item['source_id']?.toString() ?? '—'),
         ]),
@@ -175,7 +175,7 @@ class RecycleBinDetailScreen extends StatelessWidget {
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)), const SizedBox(height: 9), ...children]),
   );
 
-  Widget _row(String label, String value) => Padding(
+  Widget _row(BuildContext context, String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Expanded(flex: 4, child: Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor))),

@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -7,6 +10,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/finance/models/goals_model.dart';
 import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
+import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -110,7 +114,34 @@ class _GoalsScreenState extends State<GoalsScreen> {
     }
     int? walletId = goal?.walletId;
     int? attachmentGoalId = goal?.id;
-    bool goalCreated = goal != null;
+    final List<Map<String, String>> pendingAttachments = [];
+
+    Future<void> addPendingFile(String path, String name, StateSetter setSheetState) async {
+      if (!File(path).existsSync()) return;
+      setSheetState(() => pendingAttachments.add({'path': path, 'name': name}));
+    }
+
+    Future<void> pickGoalPhoto(StateSetter setSheetState) async {
+      final photo = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (photo != null) await addPendingFile(photo.path, photo.name, setSheetState);
+    }
+
+    Future<void> pickGoalGallery(StateSetter setSheetState) async {
+      final photos = await ImagePicker().pickMultiImage(imageQuality: 85);
+      for (final photo in photos) {
+        await addPendingFile(photo.path, photo.name, setSheetState);
+      }
+    }
+
+    Future<void> pickGoalPdfs(StateSetter setSheetState) async {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: true,
+      );
+      if (result == null) return;
+      for (final file in result.files) {
+        if (file.path != null) await addPendingFile(file.path!, file.name, setSheetState);
+      }
+    }
     InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
@@ -192,13 +223,47 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   ]),
                   SizedBox(height: 12),
                   TextFormField(controller: notesController, maxLines: 2, decoration: decoration('Notes (optional)', Icons.notes_outlined)),
-                  if (attachmentGoalId != null) ...[
-                    const SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                  if (goal == null) ...[
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Row(children: [
+                            const Icon(Icons.attach_file, size: 19),
+                            const SizedBox(width: 8),
+                            const Expanded(child: Text('Attachments', style: TextStyle(fontWeight: FontWeight.w700))),
+                            Text('${pendingAttachments.length}'),
+                          ]),
+                          const SizedBox(height: 10),
+                          Wrap(spacing: 8, runSpacing: 8, children: [
+                            OutlinedButton.icon(onPressed: () => pickGoalPhoto(setSheetState),
+                              icon: const Icon(Icons.camera_alt_outlined), label: const Text('Camera')),
+                            OutlinedButton.icon(onPressed: () => pickGoalGallery(setSheetState),
+                              icon: const Icon(Icons.photo_library_outlined), label: const Text('Gallery')),
+                            OutlinedButton.icon(onPressed: () => pickGoalPdfs(setSheetState),
+                              icon: const Icon(Icons.picture_as_pdf_outlined), label: const Text('Add PDFs')),
+                          ]),
+                          if (pendingAttachments.isNotEmpty) ...[
+                            const Divider(height: 18),
+                            ...pendingAttachments.asMap().entries.map((entry) => ListTile(
+                              dense: true, contentPadding: EdgeInsets.zero,
+                              leading: Icon(entry.value['name']!.toLowerCase().endsWith('.pdf')
+                                ? Icons.picture_as_pdf_outlined : Icons.image_outlined),
+                              title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              trailing: IconButton(icon: const Icon(Icons.close_rounded, size: 19),
+                                onPressed: () => setSheetState(() => pendingAttachments.removeAt(entry.key))),
+                            )),
+                          ],
+                        ]),
+                      ),
+                    ),
+                  ] else
                     AttachmentSection(ownerType: 'goal', ownerId: attachmentGoalId!),
-                  ],
                   SizedBox(height: 16),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
-                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(goalCreated ? (goal == null ? 'Done' : 'Update Goal') : 'Create Goal'),
+                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(goal == null ? 'Create Goal' : 'Update Goal'),
                       style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
@@ -212,16 +277,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             isCompleted: goal?.isCompleted ?? false, createdAt: goal?.createdAt ?? DateTime.now());
                           if (attachmentGoalId == null) {
                             final newId = await GoalsService.addGoal(model);
-                            if (!sheetContext.mounted) return;
-                            setSheetState(() {
-                              attachmentGoalId = newId;
-                              goalCreated = true;
-                            });
-                            await _loadData();
-                            _message('Goal created. You can now add attachments.');
-                            return;
+                            for (final attachment in pendingAttachments) {
+                              await AttachmentService.addAttachment(
+                                ownerType: 'goal',
+                                ownerId: newId,
+                                sourcePath: attachment['path']!,
+                                originalFileName: attachment['name'],
+                              );
+                            }
+                          } else {
+                            await GoalsService.updateGoal(model);
                           }
-                          await GoalsService.updateGoal(model);
                           if (!sheetContext.mounted) return;
                           Navigator.pop(sheetContext);
                           await _loadData();

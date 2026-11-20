@@ -882,7 +882,8 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.all(16),
+              constraints: const BoxConstraints(minHeight: 74),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.onPrimary,
                 borderRadius: BorderRadius.circular(17),
@@ -891,8 +892,8 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 children: [
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: 30,
+                    height: 30,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(13),
@@ -953,6 +954,7 @@ class _HomePageState extends State<HomePage> {
               )
             else if (budgetAlerts.isEmpty)
               Container(
+                constraints: const BoxConstraints(minHeight: 74),
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.onPrimary,
@@ -1027,6 +1029,7 @@ class _HomePageState extends State<HomePage> {
     required Color color,
   }) {
     return Container(
+      constraints: const BoxConstraints(minHeight: 74),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onPrimary,
@@ -1080,6 +1083,7 @@ class _HomePageState extends State<HomePage> {
                 ? '75% used'
                 : '50% used';
     return Container(
+      constraints: const BoxConstraints(minHeight: 74),
       margin: const EdgeInsets.only(bottom: 9),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(

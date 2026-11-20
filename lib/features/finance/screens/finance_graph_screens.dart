@@ -48,7 +48,7 @@ class _LoanGraphScreenState extends State<LoanGraphScreen> {
       if (s.connectionState != ConnectionState.done) return const _LoadingPage(title: 'Loans Analytics');
       if (s.hasError) return _ErrorPage(title: 'Loans Analytics', message: s.error.toString());
       final data = (s.data ?? const <LoansModel>[]).map((l) => _Entry(
-        name: 'Loan #\${l.id ?? '-'}', currency: l.currency, amount: l.remainingAmount, base: l.amount,
+        name: 'Loan #${l.id ?? '-'}', currency: l.currency, amount: l.remainingAmount, base: l.amount,
         status: l.isOverdue ? 'Overdue' : (l.isPaid ? 'Paid' : 'Active'),
         type: l.loanType == 'given' ? 'Receivable' : 'Payable',
       )).toList();
@@ -156,7 +156,7 @@ class _DashboardState extends State<_Dashboard> {
             _CurrencyCard(currency: c, entries: visible.where((e) => e.currency.toUpperCase() == c).toList(),
               value: value, metric: metric, money: money, assets: widget.assets),
           const SizedBox(height: 5),
-          Text('\${visible.length} records • \${currencies.length} currencies',
+          Text('${visible.length} records • ${currencies.length} currencies',
             textAlign: TextAlign.center, style: const TextStyle(color: _muted, fontSize: 10, fontWeight: FontWeight.w600)),
         ],
       ),
@@ -278,7 +278,7 @@ class _StatusLine extends StatelessWidget {
     Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
     const SizedBox(width: 8), Expanded(child: Text(label, style: const TextStyle(color: _muted, fontSize: 11, fontWeight: FontWeight.w600))),
     Text('$count', style: const TextStyle(color: _white, fontSize: 12, fontWeight: FontWeight.w900)),
-    const SizedBox(width: 6), Text(total == 0 ? '0%' : '\${(count * 100 / total).round()}%',
+    const SizedBox(width: 6), Text(total == 0 ? '0%' : '${(count * 100 / total).round()}%',
       style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800)),
   ]);
 }
@@ -317,7 +317,7 @@ class _CurrencyCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('$currency portfolio', style: const TextStyle(color: _white, fontSize: 13, fontWeight: FontWeight.w900)),
-            Text('\${entries.length} records • highest value first', style: const TextStyle(color: _muted, fontSize: 9)),
+            Text('${entries.length} records • highest value first', style: const TextStyle(color: _muted, fontSize: 9)),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text(money(total), style: const TextStyle(color: _teal, fontSize: 15, fontWeight: FontWeight.w900)),

@@ -440,25 +440,6 @@ class AssetsService {
             (row['total'] as num).toDouble(),
     };
   }
-  Future<Map<String, double>> getTotalRealizedProfitLossByCurrency() async {
-    final db = await _database;
-    await _ensureTables(db);
-    final rows = await db.rawQuery('''
-      SELECT s.currency AS currency,
-             COALESCE(
-               SUM(s.sale_price - s.purchase_price), 0
-             ) AS total
-      FROM assets s
-      INNER JOIN wallets a ON a.id = s.wallet_id
-      WHERE s.is_sold = 1
-      GROUP BY a.currency
-    ''');
-    return {
-      for (final row in rows)
-        (row['currency'] ?? 'PKR').toString():
-            (row['total'] as num).toDouble(),
-    };
-  }
   Future<double> getTotalCurrentValue() async {
     final values = await getTotalCurrentValueByCurrency();
     return values.values.fold<double>(
@@ -468,14 +449,6 @@ class AssetsService {
   }
   Future<double> getTotalPurchaseValue() async {
     final values = await getTotalPurchaseValueByCurrency();
-    return values.values.fold<double>(
-      0.0,
-      (double total, double value) => total + value,
-    );
-  }
-  Future<double> getTotalRealizedProfitLoss() async {
-    final values =
-        await getTotalRealizedProfitLossByCurrency();
     return values.values.fold<double>(
       0.0,
       (double total, double value) => total + value,

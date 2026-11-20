@@ -12,6 +12,9 @@ class MyLibraryService {
 
   static const _databaseName = 'my_library.db';
   static const _tableName = 'library_items';
+  static const _playlistsTable = 'library_playlists';
+  static const _playlistItemsTable = 'library_playlist_items';
+  static const _collectionsTable = 'library_collections';
 
   Database? _database;
   Future<Database>? _opening;
@@ -49,7 +52,7 @@ class MyLibraryService {
     final directory = await libraryDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -74,7 +77,15 @@ class MyLibraryService {
             'ALTER TABLE $_tableName ADD COLUMN last_position_ms INTEGER NOT NULL DEFAULT 0',
           );
         }
+        if (oldVersion < 3) {
+          await db.execute('CREATE TABLE $_playlistsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
+          await db.execute('CREATE TABLE $_playlistItemsTable (playlist_id INTEGER NOT NULL, item_id INTEGER NOT NULL, added_at TEXT NOT NULL, PRIMARY KEY (playlist_id, item_id), FOREIGN KEY (playlist_id) REFERENCES $_playlistsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
+          await db.execute('CREATE TABLE $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
+          await db.execute('ALTER TABLE $_tableName ADD COLUMN collection_id INTEGER');
+          await db.execute('CREATE INDEX idx_library_items_collection ON $_tableName(collection_id)');
+        }
       },
+      onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
     _database = db;
     return db;
@@ -121,6 +132,75 @@ class MyLibraryService {
       if (await destination.exists()) await destination.delete();
       rethrow;
     }
+  }
+
+  Future<List<Map<String, Object?>>> getPlaylists() async =>
+      (await database).query(_playlistsTable, orderBy: 'name COLLATE NOCASE');
+
+  Future<int> createPlaylist(String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Playlist name is required.');
+    return (await database).insert(_playlistsTable, {'name': clean, 'created_at': DateTime.now().toIso8601String()});
+  }
+
+  Future<void> deletePlaylist(int id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(_playlistItemsTable, where: 'playlist_id = ?', whereArgs: [id]);
+      await txn.delete(_playlistsTable, where: 'id = ?', whereArgs: [id]);
+    });
+  }
+
+  Future<void> addItemToPlaylist(int playlistId, int itemId) async {
+    await (await database).insert(_playlistItemsTable, {
+      'playlist_id': playlistId, 'item_id': itemId, 'added_at': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<List<Map<String, Object?>>> getPlaylistItems(int playlistId) async =>
+      (await database).rawQuery('SELECT i.* FROM $_tableName i INNER JOIN $_playlistItemsTable pi ON pi.item_id = i.id WHERE pi.playlist_id = ? ORDER BY pi.added_at DESC', [playlistId]);
+
+  Future<void> removeItemFromPlaylist(int playlistId, int itemId) async =>
+      (await database).delete(_playlistItemsTable, where: 'playlist_id = ? AND item_id = ?', whereArgs: [playlistId, itemId]);
+
+  Future<List<Map<String, Object?>>> getCollections() async =>
+      (await database).query(_collectionsTable, orderBy: 'name COLLATE NOCASE');
+
+  Future<int> createCollection(String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Folder name is required.');
+    return (await database).insert(_collectionsTable, {'name': clean, 'created_at': DateTime.now().toIso8601String()});
+  }
+
+  Future<void> renameCollection(int id, String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Folder name is required.');
+    await (await database).update(_collectionsTable, {'name': clean}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteCollection(int id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.update(_tableName, {'collection_id': null}, where: 'collection_id = ?', whereArgs: [id]);
+      await txn.delete(_collectionsTable, where: 'id = ?', whereArgs: [id]);
+    });
+  }
+
+  Future<void> moveItemToCollection(int itemId, int? collectionId) async =>
+      (await database).update(_tableName, {'collection_id': collectionId}, where: 'id = ?', whereArgs: [itemId]);
+
+  Future<List<Map<String, Object?>>> getCollectionItems(int collectionId) async =>
+      (await database).query(_tableName, where: 'collection_id = ?', whereArgs: [collectionId], orderBy: 'added_at DESC');
+
+  Future<Map<String, Object>> getStorageInformation() async {
+    final row = (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count FROM $_tableName");
+    final value = row.first;
+    return {
+      'total_count': (value['total_count'] as int?) ?? 0,
+      'total_bytes': (value['total_bytes'] as int?) ?? 0,
+      'book_count': (value['book_count'] as int?) ?? 0,
+      'audio_count': (value['audio_count'] as int?) ?? 0,
+    };
   }
 
   Future<void> saveReadingPage(int id, int page) async {

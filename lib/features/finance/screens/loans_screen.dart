@@ -1512,7 +1512,8 @@ class _LoansScreenState extends State<LoansScreen> {
                 children: [
                   Container(
                     margin: const EdgeInsets.only(bottom: 2),
-                    padding: const EdgeInsets.all(12),
+                    height: 110,
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -1535,16 +1536,16 @@ class _LoansScreenState extends State<LoansScreen> {
                         Row(
                           children: [
                             Container(
-                              width: 42,
-                              height: 42,
+                              width: 30,
+                              height: 30,
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(Icons.account_balance_wallet_rounded,
-                                color: Theme.of(context).colorScheme.onPrimary, size: 22),
+                                color: Theme.of(context).colorScheme.onPrimary, size: 18),
                             ),
-                            const SizedBox(width: 11),
+                            const SizedBox(width: 7),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1553,16 +1554,16 @@ class _LoansScreenState extends State<LoansScreen> {
                                     appText(context, 'Total Outstanding', 'Total Outstanding'),
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.onPrimary,
-                                      fontSize: 17,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 1),
                                   Text(
                                     'Across all currencies',
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.72),
-                                      fontSize: 11,
+                                      fontSize: 9,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -1576,18 +1577,18 @@ class _LoansScreenState extends State<LoansScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 3),
                         if (_outstandingByCurrency.isEmpty)
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.09),
                               borderRadius: BorderRadius.circular(13),
                             ),
                             child: Text(
                               appText(context, 'No outstanding loans.', 'No outstanding loans.'),
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.82), fontSize: 13),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.82), fontSize: 11),
                             ),
                           )
                         else
@@ -1603,7 +1604,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               Widget amountTile(MapEntry<String, double> entry) {
                                 return Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
                                       borderRadius: BorderRadius.circular(12),
@@ -1625,14 +1626,14 @@ class _LoansScreenState extends State<LoansScreen> {
                                             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w800),
                                           ),
                                         ),
-                                        const SizedBox(height: 3),
+                                        const SizedBox(height: 1),
                                         Text(
                                           _money(entry.value),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.onPrimary,
-                                            fontSize: 15,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.w800,
                                           ),
                                         ),
@@ -1642,7 +1643,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 );
                               }
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 5),
+                                padding: const EdgeInsets.only(bottom: 2),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -1657,9 +1658,9 @@ class _LoansScreenState extends State<LoansScreen> {
                               );
                             },
                           ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Container(
-                          padding: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.only(top: 3),
                           decoration: BoxDecoration(
                             border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.22))),
                           ),
@@ -1668,12 +1669,12 @@ class _LoansScreenState extends State<LoansScreen> {
                               Expanded(
                                 child: Row(
                                   children: [
-                                    Icon(Icons.receipt_long_rounded, color: Color(0xFFBCEBD7), size: 16),
-                                    const SizedBox(width: 6),
+                                    Icon(Icons.receipt_long_rounded, color: Color(0xFFBCEBD7), size: 13),
+                                    const SizedBox(width: 4),
                                     Flexible(
                                       child: Text('Total Loans  ${_loans.length}',
                                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
+                                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 9, fontWeight: FontWeight.w700)),
                                     ),
                                   ],
                                 ),
@@ -1683,8 +1684,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD18A), size: 16),
-                                    const SizedBox(width: 5),
+                                    Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD18A), size: 13),
+                                    const SizedBox(width: 3),
                                     Flexible(
                                       child: Text('Overdue  $overdueCount',
                                         maxLines: 1, overflow: TextOverflow.ellipsis,

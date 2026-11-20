@@ -16,6 +16,7 @@ import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
+import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
   @override
@@ -1570,10 +1571,17 @@ class _LoansScreenState extends State<LoansScreen> {
                                 ],
                               ),
                             ),
-                            Transform.translate(
-                              offset: const Offset(0, -4),
-                              child: Icon(Icons.trending_up_rounded,
-                                color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8), size: 22),
+                            IconButton(
+                              tooltip: 'View loans analytics',
+                              visualDensity: VisualDensity.compact,
+                              constraints: const BoxConstraints.tightFor(width: 38, height: 38),
+                              padding: EdgeInsets.zero,
+                              onPressed: () => Navigator.push<void>(
+                                context,
+                                MaterialPageRoute(builder: (_) => LoanGraphScreen(hideBalances: _hideBalances)),
+                              ),
+                              icon: Icon(Icons.arrow_forward_rounded,
+                                color: Theme.of(context).colorScheme.onPrimary, size: 22),
                             ),
                           ],
                         ),

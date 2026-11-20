@@ -216,8 +216,20 @@ class MyLibraryService {
           await entity.copy(targetPath);
         }
       }
-      await destination.delete(recursive: true);
-      await staging.rename(destination.path);
+      final previous = Directory('${destination.path}_restore_previous');
+      if (await previous.exists()) await previous.delete(recursive: true);
+      final hadPrevious = await destination.exists();
+      if (hadPrevious) await destination.rename(previous.path);
+      try {
+        await staging.rename(destination.path);
+        if (await previous.exists()) await previous.delete(recursive: true);
+      } catch (_) {
+        if (await destination.exists()) await destination.delete(recursive: true);
+        if (hadPrevious && await previous.exists()) {
+          await previous.rename(destination.path);
+        }
+        rethrow;
+      }
     } catch (_) {
       if (await staging.exists()) await staging.delete(recursive: true);
       rethrow;

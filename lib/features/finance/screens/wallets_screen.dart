@@ -982,25 +982,21 @@ class _WalletsPageState extends State<WalletsPage> {
                         appText(context, 'My Wallets', 'میرے والٹس'),
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                       )),
-                      SizedBox(
-                        width: 132,
-                        height: 30,
-                        child: SegmentedButton<bool>(
-                          showSelectedIcon: false,
-                          style: SegmentedButton.styleFrom(
-                            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            minimumSize: const Size(0, 26),
-                            textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                          ),
-                          segments: const [
-                            ButtonSegment(value: false, label: Text('Classic')),
-                            ButtonSegment(value: true, label: Text('Modern')),
-                          ],
-                          selected: {_usePremiumCards},
-                          onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),
+                      SegmentedButton<bool>(
+                        showSelectedIcon: false,
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(0, 27),
+                          textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                         ),
+                        segments: const [
+                          ButtonSegment(value: false, label: Text('Classic')),
+                          ButtonSegment(value: true, label: Text('Modern')),
+                        ],
+                        selected: {_usePremiumCards},
+                        onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),
                       ),
                       const SizedBox(width: 5),
                       TextButton(

@@ -20,6 +20,7 @@ class _LibraryVideoPlayerScreenState extends State<LibraryVideoPlayerScreen> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.file(File(widget.item['file_path'] as String))
+      ..addListener(_videoChanged)
       ..initialize().then((_) {
         if (!mounted) return;
         setState(() => _ready = true);
@@ -28,8 +29,13 @@ class _LibraryVideoPlayerScreenState extends State<LibraryVideoPlayerScreen> {
       });
   }
 
+  void _videoChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _controller.removeListener(_videoChanged);
     _controller.dispose();
     super.dispose();
   }

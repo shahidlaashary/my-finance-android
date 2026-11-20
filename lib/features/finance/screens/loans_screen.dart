@@ -1588,46 +1588,72 @@ class _LoansScreenState extends State<LoansScreen> {
                             ),
                           )
                         else
-                          ..._outstandingByCurrency.entries.map((entry) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 7),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.08)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(entry.key,
-                                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
+                          ...List.generate(
+                            (_outstandingByCurrency.length / 2).ceil(),
+                            (rowIndex) {
+                              final entries = _outstandingByCurrency.entries.toList();
+                              final first = entries[rowIndex * 2];
+                              final secondIndex = rowIndex * 2 + 1;
+                              final second = secondIndex < entries.length
+                                  ? entries[secondIndex]
+                                  : null;
+                              Widget amountTile(MapEntry<String, double> entry) {
+                                return Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.08)),
                                     ),
-                                    const Spacer(),
-                                    Flexible(
-                                      child: Text(
-                                        _money(entry.value),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onPrimary,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            entry.key,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w800),
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          _money(entry.value),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onPrimary,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                );
+                              }
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 7),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    amountTile(first),
+                                    if (second != null) ...[
+                                      const SizedBox(width: 8),
+                                      amountTile(second),
+                                    ] else
+                                      const Spacer(),
                                   ],
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            },
+                          ),
                         const SizedBox(height: 5),
                         Container(
                           padding: const EdgeInsets.only(top: 12),

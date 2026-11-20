@@ -67,6 +67,10 @@ class MyLibraryService {
             last_position_ms INTEGER NOT NULL DEFAULT 0
           )
         ''');
+        await db.execute('CREATE TABLE $_playlistsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
+        await db.execute('CREATE TABLE $_playlistItemsTable (playlist_id INTEGER NOT NULL, item_id INTEGER NOT NULL, added_at TEXT NOT NULL, PRIMARY KEY (playlist_id, item_id), FOREIGN KEY (playlist_id) REFERENCES $_playlistsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
+        await db.execute('CREATE TABLE $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
+        await db.execute('ALTER TABLE $_tableName ADD COLUMN collection_id INTEGER');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {

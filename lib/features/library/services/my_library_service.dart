@@ -15,6 +15,7 @@ class MyLibraryService {
   static const _playlistsTable = 'library_playlists';
   static const _playlistItemsTable = 'library_playlist_items';
   static const _collectionsTable = 'library_collections';
+  static const _collectionItemsTable = 'library_collection_items';
 
   Database? _database;
   Future<Database>? _opening;
@@ -52,7 +53,7 @@ class MyLibraryService {
     final directory = await libraryDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
-      version: 3,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -67,10 +68,6 @@ class MyLibraryService {
             last_position_ms INTEGER NOT NULL DEFAULT 0
           )
         ''');
-        await db.execute('CREATE TABLE $_playlistsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
-        await db.execute('CREATE TABLE $_playlistItemsTable (playlist_id INTEGER NOT NULL, item_id INTEGER NOT NULL, added_at TEXT NOT NULL, PRIMARY KEY (playlist_id, item_id), FOREIGN KEY (playlist_id) REFERENCES $_playlistsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
-        await db.execute('CREATE TABLE $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
-        await db.execute('ALTER TABLE $_tableName ADD COLUMN collection_id INTEGER');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -81,18 +78,22 @@ class MyLibraryService {
             'ALTER TABLE $_tableName ADD COLUMN last_position_ms INTEGER NOT NULL DEFAULT 0',
           );
         }
-        if (oldVersion < 3) {
-          await db.execute('CREATE TABLE $_playlistsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
-          await db.execute('CREATE TABLE $_playlistItemsTable (playlist_id INTEGER NOT NULL, item_id INTEGER NOT NULL, added_at TEXT NOT NULL, PRIMARY KEY (playlist_id, item_id), FOREIGN KEY (playlist_id) REFERENCES $_playlistsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
-          await db.execute('CREATE TABLE $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
-          await db.execute('ALTER TABLE $_tableName ADD COLUMN collection_id INTEGER');
-          await db.execute('CREATE INDEX idx_library_items_collection ON $_tableName(collection_id)');
-        }
       },
       onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
+    // Idempotent add-on tables; no change to the existing Library schema.
+    await _ensureAddOnTables(db);
     _database = db;
     return db;
+  }
+
+
+  Future<void> _ensureAddOnTables(Database db) async {
+    await db.execute('CREATE TABLE IF NOT EXISTS $_playlistsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
+    await db.execute('CREATE TABLE IF NOT EXISTS $_playlistItemsTable (playlist_id INTEGER NOT NULL, item_id INTEGER NOT NULL, added_at TEXT NOT NULL, PRIMARY KEY (playlist_id, item_id), FOREIGN KEY (playlist_id) REFERENCES $_playlistsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
+    await db.execute('CREATE TABLE IF NOT EXISTS $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
+    await db.execute('CREATE TABLE IF NOT EXISTS $_collectionItemsTable (collection_id INTEGER NOT NULL, item_id INTEGER NOT NULL UNIQUE, added_at TEXT NOT NULL, PRIMARY KEY (collection_id, item_id), FOREIGN KEY (collection_id) REFERENCES $_collectionsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_library_collection_items_collection ON $_collectionItemsTable(collection_id)');
   }
 
   Future<List<Map<String, Object?>>> getItems({String? fileType}) async {
@@ -186,17 +187,30 @@ class MyLibraryService {
   Future<void> deleteCollection(int id) async {
     final db = await database;
     await db.transaction((txn) async {
-      await txn.update(_tableName, {'collection_id': null}, where: 'collection_id = ?', whereArgs: [id]);
+      await txn.delete(_collectionItemsTable, where: 'collection_id = ?', whereArgs: [id]);
       await txn.delete(_collectionsTable, where: 'id = ?', whereArgs: [id]);
     });
   }
 
   Future<void> moveItemToCollection(int itemId, int? collectionId) async {
-    await (await database).update(_tableName, {'collection_id': collectionId}, where: 'id = ?', whereArgs: [itemId]);
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(_collectionItemsTable, where: 'item_id = ?', whereArgs: [itemId]);
+      if (collectionId != null) {
+        await txn.insert(_collectionItemsTable, {
+          'collection_id': collectionId,
+          'item_id': itemId,
+          'added_at': DateTime.now().toIso8601String(),
+        });
+      }
+    });
   }
 
   Future<List<Map<String, Object?>>> getCollectionItems(int collectionId) async =>
-      (await database).query(_tableName, where: 'collection_id = ?', whereArgs: [collectionId], orderBy: 'added_at DESC');
+      (await database).rawQuery(
+        'SELECT i.* FROM $_tableName i INNER JOIN $_collectionItemsTable ci ON ci.item_id = i.id WHERE ci.collection_id = ? ORDER BY i.added_at DESC',
+        [collectionId],
+      );
 
   Future<Map<String, Object>> getStorageInformation() async {
     final row = (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count FROM $_tableName");

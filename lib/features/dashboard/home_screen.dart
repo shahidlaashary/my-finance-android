@@ -825,7 +825,8 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.all(16),
+              height: 57,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.onPrimary,
                 borderRadius: BorderRadius.circular(17),
@@ -882,8 +883,8 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 10),
             Container(
-              constraints: const BoxConstraints(minHeight: 74),
-              padding: const EdgeInsets.all(12),
+              height: 57,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.onPrimary,
                 borderRadius: BorderRadius.circular(17),
@@ -954,8 +955,8 @@ class _HomePageState extends State<HomePage> {
               )
             else if (budgetAlerts.isEmpty)
               Container(
-                constraints: const BoxConstraints(minHeight: 74),
-                padding: const EdgeInsets.all(15),
+                height: 57,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.onPrimary,
                   borderRadius: BorderRadius.circular(16),
@@ -1029,34 +1030,36 @@ class _HomePageState extends State<HomePage> {
     required Color color,
   }) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 74),
-      padding: const EdgeInsets.all(10),
+      height: 57,
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(17),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Icon(icon, color: color, size: 16),
-            SizedBox(width: 5),
+            Icon(icon, color: color, size: 15),
+            SizedBox(width: 4),
             Expanded(
-              child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
+              child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 10,
                       color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
             ),
           ]),
-          SizedBox(height: 8),
+          SizedBox(height: 3),
           loading
-              ? SizedBox(height: 18, width: 18,
+              ? SizedBox(height: 15, width: 15,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(money(value),
-                      style: TextStyle(fontSize: 14,
+                      maxLines: 1,
+                      style: TextStyle(fontSize: 13,
                           fontWeight: FontWeight.w800, color: color)),
                 ),
         ],
@@ -1083,43 +1086,57 @@ class _HomePageState extends State<HomePage> {
                 ? '75% used'
                 : '50% used';
     return Container(
-      constraints: const BoxConstraints(minHeight: 74),
+      height: 57,
       margin: const EdgeInsets.only(bottom: 9),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
             Expanded(
-              child: Text(budget.name,
+              child: Text(budget.name, maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.w800,
-                      fontSize: 13, color: Theme.of(context).colorScheme.onSurface)),
+                      fontSize: 12, color: Theme.of(context).colorScheme.onSurface)),
             ),
+            SizedBox(width: 8),
             Text('${percent.toStringAsFixed(0)}%',
-                style: TextStyle(fontSize: 13,
+                style: TextStyle(fontSize: 12,
                     fontWeight: FontWeight.w800, color: color)),
           ]),
-          SizedBox(height: 5),
-          Text(status, style: TextStyle(fontSize: 11,
-              fontWeight: FontWeight.w600, color: color)),
-          SizedBox(height: 9),
+          SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: ratio.clamp(0.0, 1.0).toDouble(),
-              minHeight: 7,
+              minHeight: 5,
               backgroundColor: Theme.of(context).dividerColor,
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
-          SizedBox(height: 7),
-          Text('${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} spent of ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
-              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+          SizedBox(height: 3),
+          Row(children: [
+            Expanded(
+              child: Text(status, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 9,
+                      fontWeight: FontWeight.w700, color: color)),
+            ),
+            SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '${budget.currency} ${NumberFormat('#,##0.00').format(budget.spentAmount)} / ${NumberFormat('#,##0.00').format(budget.limitAmount)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor),
+              ),
+            ),
+          ]),
         ],
       ),
     );

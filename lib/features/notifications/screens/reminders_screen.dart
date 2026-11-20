@@ -220,13 +220,13 @@ class _RemindersScreenState extends State<RemindersScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: _items.isEmpty
-                  ? ListView(children: const [
-                      SizedBox(height: 100),
+                  ? ListView(children: [
+                      const SizedBox(height: 100),
                       Icon(Icons.notifications_none, size: 58, color: Theme.of(context).hintColor),
-                      SizedBox(height: 12),
-                      Center(child: Text('No reminders scheduled yet.')),
-                      SizedBox(height: 8),
-                      Center(child: Text('Add a reminder for bills, loans or savings goals.')),
+                      const SizedBox(height: 12),
+                      const Center(child: Text('No reminders scheduled yet.')),
+                      const SizedBox(height: 8),
+                      const Center(child: Text('Add a reminder for bills, loans or savings goals.')),
                     ])
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),

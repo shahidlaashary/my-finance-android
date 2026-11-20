@@ -1379,13 +1379,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
-  Widget _assetStatusChip(String label, Color background, Color foreground) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(7)),
-      child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: foreground, letterSpacing: .3)),
-    );
-  }
+
 
   @override
   void initState() {

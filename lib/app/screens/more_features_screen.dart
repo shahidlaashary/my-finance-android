@@ -8,6 +8,7 @@ import 'package:my_finance/features/settings/general_app_preferences_screen.dart
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/features/settings/base_currency_screen.dart';
 import 'package:my_finance/features/settings/language_settings_screen.dart';
+import 'package:my_finance/features/settings/sound_voice_settings_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
 import 'package:my_finance/app/screens/about_hub_screen.dart';
@@ -83,6 +84,15 @@ class AppSettingsScreen extends StatelessWidget {
             title: 'Notifications & Reminders',
             subtitle: 'Schedule bill, loan and personal finance reminders',
             onTap: () => _openScreen(context, const RemindersScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.volume_up_rounded,
+            title: 'Sound & Voice Settings',
+            subtitle: 'Control app sounds, voice announcements and volume',
+            onTap: () => _openScreen(
+              context,
+              const SoundVoiceSettingsScreen(),
+            ),
           ),
           _SettingsInfoTile(
             icon: Icons.chat_rounded,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
 class SoundVoiceSettingsScreen extends StatelessWidget {
@@ -100,7 +101,9 @@ class SoundVoiceSettingsScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: OutlinedButton.icon(
-                      onPressed: settings.voiceEnabled ? settings.testVoice : null,
+                      onPressed: settings.voiceEnabled
+                          ? () => _testVoice(context, settings)
+                          : null,
                       icon: const Icon(Icons.record_voice_over_rounded),
                       label: const Text('Test Voice'),
                     ),
@@ -111,7 +114,7 @@ class SoundVoiceSettingsScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 2, 4, 12),
               child: Text(
-                'Voice availability and pronunciation depend on the text-to-speech voices installed on your Android device.',
+                'Only the selected language voice is used. If it is not installed or supported on your Android device, the announcement will not play.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -121,6 +124,35 @@ class SoundVoiceSettingsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _testVoice(
+    BuildContext context,
+    SoundSettingsService settings,
+  ) async {
+    try {
+      await settings.testVoice();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voice test started.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on PlatformException catch (error) {
+      if (!context.mounted) return;
+      final message = error.code == 'VOICE_UNAVAILABLE'
+          ? 'Selected language ki TTS voice is not available on this device. Install that voice in Android Text-to-Speech settings.'
+          : error.code == 'TTS_NOT_READY'
+              ? 'Text-to-speech is still starting. Please try again.'
+              : 'Unable to start the selected TTS voice.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Widget _sectionCard(

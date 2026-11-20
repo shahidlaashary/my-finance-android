@@ -273,170 +273,132 @@ class _RecurringTransactionsScreenState
   Widget _transactionCard(RecurringTransactionModel item) {
     final isIncome = item.type.toLowerCase() == 'income';
     final isTransfer = item.isTransfer;
+    final scheme = Theme.of(context).colorScheme;
+    final color = isIncome ? scheme.secondary : isTransfer ? scheme.primary : scheme.error;
+    final icon = isIncome ? Icons.arrow_downward_rounded : isTransfer ? Icons.swap_horiz_rounded : Icons.arrow_upward_rounded;
 
-    final color = isIncome
-        ? Theme.of(context).colorScheme.secondary
-        : isTransfer
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.error;
-
-    final icon = isIncome
-        ? Icons.arrow_downward
-        : isTransfer
-            ? Icons.swap_horiz
-            : Icons.arrow_upward;
+    Widget detailTile(IconData iconData, String label, String value) => Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withOpacity(0.48),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Row(children: [
+          Icon(iconData, size: 14, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant)),
+              const SizedBox(height: 1),
+              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+            ],
+          )),
+        ]),
+      ),
+    );
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 1.5,
-      shadowColor: color.withOpacity(0.12),
+      margin: const EdgeInsets.only(bottom: 9),
+      elevation: 0,
+      color: scheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: color.withOpacity(0.10)),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: scheme.outlineVariant.withOpacity(0.65)),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        padding: const EdgeInsets.fromLTRB(10, 10, 8, 5),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(
+              width: 35, height: 35,
+              decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: color, size: 19),
+            ),
+            const SizedBox(width: 9),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: color.withOpacity(0.12),
-                  child: Icon(icon, color: color),
-                ),
-                SizedBox(width: 9),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        item.type.toUpperCase(),
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  _money(item.amount, _currency(item.walletId)),
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
+                Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 3),
+                Row(children: [
+                  Text(item.type.toUpperCase(), style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w800)),
+                  Text('  •  ', style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant)),
+                  Text(item.frequency.toUpperCase(), style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+                ]),
               ],
-            ),
-            const Divider(height: 18, thickness: 0.7),
-            _detailRow(
-              Icons.account_balance_wallet,
-              'Wallet',
-              _walletName(item.walletId),
-            ),
-            if (isTransfer)
-              _detailRow(
-                Icons.account_balance,
-                'Destination',
-                _walletName(item.toWalletId),
-              ),
-            if (isTransfer && item.transferFee > 0)
-              _detailRow(
-                Icons.payments_outlined,
-                'Transfer fee',
-                _money(item.transferFee, _currency(item.walletId)),
-              ),
-            _detailRow(
-              Icons.repeat,
-              'Frequency',
-              item.frequency.toUpperCase(),
-            ),
-            _detailRow(
-              Icons.calendar_today,
-              'Start date',
-              _date(item.startDate),
-            ),
-            _detailRow(
-              Icons.event,
-              'Next run',
-              _date(item.nextRunDate),
-            ),
-            if (item.endDate != null)
-              _detailRow(
-                Icons.event_busy,
-                'End date',
-                _date(item.endDate),
-              ),
-            if (item.note.isNotEmpty)
-              _detailRow(
-                Icons.notes,
-                'Note',
-                item.note,
-              ),
-            SizedBox(height: 7),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: item.isActive
-                        ? Theme.of(context).colorScheme.secondary.withOpacity(0.12)
-                        : Theme.of(context).hintColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    item.isActive ? 'Active' : 'Paused',
-                    style: TextStyle(
-                      color: item.isActive
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).hintColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Edit',
-                  onPressed: () => _openForm(existing: item),
-                  icon: Icon(Icons.edit_outlined),
-                ),
-                IconButton(
-                  tooltip: item.isActive ? 'Pause' : 'Resume',
-                  onPressed: () => _toggleStatus(item),
-                  icon: Icon(
-                    item.isActive
-                        ? Icons.pause_circle_outline
-                        : Icons.play_circle_outline,
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Delete',
-                  onPressed: () => _deleteItem(item),
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ],
-            ),
+            )),
+            const SizedBox(width: 6),
+            Flexible(child: Text(_money(item.amount, _currency(item.walletId)),
+              maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end,
+              style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13))),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            detailTile(Icons.account_balance_wallet_outlined, 'Wallet', _walletName(item.walletId)),
+            const SizedBox(width: 7),
+            detailTile(Icons.event_available_outlined, 'Next run', _date(item.nextRunDate)),
+          ]),
+          if (isTransfer || item.endDate != null) ...[
+            const SizedBox(height: 6),
+            Row(children: [
+              if (isTransfer)
+                detailTile(Icons.account_balance_outlined, 'Destination', _walletName(item.toWalletId))
+              else
+                detailTile(Icons.calendar_today_outlined, 'Start date', _date(item.startDate)),
+              const SizedBox(width: 7),
+              if (isTransfer && item.transferFee > 0)
+                detailTile(Icons.payments_outlined, 'Transfer fee', _money(item.transferFee, _currency(item.walletId)))
+              else if (item.endDate != null)
+                detailTile(Icons.event_busy_outlined, 'End date', _date(item.endDate))
+              else
+                const Expanded(child: SizedBox()),
+            ]),
           ],
-        ),
+          if (item.note.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(children: [
+              Icon(Icons.notes_rounded, size: 13, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(child: Text(item.note, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant))),
+            ]),
+          ],
+          const SizedBox(height: 2),
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: item.isActive ? scheme.secondaryContainer : scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(item.isActive ? 'Active' : 'Paused',
+                style: TextStyle(
+                  color: item.isActive ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
+                  fontSize: 10, fontWeight: FontWeight.w800)),
+            ),
+            const Spacer(),
+            IconButton(
+              tooltip: 'Edit', visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              padding: EdgeInsets.zero, onPressed: () => _openForm(existing: item),
+              icon: const Icon(Icons.edit_outlined, size: 18)),
+            IconButton(
+              tooltip: item.isActive ? 'Pause' : 'Resume', visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              padding: EdgeInsets.zero, onPressed: () => _toggleStatus(item),
+              icon: Icon(item.isActive ? Icons.pause_circle_outline : Icons.play_circle_outline, size: 19)),
+            IconButton(
+              tooltip: 'Delete', visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              padding: EdgeInsets.zero, onPressed: () => _deleteItem(item),
+              icon: Icon(Icons.delete_outline, color: scheme.error, size: 19)),
+          ]),
+        ]),
       ),
     );
   }
@@ -513,50 +475,62 @@ class _RecurringTransactionsScreenState
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                       children: [
                         Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.repeat,
-                                  size: 32,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(appText(context, "Recurring Schedules", "Recurring Schedules"),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        '${_items.length} total schedules',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Column(
-                                  children: [
-                                    Text(
-                                      '$activeCount',
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.secondary,
-                                      ),
-                                    ),
-                                    Text(appText(context, "Active", "Active"),
-                                      style: TextStyle(fontSize: 11),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          elevation: 0,
+                          margin: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.14)),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Theme.of(context).colorScheme.primaryContainer.withOpacity(0.72),
+                                  Theme.of(context).colorScheme.surface,
+                                ],
+                              ),
                             ),
+                            child: Row(children: [
+                              Container(
+                                width: 42, height: 42,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(Icons.event_repeat_rounded, size: 23, color: Theme.of(context).colorScheme.primary),
+                              ),
+                              const SizedBox(width: 11),
+                              Expanded(child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(appText(context, "Recurring Schedule", "Recurring Schedule"),
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                                  const SizedBox(height: 3),
+                                  Text('${_items.length} total schedules',
+                                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                ],
+                              )),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                                child: Column(children: [
+                                  Text('$activeCount', style: TextStyle(
+                                    fontSize: 19, height: 1, fontWeight: FontWeight.w900,
+                                    color: Theme.of(context).colorScheme.onSecondaryContainer)),
+                                  const SizedBox(height: 3),
+                                  Text(appText(context, "Active", "Active"), style: TextStyle(
+                                    fontSize: 9, fontWeight: FontWeight.w700,
+                                    color: Theme.of(context).colorScheme.onSecondaryContainer)),
+                                ]),
+                              ),
+                            ]),
                           ),
                         ),
                         SizedBox(height: 16),

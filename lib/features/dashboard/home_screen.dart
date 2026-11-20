@@ -691,8 +691,8 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Primary wallet balance.
             Container(
-              constraints: const BoxConstraints(minHeight: 110),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              height: 110,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primaryContainer],
@@ -732,7 +732,7 @@ class _HomePageState extends State<HomePage> {
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(appText(context, 'Other Currencies', 'دیگر کرنسیاں'),
                           style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11, fontWeight: FontWeight.w700)),
-                        SizedBox(height: 7),
+                        SizedBox(height: 3),
                         if (loading)
                           SizedBox(height: 25, width: 25,
                             child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
@@ -741,7 +741,7 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12))
                         else ...[
                           SizedBox(
-                            height: 25,
+                            height: 20,
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: FittedBox(
@@ -750,17 +750,17 @@ class _HomePageState extends State<HomePage> {
                                 child: Text(_currencyAmount(firstOtherCurrency!.key, firstOtherCurrency!.value),
                                   maxLines: 1,
                                   softWrap: false,
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 19, fontWeight: FontWeight.w800)),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
                               ),
                             ),
                           ),
                           if (otherCurrencyTotals.length > 1)
-                            Padding(padding: const EdgeInsets.only(top: 3),
+                            Padding(padding: const EdgeInsets.only(top: 1),
                               child: Text('+${otherCurrencyTotals.length - 1} ${appText(context, 'more currencies', 'مزید کرنسیاں')}',
-                                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 11))),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontSize: 10))),
                           TextButton(onPressed: _showAllCurrencies,
                             style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 4), minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(vertical: 0), minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                             child: Text(appText(context, 'View All Currencies', 'تمام کرنسیاں دیکھیں'),
                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
@@ -768,10 +768,10 @@ class _HomePageState extends State<HomePage> {
                       ])),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 2),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.13),
                       borderRadius: BorderRadius.circular(12)),
                     child: Row(children: [

@@ -1443,18 +1443,18 @@ class TransactionDetailScreen extends StatelessWidget {
           final sourceId = transaction['wallet_id'];
           final details = <Widget>[
             _detailRow(context, 'Transaction ID', '#${transaction['id']}'),
-            _detailRow('Type', type),
-            _detailRow('Date & Time', date == null
+            _detailRow(context, 'Type', type),
+            _detailRow(context, 'Date & Time', date == null
                 ? (transaction['date']?.toString() ?? '—')
                 : DateFormat('dd MMM yyyy, hh:mm a').format(date)),
-            _detailRow('Wallet', walletName(sourceId)),
+            _detailRow(context, 'Wallet', walletName(sourceId)),
             if (isCommitteeTransfer)
-              _detailRow('Transfer link', (transaction['balance_delta'] as num?)?.toDouble() != null &&
+              _detailRow(context, 'Transfer link', (transaction['balance_delta'] as num?)?.toDouble() != null &&
                 ((transaction['balance_delta'] as num).toDouble() < 0)
                   ? 'Personal Wallet → Committee Ledger'
                   : 'Committee Ledger → Personal Wallet'),
-            _detailRow('Category', category.isEmpty ? (isTransfer ? 'Transfer' : 'No category') : category),
-            _detailRow('Description / Note', note.isEmpty ? '—' : note),
+            _detailRow(context, 'Category', category.isEmpty ? (isTransfer ? 'Transfer' : 'No category') : category),
+            _detailRow(context, 'Description / Note', note.isEmpty ? '—' : note),
           ];
 
           return ListView(

@@ -992,8 +992,8 @@ class _WalletsPageState extends State<WalletsPage> {
                           textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                         ),
                         segments: const [
-                          ButtonSegment(value: false, label: const SizedBox(width: 28, child: Center(child: Text('Classic', maxLines: 1, softWrap: false, overflow: TextOverflow.visible)))),
-                          ButtonSegment(value: true, label: const SizedBox(width: 28, child: Center(child: Text('Modern', maxLines: 1, softWrap: false, overflow: TextOverflow.visible)))),
+                          ButtonSegment(value: false, label: const SizedBox(width: 24, child: Center(child: Text('Classic', textAlign: TextAlign.center, maxLines: 1, softWrap: false, overflow: TextOverflow.visible)))),
+                          ButtonSegment(value: true, label: const SizedBox(width: 24, child: Center(child: Text('Modern', textAlign: TextAlign.center, maxLines: 1, softWrap: false, overflow: TextOverflow.visible)))),
                         ],
                         selected: {_usePremiumCards},
                         onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),

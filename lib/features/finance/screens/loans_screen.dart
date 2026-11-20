@@ -1512,7 +1512,7 @@ class _LoansScreenState extends State<LoansScreen> {
                 children: [
                   Container(
                     margin: const EdgeInsets.only(bottom: 2),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -1569,11 +1569,14 @@ class _LoansScreenState extends State<LoansScreen> {
                                 ],
                               ),
                             ),
-                            Icon(Icons.trending_up_rounded,
-                              color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8), size: 22),
+                            Transform.translate(
+                              offset: const Offset(0, -4),
+                              child: Icon(Icons.trending_up_rounded,
+                                color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8), size: 22),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 8),
                         if (_outstandingByCurrency.isEmpty)
                           Container(
                             width: double.infinity,
@@ -1600,7 +1603,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               Widget amountTile(MapEntry<String, double> entry) {
                                 return Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                                     decoration: BoxDecoration(
                                       color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
                                       borderRadius: BorderRadius.circular(12),
@@ -1610,7 +1613,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                           decoration: BoxDecoration(
                                             color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
                                             borderRadius: BorderRadius.circular(8),
@@ -1622,7 +1625,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w800),
                                           ),
                                         ),
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 3),
                                         Text(
                                           _money(entry.value),
                                           maxLines: 1,
@@ -1639,7 +1642,7 @@ class _LoansScreenState extends State<LoansScreen> {
                                 );
                               }
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 7),
+                                padding: const EdgeInsets.only(bottom: 5),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -1654,9 +1657,9 @@ class _LoansScreenState extends State<LoansScreen> {
                               );
                             },
                           ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 2),
                         Container(
-                          padding: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.only(top: 8),
                           decoration: BoxDecoration(
                             border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.22))),
                           ),

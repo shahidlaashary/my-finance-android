@@ -1118,7 +1118,298 @@ class _AssetsScreenState extends State<AssetsScreen> {
     notesController.dispose();
   }
 
+
+  // New comparison design. The original asset card remains available below it.
+  Widget _redesignedAssetCard(AssetsModel asset) {
+    final currency = asset.currency.toUpperCase();
+    final displayedValue = asset.isSold && asset.salePrice != null
+        ? asset.salePrice!
+        : asset.currentValue;
+    final profitLoss = displayedValue - asset.purchasePrice;
+    final purchaseLoan = asset.linkedLoanId == null ? null : _linkedLoans[asset.linkedLoanId!];
+    final saleLoan = asset.saleLinkedLoanId == null ? null : _linkedLoans[asset.saleLinkedLoanId!];
+    final showPurchaseProgress = asset.paymentType.toLowerCase() == 'loan' && purchaseLoan != null;
+    final showSaleProgress = asset.isSold &&
+        asset.salePaymentType.toLowerCase() == 'loan' && saleLoan != null;
+    final purchaseProgress = purchaseLoan == null || purchaseLoan.amount <= 0
+        ? 0.0
+        : (purchaseLoan.repaidAmount / purchaseLoan.amount).clamp(0.0, 1.0).toDouble();
+    final saleProgress = saleLoan == null || saleLoan.amount <= 0
+        ? 0.0
+        : (saleLoan.repaidAmount / saleLoan.amount).clamp(0.0, 1.0).toDouble();
+    final categoryIcon = <String, IconData>{
+      'Property': Icons.home_work_outlined,
+      'Vehicles': Icons.directions_car_outlined,
+      'Gold': Icons.diamond_outlined,
+      'Jewellery': Icons.watch_outlined,
+      'Electronics': Icons.devices_other_outlined,
+      'Investments': Icons.trending_up_rounded,
+      'Livestock': Icons.pets_outlined,
+      'Business': Icons.storefront_outlined,
+    }[asset.category] ?? Icons.inventory_2_outlined;
+
+    Widget progressSection({
+      required String title,
+      required String completedLabel,
+      required double completed,
+      required double total,
+      required double remaining,
+      required double progress,
+      required Color color,
+      required IconData icon,
+    }) {
+      return Container(
+        padding: const EdgeInsets.all(11),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .82),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: const Color(0xFFE5EBF3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(icon, size: 15, color: color),
+              const SizedBox(width: 6),
+              Expanded(child: Text(title, style: const TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF263B59)))),
+              Text('${(progress * 100).round()}%', style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w800, color: color)),
+            ]),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor: const Color(0xFFE8EDF4),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            ),
+            const SizedBox(height: 7),
+            Row(children: [
+              Expanded(child: Text('$completedLabel: $currency ${_money(completed)} / ${_money(total)}',
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
+            ]),
+            const SizedBox(height: 3),
+            Text('Remaining: $currency ${_money(remaining)}',
+              style: const TextStyle(fontSize: 10, color: Color(0xFF536987), fontWeight: FontWeight.w600)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FC),
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: const Color(0xFFDCE5F0)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0D243B5A), blurRadius: 13, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(13),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _openAssetDetails(asset),
+            child: Row(children: [
+              Container(
+                width: 43, height: 43,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5EEFA),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(categoryIcon, color: const Color(0xFF315F9B), size: 23),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF101D3A))),
+                const SizedBox(height: 3),
+                Text('${asset.category} • ${asset.paymentType.toUpperCase()} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF5B6F91))),
+              ])),
+              const SizedBox(width: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: asset.isSold ? const Color(0xFFFFE9ED) : const Color(0xFFE7F8ED),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(asset.isSold ? 'SOLD' : 'ACTIVE',
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                    color: asset.isSold ? const Color(0xFFDA233C) : const Color(0xFF11864A))),
+              ),
+              PopupMenuButton<String>(
+                tooltip: 'Manage Asset',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 160),
+                icon: const Icon(Icons.more_vert_rounded, size: 20, color: Color(0xFF536987)),
+                onSelected: (value) {
+                  if (value == 'edit' && !asset.isSold) {
+                    _showAssetDialog(asset: asset);
+                  } else if (value == 'valuation' && !asset.isSold) {
+                    _updateValuation(asset);
+                  } else if (value == 'sell' && !asset.isSold) {
+                    _sellAsset(asset);
+                  } else if (value == 'delete') {
+                    _deleteAsset(asset);
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (!asset.isSold) const PopupMenuItem(value: 'edit', child: Text('Edit Asset')),
+                  if (!asset.isSold) const PopupMenuItem(value: 'valuation', child: Text('Update Valuation')),
+                  if (!asset.isSold) const PopupMenuItem(value: 'sell', child: Text('Sell Asset')),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete Asset')),
+                ],
+              ),
+            ]),
+          ),
+          const SizedBox(height: 13),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: const Color(0xFFE5EBF3)),
+            ),
+            child: Row(children: [
+              Expanded(child: _assetCardMetric('Purchase Value', '$currency ${_money(asset.purchasePrice)}',
+                valueColor: const Color(0xFF263B59))),
+              Container(width: 1, height: 31, color: const Color(0xFFE0E8F1)),
+              const SizedBox(width: 10),
+              Expanded(child: _assetCardMetric(asset.isSold ? 'Sale Value' : 'Current Value',
+                '$currency ${_money(displayedValue)}', valueColor: const Color(0xFF263B59))),
+              Container(width: 1, height: 31, color: const Color(0xFFE0E8F1)),
+              const SizedBox(width: 10),
+              Expanded(child: _assetCardMetric(asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
+                '$currency ${_money(profitLoss)}',
+                valueColor: profitLoss >= 0 ? const Color(0xFF159B61) : const Color(0xFFDA3A50))),
+            ]),
+          ),
+          if (showPurchaseProgress || showSaleProgress) ...[
+            const SizedBox(height: 10),
+            if (showPurchaseProgress)
+              progressSection(
+                title: 'Credit Purchase Progress',
+                completedLabel: 'Paid to Seller',
+                completed: purchaseLoan!.repaidAmount,
+                total: purchaseLoan.amount,
+                remaining: purchaseLoan.remainingAmount,
+                progress: purchaseProgress,
+                color: const Color(0xFF159B61),
+                icon: Icons.payments_outlined,
+              ),
+            if (showPurchaseProgress && showSaleProgress) const SizedBox(height: 8),
+            if (showSaleProgress)
+              progressSection(
+                title: 'Credit Sale Recovery',
+                completedLabel: 'Received from Buyer',
+                completed: saleLoan!.repaidAmount,
+                total: saleLoan.amount,
+                remaining: saleLoan.remainingAmount,
+                progress: saleProgress,
+                color: const Color(0xFF2674E8),
+                icon: Icons.call_received_rounded,
+              ),
+          ],
+          const SizedBox(height: 10),
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: asset.isSold ? const Color(0xFFFFE9ED) : const Color(0xFFE5EEFA),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(asset.isSold ? 'SOLD ASSET' : asset.paymentType.toUpperCase(),
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                  color: asset.isSold ? const Color(0xFFDA233C) : const Color(0xFF315F9B))),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () => _openAssetDetails(asset),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                minimumSize: const Size(0, 30),
+              ),
+              icon: const Icon(Icons.receipt_long_outlined, size: 14),
+              label: const Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+            ),
+          ]),
+          if ((purchaseLoan != null && purchaseLoan.remainingAmount > 0) ||
+              (saleLoan != null && saleLoan.remainingAmount > 0)) ...[
+            const SizedBox(height: 3),
+            Row(children: [
+              if (purchaseLoan != null && purchaseLoan.remainingAmount > 0)
+                Expanded(child: OutlinedButton.icon(
+                  onPressed: () => _addAssetRepayment(purchaseLoan),
+                  icon: const Icon(Icons.payments_outlined, size: 15),
+                  label: const Text('Pay Back', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF159B61),
+                    side: const BorderSide(color: Color(0xFFB8DDCA)),
+                    minimumSize: const Size(0, 34),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )),
+              if (purchaseLoan != null && purchaseLoan.remainingAmount > 0 &&
+                  saleLoan != null && saleLoan.remainingAmount > 0) const SizedBox(width: 8),
+              if (saleLoan != null && saleLoan.remainingAmount > 0)
+                Expanded(child: OutlinedButton.icon(
+                  onPressed: () => _addAssetRepayment(saleLoan),
+                  icon: const Icon(Icons.call_received_rounded, size: 15),
+                  label: const Text('Receive', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF2674E8),
+                    side: const BorderSide(color: Color(0xFFB8CFF1)),
+                    minimumSize: const Size(0, 34),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )),
+            ]),
+          ],
+        ]),
+      ),
+    );
+  }
+
   Widget _assetCard(AssetsModel asset) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 2, top: 2),
+          child: Row(children: [
+            const Icon(Icons.auto_awesome, size: 13, color: Color(0xFF2674E8)),
+            const SizedBox(width: 5),
+            const Text('NEW DESIGN PREVIEW', style: TextStyle(
+              fontSize: 9, letterSpacing: .7, fontWeight: FontWeight.w800,
+              color: Color(0xFF2674E8))),
+          ]),
+        ),
+        _redesignedAssetCard(asset),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 2, top: 5),
+          child: Row(children: [
+            const Icon(Icons.layers_outlined, size: 13, color: Color(0xFF718096)),
+            const SizedBox(width: 5),
+            const Text('EXISTING DESIGN', style: TextStyle(
+              fontSize: 9, letterSpacing: .7, fontWeight: FontWeight.w800,
+              color: Color(0xFF718096))),
+          ]),
+        ),
+        _existingAssetCard(asset),
+      ],
+    );
+  }
+
+  Widget _existingAssetCard(AssetsModel asset) {
     final currency = asset.currency.toUpperCase();
     final displayedValue = asset.isSold && asset.salePrice != null
         ? asset.salePrice!

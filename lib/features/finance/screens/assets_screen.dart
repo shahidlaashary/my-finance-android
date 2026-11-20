@@ -543,7 +543,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                       Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 10),
                                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
+                                        Text(appText(context, 'Purchase Date', 'خریداری کی تاریخ'), style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
                                         const SizedBox(height: 3),
                                         Text(DateFormat('dd MMM yyyy').format(purchaseDate), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                                       ])),
@@ -1815,7 +1815,7 @@ class AssetDetailsScreen extends StatelessWidget {
     return 'Party';
   }
 
-  Widget _detailRow(String title, String value) {
+  Widget _detailRow(context, String title, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1928,14 +1928,14 @@ class AssetDetailsScreen extends StatelessWidget {
                 Text('$currency ${_money(currentValue)}', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 24, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 9),
                 Row(children: [
-                  Expanded(child: _metric('Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
+                  Expanded(child: _metric(context, 'Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
                   Container(width: 1, height: 30, color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .14)),
                   const SizedBox(width: 14),
-                  Expanded(child: _metric(asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
+                  Expanded(child: _metric(context, asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
                     '$currency ${_money(profitLoss)}', color: profitLoss >= 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.errorContainer)),
                 ]),
                 const SizedBox(height: 10),
-                _detailRow('Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
+                _detailRow(context, 'Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
               ],
             ),
           ),
@@ -1989,7 +1989,7 @@ class AssetDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _metric(String label, String value, {Color color = Colors.white}) => Column(
+  Widget _metric(context, String label, String value, {Color color = Colors.white}) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 10)),

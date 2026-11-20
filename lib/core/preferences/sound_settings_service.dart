@@ -18,17 +18,7 @@ class SoundSettingsService extends ChangeNotifier {
   static const _voiceVolumeKey = 'voice_announcements_volume';
   static const _voiceLanguageKey = 'voice_announcements_language';
 
-  static const supportedLanguages = <String, String>{
-    'en': 'English',
-    'ur': 'اردو',
-    'ar': 'العربية',
-    'hi': 'हिन्दी',
-    'pa': 'پنجابی',
-    'skr': 'سرائیکی',
-    'sd': 'سنڌي',
-    'bal': 'بلوچی',
-    'ps': 'پښتو',
-  };
+  static const supportedLanguages = LanguageSettingsService.languageNames;
 
   bool soundEnabled = true;
   bool voiceEnabled = false;
@@ -103,8 +93,9 @@ class SoundSettingsService extends ChangeNotifier {
         'volume': voiceVolume,
       });
     } on PlatformException {
-      // Device TTS may not have the requested voice installed.
-    } catch (_) {}
+      // Let the caller show a clear message when the selected voice is missing.
+      rethrow;
+    }
   }
 
   Future<void> testSound() async {
@@ -125,8 +116,6 @@ class SoundSettingsService extends ChangeNotifier {
       'ur': 'مائی فنانس میں خوش آمدید۔',
       'ar': 'مرحباً بك في ماي فاينانس.',
       'hi': 'माई फाइनेंस में आपका स्वागत है।',
-      // Android devices commonly lack dedicated TTS voices for these regional
-      // languages; the native bridge uses the installed Urdu voice as fallback.
       'pa': 'مائی فنانس میں خوش آمدید۔',
       'skr': 'مائی فنانس میں خوش آمدید۔',
       'sd': 'مائی فنانس میں خوش آمدید۔',

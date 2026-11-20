@@ -277,13 +277,21 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             isCompleted: goal?.isCompleted ?? false, createdAt: goal?.createdAt ?? DateTime.now());
                           if (attachmentGoalId == null) {
                             final newId = await GoalsService.addGoal(model);
+                            var failedAttachments = 0;
                             for (final attachment in pendingAttachments) {
-                              await AttachmentService.addAttachment(
-                                ownerType: 'goal',
-                                ownerId: newId,
-                                sourcePath: attachment['path']!,
-                                originalFileName: attachment['name'],
-                              );
+                              try {
+                                await AttachmentService.addAttachment(
+                                  ownerType: 'goal',
+                                  ownerId: newId,
+                                  sourcePath: attachment['path']!,
+                                  originalFileName: attachment['name'],
+                                );
+                              } catch (_) {
+                                failedAttachments++;
+                              }
+                            }
+                            if (failedAttachments > 0) {
+                              _message('$failedAttachments attachment(s) could not be saved. You can add them from Edit Goal.');
                             }
                           } else {
                             await GoalsService.updateGoal(model);

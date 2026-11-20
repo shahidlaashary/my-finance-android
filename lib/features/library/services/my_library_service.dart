@@ -79,6 +79,9 @@ class MyLibraryService {
           );
         }
       },
+      // If a development build briefly used schema v3, safely return to v2.
+      // The unused v3 column is left in place; no existing rows are rewritten.
+      onDowngrade: (db, oldVersion, newVersion) async {},
       onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
     // Idempotent add-on tables; no change to the existing Library schema.

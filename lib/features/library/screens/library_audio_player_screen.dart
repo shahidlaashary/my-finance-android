@@ -135,7 +135,7 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
                     children: [
                       IconButton.filledTonal(
                         iconSize: 32,
-                        onPressed: () => _player.seek(Duration(seconds: (_position.inSeconds - 10).clamp(0, _duration.inSeconds))),
+                        onPressed: () => _player.seek(Duration(seconds: (_position.inSeconds - 10).clamp(0, _duration.inSeconds).toInt())),
                         icon: const Icon(Icons.replay_10_rounded),
                       ),
                       const SizedBox(width: 18),

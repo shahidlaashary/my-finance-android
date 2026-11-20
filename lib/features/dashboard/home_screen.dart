@@ -780,13 +780,22 @@ class _HomePageState extends State<HomePage> {
                     color: Theme.of(context).colorScheme.tertiary,
                   ),
                 ),
-                SizedBox(width: 10),
+                SizedBox(width: 8),
                 Expanded(
                   child: _metricCard(
                     title: appText(context, 'Loans Receivable', 'وصول طلب قرضے'),
                     value: loansReceivablePKR,
                     icon: Icons.handshake_outlined,
                     color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: _metricCard(
+                    title: appText(context, 'Loans Payable', 'قابلِ ادائیگی قرضے'),
+                    value: loansPayablePKR,
+                    icon: Icons.account_balance_outlined,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                 ),
               ],
@@ -995,7 +1004,7 @@ class _HomePageState extends State<HomePage> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(17),
@@ -1005,12 +1014,15 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Icon(icon, color: color, size: 18),
-            SizedBox(width: 7),
-            Text(title, style: TextStyle(fontSize: 12,
-                color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
+            Icon(icon, color: color, size: 16),
+            SizedBox(width: 5),
+            Expanded(
+              child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10,
+                      color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
+            ),
           ]),
-          SizedBox(height: 9),
+          SizedBox(height: 8),
           loading
               ? SizedBox(height: 18, width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2))
@@ -1018,7 +1030,7 @@ class _HomePageState extends State<HomePage> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(money(value),
-                      style: TextStyle(fontSize: 16,
+                      style: TextStyle(fontSize: 14,
                           fontWeight: FontWeight.w800, color: color)),
                 ),
         ],

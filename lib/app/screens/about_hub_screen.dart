@@ -16,7 +16,7 @@ class AboutHubScreen extends StatelessWidget {
       _AboutEntry('Terms of Use','Important terms for using My Finance',Icons.gavel_outlined,()=>_open(context,const _TermsPage())),
       _AboutEntry('Storage Information','Local database and attachment storage details',Icons.storage_outlined,()=>_open(context,const _StoragePage())),
     ];
-    return Scaffold(appBar:AppBar(title:Text(appText(context, "About My Finance", "About My Finance"),style:TextStyle(fontWeight:FontWeight.w800))),body:ListView(padding:const EdgeInsets.all(16),children:[
+    return Scaffold(appBar:AppBar(title:Text(appText(context, "About My Finance", "About My Finance"),style:const TextStyle(fontWeight:FontWeight.bold))),body:ListView(padding:const EdgeInsets.all(16),children:[
       Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 12),
@@ -59,21 +59,30 @@ class AboutHubScreen extends StatelessWidget {
         ),
       ),
       ...sections.map((s)=>Card(
-        margin: const EdgeInsets.only(bottom: 8),
+        elevation: 1,
+        margin: const EdgeInsets.only(bottom: 7),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
-          minVerticalPadding: 12,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-          leading: Container(
-            width: 38, height: 38,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: .10),
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: Icon(s.icon, color: Theme.of(context).colorScheme.primary, size: 21),
+          minTileHeight: 72,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 1),
+          leading: Icon(
+            s.icon,
+            color: Theme.of(context).colorScheme.primary,
+            size: 23,
           ),
-          title: Text(s.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-          subtitle: Text(s.subtitle, style: const TextStyle(fontSize: 12, height: 1.25)),
+          title: Text(
+            s.title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          subtitle: Text(
+            s.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12),
+          ),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: s.action,
         ),

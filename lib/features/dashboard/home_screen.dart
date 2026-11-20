@@ -691,6 +691,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Primary wallet balance.
             Container(
+              constraints: const BoxConstraints(minHeight: 110),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -712,9 +713,20 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(height: 5),
                         loading ? SizedBox(height: 25, width: 25,
                           child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2))
-                          : FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-                            child: Text(_currencyAmount(baseCurrency, baseCurrencyWalletTotal),
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 25, fontWeight: FontWeight.w800))),
+                          : SizedBox(
+                              height: 30,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(_currencyAmount(baseCurrency, baseCurrencyWalletTotal),
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 25, fontWeight: FontWeight.w800)),
+                                ),
+                              ),
+                            ),
                       ])),
                       SizedBox(width: 14),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -728,9 +740,20 @@ class _HomePageState extends State<HomePage> {
                           Text(appText(context, 'No other currencies', 'کوئی دوسری کرنسی نہیں'),
                             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 12))
                         else ...[
-                          FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-                            child: Text(_currencyAmount(firstOtherCurrency!.key, firstOtherCurrency!.value),
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 19, fontWeight: FontWeight.w800))),
+                          SizedBox(
+                            height: 25,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(_currencyAmount(firstOtherCurrency!.key, firstOtherCurrency!.value),
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 19, fontWeight: FontWeight.w800)),
+                              ),
+                            ),
+                          ),
                           if (otherCurrencyTotals.length > 1)
                             Padding(padding: const EdgeInsets.only(top: 3),
                               child: Text('+${otherCurrencyTotals.length - 1} ${appText(context, 'more currencies', 'مزید کرنسیاں')}',

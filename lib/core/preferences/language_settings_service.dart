@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persists the selected application language and notifies the root app.
+/// Persists the selected application language and exposes the canonical
+/// language catalogue shared by app localization and voice settings.
 class LanguageSettingsService {
   LanguageSettingsService._();
   static final LanguageSettingsService instance = LanguageSettingsService._();
 
-  static const _key = 'app_language_code';
-  static const supportedLanguageCodes = <String>{
-    'en', 'ur', 'ar', 'hi', 'pa', 'skr', 'sd', 'bal', 'ps',
+  static const languageNames = <String, String>{
+    'en': 'English',
+    'ur': 'اردو',
+    'ar': 'العربية',
+    'hi': 'हिन्दी',
+    'pa': 'پنجابی',
+    'skr': 'سرائیکی',
+    'sd': 'سنڌي',
+    'bal': 'بلوچی',
+    'ps': 'پښتو',
   };
+
+  static final supportedLanguageCodes = languageNames.keys.toSet();
+
+  static const _key = 'app_language_code';
 
   final ValueNotifier<Locale> locale = ValueNotifier<Locale>(const Locale('en'));
 

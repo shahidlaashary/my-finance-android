@@ -12,6 +12,7 @@ import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart'
 import 'package:my_finance/features/installments/screens/installments_screen.dart';
 import 'package:my_finance/features/committee/screens/committee_screen.dart';
 import 'package:my_finance/features/partners/screens/my_partner_screen.dart';
+import 'package:my_finance/features/finance/screens/loans_screen.dart' show PartyManagementPage;
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -60,6 +61,11 @@ class MoreFeaturesPage extends StatelessWidget {
         'title': 'My Partner',
         'subtitle': 'Manage partner details and shared records',
         'icon': Icons.handshake_outlined,
+      },
+      {
+        'title': 'Manage Parties',
+        'subtitle': 'Manage your parties and contact records',
+        'icon': Icons.people_alt_outlined,
       },
       {
         'title': 'Recycle Bin',
@@ -130,6 +136,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'My Partner') {
                         return const MyPartnerScreen();
+                      }
+                      if (feature['title'] == 'Manage Parties') {
+                        return const PartyManagementPage();
                       }
                       return const MyDocumentsScreen();
                     },

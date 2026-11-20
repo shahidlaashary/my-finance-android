@@ -993,7 +993,7 @@ class _WalletsPageState extends State<WalletsPage> {
                         ),
                         segments: const [
                           ButtonSegment(value: false, label: Text('Classic')),
-                          ButtonSegment(value: true, label: Text('Bank Cards')),
+                          ButtonSegment(value: true, label: Text('Modern')),
                         ],
                         selected: {_usePremiumCards},
                         onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),

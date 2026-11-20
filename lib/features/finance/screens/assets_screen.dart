@@ -1935,6 +1935,9 @@ class AssetDetailsScreen extends StatelessWidget {
                     '$currency ${_money(profitLoss)}', color: profitLoss >= 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.errorContainer)),
                 ]),
                 const SizedBox(height: 10),
+                _detailRow(context, 'Purchase Payment Type', asset.paymentType),
+                if (asset.paymentType.toLowerCase() == 'loan')
+                  _detailRow(context, 'Payable Party', _partyName(asset.partyId)),
                 _detailRow(context, 'Purchase Wallet', asset.paymentType.toLowerCase() == 'loan' ? 'Loan (no initial wallet debit)' : _walletName(asset.walletId)),
               ],
             ),

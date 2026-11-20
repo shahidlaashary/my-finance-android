@@ -17,6 +17,7 @@ import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
+import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
@@ -1403,8 +1404,25 @@ class _AssetsScreenState extends State<AssetsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${appText(context, 'TOTAL ASSET VALUE', 'کل اثاثوں کی مالیت')}  •  $primaryCurrency',
-                          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text('${appText(context, 'TOTAL ASSET VALUE', 'کل اثاثوں کی مالیت')}  •  $primaryCurrency',
+                                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .5)),
+                            ),
+                            IconButton(
+                              tooltip: 'View asset analytics',
+                              visualDensity: VisualDensity.compact,
+                              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                              padding: EdgeInsets.zero,
+                              onPressed: () => Navigator.push<void>(
+                                context,
+                                MaterialPageRoute(builder: (_) => AssetGraphScreen(hideBalances: _hideBalances)),
+                              ),
+                              icon: Icon(Icons.arrow_forward_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 21),
+                            ),
+                          ],
+                        ),
                         SizedBox(height: 5),
                         Text('$primaryCurrency ${_money(currentTotal)}',
                           style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 25, fontWeight: FontWeight.w800)),
@@ -1417,11 +1435,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             Expanded(child: _heroMetric('Unrealized P/L', '$primaryCurrency ${_money(unrealized)}', valueColor: unrealized >= 0 ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.errorContainer)),
                           ],
                         ),
-                        if (currencies.length > 1) ...[
-                          SizedBox(height: 7),
-                          Text(appText(context, "Totals shown for this currency; other currencies below.", "Totals shown for this currency; other currencies below."),
-                            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .82), fontSize: 10)),
-                        ],
+
                       ],
                     ),
                   ),

@@ -82,6 +82,37 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     if (mounted) setState(_refresh);
   }
 
+  Future<void> _moveItemToFolder(Map<String, Object?> item) async {
+    final folders = await _library.getCollections();
+    if (!mounted) return;
+    if (folders.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a folder first in Library Tools.')));
+      return;
+    }
+    final current = item['collection_id'] as int?;
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Move to folder'),
+        children: folders.map((folder) => SimpleDialogOption(
+          onPressed: () => Navigator.pop(context, folder['id'] as int),
+          child: Row(children: [
+            const Icon(Icons.folder_outlined),
+            const SizedBox(width: 12),
+            Expanded(child: Text(folder['name'] as String)),
+            if (current == folder['id']) const Icon(Icons.check, color: Colors.green),
+          ]),
+        )).toList(),
+      ),
+    );
+    if (selected == null) return;
+    await _library.moveItemToCollection(item['id'] as int, selected);
+    if (mounted) {
+      setState(_refresh);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File moved to folder.')));
+    }
+  }
+
   Future<void> _deleteItem(Map<String, Object?> item) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -154,9 +185,11 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                   onSelected: (value) {
                     if (value == 'open') _openItem(item);
                     if (value == 'delete') _deleteItem(item);
+                    if (value == 'folder') _moveItemToFolder(item);
                   },
                   itemBuilder: (_) => const [
                     PopupMenuItem(value: 'open', child: Text('Open')),
+                    PopupMenuItem(value: 'folder', child: Text('Move to folder')),
                     PopupMenuItem(value: 'delete', child: Text('Remove')),
                   ],
                 ),

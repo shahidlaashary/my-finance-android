@@ -1188,7 +1188,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             ),
             const SizedBox(height: 3),
             Row(children: [
-              Expanded(child: Text('$completedLabel: $currency ${_money(completed)} / ${_money(total)}',
+              Expanded(child: Text('$completedLabel: $currency ${_money(completed)}',
                 maxLines: 1, overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 10, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
               const SizedBox(width: 6),

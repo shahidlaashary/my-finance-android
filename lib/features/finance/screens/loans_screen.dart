@@ -684,6 +684,26 @@ class _LoansScreenState extends State<LoansScreen> {
     return '$name • $type';
   }
 
+  Future<void> _showRepaymentAttachments(int repaymentId) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 20),
+          child: SingleChildScrollView(
+            child: AttachmentSection(
+              ownerType: AttachmentOwnerTypes.repayment,
+              ownerId: repaymentId,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<bool> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return false;
     await _loadData();

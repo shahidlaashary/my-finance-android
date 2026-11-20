@@ -1519,7 +1519,7 @@ class _LoansScreenState extends State<LoansScreen> {
                         end: Alignment.bottomRight,
                         colors: [Theme.of(context).colorScheme.primary, Color.lerp(Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.surface, .20)!, Theme.of(context).colorScheme.primaryContainer],
                       ),
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.35)),
                       boxShadow: [
                         BoxShadow(

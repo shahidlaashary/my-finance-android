@@ -748,7 +748,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 4),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.13),
                       borderRadius: BorderRadius.circular(12)),
                     child: Row(children: [
@@ -774,7 +774,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Expanded(
                   child: _metricCard(
-                    title: appText(context, 'Assets', 'اثاثے'),
+                    title: appText(context, 'My Assets', 'میرے اثاثے'),
                     value: currentAssetsPKR,
                     icon: Icons.real_estate_agent_outlined,
                     color: Theme.of(context).colorScheme.tertiary,
@@ -783,18 +783,18 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(width: 8),
                 Expanded(
                   child: _metricCard(
-                    title: appText(context, 'Loans Receivable', 'وصول طلب قرضے'),
+                    title: appText(context, 'Receivable', 'وصول طلب'),
                     value: loansReceivablePKR,
-                    icon: Icons.handshake_outlined,
+                    icon: Icons.call_received_rounded,
                     color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
                 SizedBox(width: 8),
                 Expanded(
                   child: _metricCard(
-                    title: appText(context, 'Loans Payable', 'قابلِ ادائیگی قرضے'),
+                    title: appText(context, 'Payable', 'قابلِ ادائیگی'),
                     value: loansPayablePKR,
-                    icon: Icons.account_balance_outlined,
+                    icon: Icons.call_made_rounded,
                     color: Theme.of(context).colorScheme.error,
                   ),
                 ),

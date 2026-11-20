@@ -1419,7 +1419,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                                 context,
                                 MaterialPageRoute(builder: (_) => AssetGraphScreen(hideBalances: _hideBalances)),
                               ),
-                              icon: Icon(Icons.arrow_forward_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 21),
+                              icon: Icon(Icons.trending_up_rounded, color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8), size: 22),
                             ),
                           ],
                         ),

@@ -381,7 +381,8 @@ class _AttachmentSectionState extends State<AttachmentSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.compact) return _buildCompactAttachments(context);\n    return Card(
+    if (widget.compact) return _buildCompactAttachments(context);
+    return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),

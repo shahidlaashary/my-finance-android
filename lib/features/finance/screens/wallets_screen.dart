@@ -986,9 +986,9 @@ class _WalletsPageState extends State<WalletsPage> {
                         showSelectedIcon: false,
                         style: SegmentedButton.styleFrom(
                           visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-                          padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+                          padding: EdgeInsets.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          minimumSize: const Size(0, 19),
+                          minimumSize: const Size(0, 16),
                           textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                         ),
                         segments: const [

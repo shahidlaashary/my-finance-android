@@ -2203,9 +2203,9 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
     final picker = ImagePicker();
 
     InputDecoration inputDecoration(String label, IconData icon) => InputDecoration(
-      labelText: label, prefixIcon: Icon(icon, size: 16), isDense: true,
+      labelText: label, prefixIcon: Icon(icon, size: 15), isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
-      prefixIconConstraints: const BoxConstraints(minWidth: 29, minHeight: 40),
+      prefixIconConstraints: const BoxConstraints(minWidth: 24, minHeight: 40),
       isCollapsed: false,
       filled: true,
       fillColor: const Color(0xFFFBFDFC),
@@ -2292,18 +2292,28 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                           Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                         ])),
                         section('Basic Information', Icons.person_outline_rounded),
-                        pair(
-                          DropdownButtonFormField<String>(
-                            value: partyType == 'Business' ? 'Business' : 'Individual',
-                            isExpanded: true,
-                            decoration: inputDecoration('Party Type', Icons.category_outlined),
-                            items: const [
-                              DropdownMenuItem(value: 'Individual', child: Text('Individual')),
-                              DropdownMenuItem(value: 'Business', child: Text('Business')),
-                            ],
-                            onChanged: (value) { if (value != null) setSheetState(() => partyType = value); },
-                          ),
-                          field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: DropdownButtonFormField<String>(
+                                value: partyType == 'Business' ? 'Business' : 'Individual',
+                                isExpanded: true,
+                                decoration: inputDecoration('Party Type', Icons.category_outlined),
+                                items: const [
+                                  DropdownMenuItem(value: 'Individual', child: Text('Individual', overflow: TextOverflow.ellipsis)),
+                                  DropdownMenuItem(value: 'Business', child: Text('Business', overflow: TextOverflow.ellipsis)),
+                                ],
+                                onChanged: (value) { if (value != null) setSheetState(() => partyType = value); },
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Expanded(
+                              flex: 6,
+                              child: field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 7),
                         pair(field(phone, 'Phone Number', Icons.phone_outlined, type: TextInputType.phone), field(email, 'Email Address', Icons.email_outlined, type: TextInputType.emailAddress)),
@@ -2908,9 +2918,11 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
           ),
         ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _editParty(),
         backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: Icon(Icons.add_rounded),
         label: Text('Add Party'),
       ),

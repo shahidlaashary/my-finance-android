@@ -8,6 +8,7 @@ import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/finance/services/category_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
+import 'package:my_finance/shared/widgets/attachment_section.dart';
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
   @override
@@ -89,6 +90,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     String? category = budget?.category;
     String currency = budget?.currency ?? _currencies.first;
     String period = budget?.period ?? 'Monthly';
+    int? attachmentBudgetId = budget?.id;
+    bool savedInThisSession = false;
     DateTime startDate = budget == null ? DateTime(DateTime.now().year, DateTime.now().month, 1) : budget.startDate;
     DateTime endDate = budget == null ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0) : budget.endDate;
     InputDecoration decoration(String label, IconData icon) => InputDecoration(labelText: label, prefixIcon: Icon(icon, size: 19),
@@ -178,21 +181,35 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                       ])),
                     )),
                   ]),
+                  if (attachmentBudgetId != null) ...[
+                    const SizedBox(height: 8),
+                    AttachmentSection(ownerType: 'budget', ownerId: attachmentBudgetId!),
+                  ],
                   SizedBox(height: 12),
                   Row(children: [Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))), SizedBox(width: 10),
-                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(budget == null ? 'Create Budget' : 'Update Budget'),
+                    Expanded(child: ElevatedButton.icon(icon: Icon(Icons.check_rounded), label: Text(savedInThisSession ? 'Done' : budget == null ? 'Create Budget' : 'Update Budget'),
                       style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, padding: const EdgeInsets.symmetric(vertical: 13)),
                       onPressed: () async {
+                        if (savedInThisSession) {
+                          Navigator.pop(sheetContext);
+                          await _loadData();
+                          return;
+                        }
                         if (!formKey.currentState!.validate()) return;
                         if (endDate.isBefore(startDate)) { _message('End date cannot be before start date.'); return; }
                         try {
-                          final model = BudgetsModel(id: budget?.id, name: nameController.text.trim(), category: category,
+                          final model = BudgetsModel(id: attachmentBudgetId, name: nameController.text.trim(), category: category,
                             limitAmount: double.parse(amountController.text), spentAmount: budget?.spentAmount ?? 0, period: period,
                             startDate: startDate, endDate: endDate, currency: currency, isActive: budget?.isActive ?? true, createdAt: budget?.createdAt ?? DateTime.now());
-                          if (budget == null) await BudgetsService.addBudget(model); else await BudgetsService.updateBudget(model);
+                          if (attachmentBudgetId == null) {
+                            attachmentBudgetId = await BudgetsService.addBudget(model);
+                          } else {
+                            await BudgetsService.updateBudget(model);
+                          }
                           if (!sheetContext.mounted) return;
-                          Navigator.pop(sheetContext); await _loadData();
-                          _message(budget == null ? 'Budget created successfully.' : 'Budget updated successfully.');
+                          setSheetState(() => savedInThisSession = true);
+                          await _loadData();
+                          _message(budget == null ? 'Budget created successfully. You can add attachments below.' : 'Budget updated successfully. You can manage attachments below.');
                         } catch (e) { _message('Error: $e'); }
                       }))]),
                 ]))),
@@ -352,7 +369,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 10,
+                minHeight: 7,
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 color: color,
               ),

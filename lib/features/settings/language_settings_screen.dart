@@ -64,17 +64,23 @@ class LanguageSettingsScreen extends StatelessWidget {
           ),
           body: SafeArea(
             top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 3, 10, 5),
-              child: Column(
-                children: [
-                  for (final language in _languages)
-                    Expanded(
-                      child: Card(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () => _select(context, language.code),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 5),
+              children: [
+                for (final language in _languages)
+                  Card(
+                    elevation: 1,
+                    margin: const EdgeInsets.only(bottom: 7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: SizedBox(
+                      height: 72,
+                      child: InkWell(
+                        onTap: () => _select(context, language.code),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 13),
                           child: Directionality(
                             // Keep the radio, flag and text columns aligned
                             // identically for both LTR and RTL app languages.
@@ -156,29 +162,29 @@ class LanguageSettingsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                  SizedBox(
-                    height: 31,
-                    child: Align(
-                      alignment: isRtl
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Text(
-                        isUrdu
-                            ? 'زبان تبدیل کرنے سے ایپ کی سمت بھی تبدیل ہو جائے گی۔'
-                            : selectedLocale.languageCode == 'bal'
-                                ? 'زبان بدلگ ءَ ایپ ءِ لکھت ءِ سمت ھم بدل بیت۔'
-                                : selectedLocale.languageCode == 'ps'
-                                    ? 'د ژبې په بدلولو سره د اپ د متن لوری هم بدلېږي.'
-                                    : 'Changing the language also changes the app text direction.',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                  ),
+                SizedBox(
+                  height: 31,
+                  child: Align(
+                    alignment: isRtl
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Text(
+                      isUrdu
+                          ? 'زبان تبدیل کرنے سے ایپ کی سمت بھی تبدیل ہو جائے گی۔'
+                          : selectedLocale.languageCode == 'bal'
+                              ? 'زبان بدلگ ءَ ایپ ءِ لکھت ءِ سمت ھم بدل بیت۔'
+                              : selectedLocale.languageCode == 'ps'
+                                  ? 'د ژبې په بدلولو سره د اپ د متن لوری هم بدلېږي.'
+                                  : 'Changing the language also changes the app text direction.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

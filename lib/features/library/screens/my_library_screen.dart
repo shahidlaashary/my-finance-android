@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/library/screens/library_audio_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
+import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
@@ -38,18 +39,23 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
+        allowMultiple: true,
+        withData: false,
         allowedExtensions: ['pdf', 'epub', 'mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac'],
       );
       if (result == null || result.files.isEmpty) return;
-      final picked = result.files.single;
-      final path = picked.path;
-      if (path == null) throw Exception('The selected file could not be accessed.');
-      await _library.addFile(File(path), picked.name);
+      var added = 0;
+      final failures = <String>[];
+      for (final picked in result.files) {
+        final path = picked.path;
+        if (path == null) { failures.add(picked.name); continue; }
+        try { await _library.addFile(File(path), picked.name); added++; }
+        catch (_) { failures.add(picked.name); }
+      }
       if (!mounted) return;
       setState(_refresh);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(appText(context, 'Added to My Library', 'My Library میں شامل کر دیا گیا'))),
-      );
+      final message = failures.isEmpty ? '$added file(s) imported successfully.' : '$added imported; ' + failures.length.toString() + ' failed: ' + failures.take(3).join(', ');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to add file: $e')));
@@ -169,6 +175,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(appText(context, 'My Library', 'میری لائبریری')),
+          actions: [IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); })],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'All', icon: Icon(Icons.library_books_outlined)),

@@ -38,7 +38,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   Map<String, double> _currentValues = {};
   Map<String, double> _purchaseValues = {};
-  Map<String, double> _realizedProfitLoss = {};
 
   bool _loading = true;
   bool _hideBalances = false;
@@ -110,9 +109,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
       final purchase =
           await _service.getTotalPurchaseValueByCurrency();
 
-      final realized =
-          await _service.getTotalRealizedProfitLossByCurrency();
-
       final Database db = await TransactionsService.database;
 
       final wallets = await db.query(
@@ -142,7 +138,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
         _linkedLoans = linkedLoans;
         _currentValues = current;
         _purchaseValues = purchase;
-        _realizedProfitLoss = realized;
         _loading = false;
       });
     } catch (e) {
@@ -281,7 +276,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
     final currencies = <String>{
       ..._currentValues.keys,
       ..._purchaseValues.keys,
-      ..._realizedProfitLoss.keys,
       ..._assets.map((asset) => asset.currency.toUpperCase()),
     };
 
@@ -956,43 +950,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
-  Widget _summaryCard(
-    String title,
-    String currency,
-    double amount,
-    IconData icon, {
-    Color? color,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color ?? Theme.of(context).colorScheme.primary, size: 25),
-            SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                color: Theme.of(context).hintColor,
-                fontSize: 12,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              '$currency ${_money(amount)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _assetAttachmentButton(IconData icon, String label, VoidCallback onPressed, Color color) {
     return OutlinedButton.icon(
       onPressed: onPressed,
@@ -1375,72 +1332,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
     );
   }
 
-  Widget _currencySummary(String currency) {
-    final current = _currentValues[currency] ?? 0;
-    final purchase = _purchaseValues[currency] ?? 0;
-    final realized = _realizedProfitLoss[currency] ?? 0;
-
-    final unrealized = current - purchase;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text(
-            currency,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.65,
-            children: [
-              _summaryCard(
-                'Current Value',
-                currency,
-                current,
-                Icons.account_balance,
-              ),
-              _summaryCard(
-                'Purchase Value',
-                currency,
-                purchase,
-                Icons.shopping_bag,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              _summaryCard(
-                'Realized Profit/Loss',
-                currency,
-                realized,
-                Icons.trending_up,
-                color: realized >= 0
-                    ? Theme.of(context).colorScheme.secondary
-                    : Theme.of(context).colorScheme.error,
-              ),
-              _summaryCard(
-                'Unrealized Profit/Loss',
-                currency,
-                unrealized,
-                Icons.show_chart,
-                color: unrealized >= 0
-                    ? Theme.of(context).colorScheme.secondary
-                    : Theme.of(context).colorScheme.error,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   void initState() {
     super.initState();
@@ -1604,8 +1495,6 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       ),
                     ],
                   ),
-                  if (currencies.isNotEmpty)
-                    ...currencies.where((c) => c != primaryCurrency).map(_currencySummary),
                   SizedBox(
                     height: 38,
                     child: Row(

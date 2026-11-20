@@ -87,10 +87,11 @@ class _DashboardState extends State<_Dashboard> {
     final active = all.where((e) => e.status == 'Active').length;
     final closed = all.where((e) => e.status == 'Sold' || e.status == 'Paid').length;
     final overdue = all.where((e) => e.status == 'Overdue').length;
-    final visible = all.where((e) => filter == 'All' || e.status == filter).toList();
+    final visible = all.where((e) => filter == 'All' || e.status == filter || e.type == filter).toList();
     final currencies = visible.map((e) => e.currency.toUpperCase()).toSet().toList()..sort();
-    final total = sum(all, (e) => e.amount);
-    final labels = widget.assets ? ['All', 'Active', 'Sold'] : ['All', 'Active', 'Overdue', 'Paid'];
+    final currencySet = all.map((e) => e.currency.toUpperCase()).toSet();
+    final heroValue = widget.hide ? '••••••' : (currencySet.length == 1 ? money(sum(all, (e) => e.amount)) : 'Multiple currencies');
+    final labels = widget.assets ? ['All', 'Active', 'Sold'] : ['All', 'Receivable', 'Payable', 'Active', 'Overdue', 'Paid'];
     final metric = compareBase ? (widget.assets ? 'Purchase value' : 'Original amount')
       : (widget.assets ? 'Current / sale value' : 'Outstanding');
     return Scaffold(
@@ -102,8 +103,8 @@ class _DashboardState extends State<_Dashboard> {
         children: [
           _Hero(icon: widget.icon, subtitle: widget.subtitle,
             label: widget.assets ? 'PORTFOLIO VALUE' : 'TOTAL OUTSTANDING',
-            value: money(total), count: all.length,
-            currencyCount: all.map((e) => e.currency.toUpperCase()).toSet().length),
+            value: heroValue, count: all.length,
+            currencyCount: currencySet.length),
           const SizedBox(height: 13),
           Row(children: [
             Expanded(child: _Kpi(label: 'Active', value: '$active', color: _teal, icon: Icons.radio_button_checked_rounded)),
@@ -389,7 +390,7 @@ class _RingPainter extends CustomPainter {
       if (values[i] <= 0) continue;
       final sweep = values[i] / total * 6.28318;
       paint.color = colors[i];
-      canvas.drawArc(rect.deflate(9), start, (sweep - .035).clamp(0.0, 6.28318), false, paint);
+      canvas.drawArc(rect.deflate(9), start, (sweep - .035).clamp(0.0, 6.28318).toDouble(), false, paint);
       start += sweep;
     }
   }

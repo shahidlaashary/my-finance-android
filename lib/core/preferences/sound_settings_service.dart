@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:my_finance/core/preferences/language_settings_service.dart';
 
 /// App-wide sound and voice preferences plus the native Android audio bridge.
 class SoundSettingsService extends ChangeNotifier {
@@ -38,7 +40,8 @@ class SoundSettingsService extends ChangeNotifier {
     voiceEnabled = prefs.getBool(_voiceKey) ?? false;
     soundVolume = prefs.getDouble(_soundVolumeKey) ?? 0.55;
     voiceVolume = prefs.getDouble(_voiceVolumeKey) ?? 0.85;
-    final language = prefs.getString(_voiceLanguageKey) ?? 'en';
+    final language = prefs.getString(_voiceLanguageKey) ??
+        LanguageSettingsService.instance.locale.value.languageCode;
     voiceLanguage = supportedLanguages.containsKey(language) ? language : 'en';
     notifyListeners();
   }

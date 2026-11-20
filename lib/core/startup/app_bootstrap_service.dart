@@ -11,6 +11,7 @@ import 'package:my_finance/core/database/database_platform.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:my_finance/core/startup/app_startup_service.dart';
 import 'package:my_finance/core/security/installation_identity_service.dart';
 import 'package:my_finance/core/security/firebase_installation_auth_service.dart';
@@ -111,5 +112,6 @@ class AppBootstrapService {
     );
     await appearance.load();
     await LanguageSettingsService.instance.load();
+    await SoundSettingsService.instance.load();
   }
 }

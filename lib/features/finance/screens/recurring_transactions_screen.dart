@@ -274,131 +274,358 @@ class _RecurringTransactionsScreenState
     final isIncome = item.type.toLowerCase() == 'income';
     final isTransfer = item.isTransfer;
     final scheme = Theme.of(context).colorScheme;
-    final color = isIncome ? scheme.secondary : isTransfer ? scheme.primary : scheme.error;
-    final icon = isIncome ? Icons.arrow_downward_rounded : isTransfer ? Icons.swap_horiz_rounded : Icons.arrow_upward_rounded;
+    final color = isIncome
+        ? scheme.secondary
+        : isTransfer
+            ? scheme.primary
+            : scheme.error;
+    final icon = isIncome
+        ? Icons.south_west_rounded
+        : isTransfer
+            ? Icons.swap_horiz_rounded
+            : Icons.north_east_rounded;
 
-    Widget detailTile(IconData iconData, String label, String value) => Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withOpacity(0.48),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Row(children: [
-          Icon(iconData, size: 14, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Expanded(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    Widget detailTile(IconData iconData, String label, String value) {
+      return Expanded(
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 43),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withOpacity(0.42),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: scheme.outlineVariant.withOpacity(0.45)),
+          ),
+          child: Row(
             children: [
-              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant)),
-              const SizedBox(height: 1),
-              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+              Icon(iconData, size: 15, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 9,
+                        height: 1.1,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        height: 1.1,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          )),
-        ]),
-      ),
-    );
+          ),
+        ),
+      );
+    }
+
+    Widget typePill(String label) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 9,
+            height: 1,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.35,
+          ),
+        ),
+      );
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 9),
-      elevation: 0,
+      elevation: 1,
+      shadowColor: scheme.shadow.withOpacity(0.08),
       color: scheme.surface,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant.withOpacity(0.65)),
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: scheme.outlineVariant.withOpacity(0.55)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 10, 8, 5),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(
-              width: 35, height: 35,
-              decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: color, size: 19),
-            ),
-            const SizedBox(width: 9),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 3),
-                Row(children: [
-                  Text(item.type.toUpperCase(), style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w800)),
-                  Text('  •  ', style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant)),
-                  Text(item.frequency.toUpperCase(), style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
-                ]),
-              ],
-            )),
-            const SizedBox(width: 6),
-            Flexible(child: Text(_money(item.amount, _currency(item.walletId)),
-              maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end,
-              style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13))),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            detailTile(Icons.account_balance_wallet_outlined, 'Wallet', _walletName(item.walletId)),
-            const SizedBox(width: 7),
-            detailTile(Icons.event_available_outlined, 'Next run', _date(item.nextRunDate)),
-          ]),
-          if (isTransfer || item.endDate != null) ...[
-            const SizedBox(height: 6),
-            Row(children: [
-              if (isTransfer)
-                detailTile(Icons.account_balance_outlined, 'Destination', _walletName(item.toWalletId))
-              else
-                detailTile(Icons.calendar_today_outlined, 'Start date', _date(item.startDate)),
-              const SizedBox(width: 7),
-              if (isTransfer && item.transferFee > 0)
-                detailTile(Icons.payments_outlined, 'Transfer fee', _money(item.transferFee, _currency(item.walletId)))
-              else if (item.endDate != null)
-                detailTile(Icons.event_busy_outlined, 'End date', _date(item.endDate))
-              else
-                const Expanded(child: SizedBox()),
-            ]),
-          ],
-          if (item.note.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(children: [
-              Icon(Icons.notes_rounded, size: 13, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 6),
-              Expanded(child: Text(item.note, maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant))),
-            ]),
-          ],
-          const SizedBox(height: 2),
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: item.isActive ? scheme.secondaryContainer : scheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(20),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(width: 3, color: color.withOpacity(0.85)),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 9, 8, 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                color.withOpacity(0.18),
+                                color.withOpacity(0.07),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: Icon(icon, color: color, size: 19),
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  typePill(item.type.toUpperCase()),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      item.frequency.toUpperCase(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: scheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.35,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: Text(
+                              _money(item.amount, _currency(item.walletId)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 9),
+                    Row(
+                      children: [
+                        detailTile(
+                          Icons.account_balance_wallet_outlined,
+                          'Wallet',
+                          _walletName(item.walletId),
+                        ),
+                        const SizedBox(width: 7),
+                        detailTile(
+                          Icons.event_available_outlined,
+                          'Next run',
+                          _date(item.nextRunDate),
+                        ),
+                      ],
+                    ),
+                    if (isTransfer || item.endDate != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (isTransfer)
+                            detailTile(
+                              Icons.account_balance_outlined,
+                              'Destination',
+                              _walletName(item.toWalletId),
+                            )
+                          else
+                            detailTile(
+                              Icons.calendar_today_outlined,
+                              'Start date',
+                              _date(item.startDate),
+                            ),
+                          const SizedBox(width: 7),
+                          if (isTransfer && item.transferFee > 0)
+                            detailTile(
+                              Icons.payments_outlined,
+                              'Transfer fee',
+                              _money(item.transferFee, _currency(item.walletId)),
+                            )
+                          else if (item.endDate != null)
+                            detailTile(
+                              Icons.event_busy_outlined,
+                              'End date',
+                              _date(item.endDate),
+                            )
+                          else
+                            const Expanded(child: SizedBox()),
+                        ],
+                      ),
+                    ],
+                    if (item.note.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.sticky_note_2_outlined,
+                            size: 14,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              item.note,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: item.isActive
+                                ? scheme.secondaryContainer
+                                : scheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                item.isActive
+                                    ? Icons.check_circle_rounded
+                                    : Icons.pause_circle_filled_rounded,
+                                size: 12,
+                                color: item.isActive
+                                    ? scheme.onSecondaryContainer
+                                    : scheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                item.isActive ? 'Active' : 'Paused',
+                                style: TextStyle(
+                                  color: item.isActive
+                                      ? scheme.onSecondaryContainer
+                                      : scheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          tooltip: 'Edit',
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 32,
+                            height: 32,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onPressed: () => _openForm(existing: item),
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: scheme.primary,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: item.isActive ? 'Pause' : 'Resume',
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 32,
+                            height: 32,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onPressed: () => _toggleStatus(item),
+                          icon: Icon(
+                            item.isActive
+                                ? Icons.pause_circle_outline_rounded
+                                : Icons.play_circle_outline_rounded,
+                            size: 19,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Delete',
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 32,
+                            height: 32,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onPressed: () => _deleteItem(item),
+                          icon: Icon(
+                            Icons.delete_outline_rounded,
+                            color: scheme.error,
+                            size: 19,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: Text(item.isActive ? 'Active' : 'Paused',
-                style: TextStyle(
-                  color: item.isActive ? scheme.onSecondaryContainer : scheme.onSurfaceVariant,
-                  fontSize: 10, fontWeight: FontWeight.w800)),
             ),
-            const Spacer(),
-            IconButton(
-              tooltip: 'Edit', visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-              padding: EdgeInsets.zero, onPressed: () => _openForm(existing: item),
-              icon: const Icon(Icons.edit_outlined, size: 18)),
-            IconButton(
-              tooltip: item.isActive ? 'Pause' : 'Resume', visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-              padding: EdgeInsets.zero, onPressed: () => _toggleStatus(item),
-              icon: Icon(item.isActive ? Icons.pause_circle_outline : Icons.play_circle_outline, size: 19)),
-            IconButton(
-              tooltip: 'Delete', visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-              padding: EdgeInsets.zero, onPressed: () => _deleteItem(item),
-              icon: Icon(Icons.delete_outline, color: scheme.error, size: 19)),
-          ]),
-        ]),
+          ],
+        ),
       ),
     );
   }

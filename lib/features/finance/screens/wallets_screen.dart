@@ -982,21 +982,73 @@ class _WalletsPageState extends State<WalletsPage> {
                         appText(context, 'My Wallets', 'میرے والٹس'),
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                       )),
-                      SegmentedButton<bool>(
-                        showSelectedIcon: false,
-                        style: SegmentedButton.styleFrom(
-                          visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-                          padding: EdgeInsets.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          minimumSize: const Size(0, 12),
-                          textStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                      Container(
+                        width: 124,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
                         ),
-                        segments: const [
-                          ButtonSegment(value: false, label: const SizedBox(width: 24, child: Center(child: Text('Classic', textAlign: TextAlign.center, maxLines: 1, softWrap: false, overflow: TextOverflow.visible)))),
-                          ButtonSegment(value: true, label: const SizedBox(width: 24, child: Center(child: Text('Modern', textAlign: TextAlign.center, maxLines: 1, softWrap: false, overflow: TextOverflow.visible)))),
-                        ],
-                        selected: {_usePremiumCards},
-                        onSelectionChanged: (value) => setState(() => _usePremiumCards = value.first),
+                        clipBehavior: Clip.antiAlias,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Material(
+                                color: _usePremiumCards
+                                    ? Colors.transparent
+                                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.14),
+                                child: InkWell(
+                                  onTap: () => setState(() => _usePremiumCards = false),
+                                  child: Center(
+                                    child: Text(
+                                      'Classic',
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: _usePremiumCards
+                                            ? Theme.of(context).colorScheme.onSurface
+                                            : Theme.of(context).colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.outlineVariant,
+                            ),
+                            Expanded(
+                              child: Material(
+                                color: _usePremiumCards
+                                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.14)
+                                    : Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => setState(() => _usePremiumCards = true),
+                                  child: Center(
+                                    child: Text(
+                                      'Modern',
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: _usePremiumCards
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(width: 5),
                       TextButton(

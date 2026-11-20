@@ -156,11 +156,11 @@ class RecycleBinDetailScreen extends StatelessWidget {
         const SizedBox(height: 16),
         _section(context, tr('Deletion Information'), [
           _row(context, tr('Deleted'), deleted == null ? '—' : DateFormat('dd MMM yyyy, hh:mm a').format(deleted)),
-          _row(tr('Auto-delete date'), expiry == null ? '—' : DateFormat('dd MMM yyyy, hh:mm a').format(expiry)),
-          _row(tr('Record ID'), item['source_id']?.toString() ?? '—'),
+          _row(context, tr('Auto-delete date'), expiry == null ? '—' : DateFormat('dd MMM yyyy, hh:mm a').format(expiry)),
+          _row(context, tr('Record ID'), item['source_id']?.toString() ?? '—'),
         ]),
         const SizedBox(height: 16),
-        _section(context, tr('Original Details'), fields.isEmpty ? [_row(tr('Details'), tr('No additional details available'))] : fields.map((e) => _row(label(e.key), val(e.value))).toList()),
+        _section(context, tr('Original Details'), fields.isEmpty ? [_row(context, tr('Details'), tr('No additional details available'))] : fields.map((e) => _row(context, label(e.key), val(e.value))).toList()),
         if (owner != null && sourceId != null) ...[
           const SizedBox(height: 16),
           _section(context, tr('Attachments'), [AttachmentSection(ownerType: owner, ownerId: sourceId)]),

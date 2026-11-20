@@ -995,23 +995,35 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 const SizedBox(height: 6),
                 Expanded(
                   child: filteredTransactions.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                      ? RefreshIndicator(
+                          onRefresh: loadTransactions,
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
                             children: [
-                              Icon(
-                                Icons.receipt_long_outlined,
-                                size: 52,
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.65),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                filteredTransactions.isEmpty
-                                    ? appText(context, "No transactions available", "No transactions available")
-                                    : 'No ${selectedFilter == 'all' ? '' : selectedFilter} transactions',
-                                style: TextStyle(
-                                  color: Theme.of(context).hintColor,
-                                  fontWeight: FontWeight.w500,
+                              SizedBox(
+                                height: 260,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.receipt_long_outlined,
+                                        size: 52,
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.65),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        appText(context, "No transactions available", "No transactions available"),
+                                        style: TextStyle(
+                                          color: Theme.of(context).hintColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text('Pull down to refresh', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -1020,6 +1032,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       : RefreshIndicator(
                           onRefresh: loadTransactions,
                           child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
                             itemCount: displayRows.length + 1,
                             itemBuilder: (context, index) {

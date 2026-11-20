@@ -1578,86 +1578,67 @@ class _LoansScreenState extends State<LoansScreen> {
                           ],
                         ),
                         const SizedBox(height: 3),
-                        if (_outstandingByCurrency.isEmpty)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.09),
-                              borderRadius: BorderRadius.circular(13),
-                            ),
-                            child: Text(
-                              appText(context, 'No outstanding loans.', 'No outstanding loans.'),
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.82), fontSize: 11),
-                            ),
-                          )
-                        else
-                          ...List.generate(
-                            (_outstandingByCurrency.length / 2).ceil(),
-                            (rowIndex) {
-                              final entries = _outstandingByCurrency.entries.toList();
-                              final first = entries[rowIndex * 2];
-                              final secondIndex = rowIndex * 2 + 1;
-                              final second = secondIndex < entries.length
-                                  ? entries[secondIndex]
-                                  : null;
-                              Widget amountTile(MapEntry<String, double> entry) {
-                                return Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.08)),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.14),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            entry.key,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.w800),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 1),
-                                        Text(
-                                          _money(entry.value),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onPrimary,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ],
+                        SizedBox(
+                          height: 36,
+                          child: _outstandingByCurrency.isEmpty
+                              ? Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    appText(context, 'No outstanding loans.', 'No outstanding loans.'),
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.82),
+                                      fontSize: 11,
                                     ),
                                   ),
-                                );
-                              }
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    amountTile(first),
-                                    if (second != null) ...[
-                                      const SizedBox(width: 8),
-                                      amountTile(second),
-                                    ] else
-                                      const Spacer(),
-                                  ],
+                                )
+                              : SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: _outstandingByCurrency.entries.map((entry) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: Container(
+                                          width: 142,
+                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.10),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.08),
+                                            ),
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                entry.key,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: Theme.of(context).colorScheme.onPrimary,
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                              Text(
+                                                _money(entry.value),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: Theme.of(context).colorScheme.onPrimary,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
-                              );
-                            },
-                          ),
+                        ),
                         const SizedBox(height: 1),
                         Container(
                           padding: const EdgeInsets.only(top: 3),

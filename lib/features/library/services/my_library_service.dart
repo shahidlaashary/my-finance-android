@@ -216,7 +216,7 @@ class MyLibraryService {
       );
 
   Future<Map<String, Object>> getStorageInformation() async {
-    final row = (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count FROM $_tableName");
+    final row = await (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count FROM $_tableName");
     final value = row.first;
     return {
       'total_count': (value['total_count'] as int?) ?? 0,

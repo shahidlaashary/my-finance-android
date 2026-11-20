@@ -983,8 +983,8 @@ class _WalletsPageState extends State<WalletsPage> {
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                       )),
                       Container(
-                        width: 96,
-                        height: 24,
+                        width: 92,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(18),

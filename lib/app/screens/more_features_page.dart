@@ -12,7 +12,7 @@ import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart'
 import 'package:my_finance/features/installments/screens/installments_screen.dart';
 import 'package:my_finance/features/committee/screens/committee_screen.dart';
 import 'package:my_finance/features/partners/screens/my_partner_screen.dart';
-import 'package:my_finance/features/finance/screens/loans_screen.dart' show PartyManagementPage;
+import 'package:my_finance/features/finance/screens/loans_screen.dart' show ManageParties;
 
 class MoreFeaturesPage extends StatelessWidget {
   const MoreFeaturesPage({super.key});
@@ -138,7 +138,7 @@ class MoreFeaturesPage extends StatelessWidget {
                         return const MyPartnerScreen();
                       }
                       if (feature['title'] == 'Manage Parties') {
-                        return const PartyManagementPage();
+                        return ManageParties(hideBalances: false, onLoanTap: (_) {});
                       }
                       return const MyDocumentsScreen();
                     },

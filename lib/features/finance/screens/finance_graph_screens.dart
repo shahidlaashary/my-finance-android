@@ -362,7 +362,7 @@ class _CurrencyGraphCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: LayoutBuilder(builder: (context, constraints) {
-              final ratio = maxValue <= 0 ? 0.0 : (entry.value / maxValue).clamp(0.0, 1.0);
+              final ratio = maxValue <= 0 ? 0.0 : (entry.value / maxValue).clamp(0.0, 1.0).toDouble();
               return Stack(children: [
                 Container(height: 8, width: constraints.maxWidth, color: Theme.of(context).colorScheme.surfaceContainerHighest),
                 Container(

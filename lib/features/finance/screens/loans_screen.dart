@@ -1508,7 +1508,7 @@ class _LoansScreenState extends State<LoansScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 children: [
                   Container(
                     margin: const EdgeInsets.only(bottom: 2),

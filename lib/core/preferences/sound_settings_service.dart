@@ -1,3 +1,5 @@
+import 'dart:ui' show Offset;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -59,13 +61,13 @@ class SoundSettingsService extends ChangeNotifier {
   }
 
   Future<void> setSoundVolume(double value) async {
-    soundVolume = value.clamp(0.0, 1.0);
+    soundVolume = value.clamp(0.0, 1.0).toDouble();
     notifyListeners();
     await (await SharedPreferences.getInstance()).setDouble(_soundVolumeKey, soundVolume);
   }
 
   Future<void> setVoiceVolume(double value) async {
-    voiceVolume = value.clamp(0.0, 1.0);
+    voiceVolume = value.clamp(0.0, 1.0).toDouble();
     notifyListeners();
     await (await SharedPreferences.getInstance()).setDouble(_voiceVolumeKey, voiceVolume);
   }
@@ -123,11 +125,13 @@ class SoundSettingsService extends ChangeNotifier {
       'ur': 'مائی فنانس میں خوش آمدید۔',
       'ar': 'مرحباً بك في ماي فاينانس.',
       'hi': 'माई फाइनेंस में आपका स्वागत है।',
-      'pa': 'مائی فنانس وچ تہاڈا خیر مقدم اے۔',
-      'skr': 'مائی فنانس وچ تہاݙا خیر مقدم اے۔',
-      'sd': 'مائي فنانس ۾ ڀليڪار۔',
-      'bal': 'مائی فنانس ءَ وش آتک۔',
-      'ps': 'مای فایننس ته ښه راغلاست۔',
+      // Android devices commonly lack dedicated TTS voices for these regional
+      // languages; the native bridge uses the installed Urdu voice as fallback.
+      'pa': 'مائی فنانس میں خوش آمدید۔',
+      'skr': 'مائی فنانس میں خوش آمدید۔',
+      'sd': 'مائی فنانس میں خوش آمدید۔',
+      'bal': 'مائی فنانس میں خوش آمدید۔',
+      'ps': 'مائی فنانس میں خوش آمدید۔',
     };
     await announce(samples[voiceLanguage] ?? samples['en']!);
   }

@@ -19,7 +19,6 @@ import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
 import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
-import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
 class AssetsScreen extends StatefulWidget {
@@ -567,37 +566,41 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           SizedBox(height: 14),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(13),
-                            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(15), border: Border.all(color: Theme.of(context).colorScheme.outlineVariant)),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Row(children: [
-                                Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary, size: 19),
-                                const SizedBox(width: 7),
-                                Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14))),
-                                Text('${pendingFiles.length} selected', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w700)),
-                              ]),
-                              const SizedBox(height: 4),
-                              Text('Add photos or PDF documents while entering this asset.', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11)),
-                              const SizedBox(height: 10),
-                              Wrap(spacing: 8, runSpacing: 8, children: [
-                                _assetAttachmentButton(Icons.camera_alt_outlined, 'Camera', pickCamera, Theme.of(context).colorScheme.primary),
-                                _assetAttachmentButton(Icons.photo_library_outlined, 'Gallery', pickGallery, Theme.of(context).colorScheme.tertiary),
-                                _assetAttachmentButton(Icons.picture_as_pdf_outlined, 'PDFs', pickPdfs, Theme.of(context).colorScheme.error),
-                              ]),
-                              if (pendingFiles.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                ...pendingFiles.asMap().entries.map((entry) => Row(children: [
-                                  Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: Theme.of(context).colorScheme.primary),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(children: [
+                                  Icon(Icons.attach_file_rounded, color: Theme.of(context).colorScheme.primary, size: 18),
                                   const SizedBox(width: 7),
-                                  Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11))),
-                                  IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: Icon(Icons.close, size: 17, color: Theme.of(context).colorScheme.error)),
-                                ])),
+                                  Expanded(child: Text('Asset Attachments', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
+                                  Text('${pendingFiles.length} selected', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w700)),
+                                ]),
+                                const SizedBox(height: 6),
+                                Wrap(spacing: 8, runSpacing: 4, children: [
+                                  _assetAttachmentButton(Icons.camera_alt_outlined, 'Camera', pickCamera, Theme.of(context).colorScheme.primary),
+                                  _assetAttachmentButton(Icons.photo_library_outlined, 'Gallery', pickGallery, Theme.of(context).colorScheme.tertiary),
+                                  _assetAttachmentButton(Icons.picture_as_pdf_outlined, 'PDFs', pickPdfs, Theme.of(context).colorScheme.error),
+                                ]),
+                                if (pendingFiles.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  ...pendingFiles.asMap().entries.map((entry) => Row(children: [
+                                    Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined, size: 17, color: Theme.of(context).colorScheme.primary),
+                                    const SizedBox(width: 7),
+                                    Expanded(child: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11))),
+                                    IconButton(visualDensity: VisualDensity.compact, onPressed: saving ? null : () => setSheetState(() => pendingFiles.removeAt(entry.key)), icon: Icon(Icons.close, size: 17, color: Theme.of(context).colorScheme.error)),
+                                  ])),
+                                ],
                               ],
-                              if (asset?.id != null) ...[
-                                const Divider(height: 18),
-                                AttachmentSection(ownerType: 'asset', ownerId: asset!.id!),
-                              ],
-                            ]),
+                            ),
                           ),
                           SizedBox(height: 16),
                           Row(children: [

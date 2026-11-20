@@ -19,6 +19,7 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
   bool _loading = true;
   bool _seeking = false;
   int _lastSavedSecond = -1;
+  bool _completed = false;
 
   @override
   void initState() {
@@ -26,7 +27,10 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
     _prepare();
     _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
-      setState(() => _position = _duration);
+      setState(() {
+        _position = Duration.zero;
+        _completed = true;
+      });
       _saveProgress(Duration.zero);
     });
     _player.onDurationChanged.listen((value) {
@@ -150,6 +154,10 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
                           if (playing) {
                             await _player.pause();
                           } else {
+                            if (_completed) {
+                              await _player.seek(Duration.zero);
+                              _completed = false;
+                            }
                             await _player.resume();
                           }
                         },

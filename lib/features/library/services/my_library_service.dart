@@ -113,8 +113,13 @@ class MyLibraryService {
     final extension = p.extension(originalName).toLowerCase();
     const audioExtensions = {'.mp3', '.m4a', '.aac', '.wav', '.ogg', '.flac'};
     const bookExtensions = {'.pdf', '.epub'};
-    if (!audioExtensions.contains(extension) && !bookExtensions.contains(extension)) {
-      throw const FormatException('Supported formats: PDF, EPUB, MP3, M4A, AAC, WAV, OGG and FLAC.');
+    const photoExtensions = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'};
+    const videoExtensions = {'.mp4', '.m4v', '.mov', '.mkv', '.avi', '.webm', '.3gp'};
+    if (!audioExtensions.contains(extension) &&
+        !bookExtensions.contains(extension) &&
+        !photoExtensions.contains(extension) &&
+        !videoExtensions.contains(extension)) {
+      throw const FormatException('Supported formats: PDF, EPUB, audio, JPG, PNG, WEBP, GIF, BMP, MP4, MOV, MKV, AVI and WEBM.');
     }
     if (!await source.exists()) throw Exception('Selected file could not be found.');
 
@@ -130,7 +135,7 @@ class MyLibraryService {
         'title': p.basenameWithoutExtension(originalName),
         'file_name': originalName,
         'file_path': copied.path,
-        'file_type': audioExtensions.contains(extension) ? 'audio' : 'book',
+        'file_type': audioExtensions.contains(extension) ? 'audio' : bookExtensions.contains(extension) ? 'book' : photoExtensions.contains(extension) ? 'photo' : 'video',
         'file_size': fileSize,
         'added_at': DateTime.now().toIso8601String(),
         'last_page': 1,
@@ -216,13 +221,15 @@ class MyLibraryService {
       );
 
   Future<Map<String, Object>> getStorageInformation() async {
-    final row = await (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count FROM $_tableName");
+    final row = await (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count, SUM(CASE WHEN file_type = 'photo' THEN 1 ELSE 0 END) AS photo_count, SUM(CASE WHEN file_type = 'video' THEN 1 ELSE 0 END) AS video_count FROM $_tableName");
     final value = row.first;
     return {
       'total_count': (value['total_count'] as int?) ?? 0,
       'total_bytes': (value['total_bytes'] as int?) ?? 0,
       'book_count': (value['book_count'] as int?) ?? 0,
       'audio_count': (value['audio_count'] as int?) ?? 0,
+      'photo_count': (value['photo_count'] as int?) ?? 0,
+      'video_count': (value['video_count'] as int?) ?? 0,
     };
   }
 

@@ -61,10 +61,17 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
 
   Widget _choice(String title, String subtitle, IconData icon, String value,
       List<String> options, ValueChanged<String> onChanged) {
-    return Card(child: ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 7),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+      minTileHeight: 72,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 1),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 23),
+      title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: DropdownButton<String>(
         value: value,
         underline: const SizedBox.shrink(),
@@ -75,17 +82,37 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   }
 
   Widget _toggle(String title, String subtitle, IconData icon, bool value,
-      ValueChanged<bool> onChanged) => Card(child: SwitchListTile(
-        secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle), value: value, onChanged: onChanged,
-      ));
+      ValueChanged<bool> onChanged) => Card(
+        elevation: 1,
+        margin: const EdgeInsets.only(bottom: 7),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        clipBehavior: Clip.antiAlias,
+        child: SwitchListTile(
+          minTileHeight: 72,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 1),
+          secondary: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 23),
+          title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+          value: value,
+          onChanged: onChanged,
+        ),
+      );
 
-  Widget _defaultDateTile() => Card(child: ListTile(
-    leading: Icon(Icons.event, color: Theme.of(context).colorScheme.primary),
-    title: const Text('Default Transaction Date', maxLines: 2,
+  Widget _defaultDateTile() => Card(
+    elevation: 1,
+    margin: const EdgeInsets.only(bottom: 7),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    clipBehavior: Clip.antiAlias,
+    child: ListTile(
+    minTileHeight: 72,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 1),
+    leading: Icon(Icons.event, color: Theme.of(context).colorScheme.primary, size: 23),
+    title: const Text('Default Transaction Date', maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(fontWeight: FontWeight.w600)),
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+    subtitle: const Text('Set the date used for new transactions',
+      maxLines: 1, overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: 12)),
     trailing: DropdownButton<String>(
       value: _defaultDate,
       underline: const SizedBox.shrink(),
@@ -102,7 +129,12 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(appText(context, 'General App Preferences', 'ایپ کی عمومی ترجیحات'))),
+      appBar: AppBar(
+        title: Text(
+          appText(context, 'General App Preferences', 'ایپ کی عمومی ترجیحات'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: _loading ? Center(child: CircularProgressIndicator()) : ListView(
         padding: const EdgeInsets.all(16),
         children: [

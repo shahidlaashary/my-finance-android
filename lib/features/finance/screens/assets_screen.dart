@@ -1159,7 +1159,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       required IconData icon,
     }) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: .82),
           borderRadius: BorderRadius.circular(13),
@@ -1172,25 +1172,25 @@ class _AssetsScreenState extends State<AssetsScreen> {
               Icon(icon, size: 15, color: color),
               const SizedBox(width: 6),
               Expanded(child: Text(title, style: const TextStyle(
-                fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF263B59)))),
+                fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF263B59)))),
               Text('${(progress * 100).round()}%', style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w800, color: color)),
+                fontSize: 12, fontWeight: FontWeight.w800, color: color)),
             ]),
-            const SizedBox(height: 5),
+            const SizedBox(height: 3),
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 5,
+                minHeight: 4,
                 backgroundColor: const Color(0xFFE8EDF4),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 3),
             Row(children: [
               Expanded(child: Text('$completedLabel: $currency ${_money(completed)} / ${_money(total)}',
                 maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 9, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
+                style: const TextStyle(fontSize: 10, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
               const SizedBox(width: 6),
               Expanded(child: Text('Remaining: $currency ${_money(remaining)}', textAlign: TextAlign.end,
                 maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -1229,11 +1229,11 @@ class _AssetsScreenState extends State<AssetsScreen> {
               const SizedBox(width: 8),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF101D3A))),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF101D3A))),
                 const SizedBox(height: 3),
                 Text('${asset.category} • ${asset.paymentType.toUpperCase()} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 9.5, color: Color(0xFF5B6F91))),
+                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF5B6F91))),
               ])),
               const SizedBox(width: 5),
               Container(
@@ -1243,7 +1243,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(asset.isSold ? 'SOLD' : 'ACTIVE',
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
                     color: asset.isSold ? const Color(0xFFDA233C) : const Color(0xFF11864A))),
               ),
               PopupMenuButton<String>(
@@ -1298,7 +1298,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             if (showPurchaseProgress)
               progressSection(
                 title: 'Credit Purchase Progress',
-                completedLabel: 'Paid to Seller',
+                completedLabel: 'Paid',
                 completed: purchaseLoan!.repaidAmount,
                 total: purchaseLoan.amount,
                 remaining: purchaseLoan.remainingAmount,
@@ -1310,7 +1310,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             if (showSaleProgress)
               progressSection(
                 title: 'Credit Sale Recovery',
-                completedLabel: 'Received from Buyer',
+                completedLabel: 'Received',
                 completed: saleLoan!.repaidAmount,
                 total: saleLoan.amount,
                 remaining: saleLoan.remainingAmount,
@@ -1321,287 +1321,49 @@ class _AssetsScreenState extends State<AssetsScreen> {
           ],
           const SizedBox(height: 7),
           Row(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-              decoration: BoxDecoration(
-                color: asset.isSold ? const Color(0xFFFFE9ED) : const Color(0xFFE5EEFA),
-                borderRadius: BorderRadius.circular(8),
+            if (purchaseLoan != null && purchaseLoan.remainingAmount > 0)
+              TextButton.icon(
+                onPressed: () => _addAssetRepayment(purchaseLoan),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF159B61),
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: const Size(0, 32),
+                ),
+                icon: const Icon(Icons.payments_outlined, size: 15),
+                label: const Text('Pay Back', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800)),
               ),
-              child: Text(asset.isSold ? 'SOLD ASSET' : asset.paymentType.toUpperCase(),
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
-                  color: asset.isSold ? const Color(0xFFDA233C) : const Color(0xFF315F9B))),
-            ),
+            if (saleLoan != null && saleLoan.remainingAmount > 0)
+              TextButton.icon(
+                onPressed: () => _addAssetRepayment(saleLoan),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2674E8),
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: const Size(0, 32),
+                ),
+                icon: const Icon(Icons.call_received_rounded, size: 15),
+                label: const Text('Receive', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800)),
+              ),
             const Spacer(),
             TextButton.icon(
               onPressed: () => _openAssetDetails(asset),
               style: TextButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(horizontal: 5),
-                minimumSize: const Size(0, 30),
+                minimumSize: const Size(0, 32),
               ),
-              icon: const Icon(Icons.receipt_long_outlined, size: 14),
-              label: const Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+              icon: const Icon(Icons.receipt_long_outlined, size: 16),
+              label: const Text('View Entries', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
             ),
           ]),
-          if ((purchaseLoan != null && purchaseLoan.remainingAmount > 0) ||
-              (saleLoan != null && saleLoan.remainingAmount > 0)) ...[
-            const SizedBox(height: 3),
-            Row(children: [
-              if (purchaseLoan != null && purchaseLoan.remainingAmount > 0)
-                Expanded(child: OutlinedButton.icon(
-                  onPressed: () => _addAssetRepayment(purchaseLoan),
-                  icon: const Icon(Icons.payments_outlined, size: 15),
-                  label: const Text('Pay Back', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF159B61),
-                    side: const BorderSide(color: Color(0xFFB8DDCA)),
-                    minimumSize: const Size(0, 31),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                )),
-              if (purchaseLoan != null && purchaseLoan.remainingAmount > 0 &&
-                  saleLoan != null && saleLoan.remainingAmount > 0) const SizedBox(width: 8),
-              if (saleLoan != null && saleLoan.remainingAmount > 0)
-                Expanded(child: OutlinedButton.icon(
-                  onPressed: () => _addAssetRepayment(saleLoan),
-                  icon: const Icon(Icons.call_received_rounded, size: 15),
-                  label: const Text('Receive', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF2674E8),
-                    side: const BorderSide(color: Color(0xFFB8CFF1)),
-                    minimumSize: const Size(0, 34),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                )),
-            ]),
-          ],
         ]),
       ),
     );
   }
 
   Widget _assetCard(AssetsModel asset) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 2, top: 2),
-          child: Row(children: [
-            const Icon(Icons.auto_awesome, size: 13, color: Color(0xFF2674E8)),
-            const SizedBox(width: 5),
-            const Text('NEW DESIGN PREVIEW', style: TextStyle(
-              fontSize: 9, letterSpacing: .7, fontWeight: FontWeight.w800,
-              color: Color(0xFF2674E8))),
-          ]),
-        ),
-        _redesignedAssetCard(asset),
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 2, top: 5),
-          child: Row(children: [
-            const Icon(Icons.layers_outlined, size: 13, color: Color(0xFF718096)),
-            const SizedBox(width: 5),
-            const Text('EXISTING DESIGN', style: TextStyle(
-              fontSize: 9, letterSpacing: .7, fontWeight: FontWeight.w800,
-              color: Color(0xFF718096))),
-          ]),
-        ),
-        _existingAssetCard(asset),
-      ],
-    );
-  }
-
-  Widget _existingAssetCard(AssetsModel asset) {
-    final currency = asset.currency.toUpperCase();
-    final displayedValue = asset.isSold && asset.salePrice != null
-        ? asset.salePrice!
-        : asset.currentValue;
-    final profitLoss = asset.isSold && asset.salePrice != null
-        ? asset.salePrice! - asset.purchasePrice
-        : asset.currentValue - asset.purchasePrice;
-    final purchaseLoan = asset.linkedLoanId == null ? null : _linkedLoans[asset.linkedLoanId!];
-    final saleLoan = asset.saleLinkedLoanId == null ? null : _linkedLoans[asset.saleLinkedLoanId!];
-    final payableOutstanding = purchaseLoan != null && purchaseLoan.remainingAmount > 0;
-    final receivableOutstanding = saleLoan != null && saleLoan.remainingAmount > 0;
-    final categoryIcon = <String, IconData>{
-      'Property': Icons.home_work_outlined,
-      'Vehicles': Icons.directions_car_outlined,
-      'Gold': Icons.diamond_outlined,
-      'Jewellery': Icons.watch_outlined,
-      'Electronics': Icons.devices_other_outlined,
-      'Investments': Icons.trending_up_rounded,
-      'Livestock': Icons.pets_outlined,
-      'Business': Icons.storefront_outlined,
-    }[asset.category] ?? Icons.inventory_2_outlined;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: .055), blurRadius: 12, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () => _openAssetDetails(asset),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 11),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(13),
-                        ),
-                        child: Icon(categoryIcon, color: Theme.of(context).colorScheme.primary, size: 22),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
-                            const SizedBox(height: 3),
-                            Text('${asset.category}  •  ${asset.paymentType.toLowerCase() == 'loan' ? 'Loan  •  ' : ''}${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context).hintColor,
-                                fontWeight: FontWeight.w500,
-                              )),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Transform.translate(
-                        offset: const Offset(19, -9),
-                        child: PopupMenuButton<String>(
-                        tooltip: 'Manage Asset',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 160),
-                        icon: Icon(Icons.more_vert_rounded, size: 20, color: Theme.of(context).hintColor),
-                        onSelected: (value) {
-                          if (value == 'edit' && !asset.isSold) {
-                            _showAssetDialog(asset: asset);
-                          } else if (value == 'valuation' && !asset.isSold) {
-                            _updateValuation(asset);
-                          } else if (value == 'sell' && !asset.isSold) {
-                            _sellAsset(asset);
-                          } else if (value == 'delete') {
-                            _deleteAsset(asset);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          if (!asset.isSold)
-                            const PopupMenuItem(value: 'edit', child: Text('Edit Asset')),
-                          if (!asset.isSold)
-                            const PopupMenuItem(value: 'valuation', child: Text('Update Valuation')),
-                          if (!asset.isSold)
-                            const PopupMenuItem(value: 'sell', child: Text('Sell Asset')),
-                          const PopupMenuItem(value: 'delete', child: Text('Delete Asset')),
-                        ],
-                      ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 13),
-                  Row(
-                    children: [
-                      Expanded(child: _assetCardMetric('Purchase Value', '$currency ${_money(asset.purchasePrice)}')),
-                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outlineVariant),
-                      const SizedBox(width: 12),
-                      Expanded(child: _assetCardMetric(asset.isSold ? 'Sale Value' : 'Current Value', '$currency ${_money(displayedValue)}')),
-                      Container(width: 1, height: 30, color: Theme.of(context).colorScheme.outlineVariant),
-                      const SizedBox(width: 12),
-                      Expanded(child: _assetCardMetric(asset.isSold ? 'Realized P/L' : 'Unrealized P/L',
-                        '$currency ${_money(profitLoss)}', valueColor: profitLoss >= 0 ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _assetStatusChip(
-                              asset.isSold ? 'SOLD' : asset.paymentType.toUpperCase(),
-                              asset.isSold ? Theme.of(context).colorScheme.errorContainer : Theme.of(context).colorScheme.primaryContainer,
-                              asset.isSold ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('View Entries', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.primary)),
-                                SizedBox(width: 2),
-                                Icon(Icons.arrow_forward_rounded, size: 12, color: Theme.of(context).colorScheme.primary),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (payableOutstanding)
-                              OutlinedButton(
-                                onPressed: () => _addAssetRepayment(purchaseLoan!),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Theme.of(context).colorScheme.tertiary,
-                                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                                  minimumSize: const Size(0, 30),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(Icons.payments_outlined, size: 12),
-                                  SizedBox(width: 3),
-                                  Text('Pay Back', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
-                                ]),
-                              ),
-                            if (payableOutstanding && receivableOutstanding) const SizedBox(width: 4),
-                            if (receivableOutstanding)
-                              OutlinedButton(
-                                onPressed: () => _addAssetRepayment(saleLoan!),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Theme.of(context).colorScheme.secondary,
-                                  side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                                  minimumSize: const Size(0, 30),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(Icons.call_received_rounded, size: 12),
-                                  SizedBox(width: 3),
-                                  Text('Receive', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
-                                ]),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return _redesignedAssetCard(asset);
   }
 
   Widget _assetCardMetric(String label, String value, {Color? valueColor}) {
@@ -1609,10 +1371,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 9.5, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
+          style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: valueColor ?? Theme.of(context).colorScheme.onSurface)),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: valueColor ?? Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }

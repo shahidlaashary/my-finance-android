@@ -31,7 +31,7 @@ class _LibraryPdfReaderScreenState extends State<LibraryPdfReaderScreen> {
       final savedPage = (widget.item['last_page'] as int?) ?? 1;
       final document = await PdfDocument.openFile(path);
       final pageCount = document.pagesCount;
-      final initialPage = savedPage.clamp(1, pageCount);
+      final initialPage = savedPage.clamp(1, pageCount).toInt();
       final controller = PdfControllerPinch(
         document: Future.value(document),
         initialPage: initialPage,

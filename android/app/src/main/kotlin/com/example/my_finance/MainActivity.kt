@@ -45,20 +45,33 @@ class MainActivity : FlutterFragmentActivity(), TextToSpeech.OnInitListener {
                         if (!ttsReady || text.isBlank()) {
                             result.error("TTS_NOT_READY", "Text-to-speech is not ready on this device.", null)
                         } else {
-                            val locale = when (language) {
-                                "skr", "sd", "bal", "ps", "pa" -> Locale("ur")
-                                else -> Locale(language.ifBlank { "en" })
-                            }
+                            // Never substitute another language: only the selected
+                            // locale may be used for this announcement.
+                            val locale = Locale(language.ifBlank { "en" })
                             val availability = tts?.isLanguageAvailable(locale) ?: TextToSpeech.LANG_NOT_SUPPORTED
                             if (availability < TextToSpeech.LANG_AVAILABLE) {
                                 result.error("VOICE_UNAVAILABLE", "The selected voice is not installed on this device.", null)
                             } else {
-                                tts?.language = locale
-                                val params = Bundle().apply {
-                                    putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume)
+                                val languageStatus = tts?.setLanguage(locale)
+                                    ?: TextToSpeech.LANG_NOT_SUPPORTED
+                                if (languageStatus < TextToSpeech.LANG_AVAILABLE) {
+                                    result.error("VOICE_UNAVAILABLE", "The selected voice is not installed on this device.", null)
+                                } else {
+                                    val params = Bundle().apply {
+                                        putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume)
+                                    }
+                                    val speakStatus = tts?.speak(
+                                        text,
+                                        TextToSpeech.QUEUE_FLUSH,
+                                        params,
+                                        "my_finance_voice"
+                                    ) ?: TextToSpeech.ERROR
+                                    if (speakStatus == TextToSpeech.ERROR) {
+                                        result.error("TTS_FAILED", "The selected text-to-speech voice could not start.", null)
+                                    } else {
+                                        result.success(true)
+                                    }
                                 }
-                                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params, "my_finance_voice")
-                                result.success(true)
                             }
                         }
                     }

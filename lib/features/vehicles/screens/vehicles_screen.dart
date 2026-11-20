@@ -257,7 +257,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     labelText: label, prefixIcon: Icon(icon, size: 19),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
-    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 1.5)),
+    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _green, width: 1.5)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13), isDense: true,
   );
 

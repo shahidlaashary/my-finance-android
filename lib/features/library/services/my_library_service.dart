@@ -164,8 +164,9 @@ class MyLibraryService {
   Future<List<Map<String, Object?>>> getPlaylistItems(int playlistId) async =>
       (await database).rawQuery('SELECT i.* FROM $_tableName i INNER JOIN $_playlistItemsTable pi ON pi.item_id = i.id WHERE pi.playlist_id = ? ORDER BY pi.added_at DESC', [playlistId]);
 
-  Future<void> removeItemFromPlaylist(int playlistId, int itemId) async =>
-      (await database).delete(_playlistItemsTable, where: 'playlist_id = ? AND item_id = ?', whereArgs: [playlistId, itemId]);
+  Future<void> removeItemFromPlaylist(int playlistId, int itemId) async {
+    await (await database).delete(_playlistItemsTable, where: 'playlist_id = ? AND item_id = ?', whereArgs: [playlistId, itemId]);
+  }
 
   Future<List<Map<String, Object?>>> getCollections() async =>
       (await database).query(_collectionsTable, orderBy: 'name COLLATE NOCASE');
@@ -190,8 +191,9 @@ class MyLibraryService {
     });
   }
 
-  Future<void> moveItemToCollection(int itemId, int? collectionId) async =>
-      (await database).update(_tableName, {'collection_id': collectionId}, where: 'id = ?', whereArgs: [itemId]);
+  Future<void> moveItemToCollection(int itemId, int? collectionId) async {
+    await (await database).update(_tableName, {'collection_id': collectionId}, where: 'id = ?', whereArgs: [itemId]);
+  }
 
   Future<List<Map<String, Object?>>> getCollectionItems(int collectionId) async =>
       (await database).query(_tableName, where: 'collection_id = ?', whereArgs: [collectionId], orderBy: 'added_at DESC');

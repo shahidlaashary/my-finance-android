@@ -1304,8 +1304,8 @@ class _LoansScreenState extends State<LoansScreen> {
                                                 if (mounted) _showMessage('Payment entry deleted.');
                                               }
                                             },
-                                            itemBuilder: (context) => const [
-                                              PopupMenuItem(
+                                            itemBuilder: (context) => [
+                                              const PopupMenuItem(
                                                 value: 'edit',
                                                 child: Row(
                                                   children: [

@@ -4,6 +4,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
+import 'package:my_finance/features/library/screens/my_library_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
@@ -26,6 +27,11 @@ class MoreFeaturesPage extends StatelessWidget {
         'title': 'Exchange Rates',
         'subtitle': 'View and manage currency exchange rates',
         'icon': Icons.currency_exchange_rounded,
+      },
+      {
+        'title': 'My Library',
+        'subtitle': 'Keep your books, PDFs and music in one place',
+        'icon': Icons.local_library_outlined,
       },
       {
         'title': 'My Documents',
@@ -112,6 +118,9 @@ class MoreFeaturesPage extends StatelessWidget {
                       }
                       if (feature['title'] == 'Vehicle Manager') {
                         return const VehiclesScreen();
+                      }
+                      if (feature['title'] == 'My Library') {
+                        return const MyLibraryScreen();
                       }
                       if (feature['title'] == 'My Documents') {
                         return const MyDocumentsScreen();

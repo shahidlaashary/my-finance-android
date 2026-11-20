@@ -6,6 +6,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/library/screens/library_audio_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
 import 'package:my_finance/features/library/screens/library_tools_screen.dart';
+import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
@@ -22,6 +23,8 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
+  late Future<List<Map<String, Object?>>> _photoItems;
+  late Future<List<Map<String, Object?>>> _videoItems;
 
   @override
   void initState() {
@@ -33,6 +36,8 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     _allItems = _library.getItems();
     _bookItems = _library.getItems(fileType: 'book');
     _audioItems = _library.getItems(fileType: 'audio');
+    _photoItems = _library.getItems(fileType: 'photo');
+    _videoItems = _library.getItems(fileType: 'video');
   }
 
   Future<void> _addFile() async {
@@ -41,7 +46,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         type: FileType.custom,
         allowMultiple: true,
         withData: false,
-        allowedExtensions: ['pdf', 'epub', 'mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac'],
+        allowedExtensions: ['pdf', 'epub', 'mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac', 'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'mp4', 'm4v', 'mov', 'mkv', 'avi', 'webm', '3gp'],
       );
       if (result == null || result.files.isEmpty) return;
       var added = 0;
@@ -73,6 +78,13 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     final extension = p.extension(path).toLowerCase();
     if (item['file_type'] == 'audio') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryAudioPlayerScreen(item: item)));
+    } else if (item['file_type'] == 'video') {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryVideoPlayerScreen(item: item)));
+    } else if (item['file_type'] == 'photo') {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
+        appBar: AppBar(title: Text(item['title'] as String)),
+        body: Center(child: InteractiveViewer(minScale: 0.5, maxScale: 5, child: Image.file(File(path), fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Text('Unable to display this photo.')))),
+      )));
     } else if (extension == '.pdf') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryPdfReaderScreen(item: item)));
     } else {
@@ -167,20 +179,25 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final item = items[index];
-            final isAudio = item['file_type'] == 'audio';
+            final type = item['file_type'] as String;
+            final isAudio = type == 'audio';
+            final isPhoto = type == 'photo';
+            final isVideo = type == 'video';
             final size = (item['file_size'] as int) / (1024 * 1024);
             final progress = isAudio
                 ? ((item['last_position_ms'] as int? ?? 0) > 0 ? ' • Resume available' : '')
-                : ((item['last_page'] as int? ?? 1) > 1 ? ' • Page ${item['last_page']}' : '');
+                : type == 'book' ? ((item['last_page'] as int? ?? 1) > 1 ? ' • Page ${item['last_page']}' : '') : '';
             return Card(
               child: ListTile(
                 onTap: () => _openItem(item),
                 leading: CircleAvatar(
                   backgroundColor: colors.primaryContainer,
-                  child: Icon(isAudio ? Icons.headphones_rounded : Icons.menu_book_rounded, color: colors.onPrimaryContainer),
+                  child: isPhoto
+                      ? ClipOval(child: Image.file(File(item['file_path'] as String), width: 44, height: 44, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.broken_image_outlined, color: colors.onPrimaryContainer)))
+                      : Icon(isAudio ? Icons.headphones_rounded : isVideo ? Icons.video_library_outlined : Icons.menu_book_rounded, color: colors.onPrimaryContainer),
                 ),
                 title: Text(item['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text('${isAudio ? 'Audio' : 'Book'} • ${size.toStringAsFixed(1)} MB$progress', maxLines: 2),
+                subtitle: Text('${isAudio ? 'Music' : isPhoto ? 'Photo' : isVideo ? 'Video' : 'Book'} • ${size.toStringAsFixed(1)} MB$progress', maxLines: 2),
                 trailing: PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'open') _openItem(item);
@@ -204,7 +221,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(appText(context, 'My Library', 'میری لائبریری')),
@@ -214,19 +231,23 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               Tab(text: 'All', icon: Icon(Icons.library_books_outlined)),
               Tab(text: 'Books', icon: Icon(Icons.menu_book_outlined)),
               Tab(text: 'Music', icon: Icon(Icons.headphones_outlined)),
+              Tab(text: 'Photos', icon: Icon(Icons.photo_outlined)),
+              Tab(text: 'Videos', icon: Icon(Icons.video_library_outlined)),
             ],
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _addFile,
           icon: const Icon(Icons.add_rounded),
-          label: Text(appText(context, 'Add Book / Music', 'کتاب / میوزک شامل کریں')),
+          label: Text(appText(context, 'Add Media', 'میڈیا شامل کریں')),
         ),
         body: TabBarView(
           children: [
-            _buildItems(_allItems, 'Your library is empty', 'Add PDF or EPUB books and audio files. Added files are copied into My Finance app storage.'),
+            _buildItems(_allItems, 'Your library is empty', 'Add books, music, photos and videos. Added files are copied into My Finance app storage.'),
             _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
             _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
+            _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
+            _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
           ],
         ),
       ),

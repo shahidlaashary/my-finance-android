@@ -2292,24 +2292,23 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                           Text('Party Profile Photo', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                         ])),
                         section('Basic Information', Icons.person_outline_rounded),
-                        field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
+                        pair(
+                          DropdownButtonFormField<String>(
+                            value: partyType == 'Business' ? 'Business' : 'Individual',
+                            isExpanded: true,
+                            decoration: inputDecoration('Party Type', Icons.category_outlined),
+                            items: const [
+                              DropdownMenuItem(value: 'Individual', child: Text('Individual')),
+                              DropdownMenuItem(value: 'Business', child: Text('Business')),
+                            ],
+                            onChanged: (value) { if (value != null) setSheetState(() => partyType = value); },
+                          ),
+                          field(name, 'Party Name *', Icons.badge_outlined, validator: (v) => v == null || v.trim().isEmpty ? 'Party name is required' : null),
+                        ),
                         const SizedBox(height: 7),
                         pair(field(phone, 'Phone Number', Icons.phone_outlined, type: TextInputType.phone), field(email, 'Email Address', Icons.email_outlined, type: TextInputType.emailAddress)),
                         const SizedBox(height: 10),
-                        DropdownButtonFormField<String>(
-                          value: partyType == 'Business' ? 'Business' : 'Individual',
-                          isExpanded: true,
-                          decoration: inputDecoration('Party Type', Icons.category_outlined),
-                          items: const [
-                            DropdownMenuItem(value: 'Individual', child: Text('Individual')),
-                            DropdownMenuItem(value: 'Business', child: Text('Business')),
-                          ],
-                          onChanged: (value) { if (value != null) setSheetState(() => partyType = value); },
-                        ),
-                        const SizedBox(height: 10),
-                        field(cnic, 'CNIC / ID Number', Icons.credit_card_outlined),
-                        const SizedBox(height: 10),
-                        field(referencePerson, 'Reference Person', Icons.contacts_outlined),
+                        pair(field(cnic, 'CNIC / ID Number', Icons.credit_card_outlined), field(referencePerson, 'Reference Person', Icons.contacts_outlined)),
                         section('Address Information', Icons.location_on_outlined),
                         pair(field(country, 'Country', Icons.public_outlined), field(city, 'City', Icons.location_city_outlined)),
                         const SizedBox(height: 10),
@@ -2335,24 +2334,23 @@ class _PartyManagementPageState extends State<PartyManagementPage> {
                         TextFormField(
                           controller: notes,
                           maxLines: 2,
-                          decoration: inputDecoration('Notes', Icons.sticky_note_2_outlined),
-                        ),
-                        const SizedBox(height: 7),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              try {
-                                final result = await FilePicker.platform.pickFiles(type: FileType.any, allowMultiple: true, withData: false);
-                                if (result != null) {
-                                  setSheetState(() => pendingNoteAttachments.addAll(result.files.where((file) => file.path != null)));
+                          decoration: inputDecoration('Notes', Icons.sticky_note_2_outlined).copyWith(
+                            suffixIcon: IconButton(
+                              tooltip: 'Attach Files',
+                              visualDensity: VisualDensity.compact,
+                              icon: const Icon(Icons.attach_file_rounded, size: 19),
+                              onPressed: () async {
+                                try {
+                                  final result = await FilePicker.platform.pickFiles(type: FileType.any, allowMultiple: true, withData: false);
+                                  if (result != null) {
+                                    setSheetState(() => pendingNoteAttachments.addAll(result.files.where((file) => file.path != null)));
+                                  }
+                                } catch (error) {
+                                  if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Attachment select error: $error')));
                                 }
-                              } catch (error) {
-                                if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Attachment select error: $error')));
-                              }
-                            },
-                            icon: Icon(Icons.attach_file_rounded, size: 17),
-                            label: Text('Attach Files'),
+                              },
+                            ),
+                            suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 40),
                           ),
                         ),
                         if (existingPartyAttachments.isNotEmpty || pendingNoteAttachments.isNotEmpty)

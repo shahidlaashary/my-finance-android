@@ -684,26 +684,6 @@ class _LoansScreenState extends State<LoansScreen> {
     return '$name • $type';
   }
 
-  Future<void> _showRepaymentAttachments(int repaymentId) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 20),
-          child: SingleChildScrollView(
-            child: AttachmentSection(
-              ownerType: AttachmentOwnerTypes.repayment,
-              ownerId: repaymentId,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<bool> _addRepayment(LoansModel loan) async {
     if (loan.id == null) return false;
     await _loadData();
@@ -720,6 +700,42 @@ class _LoansScreenState extends State<LoansScreen> {
       walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
     }
     DateTime repaymentDate = DateTime.now();
+    final pendingAttachments = <Map<String, String>>[];
+
+    Future<void> addPendingFile(String? path, String name, StateSetter setDialogState) async {
+      if (path != null && path.isNotEmpty) {
+        setDialogState(() => pendingAttachments.add({'path': path, 'name': name}));
+      }
+    }
+
+    Future<void> pickRepaymentPhoto(ImageSource source, StateSetter setDialogState) async {
+      try {
+        final picker = ImagePicker();
+        if (source == ImageSource.camera) {
+          final photo = await picker.pickImage(source: source, imageQuality: 85);
+          if (photo != null) await addPendingFile(photo.path, photo.name, setDialogState);
+        } else {
+          final photos = await picker.pickMultiImage(imageQuality: 85);
+          for (final photo in photos) {
+            await addPendingFile(photo.path, photo.name, setDialogState);
+          }
+        }
+      } catch (error) { _showMessage('Could not select image: $error'); }
+    }
+
+    Future<void> pickRepaymentPdfs(StateSetter setDialogState) async {
+      try {
+        final files = await FilePicker.platform.pickFiles(
+          type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: true,
+        );
+        if (files != null) {
+          for (final file in files.files) {
+            await addPendingFile(file.path, file.name, setDialogState);
+          }
+        }
+      } catch (error) { _showMessage('Could not select PDF: $error'); }
+    }
+
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -771,6 +787,39 @@ class _LoansScreenState extends State<LoansScreen> {
                   maxLines: 2,
                   decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
                 ),
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerLeft, child: Text(
+                  'Attachments',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                )),
+                const SizedBox(height: 8),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  OutlinedButton.icon(
+                    onPressed: () => pickRepaymentPhoto(ImageSource.camera, setDialogState),
+                    icon: const Icon(Icons.camera_alt_outlined, size: 18), label: const Text('Camera'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => pickRepaymentPhoto(ImageSource.gallery, setDialogState),
+                    icon: const Icon(Icons.photo_library_outlined, size: 18), label: const Text('Gallery'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => pickRepaymentPdfs(setDialogState),
+                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 18), label: const Text('PDF'),
+                  ),
+                ]),
+                if (pendingAttachments.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  ...pendingAttachments.asMap().entries.map((entry) => ListTile(
+                    dense: true, contentPadding: EdgeInsets.zero,
+                    leading: Icon(entry.value['name']!.toLowerCase().endsWith('.pdf')
+                      ? Icons.picture_as_pdf_outlined : Icons.image_outlined),
+                    title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    trailing: IconButton(
+                      tooltip: 'Remove attachment', icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => setDialogState(() => pendingAttachments.removeAt(entry.key)),
+                    ),
+                  )),
+                ],
               ],
             ),
           ),
@@ -817,9 +866,21 @@ class _LoansScreenState extends State<LoansScreen> {
       );
       final repaymentId = await LoansService.addRepayment(repayment);
       _selectedRepaymentWalletId = walletId;
+      var attachmentFailures = 0;
+      for (final file in pendingAttachments) {
+        try {
+          await AttachmentService.addAttachment(
+            ownerType: AttachmentOwnerTypes.repayment,
+            ownerId: repaymentId,
+            sourcePath: file['path']!,
+            originalFileName: file['name']!,
+          );
+        } catch (_) { attachmentFailures++; }
+      }
       await _loadData();
-      _showMessage('Repayment saved successfully.');
-      if (mounted) await _showRepaymentAttachments(repaymentId);
+      _showMessage(attachmentFailures == 0
+          ? 'Repayment saved successfully' + (pendingAttachments.isEmpty ? '.' : ' with attachments.')
+          : 'Repayment saved, but ' + attachmentFailures.toString() + ' attachment(s) could not be added.');
       return true;
     } catch (error) {
       _showMessage('Could not save repayment: $error');

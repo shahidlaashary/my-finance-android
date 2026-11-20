@@ -24,46 +24,57 @@ class MoreFeaturesPage extends StatelessWidget {
     final features = [
       {
         'title': 'WhatsApp Automation',
+        'subtitle': 'Automate finance updates and messages on WhatsApp',
         'icon': Icons.chat_rounded,
       },
       {
         'title': 'Exchange Rates',
+        'subtitle': 'View and manage currency exchange rates',
         'icon': Icons.currency_exchange_rounded,
       },
       {
         'title': 'My Documents',
+        'subtitle': 'Store and access your important documents',
         'icon': Icons.folder_copy_outlined,
       },
       {
         'title': 'Staff Management',
+        'subtitle': 'Manage staff details and related records',
         'icon': Icons.badge_outlined,
       },
       {
         'title': 'Stock Manager',
+        'subtitle': 'Track inventory, purchases and stock levels',
         'icon': Icons.inventory_2_outlined,
       },
       {
         'title': 'Vehicle Manager',
+        'subtitle': 'Manage your vehicles and related expenses',
         'icon': Icons.directions_car_filled_rounded,
       },
       {
         'title': 'Installment Manager',
+        'subtitle': 'Track installment plans and payment schedules',
         'icon': Icons.payments_rounded,
       },
       {
         'title': 'Committee',
+        'subtitle': 'Manage committee members and contribution records',
         'icon': Icons.groups_2_outlined,
       },
       {
         'title': 'My Partner',
+        'subtitle': 'Manage partner details and shared records',
         'icon': Icons.handshake_outlined,
       },
       {
         'title': 'Recycle Bin',
+        'subtitle': 'Restore deleted records or permanently remove them',
         'icon': Icons.delete_outline_rounded,
       },
       {
         'title': 'Settings',
+        'subtitle': 'Manage app preferences, appearance and security',
         'icon': Icons.settings_outlined,
       },
 
@@ -74,7 +85,7 @@ class MoreFeaturesPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           appText(context, 'More Features', 'مزید خصوصیات'),
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView.builder(
@@ -158,10 +169,17 @@ class MoreFeaturesPage extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: Theme.of(context).hintColor,
+                subtitle: Text(
+                  appText(
+                    context,
+                    feature['subtitle'] as String,
+                    feature['subtitle'] as String,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12),
                 ),
+                trailing: const Icon(Icons.chevron_right_rounded),
               ),
             ),
           );

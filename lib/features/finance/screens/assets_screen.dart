@@ -1159,7 +1159,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
       required IconData icon,
     }) {
       return Container(
-        padding: const EdgeInsets.all(11),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: .82),
           borderRadius: BorderRadius.circular(13),
@@ -1172,29 +1172,30 @@ class _AssetsScreenState extends State<AssetsScreen> {
               Icon(icon, size: 15, color: color),
               const SizedBox(width: 6),
               Expanded(child: Text(title, style: const TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF263B59)))),
+                fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF263B59)))),
               Text('${(progress * 100).round()}%', style: TextStyle(
                 fontSize: 11, fontWeight: FontWeight.w800, color: color)),
             ]),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 8,
+                minHeight: 5,
                 backgroundColor: const Color(0xFFE8EDF4),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 5),
             Row(children: [
               Expanded(child: Text('$completedLabel: $currency ${_money(completed)} / ${_money(total)}',
                 maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
+                style: const TextStyle(fontSize: 9, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
+              const SizedBox(width: 6),
+              Expanded(child: Text('Remaining: $currency ${_money(remaining)}', textAlign: TextAlign.end,
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 9, color: Color(0xFF536987), fontWeight: FontWeight.w600))),
             ]),
-            const SizedBox(height: 3),
-            Text('Remaining: $currency ${_money(remaining)}',
-              style: const TextStyle(fontSize: 10, color: Color(0xFF536987), fontWeight: FontWeight.w600)),
           ],
         ),
       );
@@ -1203,40 +1204,40 @@ class _AssetsScreenState extends State<AssetsScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: const Color(0xFFDCE5F0)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E5E9)),
         boxShadow: const [
-          BoxShadow(color: Color(0x0D243B5A), blurRadius: 13, offset: Offset(0, 4)),
+          BoxShadow(color: Color(0x08000000), blurRadius: 9, offset: Offset(0, 3)),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(13),
+        padding: const EdgeInsets.all(10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () => _openAssetDetails(asset),
             child: Row(children: [
               Container(
-                width: 43, height: 43,
+                width: 38, height: 38,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE5EEFA),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(categoryIcon, color: const Color(0xFF315F9B), size: 23),
+                child: Icon(categoryIcon, color: const Color(0xFF315F9B), size: 21),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(asset.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF101D3A))),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF101D3A))),
                 const SizedBox(height: 3),
                 Text('${asset.category} • ${asset.paymentType.toUpperCase()} • ${DateFormat('dd MMM yyyy').format(asset.purchaseDate)}',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF5B6F91))),
+                  style: const TextStyle(fontSize: 9.5, color: Color(0xFF5B6F91))),
               ])),
               const SizedBox(width: 5),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: asset.isSold ? const Color(0xFFFFE9ED) : const Color(0xFFE7F8ED),
                   borderRadius: BorderRadius.circular(20),
@@ -1270,9 +1271,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
               ),
             ]),
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(13),
@@ -1293,7 +1294,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
             ]),
           ),
           if (showPurchaseProgress || showSaleProgress) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 7),
             if (showPurchaseProgress)
               progressSection(
                 title: 'Credit Purchase Progress',
@@ -1305,7 +1306,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 color: const Color(0xFF159B61),
                 icon: Icons.payments_outlined,
               ),
-            if (showPurchaseProgress && showSaleProgress) const SizedBox(height: 8),
+            if (showPurchaseProgress && showSaleProgress) const SizedBox(height: 6),
             if (showSaleProgress)
               progressSection(
                 title: 'Credit Sale Recovery',
@@ -1318,7 +1319,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 icon: Icons.call_received_rounded,
               ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 7),
           Row(children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
@@ -1354,7 +1355,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF159B61),
                     side: const BorderSide(color: Color(0xFFB8DDCA)),
-                    minimumSize: const Size(0, 34),
+                    minimumSize: const Size(0, 31),
                     visualDensity: VisualDensity.compact,
                   ),
                 )),

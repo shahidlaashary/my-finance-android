@@ -37,6 +37,7 @@ class _AssetValuationEntryFormState extends State<AssetValuationEntryForm> {
       await SoundSettingsService.instance.play('update');
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
+      await SoundSettingsService.instance.play('error');
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));

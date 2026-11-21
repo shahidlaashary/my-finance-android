@@ -7,6 +7,7 @@ import 'package:my_finance/features/library/screens/library_audio_player_screen.
 import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
 import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
+import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
@@ -25,6 +26,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   late Future<List<Map<String, Object?>>> _audioItems;
   late Future<List<Map<String, Object?>>> _photoItems;
   late Future<List<Map<String, Object?>>> _videoItems;
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
@@ -50,13 +52,22 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Future<void> _addFile() async {
+  Future<void> _addFile({String? mediaType}) async {
+    const bookExts = ['pdf', 'epub'];
+    const musicExts = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac'];
+    const photoExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+    const videoExts = ['mp4', 'm4v', 'mov', 'mkv', 'avi', 'webm', '3gp'];
+    final allowed = mediaType == 'book' ? bookExts
+        : mediaType == 'audio' ? musicExts
+        : mediaType == 'photo' ? photoExts
+        : mediaType == 'video' ? videoExts
+        : [...bookExts, ...musicExts, ...photoExts, ...videoExts];
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowMultiple: true,
         withData: false,
-        allowedExtensions: ['pdf', 'epub', 'mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac', 'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'mp4', 'm4v', 'mov', 'mkv', 'avi', 'webm', '3gp'],
+        allowedExtensions: allowed,
       );
       if (result == null || result.files.isEmpty) return;
       var added = 0;
@@ -230,73 +241,92 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 5,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(appText(context, 'My Library', 'میری لائبریری')),
-          actions: [
-          IconButton(
-            tooltip: 'Search My Library',
-            icon: const Icon(Icons.search_rounded),
-            onPressed: _openLibrarySearch,
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(appText(context, 'My Library', 'میری لائبریری')),
+        actions: [
+          IconButton(tooltip: 'Search My Library', icon: const Icon(Icons.search_rounded), onPressed: _openLibrarySearch),
           IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); }),
         ],
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.055), blurRadius: 14, offset: const Offset(0, -3))],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _addFile,
-          icon: const Icon(Icons.add_rounded),
-          label: Text(appText(context, 'Add Media', 'میڈیا شامل کریں')),
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.055),
-                blurRadius: 14,
-                offset: const Offset(0, -3),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            top: false,
-            child: SizedBox(
-              height: 66,
-              child: TabBar(
-                indicatorColor: Colors.transparent,
-                dividerColor: Colors.transparent,
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Theme.of(context).hintColor,
-                labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-                overlayColor: WidgetStateProperty.all(Colors.transparent),
-                tabs: const [
-                  Tab(icon: Icon(Icons.library_books_outlined, size: 22), text: 'All'),
-                  Tab(icon: Icon(Icons.menu_book_outlined, size: 22), text: 'Books'),
-                  Tab(icon: Icon(Icons.headphones_outlined, size: 22), text: 'Music'),
-                  Tab(icon: Icon(Icons.photo_outlined, size: 22), text: 'Photos'),
-                  Tab(icon: Icon(Icons.video_library_outlined, size: 22), text: 'Videos'),
-                ],
-              ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 66,
+            child: Row(
+              children: [
+                _navItem(0, Icons.library_books_outlined, 'All'),
+                _navItem(1, Icons.menu_book_outlined, 'Books'),
+                _navItem(2, Icons.folder_copy_outlined, 'Docs'),
+                Expanded(
+                  child: PopupMenuButton<String>(
+                    tooltip: 'Add to My Library',
+                    icon: Icon(Icons.add_circle_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 25),
+                    onSelected: (type) {
+                      if (type == 'document') {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const MyDocumentsScreen(openAddOnStart: true)));
+                      } else {
+                        _addFile(mediaType: type);
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'book', child: ListTile(leading: Icon(Icons.menu_book_outlined), title: Text('Add Book'), contentPadding: EdgeInsets.zero)),
+                      PopupMenuItem(value: 'document', child: ListTile(leading: Icon(Icons.description_outlined), title: Text('Add Document'), contentPadding: EdgeInsets.zero)),
+                      PopupMenuItem(value: 'audio', child: ListTile(leading: Icon(Icons.music_note_outlined), title: Text('Add Music'), contentPadding: EdgeInsets.zero)),
+                      PopupMenuItem(value: 'photo', child: ListTile(leading: Icon(Icons.photo_outlined), title: Text('Add Photo'), contentPadding: EdgeInsets.zero)),
+                      PopupMenuItem(value: 'video', child: ListTile(leading: Icon(Icons.video_library_outlined), title: Text('Add Video'), contentPadding: EdgeInsets.zero)),
+                    ],
+                  ),
+                ),
+                _navItem(3, Icons.headphones_outlined, 'Music'),
+                _navItem(4, Icons.photo_outlined, 'Photos'),
+                _navItem(5, Icons.video_library_outlined, 'Videos'),
+              ],
             ),
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildItems(_allItems, 'Your library is empty', 'Add books, music, photos and videos. Added files are copied into My Finance app storage.'),
-            _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
-            _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
-            _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
-            _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
-          ],
+      ),
+      body: IndexedStack(
+        index: _selectedTabIndex,
+        children: [
+          _buildItems(_allItems, 'Your library is empty', 'Add books, music, photos and videos. Added files are copied into My Finance app storage.'),
+          _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
+          const MyDocumentsScreen(),
+          _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
+          _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
+          _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
+        ],
+      ),
+    );
+}
+
+  
+  Widget _navItem(int index, IconData icon, String label) {
+    final selected = _selectedTabIndex == index;
+    final color = selected ? Theme.of(context).colorScheme.primary : Theme.of(context).hintColor;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _selectedTabIndex = index),
+        child: SizedBox(
+          height: 66,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 22, color: color),
+              const SizedBox(height: 3),
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
 
 class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
   _LibrarySearchDelegate({required this.library, required this.onOpen});

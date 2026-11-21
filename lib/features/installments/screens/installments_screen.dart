@@ -246,7 +246,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
         await SoundSettingsService.instance.play('save');
         await _load();
         _message('Installment plan created successfully.');
-      } catch (e) { _message(e.toString().replaceFirst('Exception: ', '')); }
+      } catch (e) { await SoundSettingsService.instance.play('error'); _message(e.toString().replaceFirst('Exception: ', '')); }
     }
     for (final c in [item, party, phone, total, advance, installment, notes]) { c.dispose(); }
   }

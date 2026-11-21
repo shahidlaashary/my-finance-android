@@ -14,14 +14,13 @@ import 'package:my_finance/features/library/services/library_documents_service.d
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 
 class LibraryDocumentsScreen extends StatefulWidget {
-  const LibraryDocumentsScreen({super.key, this.openAddOnStart = false});
-  final bool openAddOnStart;
+  const LibraryDocumentsScreen({super.key});
 
   @override
-  State<LibraryDocumentsScreen> createState() => _LibraryDocumentsScreenState();
+  State<LibraryDocumentsScreen> createState() => LibraryDocumentsScreenState();
 }
 
-class _LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
+class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
   static const List<String> _categories = [
     'Personal',
     'Vehicle',
@@ -46,10 +45,9 @@ class _LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadDocuments();
     _searchController.addListener(_loadDocuments);
-    if (widget.openAddOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _showDocumentForm(); });
-    }
   }
+
+  Future<void> showAddDocumentForm() => _showDocumentForm();
 
   void _onAppDataChanged() {
     if (mounted) _loadDocuments();

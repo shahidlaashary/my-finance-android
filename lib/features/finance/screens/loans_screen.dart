@@ -12,6 +12,7 @@ import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
+import 'package:my_finance/features/finance/screens/loan_repayment_entry_form.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
@@ -727,208 +728,19 @@ class LoansScreenState extends State<LoansScreen> {
   }
 
   Future<bool> _addRepayment(LoansModel loan) async {
-    if (loan.id == null) return false;
-    await _loadData();
-    if (!mounted) return false;
-    if (_wallets.isEmpty) {
-      _showMessage('Please create an wallet first.');
-      return false;
-    }
-    _repaymentAmountController.clear();
-    _repaymentNotesController.clear();
-    int? walletId = _selectedRepaymentWalletId;
-    if (walletId == null || _currencyForWallet(walletId) != loan.currency.toUpperCase()) {
-      final matching = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == loan.currency.toUpperCase());
-      walletId = matching.isEmpty ? null : (matching.first['id'] as num).toInt();
-    }
-    DateTime repaymentDate = DateTime.now();
-    final pendingAttachments = <Map<String, String>>[];
-
-    Future<void> addPendingFile(String? path, String name, StateSetter setDialogState) async {
-      if (path != null && path.isNotEmpty) {
-        setDialogState(() => pendingAttachments.add({'path': path, 'name': name}));
-      }
-    }
-
-    Future<void> pickRepaymentPhoto(ImageSource source, StateSetter setDialogState) async {
-      try {
-        final picker = ImagePicker();
-        if (source == ImageSource.camera) {
-          final photo = await picker.pickImage(source: source, imageQuality: 85);
-          if (photo != null) await addPendingFile(photo.path, photo.name, setDialogState);
-        } else {
-          final photos = await picker.pickMultiImage(imageQuality: 85);
-          for (final photo in photos) {
-            await addPendingFile(photo.path, photo.name, setDialogState);
-          }
-        }
-      } catch (error) { _showMessage('Could not select image: $error'); }
-    }
-
-    Future<void> pickRepaymentPdfs(StateSetter setDialogState) async {
-      try {
-        final files = await FilePicker.platform.pickFiles(
-          type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: true,
-        );
-        if (files != null) {
-          for (final file in files.files) {
-            await addPendingFile(file.path, file.name, setDialogState);
-          }
-        }
-      } catch (error) { _showMessage('Could not select PDF: $error'); }
-    }
-
-    final result = await showDialog<bool>(
+    if (loan.id == null || loan.remainingAmount <= 0) return false;
+    final saved = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(loan.loanType == 'given' ? 'Receive Repayment' : 'Pay Back Loan'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${loan.loanType == 'given' ? 'Borrower:' : 'Lender:'} ${_partyNameForLoan(loan)}'),
-                SizedBox(height: 6),
-                Text('${appText(context, "Outstanding: ", "بقایا: ")}'
-                  '${_moneyWithLoanCurrency(loan.remainingAmount, loan)}',
-                ),
-                TextField(
-                  controller: _repaymentAmountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: appText(context, "Repayment Amount *", "Repayment Amount *")),
-                ),
-                SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: walletId,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: loan.loanType == 'given' ? 'Receiving Wallet *' : 'Paying Wallet *'),
-                  items: _wallets.where((wallet) =>
-                    (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == loan.currency.toUpperCase()
-                  ).map((wallet) {
-                    return DropdownMenuItem<int>(
-                      value: (wallet['id'] as num).toInt(),
-                      child: Text('${wallet['name']} (${(wallet['currency']?.toString() ?? 'PKR').toUpperCase()})'),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setDialogState(() => walletId = value),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(appText(context, 'Repayment Date', 'واپسی کی تاریخ')),
-                  subtitle: Text(_dateString(repaymentDate)),
-                  trailing: Icon(Icons.calendar_month),
-                  onTap: () async {
-                    final date = await _pickDate(repaymentDate);
-                    if (date != null) {
-                      setDialogState(() => repaymentDate = date);
-                    }
-                  },
-                ),
-                TextField(
-                  controller: _repaymentNotesController,
-                  maxLines: 2,
-                  decoration: InputDecoration(labelText: appText(context, "Notes", "Notes")),
-                ),
-                const SizedBox(height: 12),
-                Align(alignment: Alignment.centerLeft, child: Text(
-                  'Attachments',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                )),
-                const SizedBox(height: 8),
-                Wrap(spacing: 8, runSpacing: 8, children: [
-                  OutlinedButton.icon(
-                    onPressed: () => pickRepaymentPhoto(ImageSource.camera, setDialogState),
-                    icon: const Icon(Icons.camera_alt_outlined, size: 18), label: const Text('Camera'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => pickRepaymentPhoto(ImageSource.gallery, setDialogState),
-                    icon: const Icon(Icons.photo_library_outlined, size: 18), label: const Text('Gallery'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => pickRepaymentPdfs(setDialogState),
-                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 18), label: const Text('PDF'),
-                  ),
-                ]),
-                if (pendingAttachments.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  ...pendingAttachments.asMap().entries.map((entry) => ListTile(
-                    dense: true, contentPadding: EdgeInsets.zero,
-                    leading: Icon(entry.value['name']!.toLowerCase().endsWith('.pdf')
-                      ? Icons.picture_as_pdf_outlined : Icons.image_outlined),
-                    title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    trailing: IconButton(
-                      tooltip: 'Remove attachment', icon: const Icon(Icons.close, size: 18),
-                      onPressed: () => setDialogState(() => pendingAttachments.removeAt(entry.key)),
-                    ),
-                  )),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(loan.loanType == 'given' ? 'Save Repayment' : 'Save Payment'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => LoanRepaymentEntryForm(loan: loan),
     );
-    if (result != true) return false;
-    final amount = double.tryParse(_repaymentAmountController.text.trim());
-    if (amount == null || !amount.isFinite || amount <= 0) {
-      _showMessage('Enter a valid repayment amount.');
-      return false;
-    }
-    if (amount > loan.remainingAmount + 0.000001) {
-      _showMessage('Amount exceeds outstanding balance.');
-      return false;
-    }
-    if (walletId == null) {
-      _showMessage('Please select a receiving wallet.');
-      return false;
-    }
-    if (_currencyForWallet(walletId!) != loan.currency.toUpperCase()) {
-      _showMessage('Receiving wallet must use the same currency as the loan.');
-      return false;
-    }
-    try {
-      final repayment = RepaymentModel(
-        loanId: loan.id!,
-        amount: amount,
-        walletId: walletId!,
-        repaymentDate: _dateString(repaymentDate),
-        paymentMethod: 'cash',
-        notes: _repaymentNotesController.text.trim(),
-        createdAt: DateTime.now().toIso8601String(),
-      );
-      final repaymentId = await LoansService.addRepayment(repayment);
-      _selectedRepaymentWalletId = walletId;
-      var attachmentFailures = 0;
-      for (final file in pendingAttachments) {
-        try {
-          await AttachmentService.addAttachment(
-            ownerType: AttachmentOwnerTypes.repayment,
-            ownerId: repaymentId,
-            sourcePath: file['path']!,
-            originalFileName: file['name']!,
-          );
-        } catch (_) { attachmentFailures++; }
-      }
+    if (saved == true) {
       await _loadData();
-      _showMessage(attachmentFailures == 0
-          ? 'Repayment saved successfully' + (pendingAttachments.isEmpty ? '.' : ' with attachments.')
-          : 'Repayment saved, but ' + attachmentFailures.toString() + ' attachment(s) could not be added.');
+      if (mounted) _showMessage('Repayment saved successfully.');
       return true;
-    } catch (error) {
-      _showMessage('Could not save repayment: $error');
-      return false;
     }
+    return false;
   }
+
   Future<bool> _editLoan(LoansModel loan) async {
     if (loan.id == null || loan.isAssetLinked) {
       _showMessage('Asset-linked loans must be edited from Asset Section.');

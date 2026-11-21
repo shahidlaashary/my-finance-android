@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
 
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
@@ -257,6 +258,19 @@ class _AttachmentSectionState extends State<AttachmentSection> {
 
       if (attachment.fileType == 'image') {
         _showImagePreview(attachment);
+        return;
+      }
+
+      if (attachment.fileType == 'pdf') {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LibraryPdfReaderScreen.fromFile(
+              filePath: attachment.filePath,
+              documentTitle: attachment.fileName,
+            ),
+          ),
+        );
         return;
       }
 

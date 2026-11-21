@@ -384,7 +384,9 @@ class _RecurringTransactionsScreenState
               ]),
             ] else if ((item.category ?? '').trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              infoChip(Icons.category_outlined, 'Category', item.category!.trim()),
+              Row(children: [
+                infoChip(Icons.category_outlined, 'Category', item.category!.trim()),
+              ]),
             ],
             const SizedBox(height: 8),
             Row(children: [

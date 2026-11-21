@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Independent local data store for My Library.
 /// Finance database and finance records are never opened or modified here.
@@ -256,16 +257,16 @@ class MyLibraryService {
   Future<void> deleteItem(Map<String, Object?> item) async {
     final db = await database;
     final id = item['id'] as int;
-    final filePath = item['file_path'] as String;
-    await db.transaction((txn) async {
-      await txn.delete(_tableName, where: 'id = ?', whereArgs: [id]);
-    });
-    try {
-      final file = File(filePath);
-      if (await file.exists()) await file.delete();
-    } on FileSystemException {
-      // Metadata is removed; an orphaned file can be cleaned up later.
-    }
+    final record = Map<String, dynamic>.from(item);
+    // Keep the original media file in Library storage until the central Recycle Bin expires or the user permanently deletes it.
+    await RecycleBinService.archive(
+      type: 'Library ${item['file_type'] ?? 'media'}',
+      title: (item['title'] ?? item['file_name'] ?? 'Library item').toString(),
+      table: 'library_items',
+      id: id,
+      record: record,
+    );
+    await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
   }
 
   /// Closes the database before a whole-app backup/restore operation.

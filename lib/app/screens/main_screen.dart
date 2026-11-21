@@ -275,6 +275,23 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     setState(() => selectedType = type);
   }
 
+  String _sheetTitle(BuildContext context) {
+    switch (selectedType) {
+      case 'Income':
+        return appText(context, 'Add Income', 'آمدنی شامل کریں');
+      case 'Expense':
+        return appText(context, 'Add Expense', 'اخراجات شامل کریں');
+      case 'Transfer':
+        return appText(context, 'Add Transfer', 'رقم منتقل کریں');
+      case 'Loan':
+        return appText(context, 'Add Loan', 'قرض شامل کریں');
+      case 'Asset':
+        return appText(context, 'Add Asset', 'اثاثہ شامل کریں');
+      default:
+        return appText(context, 'Add Income', 'آمدنی شامل کریں');
+    }
+  }
+
   Widget _buildQuickEntryForm() {
     switch (selectedType) {
       case 'Income':
@@ -332,7 +349,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     children: [
                       Expanded(
                         child: Text(
-                          appText(context, 'Quick Add', 'فوری اندراج'),
+                          _sheetTitle(context),
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,

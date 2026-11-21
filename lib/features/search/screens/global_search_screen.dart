@@ -276,7 +276,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         }
       }),
       _collect(() async {
-        final rows = await LibraryDocumentsService.instance.getDocuments();
+        final rows = await SpaceDocumentsService.instance.getDocuments();
         for (final item in rows) {
           final data = item.toMap();
           _addRecord(

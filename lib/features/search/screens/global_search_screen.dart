@@ -12,7 +12,7 @@ import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/committee/services/committee_service.dart';
-import 'package:my_finance/features/documents/services/my_documents_service.dart';
+import 'package:my_finance/features/library/services/library_documents_service.dart';
 import 'package:my_finance/features/installments/services/installment_service.dart';
 import 'package:my_finance/features/stock/services/stock_service.dart';
 import 'package:my_finance/features/staff/services/staff_service.dart';
@@ -276,7 +276,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         }
       }),
       _collect(() async {
-        final rows = await MyDocumentsService.instance.getDocuments();
+        final rows = await LibraryDocumentsService.instance.getDocuments();
         for (final item in rows) {
           final data = item.toMap();
           _addRecord(

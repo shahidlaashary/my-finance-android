@@ -161,8 +161,9 @@ class MyLibraryService {
     }
   }
 
-  Future<void> deleteSectionRecord(String section, int id) async =>
-      (await database).delete(_sectionTable(section), where: 'id = ?', whereArgs: [id]);
+  Future<void> deleteSectionRecord(String section, int id) async {
+    await (await database).delete(_sectionTable(section), where: 'id = ?', whereArgs: [id]);
+  }
 
   Future<List<Map<String, Object?>>> getItems({String? fileType}) async {
     final db = await database;

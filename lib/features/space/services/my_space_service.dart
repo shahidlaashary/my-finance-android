@@ -54,7 +54,7 @@ class MySpaceService {
     final directory = await spaceDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
-      version: 3,
+      version: 1,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -71,20 +71,6 @@ class MySpaceService {
           )
         ''');
       },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute(
-            'ALTER TABLE $_tableName ADD COLUMN last_page INTEGER NOT NULL DEFAULT 1',
-          );
-          await db.execute(
-            'ALTER TABLE $_tableName ADD COLUMN last_position_ms INTEGER NOT NULL DEFAULT 0',
-          );
-        }
-        if (oldVersion < 3) {
-          await db.execute('ALTER TABLE $_tableName ADD COLUMN last_epub_cfi TEXT');
-        }
-      },
-      onDowngrade: (db, oldVersion, newVersion) async {},
       onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
     // Idempotent add-on tables; no change to the existing Space schema.

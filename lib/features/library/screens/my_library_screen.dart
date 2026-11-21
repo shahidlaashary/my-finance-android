@@ -10,7 +10,7 @@ import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_documents_screen.dart';
 import 'package:my_finance/features/library/screens/library_records_screen.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/library/services/my_space_service.dart';
 import 'package:my_finance/features/library/services/library_documents_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
@@ -23,7 +23,7 @@ class MySpaceScreen extends StatefulWidget {
 }
 
 class _MySpaceScreenState extends State<MySpaceScreen> {
-  final _library = MySpaceService.instance;
+  final _space = MySpaceService.instance;
   final _documentsKey = GlobalKey<SpaceDocumentsScreenState>();
   final _dealsKey = GlobalKey<SpaceRecordsScreenState>();
   final _projectsKey = GlobalKey<SpaceRecordsScreenState>();
@@ -41,11 +41,11 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   void _refresh() {
-    _allItems = _library.getItems();
-    _bookItems = _library.getItems(fileType: 'book');
-    _audioItems = _library.getItems(fileType: 'audio');
-    _photoItems = _library.getItems(fileType: 'photo');
-    _videoItems = _library.getItems(fileType: 'video');
+    _allItems = _space.getItems();
+    _bookItems = _space.getItems(fileType: 'book');
+    _audioItems = _space.getItems(fileType: 'audio');
+    _photoItems = _space.getItems(fileType: 'photo');
+    _videoItems = _space.getItems(fileType: 'video');
   }
 
   Future<void> _openRecordForm(String section) async {
@@ -57,11 +57,11 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     if (section == 'projects') _projectsKey.currentState?.refresh();
   }
 
-  Future<void> _openLibrarySearch() async {
+  Future<void> _openSpaceSearch() async {
     await showSearch<Object?>(
       context: context,
-      delegate: _LibrarySearchDelegate(
-        library: _library,
+      delegate: _SpaceSearchDelegate(
+        library: _space,
         onOpen: _openItem,
         onOpenDocument: (document) => _documentsKey.currentState?.openDocumentFromSearch(document),
       ),
@@ -91,7 +91,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       for (final picked in result.files) {
         final path = picked.path;
         if (path == null) { failures.add(picked.name); continue; }
-        try { await _library.addFile(File(path), picked.name); added++; }
+        try { await _space.addFile(File(path), picked.name); added++; }
         catch (_) { failures.add(picked.name); }
       }
       if (!mounted) return;
@@ -133,7 +133,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   Future<void> _moveItemToFolder(Map<String, Object?> item) async {
-    final folders = await _library.getCollections();
+    final folders = await _space.getCollections();
     if (!mounted) return;
     if (folders.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a folder first in Space Tools.')));
@@ -156,7 +156,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       ),
     );
     if (selected == null) return;
-    await _library.moveItemToCollection(item['id'] as int, selected);
+    await _space.moveItemToCollection(item['id'] as int, selected);
     if (mounted) {
       setState(_refresh);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File moved to folder.')));
@@ -177,7 +177,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     );
     if (confirm != true) return;
     try {
-      await _library.deleteItem(item);
+      await _space.deleteItem(item);
       if (mounted) setState(_refresh);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to remove file: $e')));
@@ -199,7 +199,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.local_library_outlined, size: 64, color: colors.primary),
+                  Icon(Icons.local_space_outlined, size: 64, color: colors.primary),
                   const SizedBox(height: 16),
                   Text(emptyTitle, style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
@@ -232,7 +232,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                   backgroundColor: colors.primaryContainer,
                   child: isPhoto
                       ? ClipOval(child: Image.file(File(item['file_path'] as String), width: 44, height: 44, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.broken_image_outlined, color: colors.onPrimaryContainer)))
-                      : Icon(isAudio ? Icons.headphones_rounded : isVideo ? Icons.video_library_outlined : Icons.menu_book_rounded, color: colors.onPrimaryContainer),
+                      : Icon(isAudio ? Icons.headphones_rounded : isVideo ? Icons.video_space_outlined : Icons.menu_book_rounded, color: colors.onPrimaryContainer),
                 ),
                 title: Text(item['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis),
                 subtitle: Text('${isAudio ? 'Music' : isPhoto ? 'Photo' : isVideo ? 'Video' : 'Book'} • ${size.toStringAsFixed(1)} MB$progress', maxLines: 2),
@@ -262,7 +262,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       appBar: AppBar(
         title: Text(appText(context, 'My Space', 'میری لائبریری')),
         actions: [
-          IconButton(tooltip: 'Search My Space', icon: const Icon(Icons.search_rounded), onPressed: _openLibrarySearch),
+          IconButton(tooltip: 'Search My Space', icon: const Icon(Icons.search_rounded), onPressed: _openSpaceSearch),
           IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const SpaceToolsScreen())); if (mounted) setState(_refresh); }),
         ],
       ),
@@ -320,7 +320,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photo', Icons.photo_outlined, 'Add Photo'),
-                      _addMenuItem('video', Icons.video_library_outlined, 'Add Video'),
+                      _addMenuItem('video', Icons.video_space_outlined, 'Add Video'),
                       _addMenuItem('project', Icons.work_outline_rounded, 'Add Project'),
                     ],
                   ),
@@ -328,7 +328,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 _navItem(4, Icons.headphones_outlined, 'Music'),
                 _navItem(5, Icons.photo_outlined, 'Photo'),
                 _navItem(6, Icons.work_outline_rounded, 'Projects'),
-                _navItem(7, Icons.video_library_outlined, 'Video'),
+                _navItem(7, Icons.video_space_outlined, 'Video'),
               ],
             ),
           ),
@@ -398,8 +398,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 }
 
-class _LibrarySearchDelegate extends SearchDelegate<Object?> {
-  _LibrarySearchDelegate({required this.library, required this.onOpen, required this.onOpenDocument});
+class _SpaceSearchDelegate extends SearchDelegate<Object?> {
+  _SpaceSearchDelegate({required this.library, required this.onOpen, required this.onOpenDocument});
 
   final MySpaceService library;
   final Future<void> Function(Map<String, Object?> item) onOpen;
@@ -591,7 +591,7 @@ class _LibrarySearchDelegate extends SearchDelegate<Object?> {
               final type = item['file_type']?.toString() ?? '';
               final icon = type == 'audio' ? Icons.headphones_rounded
                   : type == 'photo' ? Icons.image_rounded
-                  : type == 'video' ? Icons.video_library_rounded : Icons.menu_book_rounded;
+                  : type == 'video' ? Icons.video_space_rounded : Icons.menu_book_rounded;
               final label = type == 'audio' ? 'Music' : type == 'photo' ? 'Photo' : type == 'video' ? 'Video' : 'Book';
               return ListTile(
                 leading: CircleAvatar(child: Icon(icon)),

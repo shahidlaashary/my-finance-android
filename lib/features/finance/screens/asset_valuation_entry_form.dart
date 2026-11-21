@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
@@ -33,6 +34,7 @@ class _AssetValuationEntryFormState extends State<AssetValuationEntryForm> {
     setState(() => _saving = true);
     try {
       await AssetsService().updateCurrentValue(widget.asset.id!, value);
+      await SoundSettingsService.instance.play('update');
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {

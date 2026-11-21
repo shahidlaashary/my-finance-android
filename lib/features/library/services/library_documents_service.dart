@@ -139,22 +139,15 @@ class LibraryDocumentsService {
   }
 
   Future<List<LibraryDocumentModel>> getDocuments({
-    String search = '',
     String category = 'All',
     String filter = 'All',
   }) async {
     final db = await _db;
     final rows = await _readMaps(db);
-    final query = search.trim().toLowerCase();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return rows.map(LibraryDocumentModel.fromMap).where((document) {
       if (category != 'All' && document.category != category) return false;
-      if (query.isNotEmpty &&
-          !document.title.toLowerCase().contains(query) &&
-          !document.category.toLowerCase().contains(query) &&
-          !document.documentNumber.toLowerCase().contains(query) &&
-          !document.notes.toLowerCase().contains(query)) return false;
       if (filter == 'Favorites' && !document.isFavorite) return false;
       if (filter == 'Expiring Soon') {
         final expiry = document.expiryDate;

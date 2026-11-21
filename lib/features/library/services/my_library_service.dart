@@ -89,6 +89,7 @@ class MyLibraryService {
     );
     // Idempotent add-on tables; no change to the existing Library schema.
     await _ensureAddOnTables(db);
+    await _ensureSectionTables(db);
     _database = db;
     return db;
   }
@@ -101,6 +102,67 @@ class MyLibraryService {
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionItemsTable (collection_id INTEGER NOT NULL, item_id INTEGER NOT NULL UNIQUE, added_at TEXT NOT NULL, PRIMARY KEY (collection_id, item_id), FOREIGN KEY (collection_id) REFERENCES $_collectionsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_library_collection_items_collection ON $_collectionItemsTable(collection_id)');
   }
+
+  Future<void> _ensureSectionTables(Database db) async {
+    for (final table in ['library_deals', 'library_projects']) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $table (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          category TEXT NOT NULL DEFAULT '',
+          party_one TEXT NOT NULL DEFAULT '',
+          party_two TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT '',
+          start_date TEXT NOT NULL DEFAULT '',
+          end_date TEXT NOT NULL DEFAULT '',
+          description TEXT NOT NULL DEFAULT '',
+          notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+    }
+  }
+
+  String _sectionTable(String section) {
+    if (section == 'deals') return 'library_deals';
+    if (section == 'projects') return 'library_projects';
+    throw ArgumentError.value(section, 'section', 'Unsupported Library section');
+  }
+
+  Future<List<Map<String, Object?>>> getSectionRecords(String section) async =>
+      (await database).query(_sectionTable(section), orderBy: 'updated_at DESC');
+
+  Future<void> saveSectionRecord(String section, Map<String, Object?> record) async {
+    final table = _sectionTable(section);
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    final values = <String, Object?>{
+      'title': (record['title'] ?? '').toString().trim(),
+      'category': (record['category'] ?? '').toString().trim(),
+      'party_one': (record['party_one'] ?? '').toString().trim(),
+      'party_two': (record['party_two'] ?? '').toString().trim(),
+      'status': (record['status'] ?? '').toString().trim(),
+      'start_date': (record['start_date'] ?? '').toString().trim(),
+      'end_date': (record['end_date'] ?? '').toString().trim(),
+      'description': (record['description'] ?? '').toString().trim(),
+      'notes': (record['notes'] ?? '').toString().trim(),
+      'updated_at': now,
+    };
+    if ((values['title'] as String).isEmpty) {
+      throw const FormatException('Title is required.');
+    }
+    final id = record['id'] as int?;
+    if (id == null) {
+      values['created_at'] = now;
+      await db.insert(table, values);
+    } else {
+      await db.update(table, values, where: 'id = ?', whereArgs: [id]);
+    }
+  }
+
+  Future<void> deleteSectionRecord(String section, int id) async =>
+      (await database).delete(_sectionTable(section), where: 'id = ?', whereArgs: [id]);
 
   Future<List<Map<String, Object?>>> getItems({String? fileType}) async {
     final db = await database;

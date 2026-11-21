@@ -20,9 +20,9 @@ import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
   @override
-  State<LoansScreen> createState() => _LoansScreenState();
+  State<LoansScreen> createState() => LoansScreenState();
 }
-class _LoansScreenState extends State<LoansScreen> {
+class LoansScreenState extends State<LoansScreen> {
   List<LoansModel> _loans = [];
   List<Map<String, dynamic>> _wallets = [];
   List<Map<String, dynamic>> _parties = [];
@@ -187,6 +187,8 @@ class _LoansScreenState extends State<LoansScreen> {
     );
     await _loadData();
   }
+
+  Future<void> openNewLoanForm() => _addLoan();
 
   Future<void> _addLoan() async {
     await _loadData();

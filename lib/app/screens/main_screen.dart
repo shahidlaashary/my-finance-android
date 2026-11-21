@@ -436,8 +436,8 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
         borderRadius: BorderRadius.circular(13),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          height: 58,
-          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+          height: 50,
+          padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(13),
@@ -449,29 +449,29 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 17, color: selected ? color : Theme.of(context).hintColor),
+              Icon(icon, size: 15, color: selected ? color : Theme.of(context).hintColor),
               const SizedBox(height: 2),
               Text(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.w800,
                   color: selected ? color : Theme.of(context).hintColor,
                 ),
               ),
               const SizedBox(height: 1),
               SizedBox(
-                height: 18,
+                height: 15,
                 child: Text(
                   subtitle,
                   maxLines: 2,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 7.8,
-                    height: 1.15,
+                    fontSize: 7.2,
+                    height: 1.05,
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).hintColor,
                   ),

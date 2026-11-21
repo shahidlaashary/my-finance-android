@@ -60,7 +60,11 @@ class _MainScreenState extends State<MainScreen> {
       builder: (context) => PlusActionSheet(
         onNewLoan: () {
           Navigator.of(context).pop();
+          // Build the Loans tab before opening its existing form. The tab is
+          // lazy-loaded, so its State may not exist until it is selected.
+          selectPage(4);
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
             _loansScreenKey.currentState?.openNewLoanForm();
           });
         },

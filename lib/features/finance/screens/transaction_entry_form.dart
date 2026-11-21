@@ -9,6 +9,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/models/attachment_model.dart';

@@ -289,12 +289,24 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                         _addFile(mediaType: type);
                       }
                     },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'book', child: ListTile(leading: Icon(Icons.menu_book_outlined), title: Text('Add Book'), contentPadding: EdgeInsets.zero)),
-                      PopupMenuItem(value: 'document', child: ListTile(leading: Icon(Icons.description_outlined), title: Text('Add Docs'), contentPadding: EdgeInsets.zero)),
-                      PopupMenuItem(value: 'audio', child: ListTile(leading: Icon(Icons.music_note_outlined), title: Text('Add Music'), contentPadding: EdgeInsets.zero)),
-                      PopupMenuItem(value: 'photo', child: ListTile(leading: Icon(Icons.photo_outlined), title: Text('Add Photo'), contentPadding: EdgeInsets.zero)),
-                      PopupMenuItem(value: 'video', child: ListTile(leading: Icon(Icons.video_library_outlined), title: Text('Add Video'), contentPadding: EdgeInsets.zero)),
+                    position: PopupMenuPosition.under,
+                    offset: const Offset(0, 4),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 0, maxWidth: 230),
+                    color: Theme.of(context).colorScheme.surface,
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .8),
+                      ),
+                    ),
+                    itemBuilder: (_) => [
+                      _addMenuItem('book', Icons.menu_book_outlined, 'Add Book'),
+                      _addMenuItem('document', Icons.description_outlined, 'Add Docs'),
+                      _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
+                      _addMenuItem('photo', Icons.photo_outlined, 'Add Photo'),
+                      _addMenuItem('video', Icons.video_library_outlined, 'Add Video'),
                     ],
                   ),
                 ),
@@ -321,6 +333,31 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 }
 
   
+  PopupMenuItem<String> _addMenuItem(String value, IconData icon, String label) {
+    final colors = Theme.of(context).colorScheme;
+    return PopupMenuItem<String>(
+      value: value,
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: colors.primary),
+          const SizedBox(width: 9),
+          Text(
+            label,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: colors.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _navItem(int index, IconData icon, String label) {
     final selected = _selectedTabIndex == index;
     final color = selected ? Theme.of(context).colorScheme.primary : Theme.of(context).hintColor;

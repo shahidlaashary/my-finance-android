@@ -183,7 +183,7 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
             ),
           Expanded(child: RefreshIndicator(
         onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
           Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -422,7 +422,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
         ]),
       ]),
       floatingActionButton: FloatingActionButton.extended(onPressed: _addTransaction, backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: Icon(Icons.add), label: Text('Add Transaction')),
-      body: _loading ? const Center(child: CircularProgressIndicator()) : p == null ? const Center(child: Text('Partner not found')) : RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.fromLTRB(16,12,16,100), children: [
+      body: _loading ? const Center(child: CircularProgressIndicator()) : p == null ? const Center(child: Text('Partner not found')) : RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.fromLTRB(16,12,16,16), children: [
         Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(17)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(p['type'].toString() + ' Partner', style: TextStyle(color: Theme.of(context).hintColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 5),

@@ -33,7 +33,6 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
   ];
 
   final _service = LibraryDocumentsService.instance;
-  final _searchController = TextEditingController();
   List<LibraryDocumentModel> _documents = [];
   bool _loading = true;
   String _category = 'All';
@@ -44,7 +43,6 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     super.initState();
     AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadDocuments();
-    _searchController.addListener(_loadDocuments);
   }
 
   Future<void> showAddDocumentForm() => _showDocumentForm();
@@ -56,15 +54,12 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
   @override
   void dispose() {
     AppRefreshController.revision.removeListener(_onAppDataChanged);
-    _searchController.removeListener(_loadDocuments);
-    _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDocuments() async {
     try {
       final items = await _service.getDocuments(
-        search: _searchController.text,
         category: _category,
         filter: _filter,
       );
@@ -651,74 +646,55 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        title: Text(appText(context, "Library Docs", "Library Docs"), style: TextStyle(fontWeight: FontWeight.w800)),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          height: 58,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border(top: BorderSide(color: const Color(0xFFE5EBE7))),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: .035),
-                blurRadius: 10,
-                offset: const Offset(0, -3),
-              ),
-            ],
-          ),
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            children: [
-              ...['All', 'Favorites', 'Expiring Soon', 'Expired'].map((filter) {
-                final selected = _filter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(filter),
-                    selected: selected,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    onSelected: (_) {
-                      setState(() => _filter = filter);
-                      _loadDocuments();
-                    },
-                  ),
-                );
-              }),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 7),
-                child: Container(width: 1, color: const Color(0xFFDDE5E0)),
-              ),
-              ...['All', ..._categories].map((category) {
-                final selected = _category == category;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(category),
-                    selected: selected,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    onSelected: (_) {
-                      setState(() => _category = category);
-                      _loadDocuments();
-                    },
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-      body: Column(
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Column(
         children: [
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              children: [
+                ...['All', 'Favorites', 'Expiring Soon', 'Expired'].map((filter) {
+                  final selected = _filter == filter;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(filter),
+                      selected: selected,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onSelected: (_) {
+                        setState(() => _filter = filter);
+                        _loadDocuments();
+                      },
+                    ),
+                  );
+                }),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 7),
+                  child: Container(width: 1, color: const Color(0xFFDDE5E0)),
+                ),
+                ...['All', ..._categories].map((category) {
+                  final selected = _category == category;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(category),
+                      selected: selected,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onSelected: (_) {
+                        setState(() => _category = category);
+                        _loadDocuments();
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Row(
@@ -729,25 +705,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: appText(context, "Search documents...", "Search documents..."),
-                prefixIcon: Icon(Icons.search_rounded),
-                suffixIcon: _searchController.text.isEmpty ? null : IconButton(
-                  onPressed: () => _searchController.clear(),
-                  icon: Icon(Icons.close_rounded),
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-
+          SizedBox(height: 8),
           Expanded(
             child: _loading
                 ? Center(child: CircularProgressIndicator())

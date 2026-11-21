@@ -290,16 +290,17 @@ class _RecurringTransactionsScreenState
     ]);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
+      elevation: 2,
+      shadowColor: const Color(0xFF183D2D).withOpacity(0.08),
       color: scheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15),
-        side: BorderSide(color: scheme.outlineVariant.withOpacity(0.55))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: scheme.outlineVariant.withOpacity(0.75))),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 11, 9, 8),
+        padding: const EdgeInsets.fromLTRB(11, 9, 7, 6),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Container(width: 34, height: 34, decoration: BoxDecoration(color: accent.withOpacity(.12), borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, size: 18, color: accent)),
+            Container(width: 38, height: 38, decoration: BoxDecoration(color: accent.withOpacity(.12), borderRadius: BorderRadius.circular(11)),
+              child: Icon(icon, size: 19, color: accent)),
             const SizedBox(width: 9),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -312,8 +313,8 @@ class _RecurringTransactionsScreenState
             Text(_money(item.amount, _currency(item.walletId)), maxLines: 1, overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: accent)),
           ]),
-          const SizedBox(height: 9),
-          Wrap(spacing: 12, runSpacing: 7, children: [
+          const SizedBox(height: 7),
+          Wrap(spacing: 10, runSpacing: 5, children: [
             detail(Icons.account_balance_wallet_outlined, isTransfer ? _walletName(item.walletId) + ' → ' + _walletName(item.toWalletId) : _walletName(item.walletId)),
             detail(Icons.repeat_rounded, 'Next: ${_date(item.nextRunDate)}'),
             if (!isTransfer && (item.category ?? '').trim().isNotEmpty)
@@ -324,11 +325,11 @@ class _RecurringTransactionsScreenState
             detail(Icons.event_outlined, item.endDate == null ? 'No end date' : 'End: ${_date(item.endDate)}'),
           ]),
           if (item.note.trim().isNotEmpty) ...[
-            const SizedBox(height: 7),
+            const SizedBox(height: 5),
             Text(item.note, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
           ],
-          const SizedBox(height: 5),
+          const SizedBox(height: 3),
           Row(children: [
             Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(color: item.isActive ? scheme.secondaryContainer : scheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(20)),

@@ -14,6 +14,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
+import 'package:my_finance/features/finance/screens/loan_repayment_entry_form.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
@@ -1025,123 +1026,18 @@ class AssetsScreenState extends State<AssetsScreen> {
 
   Future<void> _addAssetRepayment(LoansModel loan) async {
     if (loan.id == null || loan.remainingAmount <= 0) return;
-    final amountController = TextEditingController();
-    final notesController = TextEditingController();
-    final matchingWallets = _wallets.where((wallet) =>
-      (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == loan.currency.toUpperCase()
-    ).toList();
-    if (matchingWallets.isEmpty) {
-      _message('Create a ${loan.currency} wallet first.');
-      return;
-    }
-    int selectedWalletId = (matchingWallets.first['id'] as num).toInt();
-    DateTime paymentDate = DateTime.now();
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(18, 8, 18, MediaQuery.viewInsetsOf(context).bottom + 20),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(loan.loanType == 'given' ? 'Receive Payment' : 'Pay Back',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 4),
-                Text('Remaining: ${loan.currency} ${_money(loan.remainingAmount)}',
-                  style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Amount',
-                    prefixText: '${loan.currency} ',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: selectedWalletId,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: loan.loanType == 'given' ? 'Receiving Wallet' : 'Payment Wallet',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  items: matchingWallets.map((wallet) => DropdownMenuItem<int>(
-                    value: (wallet['id'] as num).toInt(),
-                    child: Text('${wallet['name']} (${wallet['currency']})', overflow: TextOverflow.ellipsis),
-                  )).toList(),
-                  onChanged: (value) { if (value != null) setSheetState(() => selectedWalletId = value); },
-                ),
-                const SizedBox(height: 8),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Payment Date'),
-                  subtitle: Text(DateFormat('dd MMM yyyy').format(paymentDate)),
-                  trailing: Icon(Icons.calendar_month_rounded),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: paymentDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) setSheetState(() => paymentDate = picked);
-                  },
-                ),
-                TextField(
-                  controller: notesController,
-                  decoration: InputDecoration(
-                    labelText: 'Notes (Optional)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () {
-                      final amount = double.tryParse(amountController.text.trim());
-                      if (amount == null || !amount.isFinite || amount <= 0 || amount > loan.remainingAmount) {
-                        _message('Enter a valid amount not greater than the remaining balance.');
-                        return;
-                      }
-                      Navigator.pop(sheetContext, true);
-                    },
-                    child: Text(loan.loanType == 'given' ? 'Save Received Payment' : 'Save Repayment'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      builder: (_) => LoanRepaymentEntryForm(loan: loan),
     );
     if (saved == true) {
-      try {
-        final amount = double.parse(amountController.text.trim());
-        await LoansService.addRepayment(RepaymentModel(
-          loanId: loan.id!,
-          amount: amount,
-          walletId: selectedWalletId,
-          repaymentDate: paymentDate.toIso8601String().split('T').first,
-          paymentMethod: 'wallet',
-          notes: notesController.text.trim(),
-          createdAt: DateTime.now().toIso8601String(),
-        ));
-        await _loadData();
-        _message(loan.loanType == 'given' ? 'Payment received successfully.' : 'Repayment saved successfully.');
-      } catch (error) {
-        _message(error.toString().replaceFirst('Exception: ', ''));
+      await _loadData();
+      if (mounted) {
+        _message(loan.loanType == 'given'
+            ? 'Payment received successfully.'
+            : 'Repayment saved successfully.');
       }
     }
-    amountController.dispose();
-    notesController.dispose();
   }
 
 

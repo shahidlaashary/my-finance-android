@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -142,6 +143,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
         attachments,
       );
 
+      await SoundSettingsService.instance.play('save');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Asset and attachments saved successfully.')),

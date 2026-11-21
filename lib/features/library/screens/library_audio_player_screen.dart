@@ -50,6 +50,10 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
     try {
       final path = widget.item['file_path'] as String;
       if (!await File(path).exists()) throw Exception('Audio file is missing.');
+      final lowerPath = path.toLowerCase();
+      if (lowerPath.endsWith('.aac') || lowerPath.endsWith('.ogg')) {
+        throw const FormatException('AAC and OGG audio formats are no longer supported.');
+      }
       await _player.setSourceDeviceFile(path);
       final savedMs = (widget.item['last_position_ms'] as int?) ?? 0;
       if (savedMs > 0) await _player.seek(Duration(milliseconds: savedMs));

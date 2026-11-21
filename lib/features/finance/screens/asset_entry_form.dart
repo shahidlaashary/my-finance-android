@@ -70,7 +70,7 @@ class _AssetEntryFormState extends State<AssetEntryForm> {
       try {
         final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
         final parties = await LoansService.getParties();
-        if (mounted) setState(() { _parties = parties; _partyId = id; });
+        if (mounted) setState(() { _parties = parties; _partyId = id; final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency.toUpperCase()); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); });
       } catch (e) { _msg(e); }
     }
     name.dispose(); phone.dispose();
@@ -118,7 +118,7 @@ class _AssetEntryFormState extends State<AssetEntryForm> {
       DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Cash','Bank','Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
       if (_payment == 'Loan') ...[
         Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createParty, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))),
-        DropdownButtonFormField<int>(value: _partyId, decoration: _dec('Loan party'), items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(), onChanged: (v) => setState(() => _partyId = v), validator: (v) => _payment == 'Loan' && v == null ? 'Select a party.' : null),
+        DropdownButtonFormField<int>(value: _partyId, decoration: _dec('Loan party'), items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(), onChanged: (v) => setState(() { _partyId = v; if (v != null) { final p = _parties.firstWhere((x) => (x['id'] as num).toInt() == v); final c = (p['currency']?.toString() ?? 'PKR').toUpperCase(); final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == c); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); } }), validator: (v) => _payment == 'Loan' && v == null ? 'Select a party.' : null),
       ],
       const SizedBox(height: 12),
       TextFormField(controller: _purchase, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Purchase price *'), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid purchase price.' : null; }),

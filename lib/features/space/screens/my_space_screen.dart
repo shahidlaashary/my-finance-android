@@ -32,8 +32,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
-  late Future<List<Map<String, Object?>>> _photoItems;
-  late Future<List<Map<String, Object?>>> _videoItems;
+  late Future<List<Map<String, Object?>>> _photosItems;
+  late Future<List<Map<String, Object?>>> _videosItems;
   int _selectedTabIndex = 0;
 
   @override
@@ -46,8 +46,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     _allItems = _space.getItems();
     _bookItems = _space.getItems(fileType: 'book');
     _audioItems = _space.getItems(fileType: 'audio');
-    _photoItems = _space.getItems(fileType: 'photo');
-    _videoItems = _space.getItems(fileType: 'video');
+    _photosItems = _space.getItems(fileType: 'photos');
+    _videosItems = _space.getItems(fileType: 'videos');
   }
 
   Future<void> _openRecordForm(String section) async {
@@ -73,13 +73,13 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   Future<void> _addFile({String? mediaType}) async {
     const bookExts = ['pdf', 'epub'];
     const musicExts = ['mp3', 'm4a', 'wav', 'flac'];
-    const photoExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
-    const videoExts = ['mp4', 'm4v', 'mov', 'mkv', 'avi', 'webm', '3gp'];
+    const photosExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+    const videosExts = ['mp4', 'm4v', 'mov', 'mkv', 'avi', 'webm', '3gp'];
     final allowed = mediaType == 'book' ? bookExts
         : mediaType == 'audio' ? musicExts
-        : mediaType == 'photo' ? photoExts
-        : mediaType == 'video' ? videoExts
-        : [...bookExts, ...musicExts, ...photoExts, ...videoExts];
+        : mediaType == 'photos' ? photosExts
+        : mediaType == 'videos' ? videosExts
+        : [...bookExts, ...musicExts, ...photosExts, ...videosExts];
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -117,9 +117,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     final extension = p.extension(path).toLowerCase();
     if (item['file_type'] == 'audio') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => SpaceAudioPlayerScreen(item: item)));
-    } else if (item['file_type'] == 'video') {
+    } else if (item['file_type'] == 'videos') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => SpaceVideoPlayerScreen(item: item)));
-    } else if (item['file_type'] == 'photo') {
+    } else if (item['file_type'] == 'photos') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
         appBar: AppBar(title: Text(item['title'] as String)),
         body: Center(child: InteractiveViewer(minScale: 0.5, maxScale: 5, child: Image.file(File(path), fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Text('Unable to display this photo.')))),
@@ -221,8 +221,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
             final item = items[index];
             final type = item['file_type'] as String;
             final isAudio = type == 'audio';
-            final isPhoto = type == 'photo';
-            final isVideo = type == 'video';
+            final isPhoto = type == 'photos';
+            final isVideo = type == 'videos';
             final size = (item['file_size'] as int) / (1024 * 1024);
             final progress = isAudio
                 ? ((item['last_position_ms'] as int? ?? 0) > 0 ? ' • Resume available' : '')
@@ -321,8 +321,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       _addMenuItem('deal', Icons.handshake_outlined, 'Add Deal'),
                       _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
-                      _addMenuItem('photo', Icons.photo_outlined, 'Add Photo'),
-                      _addMenuItem('video', Icons.video_library_outlined, 'Add Video'),
+                      _addMenuItem('photos', Icons.photo_outlined, 'Add Photo'),
+                      _addMenuItem('videos', Icons.video_library_outlined, 'Add Video'),
                       _addMenuItem('project', Icons.work_outline_rounded, 'Add Project'),
                     ],
                   ),
@@ -344,9 +344,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           SpaceRecordsScreen(key: _dealsKey, section: 'deals'),
           SpaceDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your space.'),
-          _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
+          _buildItems(_photosItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
           SpaceRecordsScreen(key: _projectsKey, section: 'projects'),
-          _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
+          _buildItems(_videosItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
         ],
       ),
     );
@@ -428,8 +428,8 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
         PopupMenuItem(value: 'book', child: Text('Books')),
         PopupMenuItem(value: 'document', child: Text('My Docs')),
         PopupMenuItem(value: 'audio', child: Text('Music')),
-        PopupMenuItem(value: 'photo', child: Text('Photos')),
-        PopupMenuItem(value: 'video', child: Text('Videos')),
+        PopupMenuItem(value: 'photos', child: Text('Photos')),
+        PopupMenuItem(value: 'videos', child: Text('Videos')),
       ],
     ),
     PopupMenuButton<String>(
@@ -592,9 +592,9 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
               final item = result.item!;
               final type = item['file_type']?.toString() ?? '';
               final icon = type == 'audio' ? Icons.headphones_rounded
-                  : type == 'photo' ? Icons.image_rounded
-                  : type == 'video' ? Icons.video_library_rounded : Icons.menu_book_rounded;
-              final label = type == 'audio' ? 'Music' : type == 'photo' ? 'Photo' : type == 'video' ? 'Video' : 'Book';
+                  : type == 'photos' ? Icons.image_rounded
+                  : type == 'videos' ? Icons.video_library_rounded : Icons.menu_book_rounded;
+              final label = type == 'audio' ? 'Music' : type == 'photos' ? 'Photo' : type == 'videos' ? 'Video' : 'Book';
               return ListTile(
                 leading: CircleAvatar(child: Icon(icon)),
                 title: Text(item['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),

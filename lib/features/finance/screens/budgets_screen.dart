@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -203,8 +204,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                             startDate: startDate, endDate: endDate, currency: currency, isActive: budget?.isActive ?? true, createdAt: budget?.createdAt ?? DateTime.now());
                           if (attachmentBudgetId == null) {
                             attachmentBudgetId = await BudgetsService.addBudget(model);
+                            await SoundSettingsService.instance.play('save');
                           } else {
                             await BudgetsService.updateBudget(model);
+                            await SoundSettingsService.instance.play('update');
                           }
                           if (!sheetContext.mounted) return;
                           setSheetState(() => savedInThisSession = true);
@@ -261,7 +264,9 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     );
     if (confirm != true) return;
     try {
+      await SoundSettingsService.instance.play('delete_warning');
       await BudgetsService.deleteBudget(budget.id!);
+      await SoundSettingsService.instance.play('delete_success');
       await _loadData();
       _message('Budget deleted.');
     } catch (e) {

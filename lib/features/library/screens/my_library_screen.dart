@@ -9,6 +9,7 @@ import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_documents_screen.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/library/services/library_documents_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
 
@@ -49,6 +50,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       delegate: _LibrarySearchDelegate(
         library: _library,
         onOpen: _openItem,
+        onOpenDocument: (document) => _documentsKey.currentState?.openDocumentFromSearch(document),
       ),
     );
   }
@@ -341,18 +343,78 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   }
 }
 
-class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
-  _LibrarySearchDelegate({required this.library, required this.onOpen});
+class _LibrarySearchDelegate extends SearchDelegate<Object?> {
+  _LibrarySearchDelegate({required this.library, required this.onOpen, required this.onOpenDocument});
 
   final MyLibraryService library;
   final Future<void> Function(Map<String, Object?> item) onOpen;
+  final void Function(LibraryDocumentModel document) onOpenDocument;
+
+  String _type = 'All';
+  String _documentCategory = 'All';
+  String _documentFilter = 'All';
+
+  static const _categories = ['All', 'Personal', 'Vehicle', 'Education', 'Property', 'Financial', 'Bills & Receipts', 'Business', 'Other'];
+  static const _documentFilters = ['All', 'Favorites', 'Expiring Soon', 'Expired'];
 
   @override
-  String get searchFieldLabel => 'Search books, music, photos, videos';
+  String get searchFieldLabel => 'Search books, docs, music, photos, videos';
 
   @override
   List<Widget> buildActions(BuildContext context) => [
-    IconButton(icon: const Icon(Icons.clear_rounded), tooltip: 'Clear search', onPressed: () => query = ''),
+    PopupMenuButton<String>(
+      tooltip: 'Search filters',
+      icon: const Icon(Icons.filter_list_rounded),
+      onSelected: (value) { _type = value; showSuggestions(context); },
+      itemBuilder: (_) => const [
+        PopupMenuItem(value: 'All', child: Text('All Library')),
+        PopupMenuItem(value: 'book', child: Text('Books')),
+        PopupMenuItem(value: 'document', child: Text('My Docs')),
+        PopupMenuItem(value: 'audio', child: Text('Music')),
+        PopupMenuItem(value: 'photo', child: Text('Photos')),
+        PopupMenuItem(value: 'video', child: Text('Videos')),
+      ],
+    ),
+    PopupMenuButton<String>(
+      tooltip: 'Document category and status',
+      icon: const Icon(Icons.tune_rounded),
+      onSelected: (value) {
+        if (value.startsWith('category:')) {
+          _documentCategory = value.substring(9);
+        } else {
+          _documentFilter = value.substring(7);
+        }
+        showSuggestions(context);
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem<String>(enabled: false, child: Text('DOCUMENT CATEGORY')),
+        ..._categories.map((value) => PopupMenuItem(
+          value: 'category:$value',
+          child: Row(children: [
+            const Icon(Icons.folder_outlined, size: 18),
+            const SizedBox(width: 10),
+            Expanded(child: Text(value)),
+            if (_documentCategory == value) const Icon(Icons.check, size: 18),
+          ]),
+        )),
+        const PopupMenuDivider(),
+        const PopupMenuItem<String>(enabled: false, child: Text('DOCUMENT STATUS')),
+        ..._documentFilters.map((value) => PopupMenuItem(
+          value: 'status:$value',
+          child: Row(children: [
+            const Icon(Icons.filter_alt_outlined, size: 18),
+            const SizedBox(width: 10),
+            Expanded(child: Text(value)),
+            if (_documentFilter == value) const Icon(Icons.check, size: 18),
+          ]),
+        )),
+      ],
+    ),
+    IconButton(
+      icon: const Icon(Icons.close_rounded),
+      tooltip: 'Close search',
+      onPressed: () => close(context, null),
+    ),
   ];
 
   @override
@@ -362,39 +424,132 @@ class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
     onPressed: () => close(context, null),
   );
 
-  Future<List<Map<String, Object?>>> _matches() async {
-    final items = await library.getItems();
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return [];
-    return items.where((item) => (item['title'] as String? ?? '').toLowerCase().contains(q)).toList();
+  String _normalise(String value) => value.toLowerCase()
+      .replaceAll(RegExp(r'[\u200c\u200d]'), '')
+      .replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  bool _containsAllTerms(String value, String search) {
+    final text = _normalise(value);
+    return _normalise(search).split(' ').where((term) => term.isNotEmpty).every(text.contains);
   }
 
-  Widget _results(BuildContext context) => FutureBuilder<List<Map<String, Object?>>>(
-    future: _matches(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-      if (snapshot.hasError) return const Center(child: Text('Search failed.'));
-      final items = snapshot.data ?? [];
-      if (items.isEmpty) return const Center(child: Text('No matching media found.'));
-      return ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          final type = item['file_type'] as String? ?? '';
-          final icon = type == 'audio' ? Icons.headphones_rounded : type == 'photo' ? Icons.image_rounded : type == 'video' ? Icons.video_library_rounded : Icons.menu_book_rounded;
-          return ListTile(
-            leading: Icon(icon),
-            title: Text(item['title'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle: Text(type == 'audio' ? 'Music' : type == 'photo' ? 'Photo' : type == 'video' ? 'Video' : 'Book'),
-            onTap: () {
-              close(context, item);
-              onOpen(item);
+  Future<List<_LibrarySearchResult>> _matches() async {
+    final q = query.trim();
+    if (q.isEmpty) return [];
+    final results = <_LibrarySearchResult>[];
+
+    if (_type != 'document') {
+      final items = await library.getItems();
+      for (final item in items) {
+        final type = item['file_type']?.toString() ?? '';
+        if (_type != 'All' && type != _type) continue;
+        final searchable = [
+          item['title']?.toString() ?? '',
+          item['original_name']?.toString() ?? '',
+          item['file_name']?.toString() ?? '',
+          item['file_path']?.toString() ?? '',
+        ].join(' ');
+        if (_containsAllTerms(searchable, q)) results.add(_LibrarySearchResult.media(item));
+      }
+    }
+
+    if (_type == 'All' || _type == 'document') {
+      final documents = await LibraryDocumentsService.instance.getDocuments(
+        category: _documentCategory,
+        filter: _documentFilter,
+      );
+      for (final document in documents) {
+        final searchable = [
+          document.title, document.documentNumber, document.category, document.notes,
+          document.issueDate?.toIso8601String() ?? '',
+          document.expiryDate?.toIso8601String() ?? '',
+        ].join(' ');
+        if (_containsAllTerms(searchable, q)) results.add(_LibrarySearchResult.document(document));
+      }
+    }
+    return results;
+  }
+
+  Widget _filterSummary(BuildContext context) {
+    final chips = <String>[
+      if (_type != 'All') _type == 'document' ? 'My Docs' : _type[0].toUpperCase() + _type.substring(1),
+      if (_documentCategory != 'All') _documentCategory,
+      if (_documentFilter != 'All') _documentFilter,
+    ];
+    if (chips.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+      child: Wrap(spacing: 6, runSpacing: 4, children: [
+        for (final chip in chips)
+          InputChip(
+            label: Text(chip, style: const TextStyle(fontSize: 11)),
+            onDeleted: () {
+              if (['My Docs', 'Books', 'Music', 'Photos', 'Videos'].contains(chip)) {
+                _type = 'All';
+              } else if (_categories.contains(chip)) {
+                _documentCategory = 'All';
+              } else {
+                _documentFilter = 'All';
+              }
+              showSuggestions(context);
+            },
+          ),
+        ActionChip(
+          avatar: const Icon(Icons.restart_alt_rounded, size: 15),
+          label: const Text('Reset', style: TextStyle(fontSize: 11)),
+          onPressed: () {
+            _type = 'All'; _documentCategory = 'All'; _documentFilter = 'All';
+            showSuggestions(context);
+          },
+        ),
+      ]),
+    );
+  }
+
+  Widget _results(BuildContext context) => Column(children: [
+    _filterSummary(context),
+    Expanded(
+      child: FutureBuilder<List<_LibrarySearchResult>>(
+        future: _matches(),
+        builder: (context, snapshot) {
+          if (query.trim().isEmpty) return const Center(child: Text('Search across Books, My Docs, Music, Photos and Videos.'));
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError) return const Center(child: Text('Search failed. Please try again.'));
+          final results = snapshot.data ?? [];
+          if (results.isEmpty) return const Center(child: Text('No matching items found. Try another keyword or filter.'));
+          return ListView.separated(
+            itemCount: results.length,
+            separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+            itemBuilder: (context, index) {
+              final result = results[index];
+              if (result.document != null) {
+                final document = result.document!;
+                final detail = document.documentNumber.isEmpty ? document.category : document.category + ' • ' + document.documentNumber;
+                return ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.description_outlined)),
+                  title: Text(document.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text('My Docs • ' + detail, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  onTap: () { close(context, document); onOpenDocument(document); },
+                );
+              }
+              final item = result.item!;
+              final type = item['file_type']?.toString() ?? '';
+              final icon = type == 'audio' ? Icons.headphones_rounded
+                  : type == 'photo' ? Icons.image_rounded
+                  : type == 'video' ? Icons.video_library_rounded : Icons.menu_book_rounded;
+              final label = type == 'audio' ? 'Music' : type == 'photo' ? 'Photo' : type == 'video' ? 'Video' : 'Book';
+              return ListTile(
+                leading: CircleAvatar(child: Icon(icon)),
+                title: Text(item['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(label),
+                onTap: () { close(context, item); onOpen(item); },
+              );
             },
           );
         },
-      );
-    },
-  );
+      ),
+    ),
+  ]);
 
   @override
   Widget buildSuggestions(BuildContext context) => _results(context);
@@ -403,3 +558,10 @@ class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
   Widget buildResults(BuildContext context) => _results(context);
 }
 
+class _LibrarySearchResult {
+  final Map<String, Object?>? item;
+  final LibraryDocumentModel? document;
+  const _LibrarySearchResult._({this.item, this.document});
+  factory _LibrarySearchResult.media(Map<String, Object?> item) => _LibrarySearchResult._(item: item);
+  factory _LibrarySearchResult.document(LibraryDocumentModel document) => _LibrarySearchResult._(document: document);
+}

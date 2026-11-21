@@ -137,6 +137,97 @@ class AssetsService {
       }
     }
   }
+  /// Asset, linked loan aur tamam attachments ko all-or-nothing save karta hai.
+  /// Files pehle temporary location mein prepare hoti hain; phir finance rows aur
+  /// attachment metadata ek hi SQLite transaction mein commit hotay hain.
+  Future<int> addAssetWithAttachments(
+    AssetsModel asset,
+    List<Map<String, String>> attachmentSources,
+  ) async {
+    _validateAsset(asset);
+    if (asset.isSold) throw Exception('Please add the asset first, then record its sale.');
+
+    final prepared = await AttachmentService.prepareAssetAttachments(attachmentSources);
+    final createdPaths = <String>[];
+    try {
+      final db = await _database;
+      await _ensureTables(db);
+      final isLoan = asset.paymentType.toLowerCase() == 'loan';
+      var anchorWalletId = asset.walletId;
+      var currency = asset.currency.toUpperCase();
+
+      if (isLoan) {
+        if (asset.partyId == null) throw Exception('Please select a party for this loan purchase.');
+        final parties = await db.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
+        if (parties.isEmpty) throw Exception('Selected party was not found.');
+        currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+        final matching = await db.query(
+          'wallets', columns: ['id'],
+          where: "UPPER(TRIM(COALESCE(currency, 'PKR'))) = ?",
+          whereArgs: [currency], orderBy: 'id ASC', limit: 1,
+        );
+        if (matching.isEmpty) throw Exception('Create a $currency wallet first. It is required for future loan repayments.');
+        anchorWalletId = (matching.first['id'] as num).toInt();
+      }
+
+      final assetId = await db.transaction((txn) async {
+        final wallet = await _getWallet(txn, anchorWalletId);
+        final walletCurrency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
+        if (isLoan && walletCurrency != currency) throw Exception('Asset currency does not match its party currency.');
+        if (!isLoan) currency = walletCurrency;
+        if (!isLoan && (wallet['balance'] as num).toDouble() < asset.purchasePrice) {
+          throw Exception('Insufficient wallet balance.');
+        }
+
+        final assetMap = asset.copyWith(
+          walletId: anchorWalletId,
+          currency: currency,
+          name: asset.name.trim(),
+          category: asset.category.trim().isEmpty ? 'Other' : asset.category.trim(),
+          createdAt: asset.createdAt ?? DateTime.now(),
+        ).toMap()..remove('id');
+        final id = await txn.insert('assets', assetMap);
+        if (!isLoan) {
+          await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [asset.purchasePrice, anchorWalletId]);
+        } else {
+          final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
+          if (parties.isEmpty) throw Exception('Selected party was not found.');
+          final loanId = await txn.insert('loans', {
+            'party_id': asset.partyId,
+            'loan_type': 'taken',
+            'amount': asset.purchasePrice,
+            'remaining_amount': asset.purchasePrice,
+            'wallet_id': anchorWalletId,
+            'currency': currency,
+            'source_type': 'asset_purchase',
+            'source_id': id,
+            'lending_date': asset.purchaseDate.toIso8601String().split('T').first,
+            'notes': 'Asset purchase: ${asset.name}',
+            'status': 'active',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          await txn.update('assets', {'linked_loan_id': loanId}, where: 'id = ?', whereArgs: ['$id']);
+        }
+
+        await AttachmentService.insertPreparedAssetAttachments(
+          txn: txn,
+          assetId: id,
+          prepared: prepared,
+          createdPaths: createdPaths,
+        );
+        return id;
+      });
+
+      AppRefreshController.notifyChanged();
+      return assetId;
+    } catch (_) {
+      await AttachmentService.cleanupCreatedAssetAttachmentFiles(createdPaths);
+      rethrow;
+    } finally {
+      await AttachmentService.cleanupPreparedAssetAttachments(prepared);
+    }
+  }
+
   Future<int> addAsset(AssetsModel asset) async {
     _validateAsset(asset);
     if (asset.isSold) throw Exception('Please add the asset first, then record its sale.');

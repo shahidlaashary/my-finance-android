@@ -226,6 +226,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         appBar: AppBar(
           title: Text(appText(context, 'My Library', 'میری لائبریری')),
           actions: [IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); })],
+        ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _addFile,
           icon: const Icon(Icons.add_rounded),

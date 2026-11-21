@@ -7,7 +7,7 @@ import 'package:my_finance/features/library/screens/library_audio_player_screen.
 import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
 import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
-import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
+import 'package:my_finance/features/library/screens/library_documents_screen.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
@@ -269,7 +269,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     icon: Icon(Icons.add_circle_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 25),
                     onSelected: (type) {
                       if (type == 'document') {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const MyDocumentsScreen(openAddOnStart: true)));
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryDocumentsScreen(openAddOnStart: true)));
                       } else {
                         _addFile(mediaType: type);
                       }
@@ -296,7 +296,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         children: [
           _buildItems(_allItems, 'Your library is empty', 'Add books, music, photos and videos. Added files are copied into My Finance app storage.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
-          const MyDocumentsScreen(),
+          const LibraryDocumentsScreen(),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
           _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
           _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),

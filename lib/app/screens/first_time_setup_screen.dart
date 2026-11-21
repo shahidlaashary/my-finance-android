@@ -260,7 +260,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant)),
                   const SizedBox(height: 32),
-                  Text('Your Name', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                  Text('Username', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 9),
                   TextField(
                     controller: _nameController,
@@ -269,7 +269,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _finish(),
                     decoration: const InputDecoration(
-                      hintText: 'Enter your name',
+                      hintText: 'Enter username',
                       prefixIcon: Icon(Icons.person_outline_rounded),
                       border: OutlineInputBorder(),
                     ),

@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -71,7 +72,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                 const SizedBox(height: 12), _field(notes, 'Notes', Icons.notes_outlined, maxLines: 3),
                 const SizedBox(height: 20), FilledButton(onPressed: () async {
                   if (!key.currentState!.validate()) return;
-                  try { await StaffService.saveStaff(id: member?['id'] as int?, name: name.text, phone: phone.text, role: role.text, salary: double.tryParse(salary.text) ?? 0, joinedAt: joined, notes: notes.text); if (sheet.mounted) Navigator.pop(sheet); await _load(); }
+                  try { await StaffService.saveStaff(id: member?['id'] as int?, name: name.text, phone: phone.text, role: role.text, salary: double.tryParse(salary.text) ?? 0, joinedAt: joined, notes: notes.text); await SoundSettingsService.instance.play(member == null ? 'save' : 'update'); if (sheet.mounted) Navigator.pop(sheet); await _load(); }
                   catch (e) { _message(e.toString()); }
                 }, child: Text(tr('Save Staff'))),
               ]))),
@@ -106,7 +107,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
             const SizedBox(height: 12), DropdownButtonFormField<int>(value: walletId, decoration: InputDecoration(labelText: tr('Wallet'), border: const OutlineInputBorder()), items: _wallets.map((w) => DropdownMenuItem(value: w['id'] as int, child: Text(w['name'].toString()))).toList(), onChanged: (v) { if (v != null) refresh(() => walletId = v); }),
             const SizedBox(height: 8), ListTile(contentPadding: EdgeInsets.zero, title: Text(tr('Payment Date')), subtitle: Text(DateFormat.yMMMd().format(date)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) refresh(() => date = d); }),
             const SizedBox(height: 8), TextFormField(controller: note, maxLines: 2, decoration: InputDecoration(labelText: tr('Notes (optional)'), border: const OutlineInputBorder())),
-            const SizedBox(height: 20), FilledButton(onPressed: () async { if (!key.currentState!.validate()) return; try { await StaffService.paySalary(staffId: staffId, amount: double.parse(amount.text), walletId: walletId, date: date, note: note.text); if (sheet.mounted) Navigator.pop(sheet); await _load(); } catch (e) { _message(e.toString()); } }, child: Text(tr('Save Salary Payment'))),
+            const SizedBox(height: 20), FilledButton(onPressed: () async { if (!key.currentState!.validate()) return; try { await StaffService.paySalary(staffId: staffId, amount: double.parse(amount.text), walletId: walletId, date: date, note: note.text); await SoundSettingsService.instance.play('expense'); if (sheet.mounted) Navigator.pop(sheet); await _load(); } catch (e) { _message(e.toString()); } }, child: Text(tr('Save Salary Payment'))),
           ])),
         ),
       )));
@@ -128,7 +129,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
             const SizedBox(height: 12), DropdownButtonFormField<String>(value: status, decoration: InputDecoration(labelText: tr('Status'), border: const OutlineInputBorder()), items: ['Present','Absent','Late','Leave','Half Day'].map((s) => DropdownMenuItem(value: s, child: Text(tr(s)))).toList(), onChanged: (v) { if (v != null) refresh(() => status = v); }),
             const SizedBox(height: 8), ListTile(contentPadding: EdgeInsets.zero, title: Text(tr('Date')), subtitle: Text(DateFormat.yMMMd().format(date)), trailing: const Icon(Icons.calendar_month), onTap: () async { final d = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) refresh(() => date = d); }),
             TextField(controller: note, maxLines: 2, decoration: InputDecoration(labelText: tr('Notes (optional)'), border: const OutlineInputBorder())),
-            const SizedBox(height: 20), FilledButton(onPressed: () async { try { await StaffService.saveAttendance(staffId: staffId, date: date, status: status, note: note.text); if (sheet.mounted) Navigator.pop(sheet); await _load(); } catch (e) { _message(e.toString()); } }, child: Text(tr('Save Attendance'))),
+            const SizedBox(height: 20), FilledButton(onPressed: () async { try { await StaffService.saveAttendance(staffId: staffId, date: date, status: status, note: note.text); await SoundSettingsService.instance.play('save'); if (sheet.mounted) Navigator.pop(sheet); await _load(); } catch (e) { _message(e.toString()); } }, child: Text(tr('Save Attendance'))),
           ]),
         ),
       )));

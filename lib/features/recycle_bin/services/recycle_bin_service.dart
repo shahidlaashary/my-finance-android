@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/features/notifications/services/reminder_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -238,6 +239,11 @@ class RecycleBinService {
         return;
       }
 
+      if (table == 'finance_reminders_v1') {
+        await ReminderService.instance.restoreReminder(record);
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'library_items') {
         final libraryDir = await getApplicationDocumentsDirectory();
         final libraryDb = await openDatabase(p.join(libraryDir.path, 'my_library', 'my_library.db'));

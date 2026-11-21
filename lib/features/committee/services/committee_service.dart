@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Committee funds are maintained in a private ledger. Personal wallets are
 /// touched only when the user explicitly chooses one for an installment/payout.
@@ -262,6 +263,44 @@ class CommitteeService {
     });
     AppRefreshController.notifyChanged();
     return result;
+  }
+
+  static Future<void> deleteCommittee(int committeeId) async {
+    await _ensureSchema();
+    final db = FinanceDB.instance.db;
+    final committees = await db.query('committees', where: 'id=?', whereArgs: [committeeId], limit: 1);
+    if (committees.isEmpty) return;
+    final committee = Map<String,dynamic>.from(committees.first);
+    final members = await db.query('committee_members', where: 'committee_id=?', whereArgs: [committeeId]);
+    final entries = await db.query('committee_entries', where: 'committee_id=?', whereArgs: [committeeId]);
+    final txIds = entries.map((e) => e['transaction_id']).whereType<int>().toList();
+    final finance = txIds.isEmpty ? <Map<String,Object?>>[] :
+      await db.query('transactions', where: 'id IN (${List.filled(txIds.length, '?').join(',')})', whereArgs: txIds);
+    await RecycleBinService.archive(
+      type: 'Committee', title: committee['name']?.toString() ?? 'Committee',
+      table: 'committees', id: committeeId, record: committee,
+      related: [
+        ...members.map((e) => {'_related_table':'committee_members', ...Map<String,dynamic>.from(e)}),
+        ...entries.map((e) => {'_related_table':'committee_entries', ...Map<String,dynamic>.from(e)}),
+        ...finance.map((e) => {'_related_table':'transactions', ...Map<String,dynamic>.from(e)}),
+      ],
+    );
+    await db.transaction((txn) async {
+      for (final row in finance) {
+        final walletId = (row['wallet_id'] as num?)?.toInt();
+        final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
+        if (walletId != null && delta != 0) {
+          await txn.rawUpdate('UPDATE wallets SET balance=balance-? WHERE id=?', [delta,walletId]);
+        }
+      }
+      if (txIds.isNotEmpty) {
+        await txn.delete('transactions', where: 'id IN (${List.filled(txIds.length, '?').join(',')})', whereArgs: txIds);
+      }
+      await txn.delete('committee_entries', where: 'committee_id=?', whereArgs: [committeeId]);
+      await txn.delete('committee_members', where: 'committee_id=?', whereArgs: [committeeId]);
+      await txn.delete('committees', where: 'id=?', whereArgs: [committeeId]);
+    });
+    AppRefreshController.notifyChanged();
   }
 
   static Future<void> updateStatus(int committeeId, String status) async {

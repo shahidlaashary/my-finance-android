@@ -102,6 +102,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             'note': 'Sold: ${asset.name}',
             'date': asset.saleDate!.toIso8601String(),
             'wallet_currency': asset.currency,
+            'payment_type': asset.salePaymentType,
           });
         }
       }
@@ -141,7 +142,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         }
       }
       if (widget.walletId != null) {
-        otherRows.removeWhere((row) => row['wallet_id'] != widget.walletId);
+        // Loan-financed asset purchases/sales are source records, not wallet cash flows.
+        // Keep them in the global Others list, but hide them from wallet-specific history.
+        otherRows.removeWhere((row) =>
+            row['wallet_id'] != widget.walletId ||
+            (row['type'] == 'asset' &&
+                row['payment_type']?.toString().trim().toLowerCase() == 'loan'));
       }
       final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
 

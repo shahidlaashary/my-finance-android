@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -798,8 +799,10 @@ class LoansScreenState extends State<LoansScreen> {
     );
     if (confirm != true) return;
     try {
+      await SoundSettingsService.instance.play('delete_warning');
       final repayments = await LoansService.getRepayments(loan.id!);
       await LoansService.deleteLoan(loan.id!);
+      await SoundSettingsService.instance.play('delete_success');
       await AttachmentService.deleteOwnerAttachments(
         ownerType: AttachmentOwnerTypes.loan,
         ownerId: loan.id!,

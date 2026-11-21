@@ -236,75 +236,72 @@ class LoansScreenState extends State<LoansScreen> {
     final List<PlatformFile> pendingLoanPdfs = [];
     final ImagePicker loanImagePicker = ImagePicker();
         Future<bool> saveLoan() async {
-final name = _nameController.text.trim();
-    final amount = double.tryParse(_amountController.text.trim());
-    if ((createNewParty && name.isEmpty) || amount == null || !amount.isFinite || amount <= 0) {
-      _showMessage('Enter a valid party name and loan amount.');
-      return;
-    }
-    if (!createNewParty && _selectedPartyId == null) {
-      _showMessage('Please select a party.');
-      return;
-    }
-    if (walletId == null) {
-      _showMessage('Please select a wallet.');
-      return;
-    }
-    try {
-      if (createNewParty) {
-        _selectedPartyId = await LoansService.addParty(
-          name: name,
-          phone: _phoneController.text,
-          currency: newPartyCurrency,
+      final name = _nameController.text.trim();
+      final amount = double.tryParse(_amountController.text.trim());
+      if ((createNewParty && name.isEmpty) || amount == null || !amount.isFinite || amount <= 0) {
+        _showMessage('Enter a valid party name and loan amount.');
+        return false;
+      }
+      if (!createNewParty && _selectedPartyId == null) {
+        _showMessage('Please select a party.');
+        return false;
+      }
+      if (walletId == null) {
+        _showMessage('Please select a wallet.');
+        return false;
+      }
+      try {
+        if (createNewParty) {
+          _selectedPartyId = await LoansService.addParty(
+            name: name,
+            phone: _phoneController.text,
+            currency: newPartyCurrency,
+          );
+          await _loadData();
+        }
+        final loan = LoansModel(
+          partyId: _selectedPartyId,
+          loanType: _loanType,
+          amount: amount,
+          remainingAmount: amount,
+          walletId: walletId!,
+          currency: createNewParty ? newPartyCurrency : ((_parties.firstWhere((p) => p['id'] == _selectedPartyId, orElse: () => {'currency': 'PKR'})['currency']?.toString() ?? 'PKR').toUpperCase()),
+          lendingDate: _dateString(lendingDate),
+          dueDate: dueDate == null ? null : _dateString(dueDate!),
+          notes: _notesController.text.trim(),
+          createdAt: DateTime.now().toIso8601String(),
         );
+        final loanId = await LoansService.addLoan(loan);
+        for (final image in pendingLoanImages) {
+          await AttachmentService.addAttachment(
+            ownerType: AttachmentOwnerTypes.loan,
+            ownerId: loanId,
+            sourcePath: image.path,
+            originalFileName: image.name,
+          );
+        }
+        for (final pdf in pendingLoanPdfs) {
+          final path = pdf.path;
+          if (path == null) continue;
+          await AttachmentService.addAttachment(
+            ownerType: AttachmentOwnerTypes.loan,
+            ownerId: loanId,
+            sourcePath: path,
+            originalFileName: pdf.name,
+          );
+        }
+        _selectedWalletId = walletId;
         await _loadData();
+        _showMessage('Loan saved successfully.');
+        return true;
+      } catch (error) {
+        _showMessage('Could not save loan: $error');
+        return false;
       }
-      final loan = LoansModel(
-        partyId: _selectedPartyId,
-        loanType: _loanType,
-        amount: amount,
-        remainingAmount: amount,
-        walletId: walletId!,
-        currency: createNewParty ? newPartyCurrency : ((_parties.firstWhere((p) => p['id'] == _selectedPartyId, orElse: () => {'currency': 'PKR'})['currency']?.toString() ?? 'PKR').toUpperCase()),
-        lendingDate: _dateString(lendingDate),
-        dueDate: dueDate == null ? null : _dateString(dueDate!),
-        notes: _notesController.text.trim(),
-        createdAt: DateTime.now().toIso8601String(),
-      );
-      final loanId = await LoansService.addLoan(loan);
-      for (final image in pendingLoanImages) {
-        await AttachmentService.addAttachment(
-          ownerType: AttachmentOwnerTypes.loan,
-          ownerId: loanId,
-          sourcePath: image.path,
-          originalFileName: image.name,
-        );
-      }
-      for (final pdf in pendingLoanPdfs) {
-        final path = pdf.path;
-        if (path == null) continue;
-        await AttachmentService.addAttachment(
-          ownerType: AttachmentOwnerTypes.loan,
-          ownerId: loanId,
-          sourcePath: path,
-          originalFileName: pdf.name,
-        );
-      }
-      _selectedWalletId = walletId;
-      await _loadData();
-      _showMessage('Loan saved successfully.');
-    } catch (error) {
-      _showMessage('Could not save loan: $error');
     }
-  }
-      return true;
-    }
-final loanForm = 
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => StatefulBuilder(
+
+    final loanForm = StatefulBuilder(
+      StatefulBuilder(
         builder: (context, setSheetState) {
           final screenHeight = MediaQuery.sizeOf(context).height;
           final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;

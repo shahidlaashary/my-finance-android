@@ -267,44 +267,11 @@ class PlusActionSheet extends StatefulWidget {
 
 class _PlusActionSheetState extends State<PlusActionSheet> {
   String selectedType = 'Income';
-  final GlobalKey<LoansScreenState> _loanFormKey = GlobalKey<LoansScreenState>();
-  final GlobalKey<AssetsScreenState> _assetFormKey = GlobalKey<AssetsScreenState>();
-
   void _selectType(String type) {
     setState(() => selectedType = type);
-    if (type == 'Loan' || type == 'Asset') {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        if (type == 'Loan') {
-          _loanFormKey.currentState?.openNewLoanForm();
-        } else {
-          _assetFormKey.currentState?.openNewAssetForm();
-        }
-      });
-    }
   }
 
-  Widget _buildEmbeddedFormHost() {
-    if (selectedType == 'Loan') {
-      return Navigator(
-        onGenerateRoute: (_) => MaterialPageRoute<void>(
-          builder: (_) => LoansScreen(
-            key: _loanFormKey,
-            embeddedFormHost: true,
-          ),
-        ),
-      );
-    }
-    if (selectedType == 'Asset') {
-      return Navigator(
-        onGenerateRoute: (_) => MaterialPageRoute<void>(
-          builder: (_) => AssetsScreen(
-            key: _assetFormKey,
-            embeddedFormHost: true,
-          ),
-        ),
-      );
-    }
+  Widget _buildQuickEntryForm() {
     return TransactionEntryForm(
       key: ValueKey(selectedType),
       transactionType: selectedType,
@@ -415,7 +382,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Expanded(child: _buildEmbeddedFormHost()),
+                Expanded(child: _buildQuickEntryForm()),
               ],
             ),
           ),

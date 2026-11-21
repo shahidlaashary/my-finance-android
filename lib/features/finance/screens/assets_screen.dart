@@ -324,6 +324,14 @@ class AssetsScreenState extends State<AssetsScreen> {
     final pendingFiles = <Map<String, String>>[];
     final imagePicker = ImagePicker();
     bool saving = false;
+    void disposeAssetControllers() {
+      nameController.dispose();
+      purchaseController.dispose();
+      currentController.dispose();
+      notesController.dispose();
+      newPartyNameController.dispose();
+      newPartyPhoneController.dispose();
+    }
 
     InputDecoration fieldDecoration(String label, IconData icon) => InputDecoration(
       labelText: label,
@@ -388,7 +396,7 @@ class AssetsScreenState extends State<AssetsScreen> {
                           SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-                            IconButton(onPressed: () => _closeAssetForm(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
+                            IconButton(onPressed: () { _closeAssetForm(sheetContext); if (widget.embeddedFormHost) disposeAssetControllers(); }, icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
                           ]),
                           SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
@@ -613,7 +621,7 @@ class AssetsScreenState extends State<AssetsScreen> {
                           ),
                           SizedBox(height: 16),
                           Row(children: [
-                            Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
+                            Expanded(child: OutlinedButton(onPressed: () => _closeAssetForm(sheetContext), child: Text(appText(context, 'Cancel', 'منسوخ کریں')))),
                             SizedBox(width: 10),
                             Expanded(child: ElevatedButton.icon(
                               icon: Icon(Icons.check_rounded), label: Text(asset == null ? 'Save Asset' : 'Update Asset'),
@@ -655,7 +663,7 @@ class AssetsScreenState extends State<AssetsScreen> {
                                     );
                                   }
                                   if (!sheetContext.mounted) return;
-                                  Navigator.pop(sheetContext);
+                                  _closeAssetForm(sheetContext);
                                   await _loadData();
                                   _message(asset == null ? 'Asset added successfully.' : 'Asset updated successfully.');
                                 } catch (e) { if (sheetContext.mounted) setSheetState(() => saving = false); _message('Error: $e'); }
@@ -685,12 +693,7 @@ class AssetsScreenState extends State<AssetsScreen> {
       );
     }
 
-    nameController.dispose();
-    purchaseController.dispose();
-    currentController.dispose();
-    notesController.dispose();
-    newPartyNameController.dispose();
-    newPartyPhoneController.dispose();
+    if (!widget.embeddedFormHost) disposeAssetControllers();
   }
 
   Future<void> _updateValuation(AssetsModel asset) async {

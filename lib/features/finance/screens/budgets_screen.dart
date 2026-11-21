@@ -94,6 +94,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         await SoundSettingsService.instance.play('budget_limit');
       }
     } catch (e) {
+      await SoundSettingsService.instance.play('error');
       if (!mounted) return;
       setState(() => _loading = false);
       _message('Error loading budgets: $e');

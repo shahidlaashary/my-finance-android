@@ -350,7 +350,24 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: Text(p?['name']?.toString() ?? 'Partner Details', style: TextStyle(fontWeight: FontWeight.w800)), actions: [
-        PopupMenuButton<String>(onSelected: (v) async { if (v == 'active') { await _service.setActive(widget.partnerId, (p?['is_active'] as int? ?? 1) == 0); await _load(); } }, itemBuilder: (_) => [PopupMenuItem(value: 'active', child: Text((p?['is_active'] as int? ?? 1) == 1 ? 'Deactivate Partner' : 'Activate Partner'))]),
+        PopupMenuButton<String>(onSelected: (v) async {
+          if (v == 'active') { await _service.setActive(widget.partnerId, (p?['is_active'] as int? ?? 1) == 0); await _load(); }
+          if (v == 'delete') {
+            final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+              title: const Text('Move partner to Recycle Bin?'),
+              content: const Text('Partner profile, wallet links and transaction history will be archived. Linked wallet balances will be reversed.'),
+              actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete'))],
+            ));
+            if (confirmed == true) {
+              try { await _service.deletePartner(widget.partnerId); if (mounted) Navigator.pop(context); }
+              catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not delete partner: $e'))); }
+            }
+          }
+        }, itemBuilder: (_) => [
+          PopupMenuItem(value: 'active', child: Text((p?['is_active'] as int? ?? 1) == 1 ? 'Deactivate Partner' : 'Activate Partner')),
+          const PopupMenuItem(value: 'delete', child: Text('Move to Recycle Bin')),
+        ]),
       ]),
       floatingActionButton: FloatingActionButton.extended(onPressed: _addTransaction, backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: Icon(Icons.add), label: Text('Add Transaction')),
       body: _loading ? const Center(child: CircularProgressIndicator()) : p == null ? const Center(child: Text('Partner not found')) : RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.fromLTRB(16,12,16,100), children: [

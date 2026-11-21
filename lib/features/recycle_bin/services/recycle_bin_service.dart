@@ -376,7 +376,7 @@ class RecycleBinService {
       if (table == 'library_playlists' || table == 'library_collections') {
         final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
           .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
-        await MyLibraryService.instance.restoreArchivedLibraryGroup(table, record, related);
+        await MySpaceService.instance.restoreArchivedLibraryGroup(table, record, related);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }

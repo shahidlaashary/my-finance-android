@@ -145,6 +145,106 @@ class AttachmentService {
     return 'file';
   }
 
+  /// Asset save se pehle tamam selected files ko temporary storage mein copy karta hai.
+  /// Is stage par database mein koi attachment row ya finance record create nahi hota.
+  static Future<List<Map<String, dynamic>>> prepareAssetAttachments(
+    List<Map<String, String>> sources,
+  ) async {
+    final staged = <Map<String, dynamic>>[];
+    try {
+      final tempRoot = await getTemporaryDirectory();
+      final stagingDir = Directory(p.join(
+        tempRoot.path,
+        'my_finance_asset_staging',
+        DateTime.now().microsecondsSinceEpoch.toString(),
+      ));
+      await stagingDir.create(recursive: true);
+      for (final source in sources) {
+        final sourcePath = source['path']!;
+        final sourceFile = File(sourcePath);
+        if (!await sourceFile.exists()) {
+          throw Exception('Selected attachment could not be found: ${source['name']}');
+        }
+        final name = source['name']!.trim().isEmpty
+            ? p.basename(sourcePath)
+            : source['name']!.trim();
+        final target = File(p.join(stagingDir.path, '${staged.length}_${p.basename(name)}'));
+        await sourceFile.copy(target.path);
+        final size = await target.length();
+        if (size <= 0) throw Exception('Selected attachment is empty or could not be copied: $name');
+        staged.add({'path': target.path, 'name': name, 'size': size});
+      }
+      return staged;
+    } catch (_) {
+      await cleanupPreparedAssetAttachments(staged);
+      rethrow;
+    }
+  }
+
+  /// Asset transaction ke andar prepared files ko final folder mein copy aur
+  /// attachment metadata insert karta hai. Transaction fail ho to caller files clean karta hai.
+  static Future<void> insertPreparedAssetAttachments({
+    required Transaction txn,
+    required int assetId,
+    required List<Map<String, dynamic>> prepared,
+    required List<String> createdPaths,
+  }) async {
+    if (assetId <= 0) throw ArgumentError('A valid asset ID is required.');
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final directory = Directory(p.join(
+      documentsDirectory.path,
+      'my_finance_attachments',
+      '${AttachmentOwnerTypes.asset}_$assetId',
+    ));
+    await directory.create(recursive: true);
+    for (final item in prepared) {
+      final name = item['name'] as String;
+      final stagedFile = File(item['path'] as String);
+      if (!await stagedFile.exists()) throw Exception('Prepared attachment is missing: $name');
+      final uniqueName = '${DateTime.now().microsecondsSinceEpoch}_${p.basename(name)}';
+      final destination = File(p.join(directory.path, uniqueName));
+      await stagedFile.copy(destination.path);
+      createdPaths.add(destination.path);
+      final size = await destination.length();
+      if (size <= 0) throw Exception('Attachment could not be saved: $name');
+      await txn.insert(_tableName, {
+        'owner_type': AttachmentOwnerTypes.asset,
+        'owner_id': assetId,
+        'file_path': destination.path,
+        'file_name': name,
+        'file_type': _getFileType(name),
+        'file_size': size,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  static Future<void> cleanupPreparedAssetAttachments(
+    List<Map<String, dynamic>> prepared,
+  ) async {
+    for (final item in prepared) {
+      try {
+        final file = File(item['path'] as String);
+        if (await file.exists()) await file.delete();
+      } catch (error) {
+        debugPrint('Could not clean staged asset attachment: $error');
+      }
+    }
+  }
+
+  static Future<void> cleanupCreatedAssetAttachmentFiles(
+    List<String> paths,
+  ) async {
+    for (final path in paths) {
+      try {
+        final file = File(path);
+        if (await file.exists()) await file.delete();
+      } catch (error) {
+        debugPrint('Could not clean failed asset attachment: $error');
+      }
+    }
+  }
+
   /// Kisi bhi finance record ke sath photo, PDF ya supported document save karta hai.
   static Future<AttachmentModel> addAttachment({
     required String ownerType,

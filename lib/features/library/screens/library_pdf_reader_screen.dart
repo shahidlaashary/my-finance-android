@@ -4,25 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 
-class LibraryPdfReaderScreen extends StatefulWidget {
+class SpacePdfReaderScreen extends StatefulWidget {
   final Map<String, Object?>? item;
   final String? filePath;
   final String? documentTitle;
 
-  const LibraryPdfReaderScreen({super.key, required Map<String, Object?> item})
+  const SpacePdfReaderScreen({super.key, required Map<String, Object?> item})
       : item = item, filePath = null, documentTitle = null;
 
-  const LibraryPdfReaderScreen.fromFile({
+  const SpacePdfReaderScreen.fromFile({
     super.key,
     required this.filePath,
     required this.documentTitle,
   }) : item = null;
 
   @override
-  State<LibraryPdfReaderScreen> createState() => _LibraryPdfReaderScreenState();
+  State<SpacePdfReaderScreen> createState() => _SpacePdfReaderScreenState();
 }
 
-class _LibraryPdfReaderScreenState extends State<LibraryPdfReaderScreen> {
+class _SpacePdfReaderScreenState extends State<SpacePdfReaderScreen> {
   PdfControllerPinch? _controller;
   String? _error;
   int _currentPage = 1;

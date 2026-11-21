@@ -226,15 +226,37 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         appBar: AppBar(
           title: Text(appText(context, 'My Library', 'میری لائبریری')),
           actions: [IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); })],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'All', icon: Icon(Icons.library_books_outlined)),
-              Tab(text: 'Books', icon: Icon(Icons.menu_book_outlined)),
-              Tab(text: 'Music', icon: Icon(Icons.headphones_outlined)),
-              Tab(text: 'Photos', icon: Icon(Icons.photo_outlined)),
-              Tab(text: 'Videos', icon: Icon(Icons.video_library_outlined)),
-            ],
+          bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(66),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.055),
+                  blurRadius: 14,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: TabBar(
+              indicatorColor: Colors.transparent,
+              dividerColor: Colors.transparent,
+              labelColor: Theme.of(context).colorScheme.primary,
+              unselectedLabelColor: Theme.of(context).hintColor,
+              labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+              unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              tabs: const [
+                Tab(icon: Icon(Icons.library_books_outlined, size: 22), text: 'All'),
+                Tab(icon: Icon(Icons.menu_book_outlined, size: 22), text: 'Books'),
+                Tab(icon: Icon(Icons.headphones_outlined, size: 22), text: 'Music'),
+                Tab(icon: Icon(Icons.photo_outlined, size: 22), text: 'Photos'),
+                Tab(icon: Icon(Icons.video_library_outlined, size: 22), text: 'Videos'),
+              ],
+            ),
           ),
+        ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _addFile,

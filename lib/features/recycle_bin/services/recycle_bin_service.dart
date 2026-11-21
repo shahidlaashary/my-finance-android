@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -235,6 +238,17 @@ class RecycleBinService {
         return;
       }
 
+      if (table == 'library_items') {
+        final libraryDir = await getApplicationDocumentsDirectory();
+        final libraryDb = await openDatabase(p.join(libraryDir.path, 'my_library', 'my_library.db'));
+        try {
+          final existing = await libraryDb.query('library_items', where: 'id = ?', whereArgs: [record['id']], limit: 1);
+          if (existing.isNotEmpty) throw Exception('This Library item already exists.');
+          await libraryDb.insert('library_items', record);
+        } finally { await libraryDb.close(); }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'library_documents_records') {
         final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['library_documents_records'], limit: 1);
         final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
@@ -290,6 +304,13 @@ class RecycleBinService {
     if (table.startsWith('vehicle_manager_data_v1:')) {
       final key = table.substring('vehicle_manager_data_v1:'.length);
       ownerType = key == 'vehicles' ? 'vehicle' : key == 'fuel_logs' ? 'vehicle_fuel' : key == 'expenses' ? 'vehicle_expense' : null;
+    }
+    if (table == 'library_items') {
+      try {
+        final record = Map<String, dynamic>.from(jsonDecode(item['payload']?.toString() ?? '{}') as Map);
+        final path = record['file_path']?.toString();
+        if (path != null && path.isNotEmpty) { final file = File(path); if (await file.exists()) await file.delete(); }
+      } on FileSystemException { /* best effort cleanup */ }
     }
     if (ownerType != null && sourceId != null) {
       await AttachmentService.deleteOwnerAttachments(ownerType: ownerType, ownerId: sourceId);

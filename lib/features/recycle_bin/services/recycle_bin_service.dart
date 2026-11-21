@@ -235,12 +235,12 @@ class RecycleBinService {
         return;
       }
 
-      if (table == 'my_documents_records') {
-        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['my_documents_records'], limit: 1);
+      if (table == 'library_documents_records') {
+        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['library_documents_records'], limit: 1);
         final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
         if (current.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A document with this ID already exists.');
         current.add(record);
-        await txn.insert('app_settings', {'setting_key':'my_documents_records','setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert('app_settings', {'setting_key':'library_documents_records','setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
@@ -284,7 +284,7 @@ class RecycleBinService {
     final sourceId = int.tryParse(item['source_id']?.toString() ?? '');
     final ownerTypes = <String, String>{
       'transactions':'transaction', 'assets':'asset', 'loans':'loan',
-      'goals':'goal', 'loan_repayments':'repayment', 'my_documents_records':'document',
+      'goals':'goal', 'loan_repayments':'repayment', 'library_documents_records':'document',
     };
     String? ownerType = ownerTypes[table];
     if (table.startsWith('vehicle_manager_data_v1:')) {

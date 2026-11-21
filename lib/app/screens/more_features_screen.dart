@@ -88,7 +88,7 @@ class AppSettingsScreen extends StatelessWidget {
           _SettingsInfoTile(
             icon: Icons.volume_up_rounded,
             title: 'Sound Settings',
-            subtitle: 'Customize startup and action sounds, volume and sound styles',
+            subtitle: 'Control app launch music, action effects and individual sound styles',
             onTap: () => _openScreen(
               context,
               const SoundSettingsScreen(),

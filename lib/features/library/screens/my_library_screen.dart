@@ -15,18 +15,18 @@ import 'package:my_finance/features/library/services/library_documents_service.d
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
 
-class MyLibraryScreen extends StatefulWidget {
-  const MyLibraryScreen({super.key});
+class MySpaceScreen extends StatefulWidget {
+  const MySpaceScreen({super.key});
 
   @override
-  State<MyLibraryScreen> createState() => _MyLibraryScreenState();
+  State<MySpaceScreen> createState() => _MySpaceScreenState();
 }
 
-class _MyLibraryScreenState extends State<MyLibraryScreen> {
-  final _library = MyLibraryService.instance;
-  final _documentsKey = GlobalKey<LibraryDocumentsScreenState>();
-  final _dealsKey = GlobalKey<LibraryRecordsScreenState>();
-  final _projectsKey = GlobalKey<LibraryRecordsScreenState>();
+class _MySpaceScreenState extends State<MySpaceScreen> {
+  final _library = MySpaceService.instance;
+  final _documentsKey = GlobalKey<SpaceDocumentsScreenState>();
+  final _dealsKey = GlobalKey<SpaceRecordsScreenState>();
+  final _projectsKey = GlobalKey<SpaceRecordsScreenState>();
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
@@ -50,7 +50,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
   Future<void> _openRecordForm(String section) async {
     await Navigator.push(context, MaterialPageRoute(
-      builder: (_) => LibraryRecordFormScreen(section: section),
+      builder: (_) => SpaceRecordFormScreen(section: section),
     ));
     if (!mounted) return;
     if (section == 'deals') _dealsKey.currentState?.refresh();
@@ -114,18 +114,18 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
     final extension = p.extension(path).toLowerCase();
     if (item['file_type'] == 'audio') {
-      await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryAudioPlayerScreen(item: item)));
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => SpaceAudioPlayerScreen(item: item)));
     } else if (item['file_type'] == 'video') {
-      await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryVideoPlayerScreen(item: item)));
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => SpaceVideoPlayerScreen(item: item)));
     } else if (item['file_type'] == 'photo') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
         appBar: AppBar(title: Text(item['title'] as String)),
         body: Center(child: InteractiveViewer(minScale: 0.5, maxScale: 5, child: Image.file(File(path), fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Text('Unable to display this photo.')))),
       )));
     } else if (extension == '.pdf') {
-      await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryPdfReaderScreen(item: item)));
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => SpacePdfReaderScreen(item: item)));
     } else if (extension == '.epub') {
-      await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryEpubReaderScreen(item: item)));
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => SpaceEpubReaderScreen(item: item)));
     } else {
       await OpenFilex.open(path);
     }
@@ -136,7 +136,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     final folders = await _library.getCollections();
     if (!mounted) return;
     if (folders.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a folder first in Library Tools.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a folder first in Space Tools.')));
       return;
     }
     final current = item['collection_id'] as int?;
@@ -167,7 +167,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove from My Library?'),
+        title: const Text('Remove from My Space?'),
         content: Text('“${item['title']}” will be removed from this device.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
@@ -190,7 +190,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-        if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Unable to load My Library: ${snapshot.error}')));
+        if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Unable to load My Space: ${snapshot.error}')));
         final items = snapshot.data ?? [];
         if (items.isEmpty) {
           return Center(
@@ -260,10 +260,10 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(appText(context, 'My Library', 'میری لائبریری')),
+        title: Text(appText(context, 'My Space', 'میری لائبریری')),
         actions: [
-          IconButton(tooltip: 'Search My Library', icon: const Icon(Icons.search_rounded), onPressed: _openLibrarySearch),
-          IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); }),
+          IconButton(tooltip: 'Search My Space', icon: const Icon(Icons.search_rounded), onPressed: _openLibrarySearch),
+          IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const SpaceToolsScreen())); if (mounted) setState(_refresh); }),
         ],
       ),
       bottomNavigationBar: Container(
@@ -283,7 +283,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 _navItem(3, Icons.description_outlined, 'Docs'),
                 Expanded(
                   child: PopupMenuButton<String>(
-                    tooltip: 'Add to My Library',
+                    tooltip: 'Add to My Space',
                     icon: Container(
                       width: 42,
                       height: 42,
@@ -339,11 +339,11 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         children: [
           _buildItems(_allItems, 'Your library is empty', 'Add books, deals, docs, music, photos, videos and projects.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
-          LibraryRecordsScreen(key: _dealsKey, section: 'deals'),
-          LibraryDocumentsScreen(key: _documentsKey),
+          SpaceRecordsScreen(key: _dealsKey, section: 'deals'),
+          SpaceDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
           _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
-          LibraryRecordsScreen(key: _projectsKey, section: 'projects'),
+          SpaceRecordsScreen(key: _projectsKey, section: 'projects'),
           _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
         ],
       ),
@@ -401,9 +401,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 class _LibrarySearchDelegate extends SearchDelegate<Object?> {
   _LibrarySearchDelegate({required this.library, required this.onOpen, required this.onOpenDocument});
 
-  final MyLibraryService library;
+  final MySpaceService library;
   final Future<void> Function(Map<String, Object?> item) onOpen;
-  final void Function(LibraryDocumentModel document) onOpenDocument;
+  final void Function(SpaceDocumentModel document) onOpenDocument;
 
   String _type = 'All';
   String _documentCategory = 'All';
@@ -422,7 +422,7 @@ class _LibrarySearchDelegate extends SearchDelegate<Object?> {
       icon: const Icon(Icons.filter_list_rounded),
       onSelected: (value) { _type = value; showSuggestions(context); },
       itemBuilder: (_) => const [
-        PopupMenuItem(value: 'All', child: Text('All Library')),
+        PopupMenuItem(value: 'All', child: Text('All Space')),
         PopupMenuItem(value: 'book', child: Text('Books')),
         PopupMenuItem(value: 'document', child: Text('My Docs')),
         PopupMenuItem(value: 'audio', child: Text('Music')),
@@ -509,7 +509,7 @@ class _LibrarySearchDelegate extends SearchDelegate<Object?> {
     }
 
     if (_type == 'All' || _type == 'document') {
-      final documents = await LibraryDocumentsService.instance.getDocuments(
+      final documents = await SpaceDocumentsService.instance.getDocuments(
         category: _documentCategory,
         filter: _documentFilter,
       );
@@ -615,8 +615,8 @@ class _LibrarySearchDelegate extends SearchDelegate<Object?> {
 
 class _LibrarySearchResult {
   final Map<String, Object?>? item;
-  final LibraryDocumentModel? document;
+  final SpaceDocumentModel? document;
   const _LibrarySearchResult._({this.item, this.document});
   factory _LibrarySearchResult.media(Map<String, Object?> item) => _LibrarySearchResult._(item: item);
-  factory _LibrarySearchResult.document(LibraryDocumentModel document) => _LibrarySearchResult._(document: document);
+  factory _LibrarySearchResult.document(SpaceDocumentModel document) => _LibrarySearchResult._(document: document);
 }

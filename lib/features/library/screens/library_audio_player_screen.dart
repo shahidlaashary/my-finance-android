@@ -4,15 +4,15 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 
-class LibraryAudioPlayerScreen extends StatefulWidget {
+class SpaceAudioPlayerScreen extends StatefulWidget {
   final Map<String, Object?> item;
-  const LibraryAudioPlayerScreen({super.key, required this.item});
+  const SpaceAudioPlayerScreen({super.key, required this.item});
 
   @override
-  State<LibraryAudioPlayerScreen> createState() => _LibraryAudioPlayerScreenState();
+  State<SpaceAudioPlayerScreen> createState() => _SpaceAudioPlayerScreenState();
 }
 
-class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
+class _SpaceAudioPlayerScreenState extends State<SpaceAudioPlayerScreen> {
   final AudioPlayer _player = AudioPlayer();
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -70,7 +70,7 @@ class _LibraryAudioPlayerScreenState extends State<LibraryAudioPlayerScreen> {
     final id = widget.item['id'] as int?;
     if (id != null) {
       try {
-        await MyLibraryService.instance.saveAudioPosition(id, value);
+        await MySpaceService.instance.saveAudioPosition(id, value);
       } catch (_) {
         // Playback continues even if progress cannot be persisted.
       }

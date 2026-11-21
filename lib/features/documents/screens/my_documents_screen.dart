@@ -659,21 +659,6 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: Text(appText(context, "My Documents", "My Documents"), style: TextStyle(fontWeight: FontWeight.w800)),
-        actions: [
-          IconButton(
-            tooltip: 'Add Document',
-            onPressed: () => _showDocumentForm(),
-            icon: Icon(Icons.add_rounded, size: 29),
-          ),
-          SizedBox(width: 5),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showDocumentForm(),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: Icon(Icons.add_rounded),
-        label: Text(appText(context, 'Add Document', 'دستاویز شامل کریں')),
       ),
       bottomNavigationBar: SafeArea(
         top: false,

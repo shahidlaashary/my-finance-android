@@ -10,7 +10,7 @@ import 'package:open_filex/open_filex.dart';
 
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
-import 'package:my_finance/features/library/services/library_documents_service.dart';
+import 'package:my_finance/features/space/services/space_documents_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 
 class SpaceDocumentsScreen extends StatefulWidget {
@@ -397,7 +397,7 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
                               ),
                               OutlinedButton.icon(
                                 onPressed: chooseGallery,
-                                icon: Icon(Icons.photo_library_outlined),
+                                icon: Icon(Icons.photo_space_outlined),
                                 label: Text(appText(context, 'Gallery', 'Gallery')),
                               ),
                             ],

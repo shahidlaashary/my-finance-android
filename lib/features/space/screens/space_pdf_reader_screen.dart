@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
 
 class SpacePdfReaderScreen extends StatefulWidget {
   final Map<String, Object?>? item;
@@ -32,7 +32,7 @@ class _SpacePdfReaderScreenState extends State<SpacePdfReaderScreen> {
   String get _path => widget.filePath ?? widget.item?['file_path'] as String;
   String get _title => widget.documentTitle ??
       widget.item?['title'] as String? ?? 'PDF Reader';
-  int? get _libraryItemId => widget.item?['id'] as int?;
+  int? get _spaceItemId => widget.item?['id'] as int?;
 
   @override
   void initState() {
@@ -75,10 +75,10 @@ class _SpacePdfReaderScreenState extends State<SpacePdfReaderScreen> {
   }
 
   Future<void> _savePage(int page) async {
-    final id = _libraryItemId;
+    final id = _spaceItemId;
     if (id == null) return;
     try {
-      await MyLibraryService.instance.saveReadingPage(id, page);
+      await MySpaceService.instance.saveReadingPage(id, page);
     } catch (_) {
       // Reading remains available if progress storage fails.
     }

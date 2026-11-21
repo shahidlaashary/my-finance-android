@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
 
 class SpaceToolsScreen extends StatefulWidget {
   const SpaceToolsScreen({super.key});
@@ -12,7 +12,7 @@ class SpaceToolsScreen extends StatefulWidget {
 }
 
 class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
-  final _library = MyLibraryService.instance;
+  final _space = MySpaceService.instance;
   Future<List<Map<String, Object?>>>? _playlists;
   Future<List<Map<String, Object?>>>? _collections;
   Future<Map<String, Object>>? _storage;
@@ -24,9 +24,9 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
   }
 
   void _refresh() {
-    _playlists = _library.getPlaylists();
-    _collections = _library.getCollections();
-    _storage = _library.getStorageInformation();
+    _playlists = _space.getPlaylists();
+    _collections = _space.getCollections();
+    _storage = _space.getStorageInformation();
   }
 
   Future<String?> _askName(String title, {String initial = ''}) async {
@@ -52,7 +52,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
     final name = await _askName('New playlist');
     if (name == null) return;
     try {
-      await _library.createPlaylist(name);
+      await _space.createPlaylist(name);
       if (mounted) setState(_refresh);
     } catch (e) {
       _message('Could not create playlist: $e');
@@ -63,7 +63,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
     final name = await _askName('New folder / collection');
     if (name == null) return;
     try {
-      await _library.createCollection(name);
+      await _space.createCollection(name);
       if (mounted) setState(_refresh);
     } catch (e) {
       _message('Could not create folder: $e');
@@ -92,7 +92,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
   }
 
   Future<void> _addAudioToPlaylist(int playlistId) async {
-    final items = await _library.getItems(fileType: 'audio');
+    final items = await _space.getItems(fileType: 'audio');
     if (!mounted) return;
     if (items.isEmpty) {
       _message('Add audio files to My Space first.');
@@ -123,7 +123,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
     );
     if (result == true) {
       for (final id in selected) {
-        await _library.addItemToPlaylist(playlistId, id);
+        await _space.addItemToPlaylist(playlistId, id);
       }
       _message('${selected.length} audio item(s) added.');
     }
@@ -152,7 +152,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
                 onSelected: (value) async {
                   if (value == 'add') await _addAudioToPlaylist(id);
                   if (value == 'delete') {
-                    await _library.deletePlaylist(id);
+                    await _space.deletePlaylist(id);
                     if (mounted) setState(_refresh);
                   }
                 },
@@ -189,9 +189,9 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
                 onSelected: (value) async {
                   if (value == 'rename') {
                     final name = await _askName('Rename folder', initial: folder['name'] as String);
-                    if (name != null) await _library.renameCollection(id, name);
+                    if (name != null) await _space.renameCollection(id, name);
                   } else if (value == 'delete') {
-                    await _library.deleteCollection(id);
+                    await _space.deleteCollection(id);
                   }
                   if (mounted) setState(_refresh);
                 },
@@ -202,7 +202,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
               ),
             ));
           }),
-          const Padding(padding: EdgeInsets.only(top: 12), child: Text('Folder assignment and moving files can be added from each library item menu in the next UI pass.')),
+          const Padding(padding: EdgeInsets.only(top: 12), child: Text('Folder assignment and moving files can be added from each space item menu in the next UI pass.')),
         ],
       );
     },
@@ -212,7 +212,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
     future: _storage,
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-      if (snapshot.hasError) return Center(child: Text('Unable to calculate Library storage: ${snapshot.error}'));
+      if (snapshot.hasError) return Center(child: Text('Unable to calculate Space storage: ${snapshot.error}'));
       final data = snapshot.data ?? {};
       return FutureBuilder<Map<String, dynamic>?>(
         future: _deviceStorage(),
@@ -237,7 +237,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
               if (device.connectionState == ConnectionState.waiting)
                 const LinearProgressIndicator()
               else if (device.data == null)
-                const Text('Device storage details are unavailable on this platform. Library storage is still measured accurately.'),
+                const Text('Device storage details are unavailable on this platform. Space storage is still measured accurately.'),
               if (device.data != null) ...[
                 _statRow('Free space', _formatBytes(device.data!['freeBytes'])),
                 _statRow('Total capacity', _formatBytes(device.data!['totalBytes'])),

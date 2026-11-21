@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
 
 /// Native in-app EPUB reader for books stored in My Space.
 class SpaceEpubReaderScreen extends StatefulWidget {

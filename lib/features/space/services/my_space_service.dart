@@ -12,11 +12,11 @@ class MySpaceService {
   static final MySpaceService instance = MySpaceService._();
 
   static const _databaseName = 'my_space.db';
-  static const _tableName = 'library_items';
-  static const _playlistsTable = 'library_playlists';
-  static const _playlistItemsTable = 'library_playlist_items';
-  static const _collectionsTable = 'library_collections';
-  static const _collectionItemsTable = 'library_collection_items';
+  static const _tableName = 'space_items';
+  static const _playlistsTable = 'space_playlists';
+  static const _playlistItemsTable = 'space_playlist_items';
+  static const _collectionsTable = 'space_collections';
+  static const _collectionItemsTable = 'space_collection_items';
 
   Database? _database;
   Future<Database>? _opening;
@@ -87,7 +87,7 @@ class MySpaceService {
       onDowngrade: (db, oldVersion, newVersion) async {},
       onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
-    // Idempotent add-on tables; no change to the existing Library schema.
+    // Idempotent add-on tables; no change to the existing Space schema.
     await _ensureAddOnTables(db);
     await _ensureSectionTables(db);
     _database = db;
@@ -104,7 +104,7 @@ class MySpaceService {
   }
 
   Future<void> _ensureSectionTables(Database db) async {
-    for (final table in ['library_deals', 'library_projects']) {
+    for (final table in ['space_deals', 'space_projects']) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS $table (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,9 +125,9 @@ class MySpaceService {
   }
 
   String _sectionTable(String section) {
-    if (section == 'deals') return 'library_deals';
-    if (section == 'projects') return 'library_projects';
-    throw ArgumentError.value(section, 'section', 'Unsupported Library section');
+    if (section == 'deals') return 'space_deals';
+    if (section == 'projects') return 'space_projects';
+    throw ArgumentError.value(section, 'section', 'Unsupported Space section');
   }
 
   Future<List<Map<String, Object?>>> getSectionRecords(String section) async =>
@@ -229,8 +229,8 @@ class MySpaceService {
     final record = Map<String,dynamic>.from(rows.first);
     final links = await db.query(_playlistItemsTable, where: 'playlist_id = ?', whereArgs: [id]);
     await RecycleBinService.archive(
-      type: 'Library Playlist', title: record['name']?.toString() ?? 'Playlist',
-      table: 'library_playlists', id: id, record: record,
+      type: 'Space Playlist', title: record['name']?.toString() ?? 'Playlist',
+      table: 'space_playlists', id: id, record: record,
       related: links.map((e) => Map<String,dynamic>.from(e)).toList(),
     );
     await db.transaction((txn) async {
@@ -274,8 +274,8 @@ class MySpaceService {
     final record = Map<String,dynamic>.from(rows.first);
     final links = await db.query(_collectionItemsTable, where: 'collection_id = ?', whereArgs: [id]);
     await RecycleBinService.archive(
-      type: 'Library Folder', title: record['name']?.toString() ?? 'Folder',
-      table: 'library_collections', id: id, record: record,
+      type: 'Space Folder', title: record['name']?.toString() ?? 'Folder',
+      table: 'space_collections', id: id, record: record,
       related: links.map((e) => Map<String,dynamic>.from(e)).toList(),
     );
     await db.transaction((txn) async {
@@ -284,17 +284,17 @@ class MySpaceService {
     });
   }
 
-  Future<void> restoreArchivedLibraryGroup(
+  Future<void> restoreArchivedSpaceGroup(
     String table, Map<String,dynamic> record, List<Map<String,dynamic>> related,
   ) async {
     final db = await database;
-    final isPlaylist = table == 'library_playlists';
+    final isPlaylist = table == 'space_playlists';
     final parentTable = isPlaylist ? _playlistsTable : _collectionsTable;
     final linkTable = isPlaylist ? _playlistItemsTable : _collectionItemsTable;
     final parentKey = isPlaylist ? 'playlist_id' : 'collection_id';
     await db.transaction((txn) async {
       final existing = await txn.query(parentTable, where: 'id = ?', whereArgs: [record['id']], limit: 1);
-      if (existing.isNotEmpty) throw StateError('This Library group already exists.');
+      if (existing.isNotEmpty) throw StateError('This Space group already exists.');
       await txn.insert(parentTable, record);
       for (final link in related) {
         await txn.insert(linkTable, link);
@@ -369,11 +369,11 @@ class MySpaceService {
     final db = await database;
     final id = item['id'] as int;
     final record = Map<String, dynamic>.from(item);
-    // Keep the original media file in Library storage until the central Recycle Bin expires or the user permanently deletes it.
+    // Keep the original media file in Space storage until the central Recycle Bin expires or the user permanently deletes it.
     await RecycleBinService.archive(
-      type: 'Library ${item['file_type'] ?? 'media'}',
-      title: (item['title'] ?? item['file_name'] ?? 'Library item').toString(),
-      table: 'library_items',
+      type: 'Space ${item['file_type'] ?? 'media'}',
+      title: (item['title'] ?? item['file_name'] ?? 'Space item').toString(),
+      table: 'space_items',
       id: id,
       record: record,
     );
@@ -412,7 +412,7 @@ class MySpaceService {
         final relative = p.relative(entity.path, from: source.path);
         final copied = File(p.join(destination.path, relative));
         if (!await copied.exists() || await copied.length() != await entity.length()) {
-          throw FileSystemException('Library backup verification failed', copied.path);
+          throw FileSystemException('Space backup verification failed', copied.path);
         }
       }
     }
@@ -422,7 +422,7 @@ class MySpaceService {
   Future<void> restoreFromFullBackup(Directory backupRoot) async {
     await closeForBackupOrRestore();
     final source = Directory(p.join(backupRoot.path, 'my_space'));
-    if (!await source.exists()) return; // Older backups may not contain a Library.
+    if (!await source.exists()) return; // Older backups may not contain a Space.
     final destination = await spaceDirectory;
     final staging = Directory('${destination.path}_restore_tmp');
     if (await staging.exists()) await staging.delete(recursive: true);

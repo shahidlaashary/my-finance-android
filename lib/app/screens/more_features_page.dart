@@ -3,7 +3,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/features/library/screens/my_library_screen.dart';
+import 'package:my_finance/features/space/screens/my_space_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
@@ -30,7 +30,7 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'My Space',
         'subtitle': 'Organize books, deals, docs, music, photos, videos and projects in one place',
-        'icon': Icons.local_library_outlined,
+        'icon': Icons.local_space_outlined,
       },
       {
         'title': 'Staff Management',

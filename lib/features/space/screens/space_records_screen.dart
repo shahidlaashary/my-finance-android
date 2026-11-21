@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
 
 class SpaceRecordsScreen extends StatefulWidget {
   const SpaceRecordsScreen({super.key, required this.section});
@@ -19,7 +19,7 @@ class SpaceRecordsScreenState extends State<SpaceRecordsScreen> {
   }
 
   void refresh() {
-    _records = MyLibraryService.instance.getSectionRecords(widget.section);
+    _records = MySpaceService.instance.getSectionRecords(widget.section);
     if (mounted) setState(() {});
   }
 
@@ -94,7 +94,7 @@ class SpaceRecordsScreenState extends State<SpaceRecordsScreen> {
                         ],
                       ));
                       if (yes == true) {
-                        await MyLibraryService.instance.deleteSectionRecord(widget.section, row['id'] as int);
+                        await MySpaceService.instance.deleteSectionRecord(widget.section, row['id'] as int);
                         refresh();
                       }
                     }
@@ -219,7 +219,7 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      await MyLibraryService.instance.saveSectionRecord(widget.section, {
+      await MySpaceService.instance.saveSectionRecord(widget.section, {
         'id': widget.record?['id'],
         'title': _title.text,
         'category': _category.text,

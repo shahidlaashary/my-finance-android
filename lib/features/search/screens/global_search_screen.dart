@@ -12,7 +12,7 @@ import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/committee/services/committee_service.dart';
-import 'package:my_finance/features/library/services/library_documents_service.dart';
+import 'package:my_finance/features/space/services/space_documents_service.dart';
 import 'package:my_finance/features/installments/services/installment_service.dart';
 import 'package:my_finance/features/stock/services/stock_service.dart';
 import 'package:my_finance/features/staff/services/staff_service.dart';

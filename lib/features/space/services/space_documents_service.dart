@@ -84,7 +84,7 @@ class SpaceDocumentsService {
   static final SpaceDocumentsService instance = SpaceDocumentsService._();
 
   static const String _databaseName = 'my_finance.db';
-  static const String _storageKey = 'library_documents_records';
+  static const String _storageKey = 'space_documents_records';
   Database? _database;
   Future<Database>? _opening;
 
@@ -213,7 +213,7 @@ class SpaceDocumentsService {
     final record = current[index];
     await RecycleBinService.archive(type: 'Document',
       title: record['title']?.toString() ?? 'Document',
-      table: 'library_documents_records', id: id, record: record);
+      table: 'space_documents_records', id: id, record: record);
     await db.transaction((txn) async {
       final records = await _readMaps(txn);
       records.removeWhere((item) => (item['id'] as num?)?.toInt() == id);

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
 
 class SpaceAudioPlayerScreen extends StatefulWidget {
   final Map<String, Object?> item;

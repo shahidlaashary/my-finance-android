@@ -8,7 +8,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
-import 'package:my_finance/features/library/services/my_library_service.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -373,10 +373,10 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      if (table == 'library_playlists' || table == 'library_collections') {
+      if (table == 'space_playlists' || table == 'space_collections') {
         final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
           .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
-        await MySpaceService.instance.restoreArchivedLibraryGroup(table, record, related);
+        await MySpaceService.instance.restoreArchivedSpaceGroup(table, record, related);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
@@ -385,23 +385,23 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      if (table == 'library_items') {
-        final libraryDir = await getApplicationDocumentsDirectory();
-        final libraryDb = await openDatabase(p.join(libraryDir.path, 'my_library', 'my_library.db'));
+      if (table == 'space_items') {
+        final spaceDir = await getApplicationDocumentsDirectory();
+        final spaceDb = await openDatabase(p.join(spaceDir.path, 'my_space', 'my_space.db'));
         try {
-          final existing = await libraryDb.query('library_items', where: 'id = ?', whereArgs: [record['id']], limit: 1);
-          if (existing.isNotEmpty) throw Exception('This Library item already exists.');
-          await libraryDb.insert('library_items', record);
-        } finally { await libraryDb.close(); }
+          final existing = await spaceDb.query('space_items', where: 'id = ?', whereArgs: [record['id']], limit: 1);
+          if (existing.isNotEmpty) throw Exception('This Space item already exists.');
+          await spaceDb.insert('space_items', record);
+        } finally { await spaceDb.close(); }
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      if (table == 'library_documents_records') {
-        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['library_documents_records'], limit: 1);
+      if (table == 'space_documents_records') {
+        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['space_documents_records'], limit: 1);
         final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
         if (current.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A document with this ID already exists.');
         current.add(record);
-        await txn.insert('app_settings', {'setting_key':'library_documents_records','setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert('app_settings', {'setting_key':'space_documents_records','setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
@@ -445,14 +445,14 @@ class RecycleBinService {
     final sourceId = int.tryParse(item['source_id']?.toString() ?? '');
     final ownerTypes = <String, String>{
       'transactions':'transaction', 'assets':'asset', 'loans':'loan',
-      'goals':'goal', 'loan_repayments':'repayment', 'library_documents_records':'document',
+      'goals':'goal', 'loan_repayments':'repayment', 'space_documents_records':'document',
     };
     String? ownerType = ownerTypes[table];
     if (table.startsWith('vehicle_manager_data_v1:')) {
       final key = table.substring('vehicle_manager_data_v1:'.length);
       ownerType = key == 'vehicles' ? 'vehicle' : key == 'fuel_logs' ? 'vehicle_fuel' : key == 'expenses' ? 'vehicle_expense' : null;
     }
-    if (table == 'library_items') {
+    if (table == 'space_items') {
       try {
         final record = Map<String, dynamic>.from(jsonDecode(item['payload']?.toString() ?? '{}') as Map);
         final path = record['file_path']?.toString();

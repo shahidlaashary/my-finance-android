@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/features/library/screens/library_audio_player_screen.dart';
-import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
-import 'package:my_finance/features/library/screens/library_epub_reader_screen.dart';
-import 'package:my_finance/features/library/screens/library_tools_screen.dart';
-import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
-import 'package:my_finance/features/library/screens/library_documents_screen.dart';
-import 'package:my_finance/features/library/screens/library_records_screen.dart';
-import 'package:my_finance/features/library/services/my_space_service.dart';
-import 'package:my_finance/features/library/services/library_documents_service.dart';
+import 'package:my_finance/features/space/screens/space_audio_player_screen.dart';
+import 'package:my_finance/features/space/screens/space_pdf_reader_screen.dart';
+import 'package:my_finance/features/space/screens/space_epub_reader_screen.dart';
+import 'package:my_finance/features/space/screens/space_tools_screen.dart';
+import 'package:my_finance/features/space/screens/space_video_player_screen.dart';
+import 'package:my_finance/features/space/screens/space_documents_screen.dart';
+import 'package:my_finance/features/space/screens/space_records_screen.dart';
+import 'package:my_finance/features/space/services/my_space_service.dart';
+import 'package:my_finance/features/space/services/space_documents_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
 
@@ -61,7 +61,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     await showSearch<Object?>(
       context: context,
       delegate: _SpaceSearchDelegate(
-        library: _space,
+        space: _space,
         onOpen: _openItem,
         onOpenDocument: (document) => _documentsKey.currentState?.openDocumentFromSearch(document),
       ),
@@ -108,7 +108,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     final path = item['file_path'] as String;
     if (!await File(path).exists()) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This library file is missing.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This space file is missing.')));
       return;
     }
 
@@ -277,7 +277,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
             height: 66,
             child: Row(
               children: [
-                _navItem(0, Icons.library_books_outlined, 'All'),
+                _navItem(0, Icons.space_books_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
                 _navItem(2, Icons.handshake_outlined, 'Deals'),
                 _navItem(3, Icons.description_outlined, 'Docs'),
@@ -337,11 +337,11 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       body: IndexedStack(
         index: _selectedTabIndex,
         children: [
-          _buildItems(_allItems, 'Your library is empty', 'Add books, deals, docs, music, photos, videos and projects.'),
-          _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
+          _buildItems(_allItems, 'Your space is empty', 'Add books, deals, docs, music, photos, videos and projects.'),
+          _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your space.'),
           SpaceRecordsScreen(key: _dealsKey, section: 'deals'),
           SpaceDocumentsScreen(key: _documentsKey),
-          _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
+          _buildItems(_audioItems, 'No music yet', 'Add audio files to your space.'),
           _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
           SpaceRecordsScreen(key: _projectsKey, section: 'projects'),
           _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
@@ -399,9 +399,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
 }
 
 class _SpaceSearchDelegate extends SearchDelegate<Object?> {
-  _SpaceSearchDelegate({required this.library, required this.onOpen, required this.onOpenDocument});
+  _SpaceSearchDelegate({required this.space, required this.onOpen, required this.onOpenDocument});
 
-  final MySpaceService library;
+  final MySpaceService space;
   final Future<void> Function(Map<String, Object?> item) onOpen;
   final void Function(SpaceDocumentModel document) onOpenDocument;
 
@@ -488,13 +488,13 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
     return _normalise(search).split(' ').where((term) => term.isNotEmpty).every(text.contains);
   }
 
-  Future<List<_LibrarySearchResult>> _matches() async {
+  Future<List<_SpaceSearchResult>> _matches() async {
     final q = query.trim();
     if (q.isEmpty) return [];
-    final results = <_LibrarySearchResult>[];
+    final results = <_SpaceSearchResult>[];
 
     if (_type != 'document') {
-      final items = await library.getItems();
+      final items = await space.getItems();
       for (final item in items) {
         final type = item['file_type']?.toString() ?? '';
         if (_type != 'All' && type != _type) continue;
@@ -504,7 +504,7 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
           item['file_name']?.toString() ?? '',
           item['file_path']?.toString() ?? '',
         ].join(' ');
-        if (_containsAllTerms(searchable, q)) results.add(_LibrarySearchResult.media(item));
+        if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.media(item));
       }
     }
 
@@ -519,7 +519,7 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
           document.issueDate?.toIso8601String() ?? '',
           document.expiryDate?.toIso8601String() ?? '',
         ].join(' ');
-        if (_containsAllTerms(searchable, q)) results.add(_LibrarySearchResult.document(document));
+        if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.document(document));
       }
     }
     return results;
@@ -564,7 +564,7 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
   Widget _results(BuildContext context) => Column(children: [
     _filterSummary(context),
     Expanded(
-      child: FutureBuilder<List<_LibrarySearchResult>>(
+      child: FutureBuilder<List<_SpaceSearchResult>>(
         future: _matches(),
         builder: (context, snapshot) {
           if (query.trim().isEmpty) return const Center(child: Text('Search across Books, My Docs, Music, Photos and Videos.'));
@@ -613,10 +613,10 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
   Widget buildResults(BuildContext context) => _results(context);
 }
 
-class _LibrarySearchResult {
+class _SpaceSearchResult {
   final Map<String, Object?>? item;
   final SpaceDocumentModel? document;
-  const _LibrarySearchResult._({this.item, this.document});
-  factory _LibrarySearchResult.media(Map<String, Object?> item) => _LibrarySearchResult._(item: item);
-  factory _LibrarySearchResult.document(SpaceDocumentModel document) => _LibrarySearchResult._(document: document);
+  const _SpaceSearchResult._({this.item, this.document});
+  factory _SpaceSearchResult.media(Map<String, Object?> item) => _SpaceSearchResult._(item: item);
+  factory _SpaceSearchResult.document(SpaceDocumentModel document) => _SpaceSearchResult._(document: document);
 }

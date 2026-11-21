@@ -21,6 +21,7 @@ class AttachmentOwnerTypes {
   static const String vehicleExpense = 'vehicle_expense';
   static const String document = 'document';
   static const String party = 'party';
+  static const String recurring = 'recurring';
 
   static const List<String> all = [
     transaction,
@@ -33,6 +34,7 @@ class AttachmentOwnerTypes {
     vehicleExpense,
     document,
     party,
+    recurring,
   ];
 }
 

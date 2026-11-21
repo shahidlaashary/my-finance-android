@@ -21,6 +21,7 @@ class MyLibraryScreen extends StatefulWidget {
 
 class _MyLibraryScreenState extends State<MyLibraryScreen> {
   final _library = MyLibraryService.instance;
+  final _documentsKey = GlobalKey<LibraryDocumentsScreenState>();
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
@@ -262,21 +263,33 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               children: [
                 _navItem(0, Icons.library_books_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
-                _navItem(2, Icons.folder_copy_outlined, 'Docs'),
+                _navItem(2, Icons.folder_copy_outlined, 'My Docs'),
                 Expanded(
                   child: PopupMenuButton<String>(
                     tooltip: 'Add to My Library',
-                    icon: Icon(Icons.add_circle_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 25),
+                    icon: Container(
+                      width: 43,
+                      height: 43,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 29,
+                      ),
+                    ),
                     onSelected: (type) {
                       if (type == 'document') {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryDocumentsScreen(openAddOnStart: true)));
+                        _documentsKey.currentState?.showAddDocumentForm();
                       } else {
                         _addFile(mediaType: type);
                       }
                     },
                     itemBuilder: (_) => const [
                       PopupMenuItem(value: 'book', child: ListTile(leading: Icon(Icons.menu_book_outlined), title: Text('Add Book'), contentPadding: EdgeInsets.zero)),
-                      PopupMenuItem(value: 'document', child: ListTile(leading: Icon(Icons.description_outlined), title: Text('Add Document'), contentPadding: EdgeInsets.zero)),
+                      PopupMenuItem(value: 'document', child: ListTile(leading: Icon(Icons.description_outlined), title: Text('Add Docs'), contentPadding: EdgeInsets.zero)),
                       PopupMenuItem(value: 'audio', child: ListTile(leading: Icon(Icons.music_note_outlined), title: Text('Add Music'), contentPadding: EdgeInsets.zero)),
                       PopupMenuItem(value: 'photo', child: ListTile(leading: Icon(Icons.photo_outlined), title: Text('Add Photo'), contentPadding: EdgeInsets.zero)),
                       PopupMenuItem(value: 'video', child: ListTile(leading: Icon(Icons.video_library_outlined), title: Text('Add Video'), contentPadding: EdgeInsets.zero)),
@@ -296,7 +309,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         children: [
           _buildItems(_allItems, 'Your library is empty', 'Add books, docs, music, photos and videos. Added files are copied into application storage.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
-          const LibraryDocumentsScreen(),
+          LibraryDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
           _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
           _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),

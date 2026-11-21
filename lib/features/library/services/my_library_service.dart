@@ -114,7 +114,7 @@ class MyLibraryService {
 
   Future<void> addFile(File source, String originalName) async {
     final extension = p.extension(originalName).toLowerCase();
-    const audioExtensions = {'.mp3', '.m4a', '.aac', '.wav', '.ogg', '.flac'};
+    const audioExtensions = {'.mp3', '.m4a', '.wav', '.flac'};
     const bookExtensions = {'.pdf', '.epub'};
     const photoExtensions = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'};
     const videoExtensions = {'.mp4', '.m4v', '.mov', '.mkv', '.avi', '.webm', '.3gp'};

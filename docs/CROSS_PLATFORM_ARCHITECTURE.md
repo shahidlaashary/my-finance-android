@@ -23,7 +23,7 @@ As a feature grows, split it into `presentation/`, `domain/` and
 
 - `features/finance/`
 - `features/vehicles/`
-- `features/documents/`
+- `features/library/screens/library_documents_screen.dart` and `features/library/services/library_documents_service.dart`
 - `features/backup_restore/`
 - future approved modules: `inventory/`, `business/` and `employees/`
 

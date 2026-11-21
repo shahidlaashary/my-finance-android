@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -495,6 +498,8 @@ class _RecurringTransactionDialogState
 
   bool _saving = false;
   bool _transferFeeEnabled = false;
+  final List<Map<String, String>> _pendingAttachments = [];
+  final ImagePicker _attachmentPicker = ImagePicker();
 
   bool get _isTransfer => _type == 'transfer';
 
@@ -587,6 +592,39 @@ class _RecurringTransactionDialogState
         '${date.year}';
   }
 
+  Future<void> _stagePhotos({bool camera = false}) async {
+    try {
+      List<XFile> photos = [];
+      if (camera) {
+        final photo = await _attachmentPicker.pickImage(source: ImageSource.camera, imageQuality: 85);
+        if (photo != null) photos = [photo];
+      } else {
+        photos = await _attachmentPicker.pickMultiImage(imageQuality: 85);
+      }
+      for (final photo in photos) {
+        _pendingAttachments.add({'path': photo.path, 'name': photo.name});
+      }
+      if (mounted) setState(() {});
+    } catch (e) {
+      _message('Photo selection failed: $e');
+    }
+  }
+
+  Future<void> _stagePdfs() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: true,
+      );
+      if (result == null) return;
+      for (final file in result.files) {
+        if (file.path != null) _pendingAttachments.add({'path': file.path!, 'name': file.name});
+      }
+      if (mounted) setState(() {});
+    } catch (e) {
+      _message('PDF selection failed: $e');
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -665,9 +703,16 @@ class _RecurringTransactionDialogState
       );
 
       if (widget.existing == null) {
-        await RecurringTransactionService().addRecurringTransaction(
-          model,
-        );
+        final createdId = await RecurringTransactionService().addRecurringTransaction(model);
+        try {
+          for (final attachment in _pendingAttachments) {
+            await AttachmentService.addAttachment(ownerType: 'recurring', ownerId: createdId, sourcePath: attachment['path']!, originalFileName: attachment['name']);
+          }
+        } catch (attachmentError) {
+          await AttachmentService.deleteOwnerAttachments(ownerType: 'recurring', ownerId: createdId);
+          await RecurringTransactionService().rollbackNewRecurringTransaction(createdId);
+          throw Exception('Attachment save failed. Schedule was rolled back. $attachmentError');
+        }
       } else {
         await RecurringTransactionService().updateRecurringTransaction(
           model,
@@ -784,7 +829,22 @@ class _RecurringTransactionDialogState
           ]),
           if (widget.existing?.id != null) ...[
             SizedBox(height: 14),
-            AttachmentSection(ownerType: 'recurring', ownerId: widget.existing!.id!, compact: true),
+            AttachmentSection(ownerType: 'recurring', ownerId: widget.existing!.id!, compact: false),
+          ] else ...[
+            SizedBox(height: 14),
+            Card(margin: EdgeInsets.zero, child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [Icon(Icons.attach_file), SizedBox(width: 8), Expanded(child: Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold))), Text('${_pendingAttachments.length}')]),
+              SizedBox(height: 10),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                if (Platform.isAndroid || Platform.isIOS) OutlinedButton.icon(onPressed: _saving ? null : () => _stagePhotos(camera: true), icon: Icon(Icons.camera_alt), label: Text('Camera')),
+                OutlinedButton.icon(onPressed: _saving ? null : () => _stagePhotos(), icon: Icon(Icons.photo_library), label: Text('Gallery')),
+                OutlinedButton.icon(onPressed: _saving ? null : _stagePdfs, icon: Icon(Icons.picture_as_pdf), label: Text('Add PDFs')),
+              ]),
+              if (_pendingAttachments.isNotEmpty) ...[
+                SizedBox(height: 8),
+                ..._pendingAttachments.asMap().entries.map((entry) => ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: Icon(entry.value['name']!.toLowerCase().endsWith('.pdf') ? Icons.picture_as_pdf : Icons.image_outlined), title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis), trailing: IconButton(onPressed: _saving ? null : () => setState(() => _pendingAttachments.removeAt(entry.key)), icon: Icon(Icons.close))))
+              ]
+            ]))),
           ],
         ])))),
         Padding(padding: EdgeInsets.fromLTRB(18, 10, 18, 14 + MediaQuery.of(context).padding.bottom), child: Row(children: [

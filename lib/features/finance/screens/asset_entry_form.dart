@@ -81,7 +81,8 @@ class _AssetEntryFormState extends State<AssetEntryForm> {
   }
   Future<void> _attachments() async {
     final choice = await showModalBottomSheet<String>(context: context, builder: (ctx) => SafeArea(child: Wrap(children: [
-      ListTile(title: const Text('Camera'), leading: const Icon(Icons.camera_alt_outlined), onTap: () => Navigator.pop(ctx, 'camera')),\n      ListTile(title: const Text('Gallery'), leading: const Icon(Icons.image_outlined), onTap: () => Navigator.pop(ctx, 'image')),
+      ListTile(title: const Text('Camera'), leading: const Icon(Icons.camera_alt_outlined), onTap: () => Navigator.pop(ctx, 'camera')),
+      ListTile(title: const Text('Gallery'), leading: const Icon(Icons.image_outlined), onTap: () => Navigator.pop(ctx, 'image')),
       ListTile(title: const Text('Add PDFs'), leading: const Icon(Icons.picture_as_pdf_outlined), onTap: () => Navigator.pop(ctx, 'pdf')),
     ])));
     if (choice == 'image' || choice == 'camera') { final f = await _picker.pickImage(source: choice == 'camera' ? ImageSource.camera : ImageSource.gallery, imageQuality: 85); if (f != null && mounted) setState(() => _image = f); }

@@ -36,6 +36,12 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _nameController.text = 'Shahzain Khan';
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();

@@ -292,11 +292,11 @@ class RecycleBinService {
           phone TEXT, notes TEXT NOT NULL DEFAULT '', profit_share REAL NOT NULL DEFAULT 50,
           opening_balance REAL NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1,
           created_at TEXT NOT NULL)""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS partner_wallet_links (
+        await txn.execute("""CREATE TABLE IF NOT EXISTS partners_wallet_links (
           id INTEGER PRIMARY KEY AUTOINCREMENT, partner_id INTEGER NOT NULL,
           wallet_id INTEGER NOT NULL, created_at TEXT NOT NULL,
           UNIQUE(partner_id,wallet_id))""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS partner_transactions (
+        await txn.execute("""CREATE TABLE IF NOT EXISTS partners_transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT, partner_id INTEGER NOT NULL,
           wallet_id INTEGER, type TEXT NOT NULL, amount REAL NOT NULL,
           balance_delta REAL NOT NULL DEFAULT 0, category TEXT NOT NULL DEFAULT '',
@@ -306,8 +306,8 @@ class RecycleBinService {
         if (duplicate.isNotEmpty) throw Exception('This partner already exists.');
         final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
           .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
-        final links = related.where((e) => e['_related_table']=='partner_wallet_links').toList();
-        final ledger = related.where((e) => e['_related_table']=='partner_transactions').toList();
+        final links = related.where((e) => e['_related_table']=='partners_wallet_links' || e['_related_table']=='partner_wallet_links').toList();
+        final ledger = related.where((e) => e['_related_table']=='partners_transactions' || e['_related_table']=='partner_transactions').toList();
         final finance = related.where((e) => e['_related_table']=='transactions').toList();
         for (final row in finance) {
           final walletId = (row['wallet_id'] as num?)?.toInt();
@@ -323,8 +323,8 @@ class RecycleBinService {
           await txn.rawUpdate('UPDATE wallets SET balance=balance+? WHERE id=?', [delta,walletId]);
         }
         await txn.insert('partners', record);
-        for (final row in links) { row.remove('_related_table'); await txn.insert('partner_wallet_links', row); }
-        for (final row in ledger) { row.remove('_related_table'); await txn.insert('partner_transactions', row); }
+        for (final row in links) { row.remove('_related_table'); await txn.insert('partners_wallet_links', row); }
+        for (final row in ledger) { row.remove('_related_table'); await txn.insert('partners_transactions', row); }
         for (final row in finance) { row.remove('_related_table'); await txn.insert('transactions', row); }
         await txn.delete('recycle_bin', where: 'id=?', whereArgs: [recycleId]);
         return;

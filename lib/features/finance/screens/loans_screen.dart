@@ -2937,14 +2937,6 @@ class _ManagePartiesState extends State<ManageParties> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _editParty(),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: Icon(Icons.add_rounded),
-        label: Text('Add Party'),
-      ),
     );
   }
 

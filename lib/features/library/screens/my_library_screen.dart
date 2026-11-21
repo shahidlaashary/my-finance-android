@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/library/screens/library_audio_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_pdf_reader_screen.dart';
+import 'package:my_finance/features/library/screens/library_epub_reader_screen.dart';
 import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_documents_screen.dart';
@@ -111,8 +112,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       )));
     } else if (extension == '.pdf') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryPdfReaderScreen(item: item)));
+    } else if (extension == '.epub') {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryEpubReaderScreen(item: item)));
     } else {
-      // EPUB currently opens with a compatible reader installed on the device.
       await OpenFilex.open(path);
     }
     if (mounted) setState(_refresh);

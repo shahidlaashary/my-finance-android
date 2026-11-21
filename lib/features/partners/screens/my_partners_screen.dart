@@ -14,6 +14,8 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
   final _service = MyPartnersService.instance;
   List<Map<String, dynamic>> _partners = [];
   bool _loading = true;
+  bool _searchVisible = false;
+  String _search = '';
   String _filter = 'All';
 
   @override
@@ -124,16 +126,64 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final visible = _partners.where((p) => _filter == 'All' || p['type'] == _filter).toList();
+    final query = _search.trim().toLowerCase();
+    final visible = _partners.where((p) {
+      final matchesType = _filter == 'All' || p['type'] == _filter;
+      final searchable = [
+        p['name'], p['phone'], p['notes'], p['type'],
+      ].map((value) => value?.toString().toLowerCase() ?? '').join(' ');
+      return matchesType && (query.isEmpty || searchable.contains(query));
+    }).toList();
     final businesses = _partners.where((p) => p['type'] == 'Business').length;
     final personals = _partners.where((p) => p['type'] == 'Personal').length;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: Text('My Partners', style: TextStyle(fontWeight: FontWeight.w800))),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _editPartner(), backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary, icon: Icon(Icons.person_add_alt_1), label: Text('Add Partner')),
-      body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
+      appBar: AppBar(
+        title: const Text('My Partners', style: TextStyle(fontWeight: FontWeight.w800)),
+        actions: [
+          IconButton(
+            tooltip: _searchVisible ? 'Close search' : 'Search partners',
+            onPressed: () => setState(() {
+              _searchVisible = !_searchVisible;
+              if (!_searchVisible) _search = '';
+            }),
+            icon: Icon(_searchVisible ? Icons.close_rounded : Icons.search_rounded),
+          ),
+          IconButton(
+            tooltip: 'Add Partner',
+            onPressed: () => _editPartner(),
+            icon: const Icon(Icons.person_add_alt_1_rounded),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: _loading ? const Center(child: CircularProgressIndicator()) : Column(
+        children: [
+          if (_searchVisible)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              child: TextField(
+                autofocus: true,
+                onChanged: (value) => setState(() => _search = value),
+                decoration: InputDecoration(
+                  hintText: 'Search name, phone or notes',
+                  prefixIcon: Icon(Icons.search_rounded, color: Theme.of(context).colorScheme.primary),
+                  suffixIcon: _search.isEmpty ? null : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: () => setState(() => _search = ''),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                  filled: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: .45))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.3)),
+                ),
+              ),
+            ),
+          Expanded(child: RefreshIndicator(
         onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 100), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 24), children: [
           Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -169,6 +219,8 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
             ),
           )),
         ]),
+      )),
+        ],
       ),
     );
   }

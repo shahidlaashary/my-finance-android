@@ -12,6 +12,7 @@ import 'package:my_finance/core/services/attachment_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
+import 'package:my_finance/features/finance/screens/asset_purchase_entry_form.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/screens/asset_loan_repayment_entry_form.dart';
@@ -287,7 +288,18 @@ class AssetsScreenState extends State<AssetsScreen> {
     return result;
   }
 
-  Future<void> openNewAssetForm() => _showAssetDialog();
+  Future<void> openNewAssetForm() async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const AssetPurchaseEntryForm(),
+    );
+    if (saved == true && mounted) {
+      await _loadData();
+    }
+  }
 
   void _closeAssetForm(BuildContext sheetContext) {
     if (Navigator.of(sheetContext).canPop()) {
@@ -1150,7 +1162,7 @@ class AssetsScreenState extends State<AssetsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAssetDialog,
+        onPressed: openNewAssetForm,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: Icon(Icons.add_rounded),

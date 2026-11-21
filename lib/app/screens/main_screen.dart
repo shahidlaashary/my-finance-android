@@ -177,6 +177,7 @@ class _MainScreenState extends State<MainScreen> {
                   activeIcon: Icons.account_balance_rounded,
                   label: appText(context, 'Wallets', 'والٹس'),
                 ),
+              ),
               ],
             ),
           ),

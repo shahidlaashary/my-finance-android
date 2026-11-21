@@ -249,7 +249,6 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ],
                 ),
-                ),
               ],
             ),
           ),
@@ -464,6 +463,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -28,7 +28,7 @@ class MoreFeaturesPage extends StatelessWidget {
         'icon': Icons.currency_exchange_rounded,
       },
       {
-        'title': 'My Library',
+        'title': 'My Space',
         'subtitle': 'Keep your books, documents, music, photos and videos in one place',
         'icon': Icons.local_library_outlined,
       },
@@ -113,8 +113,8 @@ class MoreFeaturesPage extends StatelessWidget {
                       if (feature['title'] == 'Vehicle Manager') {
                         return const VehiclesScreen();
                       }
-                      if (feature['title'] == 'My Library') {
-                        return const MyLibraryScreen();
+                      if (feature['title'] == 'My Space') {
+                        return const MySpaceScreen();
                       }
                       if (feature['title'] == 'Exchange Rates') {
                         return const ExchangeRatesScreen();
@@ -140,7 +140,7 @@ class MoreFeaturesPage extends StatelessWidget {
                       if (feature['title'] == 'Manage Parties') {
                         return ManageParties(hideBalances: false, onLoanTap: (_) {});
                       }
-                      return const MyLibraryScreen();
+                      return const MySpaceScreen();
                     },
                   ),
                 );

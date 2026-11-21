@@ -370,7 +370,7 @@ class _RecurringTransactionsScreenState
               infoChip(Icons.account_balance_wallet_outlined, isTransfer ? 'From Wallet' : 'Wallet',
                 _walletName(item.walletId)),
               const SizedBox(width: 8),
-              infoChip(Icons.event_repeat_outlined, 'Next Run', _date(item.nextRunDate)),
+              infoChip(Icons.repeat_rounded, 'Next Run', _date(item.nextRunDate)),
             ]),
             if (isTransfer || (!isTransfer && (item.category ?? '').trim().isNotEmpty)) ...[
               const SizedBox(height: 8),
@@ -758,7 +758,9 @@ class _RecurringTransactionDialogState
         frequency: _frequency,
         startDate: _startDate,
         endDate: _endDate,
-        nextRunDate: widget.existing?.nextRunDate ?? _startDate,
+        nextRunDate: widget.existing?.nextRunDate != null && !widget.existing!.nextRunDate!.isBefore(_startDate)
+            ? widget.existing!.nextRunDate
+            : _startDate,
         isActive: widget.existing?.isActive ?? true,
         createdAt: widget.existing?.createdAt ?? DateTime.now(),
       );

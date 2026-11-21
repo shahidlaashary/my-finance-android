@@ -297,6 +297,13 @@ class RecurringTransactionService {
     if (count > 0) AppRefreshController.notifyChanged();
     return count;
   }
+  /// Rollback helper used only when a newly created schedule fails attachment persistence.
+  Future<int> rollbackNewRecurringTransaction(int id) async {
+    final db = await _database;
+    final count = await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
+    if (count > 0) AppRefreshController.notifyChanged();
+    return count;
+  }
   Future<int> deleteRecurringTransaction(int id) async {
     final db = await _database;
     final rows = await db.query(_tableName, where: 'id = ?', whereArgs: [id], limit: 1);

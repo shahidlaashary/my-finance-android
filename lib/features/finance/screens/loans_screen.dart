@@ -39,10 +39,7 @@ class LoansScreenState extends State<LoansScreen> {
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
-  final _repaymentAmountController = TextEditingController();
-  final _repaymentNotesController = TextEditingController();
   int? _selectedWalletId;
-  int? _selectedRepaymentWalletId;
   DateTime _lendingDate = DateTime.now();
   DateTime? _dueDate;
   int? _selectedPartyId;
@@ -62,8 +59,6 @@ class LoansScreenState extends State<LoansScreen> {
     _phoneController.dispose();
     _amountController.dispose();
     _notesController.dispose();
-    _repaymentAmountController.dispose();
-    _repaymentNotesController.dispose();
     super.dispose();
   }
   String _dateString(DateTime date) {
@@ -153,10 +148,6 @@ class LoansScreenState extends State<LoansScreen> {
           final firstWalletId = (_wallets.first['id'] as num).toInt();
           if (_selectedWalletId == null || !walletIds.contains(_selectedWalletId)) {
             _selectedWalletId = firstWalletId;
-          }
-          if (_selectedRepaymentWalletId == null ||
-              !walletIds.contains(_selectedRepaymentWalletId)) {
-            _selectedRepaymentWalletId = firstWalletId;
           }
         }
       });

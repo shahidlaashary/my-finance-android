@@ -354,11 +354,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
     controller.dispose();
     if (amount == null) return;
     try {
+      final wasCompleted = goal.savedAmount >= goal.targetAmount;
       await GoalsService.addContribution(
         goalId: goal.id!,
         walletId: goal.walletId!,
         amount: amount,
       );
+      if (!wasCompleted && goal.savedAmount + amount >= goal.targetAmount) {
+        await SoundSettingsService.instance.play('achievement');
+      } else {
+        await SoundSettingsService.instance.play('income');
+      }
       await _loadData();
       _message('Savings contribution added.');
     } catch (e) {

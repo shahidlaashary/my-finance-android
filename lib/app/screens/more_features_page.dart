@@ -3,7 +3,6 @@ import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/features/documents/screens/my_documents_screen.dart';
 import 'package:my_finance/features/library/screens/my_library_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
@@ -32,11 +31,6 @@ class MoreFeaturesPage extends StatelessWidget {
         'title': 'My Library',
         'subtitle': 'Keep your books, PDFs and music in one place',
         'icon': Icons.local_library_outlined,
-      },
-      {
-        'title': 'My Documents',
-        'subtitle': 'Store and access your important documents',
-        'icon': Icons.folder_copy_outlined,
       },
       {
         'title': 'Staff Management',
@@ -122,9 +116,6 @@ class MoreFeaturesPage extends StatelessWidget {
                       if (feature['title'] == 'My Library') {
                         return const MyLibraryScreen();
                       }
-                      if (feature['title'] == 'My Documents') {
-                        return const MyDocumentsScreen();
-                      }
                       if (feature['title'] == 'Exchange Rates') {
                         return const ExchangeRatesScreen();
                       }
@@ -149,7 +140,7 @@ class MoreFeaturesPage extends StatelessWidget {
                       if (feature['title'] == 'Manage Parties') {
                         return ManageParties(hideBalances: false, onLoanTap: (_) {});
                       }
-                      return const MyDocumentsScreen();
+                      return const MyLibraryScreen();
                     },
                   ),
                 );

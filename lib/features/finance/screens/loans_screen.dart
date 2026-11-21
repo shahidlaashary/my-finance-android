@@ -302,6 +302,7 @@ class LoansScreenState extends State<LoansScreen> {
 
     final loanForm = StatefulBuilder(
         builder: (context, setSheetState) {
+          final sheetContext = context;
           final screenHeight = MediaQuery.sizeOf(context).height;
           final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
           final maxSheetHeight = keyboardHeight > 0

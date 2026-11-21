@@ -89,6 +89,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           'note': 'Purchased: ${asset.name}',
           'date': asset.purchaseDate.toIso8601String(),
           'wallet_currency': asset.currency,
+          'payment_type': asset.paymentType,
         });
         if (asset.isSold && asset.salePrice != null && asset.saleDate != null) {
           otherRows.add({
@@ -1304,6 +1305,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                                 if (!isScheduled && !isSourceRecord) isAdjustment ? 'Balance Adjustment' : (isTransfer ? 'Transfer' : (category.isEmpty ? 'No category' : category)),
                                                                                                  if (isScheduled && item['frequency'] != null) item['frequency'].toString(),
                                                  if (isTransfer && fee > 0) 'Fee: $currency ${money(fee)}',
+                                                 if (isAssetRecord && item['payment_type'] != null) 'Payment: ${item['payment_type']}',
                                               ].join('  •  '),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,

@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -102,6 +103,7 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
       final id = await LoansService.addLoan(LoansModel(partyId: _partyId, loanType: _type, amount: amount, remainingAmount: amount, walletId: _walletId!, currency: currency, lendingDate: DateFormat('yyyy-MM-dd').format(_date), dueDate: DateFormat('yyyy-MM-dd').format(_due), notes: _notes.text.trim(), createdAt: DateTime.now().toIso8601String()));
       if (_image != null) await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.loan, ownerId: id, sourcePath: _image!.path, originalFileName: _image!.name);
       for (final f in _pdfs) { if (f.path != null) await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.loan, ownerId: id, sourcePath: f.path!, originalFileName: f.name); }
+      await SoundSettingsService.instance.play('save');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Loan saved successfully.')));
       Navigator.pop(context, true);

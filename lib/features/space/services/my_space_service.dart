@@ -87,6 +87,37 @@ class MySpaceService {
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionItemsTable (collection_id INTEGER NOT NULL, item_id INTEGER NOT NULL UNIQUE, added_at TEXT NOT NULL, PRIMARY KEY (collection_id, item_id), FOREIGN KEY (collection_id) REFERENCES $_collectionsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_space_collection_items_collection ON $_collectionItemsTable(collection_id)');
+    await db.execute('CREATE TABLE IF NOT EXISTS space_youtube_videos (video_id TEXT PRIMARY KEY, title TEXT NOT NULL, channel_title TEXT NOT NULL DEFAULT '', thumbnail_url TEXT NOT NULL DEFAULT '', saved_at TEXT NOT NULL, last_watched_at TEXT)');
+  }
+
+  Future<void> saveYouTubeVideo({required String videoId, required String title, String? channelTitle, String? thumbnailUrl}) async {
+    final db = await database;
+    await db.insert('space_youtube_videos', {
+      'video_id': videoId,
+      'title': title.trim().isEmpty ? 'YouTube video' : title.trim(),
+      'channel_title': channelTitle ?? '',
+      'thumbnail_url': thumbnailUrl ?? '',
+      'saved_at': DateTime.now().toIso8601String(),
+      'last_watched_at': null,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, Object?>>> getYouTubeVideos({bool history = false}) async {
+    final db = await database;
+    return db.query('space_youtube_videos',
+      where: history ? 'last_watched_at IS NOT NULL' : null,
+      orderBy: history ? 'last_watched_at DESC' : 'saved_at DESC');
+  }
+
+  Future<void> markYouTubeVideoWatched(String videoId) async {
+    await (await database).update('space_youtube_videos',
+      {'last_watched_at': DateTime.now().toIso8601String()},
+      where: 'video_id = ?', whereArgs: [videoId]);
+  }
+
+  Future<void> removeYouTubeVideo(String videoId) async {
+    await (await database).delete('space_youtube_videos',
+      where: 'video_id = ?', whereArgs: [videoId]);
   }
 
   Future<void> _ensureSectionTables(Database db) async {

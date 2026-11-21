@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
@@ -242,6 +243,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
           walletId: walletId, installmentAmount: double.parse(installment.text),
           frequency: frequency, startDate: _date(start), notes: notes.text,
         );
+        await SoundSettingsService.instance.play('save');
         await _load();
         _message('Installment plan created successfully.');
       } catch (e) { _message(e.toString().replaceFirst('Exception: ', '')); }
@@ -271,6 +273,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
       try {
         await InstallmentService.addPayment(contractId: c['id'] as int,
           amount: double.parse(amount.text), date: _date(date), note: note.text);
+        await SoundSettingsService.instance.play(c['direction'] == 'sell' ? 'income' : 'expense');
         await _load(); _message('Payment recorded.');
       } catch (e) { _message(e.toString().replaceFirst('Exception: ', '')); }
     }
@@ -324,7 +327,12 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
       ],
     ));
     if (confirmed != true) return;
-    try { await InstallmentService.deleteContract((contract['id'] as num).toInt()); await _load(); }
+    try {
+      await SoundSettingsService.instance.play('delete_warning');
+      await InstallmentService.deleteContract((contract['id'] as num).toInt());
+      await SoundSettingsService.instance.play('delete_success');
+      await _load();
+    }
     catch (e) { _message('Could not delete installment: $e'); }
   }
 

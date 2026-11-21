@@ -10,8 +10,7 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 
 /// Central SQLite database for the My Finance application.
 ///
-/// Keep the existing schema and database version unchanged unless a
-/// separately reviewed feature requires a deliberate schema update.
+/// Version 1 creates the complete fresh finance database schema.
 class FinanceDB {
   FinanceDB._();
 
@@ -28,7 +27,7 @@ class FinanceDB {
     // Fresh database: koi migration ya old-data conversion nahi.
     _database = await openDatabase(
       fullPath,
-      version: 4,
+      version: 1,
       onCreate: _createDatabase,
     );
   }

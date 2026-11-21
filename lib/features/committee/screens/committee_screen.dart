@@ -232,7 +232,18 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
   @override
   Widget build(BuildContext context){
     final c=committeeData;
-    return Scaffold(appBar:AppBar(title:Text(c['name'].toString()),bottom:TabBar(controller:tabs,isScrollable:true,tabs:const[
+    return Scaffold(appBar:AppBar(title:Text(c['name'].toString()),actions:[
+      PopupMenuButton<String>(onSelected:(v) async {
+        if(v=='delete'){
+          final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+            title:const Text('Move committee to Recycle Bin?'),
+            content:const Text('Committee members, entries and linked wallet transactions will be archived. Wallet balances will be reversed.'),
+            actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
+              FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Delete'))]));
+          if(confirmed==true){try{await CommitteeService.deleteCommittee(id);if(mounted)Navigator.pop(context);}catch(e){_msg('Could not delete committee: $e');}}
+        }
+      },itemBuilder:(_)=>[const PopupMenuItem(value:'delete',child:Text('Move to Recycle Bin'))]),
+    ],bottom:TabBar(controller:tabs,isScrollable:true,tabs:const[
       Tab(text:'Overview'),Tab(text:'Members'),Tab(text:'Schedule'),Tab(text:'History'),
     ])),
     floatingActionButton:PopupMenuButton<String>(icon:const Icon(Icons.add_circle,size:52),tooltip:'Add committee entry',

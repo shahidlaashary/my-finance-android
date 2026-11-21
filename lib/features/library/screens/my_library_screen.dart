@@ -9,6 +9,7 @@ import 'package:my_finance/features/library/screens/library_epub_reader_screen.d
 import 'package:my_finance/features/library/screens/library_tools_screen.dart';
 import 'package:my_finance/features/library/screens/library_video_player_screen.dart';
 import 'package:my_finance/features/library/screens/library_documents_screen.dart';
+import 'package:my_finance/features/library/screens/library_records_screen.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 import 'package:my_finance/features/library/services/library_documents_service.dart';
 import 'package:open_filex/open_filex.dart';
@@ -24,6 +25,8 @@ class MyLibraryScreen extends StatefulWidget {
 class _MyLibraryScreenState extends State<MyLibraryScreen> {
   final _library = MyLibraryService.instance;
   final _documentsKey = GlobalKey<LibraryDocumentsScreenState>();
+  final _dealsKey = GlobalKey<LibraryRecordsScreenState>();
+  final _projectsKey = GlobalKey<LibraryRecordsScreenState>();
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
@@ -43,6 +46,15 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     _audioItems = _library.getItems(fileType: 'audio');
     _photoItems = _library.getItems(fileType: 'photo');
     _videoItems = _library.getItems(fileType: 'video');
+  }
+
+  Future<void> _openRecordForm(String section) async {
+    await Navigator.push(context, MaterialPageRoute(
+      builder: (_) => LibraryRecordFormScreen(section: section),
+    ));
+    if (!mounted) return;
+    if (section == 'deals') _dealsKey.currentState?.refresh();
+    if (section == 'projects') _projectsKey.currentState?.refresh();
   }
 
   Future<void> _openLibrarySearch() async {
@@ -267,26 +279,27 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               children: [
                 _navItem(0, Icons.library_books_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
-                _navItem(2, Icons.folder_copy_outlined, 'My Docs'),
+                _navItem(2, Icons.handshake_outlined, 'Deals'),
+                _navItem(3, Icons.description_outlined, 'Docs'),
                 Expanded(
                   child: PopupMenuButton<String>(
                     tooltip: 'Add to My Library',
                     icon: Container(
-                      width: 43,
-                      height: 43,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: Icon(
-                        Icons.add_rounded,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        size: 29,
-                      ),
+                      child: Icon(Icons.add_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 28),
                     ),
                     onSelected: (type) {
                       if (type == 'document') {
                         _documentsKey.currentState?.showAddDocumentForm();
+                      } else if (type == 'deal') {
+                        _openRecordForm('deals');
+                      } else if (type == 'project') {
+                        _openRecordForm('projects');
                       } else {
                         _addFile(mediaType: type);
                       }
@@ -299,22 +312,23 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     elevation: 8,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(13),
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .8),
-                      ),
+                      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .8)),
                     ),
                     itemBuilder: (_) => [
                       _addMenuItem('book', Icons.menu_book_outlined, 'Add Book'),
-                      _addMenuItem('document', Icons.description_outlined, 'Add Docs'),
+                      _addMenuItem('deal', Icons.handshake_outlined, 'Add Deal'),
                       _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
+                      _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photo', Icons.photo_outlined, 'Add Photo'),
                       _addMenuItem('video', Icons.video_library_outlined, 'Add Video'),
+                      _addMenuItem('project', Icons.work_outline_rounded, 'Add Project'),
                     ],
                   ),
                 ),
-                _navItem(3, Icons.headphones_outlined, 'Music'),
-                _navItem(4, Icons.photo_outlined, 'Photos'),
-                _navItem(5, Icons.video_library_outlined, 'Videos'),
+                _navItem(4, Icons.headphones_outlined, 'Music'),
+                _navItem(5, Icons.photo_outlined, 'Photo'),
+                _navItem(6, Icons.work_outline_rounded, 'Projects'),
+                _navItem(7, Icons.video_library_outlined, 'Video'),
               ],
             ),
           ),
@@ -323,11 +337,13 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       body: IndexedStack(
         index: _selectedTabIndex,
         children: [
-          _buildItems(_allItems, 'Your library is empty', 'Add books, docs, music, photos and videos. Added files are copied into application storage.'),
+          _buildItems(_allItems, 'Your library is empty', 'Add books, deals, docs, music, photos, videos and projects.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
+          LibraryRecordsScreen(key: _dealsKey, section: 'deals'),
           LibraryDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),
           _buildItems(_photoItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
+          LibraryRecordsScreen(key: _projectsKey, section: 'projects'),
           _buildItems(_videoItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
         ],
       ),

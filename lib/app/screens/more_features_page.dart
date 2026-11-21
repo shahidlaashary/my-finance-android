@@ -29,7 +29,7 @@ class MoreFeaturesPage extends StatelessWidget {
       },
       {
         'title': 'My Library',
-        'subtitle': 'Keep your books, PDFs and music in one place',
+        'subtitle': 'Keep your books, documents, music, photos and videos in one place',
         'icon': Icons.local_library_outlined,
       },
       {

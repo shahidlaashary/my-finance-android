@@ -294,7 +294,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       body: IndexedStack(
         index: _selectedTabIndex,
         children: [
-          _buildItems(_allItems, 'Your library is empty', 'Add books, music, photos and videos. Added files are copied into My Finance app storage.'),
+          _buildItems(_allItems, 'Your library is empty', 'Add books, docs, music, photos and videos. Added files are copied into application storage.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your library.'),
           const LibraryDocumentsScreen(),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your library.'),

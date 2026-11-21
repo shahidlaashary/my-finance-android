@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 
-class LibraryToolsScreen extends StatefulWidget {
-  const LibraryToolsScreen({super.key});
+class SpaceToolsScreen extends StatefulWidget {
+  const SpaceToolsScreen({super.key});
 
   @override
-  State<LibraryToolsScreen> createState() => _LibraryToolsScreenState();
+  State<SpaceToolsScreen> createState() => _SpaceToolsScreenState();
 }
 
-class _LibraryToolsScreenState extends State<LibraryToolsScreen> {
+class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
   final _library = MyLibraryService.instance;
   Future<List<Map<String, Object?>>>? _playlists;
   Future<List<Map<String, Object?>>>? _collections;
@@ -95,7 +95,7 @@ class _LibraryToolsScreenState extends State<LibraryToolsScreen> {
     final items = await _library.getItems(fileType: 'audio');
     if (!mounted) return;
     if (items.isEmpty) {
-      _message('Add audio files to My Library first.');
+      _message('Add audio files to My Space first.');
       return;
     }
     final selected = <int>{};
@@ -222,7 +222,7 @@ class _LibraryToolsScreenState extends State<LibraryToolsScreen> {
           final audio = data['audio_count'] ?? 0;
           return ListView(padding: const EdgeInsets.all(20), children: [
             Card(child: Padding(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('My Library storage', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('My Space storage', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text(_formatBytes(data['total_bytes']), style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 14),
@@ -263,7 +263,7 @@ class _LibraryToolsScreenState extends State<LibraryToolsScreen> {
   Widget build(BuildContext context) => DefaultTabController(
     length: 3,
     child: Scaffold(
-      appBar: AppBar(title: const Text('Library Tools'), bottom: const TabBar(tabs: [
+      appBar: AppBar(title: const Text('Space Tools'), bottom: const TabBar(tabs: [
         Tab(text: 'Playlists', icon: Icon(Icons.queue_music)),
         Tab(text: 'Folders', icon: Icon(Icons.folder_outlined)),
         Tab(text: 'Storage', icon: Icon(Icons.storage)),

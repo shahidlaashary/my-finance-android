@@ -405,6 +405,6 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       content:DropdownButtonFormField<String>(value:status,items:['Upcoming','Active','Completed'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setD(()=>status=v);}),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
     )));
-    if(ok==true){await CommitteeService.updateStatus(id,status);await SoundSettingsService.instance.play('update');committeeData['status']=status;}if(mounted)setState(()=>{});_msg('Status updated.');}
+    if(ok==true){await CommitteeService.updateStatus(id,status);await SoundSettingsService.instance.play('update');committeeData['status']=status;if(mounted)setState(()=>{});_msg('Status updated.');}
   }
 }

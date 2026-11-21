@@ -558,6 +558,70 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     ).then((_) => _loadDocuments());
   }
 
+  Widget _compactFilterDropdown({
+    required String label,
+    required String value,
+    required IconData icon,
+    required List<String> options,
+    required ValueChanged<String> onChanged,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      height: 58,
+      padding: const EdgeInsets.fromLTRB(10, 5, 7, 4),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: .75)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 13, color: colors.primary),
+              SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: .7,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 1),
+          SizedBox(
+            height: 25,
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                isExpanded: true,
+                isDense: true,
+                icon: Icon(Icons.keyboard_arrow_down_rounded, size: 19, color: colors.primary),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
+                items: options.map((option) => DropdownMenuItem<String>(
+                  value: option,
+                  child: Text(option, maxLines: 1, overflow: TextOverflow.ellipsis),
+                )).toList(),
+                onChanged: (selected) {
+                  if (selected != null && selected != value) onChanged(selected);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _summaryCard(String label, int value, IconData icon, Color color) {
     return Expanded(
       child: Container(
@@ -650,53 +714,8 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
       color: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              children: [
-                ...['All', 'Favorites', 'Expiring Soon', 'Expired'].map((filter) {
-                  final selected = _filter == filter;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(filter),
-                      selected: selected,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) {
-                        setState(() => _filter = filter);
-                        _loadDocuments();
-                      },
-                    ),
-                  );
-                }),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 7),
-                  child: Container(width: 1, color: const Color(0xFFDDE5E0)),
-                ),
-                ...['All', ..._categories].map((category) {
-                  final selected = _category == category;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(category),
-                      selected: selected,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) {
-                        setState(() => _category = category);
-                        _loadDocuments();
-                      },
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
               children: [
                 _summaryCard('Documents', _documents.length, Icons.folder_copy_outlined, Theme.of(context).colorScheme.primary),
@@ -705,7 +724,39 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
               ],
             ),
           ),
-          SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _compactFilterDropdown(
+                    label: 'FILTER',
+                    value: _filter,
+                    icon: Icons.filter_list_rounded,
+                    options: const ['All', 'Favorites', 'Expiring Soon', 'Expired'],
+                    onChanged: (value) {
+                      setState(() => _filter = value);
+                      _loadDocuments();
+                    },
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: _compactFilterDropdown(
+                    label: 'CATEGORY',
+                    value: _category,
+                    icon: Icons.folder_outlined,
+                    options: ['All', ..._categories],
+                    onChanged: (value) {
+                      setState(() => _category = value);
+                      _loadDocuments();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 4),
           Expanded(
             child: _loading
                 ? Center(child: CircularProgressIndicator())

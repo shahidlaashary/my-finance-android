@@ -5,7 +5,7 @@ import 'package:my_finance/features/finance/models/assets_model.dart';
 
 typedef CreateAssetSaleParty = Future<Map<String, dynamic>?> Function({
   required String initialCurrency,
-  bool lockCurrency,
+  required bool lockCurrency,
 });
 
 class AssetSaleEntryForm extends StatefulWidget {
@@ -71,7 +71,7 @@ class _AssetSaleEntryFormState extends State<AssetSaleEntryForm> {
       context: context,
       initialDate: _date.isBefore(widget.asset.purchaseDate) ? widget.asset.purchaseDate : _date,
       firstDate: widget.asset.purchaseDate,
-      lastDate: DateTime(2100),
+      lastDate: DateTime.now(),
     );
     if (picked != null && mounted) setState(() => _date = picked);
   }

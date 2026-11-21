@@ -19,9 +19,7 @@ import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
 class LoansScreen extends StatefulWidget {
-  const LoansScreen({super.key, this.embeddedFormHost = false});
-
-  final bool embeddedFormHost;
+  const LoansScreen({super.key});
 
   @override
   State<LoansScreen> createState() => LoansScreenState();
@@ -33,7 +31,6 @@ class LoansScreenState extends State<LoansScreen> {
   Map<int, String> _assetNames = {};
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
-  Widget? _embeddedLoanForm;
   bool _hideBalances = false;
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -186,10 +183,6 @@ class LoansScreenState extends State<LoansScreen> {
 
   Future<void> openNewLoanForm() => _addLoan();
   
-  void _dismissEmbeddedLoanForm() {
-    if (mounted) setState(() => _embeddedLoanForm = null);
-  }
-
   Future<void> _addLoan() async {
     await _loadData();
     if (!mounted) return;
@@ -341,7 +334,7 @@ class LoansScreenState extends State<LoansScreen> {
                             ),
                             IconButton(
                               visualDensity: VisualDensity.compact,
-                              onPressed: () { if (widget.embeddedFormHost) { _dismissEmbeddedLoanForm(); } else { Navigator.pop(sheetContext, false); } },
+                              onPressed: () => Navigator.pop(sheetContext, false),
                               icon: Icon(Icons.close_rounded),
                               color: Theme.of(context).hintColor,
                             ),
@@ -621,7 +614,7 @@ class LoansScreenState extends State<LoansScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () async { if (widget.embeddedFormHost) { final saved = await saveLoan(); if (saved) _dismissEmbeddedLoanForm(); } else { Navigator.pop(sheetContext, true); } },
+                                onPressed: () => Navigator.pop(sheetContext, true),
                                 child: Text(appText(context, 'Save Loan', 'قرض محفوظ کریں')),
                               ),
                             ),
@@ -636,18 +629,14 @@ class LoansScreenState extends State<LoansScreen> {
           );
         },
       );
-    if (widget.embeddedFormHost) {
-      if (mounted) setState(() => _embeddedLoanForm = loanForm);
-    } else {
-      final result = await showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => loanForm,
-      );
-      if (result == true) await saveLoan();
-    }
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => loanForm,
+    );
+    if (result == true) await saveLoan();
   }
 
   String _displayLoanDate(String value) {
@@ -1311,13 +1300,6 @@ class LoansScreenState extends State<LoansScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    if (widget.embeddedFormHost) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: _embeddedLoanForm ?? const SizedBox.shrink(),
-      );
-    }
-
     final overdueCount = _loans.where((loan) => loan.isOverdue).length;
     return Scaffold(
       appBar: AppBar(

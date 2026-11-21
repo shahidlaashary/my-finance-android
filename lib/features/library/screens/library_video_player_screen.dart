@@ -54,7 +54,7 @@ class _LibraryVideoPlayerScreenState extends State<LibraryVideoPlayerScreen> {
     final minutes = (seconds % 3600) ~/ 60;
     final remaining = seconds % 60;
     if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remaining.toString().padLeft(2, '0')}";
+      return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remaining.toString().padLeft(2, '0')}";
     }
     return "${minutes.toString().padLeft(2, '0')}:${remaining.toString().padLeft(2, '0')}";
   }

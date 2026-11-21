@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -206,7 +207,9 @@ class _RecurringTransactionsScreenState
 
     try {
       await AttachmentService.deleteOwnerAttachments(ownerType: 'recurring', ownerId: item.id!);
+      await SoundSettingsService.instance.play('delete_warning');
       await _service.deleteRecurringTransaction(item.id!);
+      await SoundSettingsService.instance.play('delete_success');
       await _loadData();
       _showMessage('Schedule deleted successfully.');
     } catch (e) {
@@ -705,6 +708,7 @@ class _RecurringTransactionDialogState
 
       if (widget.existing == null) {
         final createdId = await RecurringTransactionService().addRecurringTransaction(model);
+        await SoundSettingsService.instance.play('save');
         try {
           for (final attachment in _pendingAttachments) {
             await AttachmentService.addAttachment(ownerType: 'recurring', ownerId: createdId, sourcePath: attachment['path']!, originalFileName: attachment['name']);
@@ -718,6 +722,7 @@ class _RecurringTransactionDialogState
         await RecurringTransactionService().updateRecurringTransaction(
           model,
         );
+        await SoundSettingsService.instance.play('update');
       }
 
       if (!mounted) return;

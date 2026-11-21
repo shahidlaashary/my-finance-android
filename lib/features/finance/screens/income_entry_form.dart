@@ -15,6 +15,8 @@ import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/finance/services/finance_transaction_operations.dart';
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
+import 'package:my_finance/features/finance/models/recurring_transaction_model.dart';
+import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
 
 class IncomeEntryForm extends StatefulWidget {
   const IncomeEntryForm({super.key});
@@ -543,6 +545,54 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
 
 
 
+  DateTime _nextRecurringDate(DateTime date, String frequency) {
+    final current = DateTime(date.year, date.month, date.day);
+    switch (frequency.toLowerCase()) {
+      case 'daily': return current.add(const Duration(days: 1));
+      case 'weekly': return current.add(const Duration(days: 7));
+      case 'monthly':
+        final next = DateTime(current.year, current.month + 1, 1);
+        final last = DateTime(next.year, next.month + 1, 0).day;
+        return DateTime(next.year, next.month, current.day > last ? last : current.day);
+      case 'yearly':
+        final year = current.year + 1;
+        final last = DateTime(year, current.month + 1, 0).day;
+        return DateTime(year, current.month, current.day > last ? last : current.day);
+      default: return current;
+    }
+  }
+
+  Future<void> _createRecurringSchedule({
+    required double amount,
+    required double transferFee,
+    required int transactionId,
+  }) async {
+    if (selectedRecurring == 'None') return;
+    final type = 'income';
+    final frequency = selectedRecurring.toLowerCase();
+    final title = selectedCategory.trim().isNotEmpty
+        ? selectedCategory.trim()
+        : noteController.text.trim().isNotEmpty
+            ? noteController.text.trim()
+            : 'Recurring Income';
+    final schedule = RecurringTransactionModel(
+      title: title,
+      type: type,
+      amount: amount,
+      transferFee: type == 'transfer' ? transferFee : 0,
+      walletId: selectedWalletId!,
+      toWalletId: type == 'transfer' ? selectedDestinationWalletId : null,
+      category: type == 'transfer' ? null : selectedCategory,
+      note: noteController.text.trim(),
+      frequency: frequency,
+      startDate: selectedDate,
+      nextRunDate: _nextRecurringDate(selectedDate, frequency),
+      isActive: true,
+      createdAt: DateTime.now(),
+    );
+    await RecurringTransactionService().addRecurringTransaction(schedule);
+  }
+
   Future<void> save() => _saveTransaction();
 
   Future<void> _saveTransaction() async {
@@ -616,14 +666,13 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
         date: selectedDate,
       );
 
-      await FinanceDB.instance.db.insert(
-        'app_settings',
-        {
-          'setting_key': 'transaction_recurrence_$transactionId',
-          'setting_value': selectedRecurring,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      if (selectedRecurring != 'None') {
+        await _createRecurringSchedule(
+          amount: amount,
+          transferFee: transferFee,
+          transactionId: transactionId,
+        );
+      }
 
       String? attachmentWarning;
       final selectedAttachments = <({String path, String name})>[];

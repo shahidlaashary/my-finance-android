@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
@@ -71,6 +72,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
         .map((e)=>{'name':e,'phone':''}).toList();
       await CommitteeService.createCommittee(name:name.text, frequency:frequency,
         installmentAmount:double.parse(amount.text), members:memberList, startDate:start, firstDueDate:due);
+      await SoundSettingsService.instance.play('save');
       await _load();
     } catch(e) { _message(e.toString()); }
   }
@@ -164,7 +166,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
         TextField(controller:n,decoration:const InputDecoration(labelText:'Member name')),
         TextField(controller:p,decoration:const InputDecoration(labelText:'Phone (optional)'),keyboardType:TextInputType.phone),
       ]),actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Add'))]));
-    if(ok==true){try{await CommitteeService.addMember(id,n.text,p.text);await _load();}catch(e){_msg(e.toString());}}
+    if(ok==true){try{await CommitteeService.addMember(id,n.text,p.text);await SoundSettingsService.instance.play('save');await _load();}catch(e){_msg(e.toString());}}
   }
 
   Future<void> _moveMember(int index, int direction) async {
@@ -226,6 +228,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       if(paymentMethod=='Existing Wallet'&&walletId==null){_msg('Select a wallet or choose Without Wallet.');return;}
       await CommitteeService.recordEntry(committeeId:id,memberId:memberId,entryType:type,
         amount:double.parse(amount.text.trim()),walletId:paymentMethod=='Existing Wallet'?walletId:null,date:date,note:note.text);
+      await SoundSettingsService.instance.play(type.toLowerCase() == 'payout' ? 'expense' : 'income');
       await _load();
     }catch(e){_msg(e.toString());}}
   }
@@ -241,7 +244,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
             content:const Text('Committee members, entries and linked wallet transactions will be archived. Wallet balances will be reversed.'),
             actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
               FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Delete'))]));
-          if(confirmed==true){try{await CommitteeService.deleteCommittee(id);if(mounted)Navigator.pop(context);}catch(e){_msg('Could not delete committee: $e');}}
+          if(confirmed==true){try{await SoundSettingsService.instance.play('delete_warning');await CommitteeService.deleteCommittee(id);await SoundSettingsService.instance.play('delete_success');if(mounted)Navigator.pop(context);}catch(e){_msg('Could not delete committee: $e');}}
         }
       },itemBuilder:(_)=>[const PopupMenuItem(value:'delete',child:Text('Move to Recycle Bin'))]),
     ],bottom:TabBar(controller:tabs,isScrollable:true,tabs:const[
@@ -402,6 +405,6 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
       content:DropdownButtonFormField<String>(value:status,items:['Upcoming','Active','Completed'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setD(()=>status=v);}),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
     )));
-    if(ok==true){await CommitteeService.updateStatus(id,status);committeeData['status']=status;if(mounted)setState(()=>{});_msg('Status updated.');}
+    if(ok==true){await CommitteeService.updateStatus(id,status);await SoundSettingsService.instance.play('update');committeeData['status']=status;}if(mounted)setState(()=>{});_msg('Status updated.');}
   }
 }

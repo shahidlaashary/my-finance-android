@@ -665,11 +665,16 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
         date: selectedDate,
       );
 
+      String? scheduleWarning;
       if (selectedRecurring != 'None') {
-        await _createRecurringSchedule(
-          amount: amount,
-          transferFee: transferFee,
-        );
+        try {
+          await _createRecurringSchedule(
+            amount: amount,
+            transferFee: transferFee,
+          );
+        } catch (e) {
+          scheduleWarning = e.toString().replaceFirst('Exception: ', '');
+        }
       }
 
       String? attachmentWarning;
@@ -698,9 +703,13 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            attachmentWarning == null
-                ? 'Transaction successfully saved.'
-                : 'Transaction saved, but an attachment could not be added: $attachmentWarning',
+            scheduleWarning == null
+                ? (attachmentWarning == null
+                    ? 'Transaction successfully saved.'
+                    : 'Transaction saved, but an attachment could not be added: $attachmentWarning')
+                : (attachmentWarning == null
+                    ? 'Transaction saved, but recurring schedule could not be created: $scheduleWarning'
+                    : 'Transaction saved. Attachment and recurring schedule warnings: $attachmentWarning; $scheduleWarning'),
           ),
         ),
       );

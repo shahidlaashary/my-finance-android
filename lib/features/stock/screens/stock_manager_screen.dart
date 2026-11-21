@@ -65,8 +65,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
     final query=_search.trim().toLowerCase();
     final visible=_items.where((i)=>(!_lowOnly||i.isLowStock)&&(query.isEmpty||i.name.toLowerCase().contains(query)||i.sku.toLowerCase().contains(query)||i.category.toLowerCase().contains(query))).toList();
     final lowCount=_items.where((i)=>i.isLowStock).length;
-    return Scaffold(appBar:AppBar(title:Text(appText(context, "Stock Manager", "Stock Manager"),style:TextStyle(fontWeight:FontWeight.w800)),actions:[IconButton(onPressed:_load,icon:const Icon(Icons.refresh))]),
-      floatingActionButton:FloatingActionButton.extended(onPressed:()=>_edit(),icon:const Icon(Icons.add),label:Text(appText(context, "Add Item", "Add Item"))),
+    return Scaffold(appBar:AppBar(title:Text(appText(context, "Stock Manager", "Stock Manager"),style:TextStyle(fontWeight:FontWeight.w800)),actions:[IconButton(tooltip:appText(context, "Add stock item", "Add stock item"),onPressed:()=>_edit(),icon:const Icon(Icons.add_box_outlined)),IconButton(onPressed:_load,icon:const Icon(Icons.refresh))]),
       body:_loading?const Center(child:CircularProgressIndicator()):RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.fromLTRB(14,12,14,100),children:[
         Row(children:[Expanded(child:_summary('Total Items','${_items.length}',Icons.inventory_2_outlined)),const SizedBox(width:10),Expanded(child:_summary('Low Stock','$lowCount',Icons.warning_amber_rounded,color:lowCount>0?Theme.of(context).colorScheme.tertiary:null))]),
         const SizedBox(height:12),

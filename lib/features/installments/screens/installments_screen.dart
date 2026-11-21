@@ -336,8 +336,9 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     final payable = active.where((c) => c['direction'] == 'buy').fold<double>(0, (s, c) => s + (c['total_amount'] as num).toDouble() - (c['paid_amount'] as num).toDouble());
     final primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
-      appBar: AppBar(title: const Text('Installment Manager')),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _showAddMenu(), icon: const Icon(Icons.add), label: const Text('New Plan')),
+      appBar: AppBar(title: const Text('Installment Manager'), actions: [
+        IconButton(tooltip: 'Add installment plan', onPressed: _showAddMenu, icon: const Icon(Icons.add_card_rounded)),
+      ]),
       body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(onRefresh: _load,
         child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 90), children: [
           Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(

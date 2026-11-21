@@ -83,8 +83,9 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Committee Management')),
-      floatingActionButton: FloatingActionButton.extended(onPressed:_create, icon:const Icon(Icons.add), label:const Text('New Committee')),
+      appBar: AppBar(title: const Text('Committee Management'), actions: [
+        IconButton(tooltip: 'Add committee', onPressed: _create, icon: const Icon(Icons.group_add_rounded)),
+      ]),
       body: loading ? const Center(child:CircularProgressIndicator()) :
         committees.isEmpty ? Center(child:Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisSize:MainAxisSize.min,children:[
           Icon(Icons.groups_outlined,size:56,color:Theme.of(context).hintColor), const SizedBox(height:12),

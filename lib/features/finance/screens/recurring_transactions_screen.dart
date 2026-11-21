@@ -372,28 +372,27 @@ class _RecurringTransactionsScreenState
               const SizedBox(width: 8),
               infoChip(Icons.repeat_rounded, 'Next Run', _date(item.nextRunDate)),
             ]),
-            if (isTransfer || (!isTransfer && (item.category ?? '').trim().isNotEmpty)) ...[
+            if (isTransfer) ...[
               const SizedBox(height: 8),
               Row(children: [
-                if (isTransfer)
-                  infoChip(Icons.account_balance_outlined, 'To Wallet', _walletName(item.toWalletId))
-                else
-                  infoChip(Icons.category_outlined, 'Category', item.category!.trim()),
+                infoChip(Icons.account_balance_outlined, 'To Wallet', _walletName(item.toWalletId)),
                 const SizedBox(width: 8),
-                if (isTransfer && item.transferFee > 0)
-                  infoChip(Icons.payments_outlined, 'Transfer Fee',
-                    _money(item.transferFee, _currency(item.walletId)))
-                else
-                  infoChip(Icons.calendar_today_outlined, 'Start Date', _date(item.startDate)),
+                infoChip(Icons.payments_outlined, 'Transfer Fee',
+                  item.transferFee > 0
+                    ? _money(item.transferFee, _currency(item.walletId))
+                    : 'No fee'),
               ]),
-            ] else if (item.endDate != null) ...[
+            ] else if ((item.category ?? '').trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              Row(children: [
-                infoChip(Icons.calendar_today_outlined, 'Start Date', _date(item.startDate)),
-                const SizedBox(width: 8),
-                infoChip(Icons.event_busy_outlined, 'End Date', _date(item.endDate)),
-              ]),
+              infoChip(Icons.category_outlined, 'Category', item.category!.trim()),
             ],
+            const SizedBox(height: 8),
+            Row(children: [
+              infoChip(Icons.calendar_today_outlined, 'Start Date', _date(item.startDate)),
+              const SizedBox(width: 8),
+              infoChip(Icons.event_busy_outlined, 'End Date',
+                item.endDate == null ? 'No end date' : _date(item.endDate)),
+            ]),
             if (item.note.trim().isNotEmpty) ...[
               const SizedBox(height: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),

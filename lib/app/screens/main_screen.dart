@@ -25,6 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   int selectedIndex = 0;
   final Set<int> _visitedPages = {0};
   late final List<Widget> _pages;
+  final GlobalKey<LoansScreenState> _loansScreenKey = GlobalKey<LoansScreenState>();
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
       const AssetsScreen(),
       const BudgetsScreen(),
       const GoalsScreen(),
-      const LoansScreen(),
+      LoansScreen(key: _loansScreenKey),
       const StatsScreen(),
       const TransactionsScreen(),
       const WalletsPage(),
@@ -56,7 +57,14 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => const PlusActionSheet(),
+      builder: (context) => PlusActionSheet(
+        onNewLoan: () {
+          Navigator.of(context).pop();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loansScreenKey.currentState?.openNewLoanForm();
+          });
+        },
+      ),
     );
   }
 
@@ -258,7 +266,9 @@ class _MainScreenState extends State<MainScreen> {
 // ============================================================
 
 class PlusActionSheet extends StatefulWidget {
-  const PlusActionSheet({super.key});
+  const PlusActionSheet({super.key, required this.onNewLoan});
+
+  final VoidCallback onNewLoan;
 
   @override
   State<PlusActionSheet> createState() => _PlusActionSheetState();
@@ -349,6 +359,14 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                         icon: Icons.swap_horiz_rounded,
                         color: Theme.of(context).colorScheme.primary,
                       ),
+                      const SizedBox(width: 8),
+                      _transactionTab(
+                        title: appText(context, 'Loan', 'قرض'),
+                        subtitle: appText(context, 'New loan', 'نیا قرض'),
+                        icon: Icons.handshake_outlined,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        onTap: widget.onNewLoan,
+                      ),
                     ],
                   ),
                 ),
@@ -372,6 +390,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     required String subtitle,
     required IconData icon,
     required Color color,
+    VoidCallback? onTap,
   }) {
     final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     final selected = selectedType == title ||
@@ -380,7 +399,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
             (title == 'منتقلی' && selectedType == 'Transfer')));
     return Expanded(
       child: InkWell(
-        onTap: () {
+        onTap: onTap ?? () {
           final value = title == 'آمدنی' ? 'Income' :
               title == 'اخراجات' ? 'Expense' :
               title == 'منتقلی' ? 'Transfer' : title;
@@ -391,7 +410,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
         borderRadius: BorderRadius.circular(13),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 3),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(13),
@@ -403,14 +422,14 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: selected ? color : Theme.of(context).hintColor),
+              Icon(icon, size: 17, color: selected ? color : Theme.of(context).hintColor),
               const SizedBox(height: 2),
               Text(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 10.8,
                   fontWeight: FontWeight.w800,
                   color: selected ? color : Theme.of(context).hintColor,
                 ),
@@ -422,7 +441,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 8.5,
                   height: 1.15,
                   fontWeight: FontWeight.w500,
                   color: Theme.of(context).hintColor,

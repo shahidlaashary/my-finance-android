@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -102,9 +103,49 @@ class ReminderService {
 
   Future<void> deleteReminder(int id) async {
     await initialize();
-    await _notifications.cancel(id);
     final reminders = await getReminders();
-    reminders.removeWhere((item) => item['id'] == id);
+    final index = reminders.indexWhere((item) => (item['id'] as num?)?.toInt() == id);
+    if (index < 0) return;
+    final record = reminders[index];
+    await RecycleBinService.archive(
+      type: 'Reminder',
+      title: record['title']?.toString() ?? 'Reminder',
+      table: 'finance_reminders_v1',
+      id: id,
+      record: record,
+    );
+    await _notifications.cancel(id);
+    reminders.removeAt(index);
+    await _save(reminders);
+    AppRefreshController.notifyChanged();
+  }
+
+  Future<void> restoreReminder(Map<String, dynamic> record) async {
+    await initialize();
+    final id = (record['id'] as num).toInt();
+    final reminders = await getReminders();
+    if (reminders.any((item) => (item['id'] as num?)?.toInt() == id)) {
+      throw StateError('A reminder with this ID already exists.');
+    }
+    final when = DateTime.parse(record['when'].toString());
+    if (when.isAfter(DateTime.now())) {
+      final details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'finance_reminders', 'Finance reminders',
+          channelDescription: 'Bills, loans and personal finance reminders',
+          importance: Importance.high, priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      );
+      await _notifications.zonedSchedule(
+        id, record['title']?.toString() ?? 'Reminder',
+        (record['note'] ?? '').toString().isEmpty
+            ? 'My Finance reminder' : record['note'].toString(),
+        tz.TZDateTime.from(when, tz.local), details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    }
+    reminders.add(record);
     await _save(reminders);
     AppRefreshController.notifyChanged();
   }

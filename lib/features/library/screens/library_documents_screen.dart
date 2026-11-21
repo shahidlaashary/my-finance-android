@@ -13,14 +13,14 @@ import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/library/services/library_documents_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 
-class LibraryDocumentsScreen extends StatefulWidget {
-  const LibraryDocumentsScreen({super.key});
+class SpaceDocumentsScreen extends StatefulWidget {
+  const SpaceDocumentsScreen({super.key});
 
   @override
-  State<LibraryDocumentsScreen> createState() => LibraryDocumentsScreenState();
+  State<SpaceDocumentsScreen> createState() => SpaceDocumentsScreenState();
 }
 
-class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
+class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
   static const List<String> _categories = [
     'Personal',
     'Vehicle',
@@ -32,8 +32,8 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     'Other',
   ];
 
-  final _service = LibraryDocumentsService.instance;
-  List<LibraryDocumentModel> _documents = [];
+  final _service = SpaceDocumentsService.instance;
+  List<SpaceDocumentModel> _documents = [];
   bool _loading = true;
   String _category = 'All';
   String _filter = 'All';
@@ -47,7 +47,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
 
   Future<void> showAddDocumentForm() => _showDocumentForm();
 
-  void openDocumentFromSearch(LibraryDocumentModel document) => _openDetails(document);
+  void openDocumentFromSearch(SpaceDocumentModel document) => _openDetails(document);
 
   void _onAppDataChanged() {
     if (mounted) _loadDocuments();
@@ -109,7 +109,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     }
   }
 
-  Color _expiryColor(LibraryDocumentModel document) {
+  Color _expiryColor(SpaceDocumentModel document) {
     final expiry = document.expiryDate;
     if (expiry == null) return Theme.of(context).hintColor;
     final now = DateTime.now();
@@ -121,7 +121,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     return Theme.of(context).colorScheme.primary;
   }
 
-  String _expiryLabel(LibraryDocumentModel document) {
+  String _expiryLabel(SpaceDocumentModel document) {
     final expiry = document.expiryDate;
     if (expiry == null) return 'No expiry date';
     final now = DateTime.now();
@@ -134,7 +134,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     return 'Expiry • ${DateFormat('dd MMM yyyy').format(expiry)}';
   }
 
-  Future<void> _showDocumentForm({LibraryDocumentModel? document}) async {
+  Future<void> _showDocumentForm({SpaceDocumentModel? document}) async {
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController(text: document?.title ?? '');
     final numberController = TextEditingController(text: document?.documentNumber ?? '');
@@ -442,7 +442,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
                                       return;
                                     }
                                     final now = DateTime.now();
-                                    final model = LibraryDocumentModel(
+                                    final model = SpaceDocumentModel(
                                       id: document?.id,
                                       title: titleController.text.trim(),
                                       category: category,
@@ -507,12 +507,12 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     notesController.dispose();
   }
 
-  Future<void> _toggleFavorite(LibraryDocumentModel document) async {
+  Future<void> _toggleFavorite(SpaceDocumentModel document) async {
     await _service.toggleFavorite(document);
     await _loadDocuments();
   }
 
-  Future<void> _deleteDocument(LibraryDocumentModel document) async {
+  Future<void> _deleteDocument(SpaceDocumentModel document) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -545,7 +545,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     }
   }
 
-  void _openDetails(LibraryDocumentModel document) {
+  void _openDetails(SpaceDocumentModel document) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -704,7 +704,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     );
   }
 
-  Widget _documentCard(LibraryDocumentModel document) {
+  Widget _documentCard(SpaceDocumentModel document) {
     final expiryColor = _expiryColor(document);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -838,7 +838,7 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
 }
 
 class _DocumentDetailsScreen extends StatelessWidget {
-  final LibraryDocumentModel document;
+  final SpaceDocumentModel document;
   final VoidCallback onEdit;
 
   const _DocumentDetailsScreen({required this.document, required this.onEdit});

@@ -16,6 +16,8 @@ import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/screens/loan_repayment_entry_form.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
+import 'package:my_finance/features/finance/screens/asset_valuation_entry_form.dart';
+import 'package:my_finance/features/finance/screens/asset_sale_entry_form.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
 import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
@@ -698,218 +700,29 @@ class AssetsScreenState extends State<AssetsScreen> {
   }
 
   Future<void> _updateValuation(AssetsModel asset) async {
-    final controller = TextEditingController(
-      text: asset.currentValue.toString(),
-    );
-
-    final result = await showDialog<double>(
+    if (asset.id == null) return;
+    final saved = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(appText(context, 'Update Current Value', 'موجودہ قیمت اپ ڈیٹ کریں')),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            keyboardType:
-                const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
-            decoration: InputDecoration(
-              labelText: appText(context, "New Current Value", "New Current Value"),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final value =
-                    double.tryParse(controller.text);
-
-                if (value == null ||
-                    !value.isFinite ||
-                    value < 0) {
-                  return;
-                }
-
-                Navigator.pop(context, value);
-              },
-              child: Text(appText(context, 'Update', 'اپ ڈیٹ کریں')),
-            ),
-          ],
-        );
-      },
+      builder: (_) => AssetValuationEntryForm(asset: asset),
     );
-
-    controller.dispose();
-
-    if (result == null || asset.id == null) return;
-
-    try {
-      await _service.updateCurrentValue(asset.id!, result);
+    if (saved == true) {
       await _loadData();
-      _message('Asset valuation updated.');
-    } catch (e) {
-      _message('Error: $e');
+      if (mounted) _message('Asset valuation updated.');
     }
   }
 
   Future<void> _sellAsset(AssetsModel asset) async {
-    final controller = TextEditingController(
-      text: asset.currentValue.toString(),
-    );
-
-    DateTime saleDate = DateTime.now();
-    int? selectedSaleWallet = asset.walletId;
-    String selectedSalePaymentType = 'Wallet';
-    int? selectedBuyerParty;
+    if (asset.id == null) return;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(appText(context, 'Sell Asset', 'اثاثہ فروخت کریں')),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: appText(context, "Sale Price", "Sale Price"),
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: selectedSalePaymentType,
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Payment Type'),
-                    items: const ['Cash', 'Bank', 'Wallet', 'Loan'].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
-                    onChanged: (value) => setDialogState(() => selectedSalePaymentType = value ?? 'Wallet'),
-                  ),
-                  const SizedBox(height: 8),
-                  if (selectedSalePaymentType == 'Loan')
-                    DropdownButtonFormField<int>(
-                      value: selectedBuyerParty,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Buyer Party *'),
-                      items: _parties.where((party) => (party['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()).map((party) => DropdownMenuItem<int>(
-                        value: (party['id'] as num).toInt(),
-                        child: Text('${party['name']} • ${party['currency'] ?? 'PKR'}', overflow: TextOverflow.ellipsis),
-                      )).toList(),
-                      onChanged: (value) => setDialogState(() => selectedBuyerParty = value),
-                    ),
-                  if (selectedSalePaymentType == 'Loan')
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: () async {
-                          final created = await _createParty(
-                            initialCurrency: asset.currency,
-                            lockCurrency: true,
-                          );
-                          if (created != null &&
-                              (created['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()) {
-                            setDialogState(() {
-                              selectedBuyerParty = (created['id'] as num).toInt();
-                            });
-                          } else if (created != null) {
-                            _message('Buyer party currency must match ' + asset.currency + '.');
-                          }
-                        },
-                        icon: Icon(Icons.person_add_alt_1, size: 18),
-                        label: Text('Create Party'),
-                      ),
-                    )
-                  else
-                    DropdownButtonFormField<int>(
-                      value: selectedSaleWallet,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Sale Wallet'),
-                      items: _wallets.where((wallet) => (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == asset.currency.toUpperCase()).map((wallet) => DropdownMenuItem<int>(
-                        value: (wallet['id'] as num).toInt(),
-                        child: Text('${wallet['name']} (${wallet['currency'] ?? 'PKR'})'),
-                      )).toList(),
-                      onChanged: (value) => setDialogState(() => selectedSaleWallet = value),
-                    ),
-                  SizedBox(height: 12),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(appText(context, 'Sale Date', 'فروخت کی تاریخ')),
-                    subtitle: Text(
-                      DateFormat('dd MMM yyyy')
-                          .format(saleDate),
-                    ),
-                    trailing:
-                        Icon(Icons.calendar_month),
-                    onTap: () async {
-                      final selected = await showDatePicker(
-                        context: context,
-                        initialDate: saleDate,
-                        firstDate: asset.purchaseDate,
-                        lastDate: DateTime.now(),
-                      );
-
-                      if (selected != null) {
-                        setDialogState(() {
-                          saleDate = selected;
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(appText(context, 'Cancel', 'منسوخ کریں')),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final price =
-                        double.tryParse(controller.text);
-
-                    if (price == null ||
-                        !price.isFinite ||
-                        price < 0) {
-                      return;
-                    }
-
-                    if (selectedSalePaymentType == 'Loan' && selectedBuyerParty == null) {
-                      _message('Select a buyer party with ' + asset.currency + ' currency.');
-                      return;
-                    }
-                    if (selectedSalePaymentType != 'Loan' && selectedSaleWallet == null) {
-                      _message('Select a sale wallet in ' + asset.currency + '.');
-                      return;
-                    }
-                    Navigator.pop(context, {
-                      'price': price,
-                      'date': saleDate,
-                      'walletId': selectedSaleWallet ?? 0,
-                      'paymentType': selectedSalePaymentType,
-                      'partyId': selectedBuyerParty,
-                    });
-                  },
-                  child: Text(appText(context, 'Confirm Sale', 'فروخت کی تصدیق کریں')),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => AssetSaleEntryForm(
+        asset: asset,
+        wallets: _wallets,
+        parties: _parties,
+        onCreateParty: _createParty,
+      ),
     );
-
-    controller.dispose();
-
-    if (result == null || asset.id == null) return;
-
+    if (result == null) return;
     try {
       await _service.sellAsset(
         assetId: asset.id!,
@@ -919,7 +732,6 @@ class AssetsScreenState extends State<AssetsScreen> {
         paymentType: result['paymentType'] as String,
         partyId: result['partyId'] as int?,
       );
-
       await _loadData();
       _message('Asset sold successfully.');
     } catch (e) {

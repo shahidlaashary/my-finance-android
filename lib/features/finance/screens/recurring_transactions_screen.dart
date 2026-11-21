@@ -213,6 +213,7 @@ class _RecurringTransactionsScreenState
       await _loadData();
       _showMessage('Schedule deleted successfully.');
     } catch (e) {
+      await SoundSettingsService.instance.play('error');
       _showMessage('Delete failed: $e', isError: true);
     }
   }

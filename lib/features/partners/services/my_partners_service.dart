@@ -7,35 +7,8 @@ class MyPartnersService {
   MyPartnersService._();
   static final MyPartnersService instance = MyPartnersService._();
 
-  Future<void> _migrateLegacyTableNames(Database db) async {
-    await db.transaction((txn) async {
-      final rows = await txn.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (?, ?, ?, ?)",
-        ['partner_wallet_links', 'partners_wallet_links',
-         'partner_transactions', 'partners_transactions'],
-      );
-      final names = rows.map((row) => row['name'] as String).toSet();
-      for (final pair in [
-        ('partner_wallet_links', 'partners_wallet_links'),
-        ('partner_transactions', 'partners_transactions'),
-      ]) {
-        final oldName = pair.$1;
-        final newName = pair.$2;
-        if (names.contains(oldName) && !names.contains(newName)) {
-          await txn.execute('ALTER TABLE $oldName RENAME TO $newName');
-        } else if (names.contains(oldName) && names.contains(newName)) {
-          // If a prior interrupted upgrade left both tables, merge without
-          // overwriting rows already present in the new table.
-          await txn.execute('INSERT OR IGNORE INTO $newName SELECT * FROM $oldName');
-          await txn.execute('DROP TABLE $oldName');
-        }
-      }
-    });
-  }
-
   Future<void> _ensureTables() async {
     final db = FinanceDB.instance.db;
-    await _migrateLegacyTableNames(db);
     await db.execute('''
       CREATE TABLE IF NOT EXISTS partners (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +50,6 @@ class MyPartnersService {
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_partners_tx_partner_date ON partners_transactions(partner_id, date DESC)');
-    await db.execute('DROP INDEX IF EXISTS idx_partner_tx_partner_date');
     // Repair legacy ledger rows created with the old reversed sign mapping.
     // Transfer entries are intentionally excluded because their signs are already correct.
     await db.execute("""

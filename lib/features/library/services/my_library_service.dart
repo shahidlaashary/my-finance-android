@@ -11,7 +11,7 @@ class MySpaceService {
   MySpaceService._();
   static final MySpaceService instance = MySpaceService._();
 
-  static const _databaseName = 'my_library.db';
+  static const _databaseName = 'my_space.db';
   static const _tableName = 'library_items';
   static const _playlistsTable = 'library_playlists';
   static const _playlistItemsTable = 'library_playlist_items';
@@ -21,15 +21,15 @@ class MySpaceService {
   Database? _database;
   Future<Database>? _opening;
 
-  Future<Directory> get libraryDirectory async {
+  Future<Directory> get spaceDirectory async {
     final appDir = await getApplicationDocumentsDirectory();
-    final directory = Directory(p.join(appDir.path, 'my_library'));
+    final directory = Directory(p.join(appDir.path, 'my_space'));
     await directory.create(recursive: true);
     return directory;
   }
 
   Future<Directory> get filesDirectory async {
-    final directory = Directory(p.join((await libraryDirectory).path, 'files'));
+    final directory = Directory(p.join((await spaceDirectory).path, 'files'));
     await directory.create(recursive: true);
     return directory;
   }
@@ -51,7 +51,7 @@ class MySpaceService {
   }
 
   Future<Database> _openDatabase() async {
-    final directory = await libraryDirectory;
+    final directory = await spaceDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
       version: 3,
@@ -100,7 +100,7 @@ class MySpaceService {
     await db.execute('CREATE TABLE IF NOT EXISTS $_playlistItemsTable (playlist_id INTEGER NOT NULL, item_id INTEGER NOT NULL, added_at TEXT NOT NULL, PRIMARY KEY (playlist_id, item_id), FOREIGN KEY (playlist_id) REFERENCES $_playlistsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionItemsTable (collection_id INTEGER NOT NULL, item_id INTEGER NOT NULL UNIQUE, added_at TEXT NOT NULL, PRIMARY KEY (collection_id, item_id), FOREIGN KEY (collection_id) REFERENCES $_collectionsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_library_collection_items_collection ON $_collectionItemsTable(collection_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_space_collection_items_collection ON $_collectionItemsTable(collection_id)');
   }
 
   Future<void> _ensureSectionTables(Database db) async {
@@ -392,8 +392,8 @@ class MySpaceService {
   /// The caller is responsible for placing this folder inside the single app backup.
   Future<void> copyIntoFullBackup(Directory backupRoot) async {
     await closeForBackupOrRestore();
-    final source = await libraryDirectory;
-    final destination = Directory(p.join(backupRoot.path, 'my_library'));
+    final source = await spaceDirectory;
+    final destination = Directory(p.join(backupRoot.path, 'my_space'));
     if (await destination.exists()) await destination.delete(recursive: true);
     await destination.create(recursive: true);
     await for (final entity in source.list(recursive: true, followLinks: false)) {
@@ -421,9 +421,9 @@ class MySpaceService {
   /// Restores the module payload supplied by the full-app restore process.
   Future<void> restoreFromFullBackup(Directory backupRoot) async {
     await closeForBackupOrRestore();
-    final source = Directory(p.join(backupRoot.path, 'my_library'));
+    final source = Directory(p.join(backupRoot.path, 'my_space'));
     if (!await source.exists()) return; // Older backups may not contain a Library.
-    final destination = await libraryDirectory;
+    final destination = await spaceDirectory;
     final staging = Directory('${destination.path}_restore_tmp');
     if (await staging.exists()) await staging.delete(recursive: true);
     await staging.create(recursive: true);

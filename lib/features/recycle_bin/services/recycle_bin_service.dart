@@ -239,6 +239,50 @@ class RecycleBinService {
         return;
       }
 
+      if (table == 'installment_contracts') {
+        await txn.execute("""CREATE TABLE IF NOT EXISTS installment_contracts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, direction TEXT NOT NULL,
+          item_name TEXT NOT NULL, party_name TEXT NOT NULL, phone TEXT,
+          total_amount REAL NOT NULL, paid_amount REAL NOT NULL DEFAULT 0,
+          wallet_id INTEGER NOT NULL, installment_amount REAL NOT NULL,
+          frequency TEXT NOT NULL DEFAULT 'Monthly', start_date TEXT NOT NULL,
+          notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL)""");
+        await txn.execute("""CREATE TABLE IF NOT EXISTS installment_payments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, contract_id INTEGER NOT NULL,
+          amount REAL NOT NULL, payment_date TEXT NOT NULL,
+          note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)""");
+        final relatedRaw = item['related_payload']?.toString() ?? '[]';
+        final related = (jsonDecode(relatedRaw) as List)
+            .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
+        final payments = related.where((e) => e['_related_table'] == 'installment_payments').toList();
+        final transactions = related.where((e) => e['_related_table'] == 'transactions').toList();
+        final walletId = (record['wallet_id'] as num).toInt();
+        final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
+        final walletRows = await txn.query('wallets', columns: ['balance'],
+          where: 'id = ?', whereArgs: [walletId], limit: 1);
+        if (walletRows.isEmpty) throw Exception('The installment wallet no longer exists.');
+        final direction = record['direction']?.toString();
+        final delta = direction == 'sell' ? totalPaid : -totalPaid;
+        if (delta < 0 && (walletRows.first['balance'] as num).toDouble() < -delta) {
+          throw Exception('Insufficient wallet balance to restore this installment contract.');
+        }
+        final duplicate = await txn.query('installment_contracts',
+          columns: ['id'], where: 'id = ?', whereArgs: [record['id']], limit: 1);
+        if (duplicate.isNotEmpty) throw Exception('This installment contract already exists.');
+        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [delta, walletId]);
+        await txn.insert('installment_contracts', record);
+        for (final payment in payments) {
+          payment.remove('_related_table');
+          await txn.insert('installment_payments', payment);
+        }
+        for (final transaction in transactions) {
+          transaction.remove('_related_table');
+          await txn.insert('transactions', transaction);
+        }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'finance_reminders_v1') {
         await ReminderService.instance.restoreReminder(record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

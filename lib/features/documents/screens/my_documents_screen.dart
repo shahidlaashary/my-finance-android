@@ -48,6 +48,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     _searchController.addListener(_loadDocuments);
     if (widget.openAddOnStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _showDocumentForm(); });
+    }
   }
 
   void _onAppDataChanged() {

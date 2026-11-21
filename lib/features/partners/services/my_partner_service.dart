@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class MyPartnerService {
   MyPartnerService._();
@@ -160,6 +161,42 @@ class MyPartnerService {
       LEFT JOIN wallets w ON w.id = t.wallet_id
       WHERE t.partner_id = ? ORDER BY t.date DESC, t.id DESC
     ''', [partnerId]);
+  }
+
+  Future<void> deletePartner(int partnerId) async {
+    await _ensureTables();
+    final db = FinanceDB.instance.db;
+    final partners = await db.query('partners', where: 'id=?', whereArgs: [partnerId], limit: 1);
+    if (partners.isEmpty) return;
+    final partner = Map<String,dynamic>.from(partners.first);
+    final links = await db.query('partner_wallet_links', where: 'partner_id=?', whereArgs: [partnerId]);
+    final history = await db.query('partner_transactions', where: 'partner_id=?', whereArgs: [partnerId]);
+    final financeRows = await db.query('transactions',
+      where: "category LIKE 'My Partner%' AND note IN (SELECT note FROM partner_transactions WHERE partner_id=?)",
+      whereArgs: [partnerId]);
+    await RecycleBinService.archive(
+      type: 'Partner', title: partner['name']?.toString() ?? 'Partner',
+      table: 'partners', id: partnerId, record: partner,
+      related: [
+        ...links.map((e) => {'_related_table':'partner_wallet_links', ...Map<String,dynamic>.from(e)}),
+        ...history.map((e) => {'_related_table':'partner_transactions', ...Map<String,dynamic>.from(e)}),
+        ...financeRows.map((e) => {'_related_table':'transactions', ...Map<String,dynamic>.from(e)}),
+      ],
+    );
+    await db.transaction((txn) async {
+      for (final row in financeRows) {
+        final amount = (row['amount'] as num).toDouble();
+        final delta = row['type']?.toString().toLowerCase() == 'income' ? -amount : amount;
+        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id=?', [delta, row['wallet_id']]);
+      }
+      await txn.delete('transactions',
+        where: "category LIKE 'My Partner%' AND note IN (SELECT note FROM partner_transactions WHERE partner_id=?)",
+        whereArgs: [partnerId]);
+      await txn.delete('partner_transactions', where: 'partner_id=?', whereArgs: [partnerId]);
+      await txn.delete('partner_wallet_links', where: 'partner_id=?', whereArgs: [partnerId]);
+      await txn.delete('partners', where: 'id=?', whereArgs: [partnerId]);
+    });
+    AppRefreshController.notifyChanged();
   }
 
   Future<void> transferWithPartner({

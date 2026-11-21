@@ -23,6 +23,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   bool _loading = true;
   bool _hideBalances = false;
   String _filter = 'All';
+  final Map<int, bool> _budgetLimitReached = {};
+  bool _hasBudgetSnapshot = false;
   String _money(double amount) => _hideBalances ? '••••••' : _format.format(amount);
   @override
   void initState() {
@@ -70,6 +72,17 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           .toSet()
           .toList();
       if (!mounted) return;
+      final newlyExceeded = <int>[];
+      for (final budget in budgets) {
+        final id = budget.id;
+        if (id == null) continue;
+        final reached = budget.limitAmount > 0 && budget.spentAmount >= budget.limitAmount;
+        if (_hasBudgetSnapshot && reached && _budgetLimitReached[id] != true) {
+          newlyExceeded.add(id);
+        }
+        _budgetLimitReached[id] = reached;
+      }
+      _hasBudgetSnapshot = true;
       setState(() {
         _hideBalances = hideBalances;
         _budgets = budgets;
@@ -77,6 +90,9 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         _currencies = currencies.isEmpty ? ['PKR'] : currencies;
         _loading = false;
       });
+      if (newlyExceeded.isNotEmpty) {
+        await SoundSettingsService.instance.play('budget_limit');
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);

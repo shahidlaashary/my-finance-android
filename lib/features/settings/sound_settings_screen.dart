@@ -20,7 +20,7 @@ class SoundSettingsScreen extends StatelessWidget {
                 Row(children: [Icon(Icons.volume_up_rounded, color: colors.primary, size: 25), const SizedBox(width: 10),
                   const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('Action Sound Effects', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                    Text('Manage app startup sounds, action effects and audio preferences', style: TextStyle(fontSize: 12)),
+                    Text('Control app launch music, action sound effects and audio preferences', style: TextStyle(fontSize: 12)),
                   ]))]),
                 const SizedBox(height: 10),
                 SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Sound Effects'),
@@ -42,7 +42,14 @@ class SoundSettingsScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text('Choose a distinct tone style for each action.', style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12)),
                 const SizedBox(height: 8),
-                ...SoundSettingsService.actions.entries.map((entry) => Padding(padding: const EdgeInsets.only(bottom: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('App Launch Sound', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                  subtitle: const Text('Play a premium welcome tone when the app opens', style: TextStyle(fontSize: 11)),
+                  value: settings.actionEnabled['app_start'] ?? true,
+                  onChanged: settings.soundEnabled ? (value) => settings.setActionEnabled('app_start', value) : null,
+                ),
+                ...SoundSettingsService.actions.entries.where((entry) => entry.key != 'app_start').map((entry) => Padding(padding: const EdgeInsets.only(bottom: 8),
                   child: Row(children: [
                     Expanded(child: Text(entry.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
                     SizedBox(width: 142, child: DropdownButtonFormField<String>(

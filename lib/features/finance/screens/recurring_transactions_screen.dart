@@ -312,7 +312,7 @@ class _RecurringTransactionsScreenState
           const SizedBox(height: 9),
           Wrap(spacing: 12, runSpacing: 7, children: [
             detail(Icons.account_balance_wallet_outlined, isTransfer ? _walletName(item.walletId) + ' → ' + _walletName(item.toWalletId) : _walletName(item.walletId)),
-            detail(Icons.event_repeat_outlined, 'Next: ${_date(item.nextRunDate)}'),
+            detail(Icons.repeat_rounded, 'Next: ${_date(item.nextRunDate)}'),
             if (!isTransfer && (item.category ?? '').trim().isNotEmpty)
               detail(Icons.category_outlined, item.category!.trim()),
             if (isTransfer && item.transferFee > 0)

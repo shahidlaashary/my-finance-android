@@ -565,7 +565,6 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
   Future<void> _createRecurringSchedule({
     required double amount,
     required double transferFee,
-    required int transactionId,
   }) async {
     if (selectedRecurring == 'None') return;
     final type = 'expense';
@@ -670,7 +669,6 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
         await _createRecurringSchedule(
           amount: amount,
           transferFee: transferFee,
-          transactionId: transactionId,
         );
       }
 

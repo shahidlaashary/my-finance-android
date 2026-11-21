@@ -84,8 +84,8 @@ class MySpaceService {
           await db.execute('ALTER TABLE $_tableName ADD COLUMN last_epub_cfi TEXT');
         }
         if (oldVersion < 4) {
-          await db.execute("UPDATE $_tableName SET file_type = 'photos' WHERE file_type = 'photos'");
-          await db.execute("UPDATE $_tableName SET file_type = 'videos' WHERE file_type = 'videos'");
+          await db.execute("UPDATE $_tableName SET file_type = 'photos' WHERE file_type = 'photo'");
+          await db.execute("UPDATE $_tableName SET file_type = 'videos' WHERE file_type = 'video'");
         }
       },
       onDowngrade: (db, oldVersion, newVersion) async {},

@@ -29,7 +29,7 @@ class MoreFeaturesPage extends StatelessWidget {
       },
       {
         'title': 'My Space',
-        'subtitle': 'Keep your books, documents, music, photos and videos in one place',
+        'subtitle': 'Organize books, deals, docs, music, photos, videos and projects in one place',
         'icon': Icons.local_library_outlined,
       },
       {

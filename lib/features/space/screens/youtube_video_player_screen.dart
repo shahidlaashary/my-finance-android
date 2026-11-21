@@ -34,20 +34,24 @@ class _YouTubeVideoPlayerScreenState extends State<YouTubeVideoPlayerScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
-    body: ListView(
-      children: [
-        YoutubePlayer(controller: _controller, aspectRatio: 16 / 9),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text('Playback is provided by the official YouTube player.'),
-        ),
-      ],
+  Widget build(BuildContext context) => YoutubePlayerScaffold(
+    controller: _controller,
+    aspectRatio: 16 / 9,
+    builder: (context, player) => Scaffold(
+      appBar: AppBar(title: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+      body: ListView(
+        children: [
+          player,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Playback is provided by the official YouTube player.'),
+          ),
+        ],
+      ),
     ),
   );
 }

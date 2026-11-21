@@ -107,7 +107,7 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Loan saved successfully.')));
       Navigator.pop(context, true);
-    } catch (e) { if (mounted) { _msg(e); setState(() => _saving = false); } }
+    } catch (e) { await SoundSettingsService.instance.play('error'); if (mounted) { _msg(e); setState(() => _saving = false); } }
   }
 
   @override

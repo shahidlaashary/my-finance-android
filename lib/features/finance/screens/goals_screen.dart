@@ -368,6 +368,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       await _loadData();
       _message('Savings contribution added.');
     } catch (e) {
+      await SoundSettingsService.instance.play('error');
       _message('Error adding savings: $e');
     }
   }

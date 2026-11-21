@@ -455,19 +455,13 @@ class _RecurringTransactionsScreenState
       appBar: AppBar(
         title: Text(appText(context, 'Recurring Transactions', 'بار بار ہونے والے لین دین')),
       ),
-      floatingActionButton: _loading
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _openForm(),
-              tooltip: 'Add Schedule',
-              elevation: 4,
-              icon: Icon(Icons.add_rounded),
-              label: Text(
-                appText(context, 'Add Schedule', 'شیڈول شامل کریں'),
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      actions: [
+        IconButton(
+          tooltip: appText(context, 'Add Schedule', 'شیڈول شامل کریں'),
+          onPressed: _loading ? null : () => _openForm(),
+          icon: const Icon(Icons.calendar_month_rounded),
+        ),
+      ],
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -482,7 +476,7 @@ class _RecurringTransactionsScreenState
                       ],
                     )
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                       children: [
                         Card(
                           elevation: 0,
@@ -552,7 +546,7 @@ class _RecurringTransactionsScreenState
                         ),
                         SizedBox(height: 12),
                         ..._items.map(_transactionCard),
-                        SizedBox(height: 75),
+                        SizedBox(height: 16),
                       ],
                     ),
             ),

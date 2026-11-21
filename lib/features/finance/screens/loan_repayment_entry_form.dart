@@ -94,7 +94,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
       if (!mounted) return;
       if (failures > 0) _message('Repayment saved, but ' + failures.toString() + ' attachment(s) could not be added.');
       Navigator.of(context).pop(true);
-    } catch (e) { if (mounted) { setState(() => _saving = false); _message(e); } }
+    } catch (e) { await SoundSettingsService.instance.play('error'); if (mounted) { setState(() => _saving = false); _message(e); } }
   }
 
   @override

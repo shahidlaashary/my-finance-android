@@ -239,6 +239,51 @@ class RecycleBinService {
         return;
       }
 
+      if (table == 'committees') {
+        await txn.execute("""CREATE TABLE IF NOT EXISTS committees (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+          frequency TEXT NOT NULL, installment_amount REAL NOT NULL,
+          member_count INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'PKR',
+          start_date TEXT NOT NULL, first_due_date TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'Upcoming', created_at TEXT NOT NULL)""");
+        await txn.execute("""CREATE TABLE IF NOT EXISTS committee_members (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, committee_id INTEGER NOT NULL,
+          name TEXT NOT NULL, phone TEXT, turn_no INTEGER NOT NULL, created_at TEXT NOT NULL)""");
+        await txn.execute("""CREATE TABLE IF NOT EXISTS committee_entries (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, committee_id INTEGER NOT NULL,
+          member_id INTEGER NOT NULL, entry_type TEXT NOT NULL, amount REAL NOT NULL,
+          wallet_amount REAL NOT NULL DEFAULT 0, committee_currency TEXT NOT NULL DEFAULT 'PKR',
+          wallet_currency TEXT NOT NULL DEFAULT '', payment_method TEXT NOT NULL DEFAULT 'None',
+          wallet_id INTEGER NOT NULL DEFAULT -1, transaction_id INTEGER,
+          entry_date TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)""");
+        final duplicate = await txn.query('committees', columns: ['id'],
+          where: 'id=?', whereArgs: [record['id']], limit: 1);
+        if (duplicate.isNotEmpty) throw Exception('This committee already exists.');
+        final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
+          .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
+        final members = related.where((e) => e['_related_table']=='committee_members').toList();
+        final entries = related.where((e) => e['_related_table']=='committee_entries').toList();
+        final finance = related.where((e) => e['_related_table']=='transactions').toList();
+        for (final row in finance) {
+          final walletId = (row['wallet_id'] as num?)?.toInt();
+          final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
+          if (walletId != null && delta != 0) {
+            final wallet = await txn.query('wallets', columns: ['balance'],
+              where: 'id=?', whereArgs: [walletId], limit: 1);
+            if (wallet.isEmpty) throw Exception('A committee wallet no longer exists.');
+            if (delta < 0 && (wallet.first['balance'] as num).toDouble() < -delta) {
+              throw Exception('Insufficient wallet balance to restore committee activity.');
+            }
+            await txn.rawUpdate('UPDATE wallets SET balance=balance+? WHERE id=?', [delta,walletId]);
+          }
+        }
+        await txn.insert('committees', record);
+        for (final row in members) { row.remove('_related_table'); await txn.insert('committee_members', row); }
+        for (final row in finance) { row.remove('_related_table'); await txn.insert('transactions', row); }
+        for (final row in entries) { row.remove('_related_table'); await txn.insert('committee_entries', row); }
+        await txn.delete('recycle_bin', where: 'id=?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'partners') {
         await txn.execute("""CREATE TABLE IF NOT EXISTS partners (
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,

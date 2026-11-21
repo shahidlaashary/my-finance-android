@@ -160,7 +160,7 @@ The project is actively being developed and tested. The features listed under **
 - View committee schedule, balances, history and individual member ledger.
 - Optionally link an installment or payout to a personal wallet.
 
-### 18. My Partner
+### 18. My Partners
 
 - Create and manage partner profiles.
 - Link wallets with a partner.

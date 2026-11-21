@@ -119,8 +119,14 @@ class _LibraryVideoPlayerScreenState extends State<LibraryVideoPlayerScreen> {
                                         icon: const Icon(Icons.replay_10),
                                       ),
                                       const SizedBox(width: 12),
-                                      IconButton.filled(
+                                      IconButton(
                                         iconSize: 42,
+                                        color: Colors.white,
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          foregroundColor: Colors.white,
+                                          overlayColor: Colors.white24,
+                                        ),
                                         onPressed: () => _controller.value.isPlaying ? _controller.pause() : _controller.play(),
                                         icon: Icon(_controller.value.isPlaying ? Icons.pause : Icons.play_arrow),
                                       ),

@@ -54,7 +54,7 @@ class MySpaceService {
     final directory = await spaceDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
-      version: 4,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -82,10 +82,6 @@ class MySpaceService {
         }
         if (oldVersion < 3) {
           await db.execute('ALTER TABLE $_tableName ADD COLUMN last_epub_cfi TEXT');
-        }
-        if (oldVersion < 4) {
-          await db.execute("UPDATE $_tableName SET file_type = 'photos' WHERE file_type = 'photo'");
-          await db.execute("UPDATE $_tableName SET file_type = 'videos' WHERE file_type = 'video'");
         }
       },
       onDowngrade: (db, oldVersion, newVersion) async {},

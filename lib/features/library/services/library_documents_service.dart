@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
-class LibraryDocumentModel {
+class SpaceDocumentModel {
   final int? id;
   final String title;
   final String category;
@@ -18,7 +18,7 @@ class LibraryDocumentModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const LibraryDocumentModel({
+  const SpaceDocumentModel({
     this.id,
     required this.title,
     required this.category,
@@ -32,8 +32,8 @@ class LibraryDocumentModel {
     required this.updatedAt,
   });
 
-  factory LibraryDocumentModel.fromMap(Map<String, dynamic> map) {
-    return LibraryDocumentModel(
+  factory SpaceDocumentModel.fromMap(Map<String, dynamic> map) {
+    return SpaceDocumentModel(
       id: (map['id'] as num?)?.toInt(),
       title: map['title']?.toString() ?? '',
       category: map['category']?.toString() ?? 'Other',
@@ -62,7 +62,7 @@ class LibraryDocumentModel {
     'updated_at': updatedAt.toIso8601String(),
   };
 
-  LibraryDocumentModel copyWith({int? id, bool? isFavorite, DateTime? updatedAt}) => LibraryDocumentModel(
+  SpaceDocumentModel copyWith({int? id, bool? isFavorite, DateTime? updatedAt}) => SpaceDocumentModel(
     id: id ?? this.id,
     title: title,
     category: category,
@@ -79,9 +79,9 @@ class LibraryDocumentModel {
 
 /// Document metadata is stored in the existing app_settings key-value table.
 /// This avoids database-version changes, migrations, and changes to finance tables.
-class LibraryDocumentsService {
-  LibraryDocumentsService._();
-  static final LibraryDocumentsService instance = LibraryDocumentsService._();
+class SpaceDocumentsService {
+  SpaceDocumentsService._();
+  static final SpaceDocumentsService instance = SpaceDocumentsService._();
 
   static const String _databaseName = 'my_finance.db';
   static const String _storageKey = 'library_documents_records';
@@ -138,7 +138,7 @@ class LibraryDocumentsService {
     );
   }
 
-  Future<List<LibraryDocumentModel>> getDocuments({
+  Future<List<SpaceDocumentModel>> getDocuments({
     String category = 'All',
     String filter = 'All',
   }) async {
@@ -146,7 +146,7 @@ class LibraryDocumentsService {
     final rows = await _readMaps(db);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    return rows.map(LibraryDocumentModel.fromMap).where((document) {
+    return rows.map(SpaceDocumentModel.fromMap).where((document) {
       if (category != 'All' && document.category != category) return false;
       if (filter == 'Favorites' && !document.isFavorite) return false;
       if (filter == 'Expiring Soon') {
@@ -164,7 +164,7 @@ class LibraryDocumentsService {
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   }
 
-  Future<int> addDocument(LibraryDocumentModel document) async {
+  Future<int> addDocument(SpaceDocumentModel document) async {
     final db = await _db;
     return db.transaction((txn) async {
       final records = await _readMaps(txn);
@@ -178,7 +178,7 @@ class LibraryDocumentsService {
     });
   }
 
-  Future<void> updateDocument(LibraryDocumentModel document) async {
+  Future<void> updateDocument(SpaceDocumentModel document) async {
     if (document.id == null) throw ArgumentError('Document ID is required.');
     final db = await _db;
     await db.transaction((txn) async {
@@ -191,7 +191,7 @@ class LibraryDocumentsService {
     AppRefreshController.notifyChanged();
   }
 
-  Future<void> toggleFavorite(LibraryDocumentModel document) async {
+  Future<void> toggleFavorite(SpaceDocumentModel document) async {
     if (document.id == null) return;
     final db = await _db;
     await db.transaction((txn) async {

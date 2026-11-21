@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -277,6 +278,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             isCompleted: goal?.isCompleted ?? false, createdAt: goal?.createdAt ?? DateTime.now());
                           if (attachmentGoalId == null) {
                             final newId = await GoalsService.addGoal(model);
+                            await SoundSettingsService.instance.play('save');
                             var failedAttachments = 0;
                             for (final attachment in pendingAttachments) {
                               try {
@@ -295,6 +297,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             }
                           } else {
                             await GoalsService.updateGoal(model);
+                            await SoundSettingsService.instance.play('update');
                           }
                           if (!sheetContext.mounted) return;
                           Navigator.pop(sheetContext);
@@ -437,7 +440,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
     if (confirm != true) return;
     try {
+      await SoundSettingsService.instance.play('delete_warning');
       await GoalsService.deleteGoal(goal.id!);
+      await SoundSettingsService.instance.play('delete_success');
       await _loadData();
       _message('Savings goal deleted.');
     } catch (e) {

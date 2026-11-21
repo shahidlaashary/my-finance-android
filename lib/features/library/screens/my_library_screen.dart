@@ -40,6 +40,16 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     _videoItems = _library.getItems(fileType: 'video');
   }
 
+  Future<void> _openLibrarySearch() async {
+    await showSearch<Map<String, Object?>?>(
+      context: context,
+      delegate: _LibrarySearchDelegate(
+        library: _library,
+        onOpen: _openItem,
+      ),
+    );
+  }
+
   Future<void> _addFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -225,7 +235,14 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(appText(context, 'My Library', 'میری لائبریری')),
-          actions: [IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); })],
+          actions: [
+          IconButton(
+            tooltip: 'Search My Library',
+            icon: const Icon(Icons.search_rounded),
+            onPressed: _openLibrarySearch,
+          ),
+          IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const LibraryToolsScreen())); if (mounted) setState(_refresh); }),
+        ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _addFile,
@@ -278,4 +295,67 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       ),
     );
   }
+
+class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
+  _LibrarySearchDelegate({required this.library, required this.onOpen});
+
+  final MyLibraryService library;
+  final Future<void> Function(Map<String, Object?> item) onOpen;
+
+  @override
+  String get searchFieldLabel => 'Search books, music, photos, videos';
+
+  @override
+  List<Widget> buildActions(BuildContext context) => [
+    IconButton(icon: const Icon(Icons.clear_rounded), tooltip: 'Clear search', onPressed: () => query = ''),
+  ];
+
+  @override
+  Widget buildLeading(BuildContext context) => IconButton(
+    icon: const Icon(Icons.arrow_back_rounded),
+    tooltip: 'Close search',
+    onPressed: () => close(context, null),
+  );
+
+  Future<List<Map<String, Object?>>> _matches() async {
+    final items = await library.getItems();
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return [];
+    return items.where((item) => (item['title'] as String? ?? '').toLowerCase().contains(q)).toList();
+  }
+
+  Widget _results(BuildContext context) => FutureBuilder<List<Map<String, Object?>>>(
+    future: _matches(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+      if (snapshot.hasError) return const Center(child: Text('Search failed.'));
+      final items = snapshot.data ?? [];
+      if (items.isEmpty) return const Center(child: Text('No matching media found.'));
+      return ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final type = item['file_type'] as String? ?? '';
+          final icon = type == 'audio' ? Icons.headphones_rounded : type == 'photo' ? Icons.image_rounded : type == 'video' ? Icons.video_library_rounded : Icons.menu_book_rounded;
+          return ListTile(
+            leading: Icon(icon),
+            title: Text(item['title'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(type == 'audio' ? 'Music' : type == 'photo' ? 'Photo' : type == 'video' ? 'Video' : 'Book'),
+            onTap: () {
+              close(context, item);
+              onOpen(item);
+            },
+          );
+        },
+      );
+    },
+  );
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _results(context);
+
+  @override
+  Widget buildResults(BuildContext context) => _results(context);
+}
+
 }

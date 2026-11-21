@@ -70,7 +70,7 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
       try {
         final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
         final parties = await LoansService.getParties();
-        if (mounted) setState(() { _parties = parties; _partyId = id; });
+        if (mounted) setState(() { _parties = parties; _partyId = id; final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency.toUpperCase()); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); });
       } catch (e) { _msg(e); }
     }
     name.dispose(); phone.dispose();

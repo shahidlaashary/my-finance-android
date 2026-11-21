@@ -118,7 +118,7 @@ jobs:
           if old in source:
               source = source.replace(old, new)
               if "import 'dart:typed_data';" not in source:
-                  source = "import 'dart:typed_data';\\n" + source
+                  source = "import 'dart:typed_data';\n" + source
               source_file.write_text(source)
               print(f"Patched image byte type compatibility in {source_file}")
           elif new in source:

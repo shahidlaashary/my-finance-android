@@ -136,7 +136,7 @@ class RecycleBinDetailScreen extends StatelessWidget {
     final tr = (String s) => appText(context, s, s);
     Map<String, dynamic> record = {};
     try { record = Map<String, dynamic>.from(jsonDecode(item['payload']?.toString() ?? '{}') as Map); } catch (_) {}
-    const owners = {'transactions':'transaction','assets':'asset','loans':'loan','goals':'goal','loan_repayments':'repayment','my_documents_records':'document'};
+    const owners = {'transactions':'transaction','assets':'asset','loans':'loan','goals':'goal','loan_repayments':'repayment','library_documents_records':'document'};
     final owner = owners[item['source_table']];
     final sourceId = int.tryParse(item['source_id']?.toString() ?? '');
     final deleted = DateTime.tryParse(item['deleted_at']?.toString() ?? '');

@@ -648,6 +648,7 @@ class LoansScreenState extends State<LoansScreen> {
       );
       if (result == true) await saveLoan();
     }
+  }
 
   String _displayLoanDate(String value) {
     final parsed = DateTime.tryParse(value);
@@ -2732,7 +2733,7 @@ class _ManagePartiesState extends State<ManageParties> {
                                                       return Container(
                                                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
                                                         decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(9)),
-                                                        child: Text(item['currency'].toString() + ' ' + label + '  ' + _money(amount),
+                                                        child: Text(item['currency'].toString() + ' ' + label + '  ' + _money(amount.toDouble()),
                                                           style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color)),
                                                       );
                                                     }).toList(),

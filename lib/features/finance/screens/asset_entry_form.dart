@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/core/models/attachment_model.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
@@ -46,17 +46,32 @@ class _AssetEntryFormState extends State<AssetEntryForm> {
 
   Future<void> _createParty() async {
     final name = TextEditingController(), phone = TextEditingController();
+    String currency = await FinanceDB.instance.getBaseCurrency();
+    if (!CurrencyCatalog.supported.contains(currency.toUpperCase())) currency = 'PKR';
+    if (!mounted) { name.dispose(); phone.dispose(); return; }
     final key = GlobalKey<FormState>();
-    final result = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('Create Party'), content: Form(key: key, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Party name *'), validator: (v) => v == null || v.trim().isEmpty ? 'Enter party name.' : null),
-        TextFormField(controller: phone, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
-      ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () { if (key.currentState!.validate()) Navigator.pop(ctx, true); }, child: const Text('Save'))],
+    final result = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(
+      builder: (dialogContext, setDialogState) => AlertDialog(
+        title: const Text('Create Party'),
+        content: Form(key: key, child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Party name *'), validator: (v) => v == null || v.trim().isEmpty ? 'Enter party name.' : null),
+          TextFormField(controller: phone, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
+          DropdownButtonFormField<String>(value: currency, decoration: const InputDecoration(labelText: 'Currency'),
+            items: CurrencyCatalog.supported.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+            onChanged: (v) { if (v != null) setDialogState(() => currency = v); }),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () { if (key.currentState!.validate()) Navigator.pop(dialogContext, true); }, child: const Text('Save')),
+        ],
+      ),
     ));
     if (result == true) {
-      try { final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: (_wallet?['currency']?.toString() ?? 'PKR')); final parties = await LoansService.getParties(); if (mounted) setState(() { _parties = parties; _partyId = id; }); }
-      catch (e) { _msg(e); }
+      try {
+        final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
+        final parties = await LoansService.getParties();
+        if (mounted) setState(() { _parties = parties; _partyId = id; });
+      } catch (e) { _msg(e); }
     }
     name.dispose(); phone.dispose();
   }

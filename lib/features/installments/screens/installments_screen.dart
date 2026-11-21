@@ -314,6 +314,20 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     const SizedBox(height: 3), Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
   ]);
 
+  Future<void> _deleteContract(Map<String,dynamic> contract) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Move to Recycle Bin?'),
+      content: Text('“${contract['item_name']}” and its payment history will be moved to Recycle Bin. Wallet balance will be reversed.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+      ],
+    ));
+    if (confirmed != true) return;
+    try { await InstallmentService.deleteContract((contract['id'] as num).toInt()); await _load(); }
+    catch (e) { _message('Could not delete installment: $e'); }
+  }
+
   @override
   Widget build(BuildContext context) {
     final active = _contracts.where((c) => c['status'] == 'active').toList();
@@ -375,6 +389,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
               Text('${c['party_name']} • ${sell ? 'Giving' : 'Taking'}', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
             ])),
             Text(c['status'] == 'completed' ? 'PAID' : 'ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: c['status'] == 'completed' ? Theme.of(context).colorScheme.secondary : color)),
+            IconButton(tooltip: 'Move to Recycle Bin', visualDensity: VisualDensity.compact, onPressed: () => _deleteContract(c), icon: const Icon(Icons.delete_outline_rounded)),
           ]),
           const SizedBox(height: 13),
           Row(children: [Expanded(child: _metric('Total', '${_currency(c['wallet_id'] as int)} ${_cash(total)}')),

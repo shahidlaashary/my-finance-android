@@ -260,7 +260,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(appText(context, 'My Space', 'میری لائبریری')),
+        title: Text(appText(context, 'My Space', 'مائی اسپیس')),
         actions: [
           IconButton(tooltip: 'Search My Space', icon: const Icon(Icons.search_rounded), onPressed: _openSpaceSearch),
           IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const SpaceToolsScreen())); if (mounted) setState(_refresh); }),

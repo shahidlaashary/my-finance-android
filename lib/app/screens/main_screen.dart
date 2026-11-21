@@ -249,8 +249,9 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ],
                 ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -368,7 +369,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 ),
                 Padding(
                   // Keep the five quick-action cards aligned with the form content edges.
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: Row(
                     children: [
                       _transactionTab(
@@ -441,11 +442,13 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
               width: selected ? 1.4 : 1,
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 19, color: selected ? color : Theme.of(context).hintColor),
+          child: Transform.translate(
+            offset: const Offset(0, -1.5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 19, color: selected ? color : Theme.of(context).hintColor),
               const SizedBox(height: 2),
               Text(
                 title,
@@ -453,7 +456,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 softWrap: false,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w800,
                   color: selected ? color : Theme.of(context).hintColor,
                 ),

@@ -4,17 +4,17 @@ import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 
-/// Native in-app EPUB reader for books stored in My Library.
-class LibraryEpubReaderScreen extends StatefulWidget {
-  const LibraryEpubReaderScreen({super.key, required this.item});
+/// Native in-app EPUB reader for books stored in My Space.
+class SpaceEpubReaderScreen extends StatefulWidget {
+  const SpaceEpubReaderScreen({super.key, required this.item});
 
   final Map<String, Object?> item;
 
   @override
-  State<LibraryEpubReaderScreen> createState() => _LibraryEpubReaderScreenState();
+  State<SpaceEpubReaderScreen> createState() => _SpaceEpubReaderScreenState();
 }
 
-class _LibraryEpubReaderScreenState extends State<LibraryEpubReaderScreen> {
+class _SpaceEpubReaderScreenState extends State<SpaceEpubReaderScreen> {
   late final EpubController _controller;
   String? _error;
   bool _loaded = false;
@@ -38,7 +38,7 @@ class _LibraryEpubReaderScreenState extends State<LibraryEpubReaderScreen> {
   Future<void> _checkFile() async {
     if (!await File(_path).exists() && mounted) {
       setState(() {
-        _error = 'This EPUB file is missing from My Library storage.';
+        _error = 'This EPUB file is missing from My Space storage.';
         _loaded = false;
       });
     }
@@ -51,7 +51,7 @@ class _LibraryEpubReaderScreenState extends State<LibraryEpubReaderScreen> {
     if (cfi == null || cfi.isEmpty) return;
     _saving = true;
     try {
-      await MyLibraryService.instance.saveEpubPosition(id, cfi);
+      await MySpaceService.instance.saveEpubPosition(id, cfi);
     } catch (_) {
       // Reading remains available if saving progress fails.
     } finally {
@@ -133,7 +133,7 @@ class _LibraryEpubReaderScreenState extends State<LibraryEpubReaderScreen> {
                     FilledButton.icon(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.arrow_back_rounded),
-                      label: const Text('Back to My Library'),
+                      label: const Text('Back to My Space'),
                     ),
                   ],
                 ),

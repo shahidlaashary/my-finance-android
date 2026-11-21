@@ -58,7 +58,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
   Future<void> _addFile({String? mediaType}) async {
     const bookExts = ['pdf', 'epub'];
-    const musicExts = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac'];
+    const musicExts = ['mp3', 'm4a', 'wav', 'flac'];
     const photoExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
     const videoExts = ['mp4', 'm4v', 'mov', 'mkv', 'avi', 'webm', '3gp'];
     final allowed = mediaType == 'book' ? bookExts

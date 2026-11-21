@@ -15,9 +15,7 @@ import 'package:my_finance/features/space/services/space_documents_service.dart'
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
 
-class AppSpaceIcons {
-  static const IconData books_space_outlined = Icons.menu_book_rounded;
-}
+const IconData books_space_outlined = Icons.menu_book_rounded;
 
 class MySpaceScreen extends StatefulWidget {
   const MySpaceScreen({super.key});
@@ -281,7 +279,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
             height: 66,
             child: Row(
               children: [
-                _navItem(0, AppSpaceIcons.books_space_outlined, 'All'),
+                _navItem(0, books_space_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
                 _navItem(2, Icons.handshake_outlined, 'Deals'),
                 _navItem(3, Icons.description_outlined, 'Docs'),

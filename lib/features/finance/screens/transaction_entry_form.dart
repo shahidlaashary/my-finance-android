@@ -9,16 +9,11 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/finance/services/finance_transaction_operations.dart';
-import 'package:my_finance/features/finance/models/loans_model.dart';
-import 'package:my_finance/features/finance/models/assets_model.dart';
-import 'package:my_finance/features/finance/services/loans_service.dart';
-import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;
 
 class TransactionEntryForm extends StatefulWidget {
@@ -43,18 +38,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   final noteController = TextEditingController();
 
   final ImagePicker _imagePicker = ImagePicker();
-  final AssetsService _assetsService = AssetsService();
-  final TextEditingController _assetName = TextEditingController();
-  final TextEditingController _assetPurchase = TextEditingController();
-  final TextEditingController _assetCurrent = TextEditingController();
-  List<Map<String, dynamic>> _parties = [];
-  int? _partyId;
-  String _loanType = 'given';
-  String _assetCategory = 'Property';
-  String _assetPaymentType = 'Wallet';
-  bool _includeInBalance = false;
-  DateTime _dueDate = DateTime.now().add(const Duration(days: 30));
-  DateTime _purchaseDate = DateTime.now();
 
   List<Map<String, dynamic>> wallets = [];
   List<Map<String, dynamic>> transactionCategories = [];
@@ -95,9 +78,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     destinationAmountController.dispose();
     transferFeeController.dispose();
     noteController.dispose();
-    _assetName.dispose();
-    _assetPurchase.dispose();
-    _assetCurrent.dispose();
     super.dispose();
   }
 
@@ -111,7 +91,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
     final weekStart = await GeneralPreferences.instance.weekStart;
     final savedDate = prefs.getString('general_last_transaction_date');
     final result = await FinanceDB.instance.getWallets();
-    final parties = (widget.transactionType == 'Loan' || widget.transactionType == 'Asset') ? await LoansService.getParties() : _parties;
     final categories = isTransfer
         ? <Map<String, dynamic>>[]
         : await FinanceDB.instance.getCategories(widget.transactionType);
@@ -120,7 +99,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
     setState(() {
       wallets = result;
-      _parties = parties;
       transactionCategories = categories;
       loading = false;
 
@@ -571,188 +549,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
 
 
-  Future<void> _createPartyInline() async {
-    final name = TextEditingController();
-    final phone = TextEditingController();
-    String currency = await FinanceDB.instance.getBaseCurrency();
-    if (!CurrencyCatalog.supported.contains(currency.toUpperCase())) currency = 'PKR';
-    if (!mounted) { name.dispose(); phone.dispose(); return; }
-    final form = GlobalKey<FormState>();
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Create Party'),
-          content: Form(key: form, child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Party name *'),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Enter party name.' : null),
-            TextFormField(controller: phone, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
-            DropdownButtonFormField<String>(value: currency, decoration: const InputDecoration(labelText: 'Currency'),
-              items: CurrencyCatalog.supported.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-              onChanged: (v) { if (v != null) setDialogState(() => currency = v); }),
-          ])),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () { if (form.currentState!.validate()) Navigator.pop(dialogContext, true); }, child: const Text('Save Party')),
-          ],
-        ),
-      ),
-    );
-    if (result == true) {
-      try {
-        final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
-        final refreshed = await LoansService.getParties();
-        if (mounted) setState(() {
-          _parties = refreshed;
-          _partyId = id;
-          final match = wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency.toUpperCase());
-          if (match.isNotEmpty) selectedWalletId = (match.first['id'] as num).toInt();
-        });
-      } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
-      }
-    }
-    name.dispose();
-    phone.dispose();
-  }
-
-  String _dateOnly(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
-
-  Future<void> _saveLoan() async {
-    if (!formKey.currentState!.validate()) return;
-    final amount = double.tryParse(amountController.text.trim());
-    if (amount == null || !amount.isFinite || amount <= 0 || selectedWalletId == null || _partyId == null) return;
-    final party = _parties.firstWhere((p) => (p['id'] as num).toInt() == _partyId);
-    final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-    if ((selectedWallet?['currency']?.toString() ?? 'PKR').toUpperCase() != currency) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Select a ' + currency + ' wallet.')));
-      return;
-    }
-    setState(() => saving = true);
-    try {
-      final id = await LoansService.addLoan(LoansModel(
-        partyId: _partyId, loanType: _loanType, amount: amount, remainingAmount: amount,
-        walletId: selectedWalletId!, currency: currency, lendingDate: _dateOnly(selectedDate),
-        dueDate: _dateOnly(_dueDate), notes: noteController.text.trim(),
-        createdAt: DateTime.now().toIso8601String(),
-      ));
-      await _saveFormAttachments('loan', id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Loan saved successfully.')));
-      Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')))); setState(() => saving = false); }
-    }
-  }
-
-  Future<void> _saveAsset() async {
-    if (!formKey.currentState!.validate()) return;
-    final purchase = double.tryParse(_assetPurchase.text.trim());
-    final current = double.tryParse(_assetCurrent.text.trim());
-    if (purchase == null || current == null || selectedWalletId == null) return;
-    if (_assetPaymentType == 'Loan' && _partyId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a party for loan-funded asset.')));
-      return;
-    }
-    final party = _partyId == null ? null : _parties.firstWhere((p) => (p['id'] as num).toInt() == _partyId);
-    final currency = _assetPaymentType == 'Loan' ? (party?['currency']?.toString() ?? 'PKR').toUpperCase() : (selectedWallet?['currency']?.toString() ?? 'PKR').toUpperCase();
-    setState(() => saving = true);
-    try {
-      final id = await _assetsService.addAsset(AssetsModel(
-        name: _assetName.text.trim(), category: _assetCategory, purchasePrice: purchase,
-        currentValue: current, purchaseDate: _purchaseDate, walletId: selectedWalletId!,
-        paymentType: _assetPaymentType, partyId: _assetPaymentType == 'Loan' ? _partyId : null,
-        currency: currency, notes: noteController.text.trim(),
-        includeInConsolidatedBalance: _includeInBalance, createdAt: DateTime.now(),
-      ));
-      await _saveFormAttachments('asset', id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asset saved successfully.')));
-      Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')))); setState(() => saving = false); }
-    }
-  }
-
-  Future<void> _saveFormAttachments(String ownerType, int ownerId) async {
-    if (selectedNoteImage != null) {
-      await AttachmentService.addAttachment(ownerType: ownerType, ownerId: ownerId, sourcePath: selectedNoteImage!.path, originalFileName: selectedNoteImage!.name);
-    }
-    for (final pdf in selectedNotePdfs) {
-      if (pdf.path != null) await AttachmentService.addAttachment(ownerType: ownerType, ownerId: ownerId, sourcePath: pdf.path!, originalFileName: pdf.name);
-    }
-  }
-
-  Widget _buildLoanForm() => Form(
-    key: formKey,
-    child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        _buildDateTimeRecurringBox(),
-        const SizedBox(height: 12),
-        SegmentedButton<String>(segments: const [
-          ButtonSegment(value: 'given', label: Text('Given')),
-          ButtonSegment(value: 'taken', label: Text('Taken')),
-        ], selected: {_loanType}, onSelectionChanged: (v) => setState(() => _loanType = v.first)),
-        const SizedBox(height: 8),
-        Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createPartyInline, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))),
-        DropdownButtonFormField<int>(value: _partyId, isExpanded: true,
-          decoration: decoration('Party *', icon: Icons.person_outline),
-          items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(),
-          onChanged: (v) => setState(() {
-            _partyId = v;
-            final party = _parties.firstWhere((p) => (p['id'] as num).toInt() == v);
-            final c = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-            final match = wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == c);
-            if (match.isNotEmpty) selectedWalletId = (match.first['id'] as num).toInt();
-          }), validator: (v) => v == null ? 'Select a party.' : null),
-        const SizedBox(height: 12), _amountField(), const SizedBox(height: 12), _walletField(),
-        ListTile(contentPadding: EdgeInsets.zero, title: const Text('Due date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_dueDate)),
-          onTap: () async { final d = await showDatePicker(context: context, initialDate: _dueDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setState(() => _dueDate = d); }),
-        _notesField(), const SizedBox(height: 16),
-        FilledButton(onPressed: saving ? null : _saveLoan, child: saving ? const CircularProgressIndicator() : const Text('Save Loan')),
-      ]),
-    ),
-  );
-
-  Widget _buildAssetForm() => Form(
-    key: formKey,
-    child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        _buildDateTimeRecurringBox(),
-        const SizedBox(height: 12),
-        TextFormField(controller: _assetName, decoration: decoration('Asset name *', icon: Icons.inventory_2_outlined), validator: (v) => v == null || v.trim().isEmpty ? 'Enter asset name.' : null),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(value: _assetCategory, decoration: decoration('Category'),
-          items: const ['Property','Vehicles','Gold','Jewellery','Electronics','Investments','Livestock','Business'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-          onChanged: (v) { if (v != null) setState(() => _assetCategory = v); }),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(value: _assetPaymentType, decoration: decoration('Payment type'),
-          items: const ['Cash','Bank','Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-          onChanged: (v) => setState(() => _assetPaymentType = v ?? 'Wallet')),
-        Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createPartyInline, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party')),
-        if (_assetPaymentType == 'Loan') ...[
-          const SizedBox(height: 12),
-          DropdownButtonFormField<int>(value: _partyId, decoration: decoration('Loan party'),
-            items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(),
-            onChanged: (v) => setState(() => _partyId = v), validator: (v) => _assetPaymentType == 'Loan' && v == null ? 'Select a party.' : null),
-        ],
-        const SizedBox(height: 12),
-        TextFormField(controller: _assetPurchase, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: decoration('Purchase price *'),
-          validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid purchase price.' : null; }),
-        const SizedBox(height: 12),
-        TextFormField(controller: _assetCurrent, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: decoration('Current value *'),
-          validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter a valid current value.' : null; }),
-        ListTile(contentPadding: EdgeInsets.zero, title: const Text('Purchase date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_purchaseDate)),
-          onTap: () async { final d = await showDatePicker(context: context, initialDate: _purchaseDate, firstDate: DateTime(1950), lastDate: DateTime.now()); if (d != null) setState(() => _purchaseDate = d); }),
-        SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Include in consolidated balance'), value: _includeInBalance, onChanged: (v) => setState(() => _includeInBalance = v)),
-        _walletField(), const SizedBox(height: 12), _notesField(), const SizedBox(height: 16),
-        FilledButton(onPressed: saving ? null : _saveAsset, child: saving ? const CircularProgressIndicator() : const Text('Save Asset')),
-      ]),
-    ),
-  );
-
   Future<void> save() async {
     switch (widget.transactionType) {
       case 'Income':
@@ -763,12 +559,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         break;
       case 'Transfer':
         await _saveTransfer();
-        break;
-      case 'Loan':
-        await _saveLoan();
-        break;
-      case 'Asset':
-        await _saveAsset();
         break;
     }
   }
@@ -907,12 +697,6 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.transactionType == 'Loan' || widget.transactionType == 'Asset') {
-      if (loading) return const Center(child: CircularProgressIndicator());
-      if (wallets.isEmpty) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Add a wallet first.')));
-      if (widget.transactionType == 'Loan' && _parties.isEmpty) return const Center(child: Text('Add a party in Manage Parties first.'));
-      return widget.transactionType == 'Loan' ? _buildLoanForm() : _buildAssetForm();
-    }
     final isIncome = widget.transactionType == 'Income';
     final accentColor = isIncome
         ? Theme.of(context).colorScheme.secondary

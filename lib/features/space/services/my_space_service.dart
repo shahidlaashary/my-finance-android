@@ -54,7 +54,7 @@ class MySpaceService {
     final directory = await spaceDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -82,6 +82,10 @@ class MySpaceService {
         }
         if (oldVersion < 3) {
           await db.execute('ALTER TABLE $_tableName ADD COLUMN last_epub_cfi TEXT');
+        }
+        if (oldVersion < 4) {
+          await db.execute("UPDATE $_tableName SET file_type = 'photos' WHERE file_type = 'photos'");
+          await db.execute("UPDATE $_tableName SET file_type = 'videos' WHERE file_type = 'videos'");
         }
       },
       onDowngrade: (db, oldVersion, newVersion) async {},
@@ -201,7 +205,7 @@ class MySpaceService {
         'title': p.basenameWithoutExtension(originalName),
         'file_name': originalName,
         'file_path': copied.path,
-        'file_type': audioExtensions.contains(extension) ? 'audio' : bookExtensions.contains(extension) ? 'book' : photoExtensions.contains(extension) ? 'photo' : 'video',
+        'file_type': audioExtensions.contains(extension) ? 'audio' : bookExtensions.contains(extension) ? 'book' : photoExtensions.contains(extension) ? 'photos' : 'videos',
         'file_size': fileSize,
         'added_at': DateTime.now().toIso8601String(),
         'last_page': 1,
@@ -323,15 +327,15 @@ class MySpaceService {
       );
 
   Future<Map<String, Object>> getStorageInformation() async {
-    final row = await (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count, SUM(CASE WHEN file_type = 'photo' THEN 1 ELSE 0 END) AS photo_count, SUM(CASE WHEN file_type = 'video' THEN 1 ELSE 0 END) AS video_count FROM $_tableName");
+    final row = await (await database).rawQuery("SELECT COUNT(*) AS total_count, COALESCE(SUM(file_size), 0) AS total_bytes, SUM(CASE WHEN file_type = 'book' THEN 1 ELSE 0 END) AS book_count, SUM(CASE WHEN file_type = 'audio' THEN 1 ELSE 0 END) AS audio_count, SUM(CASE WHEN file_type = 'photos' THEN 1 ELSE 0 END) AS photos_count, SUM(CASE WHEN file_type = 'videos' THEN 1 ELSE 0 END) AS videos_count FROM $_tableName");
     final value = row.first;
     return {
       'total_count': (value['total_count'] as int?) ?? 0,
       'total_bytes': (value['total_bytes'] as int?) ?? 0,
       'book_count': (value['book_count'] as int?) ?? 0,
       'audio_count': (value['audio_count'] as int?) ?? 0,
-      'photo_count': (value['photo_count'] as int?) ?? 0,
-      'video_count': (value['video_count'] as int?) ?? 0,
+      'photos_count': (value['photos_count'] as int?) ?? 0,
+      'videos_count': (value['videos_count'] as int?) ?? 0,
     };
   }
 

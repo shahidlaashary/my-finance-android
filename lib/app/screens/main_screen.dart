@@ -367,44 +367,40 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  // Keep the five quick-action cards aligned with the form content edges.
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
                       _transactionTab(
                         title: appText(context, 'Income', 'آمدنی'),
-                        subtitle: appText(context, 'Received', 'وصولی'),
                         value: 'Income',
                         icon: Icons.south_west_rounded,
                         color: Theme.of(context).colorScheme.secondary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       _transactionTab(
                         title: appText(context, 'Expense', 'اخراجات'),
-                        subtitle: appText(context, 'Spent', 'خرچ'),
                         value: 'Expense',
                         icon: Icons.north_east_rounded,
                         color: Theme.of(context).colorScheme.error,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       _transactionTab(
                         title: appText(context, 'Transfer', 'منتقلی'),
-                        subtitle: appText(context, 'Wallets', 'والٹس'),
                         value: 'Transfer',
                         icon: Icons.swap_horiz_rounded,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       _transactionTab(
                         title: appText(context, 'Loan', 'قرض'),
-                        subtitle: appText(context, 'New loan', 'نیا قرض'),
                         value: 'Loan',
                         icon: Icons.handshake_outlined,
                         color: Theme.of(context).colorScheme.tertiary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       _transactionTab(
                         title: appText(context, 'Asset', 'اثاثہ'),
-                        subtitle: appText(context, 'New asset', 'نیا اثاثہ'),
                         value: 'Asset',
                         icon: Icons.real_estate_agent_outlined,
                         color: Theme.of(context).colorScheme.primary,
@@ -424,7 +420,6 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
 
   Widget _transactionTab({
     required String title,
-    required String subtitle,
     required IconData icon,
     required Color color,
     required String value,
@@ -433,48 +428,34 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     return Expanded(
       child: InkWell(
         onTap: () => _selectType(value),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          height: 50,
-          padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
+          height: 43,
+          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 1),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? color : Theme.of(context).colorScheme.outlineVariant,
               width: selected ? 1.4 : 1,
             ),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 15, color: selected ? color : Theme.of(context).hintColor),
+              Icon(icon, size: 19, color: selected ? color : Theme.of(context).hintColor),
               const SizedBox(height: 2),
               Text(
                 title,
                 maxLines: 1,
+                softWrap: false,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 9.5,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w800,
                   color: selected ? color : Theme.of(context).hintColor,
-                ),
-              ),
-              const SizedBox(height: 1),
-              SizedBox(
-                height: 15,
-                child: Text(
-                  subtitle,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 7.2,
-                    height: 1.05,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).hintColor,
-                  ),
                 ),
               ),
             ],

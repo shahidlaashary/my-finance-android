@@ -22,7 +22,9 @@ Feature-first Flutter structure for one shared Android, iOS, Windows and macOS c
 - `features/finance/models/`: finance domain models.
 - `features/finance/services/`: finance operations and feature services.
 - `features/finance/services/finance_transaction_operations.dart`: transaction database operations used by the add-transaction form.
-- `features/finance/screens/transaction_entry_form.dart`: income, expense and transfer entry form.
+- `features/finance/screens/income_entry_form.dart`, `expense_entry_form.dart` and `transfer_entry_form.dart`: dedicated income, expense and transfer entry forms.
+- `features/finance/screens/entry_form_base.dart`: shared internal UI, validation and persistence logic for those dedicated transaction forms.
+- `features/finance/screens/loan_entry_form.dart` and `asset_entry_form.dart`: dedicated loan and asset creation forms.
 
 ## Core foundations
 

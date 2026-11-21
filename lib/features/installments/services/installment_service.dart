@@ -75,31 +75,31 @@ class InstallmentService {
 
   static Future<void> deleteContract(int contractId) async {
     final db = await _db;
+    final contracts = await db.query('installment_contracts',
+      where: 'id = ?', whereArgs: [contractId], limit: 1);
+    if (contracts.isEmpty) return;
+    final contract = Map<String, dynamic>.from(contracts.first);
+    final payments = await db.query('installment_payments',
+      where: 'contract_id = ?', whereArgs: [contractId], orderBy: 'id');
+    final transactions = await db.query('transactions',
+      where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
+      whereArgs: ['Installment #$contractId%']);
+    final walletId = (contract['wallet_id'] as num).toInt();
+    final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
+    final walletDelta = contract['direction'] == 'sell' ? -totalPaid : totalPaid;
+    await RecycleBinService.archive(
+      type: 'Installment Contract',
+      title: contract['item_name']?.toString() ?? 'Installment',
+      table: 'installment_contracts',
+      id: contractId,
+      record: contract,
+      related: [
+        ...payments.map((row) => {'_related_table':'installment_payments', ...Map<String,dynamic>.from(row)}),
+        ...transactions.map((row) => {'_related_table':'transactions', ...Map<String,dynamic>.from(row)}),
+      ],
+    );
     await db.transaction((txn) async {
-      final contracts = await txn.query('installment_contracts',
-        where: 'id = ?', whereArgs: [contractId], limit: 1);
-      if (contracts.isEmpty) return;
-      final contract = Map<String, dynamic>.from(contracts.first);
-      final payments = await txn.query('installment_payments',
-        where: 'contract_id = ?', whereArgs: [contractId], orderBy: 'id');
-      final transactions = await txn.query('transactions',
-        where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
-        whereArgs: ['Installment #$contractId%']);
-      final walletId = (contract['wallet_id'] as num).toInt();
-      final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
-      final walletDelta = contract['direction'] == 'sell' ? -totalPaid : totalPaid;
       await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [walletDelta, walletId]);
-      await RecycleBinService.archive(
-        type: 'Installment Contract',
-        title: contract['item_name']?.toString() ?? 'Installment',
-        table: 'installment_contracts',
-        id: contractId,
-        record: contract,
-        related: [
-          ...payments.map((row) => {'_related_table':'installment_payments', ...Map<String,dynamic>.from(row)}),
-          ...transactions.map((row) => {'_related_table':'transactions', ...Map<String,dynamic>.from(row)}),
-        ],
-      );
       await txn.delete('transactions',
         where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
         whereArgs: ['Installment #$contractId%']);

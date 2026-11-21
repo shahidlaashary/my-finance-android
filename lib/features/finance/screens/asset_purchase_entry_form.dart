@@ -25,6 +25,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
   int? _walletId, _partyId;
   String _category = 'Property', _payment = 'Wallet';
   bool _includeBalance = false, _loading = true, _saving = false;
+  int? _savedAssetId;
   DateTime _purchaseDate = DateTime.now();
   XFile? _image;
 
@@ -89,22 +90,62 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
     if (choice == 'pdf') { final f = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: true); if (f != null && mounted) setState(() => _pdfs.addAll(f.files.where((x) => x.path != null))); }
   }
   Future<void> _save() async {
-    if (!_key.currentState!.validate()) return;
-    final purchase = double.tryParse(_purchase.text.trim()), current = double.tryParse(_current.text.trim());
-    if (purchase == null || current == null || _walletId == null) return;
-    if (_payment == 'Loan' && _partyId == null) { _msg('Select a party for loan-funded asset.'); return; }
-    final party = _partyId == null ? null : _parties.firstWhere((p) => (p['id'] as num).toInt() == _partyId);
-    final currency = _payment == 'Loan' ? (party?['currency']?.toString() ?? 'PKR').toUpperCase() : (_wallet?['currency']?.toString() ?? 'PKR').toUpperCase();
-    if (_payment == 'Loan' && (_wallet?['currency']?.toString() ?? 'PKR').toUpperCase() != currency) { _msg('Select a $currency wallet.'); return; }
+    if (_saving) return;
+
+    // Once the asset has been created, subsequent taps only retry attachments.
+    // They must never create another asset/payment/linked loan.
+    if (_savedAssetId == null && !_key.currentState!.validate()) return;
+
     setState(() => _saving = true);
     try {
-      final id = await _service.addAsset(AssetsModel(name: _name.text.trim(), category: _category, purchasePrice: purchase, currentValue: current, purchaseDate: _purchaseDate, walletId: _walletId!, paymentType: _payment, partyId: _payment == 'Loan' ? _partyId : null, currency: currency, notes: _notes.text.trim(), includeInConsolidatedBalance: _includeBalance, createdAt: DateTime.now()));
-      if (_image != null) await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.asset, ownerId: id, sourcePath: _image!.path, originalFileName: _image!.name);
-      for (final f in _pdfs) { if (f.path != null) await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.asset, ownerId: id, sourcePath: f.path!, originalFileName: f.name); }
+      if (_savedAssetId == null) {
+        final purchase = double.tryParse(_purchase.text.trim());
+        final current = double.tryParse(_current.text.trim());
+        if (purchase == null || current == null || _walletId == null) {
+          setState(() => _saving = false);
+          return;
+        }
+        if (_payment == 'Loan' && _partyId == null) {
+          _msg('Select a party for loan-funded asset.');
+          setState(() => _saving = false);
+          return;
+        }
+        final party = _partyId == null ? null : _parties.firstWhere((p) => (p['id'] as num).toInt() == _partyId);
+        final currency = _payment == 'Loan' ? (party?['currency']?.toString() ?? 'PKR').toUpperCase() : (_wallet?['currency']?.toString() ?? 'PKR').toUpperCase();
+        if (_payment == 'Loan' && (_wallet?['currency']?.toString() ?? 'PKR').toUpperCase() != currency) {
+          _msg('Select a $currency wallet.');
+          setState(() => _saving = false);
+          return;
+        }
+
+        final id = await _service.addAsset(AssetsModel(name: _name.text.trim(), category: _category, purchasePrice: purchase, currentValue: current, purchaseDate: _purchaseDate, walletId: _walletId!, paymentType: _payment, partyId: _payment == 'Loan' ? _partyId : null, currency: currency, notes: _notes.text.trim(), includeInConsolidatedBalance: _includeBalance, createdAt: DateTime.now()));
+        // Persist the successful creation in widget state before doing any file I/O.
+        if (!mounted) return;
+        setState(() => _savedAssetId = id);
+      }
+
+      final assetId = _savedAssetId!;
+      if (_image != null) {
+        await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.asset, ownerId: assetId, sourcePath: _image!.path, originalFileName: _image!.name);
+        if (mounted) setState(() => _image = null);
+      }
+      for (final file in List<PlatformFile>.from(_pdfs)) {
+        if (file.path == null) continue;
+        await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.asset, ownerId: assetId, sourcePath: file.path!, originalFileName: file.name);
+        if (mounted) setState(() => _pdfs.remove(file));
+      }
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asset saved successfully.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asset and attachments saved successfully.')));
       Navigator.pop(context, true);
-    } catch (e) { if (mounted) { _msg(e); setState(() => _saving = false); } }
+    } catch (e) {
+      if (mounted) {
+        _msg(_savedAssetId == null
+            ? e
+            : 'Asset is already saved. Attachment failed; tap Retry Attachments to try again. $e');
+        setState(() => _saving = false);
+      }
+    }
   }
 
   @override
@@ -132,7 +173,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       TextFormField(controller: _notes, maxLines: 2, decoration: _dec('Notes (Optional)').copyWith(suffixIcon: IconButton(onPressed: _attachments, icon: const Icon(Icons.attach_file_rounded)))),
       if (_image != null || _pdfs.isNotEmpty) Text('${_image == null ? '' : '1 image, '}${_pdfs.length} PDF(s)', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       const SizedBox(height: 16),
-      FilledButton(onPressed: _saving ? null : _save, child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save Asset')),
+      FilledButton(onPressed: _saving ? null : _save, child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(_savedAssetId == null ? 'Save Asset' : 'Retry Attachments')),
     ])));
   }
 }

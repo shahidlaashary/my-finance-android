@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -758,6 +759,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> deleteTransaction(
     Map<String, dynamic> item,
   ) async {
+    await SoundSettingsService.instance.play('delete_warning');
     final requireConfirmation = await GeneralPreferences.instance.deleteConfirmation;
     final confirmed = requireConfirmation ? await showDialog<bool>(
       context: context,
@@ -783,6 +785,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         await TransactionsService.deleteTransaction(
           item['id'] as int,
         );
+        await SoundSettingsService.instance.play('delete_success');
         if (await GeneralPreferences.instance.hapticFeedback) {
           await HapticFeedback.selectionClick();
         }

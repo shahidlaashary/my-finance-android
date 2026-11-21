@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
-import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
 import 'package:my_finance/app/theme/app_theme.dart';
 import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
@@ -56,9 +55,7 @@ class MyFinanceApp extends StatelessWidget {
                       .contains(locale.languageCode)
                   ? TextDirection.rtl
                   : TextDirection.ltr,
-              child: AppSoundTapListener(
-                child: AppLockGate(child: child ?? const SizedBox.shrink()),
-              ),
+              child: AppLockGate(child: child ?? const SizedBox.shrink()),
             ),
             home: home,
           );

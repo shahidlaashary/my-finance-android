@@ -150,6 +150,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       );
       Navigator.pop(context, true);
     } catch (e) {
+      await SoundSettingsService.instance.play('error');
       if (mounted) _msg(e);
     } finally {
       if (mounted) setState(() => _saving = false);

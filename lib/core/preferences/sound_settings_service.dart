@@ -11,7 +11,7 @@ class SoundSettingsService extends ChangeNotifier {
   static const _choicePrefix = 'sound_action_';
 
   static const actions = <String, String>{
-    'save': 'Save / Create', 'update': 'Update / Edit',
+    'app_start': 'App Startup', 'save': 'Save / Create', 'update': 'Update / Edit',
     'delete_warning': 'Delete Warning', 'delete_success': 'Deleted Successfully',
     'income': 'Income', 'expense': 'Expense', 'transfer': 'Transfer',
     'reminder': 'Reminder / Schedule', 'budget_limit': 'Budget Limit Warning',
@@ -58,21 +58,21 @@ class SoundSettingsService extends ChangeNotifier {
   List<List<int>> _pattern(String action, String preset) {
     const tones = <String, Map<String, List<List<int>>>>{
       'soft': {
-        'save': [[880,75]], 'update': [[740,65],[980,70]],
+        'app_start': [[523,90],[659,90],[784,140],[1047,220]], 'save': [[880,75]], 'update': [[740,65],[980,70]],
         'delete_warning': [[440,160]], 'delete_success': [[660,65],[880,75]],
         'income': [[784,65],[1046,90]], 'expense': [[620,90],[500,100]],
         'transfer': [[720,65],[840,65]], 'reminder': [[880,100],[880,100]], 'budget_limit': [[740,110],[520,160]],
         'error': [[360,150],[280,180]], 'achievement': [[880,70],[1100,70],[1320,130]],
       },
       'classic': {
-        'save': [[950,100]], 'update': [[780,100],[950,100]],
+        'app_start': [[523,100],[659,100],[784,160],[1047,260]], 'save': [[950,100]], 'update': [[780,100],[950,100]],
         'delete_warning': [[420,200]], 'delete_success': [[700,90],[1000,110]],
         'income': [[900,100],[1200,120]], 'expense': [[600,100],[420,140]],
         'transfer': [[750,90],[950,90],[750,90]], 'reminder': [[1000,120]], 'budget_limit': [[800,120],[560,180]],
         'error': [[320,200]], 'achievement': [[800,90],[1000,90],[1200,90],[1500,160]],
       },
       'premium': {
-        'save': [[1040,70],[1310,80]], 'update': [[880,60],[1100,60],[1320,85]],
+        'app_start': [[587,100],[740,100],[880,160],[1175,280]], 'save': [[1040,70],[1310,80]], 'update': [[880,60],[1100,60],[1320,85]],
         'delete_warning': [[500,100],[400,150]], 'delete_success': [[880,60],[1175,70],[1560,110]],
         'income': [[1040,70],[1310,70],[1560,100]], 'expense': [[720,90],[520,110]],
         'transfer': [[880,65],[1040,65],[880,65]], 'reminder': [[1040,90],[880,90]], 'budget_limit': [[880,100],[620,170]],
@@ -81,7 +81,7 @@ class SoundSettingsService extends ChangeNotifier {
     };
     if (preset == 'modern') {
       const modern = <String, List<List<int>>>{
-        'save': [[980,80],[1180,70]], 'update': [[760,75],[980,80]],
+        'app_start': [[554,90],[698,90],[831,150],[1109,250]], 'save': [[980,80],[1180,70]], 'update': [[760,75],[980,80]],
         'delete_warning': [[520,140]], 'delete_success': [[760,70],[1040,90]],
         'income': [[880,70],[1175,90]], 'expense': [[650,90],[460,100]],
         'transfer': [[800,65],[1000,65]], 'reminder': [[920,90],[920,90]], 'budget_limit': [[820,100],[600,160]],

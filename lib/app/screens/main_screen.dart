@@ -8,7 +8,9 @@ import 'package:my_finance/features/finance/screens/budgets_screen.dart';
 import 'package:my_finance/features/finance/screens/goals_screen.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart';
 import 'package:my_finance/features/finance/screens/stats_screen.dart';
-import 'package:my_finance/features/finance/screens/transaction_entry_form.dart' show TransactionEntryForm;
+import 'package:my_finance/features/finance/screens/income_entry_form.dart' show IncomeEntryForm;
+import 'package:my_finance/features/finance/screens/expense_entry_form.dart' show ExpenseEntryForm;
+import 'package:my_finance/features/finance/screens/transfer_entry_form.dart' show TransferEntryForm;
 import 'package:my_finance/features/finance/screens/loan_entry_form.dart' show LoanEntryForm;
 import 'package:my_finance/features/finance/screens/asset_entry_form.dart' show AssetEntryForm;
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
@@ -275,15 +277,18 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
 
   Widget _buildQuickEntryForm() {
     switch (selectedType) {
+      case 'Income':
+        return const IncomeEntryForm(key: ValueKey('Income'));
+      case 'Expense':
+        return const ExpenseEntryForm(key: ValueKey('Expense'));
+      case 'Transfer':
+        return const TransferEntryForm(key: ValueKey('Transfer'));
       case 'Loan':
         return const LoanEntryForm(key: ValueKey('Loan'));
       case 'Asset':
         return const AssetEntryForm(key: ValueKey('Asset'));
       default:
-        return TransactionEntryForm(
-          key: ValueKey(selectedType),
-          transactionType: selectedType,
-        );
+        return const IncomeEntryForm(key: ValueKey('Income'));
     }
   }
 

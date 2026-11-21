@@ -100,6 +100,32 @@ jobs:
           cache-provider: basic
       - name: Install dependencies
         run: flutter pub get
+      - name: Patch EPUB parser for current image package API
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          cache = Path(os.environ.get("PUB_CACHE", str(Path.home() / ".pub-cache")))
+          candidates = list(cache.glob("hosted/pub.dev/epubx-*/lib/src/readers/book_cover_reader.dart"))
+          candidates += list(cache.glob("hosted/pub.dartlang.org/epubx-*/lib/src/readers/book_cover_reader.dart"))
+          if len(candidates) != 1:
+              raise SystemExit(f"Expected one resolved epubx cover reader, found {len(candidates)}")
+          source_file = candidates[0]
+          source = source_file.read_text()
+          old = "images.decodeImage(coverImageContent)"
+          new = "images.decodeImage(Uint8List.fromList(coverImageContent))"
+          if old in source:
+              source = source.replace(old, new)
+              if "import 'dart:typed_data';" not in source:
+                  source = "import 'dart:typed_data';\\n" + source
+              source_file.write_text(source)
+              print(f"Patched image byte type compatibility in {source_file}")
+          elif new in source:
+              print("EPUB image byte compatibility patch is already present.")
+          else:
+              raise SystemExit("Could not find expected epubx cover image decode call")
+          PY
       - name: Align printing plugin with host Android Gradle Plugin
         run: |
           python3 - <<'PY'

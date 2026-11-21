@@ -57,18 +57,7 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => PlusActionSheet(
-        onNewLoan: () {
-          Navigator.of(context).pop();
-          // Build the Loans tab before opening its existing form. The tab is
-          // lazy-loaded, so its State may not exist until it is selected.
-          selectPage(4);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _loansScreenKey.currentState?.openNewLoanForm();
-          });
-        },
-      ),
+      builder: (context) => const PlusActionSheet(),
     );
   }
 
@@ -270,9 +259,7 @@ class _MainScreenState extends State<MainScreen> {
 // ============================================================
 
 class PlusActionSheet extends StatefulWidget {
-  const PlusActionSheet({super.key, required this.onNewLoan});
-
-  final VoidCallback onNewLoan;
+  const PlusActionSheet({super.key});
 
   @override
   State<PlusActionSheet> createState() => _PlusActionSheetState();
@@ -280,10 +267,52 @@ class PlusActionSheet extends StatefulWidget {
 
 class _PlusActionSheetState extends State<PlusActionSheet> {
   String selectedType = 'Income';
+  final GlobalKey<LoansScreenState> _loanFormKey = GlobalKey<LoansScreenState>();
+  final GlobalKey<AssetsScreenState> _assetFormKey = GlobalKey<AssetsScreenState>();
+
+  void _selectType(String type) {
+    setState(() => selectedType = type);
+    if (type == 'Loan' || type == 'Asset') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (type == 'Loan') {
+          _loanFormKey.currentState?.openNewLoanForm();
+        } else {
+          _assetFormKey.currentState?.openNewAssetForm();
+        }
+      });
+    }
+  }
+
+  Widget _buildEmbeddedFormHost() {
+    if (selectedType == 'Loan') {
+      return Navigator(
+        onGenerateRoute: (_) => MaterialPageRoute<void>(
+          builder: (_) => LoansScreen(
+            key: _loanFormKey,
+            embeddedFormHost: true,
+          ),
+        ),
+      );
+    }
+    if (selectedType == 'Asset') {
+      return Navigator(
+        onGenerateRoute: (_) => MaterialPageRoute<void>(
+          builder: (_) => AssetsScreen(
+            key: _assetFormKey,
+            embeddedFormHost: true,
+          ),
+        ),
+      );
+    }
+    return TransactionEntryForm(
+      key: ValueKey(selectedType),
+      transactionType: selectedType,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     final screenHeight = MediaQuery.sizeOf(context).height;
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = keyboardHeight > 0
@@ -322,7 +351,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     children: [
                       Expanded(
                         child: Text(
-                          appText(context, 'Add New Transaction', 'نیا لین دین شامل کریں'),
+                          appText(context, 'Quick Add', 'فوری اندراج'),
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -340,47 +369,53 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
                     children: [
                       _transactionTab(
                         title: appText(context, 'Income', 'آمدنی'),
-                        subtitle: appText(context, 'Money received', 'وصول شدہ رقم'),
+                        subtitle: appText(context, 'Received', 'وصولی'),
+                        value: 'Income',
                         icon: Icons.south_west_rounded,
                         color: Theme.of(context).colorScheme.secondary,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       _transactionTab(
                         title: appText(context, 'Expense', 'اخراجات'),
-                        subtitle: appText(context, 'Money spent', 'خرچ کی گئی رقم'),
+                        subtitle: appText(context, 'Spent', 'خرچ'),
+                        value: 'Expense',
                         icon: Icons.north_east_rounded,
                         color: Theme.of(context).colorScheme.error,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       _transactionTab(
                         title: appText(context, 'Transfer', 'منتقلی'),
-                        subtitle: appText(context, 'Between wallets', 'والٹس کے درمیان'),
+                        subtitle: appText(context, 'Wallets', 'والٹس'),
+                        value: 'Transfer',
                         icon: Icons.swap_horiz_rounded,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       _transactionTab(
                         title: appText(context, 'Loan', 'قرض'),
                         subtitle: appText(context, 'New loan', 'نیا قرض'),
+                        value: 'Loan',
                         icon: Icons.handshake_outlined,
                         color: Theme.of(context).colorScheme.tertiary,
-                        onTap: widget.onNewLoan,
+                      ),
+                      const SizedBox(width: 4),
+                      _transactionTab(
+                        title: appText(context, 'Asset', 'اثاثہ'),
+                        subtitle: appText(context, 'New asset', 'نیا اثاثہ'),
+                        value: 'Asset',
+                        icon: Icons.real_estate_agent_outlined,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
-                Expanded(
-                  child: TransactionEntryForm(
-                    key: ValueKey(selectedType),
-                    transactionType: selectedType,
-                  ),
-                ),
+                Expanded(child: _buildEmbeddedFormHost()),
               ],
             ),
           ),
@@ -394,27 +429,16 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     required String subtitle,
     required IconData icon,
     required Color color,
-    VoidCallback? onTap,
+    required String value,
   }) {
-    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
-    final selected = selectedType == title ||
-        (isUrdu && ((title == 'آمدنی' && selectedType == 'Income') ||
-            (title == 'اخراجات' && selectedType == 'Expense') ||
-            (title == 'منتقلی' && selectedType == 'Transfer')));
+    final selected = selectedType == value;
     return Expanded(
       child: InkWell(
-        onTap: onTap ?? () {
-          final value = title == 'آمدنی' ? 'Income' :
-              title == 'اخراجات' ? 'Expense' :
-              title == 'منتقلی' ? 'Transfer' : title;
-          if (selectedType != value) {
-            setState(() => selectedType = value);
-          }
-        },
+        onTap: () => _selectType(value),
         borderRadius: BorderRadius.circular(13),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 3),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(13),
@@ -433,22 +457,25 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 10.8,
+                  fontSize: 10,
                   fontWeight: FontWeight.w800,
                   color: selected ? color : Theme.of(context).hintColor,
                 ),
               ),
               const SizedBox(height: 1),
-              Text(
-                subtitle,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 8.5,
-                  height: 1.15,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).hintColor,
+              SizedBox(
+                height: 18,
+                child: Text(
+                  subtitle,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 7.8,
+                    height: 1.15,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).hintColor,
+                  ),
                 ),
               ),
             ],

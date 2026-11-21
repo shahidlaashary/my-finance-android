@@ -18,7 +18,10 @@ import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/screens/finance_graph_screens.dart';
 class LoansScreen extends StatefulWidget {
-  const LoansScreen({super.key});
+  const LoansScreen({super.key, this.embeddedFormHost = false});
+
+  final bool embeddedFormHost;
+
   @override
   State<LoansScreen> createState() => LoansScreenState();
 }
@@ -1488,6 +1491,13 @@ class LoansScreenState extends State<LoansScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    if (widget.embeddedFormHost) {
+      return const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SizedBox.shrink(),
+      );
+    }
+
     final overdueCount = _loans.where((loan) => loan.isOverdue).length;
     return Scaffold(
       appBar: AppBar(

@@ -22,13 +22,15 @@ import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
 class AssetsScreen extends StatefulWidget {
-  const AssetsScreen({super.key});
+  const AssetsScreen({super.key, this.embeddedFormHost = false});
+
+  final bool embeddedFormHost;
 
   @override
-  State<AssetsScreen> createState() => _AssetsScreenState();
+  State<AssetsScreen> createState() => AssetsScreenState();
 }
 
-class _AssetsScreenState extends State<AssetsScreen> {
+class AssetsScreenState extends State<AssetsScreen> {
   final AssetsService _service = AssetsService();
 
   List<AssetsModel> _assets = [];
@@ -283,6 +285,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
     return result;
   }
+
+  Future<void> openNewAssetForm() => _showAssetDialog();
 
   Future<void> _showAssetDialog({
     AssetsModel? asset,
@@ -1394,6 +1398,13 @@ class _AssetsScreenState extends State<AssetsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.embeddedFormHost) {
+      return const Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SizedBox.shrink(),
+      );
+    }
+
     final currencies = _availableCurrencies;
 
     final primaryCurrency = currencies.contains('PKR')

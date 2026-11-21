@@ -11,7 +11,7 @@ import 'package:my_finance/features/staff/screens/staff_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/features/installments/screens/installments_screen.dart';
 import 'package:my_finance/features/committee/screens/committee_screen.dart';
-import 'package:my_finance/features/partners/screens/my_partner_screen.dart';
+import 'package:my_finance/features/partners/screens/my_partners_screen.dart';
 import 'package:my_finance/features/finance/screens/loans_screen.dart' show ManageParties;
 
 class MoreFeaturesPage extends StatelessWidget {
@@ -58,7 +58,7 @@ class MoreFeaturesPage extends StatelessWidget {
         'icon': Icons.groups_2_outlined,
       },
       {
-        'title': 'My Partner',
+        'title': 'My Partners',
         'subtitle': 'Manage partner details and shared records',
         'icon': Icons.handshake_outlined,
       },
@@ -134,8 +134,8 @@ class MoreFeaturesPage extends StatelessWidget {
                       if (feature['title'] == 'Stock Manager') {
                         return const StockManagerScreen();
                       }
-                      if (feature['title'] == 'My Partner') {
-                        return const MyPartnerScreen();
+                      if (feature['title'] == 'My Partners') {
+                        return const MyPartnersScreen();
                       }
                       if (feature['title'] == 'Manage Parties') {
                         return ManageParties(hideBalances: false, onLoanTap: (_) {});

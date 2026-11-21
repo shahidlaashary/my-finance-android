@@ -387,7 +387,7 @@ class RecycleBinService {
       }
       if (table == 'space_items') {
         final spaceDir = await getApplicationDocumentsDirectory();
-        final spaceDb = await openDatabase(p.join(spaceDir.path, 'my_space', 'my_space.db'));
+        final spaceDb = await openDatabase(p.join(spaceDir.path, 'my_space', 'space.db'));
         try {
           final existing = await spaceDb.query('space_items', where: 'id = ?', whereArgs: [record['id']], limit: 1);
           if (existing.isNotEmpty) throw Exception('This Space item already exists.');

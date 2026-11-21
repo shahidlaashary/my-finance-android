@@ -11,7 +11,7 @@ class MySpaceService {
   MySpaceService._();
   static final MySpaceService instance = MySpaceService._();
 
-  static const _databaseName = 'my_space.db';
+  static const _databaseName = 'space.db';
   static const _tableName = 'space_items';
   static const _playlistsTable = 'space_playlists';
   static const _playlistItemsTable = 'space_playlist_items';

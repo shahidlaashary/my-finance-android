@@ -301,7 +301,6 @@ class LoansScreenState extends State<LoansScreen> {
     }
 
     final loanForm = StatefulBuilder(
-      StatefulBuilder(
         builder: (context, setSheetState) {
           final screenHeight = MediaQuery.sizeOf(context).height;
           final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
@@ -643,7 +642,7 @@ class LoansScreenState extends State<LoansScreen> {
             ),
           );
         },
-      ),;
+      );
     if (widget.embeddedFormHost) {
       if (mounted) setState(() => _embeddedLoanForm = loanForm);
     } else {

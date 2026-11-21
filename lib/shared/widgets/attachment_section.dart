@@ -265,7 +265,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => LibraryPdfReaderScreen.fromFile(
+            builder: (_) => SpacePdfReaderScreen.fromFile(
               filePath: attachment.filePath,
               documentTitle: attachment.fileName,
             ),

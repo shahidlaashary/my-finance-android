@@ -8,6 +8,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
+import 'package:my_finance/features/library/services/my_library_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -369,6 +370,13 @@ class RecycleBinService {
           transaction.remove('_related_table');
           await txn.insert('transactions', transaction);
         }
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
+      if (table == 'library_playlists' || table == 'library_collections') {
+        final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
+          .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
+        await MyLibraryService.instance.restoreArchivedLibraryGroup(table, record, related);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }

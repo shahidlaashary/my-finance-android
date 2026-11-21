@@ -32,6 +32,7 @@ class LoansScreenState extends State<LoansScreen> {
   Map<int, String> _assetNames = {};
   Map<String, double> _outstandingByCurrency = {};
   bool _loading = true;
+  Widget? _embeddedLoanForm;
   bool _hideBalances = false;
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -192,6 +193,10 @@ class LoansScreenState extends State<LoansScreen> {
   }
 
   Future<void> openNewLoanForm() => _addLoan();
+  
+  void _dismissEmbeddedLoanForm() {
+    if (mounted) setState(() => _embeddedLoanForm = null);
+  }
 
   Future<void> _addLoan() async {
     await _loadData();
@@ -230,7 +235,71 @@ class LoansScreenState extends State<LoansScreen> {
     final List<XFile> pendingLoanImages = [];
     final List<PlatformFile> pendingLoanPdfs = [];
     final ImagePicker loanImagePicker = ImagePicker();
-    final result = await showModalBottomSheet<bool>(
+        Future<bool> saveLoan() async {
+final name = _nameController.text.trim();
+    final amount = double.tryParse(_amountController.text.trim());
+    if ((createNewParty && name.isEmpty) || amount == null || !amount.isFinite || amount <= 0) {
+      _showMessage('Enter a valid party name and loan amount.');
+      return;
+    }
+    if (!createNewParty && _selectedPartyId == null) {
+      _showMessage('Please select a party.');
+      return;
+    }
+    if (walletId == null) {
+      _showMessage('Please select a wallet.');
+      return;
+    }
+    try {
+      if (createNewParty) {
+        _selectedPartyId = await LoansService.addParty(
+          name: name,
+          phone: _phoneController.text,
+          currency: newPartyCurrency,
+        );
+        await _loadData();
+      }
+      final loan = LoansModel(
+        partyId: _selectedPartyId,
+        loanType: _loanType,
+        amount: amount,
+        remainingAmount: amount,
+        walletId: walletId!,
+        currency: createNewParty ? newPartyCurrency : ((_parties.firstWhere((p) => p['id'] == _selectedPartyId, orElse: () => {'currency': 'PKR'})['currency']?.toString() ?? 'PKR').toUpperCase()),
+        lendingDate: _dateString(lendingDate),
+        dueDate: dueDate == null ? null : _dateString(dueDate!),
+        notes: _notesController.text.trim(),
+        createdAt: DateTime.now().toIso8601String(),
+      );
+      final loanId = await LoansService.addLoan(loan);
+      for (final image in pendingLoanImages) {
+        await AttachmentService.addAttachment(
+          ownerType: AttachmentOwnerTypes.loan,
+          ownerId: loanId,
+          sourcePath: image.path,
+          originalFileName: image.name,
+        );
+      }
+      for (final pdf in pendingLoanPdfs) {
+        final path = pdf.path;
+        if (path == null) continue;
+        await AttachmentService.addAttachment(
+          ownerType: AttachmentOwnerTypes.loan,
+          ownerId: loanId,
+          sourcePath: path,
+          originalFileName: pdf.name,
+        );
+      }
+      _selectedWalletId = walletId;
+      await _loadData();
+      _showMessage('Loan saved successfully.');
+    } catch (error) {
+      _showMessage('Could not save loan: $error');
+    }
+  }
+      return true;
+    }
+final loanForm = 
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -283,7 +352,7 @@ class LoansScreenState extends State<LoansScreen> {
                             ),
                             IconButton(
                               visualDensity: VisualDensity.compact,
-                              onPressed: () => Navigator.pop(sheetContext, false),
+                              onPressed: () { if (widget.embeddedFormHost) { _dismissEmbeddedLoanForm(); } else { Navigator.pop(sheetContext, false); } },
                               icon: Icon(Icons.close_rounded),
                               color: Theme.of(context).hintColor,
                             ),
@@ -563,7 +632,7 @@ class LoansScreenState extends State<LoansScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () => Navigator.pop(sheetContext, true),
+                                onPressed: () async { if (widget.embeddedFormHost) { final saved = await saveLoan(); if (saved) _dismissEmbeddedLoanForm(); } else { Navigator.pop(sheetContext, true); } },
                                 child: Text(appText(context, 'Save Loan', 'قرض محفوظ کریں')),
                               ),
                             ),
@@ -577,70 +646,20 @@ class LoansScreenState extends State<LoansScreen> {
             ),
           );
         },
-      ),
-    );
-    if (result != true) return;
-    final name = _nameController.text.trim();
-    final amount = double.tryParse(_amountController.text.trim());
-    if ((createNewParty && name.isEmpty) || amount == null || !amount.isFinite || amount <= 0) {
-      _showMessage('Enter a valid party name and loan amount.');
-      return;
-    }
-    if (!createNewParty && _selectedPartyId == null) {
-      _showMessage('Please select a party.');
-      return;
-    }
-    if (walletId == null) {
-      _showMessage('Please select a wallet.');
-      return;
-    }
-    try {
-      if (createNewParty) {
-        _selectedPartyId = await LoansService.addParty(
-          name: name,
-          phone: _phoneController.text,
-          currency: newPartyCurrency,
-        );
-        await _loadData();
-      }
-      final loan = LoansModel(
-        partyId: _selectedPartyId,
-        loanType: _loanType,
-        amount: amount,
-        remainingAmount: amount,
-        walletId: walletId!,
-        currency: createNewParty ? newPartyCurrency : ((_parties.firstWhere((p) => p['id'] == _selectedPartyId, orElse: () => {'currency': 'PKR'})['currency']?.toString() ?? 'PKR').toUpperCase()),
-        lendingDate: _dateString(lendingDate),
-        dueDate: dueDate == null ? null : _dateString(dueDate!),
-        notes: _notesController.text.trim(),
-        createdAt: DateTime.now().toIso8601String(),
+      ),;
+    if (widget.embeddedFormHost) {
+      if (mounted) setState(() => _embeddedLoanForm = loanForm);
+    } else {
+      final result = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => loanForm,
       );
-      final loanId = await LoansService.addLoan(loan);
-      for (final image in pendingLoanImages) {
-        await AttachmentService.addAttachment(
-          ownerType: AttachmentOwnerTypes.loan,
-          ownerId: loanId,
-          sourcePath: image.path,
-          originalFileName: image.name,
-        );
-      }
-      for (final pdf in pendingLoanPdfs) {
-        final path = pdf.path;
-        if (path == null) continue;
-        await AttachmentService.addAttachment(
-          ownerType: AttachmentOwnerTypes.loan,
-          ownerId: loanId,
-          sourcePath: path,
-          originalFileName: pdf.name,
-        );
-      }
-      _selectedWalletId = walletId;
-      await _loadData();
-      _showMessage('Loan saved successfully.');
-    } catch (error) {
-      _showMessage('Could not save loan: $error');
+      if (result == true) await saveLoan();
     }
-  }
+
   String _displayLoanDate(String value) {
     final parsed = DateTime.tryParse(value);
     if (parsed == null) return value;
@@ -1492,9 +1511,9 @@ class LoansScreenState extends State<LoansScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.embeddedFormHost) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.transparent,
-        body: SizedBox.shrink(),
+        body: _embeddedLoanForm ?? const SizedBox.shrink(),
       );
     }
 

@@ -12,7 +12,6 @@ import 'package:my_finance/core/services/attachment_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
-import 'package:my_finance/features/finance/screens/asset_purchase_entry_form.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/screens/asset_loan_repayment_entry_form.dart';
@@ -286,19 +285,6 @@ class AssetsScreenState extends State<AssetsScreen> {
     final result = currencies.toList()..sort();
 
     return result;
-  }
-
-  Future<void> openNewAssetForm() async {
-    final saved = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AssetPurchaseEntryForm(),
-    );
-    if (saved == true && mounted) {
-      await _loadData();
-    }
   }
 
   void _closeAssetForm(BuildContext sheetContext) {
@@ -1161,19 +1147,12 @@ class AssetsScreenState extends State<AssetsScreen> {
           child: Container(height: 1, color: Theme.of(context).colorScheme.outlineVariant),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: openNewAssetForm,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: Icon(Icons.add_rounded),
-        label: Text(appText(context, 'Add Asset', 'اثاثہ شامل کریں')),
-      ),
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),

@@ -321,6 +321,7 @@ class LoansScreenState extends State<LoansScreen> {
         dueDate: dueDate == null ? null : _dateString(dueDate!),
         notes: notesController.text.trim(),
       );
+      await SoundSettingsService.instance.play('update');
       await _loadData();
       _showMessage('Loan updated successfully.');
       return true;

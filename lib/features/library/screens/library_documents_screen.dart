@@ -558,6 +558,24 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     ).then((_) => _loadDocuments());
   }
 
+  IconData _filterOptionIcon(String option) {
+    switch (option) {
+      case 'Favorites': return Icons.star_outline_rounded;
+      case 'Expiring Soon': return Icons.event_busy_outlined;
+      case 'Expired': return Icons.event_available_outlined;
+      case 'Personal': return Icons.badge_outlined;
+      case 'Vehicle': return Icons.directions_car_outlined;
+      case 'Education': return Icons.school_outlined;
+      case 'Property': return Icons.home_work_outlined;
+      case 'Financial': return Icons.account_balance_outlined;
+      case 'Bills & Receipts': return Icons.receipt_long_outlined;
+      case 'Business': return Icons.business_center_outlined;
+      case 'Other': return Icons.folder_open_outlined;
+      case 'All': return Icons.grid_view_rounded;
+      default: return Icons.folder_outlined;
+    }
+  }
+
   Widget _compactFilterDropdown({
     required String label,
     required String value,
@@ -566,87 +584,115 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
     required ValueChanged<String> onChanged,
   }) {
     final colors = Theme.of(context).colorScheme;
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.fromLTRB(10, 5, 7, 4),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: .75)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 13, color: colors.primary),
-              SizedBox(width: 5),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 9,
-                  letterSpacing: .7,
-                  fontWeight: FontWeight.w800,
-                  color: Theme.of(context).hintColor,
-                ),
-              ),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return PopupMenuButton<String>(
+          tooltip: label,
+          position: PopupMenuPosition.under,
+          offset: const Offset(0, 4),
+          padding: EdgeInsets.zero,
+          constraints: BoxConstraints.tightFor(width: constraints.maxWidth),
+          color: colors.surface,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
+            side: BorderSide(color: colors.outlineVariant.withValues(alpha: .8)),
           ),
-          SizedBox(height: 1),
-          SizedBox(
-            height: 25,
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                isDense: true,
-                icon: Icon(Icons.keyboard_arrow_down_rounded, size: 19, color: colors.primary),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: colors.onSurface,
-                ),
-                items: options.map((option) => DropdownMenuItem<String>(
-                  value: option,
-                  child: Text(option, maxLines: 1, overflow: TextOverflow.ellipsis),
-                )).toList(),
-                onChanged: (selected) {
-                  if (selected != null && selected != value) onChanged(selected);
-                },
+          onSelected: onChanged,
+          itemBuilder: (menuContext) => options.map((option) {
+            final selected = option == value;
+            final optionIcon = _filterOptionIcon(option);
+            return PopupMenuItem<String>(
+              value: option,
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  Icon(optionIcon, size: 17,
+                    color: selected ? colors.primary : colors.onSurfaceVariant),
+                  SizedBox(width: 9),
+                  Expanded(
+                    child: Text(option, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12,
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                        color: selected ? colors.primary : colors.onSurface)),
+                  ),
+                  if (selected) Icon(Icons.check_rounded, size: 17, color: colors.primary),
+                ],
               ),
+            );
+          }).toList(),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.outlineVariant.withValues(alpha: .8)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 17, color: colors.primary),
+                SizedBox(width: 7),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label, style: TextStyle(fontSize: 8,
+                        letterSpacing: .65, fontWeight: FontWeight.w800,
+                        color: Theme.of(context).hintColor)),
+                      SizedBox(height: 1),
+                      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11.5,
+                          fontWeight: FontWeight.w700, color: colors.onSurface)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: colors.primary),
+              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _summaryCard(String label, int value, IconData icon, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(13),
+        height: 58,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .65),
+          ),
         ),
         child: Row(
           children: [
             Container(
-              width: 37, height: 37,
+              width: 31,
+              height: 31,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: .11),
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 17),
             ),
-            SizedBox(width: 9),
+            SizedBox(width: 8),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$value', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-                  Text(label, style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                  Text('$value', style: TextStyle(fontSize: 17, height: 1.05,
+                    fontWeight: FontWeight.w800)),
+                  SizedBox(height: 2),
+                  Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 9, height: 1.1,
+                      color: Theme.of(context).hintColor)),
                 ],
               ),
             ),

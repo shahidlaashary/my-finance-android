@@ -729,7 +729,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 90),
+                padding: const EdgeInsets.only(bottom: 16),
                 children: [
                   _currencySummary(),
                   if (_goals.isEmpty)

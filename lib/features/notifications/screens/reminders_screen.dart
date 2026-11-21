@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
@@ -186,6 +187,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
         when: when,
         category: category,
       );
+      await SoundSettingsService.instance.play('reminder');
       await _load();
       _message('Reminder scheduled successfully.');
     } catch (error) {
@@ -198,7 +200,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   Future<void> _delete(Map<String, dynamic> item) async {
+    await SoundSettingsService.instance.play('delete_warning');
     await _service.deleteReminder((item['id'] as num).toInt());
+    await SoundSettingsService.instance.play('delete_success');
     await _load();
     _message('Reminder removed.');
   }

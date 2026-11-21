@@ -20,7 +20,7 @@ class SoundSettingsScreen extends StatelessWidget {
                 Row(children: [Icon(Icons.volume_up_rounded, color: colors.primary, size: 25), const SizedBox(width: 10),
                   const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('Action Sound Effects', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                    Text('Sounds only for meaningful actions', style: TextStyle(fontSize: 12)),
+                    Text('Manage app startup sounds, action effects and audio preferences', style: TextStyle(fontSize: 12)),
                   ]))]),
                 const SizedBox(height: 10),
                 SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Sound Effects'),

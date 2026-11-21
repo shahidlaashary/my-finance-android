@@ -9,6 +9,7 @@ class SoundSettingsService extends ChangeNotifier {
   static const _enabledKey = 'sound_effects_enabled';
   static const _volumeKey = 'sound_effects_volume';
   static const _choicePrefix = 'sound_action_';
+  static const _actionEnabledPrefix = 'sound_action_enabled_';
 
   static const actions = <String, String>{
     'app_start': 'App Startup', 'save': 'Save / Create', 'update': 'Update / Edit',
@@ -25,6 +26,7 @@ class SoundSettingsService extends ChangeNotifier {
   bool soundEnabled = false;
   double soundVolume = 0.60;
   final Map<String, String> choices = {for (final key in actions.keys) key: 'modern'};
+  final Map<String, bool> actionEnabled = {for (final key in actions.keys) key: true};
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,6 +34,7 @@ class SoundSettingsService extends ChangeNotifier {
     soundVolume = prefs.getDouble(_volumeKey) ?? 0.60;
     for (final key in actions.keys) {
       choices[key] = prefs.getString('$_choicePrefix$key') ?? 'modern';
+      actionEnabled[key] = prefs.getBool('$_actionEnabledPrefix$key') ?? true;
     }
     notifyListeners();
   }
@@ -46,6 +49,13 @@ class SoundSettingsService extends ChangeNotifier {
     soundVolume = value.clamp(0.0, 1.0).toDouble();
     notifyListeners();
     await (await SharedPreferences.getInstance()).setDouble(_volumeKey, soundVolume);
+  }
+
+  Future<void> setActionEnabled(String action, bool value) async {
+    if (!actions.containsKey(action)) return;
+    actionEnabled[action] = value;
+    notifyListeners();
+    await (await SharedPreferences.getInstance()).setBool('$_actionEnabledPrefix$action', value);
   }
 
   Future<void> setChoice(String action, String preset) async {
@@ -93,7 +103,7 @@ class SoundSettingsService extends ChangeNotifier {
   }
 
   Future<void> play(String action, {String? presetOverride}) async {
-    if (!soundEnabled || soundVolume <= 0 || !actions.containsKey(action)) return;
+    if (!soundEnabled || soundVolume <= 0 || !actions.containsKey(action) || actionEnabled[action] == false) return;
     final pattern = _pattern(action, presetOverride ?? choices[action] ?? 'modern');
     try {
       await _channel.invokeMethod<bool>('playPattern', {
@@ -109,11 +119,14 @@ class SoundSettingsService extends ChangeNotifier {
   Future<void> reset() async {
     soundEnabled = false;
     soundVolume = 0.60;
-    for (final key in actions.keys) { choices[key] = 'modern'; }
+    for (final key in actions.keys) { choices[key] = 'modern'; actionEnabled[key] = true; }
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_enabledKey, false);
     await prefs.setDouble(_volumeKey, 0.60);
-    for (final key in actions.keys) { await prefs.setString('$_choicePrefix$key', 'modern'); }
+    for (final key in actions.keys) {
+      await prefs.setString('$_choicePrefix$key', 'modern');
+      await prefs.setBool('$_actionEnabledPrefix$key', true);
+    }
   }
 }

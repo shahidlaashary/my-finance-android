@@ -85,11 +85,11 @@ class _LibraryPdfReaderScreenState extends State<LibraryPdfReaderScreen> {
   }
 
   Future<void> _previousPage() async {
-    if (_controller != null && _currentPage > 1) await _controller!.previousPage();
+    if (_controller != null && _currentPage > 1) await _controller!.previousPage(duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
   }
 
   Future<void> _nextPage() async {
-    if (_controller != null && _currentPage < _pageCount) await _controller!.nextPage();
+    if (_controller != null && _currentPage < _pageCount) await _controller!.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
   }
 
   @override
@@ -105,14 +105,7 @@ class _LibraryPdfReaderScreenState extends State<LibraryPdfReaderScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: [
-          if (_pageCount > 0)
-            IconButton(
-              tooltip: 'First page',
-              onPressed: _currentPage == 1 ? null : () => _controller?.goToPage(1),
-              icon: const Icon(Icons.first_page_rounded),
-            ),
-        ],
+        actions: const [],
       ),
       body: _error != null
           ? Center(

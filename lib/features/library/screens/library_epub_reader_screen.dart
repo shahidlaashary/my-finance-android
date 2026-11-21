@@ -29,7 +29,7 @@ class _LibraryEpubReaderScreenState extends State<LibraryEpubReaderScreen> {
     super.initState();
     final savedCfi = widget.item['last_epub_cfi'] as String?;
     _controller = EpubController(
-      document: EpubDocument.openFile(_path),
+      document: EpubDocument.openFile(File(_path)),
       epubCfi: savedCfi?.isNotEmpty == true ? savedCfi : null,
     );
     _checkFile();

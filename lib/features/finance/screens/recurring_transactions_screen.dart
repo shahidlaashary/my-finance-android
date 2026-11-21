@@ -289,7 +289,7 @@ class _RecurringTransactionsScreenState
         style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500))),
     ]);
     return Card(
-      margin: const EdgeInsets.only(bottom: 9),
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       color: scheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15),
@@ -361,14 +361,14 @@ class _RecurringTransactionsScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(appText(context, 'Recurring Transactions', 'بار بار ہونے والے لین دین')),
+        actions: [
+          IconButton(
+            tooltip: appText(context, 'Add Schedule', 'شیڈول شامل کریں'),
+            onPressed: _loading ? null : () => _openForm(),
+            icon: const Icon(Icons.calendar_month_rounded),
+          ),
+        ],
       ),
-      actions: [
-        IconButton(
-          tooltip: appText(context, 'Add Schedule', 'شیڈول شامل کریں'),
-          onPressed: _loading ? null : () => _openForm(),
-          icon: const Icon(Icons.calendar_month_rounded),
-        ),
-      ],
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(

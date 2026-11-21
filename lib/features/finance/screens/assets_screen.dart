@@ -14,7 +14,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
-import 'package:my_finance/features/finance/screens/loan_repayment_entry_form.dart';
+import 'package:my_finance/features/finance/screens/asset_loan_repayment_entry_form.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/screens/asset_valuation_entry_form.dart';
 import 'package:my_finance/features/finance/screens/asset_sale_entry_form.dart';
@@ -840,7 +840,7 @@ class AssetsScreenState extends State<AssetsScreen> {
     if (loan.id == null || loan.remainingAmount <= 0) return;
     final saved = await showDialog<bool>(
       context: context,
-      builder: (_) => LoanRepaymentEntryForm(loan: loan),
+      builder: (_) => AssetLoanRepaymentEntryForm(loan: loan),
     );
     if (saved == true) {
       await _loadData();

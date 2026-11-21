@@ -731,6 +731,7 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
         DropdownButtonFormField<String>(value: _assetPaymentType, decoration: decoration('Payment type'),
           items: const ['Cash','Bank','Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
           onChanged: (v) => setState(() => _assetPaymentType = v ?? 'Wallet')),
+        Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createPartyInline, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party')),
         if (_assetPaymentType == 'Loan') ...[
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(value: _partyId, decoration: decoration('Loan party'),
@@ -753,8 +754,31 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   );
 
   Future<void> save() async {
-    if (widget.transactionType == 'Loan') { await _saveLoan(); return; }
-    if (widget.transactionType == 'Asset') { await _saveAsset(); return; }
+    switch (widget.transactionType) {
+      case 'Income':
+        await _saveIncome();
+        break;
+      case 'Expense':
+        await _saveExpense();
+        break;
+      case 'Transfer':
+        await _saveTransfer();
+        break;
+      case 'Loan':
+        await _saveLoan();
+        break;
+      case 'Asset':
+        await _saveAsset();
+        break;
+    }
+  }
+
+  Future<void> _saveIncome() => _saveTransaction('Income');
+  Future<void> _saveExpense() => _saveTransaction('Expense');
+  Future<void> _saveTransfer() => _saveTransaction('Transfer');
+
+  Future<void> _saveTransaction(String expectedType) async {
+    if (widget.transactionType != expectedType) return;
     if (!formKey.currentState!.validate()) return;
 
     final amount = double.tryParse(amountController.text.trim());

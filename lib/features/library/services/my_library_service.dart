@@ -54,7 +54,7 @@ class MyLibraryService {
     final directory = await libraryDirectory;
     final db = await openDatabase(
       p.join(directory.path, _databaseName),
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -66,7 +66,8 @@ class MyLibraryService {
             file_size INTEGER NOT NULL,
             added_at TEXT NOT NULL,
             last_page INTEGER NOT NULL DEFAULT 1,
-            last_position_ms INTEGER NOT NULL DEFAULT 0
+            last_position_ms INTEGER NOT NULL DEFAULT 0,
+            last_epub_cfi TEXT
           )
         ''');
       },
@@ -79,9 +80,10 @@ class MyLibraryService {
             'ALTER TABLE $_tableName ADD COLUMN last_position_ms INTEGER NOT NULL DEFAULT 0',
           );
         }
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE $_tableName ADD COLUMN last_epub_cfi TEXT');
+        }
       },
-      // If a development build briefly used schema v3, safely return to v2.
-      // The unused v3 column is left in place; no existing rows are rewritten.
       onDowngrade: (db, oldVersion, newVersion) async {},
       onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
@@ -275,6 +277,16 @@ class MyLibraryService {
     await db.update(
       _tableName,
       {'last_page': page < 1 ? 1 : page},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> saveEpubPosition(int id, String cfi) async {
+    final db = await database;
+    await db.update(
+      _tableName,
+      {'last_epub_cfi': cfi},
       where: 'id = ?',
       whereArgs: [id],
     );

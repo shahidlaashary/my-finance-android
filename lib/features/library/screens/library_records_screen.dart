@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/features/library/services/my_library_service.dart';
 
-class LibraryRecordsScreen extends StatefulWidget {
-  const LibraryRecordsScreen({super.key, required this.section});
+class SpaceRecordsScreen extends StatefulWidget {
+  const SpaceRecordsScreen({super.key, required this.section});
   final String section;
 
   @override
-  State<LibraryRecordsScreen> createState() => LibraryRecordsScreenState();
+  State<SpaceRecordsScreen> createState() => SpaceRecordsScreenState();
 }
 
-class LibraryRecordsScreenState extends State<LibraryRecordsScreen> {
+class SpaceRecordsScreenState extends State<SpaceRecordsScreen> {
   Future<List<Map<String, Object?>>>? _records;
 
   @override
@@ -82,7 +82,7 @@ class LibraryRecordsScreenState extends State<LibraryRecordsScreen> {
                   onSelected: (value) async {
                     if (value == 'edit') {
                       await Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => LibraryRecordFormScreen(section: widget.section, record: row)));
+                        builder: (_) => SpaceRecordFormScreen(section: widget.section, record: row)));
                       refresh();
                     } else if (value == 'delete') {
                       final yes = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
@@ -157,16 +157,16 @@ class LibraryRecordsScreenState extends State<LibraryRecordsScreen> {
   }
 }
 
-class LibraryRecordFormScreen extends StatefulWidget {
-  const LibraryRecordFormScreen({super.key, required this.section, this.record});
+class SpaceRecordFormScreen extends StatefulWidget {
+  const SpaceRecordFormScreen({super.key, required this.section, this.record});
   final String section;
   final Map<String, Object?>? record;
 
   @override
-  State<LibraryRecordFormScreen> createState() => _LibraryRecordFormScreenState();
+  State<SpaceRecordFormScreen> createState() => _SpaceRecordFormScreenState();
 }
 
-class _LibraryRecordFormScreenState extends State<LibraryRecordFormScreen> {
+class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _title;
   late final TextEditingController _category;

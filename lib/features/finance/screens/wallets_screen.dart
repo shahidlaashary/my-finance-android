@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
@@ -423,7 +424,9 @@ class _WalletsPageState extends State<WalletsPage> {
     if (confirmed != true) return;
 
     try {
+      await SoundSettingsService.instance.play('delete_warning');
       await FinanceDB.instance.deleteWallet(wallet['id'] as int);
+      await SoundSettingsService.instance.play('delete_success');
       if (await GeneralPreferences.instance.hapticFeedback) {
         await HapticFeedback.selectionClick();
       }
@@ -1388,6 +1391,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
         await HapticFeedback.selectionClick();
       }
       if (!mounted) return;
+      await SoundSettingsService.instance.play(isEditing ? 'update' : 'save');
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;

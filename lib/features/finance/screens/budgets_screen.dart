@@ -447,7 +447,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 90),
+                padding: const EdgeInsets.only(bottom: 16),
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(12),

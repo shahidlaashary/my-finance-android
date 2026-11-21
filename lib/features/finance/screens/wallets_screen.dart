@@ -976,6 +976,21 @@ class _WalletsPageState extends State<WalletsPage> {
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface),
                       ),
                       const SizedBox(width: 7),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          foregroundColor: Theme.of(context).colorScheme.primary,
+                        ),
+                        onPressed: () => openWalletForm(),
+                        icon: const Icon(Icons.add_rounded, size: 17),
+                        label: Text(appText(context, 'Add Wallet', 'والٹ شامل کریں'),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                      ),
+                      const SizedBox(width: 5),
+                      const Expanded(child: SizedBox()),
                       Container(
                         width: 92,
                         height: 22,
@@ -1043,20 +1058,6 @@ class _WalletsPageState extends State<WalletsPage> {
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 5),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          minimumSize: const Size(0, 32),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: VisualDensity.compact,
-                          foregroundColor: Theme.of(context).colorScheme.primary,
-                        ),
-                        onPressed: () => openWalletForm(),
-                        icon: const Icon(Icons.add_rounded, size: 17),
-                        label: Text(appText(context, 'Add Wallet', 'والٹ شامل کریں'),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                       ),
                       const SizedBox(width: 2),
                       TextButton(

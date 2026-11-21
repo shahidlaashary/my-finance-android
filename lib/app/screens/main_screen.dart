@@ -12,7 +12,7 @@ import 'package:my_finance/features/finance/screens/income_entry_form.dart' show
 import 'package:my_finance/features/finance/screens/expense_entry_form.dart' show ExpenseEntryForm;
 import 'package:my_finance/features/finance/screens/transfer_entry_form.dart' show TransferEntryForm;
 import 'package:my_finance/features/finance/screens/loan_entry_form.dart' show LoanEntryForm;
-import 'package:my_finance/features/finance/screens/asset_entry_form.dart' show AssetEntryForm;
+import 'package:my_finance/features/finance/screens/asset_purchase_entry_form.dart' show AssetPurchaseEntryForm;
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
 import 'package:my_finance/features/finance/screens/wallets_screen.dart' show WalletsPage;
 import 'package:my_finance/app/screens/simple_feature_page.dart' show SimpleFeaturePage;
@@ -286,7 +286,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
       case 'Loan':
         return const LoanEntryForm(key: ValueKey('Loan'));
       case 'Asset':
-        return const AssetEntryForm(key: ValueKey('Asset'));
+        return const AssetPurchaseEntryForm(key: ValueKey('Asset'));
       default:
         return const IncomeEntryForm(key: ValueKey('Income'));
     }

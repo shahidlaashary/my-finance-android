@@ -25,9 +25,7 @@ import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
 class AssetsScreen extends StatefulWidget {
-  const AssetsScreen({super.key, this.embeddedFormHost = false});
-
-  final bool embeddedFormHost;
+  const AssetsScreen({super.key});
 
   @override
   State<AssetsScreen> createState() => AssetsScreenState();
@@ -45,7 +43,6 @@ class AssetsScreenState extends State<AssetsScreen> {
   Map<String, double> _purchaseValues = {};
 
   bool _loading = true;
-  Widget? _embeddedAssetForm;
   bool _hideBalances = false;
   bool _showSold = false;
   String? _selectedCategory;
@@ -293,9 +290,7 @@ class AssetsScreenState extends State<AssetsScreen> {
   Future<void> openNewAssetForm() => _showAssetDialog();
 
   void _closeAssetForm(BuildContext sheetContext) {
-    if (widget.embeddedFormHost) {
-      if (mounted) setState(() => _embeddedAssetForm = null);
-    } else if (Navigator.of(sheetContext).canPop()) {
+    if (Navigator.of(sheetContext).canPop()) {
       Navigator.of(sheetContext).pop();
     }
   }
@@ -399,7 +394,7 @@ class AssetsScreenState extends State<AssetsScreen> {
                           SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-                            IconButton(onPressed: () { _closeAssetForm(sheetContext); if (widget.embeddedFormHost) disposeAssetControllers(); }, icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
+                            IconButton(onPressed: () => _closeAssetForm(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
                           ]),
                           SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
@@ -684,19 +679,14 @@ class AssetsScreenState extends State<AssetsScreen> {
       },
     );
 
-    if (widget.embeddedFormHost) {
-      if (mounted) setState(() => _embeddedAssetForm = assetForm);
-    } else {
-      await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => assetForm,
-      );
-    }
-
-    if (!widget.embeddedFormHost) disposeAssetControllers();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => assetForm,
+    );
+    disposeAssetControllers();
   }
 
   Future<void> _updateValuation(AssetsModel asset) async {
@@ -1125,13 +1115,6 @@ class AssetsScreenState extends State<AssetsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.embeddedFormHost) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: _embeddedAssetForm ?? const SizedBox.shrink(),
-      );
-    }
-
     final currencies = _availableCurrencies;
 
     final primaryCurrency = currencies.contains('PKR')

@@ -295,6 +295,8 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       ),
     );
   }
+}
+
 
 class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
   _LibrarySearchDelegate({required this.library, required this.onOpen});
@@ -358,4 +360,3 @@ class _LibrarySearchDelegate extends SearchDelegate<Map<String, Object?>?> {
   Widget buildResults(BuildContext context) => _results(context);
 }
 
-}

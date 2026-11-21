@@ -340,7 +340,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
         IconButton(tooltip: 'Add installment plan', onPressed: _showAddMenu, icon: const Icon(Icons.add_card_rounded)),
       ]),
       body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 90), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [
           Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(
             gradient: LinearGradient(colors: [primary, Color.lerp(primary, Theme.of(context).colorScheme.surface, .24)!]),
             borderRadius: BorderRadius.circular(20)),

@@ -14,7 +14,8 @@ import 'package:my_finance/features/documents/services/my_documents_service.dart
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 
 class MyDocumentsScreen extends StatefulWidget {
-  const MyDocumentsScreen({super.key});
+  const MyDocumentsScreen({super.key, this.openAddOnStart = false});
+  final bool openAddOnStart;
 
   @override
   State<MyDocumentsScreen> createState() => _MyDocumentsScreenState();
@@ -45,6 +46,8 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     AppRefreshController.revision.addListener(_onAppDataChanged);
     _loadDocuments();
     _searchController.addListener(_loadDocuments);
+    if (widget.openAddOnStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _showDocumentForm(); });
   }
 
   void _onAppDataChanged() {

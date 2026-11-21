@@ -45,7 +45,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   }
 
   Future<void> _openLibrarySearch() async {
-    await showSearch<Map<String, Object?>?>(
+    await showSearch<Object?>(
       context: context,
       delegate: _LibrarySearchDelegate(
         library: _library,

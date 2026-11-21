@@ -569,6 +569,52 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
   }
 
 
+
+  Future<void> _createPartyInline() async {
+    final name = TextEditingController();
+    final phone = TextEditingController();
+    String currency = await FinanceDB.instance.getBaseCurrency();
+    if (!CurrencyCatalog.supported.contains(currency.toUpperCase())) currency = 'PKR';
+    if (!mounted) { name.dispose(); phone.dispose(); return; }
+    final form = GlobalKey<FormState>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Create Party'),
+          content: Form(key: form, child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Party name *'),
+              validator: (v) => v == null || v.trim().isEmpty ? 'Enter party name.' : null),
+            TextFormField(controller: phone, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
+            DropdownButtonFormField<String>(value: currency, decoration: const InputDecoration(labelText: 'Currency'),
+              items: CurrencyCatalog.supported.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+              onChanged: (v) { if (v != null) setDialogState(() => currency = v); }),
+          ])),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () { if (form.currentState!.validate()) Navigator.pop(dialogContext, true); }, child: const Text('Save Party')),
+          ],
+        ),
+      ),
+    );
+    if (result == true) {
+      try {
+        final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
+        final refreshed = await LoansService.getParties();
+        if (mounted) setState(() {
+          _parties = refreshed;
+          _partyId = id;
+          final match = wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency.toUpperCase());
+          if (match.isNotEmpty) selectedWalletId = (match.first['id'] as num).toInt();
+        });
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    }
+    name.dispose();
+    phone.dispose();
+  }
+
   String _dateOnly(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
   Future<void> _saveLoan() async {
@@ -647,11 +693,18 @@ class _TransactionEntryFormState extends State<TransactionEntryForm> {
           ButtonSegment(value: 'given', label: Text('Given')),
           ButtonSegment(value: 'taken', label: Text('Taken')),
         ], selected: {_loanType}, onSelectionChanged: (v) => setState(() => _loanType = v.first)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
+        Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createPartyInline, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))),
         DropdownButtonFormField<int>(value: _partyId, isExpanded: true,
           decoration: decoration('Party *', icon: Icons.person_outline),
           items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(),
-          onChanged: (v) => setState(() => _partyId = v), validator: (v) => v == null ? 'Select a party.' : null),
+          onChanged: (v) => setState(() {
+            _partyId = v;
+            final party = _parties.firstWhere((p) => (p['id'] as num).toInt() == v);
+            final c = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+            final match = wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == c);
+            if (match.isNotEmpty) selectedWalletId = (match.first['id'] as num).toInt();
+          }), validator: (v) => v == null ? 'Select a party.' : null),
         const SizedBox(height: 12), _amountField(), const SizedBox(height: 12), _walletField(),
         ListTile(contentPadding: EdgeInsets.zero, title: const Text('Due date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_dueDate)),
           onTap: () async { final d = await showDatePicker(context: context, initialDate: _dueDate, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (d != null) setState(() => _dueDate = d); }),

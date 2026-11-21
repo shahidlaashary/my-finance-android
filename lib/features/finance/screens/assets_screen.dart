@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -720,6 +721,7 @@ class AssetsScreenState extends State<AssetsScreen> {
         paymentType: result['paymentType'] as String,
         partyId: result['partyId'] as int?,
       );
+      await SoundSettingsService.instance.play('income');
       await _loadData();
       _message('Asset sold successfully.');
     } catch (e) {
@@ -758,7 +760,9 @@ class AssetsScreenState extends State<AssetsScreen> {
     if (confirm != true || asset.id == null) return;
 
     try {
+      await SoundSettingsService.instance.play('delete_warning');
       await _service.deleteAsset(asset.id!);
+      await SoundSettingsService.instance.play('delete_success');
       await _loadData();
       _message('Asset deleted successfully.');
     } catch (e) {

@@ -47,6 +47,8 @@ class LibraryDocumentsScreenState extends State<LibraryDocumentsScreen> {
 
   Future<void> showAddDocumentForm() => _showDocumentForm();
 
+  void openDocumentFromSearch(LibraryDocumentModel document) => _openDetails(document);
+
   void _onAppDataChanged() {
     if (mounted) _loadDocuments();
   }

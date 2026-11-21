@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -60,12 +61,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   Future<void> _openSpaceSearch() async {
-    await showSearch<Object?>(
-      context: context,
-      delegate: _SpaceSearchDelegate(
-        space: _space,
-        onOpen: _openItem,
-        onOpenDocument: (document) => _documentsKey.currentState?.openDocumentFromSearch(document),
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _SpaceSearchScreen(
+          space: _space,
+          onOpen: _openItem,
+          onOpenDocument: (document) => _documentsKey.currentState?.openDocumentFromSearch(document),
+        ),
       ),
     );
   }
@@ -400,86 +403,37 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 }
 
-class _SpaceSearchDelegate extends SearchDelegate<Object?> {
-  _SpaceSearchDelegate({required this.space, required this.onOpen, required this.onOpenDocument});
-
+class _SpaceSearchScreen extends StatefulWidget {
+  const _SpaceSearchScreen({required this.space, required this.onOpen, required this.onOpenDocument});
   final MySpaceService space;
   final Future<void> Function(Map<String, Object?> item) onOpen;
   final void Function(SpaceDocumentModel document) onOpenDocument;
+  @override
+  State<_SpaceSearchScreen> createState() => _SpaceSearchScreenState();
+}
 
+class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
+  final _controller = TextEditingController();
+  Timer? _debounce;
+  List<_SpaceSearchResult> _results = [];
   String _type = 'All';
   String _documentCategory = 'All';
   String _documentFilter = 'All';
-
-  static const _categories = ['All', 'Personal', 'Vehicle', 'Education', 'Property', 'Financial', 'Bills & Receipts', 'Business', 'Other'];
+  bool _loading = false;
+  String? _error;
+  int _request = 0;
+  static const _types = <String, String>{
+    'All': 'All', 'book': 'Books', 'document': 'Docs', 'audio': 'Music',
+    'photos': 'Photos', 'videos': 'Videos', 'deals': 'Deals', 'projects': 'Projects',
+  };
+  static const _categories = [
+    'All', 'Personal', 'Vehicle', 'Education', 'Property',
+    'Financial', 'Bills & Receipts', 'Business', 'Other',
+  ];
   static const _documentFilters = ['All', 'Favorites', 'Expiring Soon', 'Expired'];
 
   @override
-  String get searchFieldLabel => 'Search books, docs, music, photos, videos';
-
-  @override
-  List<Widget> buildActions(BuildContext context) => [
-    PopupMenuButton<String>(
-      tooltip: 'Search filters',
-      icon: const Icon(Icons.filter_list_rounded),
-      onSelected: (value) { _type = value; showSuggestions(context); },
-      itemBuilder: (_) => const [
-        PopupMenuItem(value: 'All', child: Text('All Space')),
-        PopupMenuItem(value: 'book', child: Text('Books')),
-        PopupMenuItem(value: 'document', child: Text('My Docs')),
-        PopupMenuItem(value: 'audio', child: Text('Music')),
-        PopupMenuItem(value: 'photos', child: Text('Photos')),
-        PopupMenuItem(value: 'videos', child: Text('Videos')),
-      ],
-    ),
-    PopupMenuButton<String>(
-      tooltip: 'Document category and status',
-      icon: const Icon(Icons.tune_rounded),
-      onSelected: (value) {
-        if (value.startsWith('category:')) {
-          _documentCategory = value.substring(9);
-        } else {
-          _documentFilter = value.substring(7);
-        }
-        showSuggestions(context);
-      },
-      itemBuilder: (_) => [
-        const PopupMenuItem<String>(enabled: false, child: Text('DOCUMENT CATEGORY')),
-        ..._categories.map((value) => PopupMenuItem(
-          value: 'category:$value',
-          child: Row(children: [
-            const Icon(Icons.folder_outlined, size: 18),
-            const SizedBox(width: 10),
-            Expanded(child: Text(value)),
-            if (_documentCategory == value) const Icon(Icons.check, size: 18),
-          ]),
-        )),
-        const PopupMenuDivider(),
-        const PopupMenuItem<String>(enabled: false, child: Text('DOCUMENT STATUS')),
-        ..._documentFilters.map((value) => PopupMenuItem(
-          value: 'status:$value',
-          child: Row(children: [
-            const Icon(Icons.filter_alt_outlined, size: 18),
-            const SizedBox(width: 10),
-            Expanded(child: Text(value)),
-            if (_documentFilter == value) const Icon(Icons.check, size: 18),
-          ]),
-        )),
-      ],
-    ),
-    IconButton(
-      icon: const Icon(Icons.close_rounded),
-      tooltip: 'Close search',
-      onPressed: () => close(context, null),
-    ),
-  ];
-
-  @override
-  Widget buildLeading(BuildContext context) => IconButton(
-    icon: const Icon(Icons.arrow_back_rounded),
-    tooltip: 'Close search',
-    onPressed: () => close(context, null),
-  );
+  void dispose() { _debounce?.cancel(); _controller.dispose(); super.dispose(); }
 
   String _normalise(String value) => value.toLowerCase()
       .replaceAll(RegExp(r'[\u200c\u200d]'), '')
@@ -490,135 +444,262 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
     return _normalise(search).split(' ').where((term) => term.isNotEmpty).every(text.contains);
   }
 
-  Future<List<_SpaceSearchResult>> _matches() async {
-    final q = query.trim();
-    if (q.isEmpty) return [];
-    final results = <_SpaceSearchResult>[];
-
-    if (_type != 'document') {
-      final items = await space.getItems();
-      for (final item in items) {
-        final type = item['file_type']?.toString() ?? '';
-        if (_type != 'All' && type != _type) continue;
-        final searchable = [
-          item['title']?.toString() ?? '',
-          item['original_name']?.toString() ?? '',
-          item['file_name']?.toString() ?? '',
-          item['file_path']?.toString() ?? '',
-        ].join(' ');
-        if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.media(item));
-      }
+  void _onQueryChanged(String value) {
+    _debounce?.cancel();
+    if (value.trim().isEmpty) {
+      setState(() { _request++; _results = []; _loading = false; _error = null; });
+      return;
     }
-
-    if (_type == 'All' || _type == 'document') {
-      final documents = await SpaceDocumentsService.instance.getDocuments(
-        category: _documentCategory,
-        filter: _documentFilter,
-      );
-      for (final document in documents) {
-        final searchable = [
-          document.title, document.documentNumber, document.category, document.notes,
-          document.issueDate?.toIso8601String() ?? '',
-          document.expiryDate?.toIso8601String() ?? '',
-        ].join(' ');
-        if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.document(document));
-      }
-    }
-    return results;
+    _debounce = Timer(const Duration(milliseconds: 250), _runSearch);
   }
 
-  Widget _filterSummary(BuildContext context) {
-    final chips = <String>[
-      if (_type != 'All') _type == 'document' ? 'My Docs' : _type[0].toUpperCase() + _type.substring(1),
-      if (_documentCategory != 'All') _documentCategory,
-      if (_documentFilter != 'All') _documentFilter,
-    ];
-    if (chips.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
-      child: Wrap(spacing: 6, runSpacing: 4, children: [
-        for (final chip in chips)
-          InputChip(
-            label: Text(chip, style: const TextStyle(fontSize: 11)),
-            onDeleted: () {
-              if (['My Docs', 'Books', 'Music', 'Photos', 'Videos'].contains(chip)) {
-                _type = 'All';
-              } else if (_categories.contains(chip)) {
-                _documentCategory = 'All';
-              } else {
-                _documentFilter = 'All';
-              }
-              showSuggestions(context);
-            },
+  Future<void> _runSearch() async {
+    final q = _controller.text.trim();
+    if (q.isEmpty) return;
+    final request = ++_request;
+    setState(() { _loading = true; _error = null; });
+    try {
+      final results = <_SpaceSearchResult>[];
+      if (_type == 'All' || ['book', 'audio', 'photos', 'videos'].contains(_type)) {
+        final items = await widget.space.getItems();
+        for (final item in items) {
+          final type = item['file_type']?.toString() ?? '';
+          if (_type != 'All' && type != _type) continue;
+          final searchable = [item['title'], item['original_name'], item['file_name'], item['file_path']]
+              .whereType<Object>().join(' ');
+          if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.media(item));
+        }
+      }
+      if (_type == 'All' || _type == 'document') {
+        final documents = await SpaceDocumentsService.instance.getDocuments(
+          category: _documentCategory, filter: _documentFilter,
+        );
+        for (final document in documents) {
+          final searchable = [
+            document.title, document.documentNumber, document.category, document.notes,
+            document.issueDate?.toIso8601String() ?? '',
+            document.expiryDate?.toIso8601String() ?? '',
+          ].join(' ');
+          if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.document(document));
+        }
+      }
+      for (final section in ['deals', 'projects']) {
+        if (_type != 'All' && _type != section) continue;
+        final records = await widget.space.getSectionRecords(section);
+        for (final record in records) {
+          final searchable = [
+            record['title'], record['category'], record['party_one'], record['party_two'],
+            record['status'], record['start_date'], record['end_date'],
+            record['description'], record['notes'],
+          ].whereType<Object>().join(' ');
+          if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.record(record, section));
+        }
+      }
+      results.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+      if (!mounted || request != _request) return;
+      setState(() { _results = results; _loading = false; });
+    } catch (_) {
+      if (!mounted || request != _request) return;
+      setState(() { _loading = false; _error = 'Search could not be completed. Please try again.'; });
+    }
+  }
+
+  void _changeType(String value) {
+    setState(() => _type = value);
+    if (_controller.text.trim().isNotEmpty) _runSearch();
+  }
+
+  Future<void> _showFilters() async {
+    await showModalBottomSheet<void>(
+      context: context, showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Document filters', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 14),
+              Text('Category', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 8, children: _categories.map((value) => ChoiceChip(
+                label: Text(value), selected: _documentCategory == value,
+                onSelected: (_) => setSheetState(() => _documentCategory = value),
+              )).toList()),
+              const SizedBox(height: 16),
+              Text('Status', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, children: _documentFilters.map((value) => ChoiceChip(
+                label: Text(value), selected: _documentFilter == value,
+                onSelected: (_) => setSheetState(() => _documentFilter = value),
+              )).toList()),
+              const SizedBox(height: 18),
+              Row(children: [
+                TextButton(onPressed: () => setSheetState(() {
+                  _documentCategory = 'All'; _documentFilter = 'All';
+                }), child: const Text('Reset')),
+                const Spacer(),
+                FilledButton(onPressed: () {
+                  Navigator.pop(sheetContext);
+                  if (_controller.text.trim().isNotEmpty) _runSearch();
+                  setState(() {});
+                }, child: const Text('Apply')),
+              ]),
+            ]),
           ),
-        ActionChip(
-          avatar: const Icon(Icons.restart_alt_rounded, size: 15),
-          label: const Text('Reset', style: TextStyle(fontSize: 11)),
-          onPressed: () {
-            _type = 'All'; _documentCategory = 'All'; _documentFilter = 'All';
-            showSuggestions(context);
-          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResult(_SpaceSearchResult result) {
+    if (result.document != null) {
+      final document = result.document!;
+      final detail = [
+        document.category,
+        if (document.documentNumber.isNotEmpty) document.documentNumber,
+        if (document.isFavorite) 'Favorite',
+      ].join(' • ');
+      return ListTile(
+        leading: const CircleAvatar(child: Icon(Icons.description_outlined)),
+        title: Text(document.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text(detail, maxLines: 1, overflow: TextOverflow.ellipsis),
+        onTap: () { Navigator.pop(context); widget.onOpenDocument(document); },
+      );
+    }
+    if (result.section != null) {
+      final record = result.record!;
+      final isDeal = result.section == 'deals';
+      final detail = [
+        record['category'], record['status'],
+        if (isDeal) record['party_one'], if (isDeal) record['party_two'],
+      ].whereType<Object>().where((v) => v.toString().trim().isNotEmpty).join(' • ');
+      return ListTile(
+        leading: CircleAvatar(child: Icon(isDeal ? Icons.handshake_outlined : Icons.work_outline_rounded)),
+        title: Text(record['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text((isDeal ? 'Deal' : 'Project') + (detail.isEmpty ? '' : ' • ' + detail),
+            maxLines: 2, overflow: TextOverflow.ellipsis),
+        onTap: () {
+          Navigator.pop(context);
+          showModalBottomSheet<void>(
+            context: context, isScrollControlled: true, showDragHandle: true,
+            builder: (ctx) => SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: SingleChildScrollView(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(record['title']?.toString() ?? '', style: Theme.of(ctx).textTheme.titleLarge),
+                    const SizedBox(height: 12),
+                    for (final field in <String, String>{
+                      'Category': 'category', 'Status': 'status',
+                      'First Party': 'party_one', 'Second Party': 'party_two',
+                      'Start Date': 'start_date', 'End Date': 'end_date',
+                      'Description': 'description', 'Notes': 'notes',
+                    }.entries)
+                      if ((record[field.value]?.toString() ?? '').trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(field.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 3),
+                            Text(record[field.value].toString()),
+                          ]),
+                        ),
+                  ],
+                )),
+              ),
+            ),
+          );
+        },
+      );
+    }
+    final item = result.item!;
+    final type = item['file_type']?.toString() ?? '';
+    final icon = type == 'audio' ? Icons.headphones_rounded
+        : type == 'photos' ? Icons.image_rounded
+        : type == 'videos' ? Icons.video_library_rounded : Icons.menu_book_rounded;
+    final label = type == 'audio' ? 'Music' : type == 'photos' ? 'Photo'
+        : type == 'videos' ? 'Video' : 'Book';
+    return ListTile(
+      leading: CircleAvatar(child: Icon(icon)),
+      title: Text(item['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(label),
+      onTap: () { Navigator.pop(context); widget.onOpen(item); },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Search My Space'),
+        actions: [IconButton(
+          tooltip: 'Document filters', onPressed: _showFilters,
+          icon: const Icon(Icons.tune_rounded),
+        )],
+      ),
+      body: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+          child: TextField(
+            controller: _controller, autofocus: true, onChanged: _onQueryChanged,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) { _debounce?.cancel(); _runSearch(); },
+            decoration: InputDecoration(
+              hintText: 'Search My Space',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _controller.text.isEmpty ? null : IconButton(
+                tooltip: 'Clear search',
+                onPressed: () { _controller.clear(); _onQueryChanged(''); },
+                icon: const Icon(Icons.close_rounded),
+              ),
+              isDense: true, filled: true,
+              fillColor: colors.surfaceContainerHighest.withValues(alpha: .45),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 42,
+          child: ListView(
+            scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12),
+            children: _types.entries.map((entry) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: ChoiceChip(
+                label: Text(entry.value), selected: _type == entry.key,
+                onSelected: (_) => _changeType(entry.key), visualDensity: VisualDensity.compact,
+              ),
+            )).toList(),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Expanded(
+          child: _loading ? const Center(child: CircularProgressIndicator())
+              : _error != null ? Center(child: Text(_error!))
+              : _controller.text.trim().isEmpty ? const SizedBox.shrink()
+              : _results.isEmpty ? const Center(child: Text('No matching items found.'))
+              : ListView.separated(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: _results.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+                  itemBuilder: (_, index) => _buildResult(_results[index]),
+                ),
         ),
       ]),
     );
   }
-
-  Widget _results(BuildContext context) => Column(children: [
-    _filterSummary(context),
-    Expanded(
-      child: FutureBuilder<List<_SpaceSearchResult>>(
-        future: _matches(),
-        builder: (context, snapshot) {
-          if (query.trim().isEmpty) return const Center(child: Text('Search across Books, My Docs, Music, Photos and Videos.'));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError) return const Center(child: Text('Search failed. Please try again.'));
-          final results = snapshot.data ?? [];
-          if (results.isEmpty) return const Center(child: Text('No matching items found. Try another keyword or filter.'));
-          return ListView.separated(
-            itemCount: results.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
-            itemBuilder: (context, index) {
-              final result = results[index];
-              if (result.document != null) {
-                final document = result.document!;
-                final detail = document.documentNumber.isEmpty ? document.category : document.category + ' • ' + document.documentNumber;
-                return ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.description_outlined)),
-                  title: Text(document.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text('My Docs • ' + detail, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  onTap: () { close(context, document); onOpenDocument(document); },
-                );
-              }
-              final item = result.item!;
-              final type = item['file_type']?.toString() ?? '';
-              final icon = type == 'audio' ? Icons.headphones_rounded
-                  : type == 'photos' ? Icons.image_rounded
-                  : type == 'videos' ? Icons.video_library_rounded : Icons.menu_book_rounded;
-              final label = type == 'audio' ? 'Music' : type == 'photos' ? 'Photo' : type == 'videos' ? 'Video' : 'Book';
-              return ListTile(
-                leading: CircleAvatar(child: Icon(icon)),
-                title: Text(item['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text(label),
-                onTap: () { close(context, item); onOpen(item); },
-              );
-            },
-          );
-        },
-      ),
-    ),
-  ]);
-
-  @override
-  Widget buildSuggestions(BuildContext context) => _results(context);
-
-  @override
-  Widget buildResults(BuildContext context) => _results(context);
 }
 
 class _SpaceSearchResult {
   final Map<String, Object?>? item;
   final SpaceDocumentModel? document;
-  const _SpaceSearchResult._({this.item, this.document});
+  final Map<String, Object?>? record;
+  final String? section;
+  const _SpaceSearchResult._({this.item, this.document, this.record, this.section});
   factory _SpaceSearchResult.media(Map<String, Object?> item) => _SpaceSearchResult._(item: item);
   factory _SpaceSearchResult.document(SpaceDocumentModel document) => _SpaceSearchResult._(document: document);
+  factory _SpaceSearchResult.record(Map<String, Object?> record, String section) =>
+      _SpaceSearchResult._(record: record, section: section);
+  String get title => document?.title ?? record?['title']?.toString() ?? item?['title']?.toString() ?? '';
 }

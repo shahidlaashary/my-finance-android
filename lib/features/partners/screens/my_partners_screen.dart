@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -113,6 +114,7 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
     if (saved == true) {
       try {
         await _service.savePartner(id: partner?['id'] as int?, name: name.text, type: type, phone: phone.text, notes: notes.text, profitShare: double.tryParse(share.text) ?? 50, openingBalance: double.tryParse(opening.text) ?? 0);
+        await SoundSettingsService.instance.play(partner == null ? 'save' : 'update');
         await _load();
       } catch (e) { _message(e.toString()); }
     }
@@ -390,7 +392,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       TextFormField(controller: note, maxLines: 3, decoration: const InputDecoration(labelText: 'Notes / Memo')),
     ]));
     if (result == true) {
-      try { await _service.addTransaction(partnerId: widget.partnerId, type: type, amount: double.parse(amount.text), walletId: walletId, category: category.text, note: note.text, date: date); await _load(); }
+      try { await _service.addTransaction(partnerId: widget.partnerId, type: type, amount: double.parse(amount.text), walletId: walletId, category: category.text, note: note.text, date: date); await SoundSettingsService.instance.play(type.toLowerCase() == 'income' ? 'income' : 'expense'); await _load(); }
       catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
     }
     amount.dispose(); note.dispose(); category.dispose();
@@ -412,7 +414,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                 FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete'))],
             ));
             if (confirmed == true) {
-              try { await _service.deletePartner(widget.partnerId); if (mounted) Navigator.pop(context); }
+              try { await SoundSettingsService.instance.play('delete_warning'); await _service.deletePartner(widget.partnerId); await SoundSettingsService.instance.play('delete_success'); if (mounted) Navigator.pop(context); }
               catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not delete partner: $e'))); }
             }
           }

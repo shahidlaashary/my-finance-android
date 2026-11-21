@@ -59,7 +59,7 @@ class MoreFeaturesPage extends StatelessWidget {
       },
       {
         'title': 'My Partners',
-        'subtitle': 'Manage business and personal partners, linked wallets and shared transactions',
+        'subtitle': 'Manage partners details and shared records',
         'icon': Icons.handshake_outlined,
       },
       {

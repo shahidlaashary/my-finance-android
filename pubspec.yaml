@@ -41,6 +41,7 @@ dependencies:
   open_filex: ^5.0.0
   audioplayers: ^6.5.0
   video_player: ^2.10.0
+  youtube_player_iframe: ^5.2.1
   pdfx: ^2.9.2
   epub_view: ^3.3.0
 

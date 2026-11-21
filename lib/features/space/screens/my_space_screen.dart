@@ -199,7 +199,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.local_space_outlined, size: 64, color: colors.primary),
+                  Icon(Icons.folder_special_outlined, size: 64, color: colors.primary),
                   const SizedBox(height: 16),
                   Text(emptyTitle, style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
@@ -232,7 +232,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                   backgroundColor: colors.primaryContainer,
                   child: isPhoto
                       ? ClipOval(child: Image.file(File(item['file_path'] as String), width: 44, height: 44, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.broken_image_outlined, color: colors.onPrimaryContainer)))
-                      : Icon(isAudio ? Icons.headphones_rounded : isVideo ? Icons.video_space_outlined : Icons.menu_book_rounded, color: colors.onPrimaryContainer),
+                      : Icon(isAudio ? Icons.headphones_rounded : isVideo ? Icons.video_library_outlined : Icons.menu_book_rounded, color: colors.onPrimaryContainer),
                 ),
                 title: Text(item['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis),
                 subtitle: Text('${isAudio ? 'Music' : isPhoto ? 'Photo' : isVideo ? 'Video' : 'Book'} • ${size.toStringAsFixed(1)} MB$progress', maxLines: 2),
@@ -277,7 +277,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
             height: 66,
             child: Row(
               children: [
-                _navItem(0, Icons.space_books_outlined, 'All'),
+                _navItem(0, Icons.menu_book_rounded, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
                 _navItem(2, Icons.handshake_outlined, 'Deals'),
                 _navItem(3, Icons.description_outlined, 'Docs'),
@@ -320,7 +320,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photo', Icons.photo_outlined, 'Add Photo'),
-                      _addMenuItem('video', Icons.video_space_outlined, 'Add Video'),
+                      _addMenuItem('video', Icons.video_library_outlined, 'Add Video'),
                       _addMenuItem('project', Icons.work_outline_rounded, 'Add Project'),
                     ],
                   ),
@@ -328,7 +328,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 _navItem(4, Icons.headphones_outlined, 'Music'),
                 _navItem(5, Icons.photo_outlined, 'Photo'),
                 _navItem(6, Icons.work_outline_rounded, 'Projects'),
-                _navItem(7, Icons.video_space_outlined, 'Video'),
+                _navItem(7, Icons.video_library_outlined, 'Video'),
               ],
             ),
           ),
@@ -591,7 +591,7 @@ class _SpaceSearchDelegate extends SearchDelegate<Object?> {
               final type = item['file_type']?.toString() ?? '';
               final icon = type == 'audio' ? Icons.headphones_rounded
                   : type == 'photo' ? Icons.image_rounded
-                  : type == 'video' ? Icons.video_space_rounded : Icons.menu_book_rounded;
+                  : type == 'video' ? Icons.video_library_rounded : Icons.menu_book_rounded;
               final label = type == 'audio' ? 'Music' : type == 'photo' ? 'Photo' : type == 'video' ? 'Video' : 'Book';
               return ListTile(
                 leading: CircleAvatar(child: Icon(icon)),

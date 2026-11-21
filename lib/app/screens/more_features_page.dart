@@ -30,7 +30,7 @@ class MoreFeaturesPage extends StatelessWidget {
       {
         'title': 'My Space',
         'subtitle': 'Organize books, deals, docs, music, photos, videos and projects in one place',
-        'icon': Icons.local_space_outlined,
+        'icon': Icons.folder_special_outlined,
       },
       {
         'title': 'Staff Management',

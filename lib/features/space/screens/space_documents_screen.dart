@@ -397,7 +397,7 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
                               ),
                               OutlinedButton.icon(
                                 onPressed: chooseGallery,
-                                icon: Icon(Icons.photo_space_outlined),
+                                icon: Icon(Icons.photo_library_outlined),
                                 label: Text(appText(context, 'Gallery', 'Gallery')),
                               ),
                             ],

@@ -1,3 +1,4 @@
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -89,6 +90,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
           await AttachmentService.addAttachment(ownerType: AttachmentOwnerTypes.repayment, ownerId: id, sourcePath: file['path']!, originalFileName: file['name']!);
         } catch (_) { failures++; }
       }
+      await SoundSettingsService.instance.play('update');
       if (!mounted) return;
       if (failures > 0) _message('Repayment saved, but ' + failures.toString() + ' attachment(s) could not be added.');
       Navigator.of(context).pop(true);

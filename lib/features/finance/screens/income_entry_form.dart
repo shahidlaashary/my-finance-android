@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -714,6 +715,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
         ),
       );
 
+      await SoundSettingsService.instance.play('income');
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;

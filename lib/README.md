@@ -1,42 +1,58 @@
-# lib/ architecture
+# Application Architecture
 
-Feature-first Flutter structure for one shared Android, iOS, Windows and macOS codebase.
+This directory contains the Flutter application source code, organized by application layer and feature domain.
 
-- `main.dart`: minimal application entry point; initializes startup services and composes the root app.
-- `app/`: root app configuration, navigation shell, app-level screens, theme and responsive layout.
-- `core/`: cross-feature infrastructure including database, platform capabilities, security, attachments, refresh notifications, startup and theme.
-- `features/`: feature-owned screens, models and services grouped by domain.
-- `shared/`: reusable widgets and UI helpers shared across features.
+## Project Structure
 
-## App layer
+- `main.dart` — application entry point and startup initialization.
+- `app/` — root app configuration, navigation shell, app-level screens and responsive layout.
+- `core/` — shared infrastructure such as database access, localization, platform capabilities, security, attachments, preferences, startup and theme.
+- `features/` — feature-owned screens and services grouped by domain.
+- `shared/` — reusable widgets and UI helpers.
 
-- `app/my_finance_app.dart`: root Material application, routes, theme and app-lock gate.
-- `app/screens/main_screen.dart`: bottom navigation shell and the central add-transaction action sheet.
-- `app/screens/more_features_page.dart`: More Features navigation page.
-- `app/screens/more_features_screen.dart`: settings and appearance screens.
-- `app/screens/simple_feature_page.dart`: shared placeholder destination for unfinished feature entries.
+## App Layer
 
-## Finance feature
+- `app/my_finance_app.dart` — root Material application, routes, theme and app-lock gate.
+- `app/screens/main_screen.dart` — primary bottom navigation and central create-action sheet.
+- `app/screens/more_features_page.dart` — secondary feature navigation.
+- `app/screens/more_features_screen.dart` — settings and appearance entry points.
 
-- `features/finance/screens/`: finance screens, including dashboard-independent Assets, Budgets, Categories, Goals, Loans, Transactions and Wallets.
-- `features/finance/models/`: finance domain models.
-- `features/finance/services/`: finance operations and feature services.
-- `features/finance/services/finance_transaction_operations.dart`: transaction database operations used by the add-transaction form.
-- `features/finance/screens/income_entry_form.dart`, `expense_entry_form.dart` and `transfer_entry_form.dart`: fully independent forms, each with its own state, validation and save flow.
-- `features/finance/screens/loan_entry_form.dart` and `asset_purchase_entry_form.dart`: dedicated loan and asset purchase creation forms.
-- `features/finance/screens/loan_repayment_entry_form.dart` and `asset_loan_repayment_entry_form.dart`: separate repayment forms for ordinary loans and asset-linked purchase/sale loans.
-- `features/finance/screens/asset_sale_entry_form.dart` and `asset_valuation_entry_form.dart`: dedicated asset sale and current-value update forms.
+## Feature Modules
 
-## Core foundations
+- `features/dashboard/` — home dashboard and financial snapshot.
+- `features/finance/` — wallets, transactions, categories, loans, parties, assets, budgets, goals, recurring schedules, statistics, reports, exchange rates and WhatsApp automation UI.
+- `features/space/` — My Space screens and local content services, including Books, Deals, Docs, Music, Photo, Projects and Video.
+- `features/notifications/` — reminders and local notification scheduling.
+- `features/search/` — global record search.
+- `features/recycle_bin/` — supported deleted-record archive and restore flows.
+- `features/backup_restore/` — Backup & Restore information screen; actual backup and restore are disabled during testing.
+- `features/staff/` — staff profiles, attendance and salary records.
+- `features/stock/` — stock and inventory management.
+- `features/vehicles/` — vehicle records, fuel, expenses and related reports.
+- `features/installments/` — installment contracts and payments.
+- `features/committee/` — committee cycles, members, installments and payouts.
+- `features/partners/` — partner profiles and linked financial records.
+- `features/security/` — app-lock user interface and security flows.
+- `features/settings/` — language, base currency, general preferences and sound settings.
 
-- `core/database/finance_database.dart`: central `FinanceDB` implementation; no schema or database-version change is intended by the structural refactor.
-- `core/database/database_platform.dart`: desktop SQLite FFI setup; Android and iOS retain native sqflite.
-- `core/platform/platform_capabilities.dart`: platform grouping without importing `dart:io`.
-- `core/services/`: shared attachment and app-refresh services.
-- `core/startup/`: app initialization and startup coordination.
+## Core Foundations
 
-Use package imports (`package:my_finance/...`) for Dart files so file moves do not break paths. Keep platform/plugin calls behind core services and avoid platform checks scattered through feature screens.
+- `core/database/` — local SQLite database and database platform setup.
+- `core/platform/` — platform capability abstractions.
+- `core/security/` — secure local app-lock and installation-related services.
+- `core/services/` — shared attachment and app-refresh services.
+- `core/preferences/` — local preferences and sound/language settings.
+- `core/startup/` — startup initialization and coordination.
+- `core/theme/` — application appearance and theme settings.
 
-Current feature modules include finance, dashboard, vehicles, documents, backup_restore and security.
+## Data and Platform Boundaries
 
-See [Cross-platform architecture](../docs/CROSS_PLATFORM_ARCHITECTURE.md) for target boundaries, native project strategy and data-safety rules. During development, test records are disposable and schema changes may be made when required. Production data-preservation rules begin when the app is declared complete.
+- Android is the active development and APK testing target.
+- Financial records are stored locally using SQLite.
+- My Space has a separate local content database and app-managed file storage.
+- Cloud synchronization is not currently a complete production feature.
+- Backup and Restore are disabled during testing; test data is disposable.
+- Use package imports (`package:my_finance/...`) to keep file references stable.
+- Keep platform/plugin interactions within appropriate core services where practical.
+
+See the repository [README](../README.md) for the current feature inventory, limitations, setup instructions and platform status.

@@ -1,202 +1,237 @@
 # My Finance
 
-A local-first personal and business finance management application built with **Flutter**, **Dart** and **SQLite**.
+A local-first personal and business finance manager built with **Flutter**, **Dart** and **SQLite**.
 
-My Finance brings everyday money management and related personal/business records into one application. The Android application is the current active release target.
+The Android app is the active development and testing target. This README describes the features currently represented by working screens and local services in the repository. A visible screen or configuration option does not necessarily mean that a connected third-party service or production-ready automation is available.
 
 ## Project Status
 
-The project is actively being developed and tested. The features listed under **Implemented Features** have corresponding screens and service/database logic in the current codebase. This does not mean that the entire application is production-final: broader regression testing, platform validation and the items under **Pending Features** are still outstanding.
+- **Development status:** Active development and testing.
+- **Primary platform:** Android.
+- **Data model:** Local-first; finance records are stored on the device.
+- **Testing data:** Disposable. The current test app is not a production data-preservation release.
+- **Release readiness:** Full regression testing, device validation and production hardening remain outstanding.
 
-## Platforms
+## Main Navigation
 
-- **Android** — current active application and APK build target.
-- **Windows, iOS, macOS and Linux** — future platform targets; native project setup and platform-specific validation are not yet complete.
+The main bottom navigation currently contains:
 
-## Implemented Features
+1. Home
+2. Assets
+3. Budgets
+4. Goals
+5. Loans
+6. Stats
+7. Txns
+8. Wallets
 
-### 1. Dashboard and Financial Overview
+The central **+** action provides shortcuts for creating Income, Expense, Transfer, Loan and Asset records.
 
-- Overview of wallet balances and income/expense activity.
-- Multi-currency balance summaries and base-currency consolidated values.
-- Monthly financial snapshot and net-worth-related overview.
-- Quick visibility into assets, loans, budgets, savings goals and recurring transactions.
-- Budget threshold indicators and overdue-loan/goal information where applicable.
-- Option to hide financial balances across supported screens.
+## Implemented Application Features
 
-### 2. Wallet Management
+### 1. Home Dashboard
 
-- Create, edit and delete wallets.
+- Financial snapshot for assets, receivables and payables.
+- Income and expense overview.
+- Wallet balance and multi-currency summaries.
+- Base-currency consolidated values.
+- Overview shortcuts for assets, loans, budgets, goals and recurring transactions.
+- Personalized dashboard heading and balance-visibility support.
+
+### 2. Wallets
+
+- Create, edit, archive, restore and delete wallets.
 - Multiple wallet types, custom wallet types, icons and currencies.
-- Opening balances and live balance tracking.
+- Opening balances and live balance updates.
+- Manual balance adjustments recorded in transaction history.
 - Exclude selected wallets from consolidated totals.
-- Wallet management for active and hidden/archived wallets.
-- Manual balance adjustment recorded as an adjustment transaction.
-- Wallet-wise transaction history and summaries.
+- Wallet-wise transaction history and balance summaries.
+- Bank-card style wallet presentation and supported card catalogue data.
 
 ### 3. Transactions
 
 - Record Income, Expense and Transfer transactions.
-- Transfer money between wallets, including different-currency transfers.
-- Optional transfer fee.
-- Transaction date, time, category and notes.
-- Edit, delete and review transaction history.
-- Wallet balances are updated with transaction changes; deleting or editing a transaction reverses/reapplies its balance effect.
-- Adjustment entries for wallet balance corrections.
-- Attachments for supported transaction records.
-- Transaction filters, including All, Income, Expense and Transfer.
+- Transfer between wallets, including different-currency transfers.
+- Optional transfer fees.
+- Transaction date, time, category, notes and supported attachments.
+- Edit, delete and inspect transaction details.
+- Transaction filters and wallet balance updates when records are changed.
+- Balance-adjustment entries.
 
 ### 4. Categories
 
-- Separate Income and Expense categories.
-- Add, edit and delete custom categories.
-- Category icons and category ordering.
-- Category selection in transaction forms and category-based finance views.
+- Separate income and expense categories.
+- Create, edit and delete custom categories.
+- Category icons and ordering.
+- Category selection in transaction forms and finance views.
 
-### 5. Loans and Repayments
+### 5. Loans and Parties
 
-- Record money **Given** and money **Taken**.
-- Party profiles with contact details and notes.
-- Link loans to the relevant party.
+- Record **Loan Given** and **Loan Taken**.
+- Create and manage party profiles and contact details.
+- Link loans to parties.
 - Record partial and full repayments.
-- Track outstanding balances, repayment history and due/overdue status.
-- Attach files to supported loan and repayment records.
+- Track outstanding amounts, repayment progress and entry history.
+- View party ledgers and supported loan attachments.
+- Receivable/payable summaries and loan analytics.
 
-### 6. Asset Management
+### 6. Assets
 
-- Add, edit and manage assets.
+- Add, edit and delete assets.
 - Record asset purchases and sales.
-- Link asset purchases/sales to wallets.
+- Link supported purchase and sale payments to wallets or loans.
 - Update current asset valuation.
-- Track purchase value, current value and realized profit/loss.
-- Attach images and documents to assets.
+- Track purchase value, current value and sale results.
+- Manage asset-related repayments and outstanding amounts.
+- Asset details, attachments and portfolio analytics.
+- Consolidated-balance inclusion control for supported assets.
 
 ### 7. Budgets
 
-- Create and manage budgets with category, currency, amount and period settings.
+- Create and manage budgets with category, currency, amount and period.
 - Track spending against budget limits.
-- View progress and near-limit/exceeded budget indicators.
+- View progress and limit indicators.
 - Enable, pause and delete budgets.
 
 ### 8. Savings Goals
 
-- Create multiple savings goals with target amounts and dates.
+- Create goals with target amounts and dates.
 - Optionally link goals to wallets.
 - Record contributions and withdrawals.
-- Track saved amount, target progress and contribution history.
-- View savings totals by currency.
+- Track saved amounts, progress and contribution history.
+- View goal totals by currency.
 
-### 9. Recurring Transactions
+### 9. Recurring Transactions and Schedules
 
 - Create recurring Income, Expense and Transfer schedules.
-- Daily, weekly, monthly and yearly frequencies.
-- Start and optional end dates.
+- Configure frequency, start date and optional end date.
 - Pause, resume, edit and delete schedules.
-- Due transactions are processed automatically when the application starts.
-- A failed schedule is paused and reported rather than repeatedly retried on every launch.
+- Add supported attachments to schedules.
+- Process due schedules through the app's recurring-transaction service.
 
-### 10. Reports and Statistics
+### 10. Statistics, Reports and Analytics
 
 - Income, expense and net cash-flow summaries.
 - Monthly trends and category breakdowns.
-- Wallet balances and wallet-wise summaries.
-- Currency-wise reporting.
+- Wallet and currency-wise summaries.
 - Date-range and period filters.
 - PDF report export and shareable PDF statements.
-- Additional dashboard and statistics views for financial insights.
+- Asset and loan analytics, including status and currency breakdowns.
 
 ### 11. Multi-Currency and Exchange Rates
 
-- Currency selection for wallets and financial records.
-- Base-currency selection for consolidated totals.
-- Online exchange-rate refresh using the configured exchange-rate provider.
-- Manual exchange-rate editing.
-- Currency conversion and currency-wise summaries.
+- Assign currencies to wallets and supported finance records.
+- Select a base currency for consolidated totals.
+- View currency-wise balances without treating different currencies as one amount.
+- Refresh exchange rates online where the configured provider is available.
+- Manually manage exchange rates and view conversion information.
 
-### 12. Documents and Attachments
+### 12. My Space
 
-- My Documents area for storing document records.
-- Document categories, favorites and expiry-date tracking.
-- Add files using supported file picker, camera and gallery options.
-- Attach images and PDFs to supported records.
-- Attachment preview, open, replace and delete actions.
-- Shared attachment support for transactions, assets, loans, repayments, savings goals, documents and vehicles where enabled.
+My Space is the app's personal file and record area. Its internal sections are:
+
+- **All** — combined view of supported My Space items.
+- **Books** — PDF and EPUB books with in-app reading screens.
+- **Deals** — structured deal/agreement records.
+- **Docs** — document records and related files.
+- **Music** — audio files with an in-app audio player.
+- **Photo** — image files with an in-app image viewer.
+- **Projects** — structured project records.
+- **Video** — video files with an in-app video player.
+
+Additional My Space capabilities include:
+
+- Add files using the device file picker.
+- Search and filter supported items.
+- Organize supported content using folders, playlists and collections.
+- View storage information and manage content.
+- Store document details such as category, document number, issue date, expiry date, notes and favorites.
+- Add supported document attachments.
+- Use the dedicated PDF and EPUB readers.
+
+File extensions currently listed by the My Space import filters:
+
+| Content | Supported extensions |
+|---|---|
+| Books | PDF, EPUB |
+| Music | MP3, M4A, WAV, FLAC |
+| Photos | JPG, JPEG, PNG, WEBP, GIF, BMP |
+| Videos | MP4, M4V, MOV, MKV, AVI, WEBM, 3GP |
+
+Actual playback or preview may also depend on the Android device and its media/codec support.
 
 ### 13. Staff Management
 
 - Create and manage staff profiles.
 - Store contact, job, joining-date and salary details.
 - Record salary payments.
-- Track staff attendance.
+- Track attendance.
 
 ### 14. Stock Manager
 
 - Create and manage stock items.
-- Store item details such as SKU, category, unit and pricing.
+- Store item identifiers, categories, units and pricing.
 - Record stock movements and quantity adjustments.
-- Review item movement history.
-- Identify low-stock items.
+- Review item movement history and low-stock information.
 
 ### 15. Vehicle Manager
 
 - Manage vehicle profiles and details.
 - Record fuel logs, odometer readings and vehicle expenses.
-- Track vehicle-related reminders and service information.
-- View vehicle running costs and cost-per-distance summaries.
-- Export vehicle reports to PDF and Excel-compatible workbooks.
+- Track vehicle-related service information and reminders.
+- View running costs and cost-per-distance summaries.
+- Export supported vehicle reports.
 
 ### 16. Installment Manager
 
 - Create installment contracts for supported directions.
-- Record installment payments and payment history.
-- Track contract/payment progress.
-- Link payments to wallets so their financial effect is recorded through the wallet transaction flow.
+- Record payments and payment history.
+- Track contract and payment progress.
+- Link supported payments to wallets.
 
 ### 17. Committee Manager
 
 - Create committees with daily, weekly or monthly cycles.
-- Add members and manage member turn order.
-- Record member installments and payouts.
-- View committee schedule, balances, history and individual member ledger.
-- Optionally link an installment or payout to a personal wallet.
+- Add members and manage turn order.
+- Record installments and payouts.
+- View schedules, balances, history and member ledgers.
+- Optionally link supported installments or payouts to a wallet.
 
 ### 18. My Partners
 
 - Create and manage partner profiles.
 - Link wallets with a partner.
 - Record partner-related transactions.
-- Record transfers between linked wallets and partner balances.
-- Review partner transaction history and summaries.
+- Review supported partner transaction history and summaries.
 
 ### 19. Global Search
 
-- Search saved application records rather than opening a directory of feature/settings cards.
-- Search across Transactions, Wallets, Categories, Loans, Budgets, Goals, Assets, Documents, Stock, Staff, Installments, Vehicles and Committee records.
+- Search supported records across the application.
 - Filter results by record type.
-- Open transaction details and inspect matching record details.
+- Open matching records and supported details.
 
 ### 20. Reminders and Notifications
 
-- Create and manage personal finance reminders.
-- Schedule local device notifications for reminder dates/times.
+- Create and manage personal reminders.
+- Schedule local device notifications for reminder dates and times.
 - Delete reminders and cancel their scheduled notifications.
-- Vehicle-related reminders are also available in Vehicle Manager.
+- Vehicle-related reminders are available in Vehicle Manager.
 
-### 21. Settings and Personalization
+### 21. Settings, Appearance and Sound
 
-- Save a display name for the dashboard header.
-- Configure date format, week start and number format.
-- Configure default transaction date and remembered wallet preference.
-- Configure delete confirmation and haptic feedback.
+- Configure display name and general app preferences.
+- Configure date, week-start and number formats.
+- Configure default transaction date and remembered wallet preferences.
+- Set the base currency and app language.
+- Choose available appearance/theme presets.
 - Hide balances on supported screens.
-- Choose from the available appearance/theme presets.
-- Set the base currency.
-- Select a language from the available language list.
+- Configure delete confirmation and haptic feedback.
+- Control app sound effects and the app-launch sound through Sound Settings.
 
-### 22. App Lock and Security
+### 22. App Lock
 
-- Optional app lock using a 4–8 digit PIN.
-- PIN verification uses a salted hash; the PIN itself is stored in secure storage.
+- Optional PIN-based app lock.
+- PIN secret handling using secure storage and salted hashing.
 - Biometric unlock when supported and enrolled on the device.
 - Configurable automatic lock timeout.
 - Temporary lockout after repeated failed PIN attempts.
@@ -205,75 +240,68 @@ The project is actively being developed and tested. The features listed under **
 
 - Move supported deleted records into the Recycle Bin.
 - Review archived record details.
-- Restore supported records.
-- Permanently delete records when they are no longer needed.
+- Restore supported record types.
+- Permanently delete records.
 
-## Pending Features
+## Limited or Not Yet Production-Ready
 
-The following items are **not currently implemented as complete application features** and remain planned:
+The following areas should not be considered complete production integrations:
 
-### Cloud and Synchronization
+### WhatsApp
 
-- Firebase Authentication.
-- Cloud Firestore data storage.
-- Firebase Storage for cloud files and attachments.
-- Automatic background synchronization.
-- Manual Sync Now.
-- Offline-first cloud synchronization and conflict handling.
+- The app includes a WhatsApp Automation settings screen and reminder options.
+- The manual send action opens WhatsApp externally with a prepared message where supported.
+- Verified WhatsApp Business account connection and reliable background automatic message delivery are not complete. The screen's connection state should not be treated as proof of an official WhatsApp API connection.
 
-### Backup and Data Protection
+### Backup and Restore
 
-- Backup and Restore are intentionally unavailable during the testing phase.
-- Manual backup and restore workflows.
-- Cloud backup and restore.
-- Production-ready data migration and recovery strategy.
-- Encrypted local finance database/data-at-rest protection.
+- Backup and Restore are intentionally disabled during the current testing phase.
+- The current screen explains that test data is not exported or restored.
+- Production-ready local/cloud backup, restore and recovery workflows remain pending.
+
+### Cloud Services and Synchronization
+
+- Firebase packages are present in the dependency configuration, but a complete production cloud account, remote database, file-storage and synchronization workflow is not available.
+- Cloud authentication, cloud backup, automatic synchronization and conflict resolution remain future work.
 
 ### Localization
 
-- Complete translation coverage for every screen and message in all selectable languages.
-- Language-specific formatting and final localization review.
-
-### Financial and Reporting Enhancements
-
-- Historical exchange-rate storage and history reports.
-- Further advanced financial reporting and analysis beyond the current reports and statistics.
-
-### Platform Expansion and Release Readiness
-
-- Native Windows, iOS, macOS and Linux project setup.
-- Platform-specific build, plugin and device validation.
-- Full end-to-end regression testing and production release hardening.
+- Multiple language options and localization infrastructure are present.
+- Complete translation coverage and final language-by-language review remain outstanding.
 
 ## Technology Stack
 
-- Flutter and Dart.
-- SQLite and sqflite for local financial records.
-- sqflite_common_ffi / SQLite support for desktop-oriented development.
-- Shared Preferences for general local preferences and reminder storage.
-- Flutter Secure Storage for sensitive app-lock secrets.
-- Flutter Local Notifications for scheduled reminders.
-- local_auth for device-supported biometric authentication.
-- File Picker, Image Picker and Path Provider for files and attachments.
-- PDF generation and sharing utilities.
+- **Framework:** Flutter
+- **Language:** Dart
+- **Local database:** SQLite / sqflite
+- **Preferences:** Shared Preferences
+- **Sensitive local secrets:** Flutter Secure Storage
+- **Biometrics:** local_auth
+- **Notifications:** Flutter Local Notifications and timezone
+- **Files:** File Picker, Image Picker and Path Provider
+- **PDF:** PDF generation, viewing and printing utilities
+- **Books:** EPUB reader support
+- **Audio/video:** audioplayers and video_player
 
-## Local Data and Testing Notes
+## Data and Testing Notes
 
-- Financial records are currently stored locally on the device.
-- Cloud synchronization and remote storage are not available.
-- Backup and Restore are disabled during the current testing phase.
-- Test data is disposable while the application is under development. Do not treat the current test build as a production data-preservation release.
+- Financial records are stored locally on the device.
+- My Space uses its own local content database and app-managed file storage.
+- Cloud synchronization is not currently available as a complete feature.
+- Backup and Restore are disabled during testing.
+- Test data is disposable. Uninstalling or resetting the test app may remove local records and files.
+- Do not use a testing build as the only copy of important financial or personal records.
 
 ## Getting Started
 
 ### Requirements
 
-- Flutter SDK.
-- Dart SDK compatible with the version constraint in pubspec.yaml.
-- Android Studio or another compatible Android build environment.
-- Git.
+- Flutter SDK
+- Dart SDK compatible with the constraint in `pubspec.yaml`
+- Android Studio or another compatible Android build environment
+- Git
 
-### Install Dependencies
+### Install dependencies
 
 ```bash
 flutter pub get
@@ -285,7 +313,7 @@ flutter pub get
 flutter run
 ```
 
-### Build Android APK
+### Build a release APK
 
 ```bash
 flutter build apk --release
@@ -293,21 +321,17 @@ flutter build apk --release
 
 ## Automated Tests
 
-The repository contains focused automated tests for selected areas, including:
+The repository includes focused automated tests for selected application services and platform/layout behavior. Test coverage is partial and does not replace full end-to-end testing on physical Android devices.
 
-- Transaction and category services.
-- Installment and staff services.
-- Responsive breakpoints.
-- Platform capability handling.
+## Platform Status
 
-These tests provide partial regression coverage; they do not replace full application/device testing.
+- **Android:** active development and APK testing target.
+- **iOS, Windows, macOS and Linux:** not yet validated as complete supported releases.
 
 ## Repository
 
-GitHub: https://github.com/shahidlaashary/my-finance-android
+https://github.com/shahidlaashary/my-finance-android
 
 ## License
 
-Private personal finance project.
-
-All rights reserved by Shahid Laashary.
+Private personal finance project. All rights reserved by Shahid Laashary.

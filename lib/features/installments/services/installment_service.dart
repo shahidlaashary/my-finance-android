@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class InstallmentService {
   static Future<Database> get _db async {
@@ -70,6 +71,42 @@ class InstallmentService {
     });
     AppRefreshController.notifyChanged();
     return id;
+  }
+
+  static Future<void> deleteContract(int contractId) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      final contracts = await txn.query('installment_contracts',
+        where: 'id = ?', whereArgs: [contractId], limit: 1);
+      if (contracts.isEmpty) return;
+      final contract = Map<String, dynamic>.from(contracts.first);
+      final payments = await txn.query('installment_payments',
+        where: 'contract_id = ?', whereArgs: [contractId], orderBy: 'id');
+      final transactions = await txn.query('transactions',
+        where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
+        whereArgs: ['Installment #$contractId%']);
+      final walletId = (contract['wallet_id'] as num).toInt();
+      final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
+      final walletDelta = contract['direction'] == 'sell' ? -totalPaid : totalPaid;
+      await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [walletDelta, walletId]);
+      await RecycleBinService.archive(
+        type: 'Installment Contract',
+        title: contract['item_name']?.toString() ?? 'Installment',
+        table: 'installment_contracts',
+        id: contractId,
+        record: contract,
+        related: [
+          ...payments.map((row) => {'_related_table':'installment_payments', ...Map<String,dynamic>.from(row)}),
+          ...transactions.map((row) => {'_related_table':'transactions', ...Map<String,dynamic>.from(row)}),
+        ],
+      );
+      await txn.delete('transactions',
+        where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
+        whereArgs: ['Installment #$contractId%']);
+      await txn.delete('installment_payments', where: 'contract_id = ?', whereArgs: [contractId]);
+      await txn.delete('installment_contracts', where: 'id = ?', whereArgs: [contractId]);
+    });
+    AppRefreshController.notifyChanged();
   }
 
   // Qist record aur wallet balance aik hi transaction mein update karte hain.

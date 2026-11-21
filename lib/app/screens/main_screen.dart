@@ -438,7 +438,8 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
         borderRadius: BorderRadius.circular(13),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+          height: 58,
+          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(13),

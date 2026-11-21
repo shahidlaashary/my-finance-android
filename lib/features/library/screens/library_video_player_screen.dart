@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-class LibraryVideoPlayerScreen extends StatefulWidget {
-  const LibraryVideoPlayerScreen({super.key, required this.item});
+class SpaceVideoPlayerScreen extends StatefulWidget {
+  const SpaceVideoPlayerScreen({super.key, required this.item});
   final Map<String, Object?> item;
 
   @override
-  State<LibraryVideoPlayerScreen> createState() => _LibraryVideoPlayerScreenState();
+  State<SpaceVideoPlayerScreen> createState() => _SpaceVideoPlayerScreenState();
 }
 
-class _LibraryVideoPlayerScreenState extends State<LibraryVideoPlayerScreen> {
+class _SpaceVideoPlayerScreenState extends State<SpaceVideoPlayerScreen> {
   late final VideoPlayerController _controller;
   bool _ready = false;
   bool _showControls = true;

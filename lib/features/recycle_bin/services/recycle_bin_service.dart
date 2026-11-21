@@ -475,6 +475,22 @@ class RecycleBinService {
         }
       }
     }
+    if (['partners','committees','installment_contracts'].contains(table)) {
+      final raw = item['related_payload']?.toString();
+      if (raw != null && raw.isNotEmpty) {
+        final related = (jsonDecode(raw) as List).whereType<Map>();
+        for (final row in related) {
+          if (row['_related_table'] == 'transactions') {
+            final transactionId = (row['id'] as num?)?.toInt();
+            if (transactionId != null) {
+              await AttachmentService.deleteOwnerAttachments(
+                ownerType: 'transaction', ownerId: transactionId,
+              );
+            }
+          }
+        }
+      }
+    }
     await db.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }

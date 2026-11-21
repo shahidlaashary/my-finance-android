@@ -42,6 +42,7 @@ class AssetsScreenState extends State<AssetsScreen> {
   Map<String, double> _purchaseValues = {};
 
   bool _loading = true;
+  Widget? _embeddedAssetForm;
   bool _hideBalances = false;
   bool _showSold = false;
   String? _selectedCategory;
@@ -288,6 +289,14 @@ class AssetsScreenState extends State<AssetsScreen> {
 
   Future<void> openNewAssetForm() => _showAssetDialog();
 
+  void _closeAssetForm(BuildContext sheetContext) {
+    if (widget.embeddedFormHost) {
+      if (mounted) setState(() => _embeddedAssetForm = null);
+    } else if (Navigator.of(sheetContext).canPop()) {
+      Navigator.of(sheetContext).pop();
+    }
+  }
+
   Future<void> _showAssetDialog({
     AssetsModel? asset,
     String? initialCategory,
@@ -326,13 +335,9 @@ class AssetsScreenState extends State<AssetsScreen> {
       isDense: true,
     );
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) {
+    final assetForm = StatefulBuilder(
+      builder: (context, setSheetState) {
+          final sheetContext = context;
           Future<void> pickCamera() async {
             try {
               final photo = await imagePicker.pickImage(source: ImageSource.camera, imageQuality: 85);
@@ -383,7 +388,7 @@ class AssetsScreenState extends State<AssetsScreen> {
                           SizedBox(height: 12),
                           Row(children: [
                             Expanded(child: Text(asset == null ? 'Add Asset' : 'Edit Asset', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
-                            IconButton(onPressed: () => Navigator.pop(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
+                            IconButton(onPressed: () => _closeAssetForm(sheetContext), icon: Icon(Icons.close_rounded), color: Theme.of(context).hintColor),
                           ]),
                           SizedBox(height: 10),
                           TextFormField(controller: nameController, decoration: fieldDecoration('Asset Name', Icons.inventory_2_outlined),
@@ -665,9 +670,20 @@ class AssetsScreenState extends State<AssetsScreen> {
               ),
             ),
           );
-        },
-      ),
+      },
     );
+
+    if (widget.embeddedFormHost) {
+      if (mounted) setState(() => _embeddedAssetForm = assetForm);
+    } else {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => assetForm,
+      );
+    }
 
     nameController.dispose();
     purchaseController.dispose();
@@ -1399,9 +1415,9 @@ class AssetsScreenState extends State<AssetsScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.embeddedFormHost) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.transparent,
-        body: SizedBox.shrink(),
+        body: _embeddedAssetForm ?? const SizedBox.shrink(),
       );
     }
 

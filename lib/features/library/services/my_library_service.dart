@@ -159,6 +159,15 @@ class MyLibraryService {
 
   Future<void> deletePlaylist(int id) async {
     final db = await database;
+    final rows = await db.query(_playlistsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    final record = Map<String,dynamic>.from(rows.first);
+    final links = await db.query(_playlistItemsTable, where: 'playlist_id = ?', whereArgs: [id]);
+    await RecycleBinService.archive(
+      type: 'Library Playlist', title: record['name']?.toString() ?? 'Playlist',
+      table: 'library_playlists', id: id, record: record,
+      related: links.map((e) => Map<String,dynamic>.from(e)).toList(),
+    );
     await db.transaction((txn) async {
       await txn.delete(_playlistItemsTable, where: 'playlist_id = ?', whereArgs: [id]);
       await txn.delete(_playlistsTable, where: 'id = ?', whereArgs: [id]);
@@ -195,9 +204,36 @@ class MyLibraryService {
 
   Future<void> deleteCollection(int id) async {
     final db = await database;
+    final rows = await db.query(_collectionsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    final record = Map<String,dynamic>.from(rows.first);
+    final links = await db.query(_collectionItemsTable, where: 'collection_id = ?', whereArgs: [id]);
+    await RecycleBinService.archive(
+      type: 'Library Folder', title: record['name']?.toString() ?? 'Folder',
+      table: 'library_collections', id: id, record: record,
+      related: links.map((e) => Map<String,dynamic>.from(e)).toList(),
+    );
     await db.transaction((txn) async {
       await txn.delete(_collectionItemsTable, where: 'collection_id = ?', whereArgs: [id]);
       await txn.delete(_collectionsTable, where: 'id = ?', whereArgs: [id]);
+    });
+  }
+
+  Future<void> restoreArchivedLibraryGroup(
+    String table, Map<String,dynamic> record, List<Map<String,dynamic>> related,
+  ) async {
+    final db = await database;
+    final isPlaylist = table == 'library_playlists';
+    final parentTable = isPlaylist ? _playlistsTable : _collectionsTable;
+    final linkTable = isPlaylist ? _playlistItemsTable : _collectionItemsTable;
+    final parentKey = isPlaylist ? 'playlist_id' : 'collection_id';
+    await db.transaction((txn) async {
+      final existing = await txn.query(parentTable, where: 'id = ?', whereArgs: [record['id']], limit: 1);
+      if (existing.isNotEmpty) throw StateError('This Library group already exists.');
+      await txn.insert(parentTable, record);
+      for (final link in related) {
+        await txn.insert(linkTable, link);
+      }
     });
   }
 

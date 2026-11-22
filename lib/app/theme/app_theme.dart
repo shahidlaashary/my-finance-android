@@ -295,7 +295,14 @@ class AppTheme {
         textStyle: TextStyle(color: p.surface),
       ),
       dividerTheme: DividerThemeData(color: p.outline.withOpacity(.55), thickness: 1),
-
+      // Keep system-bar appearance configured globally, including routes
+      // that do not render an AppBar.
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: p.brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: p.background,
+        systemNavigationBarIconBrightness: p.brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      ),
     );
   }
 }

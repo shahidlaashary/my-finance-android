@@ -55,7 +55,14 @@ class MyFinanceApp extends StatelessWidget {
                       .contains(locale.languageCode)
                   ? TextDirection.rtl
                   : TextDirection.ltr,
-              child: AppLockGate(child: child ?? const SizedBox.shrink()),
+              // Keep every route above Android's bottom system-navigation area.
+              // SafeArea consumes the inset once, so nested Scaffolds and the
+              // main bottom navigation do not add duplicate bottom padding.
+              child: SafeArea(
+                top: false,
+                bottom: true,
+                child: AppLockGate(child: child ?? const SizedBox.shrink()),
+              ),
             ),
             home: home,
           );

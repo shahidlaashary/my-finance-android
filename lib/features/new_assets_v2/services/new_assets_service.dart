@@ -101,6 +101,21 @@ class NewAssetsService {
     }
 
     final id = await _db.transaction((txn) async {
+      if (asset.paymentType == 'Loan') {
+        final parties = await txn.query(
+          'loan_parties',
+          columns: ['id', 'currency'],
+          where: 'id = ?',
+          whereArgs: [asset.partyId],
+          limit: 1,
+        );
+        if (parties.isEmpty) throw StateError('Selected party was not found.');
+        final partyCurrency = (parties.first['currency'] as String? ?? 'PKR').toUpperCase();
+        if (partyCurrency != asset.currency.toUpperCase()) {
+          throw StateError('Asset currency must match the selected party currency.');
+        }
+      }
+
       if (asset.paymentType == 'Wallet') {
         final wallets = await txn.query(
           'wallets',

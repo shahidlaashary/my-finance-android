@@ -74,11 +74,7 @@ jobs:
             } >> "$GITHUB_ENV"
           elif [ "$secret_count" -eq 0 ]; then
             temp_password="$(openssl rand -hex 24)"
-            keytool -genkeypair -v \\
-              -keystore android/app/temporary-test-signing.jks \\
-              -storepass "$temp_password" -keypass "$temp_password" \\
-              -alias myfinance-temporary -keyalg RSA -keysize 2048 -validity 10000 \\
-              -dname "CN=My Finance Temporary Test, OU=Development, O=My Finance, L=Unknown, ST=Unknown, C=PK"
+            keytool -genkeypair -v -keystore android/app/temporary-test-signing.jks -storepass "$temp_password" -keypass "$temp_password" -alias myfinance-temporary -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=My Finance Temporary Test, OU=Development, O=My Finance, L=Unknown, ST=Unknown, C=PK"
             {
               echo "ANDROID_KEYSTORE_PATH=temporary-test-signing.jks"
               echo "ANDROID_KEYSTORE_PASSWORD=$temp_password"

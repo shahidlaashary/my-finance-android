@@ -599,7 +599,7 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
             final optionIcon = _filterOptionIcon(option);
             return PopupMenuItem<String>(
               value: option,
-              height: 42,
+              height: 34,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 children: [

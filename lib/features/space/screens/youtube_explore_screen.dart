@@ -28,6 +28,7 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
   List<Map<String, dynamic>> _results = [];
   String _searchType = 'video';
   bool _searching = false;
+  bool _searchOpen = false;
   String? _searchError;
 
   @override
@@ -265,33 +266,50 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
   );
 
   Widget _exploreTab() => ListView(padding: const EdgeInsets.all(16), children: [
-    Text('Find videos and channels', style: Theme.of(context).textTheme.titleLarge),
-    const SizedBox(height: 12),
-    Wrap(spacing: 8, children: [
-      ChoiceChip(label: const Text('Videos'), selected: _searchType == 'video', onSelected: (_) => setState(() => _searchType = 'video')),
-      ChoiceChip(label: const Text('Channels'), selected: _searchType == 'channel', onSelected: (_) => setState(() => _searchType = 'channel')),
-    ]),
-    const SizedBox(height: 10),
-    TextField(controller: _searchController, textInputAction: TextInputAction.search, onSubmitted: (_) => _search(),
-      decoration: InputDecoration(hintText: 'Search ' + (_searchType == 'video' ? 'videos' : 'channels'), prefixIcon: const Icon(Icons.search_rounded),
-        suffixIcon: IconButton(onPressed: _searching ? null : _search, icon: const Icon(Icons.arrow_forward_rounded)), border: const OutlineInputBorder())),
-    const SizedBox(height: 12),
-    Text('Search results', style: Theme.of(context).textTheme.titleMedium),
-    const SizedBox(height: 8),
-    _searchResults(),
-    if (_results.isEmpty && !_searching && _searchError == null)
-      Padding(padding: const EdgeInsets.symmetric(vertical: 28), child: Column(children: [
-        Icon(Icons.video_library_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 8), const Text('Search videos or channels, or save a link.'),
+    if (_searchOpen) ...[
+      Text('Find videos and channels', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 12),
+      Wrap(spacing: 8, children: [
+        ChoiceChip(label: const Text('Videos'), selected: _searchType == 'video', onSelected: (_) => setState(() => _searchType = 'video')),
+        ChoiceChip(label: const Text('Channels'), selected: _searchType == 'channel', onSelected: (_) => setState(() => _searchType = 'channel')),
+      ]),
+      const SizedBox(height: 10),
+      TextField(controller: _searchController, autofocus: true, textInputAction: TextInputAction.search, onSubmitted: (_) => _search(),
+        decoration: InputDecoration(hintText: 'Search ' + (_searchType == 'video' ? 'videos' : 'channels'), prefixIcon: const Icon(Icons.search_rounded),
+          suffixIcon: IconButton(onPressed: _searching ? null : _search, icon: const Icon(Icons.arrow_forward_rounded)), border: const OutlineInputBorder())),
+      const SizedBox(height: 16),
+    ],
+    if (_searching || _searchError != null || _results.isNotEmpty) ...[
+      Text('Search results', style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: 8),
+      _searchResults(),
+    ] else if (!_searchOpen) ...[
+      Padding(padding: const EdgeInsets.symmetric(vertical: 56), child: Column(children: [
+        Icon(Icons.video_library_outlined, size: 52, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 12),
+        Text('Explore YouTube', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 6),
+        const Text('Tap the search icon to find videos and channels.', textAlign: TextAlign.center),
       ])),
-    const SizedBox(height: 20),
-    Card(child: ListTile(leading: const Icon(Icons.link_rounded), title: const Text('Save by link'), subtitle: const Text('Add using video link or ID'), trailing: const Icon(Icons.chevron_right), onTap: _saving ? null : _addVideo)),
+    ] else if (_searchOpen && _results.isEmpty) ...[
+      Padding(padding: const EdgeInsets.symmetric(vertical: 24), child: Text('Search for videos or channels.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium)),
+    ],
   ]);
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: const Text('Explore Videos'),
+      actions: [
+        IconButton(
+          tooltip: _searchOpen ? 'Close search' : 'Search videos and channels',
+          onPressed: () => setState(() {
+            _searchOpen = !_searchOpen;
+            if (!_searchOpen) FocusScope.of(context).unfocus();
+          }),
+          icon: Icon(_searchOpen ? Icons.close_rounded : Icons.search_rounded),
+        ),
+      ],
       bottom: TabBar(controller: _tabs, tabs: const [
         Tab(text: 'Explore', icon: Icon(Icons.explore_outlined)),
         Tab(text: 'Saved', icon: Icon(Icons.bookmark_border_rounded)),

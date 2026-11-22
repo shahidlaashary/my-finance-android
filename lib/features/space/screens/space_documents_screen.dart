@@ -576,6 +576,7 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
     required IconData icon,
     required List<String> options,
     required ValueChanged<String> onChanged,
+    bool compact = false,
   }) {
     final colors = Theme.of(context).colorScheme;
     return LayoutBuilder(
@@ -617,8 +618,8 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
             );
           }).toList(),
           child: Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            height: compact ? 27 : 48,
+            padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 10),
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -626,24 +627,36 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 17, color: colors.primary),
-                SizedBox(width: 7),
+                Icon(icon, size: compact ? 13 : 17, color: colors.primary),
+                SizedBox(width: compact ? 3 : 7),
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label, style: TextStyle(fontSize: 8,
-                        letterSpacing: .65, fontWeight: FontWeight.w800,
-                        color: Theme.of(context).hintColor)),
-                      SizedBox(height: 1),
-                      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11.5,
-                          fontWeight: FontWeight.w700, color: colors.onSurface)),
-                    ],
-                  ),
+                  child: compact
+                      ? Text(
+                          '${label == 'STATUS' ? 'Status' : 'Category'}: $value',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: colors.onSurface,
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(label, style: TextStyle(fontSize: 8,
+                              letterSpacing: .65, fontWeight: FontWeight.w800,
+                              color: Theme.of(context).hintColor)),
+                            SizedBox(height: 1),
+                            Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11.5,
+                                fontWeight: FontWeight.w700, color: colors.onSurface)),
+                          ],
+                        ),
                 ),
-                Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: colors.primary),
+                Icon(Icons.keyboard_arrow_down_rounded,
+                  size: compact ? 14 : 18, color: colors.primary),
               ],
             ),
           ),
@@ -757,40 +770,46 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _summaryCard('Documents', _documents.length, Icons.folder_copy_outlined, Theme.of(context).colorScheme.primary),
-                SizedBox(width: 10),
+                SizedBox(width: 8),
                 _summaryCard('Expiring Soon', _expiringCount, Icons.event_busy_outlined, Theme.of(context).colorScheme.tertiary),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Row(
-              children: [
+                SizedBox(width: 8),
                 Expanded(
-                  child: _compactFilterDropdown(
-                    label: 'STATUS',
-                    value: _statusFilter,
-                    icon: Icons.filter_list_rounded,
-                    options: const ['All', 'Favorites', 'Expiring Soon', 'Expired'],
-                    onChanged: (value) {
-                      setState(() => _statusFilter = value);
-                      _loadDocuments();
-                    },
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: _compactFilterDropdown(
-                    label: 'CATEGORY',
-                    value: _category,
-                    icon: Icons.folder_outlined,
-                    options: ['All', ..._categories],
-                    onChanged: (value) {
-                      setState(() => _category = value);
-                      _loadDocuments();
-                    },
+                  child: SizedBox(
+                    height: 58,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: _compactFilterDropdown(
+                            label: 'STATUS',
+                            value: _statusFilter,
+                            icon: Icons.filter_list_rounded,
+                            options: const ['All', 'Favorites', 'Expiring Soon', 'Expired'],
+                            compact: true,
+                            onChanged: (value) {
+                              setState(() => _statusFilter = value);
+                              _loadDocuments();
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Expanded(
+                          child: _compactFilterDropdown(
+                            label: 'CATEGORY',
+                            value: _category,
+                            icon: Icons.folder_outlined,
+                            options: ['All', ..._categories],
+                            compact: true,
+                            onChanged: (value) {
+                              setState(() => _category = value);
+                              _loadDocuments();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

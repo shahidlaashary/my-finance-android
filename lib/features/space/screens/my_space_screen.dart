@@ -420,7 +420,7 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
   List<_SpaceSearchResult> _results = [];
   String _type = 'All';
   String _documentCategory = 'All';
-  String _documentFilter = 'All';
+  String _documentStatusFilter = 'All';
   bool _loading = false;
   String? _error;
   int _request = 0;
@@ -432,7 +432,7 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
     'All', 'Personal', 'Vehicle', 'Education', 'Property',
     'Financial', 'Bills & Receipts', 'Business', 'Other',
   ];
-  static const _documentFilters = ['All', 'Favorites', 'Expiring Soon', 'Expired'];
+  static const _documentStatusOptions = ['All', 'Favorites', 'Expiring Soon', 'Expired'];
 
   @override
   void dispose() { _debounce?.cancel(); _controller.dispose(); super.dispose(); }
@@ -474,7 +474,7 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
       }
       if (_type == 'All' || _type == 'document') {
         final documents = await SpaceDocumentsService.instance.getDocuments(
-          category: _documentCategory, filter: _documentFilter,
+          category: _documentCategory, filter: _documentStatusFilter,
         );
         for (final document in documents) {
           final searchable = [
@@ -530,14 +530,14 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
               const SizedBox(height: 16),
               Text('Status', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
-              Wrap(spacing: 8, children: _documentFilters.map((value) => ChoiceChip(
-                label: Text(value), selected: _documentFilter == value,
-                onSelected: (_) => setSheetState(() => _documentFilter = value),
+              Wrap(spacing: 8, children: _documentStatusOptions.map((value) => ChoiceChip(
+                label: Text(value), selected: _documentStatusFilter == value,
+                onSelected: (_) => setSheetState(() => _documentStatusFilter = value),
               )).toList()),
               const SizedBox(height: 18),
               Row(children: [
                 TextButton(onPressed: () => setSheetState(() {
-                  _documentCategory = 'All'; _documentFilter = 'All';
+                  _documentCategory = 'All'; _documentStatusFilter = 'All';
                 }), child: const Text('Reset')),
                 const Spacer(),
                 FilledButton(onPressed: () {

@@ -183,14 +183,38 @@ class NewAssetsService {
           'created_at': now,
         });
       } else {
+        final loanId = await txn.insert('loans', {
+          'party_id': asset.partyId,
+          'loan_type': 'taken',
+          'amount': asset.purchaseAmount,
+          'remaining_amount': asset.purchaseAmount,
+          // No wallet is reserved at purchase time. The first repayment
+          // records the actual wallet used.
+          'wallet_id': -1,
+          'currency': asset.currency.toUpperCase(),
+          'source_type': 'new_asset_v2_purchase',
+          'source_id': assetId,
+          'lending_date': asset.purchaseDate.toIso8601String(),
+          'due_date': null,
+          'notes': 'New Asset v2: ${asset.name.trim()}',
+          'status': 'active',
+          'created_at': now,
+        });
+        await txn.update(
+          'new_asset_v2_records',
+          {'linked_loan_id': loanId},
+          where: 'id = ?',
+          whereArgs: [assetId],
+        );
         await txn.insert('new_asset_v2_events', {
           'asset_id': assetId,
           'event_type': 'purchase',
           'amount': asset.purchaseAmount,
           'currency': asset.currency.toUpperCase(),
           'wallet_id': null,
+          'loan_id': loanId,
           'event_date': asset.purchaseDate.toIso8601String(),
-          'note': 'Loan-funded asset; wallet will be selected on repayment',
+          'note': 'Loan-funded asset purchase',
           'created_at': now,
         });
       }

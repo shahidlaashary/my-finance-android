@@ -629,6 +629,7 @@ class NewAssetV2DetailsScreen extends StatefulWidget {
 class _NewAssetV2DetailsScreenState extends State<NewAssetV2DetailsScreen> {
   List<Map<String, Object?>> _events = [];
   List<Map<String, Object?>> _attachments = [];
+  Map<String, Object?>? _linkedLoan;
   late NewAssetRecord _asset;
   bool _loading = true;
 
@@ -644,10 +645,12 @@ class _NewAssetV2DetailsScreenState extends State<NewAssetV2DetailsScreen> {
       final events = await NewAssetsService.instance.getEvents(_asset.id!);
       final attachments = await NewAssetsService.instance.getAttachments(_asset.id!);
       final refreshed = await NewAssetsService.instance.getAsset(_asset.id!);
+      final linkedLoan = await NewAssetsService.instance.getLinkedLoan(_asset.id!);
       if (!mounted) return;
       setState(() {
         _events = events;
         _attachments = attachments;
+        _linkedLoan = linkedLoan;
         if (refreshed != null) _asset = refreshed;
         _loading = false;
       });
@@ -655,6 +658,112 @@ class _NewAssetV2DetailsScreenState extends State<NewAssetV2DetailsScreen> {
       if (mounted) setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
+  }
+
+  Future<void> _recordRepayment() async {
+    final wallets = await FinanceDB.instance.getWallets();
+    final matching = wallets.where((wallet) =>
+      (wallet['currency']?.toString() ?? 'PKR').toUpperCase() == _asset.currency.toUpperCase()
+    ).toList();
+    if (!mounted) return;
+    if (matching.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Create a ${_asset.currency} wallet before recording repayment.')),
+      );
+      return;
+    }
+    final amountController = TextEditingController();
+    final noteController = TextEditingController();
+    int? walletId = (matching.first['id'] as num).toInt();
+    DateTime repaymentDate = DateTime.now();
+    final loanAmount = (_linkedLoan?['remaining_amount'] as num?)?.toDouble() ?? 0;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Pay Back Loan'),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Outstanding: ${_asset.currency} ${NumberFormat('#,##0.##').format(loanAmount)}'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Payment Amount *'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: walletId,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Paying Wallet'),
+                    items: matching.map((wallet) => DropdownMenuItem<int>(
+                      value: (wallet['id'] as num).toInt(),
+                      child: Text('${wallet['name']} (${wallet['currency']})'),
+                    )).toList(),
+                    onChanged: (value) => setDialogState(() => walletId = value),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Payment Date'),
+                    subtitle: Text(DateFormat('dd MMM yyyy').format(repaymentDate)),
+                    trailing: const Icon(Icons.calendar_month_outlined),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: dialogContext,
+                        initialDate: repaymentDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) setDialogState(() => repaymentDate = picked);
+                    },
+                  ),
+                  TextField(
+                    controller: noteController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(labelText: 'Notes (Optional)'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Save Payment'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (saved == true) {
+      try {
+        final amount = double.tryParse(amountController.text.trim());
+        if (amount == null || !amount.isFinite || amount <= 0 || amount > loanAmount + 0.000001) {
+          throw StateError('Enter a valid amount not exceeding the outstanding loan.');
+        }
+        if (walletId == null) throw StateError('Select a wallet.');
+        await NewAssetsService.instance.addLoanRepayment(
+          assetId: _asset.id!,
+          walletId: walletId!,
+          amount: amount,
+          repaymentDate: repaymentDate,
+          notes: noteController.text.trim(),
+        );
+        await _load();
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+    amountController.dispose();
+    noteController.dispose();
   }
 
   @override
@@ -691,6 +800,21 @@ class _NewAssetV2DetailsScreenState extends State<NewAssetV2DetailsScreen> {
                       ),
                   ]),
                 ),
+                if (_asset.paymentType == 'Loan' && (_linkedLoan?['remaining_amount'] as num? ?? 0) > 0) ...[
+                  const SizedBox(height: 14),
+                  FilledButton.icon(
+                    onPressed: _recordRepayment,
+                    icon: const Icon(Icons.payments_outlined),
+                    label: const Text('Pay Back Loan'),
+                  ),
+                ],
+                if (_linkedLoan != null) ...[
+                  const SizedBox(height: 14),
+                  Text('Loan Outstanding', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text('${_asset.currency} ${format.format((_linkedLoan!['remaining_amount'] as num).toDouble())}',
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                ],
                 const SizedBox(height: 18),
                 const Text('Activity & Entries', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 8),

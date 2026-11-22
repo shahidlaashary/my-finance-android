@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 const String _youtubeApiKey = String.fromEnvironment('YOUTUBE_API_KEY');
+
+// Keep recommendations available when users move between videos in one app session.
+final Map<String, List<Map<String, dynamic>>> _relatedVideoCache = {};
 
 class YouTubeVideoPlayerScreen extends StatefulWidget {
   const YouTubeVideoPlayerScreen({super.key, required this.videoId, required this.title});
@@ -39,6 +43,12 @@ class _YouTubeVideoPlayerScreenState extends State<YouTubeVideoPlayerScreen> {
   }
 
   Future<void> _loadRelatedVideos() async {
+    final cacheKey = widget.title.trim().toLowerCase();
+    final cached = _relatedVideoCache[cacheKey];
+    if (cached != null) {
+      if (mounted) setState(() { _relatedVideos = cached; _loadingRelated = false; _relatedError = null; });
+      return;
+    }
     if (_youtubeApiKey.isEmpty) {
       if (mounted) setState(() {
         _loadingRelated = false;
@@ -51,16 +61,18 @@ class _YouTubeVideoPlayerScreenState extends State<YouTubeVideoPlayerScreen> {
     try {
       final uri = Uri.https('www.googleapis.com', '/youtube/v3/search', {
         'part': 'snippet',
-        'q': widget.title,
+        'q': widget.title.trim().split(RegExp(r'\\s+')).take(7).join(' '),
         'type': 'video',
         'order': 'relevance',
-        'maxResults': '12',
+        'maxResults': '6',
+        'fields': 'items(id/videoId,snippet(title,channelTitle,thumbnails(default,medium)))',
+        'regionCode': 'PK',
         'key': _youtubeApiKey,
       });
-      final request = await client.getUrl(uri);
+      final request = await client.getUrl(uri).timeout(const Duration(seconds: 8));
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
+      final response = await request.close().timeout(const Duration(seconds: 8));
+      final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 8));
       final data = jsonDecode(body) as Map<String, dynamic>;
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(data['error']?['message'] ?? 'Could not load related videos');
@@ -70,13 +82,16 @@ class _YouTubeVideoPlayerScreenState extends State<YouTubeVideoPlayerScreen> {
         final id = (item['id'] as Map<String, dynamic>?)?['videoId']?.toString();
         return id != null && id != widget.videoId;
       }).toList();
+      _relatedVideoCache[cacheKey] = filtered;
       if (mounted) setState(() {
         _relatedVideos = filtered;
         _loadingRelated = false;
       });
     } catch (error) {
       if (mounted) setState(() {
-        _relatedError = error.toString().replaceFirst('Exception: ', '');
+        _relatedError = error is SocketException || error is HttpException || error is TimeoutException
+            ? 'Connection is taking too long. Tap to retry.'
+            : error.toString().replaceFirst('Exception: ', '');
         _loadingRelated = false;
       });
     } finally {
@@ -114,7 +129,11 @@ class _YouTubeVideoPlayerScreenState extends State<YouTubeVideoPlayerScreen> {
     if (_relatedError != null) {
       return Padding(
         padding: const EdgeInsets.all(16),
-        child: Text(_relatedError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(_relatedError!, textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          const SizedBox(height: 8),
+          TextButton.icon(onPressed: () { setState(() { _loadingRelated = true; _relatedError = null; }); _loadRelatedVideos(); }, icon: const Icon(Icons.refresh), label: const Text('Retry')),
+        ]),
       );
     }
     if (_relatedVideos.isEmpty) {

@@ -13,6 +13,7 @@ import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart'
 import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
 import 'package:my_finance/app/screens/about_hub_screen.dart';
 import 'package:my_finance/features/finance/screens/whatsapp_automation_screen.dart';
+import 'package:my_finance/features/new_assets_v2/screens/new_assets_v2_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -62,6 +63,15 @@ class AppSettingsScreen extends StatelessWidget {
             onTap: () => _openScreen(
               context,
               const BackupRestoreScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.science_outlined,
+            title: 'New Assets v2 (Testing)',
+            subtitle: 'Open the separate Assets v2 system for testing',
+            onTap: () => _openScreen(
+              context,
+              const NewAssetsV2Screen(),
             ),
           ),
           _SettingsInfoTile(

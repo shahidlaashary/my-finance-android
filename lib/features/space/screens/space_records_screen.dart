@@ -59,7 +59,7 @@ class SpaceRecordsScreenState extends State<SpaceRecordsScreen> {
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(0, 12, 0, 20),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
           itemCount: rows.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {

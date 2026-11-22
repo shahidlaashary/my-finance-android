@@ -16,11 +16,11 @@ class YouTubeExploreScreen extends StatefulWidget {
   State<YouTubeExploreScreen> createState() => _YouTubeExploreScreenState();
 }
 
-class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with SingleTickerProviderStateMixin {
+class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> {
   final _space = MySpaceService.instance;
   final _linkController = TextEditingController();
   final _titleController = TextEditingController();
-  late final TabController _tabs;
+  int _selectedTabIndex = 0;
   late Future<List<Map<String, Object?>>> _saved;
   late Future<List<Map<String, Object?>>> _history;
   bool _saving = false;
@@ -34,7 +34,6 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
     _refresh();
   }
 
@@ -45,7 +44,6 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
 
   @override
   void dispose() {
-    _tabs.dispose();
     _linkController.dispose();
     _titleController.dispose();
     _searchController.dispose();
@@ -265,77 +263,154 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
     ),
   );
 
-  Widget _exploreTab() => ListView(padding: const EdgeInsets.all(16), children: [
-    if (_searchOpen) ...[
-      Text('Find videos and channels', style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 12),
-      Wrap(spacing: 8, children: [
-        ChoiceChip(label: const Text('Videos'), selected: _searchType == 'video', onSelected: (_) => setState(() => _searchType = 'video')),
-        ChoiceChip(label: const Text('Channels'), selected: _searchType == 'channel', onSelected: (_) => setState(() => _searchType = 'channel')),
-      ]),
-      const SizedBox(height: 10),
-      TextField(controller: _searchController, autofocus: true, textInputAction: TextInputAction.search, onSubmitted: (_) => _search(),
-        decoration: InputDecoration(hintText: 'Search ' + (_searchType == 'video' ? 'videos' : 'channels'), prefixIcon: const Icon(Icons.search_rounded),
-          suffixIcon: IconButton(onPressed: _searching ? null : _search, icon: const Icon(Icons.arrow_forward_rounded)), border: const OutlineInputBorder())),
-      const SizedBox(height: 16),
+  Widget _exploreTab() => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 56),
+        child: Column(children: [
+          Icon(Icons.video_library_outlined, size: 52, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(height: 12),
+          Text('Explore YouTube', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 6),
+          const Text('Tap the search icon to find videos and channels.', textAlign: TextAlign.center),
+        ]),
+      ),
     ],
-    if (_searching || _searchError != null || _results.isNotEmpty) ...[
-      Text('Search results', style: Theme.of(context).textTheme.titleMedium),
-      const SizedBox(height: 8),
-      _searchResults(),
-    ] else if (!_searchOpen) ...[
-      Padding(padding: const EdgeInsets.symmetric(vertical: 56), child: Column(children: [
-        Icon(Icons.video_library_outlined, size: 52, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 12),
-        Text('Explore YouTube', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 6),
-        const Text('Tap the search icon to find videos and channels.', textAlign: TextAlign.center),
-      ])),
-    ] else if (_searchOpen && _results.isEmpty) ...[
-      Padding(padding: const EdgeInsets.symmetric(vertical: 24), child: Text('Search for videos or channels.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium)),
+  );
+
+  Widget _searchPanel() => Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        child: TextField(
+          controller: _searchController,
+          autofocus: true,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (_) => _search(),
+          decoration: InputDecoration(
+            hintText: 'Search YouTube',
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 10, right: 6),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _searchType,
+                  isDense: true,
+                  borderRadius: BorderRadius.circular(12),
+                  items: const [
+                    DropdownMenuItem(value: 'video', child: Text('Videos')),
+                    DropdownMenuItem(value: 'channel', child: Text('Channels')),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _searchType = value;
+                      _results = [];
+                      _searchError = null;
+                    });
+                  },
+                ),
+              ),
+            ),
+            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            suffixIcon: IconButton(
+              tooltip: 'Search',
+              onPressed: _searching ? null : _search,
+              icon: const Icon(Icons.search_rounded),
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            isDense: true,
+          ),
+        ),
+      ),
+      if (_searching || _searchError != null || _results.isNotEmpty) ...[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Search results', style: Theme.of(context).textTheme.titleMedium),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: SingleChildScrollView(child: _searchResults())),
+      ] else
+        const Expanded(
+          child: Center(child: Text('Enter a search to find videos or channels.')),
+        ),
     ],
-  ]);
+  );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Explore Videos'),
-      actions: [
-        IconButton(
-          tooltip: _searchOpen ? 'Close search' : 'Search videos and channels',
-          onPressed: () => setState(() {
-            _searchOpen = !_searchOpen;
-            if (!_searchOpen) FocusScope.of(context).unfocus();
-          }),
-          icon: Icon(_searchOpen ? Icons.close_rounded : Icons.search_rounded),
-        ),
-      ],
-      bottom: TabBar(
-        controller: _tabs,
-        isScrollable: false,
-        labelPadding: EdgeInsets.zero,
-        indicatorSize: TabBarIndicatorSize.tab,
-        tabs: const [
-          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.explore_outlined, size: 17), SizedBox(width: 4), Text('Explore'),
-          ]))),
-          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.bookmark_border_rounded, size: 17), SizedBox(width: 4), Text('Saved'),
-          ]))),
-          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.history_rounded, size: 17), SizedBox(width: 4), Text('History'),
-          ]))),
-          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.add_link_rounded, size: 17), SizedBox(width: 4), Text('Save Video'),
-          ]))),
-        ],
-      ),
-    ),
-    body: TabBarView(controller: _tabs, children: [
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final pages = <Widget>[
       _exploreTab(),
       _videoList(_saved, history: false),
       _videoList(_history, history: true),
       _saveVideoTab(),
-    ]),
-  );
+    ];
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Explore Videos'),
+        actions: [
+          IconButton(
+            tooltip: _searchOpen ? 'Close search' : 'Search videos and channels',
+            onPressed: () => setState(() {
+              _searchOpen = !_searchOpen;
+              if (!_searchOpen) {
+                FocusScope.of(context).unfocus();
+                _searchController.clear();
+                _results = [];
+                _searchError = null;
+              }
+            }),
+            icon: Icon(_searchOpen ? Icons.close_rounded : Icons.search_rounded),
+          ),
+        ],
+      ),
+      body: _searchOpen
+          ? _searchPanel()
+          : IndexedStack(index: _selectedTabIndex, children: pages),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.055), blurRadius: 14, offset: const Offset(0, -3))],
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 66,
+            child: Row(children: [
+              _navItem(0, Icons.explore_outlined, 'Explore'),
+              _navItem(1, Icons.bookmark_border_rounded, 'Saved'),
+              _navItem(2, Icons.history_rounded, 'History'),
+              _navItem(3, Icons.add_link_rounded, 'Save Video'),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(int index, IconData icon, String label) {
+    final selected = _selectedTabIndex == index;
+    final color = selected ? Theme.of(context).colorScheme.primary : Theme.of(context).hintColor;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _selectedTabIndex = index),
+        child: SizedBox(
+          height: 66,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 22, color: color),
+              const SizedBox(height: 3),
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

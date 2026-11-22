@@ -221,6 +221,50 @@ class NewAssetsService {
     };
   }
 
+  Future<int> addAttachment({
+    required int assetId,
+    required String filePath,
+    required String fileName,
+    String? mimeType,
+  }) async {
+    await ensureTables();
+    final asset = await getAsset(assetId);
+    if (asset == null) throw StateError('Asset not found.');
+    final id = await _db.insert('new_asset_v2_attachments', {
+      'asset_id': assetId,
+      'file_path': filePath,
+      'file_name': fileName,
+      'mime_type': mimeType,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    return id;
+  }
+
+  Future<List<Map<String, Object?>>> getAttachments(int assetId) async {
+    await ensureTables();
+    return _db.query(
+      'new_asset_v2_attachments',
+      where: 'asset_id = ?',
+      whereArgs: [assetId],
+      orderBy: 'id DESC',
+    );
+  }
+
+  Future<void> updateCurrentValue(int assetId, double value) async {
+    await ensureTables();
+    if (!value.isFinite || value < 0) {
+      throw ArgumentError('Current value cannot be negative.');
+    }
+    final changed = await _db.update(
+      'new_asset_v2_records',
+      {'current_value': value, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ? AND is_sold = 0',
+      whereArgs: [assetId],
+    );
+    if (changed == 0) throw StateError('Active asset not found.');
+    AppRefreshController.notifyChanged();
+  }
+
   Future<List<Map<String, Object?>>> getEvents(int assetId) async {
     await ensureTables();
     return _db.query(

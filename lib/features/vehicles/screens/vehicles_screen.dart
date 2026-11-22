@@ -876,15 +876,10 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     );
   }
 
-  String _defaultVehicleAction() => switch (_tabs.index) {
-    2 => 'Fuel',
-    3 => 'Expense',
-    4 => 'Reminder',
-    _ => 'Vehicle',
-  };
+  String _defaultVehicleAction() => 'Fuel';
 
   Future<void> _openVehiclePlusSheet() async {
-    final selectedAtOpen = _defaultVehicleAction();
+    var selected = 'Fuel';
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -893,18 +888,26 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheet) {
-            final List<(String, String, IconData, Color, VoidCallback)> actions = [
-              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green, () { _showVehicleForm(); }),
-              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary, () { _showFuelForm(); }),
-              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error, () { _showExpenseForm(); }),
-              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary, () { _showReminderForm(); }),
+            final actions = <(String, String, IconData, Color, VoidCallback)>[
+              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green, () => _showVehicleForm()),
+              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary, () => _showFuelForm()),
+              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error, () => _showExpenseForm()),
+              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary, () => _showReminderForm()),
             ];
+            final selectedAction = actions.firstWhere((a) => a.$1 == selected);
+            final heading = switch (selected) {
+              'Vehicle' => 'Add Vehicle',
+              'Fuel' => 'Add Fuel Entry',
+              'Expense' => 'Add Vehicle Expense',
+              'Reminder' => 'Add Service Reminder',
+              _ => 'Vehicle Actions',
+            };
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
               child: SafeArea(
                 top: false,
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
@@ -916,39 +919,41 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Expanded(child: Text('Vehicle Actions', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink))),
+                          Expanded(child: Text(heading, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink))),
                           IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: _muted),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 2.9,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: actions.map((action) {
                           final isSelected = selected == action.$1;
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(14),
-                            onTap: () {
-                              Navigator.pop(sheetContext);
-                              action.$5();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                              decoration: BoxDecoration(
-                                color: isSelected ? action.$4.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: isSelected ? action.$4 : Theme.of(context).colorScheme.outlineVariant, width: isSelected ? 1.4 : 1),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(action.$3, color: action.$4, size: 22),
-                                  const SizedBox(width: 9),
-                                  Expanded(child: Text(action.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _ink))),
-                                ],
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(right: action.$1 == 'Reminder' ? 0 : 5, left: action.$1 == 'Vehicle' ? 0 : 5),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  setSheet(() => selected = action.$1);
+                                  action.$5();
+                                },
+                                child: Container(
+                                  constraints: const BoxConstraints(minHeight: 70),
+                                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? action.$4.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: isSelected ? action.$4 : Theme.of(context).colorScheme.outlineVariant, width: isSelected ? 1.4 : 1),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(action.$3, color: action.$4, size: 20),
+                                      const SizedBox(height: 4),
+                                      Text(action.$2, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _ink)),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           );

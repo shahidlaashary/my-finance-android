@@ -66,40 +66,55 @@ class SoundSettingsService extends ChangeNotifier {
   }
 
   List<List<int>> _pattern(String action, String preset) {
-    const tones = <String, Map<String, List<List<int>>>>{
-      'soft': {
-        'app_start': [[523,90],[659,90],[784,140],[1047,220]], 'save': [[880,75]], 'update': [[740,65],[980,70]],
-        'delete_warning': [[440,160]], 'delete_success': [[660,65],[880,75]],
-        'income': [[784,65],[1046,90]], 'expense': [[620,90],[500,100]],
-        'transfer': [[720,65],[840,65]], 'reminder': [[880,100],[880,100]], 'budget_limit': [[740,110],[520,160]],
-        'error': [[360,150],[280,180]], 'achievement': [[880,70],[1100,70],[1320,130]],
-      },
-      'classic': {
-        'app_start': [[523,100],[659,100],[784,160],[1047,260]], 'save': [[950,100]], 'update': [[780,100],[950,100]],
-        'delete_warning': [[420,200]], 'delete_success': [[700,90],[1000,110]],
-        'income': [[900,100],[1200,120]], 'expense': [[600,100],[420,140]],
-        'transfer': [[750,90],[950,90],[750,90]], 'reminder': [[1000,120]], 'budget_limit': [[800,120],[560,180]],
-        'error': [[320,200]], 'achievement': [[800,90],[1000,90],[1200,90],[1500,160]],
-      },
-      'premium': {
-        'app_start': [[587,100],[740,100],[880,160],[1175,280]], 'save': [[1040,70],[1310,80]], 'update': [[880,60],[1100,60],[1320,85]],
-        'delete_warning': [[500,100],[400,150]], 'delete_success': [[880,60],[1175,70],[1560,110]],
-        'income': [[1040,70],[1310,70],[1560,100]], 'expense': [[720,90],[520,110]],
-        'transfer': [[880,65],[1040,65],[880,65]], 'reminder': [[1040,90],[880,90]], 'budget_limit': [[880,100],[620,170]],
-        'error': [[400,100],[300,170]], 'achievement': [[880,60],[1100,60],[1320,60],[1760,140]],
-      },
+    const patterns = <String, List<List<int>>>{
+      'app_start': [[523, 110], [659, 110], [784, 160], [1047, 260]],
+      'save': [[988, 65], [1319, 95]],
+      'update': [[740, 70], [880, 70], [1175, 105]],
+      'delete_warning': [[392, 150], [330, 210]],
+      'delete_success': [[784, 65], [988, 75], [1319, 120]],
+      'income': [[659, 75], [880, 90], [1175, 130]],
+      'expense': [[587, 100], [440, 120], [349, 160]],
+      'transfer': [[698, 65], [880, 65], [698, 65], [1047, 100]],
+      'reminder': [[880, 80], [880, 80], [1175, 140]],
+      'budget_limit': [[784, 100], [622, 120], [523, 180]],
+      'error': [[330, 130], [247, 180]],
+      'achievement': [[523, 70], [659, 70], [784, 70], [988, 90], [1319, 180]],
     };
-    if (preset == 'modern') {
-      const modern = <String, List<List<int>>>{
-        'app_start': [[554,90],[698,90],[831,150],[1109,250]], 'save': [[980,80],[1180,70]], 'update': [[760,75],[980,80]],
-        'delete_warning': [[520,140]], 'delete_success': [[760,70],[1040,90]],
-        'income': [[880,70],[1175,90]], 'expense': [[650,90],[460,100]],
-        'transfer': [[800,65],[1000,65]], 'reminder': [[920,90],[920,90]], 'budget_limit': [[820,100],[600,160]],
-        'error': [[350,140],[270,160]], 'achievement': [[880,70],[1100,70],[1400,110]],
-      };
-      return modern[action] ?? [[880,80]];
-    }
-    return tones[preset]?[action] ?? [[880,80]];
+    final source = patterns[action] ?? [[880, 90]];
+    final pitch = switch (preset) {
+      'soft' => 0.96,
+      'classic' => 0.90,
+      'premium' => 1.06,
+      _ => 1.0,
+    };
+    final duration = switch (preset) {
+      'soft' => 1.18,
+      'classic' => 1.08,
+      'premium' => 1.14,
+      _ => 1.0,
+    };
+    return source.map((step) => [
+      (step[0] * pitch).round(),
+      (step[1] * duration).round(),
+    ]).toList();
+  }
+
+  String _waveformForAction(String action) {
+    const waveforms = <String, String>{
+      'app_start': 'bell',
+      'save': 'pluck',
+      'update': 'bright',
+      'delete_warning': 'warm',
+      'delete_success': 'bell',
+      'income': 'bright',
+      'expense': 'soft',
+      'transfer': 'pluck',
+      'reminder': 'warm',
+      'budget_limit': 'bright',
+      'error': 'warm',
+      'achievement': 'bell',
+    };
+    return waveforms[action] ?? 'soft';
   }
 
   Future<void> play(String action, {String? presetOverride}) async {
@@ -107,7 +122,7 @@ class SoundSettingsService extends ChangeNotifier {
     final pattern = _pattern(action, presetOverride ?? choices[action] ?? 'modern');
     try {
       await _channel.invokeMethod<bool>('playPattern', {
-        'pattern': pattern.map((s) => {'frequency': s[0], 'durationMs': s[1]}).toList(),
+        'pattern': pattern.map((s) => {'frequency': s[0], 'durationMs': s[1], 'waveform': _waveformForAction(action)}).toList(),
         'volume': soundVolume,
       });
     } catch (_) {}

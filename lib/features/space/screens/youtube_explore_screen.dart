@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_finance/features/space/screens/youtube_video_player_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const String _youtubeApiKey = String.fromEnvironment('YOUTUBE_API_KEY');
 
 class YouTubeExploreScreen extends StatefulWidget {
   const YouTubeExploreScreen({super.key});
@@ -18,6 +24,11 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
   late Future<List<Map<String, Object?>>> _saved;
   late Future<List<Map<String, Object?>>> _history;
   bool _saving = false;
+  final _searchController = TextEditingController();
+  List<Map<String, dynamic>> _results = [];
+  String _searchType = 'video';
+  bool _searching = false;
+  String? _searchError;
 
   @override
   void initState() {
@@ -36,16 +47,17 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
     _tabs.dispose();
     _linkController.dispose();
     _titleController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   String? _videoId(String input) {
     final value = input.trim();
     final patterns = [
-      RegExp(r'youtu\\.be/([a-zA-Z0-9_-]{11})'),
+      RegExp(r'youtu\.be/([a-zA-Z0-9_-]{11})'),
       RegExp(r'[?&]v=([a-zA-Z0-9_-]{11})'),
-      RegExp(r'youtube\\.com/embed/([a-zA-Z0-9_-]{11})'),
-      RegExp(r'youtube\\.com/shorts/([a-zA-Z0-9_-]{11})'),
+      RegExp(r'youtube\.com/embed/([a-zA-Z0-9_-]{11})'),
+      RegExp(r'youtube\.com/shorts/([a-zA-Z0-9_-]{11})'),
     ];
     for (final pattern in patterns) {
       final match = pattern.firstMatch(value);
@@ -54,6 +66,91 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
     if (RegExp(r'^[a-zA-Z0-9_-]{11}$').hasMatch(value)) return value;
     return null;
   }
+
+
+  Future<void> _search() async {
+    final q = _searchController.text.trim();
+    if (q.isEmpty) return;
+    if (_youtubeApiKey.isEmpty) {
+      setState(() => _searchError = 'API key is missing in this APK build.');
+      return;
+    }
+    setState(() { _searching = true; _searchError = null; _results = []; });
+    final client = HttpClient();
+    try {
+      final uri = Uri.https('www.googleapis.com', '/youtube/v3/search', {
+        'part': 'snippet', 'q': q, 'type': _searchType, 'maxResults': '20', 'key': _youtubeApiKey,
+      });
+      final req = await client.getUrl(uri);
+      req.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      final res = await req.close();
+      final body = await res.transform(utf8.decoder).join();
+      final json = jsonDecode(body) as Map<String, dynamic>;
+      if (res.statusCode < 200 || res.statusCode >= 300) throw Exception(json['error']?['message'] ?? 'Search request failed');
+      if (mounted) setState(() => _results = (json['items'] as List? ?? []).cast<Map<String, dynamic>>());
+    } catch (e) {
+      if (mounted) setState(() => _searchError = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      client.close(force: true);
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  Future<void> _saveSearchResult(Map<String, dynamic> item) async {
+    final snippet = item['snippet'] as Map<String, dynamic>? ?? {};
+    final videoId = (item['id'] as Map<String, dynamic>?)?['videoId']?.toString();
+    if (videoId == null) return;
+    final thumbnails = snippet['thumbnails'] as Map<String, dynamic>? ?? {};
+    await _space.saveYouTubeVideo(videoId: videoId, title: snippet['title']?.toString() ?? 'Video',
+      channelTitle: snippet['channelTitle']?.toString(),
+      thumbnailUrl: (thumbnails['high']?['url'] ?? thumbnails['medium']?['url'])?.toString());
+    if (mounted) { setState(_refresh); _message('Saved to My Space.'); }
+  }
+
+  Future<void> _openSearchResult(Map<String, dynamic> item) async {
+    final id = (item['id'] as Map<String, dynamic>?)?['videoId']?.toString();
+    if (_searchType == 'channel') {
+      final channelId = (item['id'] as Map<String, dynamic>?)?['channelId']?.toString();
+      if (channelId != null) await launchUrl(Uri.parse('https://www.youtube.com/channel/' + channelId), mode: LaunchMode.externalApplication);
+      return;
+    }
+    if (id == null) return;
+    final snippet = item['snippet'] as Map<String, dynamic>? ?? {};
+    await _space.markYouTubeVideoWatched(id);
+    if (!mounted) return;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => YouTubeVideoPlayerScreen(videoId: id, title: snippet['title']?.toString() ?? 'Video')));
+    if (mounted) setState(_refresh);
+  }
+
+  Widget _searchResults() {
+    if (_searching) return const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator()));
+    if (_searchError != null) return Padding(padding: const EdgeInsets.all(12), child: Text(_searchError!, style: TextStyle(color: Theme.of(context).colorScheme.error)));
+    if (_results.isEmpty) return const SizedBox.shrink();
+    return ListView.separated(
+      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: _results.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final item = _results[index];
+        final snippet = item['snippet'] as Map<String, dynamic>? ?? {};
+        final thumbs = snippet['thumbnails'] as Map<String, dynamic>? ?? {};
+        final thumb = (thumbs['high']?['url'] ?? thumbs['medium']?['url'] ?? thumbs['default']?['url'])?.toString();
+        final isVideo = _searchType == 'video';
+        return Card(child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          leading: ClipRRect(borderRadius: BorderRadius.circular(8), child: thumb == null
+            ? _thumbPlaceholder()
+            : Image.network(thumb, width: 86, height: 54, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _thumbPlaceholder()),
+          ),
+          title: Text(snippet['title']?.toString() ?? 'Untitled', maxLines: 2, overflow: TextOverflow.ellipsis),
+          subtitle: Text(snippet['channelTitle']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+          onTap: () => _openSearchResult(item),
+          trailing: isVideo ? IconButton(icon: const Icon(Icons.bookmark_add_outlined), tooltip: 'Save video', onPressed: () => _saveSearchResult(item)) : const Icon(Icons.open_in_new_rounded),
+        ));
+      },
+    );
+  }
+
+  Widget _thumbPlaceholder() => Container(width: 86, height: 54, color: Theme.of(context).colorScheme.surfaceContainerHighest, child: Icon(Icons.play_circle_outline_rounded, color: Theme.of(context).colorScheme.primary));
 
   Future<void> _addVideo() async {
     _linkController.clear();
@@ -148,33 +245,28 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
     });
   }
 
-  Widget _exploreTab() => ListView(padding: const EdgeInsets.all(20), children: [
-    Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .55),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(Icons.video_collection_outlined, size: 34, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 12),
-        Text('Explore Videos', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 6),
-        Text('Play YouTube videos in the app and keep the ones you like in your personal library.'),
-        const SizedBox(height: 16),
-        SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _saving ? null : _addVideo, icon: const Icon(Icons.link_rounded), label: const Text('Add YouTube video link'))),
-      ]),
-    ),
-    const SizedBox(height: 18),
-    Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('YouTube search setup', style: TextStyle(fontWeight: FontWeight.w700)),
-      const SizedBox(height: 6),
-      const Text('Video and channel search will be enabled after the YouTube Data API key is configured. You can already save links and play videos here.'),
-    ]))),
+  Widget _exploreTab() => ListView(padding: const EdgeInsets.all(16), children: [
+    Text('Find videos and channels', style: Theme.of(context).textTheme.titleLarge),
     const SizedBox(height: 12),
-    Text('Your library', style: Theme.of(context).textTheme.titleMedium),
+    Wrap(spacing: 8, children: [
+      ChoiceChip(label: const Text('Videos'), selected: _searchType == 'video', onSelected: (_) => setState(() => _searchType = 'video')),
+      ChoiceChip(label: const Text('Channels'), selected: _searchType == 'channel', onSelected: (_) => setState(() => _searchType = 'channel')),
+    ]),
+    const SizedBox(height: 10),
+    TextField(controller: _searchController, textInputAction: TextInputAction.search, onSubmitted: (_) => _search(),
+      decoration: InputDecoration(hintText: 'Search ' + (_searchType == 'video' ? 'videos' : 'channels'), prefixIcon: const Icon(Icons.search_rounded),
+        suffixIcon: IconButton(onPressed: _searching ? null : _search, icon: const Icon(Icons.arrow_forward_rounded)), border: const OutlineInputBorder())),
+    const SizedBox(height: 12),
+    Text('Search results', style: Theme.of(context).textTheme.titleMedium),
     const SizedBox(height: 8),
-    SizedBox(height: 210, child: _videoList(_saved, history: false)),
+    _searchResults(),
+    if (_results.isEmpty && !_searching && _searchError == null)
+      Padding(padding: const EdgeInsets.symmetric(vertical: 28), child: Column(children: [
+        Icon(Icons.video_library_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 8), const Text('Search videos or channels, or save a link.'),
+      ])),
+    const SizedBox(height: 20),
+    Card(child: ListTile(leading: const Icon(Icons.link_rounded), title: const Text('Save by link'), subtitle: const Text('Add using video link or ID'), trailing: const Icon(Icons.chevron_right), onTap: _saving ? null : _addVideo)),
   ]);
 
   @override

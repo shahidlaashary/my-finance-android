@@ -886,7 +886,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     var vehicleDate=DateTime.now(), fuelDate=DateTime.now(), expenseDate=DateTime.now(), reminderDate=DateTime.now().add(const Duration(days:30));
     var fullTank=true, unit='L', category=_expenseCategories.first;
     Widget gap([double h=12])=>SizedBox(height:h);
-    Widget date(String label,DateTime value,void Function(DateTime) set,BuildContext c)=>InkWell(onTap:()async{final d=await showDatePicker(context:c,initialDate:value,firstDate:DateTime(1950),lastDate:DateTime(2100);if(d!=null)set(d);},child:InputDecorator(decoration:_decoration(label,Icons.calendar_month),child:Text(DateFormat('dd MMM yyyy').format(value))));
+    Widget date(String label,DateTime value,void Function(DateTime) set,BuildContext c)=>InkWell(onTap:()async{final d=await showDatePicker(context:c,initialDate:value,firstDate:DateTime(1950),lastDate:DateTime(2100));if(d!=null)set(d);},child:InputDecorator(decoration:_decoration(label,Icons.calendar_month),child:Text(DateFormat('dd MMM yyyy').format(value))));
     String heading()=>switch(tab){'Vehicle'=>'Add Vehicle','Fuel'=>'Add Fuel Entry','Expense'=>'Add Vehicle Expense','Reminder'=>'Add Service Reminder',_=>'Add'};
     Widget form(BuildContext c,StateSetter upd){
       if(tab=='Vehicle')return Form(key:keys[tab],child:Column(children:[

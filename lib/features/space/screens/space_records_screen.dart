@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 
 class SpaceRecordsScreen extends StatefulWidget {
@@ -178,6 +180,7 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
   late final TextEditingController _notes;
   late String _status;
   bool _saving = false;
+  final List<Map<String, String>> _selectedAttachments = [];
 
   bool get _deals => widget.section == 'deals';
 
@@ -204,13 +207,50 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
     super.dispose();
   }
 
+  Future<void> _pickAttachments() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: [
+          'pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic',
+          'doc', 'docx', 'xls', 'xlsx', 'txt', 'ppt', 'pptx',
+        ],
+      );
+      if (result == null) return;
+      setState(() {
+        for (final file in result.files) {
+          if (file.path != null &&
+              !_selectedAttachments.any((item) => item['path'] == file.path)) {
+            _selectedAttachments.add({'path': file.path!, 'name': file.name});
+          }
+        }
+      });
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('File select nahi ho saki: $error')),
+      );
+    }
+  }
+
   Widget _field(TextEditingController c, String label, {int lines = 1, bool required = false}) =>
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: TextFormField(
           controller: c,
           maxLines: lines,
-          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), isDense: true),
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(),
+            isDense: true,
+            suffixIcon: label == 'Notes'
+                ? IconButton(
+                    tooltip: 'Attach files',
+                    icon: const Icon(Icons.attach_file_rounded),
+                    onPressed: _pickAttachments,
+                  )
+                : null,
+          ),
           validator: required ? (v) => v == null || v.trim().isEmpty ? 'Required' : null : null,
         ),
       );
@@ -219,7 +259,7 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      await MySpaceService.instance.saveSectionRecord(widget.section, {
+      final recordId = await MySpaceService.instance.saveSectionRecord(widget.section, {
         'id': widget.record?['id'],
         'title': _title.text,
         'category': _category.text,
@@ -231,7 +271,29 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
         'description': _description.text,
         'notes': _notes.text,
       });
-      if (mounted) Navigator.pop(context, true);
+      var failedAttachments = 0;
+      for (final file in _selectedAttachments) {
+        try {
+          await AttachmentService.addAttachment(
+            ownerType: widget.section == 'deals'
+                ? AttachmentOwnerTypes.deal
+                : AttachmentOwnerTypes.project,
+            ownerId: recordId,
+            sourcePath: file['path']!,
+            originalFileName: file['name'],
+          );
+        } catch (_) {
+          failedAttachments++;
+        }
+      }
+      if (mounted) {
+        if (failedAttachments > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Record saved, but $failedAttachments file(s) could not be attached.')),
+          );
+        }
+        Navigator.pop(context, true);
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to save: $e')));
     } finally {
@@ -266,6 +328,22 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
           _field(_end, _deals ? 'End / Expiry Date (optional)' : 'Target End Date (optional)'),
           _field(_description, _deals ? 'Agreement Details / Terms' : 'Project Description', lines: 4),
           _field(_notes, 'Notes', lines: 3),
+          if (_selectedAttachments.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 0, bottom: 8),
+              child: Column(
+                children: _selectedAttachments.asMap().entries.map((entry) => ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.insert_drive_file_outlined),
+                  title: Text(entry.value['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: () => setState(() => _selectedAttachments.removeAt(entry.key)),
+                  ),
+                )).toList(),
+              ),
+            ),
           const SizedBox(height: 8),
           FilledButton.icon(
             onPressed: _saving ? null : _save,

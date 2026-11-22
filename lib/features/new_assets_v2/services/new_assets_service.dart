@@ -14,10 +14,8 @@ class NewAssetsService {
   static final NewAssetsService instance = NewAssetsService._();
 
   Database get _db => FinanceDB.instance.db;
-  bool _ready = false;
 
   Future<void> ensureTables() async {
-    if (_ready) return;
     await _db.execute('''
       CREATE TABLE IF NOT EXISTS new_asset_v2_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +73,6 @@ class NewAssetsService {
     ''');
     await _db.execute('CREATE INDEX IF NOT EXISTS idx_new_asset_v2_records_status ON new_asset_v2_records(is_sold, currency)');
     await _db.execute('CREATE INDEX IF NOT EXISTS idx_new_asset_v2_events_asset_date ON new_asset_v2_events(asset_id, event_date)');
-    _ready = true;
   }
 
   /// Creates the v2 asset record. Loan purchases intentionally do not require

@@ -88,7 +88,9 @@ class MoreFeaturesPage extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: ListView.builder(
+      body: SafeArea(
+        top: false,
+        child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: features.length,
         itemBuilder: (context, index) {
@@ -184,6 +186,7 @@ class MoreFeaturesPage extends StatelessWidget {
             ),
           );
         },
+      ),
       ),
     );
   }

@@ -22,13 +22,39 @@ class _SpaceVideoPlayerScreenState extends State<SpaceVideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.item['file_path'] as String))
+    // Local library videos use file playback. Authorized remote MP4/HLS
+    // sources can use the same native player by supplying stream_url.
+    final remoteSource = (widget.item['stream_url'] ??
+            widget.item['source_url'] ??
+            widget.item['url'])
+        ?.toString()
+        .trim();
+    if (remoteSource != null && remoteSource.isNotEmpty) {
+      final uri = Uri.tryParse(remoteSource);
+      if (uri == null || !uri.hasAuthority ||
+          (uri.scheme != 'https' && uri.scheme != 'http')) {
+        _error = 'Invalid video stream URL.';
+        return;
+      }
+      _controller = VideoPlayerController.networkUrl(uri);
+    } else {
+      final localPath = widget.item['file_path']?.toString();
+      if (localPath == null || localPath.isEmpty) {
+        _error = 'No video file or authorized stream URL was provided.';
+        return;
+      }
+      _controller = VideoPlayerController.file(File(localPath));
+    }
+    _controller
       ..addListener(_videoChanged)
       ..initialize().then((_) {
         if (!mounted) return;
         setState(() => _ready = true);
       }).catchError((Object error) {
-        if (mounted) setState(() => _error = 'Unable to play this video. This format or codec may not be supported on this device.');
+        if (mounted) {
+          setState(() => _error =
+              'Unable to play this video. Check the stream URL, network access, format and device codec support.');
+        }
       });
   }
 

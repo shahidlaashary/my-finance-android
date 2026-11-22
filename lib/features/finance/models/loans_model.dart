@@ -32,7 +32,7 @@ class LoansModel {
   });
 
   bool get isPaid => remainingAmount <= 0;
-  bool get isAssetLinked => sourceType == 'asset_purchase' || sourceType == 'asset_sale';
+  bool get isAssetLinked => sourceType == 'asset_purchase' || sourceType == 'asset_sale' || (sourceType?.startsWith('new_asset_v2_') ?? false);
 
   bool get isOverdue {
     if (isPaid || dueDate == null || dueDate!.isEmpty) return false;

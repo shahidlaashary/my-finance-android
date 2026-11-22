@@ -667,6 +667,7 @@ class LoansService {
         {
           'remaining_amount': newRemaining,
           'status': newRemaining <= 0 ? 'paid' : 'active',
+          if (loan.sourceType == 'new_asset_v2_purchase') 'wallet_id': repayment.walletId,
         },
         where: 'id = ?',
         whereArgs: [repayment.loanId],
@@ -863,6 +864,26 @@ class LoansService {
         where: 'id = ?',
         whereArgs: [repayment.loanId],
       );
+
+      if (loan.sourceType == 'new_asset_v2_purchase') {
+        final linkedEvents = await txn.query(
+          'new_asset_v2_events',
+          columns: ['id', 'transaction_id'],
+          where: 'repayment_id = ?',
+          whereArgs: [repaymentId],
+        );
+        for (final event in linkedEvents) {
+          final transactionId = (event['transaction_id'] as num?)?.toInt();
+          if (transactionId != null) {
+            await txn.delete('transactions', where: 'id = ?', whereArgs: [transactionId]);
+          }
+        }
+        await txn.delete(
+          'new_asset_v2_events',
+          where: 'repayment_id = ?',
+          whereArgs: [repaymentId],
+        );
+      }
 
       await txn.delete(
         'loan_repayments',

@@ -310,12 +310,26 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
           icon: Icon(_searchOpen ? Icons.close_rounded : Icons.search_rounded),
         ),
       ],
-      bottom: TabBar(controller: _tabs, tabs: const [
-        Tab(text: 'Explore', icon: Icon(Icons.explore_outlined)),
-        Tab(text: 'Saved', icon: Icon(Icons.bookmark_border_rounded)),
-        Tab(text: 'History', icon: Icon(Icons.history_rounded)),
-        Tab(text: 'Save Video', icon: Icon(Icons.add_link_rounded)),
-      ]),
+      bottom: TabBar(
+        controller: _tabs,
+        isScrollable: false,
+        labelPadding: EdgeInsets.zero,
+        indicatorSize: TabBarIndicatorSize.tab,
+        tabs: const [
+          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.explore_outlined, size: 17), SizedBox(width: 4), Text('Explore'),
+          ]))),
+          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.bookmark_border_rounded, size: 17), SizedBox(width: 4), Text('Saved'),
+          ]))),
+          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.history_rounded, size: 17), SizedBox(width: 4), Text('History'),
+          ]))),
+          Tab(child: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.add_link_rounded, size: 17), SizedBox(width: 4), Text('Save Video'),
+          ]))),
+        ],
+      ),
     ),
     body: TabBarView(controller: _tabs, children: [
       _exploreTab(),

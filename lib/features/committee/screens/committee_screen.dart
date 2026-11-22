@@ -42,39 +42,199 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
     String frequency = 'Monthly';
     DateTime start = DateTime.now();
     DateTime due = DateTime.now();
-    final ok = await showDialog<bool>(context: context, builder: (dialogContext) =>
-      StatefulBuilder(builder: (context, setD) => AlertDialog(
-        title: const Text('Create Committee'),
-        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Committee name')),
-          const SizedBox(height: 10),
-          TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Installment amount')),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(value: frequency, decoration: const InputDecoration(labelText: 'Frequency'),
-            items: ['Daily','Weekly','Monthly'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),
-            onChanged: (v) { if(v!=null) setD(()=>frequency=v); }),
-          const SizedBox(height: 10),
-          TextField(controller: members, minLines: 3, maxLines: 6,
-            decoration: const InputDecoration(labelText: 'Members (one name per line)', hintText: 'Ali\nAhmed\nUsman')),
-          const SizedBox(height: 8),
-          ListTile(contentPadding: EdgeInsets.zero, title: const Text('Start date'), subtitle: Text(DateFormat('dd MMM yyyy').format(start)),
-            trailing: const Icon(Icons.calendar_month), onTap: () async { final d=await showDatePicker(context: context, initialDate:start, firstDate:DateTime(2000), lastDate:DateTime(2100)); if(d!=null)setD(()=>start=d); }),
-          ListTile(contentPadding: EdgeInsets.zero, title: const Text('First installment due'), subtitle: Text(DateFormat('dd MMM yyyy').format(due)),
-            trailing: const Icon(Icons.event), onTap: () async { final d=await showDatePicker(context: context, initialDate:due, firstDate:DateTime(2000), lastDate:DateTime(2100)); if(d!=null)setD(()=>due=d); }),
-          Text('Turn order follows the member order entered above.', style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor)),
-        ])),
-        actions: [TextButton(onPressed:()=>Navigator.pop(dialogContext,false),child:const Text('Cancel')),
-          FilledButton(onPressed:()=>Navigator.pop(dialogContext,true),child:const Text('Create'))],
-      )));
-    if (ok != true) return;
-    try {
-      final memberList = members.text.split(RegExp(r'[\n,;]+')).map((e)=>e.trim()).where((e)=>e.isNotEmpty)
-        .map((e)=>{'name':e,'phone':''}).toList();
-      await CommitteeService.createCommittee(name:name.text, frequency:frequency,
-        installmentAmount:double.parse(amount.text), members:memberList, startDate:start, firstDueDate:due);
-      await SoundSettingsService.instance.play('save');
-      await _load();
-    } catch(e) { _message(e.toString()); }
+
+    final ok = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+          final screenHeight = MediaQuery.sizeOf(context).height;
+          final maxHeight = keyboardHeight > 0
+              ? (screenHeight - keyboardHeight).clamp(0.0, screenHeight) * .95
+              : screenHeight * .82;
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: keyboardHeight),
+            child: SafeArea(
+              top: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxHeight),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 38,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).dividerColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Create Committee',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Close',
+                            onPressed: () => Navigator.pop(sheetContext, false),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          primary: false,
+                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: name,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: const InputDecoration(labelText: 'Committee name'),
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: amount,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                decoration: const InputDecoration(labelText: 'Installment amount'),
+                              ),
+                              const SizedBox(height: 10),
+                              DropdownButtonFormField<String>(
+                                value: frequency,
+                                decoration: const InputDecoration(labelText: 'Frequency'),
+                                items: ['Daily', 'Weekly', 'Monthly']
+                                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                                    .toList(),
+                                onChanged: (v) {
+                                  if (v != null) setSheetState(() => frequency = v);
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: members,
+                                minLines: 3,
+                                maxLines: 6,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: const InputDecoration(
+                                  labelText: 'Members (one name per line)',
+                                  hintText: 'Ali\\nAhmed\\nUsman',
+                                  alignLabelWithHint: true,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('Start date'),
+                                subtitle: Text(DateFormat('dd MMM yyyy').format(start)),
+                                trailing: const Icon(Icons.calendar_month),
+                                onTap: () async {
+                                  final d = await showDatePicker(
+                                    context: sheetContext,
+                                    initialDate: start,
+                                    firstDate: DateTime(2000),
+                                    lastDate: DateTime(2100),
+                                  );
+                                  if (d != null) setSheetState(() => start = d);
+                                },
+                              ),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('First installment due'),
+                                subtitle: Text(DateFormat('dd MMM yyyy').format(due)),
+                                trailing: const Icon(Icons.event),
+                                onTap: () async {
+                                  final d = await showDatePicker(
+                                    context: sheetContext,
+                                    initialDate: due,
+                                    firstDate: DateTime(2000),
+                                    lastDate: DateTime(2100),
+                                  );
+                                  if (d != null) setSheetState(() => due = d);
+                                },
+                              ),
+                              Text(
+                                'Turn order follows the member order entered above.',
+                                style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () => Navigator.pop(sheetContext, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: FilledButton(
+                                      onPressed: () => Navigator.pop(sheetContext, true),
+                                      child: const Text('Create'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    if (ok == true) {
+      try {
+        final memberList = members.text
+            .split(RegExp(r'[\\n,;]+'))
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .map((e) => {'name': e, 'phone': ''})
+            .toList();
+        await CommitteeService.createCommittee(
+          name: name.text,
+          frequency: frequency,
+          installmentAmount: double.parse(amount.text),
+          members: memberList,
+          startDate: start,
+          firstDueDate: due,
+        );
+        await SoundSettingsService.instance.play('save');
+        await _load();
+      } catch (e) {
+        _message(e.toString());
+      }
+    }
+
+    name.dispose();
+    amount.dispose();
+    members.dispose();
   }
 
   Future<void> _open(Map<String,dynamic> committee) async {

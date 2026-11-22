@@ -304,6 +304,137 @@ class NewAssetsService {
     AppRefreshController.notifyChanged();
   }
 
+  Future<Map<String, Object?>?> getLinkedLoan(int assetId) async {
+    await ensureTables();
+    final assets = await _db.query(
+      'new_asset_v2_records',
+      columns: ['linked_loan_id'],
+      where: 'id = ?',
+      whereArgs: [assetId],
+      limit: 1,
+    );
+    if (assets.isEmpty || assets.first['linked_loan_id'] == null) return null;
+    final loans = await _db.query(
+      'loans',
+      where: 'id = ? AND source_type = ? AND source_id = ?',
+      whereArgs: [assets.first['linked_loan_id'], 'new_asset_v2_purchase', assetId],
+      limit: 1,
+    );
+    return loans.isEmpty ? null : loans.first;
+  }
+
+  /// Repayment, wallet balance, wallet transaction, loan balance and asset
+  /// event are committed together. The wallet is chosen at repayment time.
+  Future<int> addLoanRepayment({
+    required int assetId,
+    required int walletId,
+    required double amount,
+    required DateTime repaymentDate,
+    String notes = '',
+  }) async {
+    await ensureTables();
+    if (!amount.isFinite || amount <= 0) {
+      throw ArgumentError('Repayment amount must be greater than zero.');
+    }
+    final repaymentId = await _db.transaction((txn) async {
+      final assetRows = await txn.query(
+        'new_asset_v2_records',
+        where: 'id = ? AND payment_type = ? AND is_sold = 0',
+        whereArgs: [assetId, 'Loan'],
+        limit: 1,
+      );
+      if (assetRows.isEmpty) throw StateError('Active loan-funded asset not found.');
+      final asset = NewAssetRecord.fromMap(assetRows.first);
+      final loanId = (assetRows.first['linked_loan_id'] as num?)?.toInt();
+      if (loanId == null) throw StateError('Linked loan was not found.');
+      final loanRows = await txn.query(
+        'loans',
+        where: 'id = ? AND source_type = ? AND source_id = ?',
+        whereArgs: [loanId, 'new_asset_v2_purchase', assetId],
+        limit: 1,
+      );
+      if (loanRows.isEmpty) throw StateError('Linked loan was not found.');
+      final loan = loanRows.first;
+      final outstanding = (loan['remaining_amount'] as num).toDouble();
+      if (amount > outstanding + 0.000001) {
+        throw StateError('Repayment cannot exceed the outstanding loan.');
+      }
+      final wallets = await txn.query(
+        'wallets',
+        columns: ['id', 'currency', 'balance'],
+        where: 'id = ?',
+        whereArgs: [walletId],
+        limit: 1,
+      );
+      if (wallets.isEmpty) throw StateError('Selected wallet was not found.');
+      final wallet = wallets.single;
+      final walletCurrency = (wallet['currency'] as String? ?? 'PKR').toUpperCase();
+      if (walletCurrency != asset.currency.toUpperCase()) {
+        throw StateError('Wallet currency must match the loan currency (${asset.currency}).');
+      }
+      final balance = (wallet['balance'] as num).toDouble();
+      if (balance + 0.000001 < amount) {
+        throw StateError('Insufficient wallet balance.');
+      }
+      final now = DateTime.now().toIso8601String();
+      final newRemaining = (outstanding - amount).clamp(0.0, outstanding).toDouble();
+      final repaymentId = await txn.insert('loan_repayments', {
+        'loan_id': loanId,
+        'amount': amount,
+        'wallet_id': walletId,
+        'repayment_date': repaymentDate.toIso8601String(),
+        'payment_method': 'cash',
+        'notes': notes.trim(),
+        'created_at': now,
+      });
+      await txn.update(
+        'loans',
+        {
+          'remaining_amount': newRemaining,
+          'status': newRemaining <= 0 ? 'paid' : 'active',
+          'wallet_id': walletId,
+        },
+        where: 'id = ?',
+        whereArgs: [loanId],
+      );
+      await txn.update(
+        'wallets',
+        {'balance': balance - amount},
+        where: 'id = ?',
+        whereArgs: [walletId],
+      );
+      final transactionId = await txn.insert('transactions', {
+        'type': 'Expense',
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': null,
+        'to_amount': null,
+        'exchange_rate': null,
+        'balance_delta': null,
+        'category': 'Loan Repayment',
+        'note': 'New Asset v2: ${asset.name} repayment',
+        'date': repaymentDate.toIso8601String(),
+        'created_at': now,
+      });
+      await txn.insert('new_asset_v2_events', {
+        'asset_id': assetId,
+        'event_type': 'loan_repayment',
+        'amount': amount,
+        'currency': asset.currency,
+        'wallet_id': walletId,
+        'loan_id': loanId,
+        'transaction_id': transactionId,
+        'repayment_id': repaymentId,
+        'event_date': repaymentDate.toIso8601String(),
+        'note': notes.trim().isEmpty ? 'Loan repayment' : notes.trim(),
+        'created_at': now,
+      });
+      return repaymentId;
+    });
+    AppRefreshController.notifyChanged();
+    return repaymentId;
+  }
+
   Future<List<Map<String, Object?>>> getEvents(int assetId) async {
     await ensureTables();
     return _db.query(

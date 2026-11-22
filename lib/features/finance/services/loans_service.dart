@@ -678,6 +678,36 @@ class LoansService {
         amount: loan.loanType == 'given' ? repayment.amount : -repayment.amount,
       );
 
+      if (loan.sourceType == 'new_asset_v2_purchase' && loan.sourceId != null) {
+        final now = DateTime.now().toIso8601String();
+        final transactionId = await txn.insert('transactions', {
+          'type': loan.loanType == 'given' ? 'Income' : 'Expense',
+          'amount': repayment.amount,
+          'wallet_id': repayment.walletId,
+          'to_wallet_id': null,
+          'to_amount': null,
+          'exchange_rate': null,
+          'balance_delta': null,
+          'category': loan.loanType == 'given' ? 'Loan Received' : 'Loan Repayment',
+          'note': 'New Asset v2 linked loan repayment',
+          'date': repayment.repaymentDate,
+          'created_at': now,
+        });
+        await txn.insert('new_asset_v2_events', {
+          'asset_id': loan.sourceId,
+          'event_type': 'loan_repayment',
+          'amount': repayment.amount,
+          'currency': loan.currency,
+          'wallet_id': repayment.walletId,
+          'loan_id': loan.id,
+          'transaction_id': transactionId,
+          'repayment_id': repaymentId,
+          'event_date': repayment.repaymentDate,
+          'note': repayment.notes,
+          'created_at': now,
+        });
+      }
+
       return repaymentId;
     });
     AppRefreshController.notifyChanged();

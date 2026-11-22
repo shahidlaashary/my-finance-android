@@ -36,7 +36,7 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
   List<SpaceDocumentModel> _documents = [];
   bool _loading = true;
   String _category = 'All';
-  String _filter = 'All';
+  String _statusFilter = 'All';
 
   @override
   void initState() {
@@ -63,7 +63,7 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
     try {
       final items = await _service.getDocuments(
         category: _category,
-        filter: _filter,
+        filter: _statusFilter,
       );
       if (!mounted) return;
       setState(() {
@@ -770,12 +770,12 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
               children: [
                 Expanded(
                   child: _compactFilterDropdown(
-                    label: 'FILTER',
-                    value: _filter,
+                    label: 'STATUS',
+                    value: _statusFilter,
                     icon: Icons.filter_list_rounded,
                     options: const ['All', 'Favorites', 'Expiring Soon', 'Expired'],
                     onChanged: (value) {
-                      setState(() => _filter = value);
+                      setState(() => _statusFilter = value);
                       _loadDocuments();
                     },
                   ),

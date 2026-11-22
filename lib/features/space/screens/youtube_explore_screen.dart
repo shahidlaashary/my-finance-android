@@ -224,7 +224,7 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
         ]),
       ));
       return ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.all(16),
         itemCount: videos.length,
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, index) {

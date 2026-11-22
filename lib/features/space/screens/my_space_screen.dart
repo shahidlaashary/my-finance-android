@@ -314,7 +314,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     position: PopupMenuPosition.under,
                     offset: const Offset(0, 4),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 0, maxWidth: 230),
+                    constraints: const BoxConstraints(minWidth: 0, maxWidth: 160),
                     color: Theme.of(context).colorScheme.surface,
                     elevation: 8,
                     shape: RoundedRectangleBorder(
@@ -362,8 +362,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     final colors = Theme.of(context).colorScheme;
     return PopupMenuItem<String>(
       value: value,
-      height: 42,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

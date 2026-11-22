@@ -24,13 +24,14 @@ class MainActivity : FlutterFragmentActivity() {
                     result.error("STORAGE_UNAVAILABLE", "Device storage information is unavailable.", null)
                 }
                 "playPattern" -> {
-                    val steps = call.argument<List<Map<String, Number>>>("pattern").orEmpty().take(8)
+                    val steps = call.argument<List<Map<String, Any>>>("pattern").orEmpty().take(8)
                     val volume = (call.argument<Number>("volume")?.toDouble() ?: 0.5).coerceIn(0.0, 1.0)
                     Thread {
                         steps.forEach { step ->
-                            val frequency = (step["frequency"]?.toInt() ?: 880).coerceIn(180, 1800)
-                            val duration = (step["durationMs"]?.toInt() ?: 90).coerceIn(40, 500)
-                            playTone(frequency, duration, volume)
+                            val frequency = ((step["frequency"] as? Number)?.toInt() ?: 880).coerceIn(180, 1800)
+                            val duration = ((step["durationMs"] as? Number)?.toInt() ?: 90).coerceIn(40, 500)
+                            val waveform = step["waveform"]?.toString() ?: "soft"
+                            playTone(frequency, duration, volume, waveform)
                             Thread.sleep(35)
                         }
                     }.start()
@@ -41,13 +42,21 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private fun playTone(frequency: Int, durationMs: Int, volume: Double) {
+    private fun playTone(frequency: Int, durationMs: Int, volume: Double, waveform: String) {
         val sampleRate = 22050
         val count = sampleRate * durationMs / 1000
         val samples = ShortArray(count)
         for (i in samples.indices) {
             val envelope = minOf(1.0, i / 180.0, (count - i) / 300.0).coerceAtLeast(0.0)
-            val wave = sin(2.0 * PI * frequency * i / sampleRate)
+            val phase = 2.0 * PI * frequency * i / sampleRate
+            val fundamental = sin(phase)
+            val wave = when (waveform) {
+                "bell" -> fundamental * 0.72 + sin(phase * 2.01) * 0.20 + sin(phase * 3.97) * 0.08
+                "pluck" -> fundamental * 0.78 + sin(phase * 2.0) * 0.22
+                "bright" -> fundamental * 0.62 + sin(phase * 2.0) * 0.27 + sin(phase * 3.0) * 0.11
+                "warm" -> fundamental * 0.84 + sin(phase * 1.5) * 0.16
+                else -> fundamental
+            }
             samples[i] = (wave * envelope * volume * Short.MAX_VALUE * 0.32).toInt().toShort()
         }
         val track = AudioTrack.Builder()

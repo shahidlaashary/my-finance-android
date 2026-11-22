@@ -876,12 +876,95 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     );
   }
 
-  String _fabLabel() => switch (_tabs.index) {
-    1 => 'Add Vehicle', 2 => 'Add Fuel', 3 => 'Add Expense', 4 => 'Add Reminder', _ => 'Add Vehicle',
+  String _defaultVehicleAction() => switch (_tabs.index) {
+    2 => 'Fuel',
+    3 => 'Expense',
+    4 => 'Reminder',
+    _ => 'Vehicle',
   };
-  VoidCallback _fabAction() => switch (_tabs.index) {
-    2 => _showFuelForm, 3 => _showExpenseForm, 4 => _showReminderForm, _ => _showVehicleForm,
-  };
+
+  Future<void> _openVehiclePlusSheet() async {
+    final selectedAtOpen = _defaultVehicleAction();
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheet) {
+            final actions = [
+              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green, _showVehicleForm),
+              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary, _showFuelForm),
+              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error, _showExpenseForm),
+              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary, _showReminderForm),
+            ];
+            String selected = selectedAtOpen;
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+              child: SafeArea(
+                top: false,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: Text('Vehicle Actions', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink))),
+                          IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: _muted),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 2.9,
+                        children: actions.map((action) {
+                          final isSelected = selected == action.$1;
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              action.$5();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: isSelected ? action.$4.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: isSelected ? action.$4 : Theme.of(context).colorScheme.outlineVariant, width: isSelected ? 1.4 : 1),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(action.$3, color: action.$4, size: 22),
+                                  const SizedBox(width: 9),
+                                  Expanded(child: Text(action.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _ink))),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -913,6 +996,26 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                 _vehicleNavItem(0, Icons.dashboard_outlined, Icons.dashboard_rounded, 'Overview'),
                 _vehicleNavItem(1, Icons.directions_car_outlined, Icons.directions_car_rounded, 'Vehicles'),
                 _vehicleNavItem(2, Icons.local_gas_station_outlined, Icons.local_gas_station_rounded, 'Fuel'),
+                Expanded(
+                  child: InkWell(
+                    onTap: _openVehiclePlusSheet,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Center(
+                      child: Container(
+                        width: 43,
+                        height: 43,
+                        decoration: BoxDecoration(
+                          color: _green,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(color: _green.withValues(alpha: 0.22), blurRadius: 8, offset: const Offset(0, 3)),
+                          ],
+                        ),
+                        child: Icon(Icons.add_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 29),
+                      ),
+                    ),
+                  ),
+                ),
                 _vehicleNavItem(3, Icons.build_outlined, Icons.build_rounded, 'Expenses'),
                 _vehicleNavItem(4, Icons.notifications_none, Icons.notifications_rounded, 'Reminders'),
                 _vehicleNavItem(5, Icons.analytics_outlined, Icons.analytics_rounded, 'Reports'),
@@ -920,10 +1023,6 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _fabAction(), backgroundColor: _green, foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: Icon(Icons.add_rounded), label: Text(_fabLabel()),
       ),
       body: _loading
           ? Center(child: CircularProgressIndicator())

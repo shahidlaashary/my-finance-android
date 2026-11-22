@@ -33,7 +33,7 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(length: 4, vsync: this);
     _refresh();
   }
 
@@ -245,6 +245,25 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
     });
   }
 
+  Widget _saveVideoTab() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.video_library_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 12),
+        Text('Save a YouTube video', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        const Text('Add a video using its YouTube link or video ID.', textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _saving ? null : _addVideo,
+          icon: const Icon(Icons.add_link_rounded),
+          label: const Text('Save video'),
+        ),
+      ]),
+    ),
+  );
+
   Widget _exploreTab() => ListView(padding: const EdgeInsets.all(16), children: [
     Text('Find videos and channels', style: Theme.of(context).textTheme.titleLarge),
     const SizedBox(height: 12),
@@ -277,13 +296,14 @@ class _YouTubeExploreScreenState extends State<YouTubeExploreScreen> with Single
         Tab(text: 'Explore', icon: Icon(Icons.explore_outlined)),
         Tab(text: 'Saved', icon: Icon(Icons.bookmark_border_rounded)),
         Tab(text: 'History', icon: Icon(Icons.history_rounded)),
+        Tab(text: 'Save Video', icon: Icon(Icons.add_link_rounded)),
       ]),
     ),
-    floatingActionButton: FloatingActionButton.extended(onPressed: _saving ? null : _addVideo, icon: const Icon(Icons.add_link_rounded), label: const Text('Save video')),
     body: TabBarView(controller: _tabs, children: [
       _exploreTab(),
       _videoList(_saved, history: false),
       _videoList(_history, history: true),
+      _saveVideoTab(),
     ]),
   );
 }

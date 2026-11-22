@@ -166,13 +166,10 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
       ],
       bottom: TabBar(controller: _tabs, tabs: [Tab(text: tr('Staff')), Tab(text: tr('Salary')), Tab(text: tr('Attendance'))]),
     ),
-    body: _loading ? const Center(child: CircularProgressIndicator()) : SafeArea(
-      top: false,
-      child: TabBarView(controller: _tabs, children: [
+    body: _loading ? const Center(child: CircularProgressIndicator()) : TabBarView(controller: _tabs, children: [
       _filteredStaff.isEmpty ? _empty(_staff.isEmpty ? 'No staff added yet' : 'No matching staff found') : ListView.builder(padding: const EdgeInsets.only(bottom: 16), itemCount: _filteredStaff.length, itemBuilder: (context, i) { final s = _filteredStaff[i]; return Card(margin: const EdgeInsets.fromLTRB(12, 6, 12, 4), child: ListTile(leading: CircleAvatar(child: Text(s['name'].toString().isEmpty ? '?' : s['name'].toString()[0].toUpperCase())), title: Text(s['name'].toString(), style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text([s['role'], s['phone']].where((v) => v != null && v.toString().isNotEmpty).join(' • ')), trailing: PopupMenuButton<String>(onSelected: (v) async { if (v == 'edit') await _form(member: s); if (v == 'delete') { final yes = await showDialog<bool>(context: context, builder: (d) => AlertDialog(title: Text(tr('Delete Staff?')), content: Text(tr('Delete this staff member and their salary and attendance history?')), actions: [TextButton(onPressed: () => Navigator.pop(d, false), child: Text(tr('Cancel'))), FilledButton(onPressed: () => Navigator.pop(d, true), child: Text(tr('Delete')))])); if (yes == true) { try { await StaffService.deleteStaff(s['id'] as int); await _load(); } catch (e) { _message(e.toString()); } } } }, itemBuilder: (_) => [PopupMenuItem(value: 'edit', child: Text(tr('Edit'))), PopupMenuItem(value: 'delete', child: Text(tr('Delete')))]))); }),
       _salaries.isEmpty ? _empty('No salary payments yet') : ListView.builder(padding: const EdgeInsets.only(bottom: 16), itemCount: _salaries.length, itemBuilder: (context, i) { final s = _salaries[i]; return ListTile(leading: const CircleAvatar(child: Icon(Icons.payments_outlined)), title: Text(_staffName(s['staff_id'] as int)), subtitle: Text(DateFormat.yMMMd().format(DateTime.parse(s['paid_at'].toString()))), trailing: Text(s['amount'].toString())); }),
       _attendance.isEmpty ? _empty('No attendance records yet') : ListView.builder(padding: const EdgeInsets.only(bottom: 16), itemCount: _attendance.length, itemBuilder: (context, i) { final a = _attendance[i]; return ListTile(leading: const CircleAvatar(child: Icon(Icons.event_available_outlined)), title: Text(_staffName(a['staff_id'] as int)), subtitle: Text(DateFormat.yMMMd().format(DateTime.parse(a['attendance_date'].toString()))), trailing: Chip(label: Text(tr(a['status'].toString())))); }),
     ]),
-    ),
   );
 }

@@ -185,9 +185,7 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
             ),
           Expanded(child: RefreshIndicator(
         onRefresh: _load,
-        child: SafeArea(
-          top: false,
-          child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 16), children: [
           Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: .78)]), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Partner Overview', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78), fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -223,7 +221,6 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
             ),
           )),
         ]),
-          ),
       )),
         ],
       ),

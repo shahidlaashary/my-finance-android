@@ -11,10 +11,8 @@ class SoundSettingsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Sound Settings', style: TextStyle(fontWeight: FontWeight.bold))),
       body: AnimatedBuilder(
         animation: settings,
-        builder: (context, _) => SafeArea(
-          top: false,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
+        builder: (context, _) => ListView(
+          padding: const EdgeInsets.all(16),
           children: [
             Card(elevation: 1, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), child: Padding(
               padding: const EdgeInsets.all(15),
@@ -79,7 +77,6 @@ class SoundSettingsScreen extends StatelessWidget {
               if (confirm == true) await settings.reset();
             }, icon: const Icon(Icons.restart_alt_rounded), label: const Text('Reset Sound Settings'))),
           ],
-          ),
         ),
       ),
     );

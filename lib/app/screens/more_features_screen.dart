@@ -33,9 +33,7 @@ class AppSettingsScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
+      body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const _YourNameSettingsTile(),
@@ -124,7 +122,6 @@ class AppSettingsScreen extends StatelessWidget {
             onTap: () => _openScreen(context, const AboutHubScreen()),
           ),
         ],
-      ),
       ),
     );
   }

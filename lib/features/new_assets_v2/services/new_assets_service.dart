@@ -131,23 +131,18 @@ class NewAssetsService {
       );
 
       if (asset.paymentType == 'Wallet') {
+        final currentWalletRows = await txn.query(
+          'wallets',
+          columns: ['balance'],
+          where: 'id = ?',
+          whereArgs: [asset.walletId],
+          limit: 1,
+        );
+        final currentWalletBalance =
+            (currentWalletRows.single['balance'] as num).toDouble();
         await txn.update(
           'wallets',
-          {'balance': (await txn.query(
-            'wallets',
-            columns: ['balance'],
-            where: 'id = ?',
-            whereArgs: [asset.walletId],
-            limit: 1,
-          )).first['balance'] is num
-              ? ((await txn.query(
-                    'wallets',
-                    columns: ['balance'],
-                    where: 'id = ?',
-                    whereArgs: [asset.walletId],
-                    limit: 1,
-                  )).first['balance'] as num).toDouble() - asset.purchaseAmount
-              : 0.0},
+          {'balance': currentWalletBalance - asset.purchaseAmount},
           where: 'id = ?',
           whereArgs: [asset.walletId],
         );

@@ -376,7 +376,7 @@ class LoansService {
         COALESCE(SUM(loans.remaining_amount), 0) AS outstanding,
         COUNT(*) AS loan_count
       FROM loans
-      INNER JOIN wallets ON wallets.id = loans.wallet_id
+      LEFT JOIN wallets ON wallets.id = loans.wallet_id
       WHERE loans.party_id = ?
       GROUP BY
         UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
@@ -739,7 +739,7 @@ class LoansService {
         loans.loan_type AS loan_type,
         COALESCE(SUM(loans.remaining_amount), 0) AS total
       FROM loans
-      INNER JOIN wallets
+      LEFT JOIN wallets
         ON wallets.id = loans.wallet_id
       WHERE loans.remaining_amount > 0
       GROUP BY UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))), loans.loan_type

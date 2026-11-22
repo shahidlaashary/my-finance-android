@@ -114,6 +114,10 @@ class LoansScreenState extends State<LoansScreen> {
         for (final row in assetRows) {
           assetNames[(row['id'] as num).toInt()] = row['name']?.toString() ?? 'Asset';
         }
+        final newAssetRows = await db.query('new_asset_v2_records', columns: ['id', 'name']);
+        for (final row in newAssetRows) {
+          assetNames[(row['id'] as num).toInt()] = row['name']?.toString() ?? 'Asset';
+        }
       } catch (_) {
         // Asset table may not exist until the Asset section is first opened.
       }
@@ -205,7 +209,7 @@ class LoansScreenState extends State<LoansScreen> {
   String _assetReferenceLabel(LoansModel loan) {
     if (!loan.isAssetLinked || loan.sourceId == null) return '';
     final name = _assetNames[loan.sourceId!] ?? 'Asset';
-    final type = loan.sourceType == 'asset_purchase' ? 'Purchase' : 'Sale';
+    final type = loan.sourceType == 'asset_purchase' || loan.sourceType == 'new_asset_v2_purchase' ? 'Purchase' : 'Sale';
     return '$name • $type';
   }
 

@@ -20,6 +20,7 @@ class _YouTubeVideoPlayerScreenState extends State<YouTubeVideoPlayerScreen> {
       videoId: widget.videoId,
       autoPlay: false,
       params: const YoutubePlayerParams(
+        origin: 'https://www.youtube-nocookie.com',
         showControls: true,
         showFullscreenButton: true,
         strictRelatedVideos: true,

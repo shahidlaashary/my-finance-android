@@ -879,110 +879,78 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
   String _defaultVehicleAction() => 'Fuel';
 
   Future<void> _openVehiclePlusSheet() async {
-    var selected = 'Fuel';
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheet) {
-            final actions = <(String, String, IconData, Color)>[
-              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green),
-              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary),
-              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error),
-              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary),
-            ];
-            final heading = switch (selected) {
-              'Vehicle' => 'Add Vehicle',
-              'Fuel' => 'Add Fuel Entry',
-              'Expense' => 'Add Vehicle Expense',
-              'Reminder' => 'Add Service Reminder',
-              _ => 'Vehicle Actions',
-            };
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-              child: SafeArea(
-                top: false,
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Center(child: Container(width: 38, height: 4, decoration: BoxDecoration(color: Theme.of(context).dividerColor, borderRadius: BorderRadius.circular(10)))),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(child: Text(heading, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: _ink))),
-                          IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close_rounded), color: _muted),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: actions.map((action) {
-                          final isSelected = selected == action.$1;
-                          return Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(right: action.$1 == 'Reminder' ? 0 : 5, left: action.$1 == 'Vehicle' ? 0 : 5),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: () {
-                                  setSheet(() => selected = action.$1);
-                                  Navigator.pop(sheetContext);
-                                },
-                                child: Container(
-                                  constraints: const BoxConstraints(minHeight: 70),
-                                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? action.$4.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: isSelected ? action.$4 : Theme.of(context).colorScheme.outlineVariant, width: isSelected ? 1.4 : 1),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(action.$3, color: action.$4, size: 20),
-                                      const SizedBox(height: 4),
-                                      Text(action.$2, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: _ink)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-    switch (selected) {
-      case 'Vehicle':
-        await _showVehicleForm();
-        break;
-      case 'Fuel':
-        await _showFuelForm();
-        break;
-      case 'Expense':
-        await _showExpenseForm();
-        break;
-      case 'Reminder':
-        await _showReminderForm();
-        break;
+    var tab = 'Fuel';
+    final keys = {for (final t in ['Vehicle','Fuel','Expense','Reminder']) t: GlobalKey<FormState>()};
+    final cs = List.generate(17, (_) => TextEditingController());
+    var vehicleType='Car', vehicleFuel='Petrol', fuelVehicle=_vehicles.isEmpty?0:_vehicles.first['id'] as int, fuelWallet=_wallets.isEmpty?0:_wallets.first['id'] as int, expenseVehicle=_vehicles.isEmpty?0:_vehicles.first['id'] as int, expenseWallet=_wallets.isEmpty?0:_wallets.first['id'] as int, reminderVehicle=_vehicles.isEmpty?0:_vehicles.first['id'] as int;
+    var vehicleDate=DateTime.now(), fuelDate=DateTime.now(), expenseDate=DateTime.now(), reminderDate=DateTime.now().add(const Duration(days:30));
+    var fullTank=true, unit='L', category=_expenseCategories.first;
+    Widget gap([double h=12])=>SizedBox(height:h);
+    Widget date(String label,DateTime value,void Function(DateTime) set,BuildContext c)=>InkWell(onTap:()async{final d=await showDatePicker(context:c,initialDate:value,firstDate:DateTime(1950),lastDate:DateTime(2100);if(d!=null)set(d);},child:InputDecorator(decoration:_decoration(label,Icons.calendar_month),child:Text(DateFormat('dd MMM yyyy').format(value))));
+    String heading()=>switch(tab){'Vehicle'=>'Add Vehicle','Fuel'=>'Add Fuel Entry','Expense'=>'Add Vehicle Expense','Reminder'=>'Add Service Reminder',_=>'Add'};
+    Widget form(BuildContext c,StateSetter upd){
+      if(tab=='Vehicle')return Form(key:keys[tab],child:Column(children:[
+        TextFormField(controller:cs[0],decoration:_decoration('Vehicle Name',Icons.directions_car_outlined),validator:(v)=>(v??'').trim().isEmpty?'Enter vehicle name':null),
+        gap(),Row(children:[Expanded(child:DropdownButtonFormField<String>(value:vehicleType,decoration:_decoration('Vehicle Type',Icons.category),items:_vehicleTypes.map((x)=>DropdownMenuItem(value:x,child:Text(x))).toList(),onChanged:(x){if(x!=null)upd(()=>vehicleType=x);})),gap(8),Expanded(child:DropdownButtonFormField<String>(value:vehicleFuel,decoration:_decoration('Fuel Type',Icons.local_gas_station),items:_fuelTypes.map((x)=>DropdownMenuItem(value:x,child:Text(x))).toList(),onChanged:(x){if(x!=null)upd(()=>vehicleFuel=x);} ))]),
+        gap(),TextFormField(controller:cs[1],decoration:_decoration('Company / Model',Icons.car_repair)),
+        gap(),TextFormField(controller:cs[2],decoration:_decoration('Registration Number',Icons.confirmation_number)),
+        gap(),Row(children:[Expanded(child:TextFormField(controller:cs[3],keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:_decoration('Purchase Price (optional)',Icons.payments),validator:(v){if((v??'').isEmpty)return null;final n=double.tryParse(v!);return n==null||n<0?'Invalid price':null;})),gap(8),Expanded(child:date('Purchase Date',vehicleDate,(d)=>upd(()=>vehicleDate=d),c))]),
+        gap(),TextFormField(controller:cs[4],maxLines:2,decoration:_decoration('Notes',Icons.notes)),
+      ]));
+      if(tab=='Fuel')return Form(key:keys[tab],child:Column(children:[
+        if(_vehicles.isEmpty||_wallets.isEmpty)Text(_vehicles.isEmpty?'Please add a vehicle first.':'Please add a wallet first.')
+        else DropdownButtonFormField<int>(value:fuelVehicle,decoration:_decoration('Vehicle',Icons.directions_car),items:_vehicles.map((v)=>DropdownMenuItem(value:v['id'] as int,child:Text(v['name'].toString()))).toList(),onChanged:(v){if(v!=null)upd(()=>fuelVehicle=v);}),
+        gap(),Row(children:[Expanded(child:TextFormField(controller:cs[5],keyboardType:TextInputType.number,decoration:_decoration('Odometer (KM)',Icons.speed),validator:(v){final n=double.tryParse(v??'');return n==null||n<0?'Enter KM':null;})),gap(8),Expanded(child:date('Date',fuelDate,(d)=>upd(()=>fuelDate=d),c))]),
+        gap(),Row(children:[Expanded(child:TextFormField(controller:cs[6],keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:_decoration('Quantity ('+unit+')',Icons.local_gas_station),validator:(v){final n=double.tryParse(v??'');return n==null||n<=0?'Enter quantity':null;},onChanged:(_)=>upd((){}))),gap(8),Expanded(child:TextFormField(controller:cs[7],keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:_decoration('Unit Price',Icons.price_change),validator:(v){final n=double.tryParse(v??'');return n==null||n<=0?'Enter price':null;},onChanged:(_)=>upd((){})))]),
+        gap(6),Text('Total Fuel Cost: '+_amount((double.tryParse(cs[6].text)??0)*(double.tryParse(cs[7].text)??0)),style:TextStyle(color:_green,fontWeight:FontWeight.bold)),
+        CheckboxListTile(contentPadding:EdgeInsets.zero,value:fullTank,onChanged:(v)=>upd(()=>fullTank=v??false),title:Text('Full tank / charge'),dense:true),
+        TextFormField(controller:cs[8],decoration:_decoration('Fuel Station (optional)',Icons.store)),
+        gap(),DropdownButtonFormField<int>(value:fuelWallet,decoration:_decoration('Pay from Wallet',Icons.account_balance_wallet),items:_wallets.map((w)=>DropdownMenuItem(value:w['id'] as int,child:Text(w['name'].toString()+' • '+w['currency'].toString()))).toList(),onChanged:(v){if(v!=null)upd(()=>fuelWallet=v);}),
+        gap(),TextFormField(controller:cs[9],maxLines:2,decoration:_decoration('Notes / Memo',Icons.notes)),
+      ]));
+      if(tab=='Expense')return Form(key:keys[tab],child:Column(children:[
+        if(_vehicles.isEmpty||_wallets.isEmpty)Text(_vehicles.isEmpty?'Please add a vehicle first.':'Please add a wallet first.')
+        else DropdownButtonFormField<int>(value:expenseVehicle,decoration:_decoration('Vehicle',Icons.directions_car),items:_vehicles.map((v)=>DropdownMenuItem(value:v['id'] as int,child:Text(v['name'].toString()))).toList(),onChanged:(v){if(v!=null)upd(()=>expenseVehicle=v);}),
+        gap(),Row(children:[Expanded(child:TextFormField(controller:cs[10],keyboardType:TextInputType.number,decoration:_decoration('Amount',Icons.currency_exchange),validator:(v){final n=double.tryParse(v??'');return n==null||n<=0?'Enter amount':null;})),gap(8),Expanded(child:DropdownButtonFormField<String>(value:category,decoration:_decoration('Category',Icons.category),items:_expenseCategories.map((x)=>DropdownMenuItem(value:x,child:Text(x))).toList(),onChanged:(x){if(x!=null)upd(()=>category=x);} ))]),
+        gap(),Row(children:[Expanded(child:TextFormField(controller:cs[11],keyboardType:TextInputType.number,decoration:_decoration('Odometer (KM)',Icons.speed),validator:(v){final n=double.tryParse(v??'');return n==null||n<0?'Enter KM':null;})),gap(8),Expanded(child:date('Date',expenseDate,(d)=>upd(()=>expenseDate=d),c))]),
+        gap(),TextFormField(controller:cs[12],decoration:_decoration('Workshop / Vendor',Icons.store)),
+        gap(),DropdownButtonFormField<int>(value:expenseWallet,decoration:_decoration('Pay from Wallet',Icons.account_balance_wallet),items:_wallets.map((w)=>DropdownMenuItem(value:w['id'] as int,child:Text(w['name'].toString()+' • '+w['currency'].toString()))).toList(),onChanged:(v){if(v!=null)upd(()=>expenseWallet=v);}),
+        gap(),TextFormField(controller:cs[13],maxLines:2,decoration:_decoration('Notes / Memo',Icons.notes)),
+      ]));
+      return Form(key:keys[tab],child:Column(children:[
+        if(_vehicles.isEmpty)Text('Please add a vehicle first.')
+        else DropdownButtonFormField<int>(value:reminderVehicle,decoration:_decoration('Vehicle',Icons.directions_car),items:_vehicles.map((v)=>DropdownMenuItem(value:v['id'] as int,child:Text(v['name'].toString()))).toList(),onChanged:(v){if(v!=null)upd(()=>reminderVehicle=v);}),
+        gap(),TextFormField(controller:cs[14],decoration:_decoration('Reminder Title',Icons.notifications_active),validator:(v)=>(v??'').trim().isEmpty?'Enter title':null),
+        gap(),Row(children:[Expanded(child:date('Due Date',reminderDate,(d)=>upd(()=>reminderDate=d),c)),gap(8),Expanded(child:TextFormField(controller:cs[15],keyboardType:TextInputType.number,decoration:_decoration('Due at KM (optional)',Icons.speed),validator:(v){if((v??'').trim().isEmpty)return null;final n=double.tryParse(v!);return n==null||n<=0?'Invalid KM':null;}))]),
+        gap(),TextFormField(controller:cs[16],maxLines:2,decoration:_decoration('Notes',Icons.notes)),
+      ]));
     }
+    Future<void> saveTab(StateSetter upd)async{
+      if(tab=='Fuel'&&(_vehicles.isEmpty||_wallets.isEmpty)){_message(_vehicles.isEmpty?'Please add a vehicle first.':'Please add a wallet first.');return;}
+      if(tab=='Expense'&&(_vehicles.isEmpty||_wallets.isEmpty)){_message(_vehicles.isEmpty?'Please add a vehicle first.':'Please add a wallet first.');return;}
+      if(tab=='Reminder'&&_vehicles.isEmpty){_message('Please add a vehicle first.');return;}
+      if(!keys[tab]!.currentState!.validate())return;
+      upd(()=>_saving=true);
+      try{
+        if(tab=='Vehicle'){await VehicleService.saveVehicle({'name':cs[0].text.trim(),'type':vehicleType,'fuel_type':vehicleFuel,'model':cs[1].text.trim(),'registration':cs[2].text.trim(),'purchase_price':double.tryParse(cs[3].text)??0,'purchase_date':vehicleDate.toIso8601String(),'notes':cs[4].text.trim()});for(final i in [0,1,2,3,4])cs[i].clear();vehicleType='Car';vehicleFuel='Petrol';vehicleDate=DateTime.now();_message('Vehicle added.');}
+        else if(tab=='Fuel'){final v=_vehicles.firstWhere((v)=>v['id']==fuelVehicle);await VehicleService.addFuel(vehicleId:fuelVehicle,vehicleName:v['name'].toString(),date:fuelDate,odometer:double.parse(cs[5].text),quantity:double.parse(cs[6].text),unitPrice:double.parse(cs[7].text),fullTank:fullTank,walletId:fuelWallet,station:cs[8].text.trim(),notes:cs[9].text.trim(),unit:unit);for(final i in [5,6,7,8,9])cs[i].clear();fuelDate=DateTime.now();fullTank=true;_message('Fuel entry saved and linked to Finance expenses.');}
+        else if(tab=='Expense'){final v=_vehicles.firstWhere((v)=>v['id']==expenseVehicle);await VehicleService.addExpense(vehicleId:expenseVehicle,vehicleName:v['name'].toString(),date:expenseDate,amount:double.parse(cs[10].text),odometer:double.parse(cs[11].text),walletId:expenseWallet,category:category,vendor:cs[12].text.trim(),notes:cs[13].text.trim());for(final i in [10,11,12,13])cs[i].clear();expenseDate=DateTime.now();category=_expenseCategories.first;_message('Expense saved and linked to Finance transactions.');}
+        else{await VehicleService.saveReminder({'vehicle_id':reminderVehicle,'title':cs[14].text.trim(),'due_date':reminderDate.toIso8601String(),'due_odometer':double.tryParse(cs[15].text),'notes':cs[16].text.trim()});for(final i in [14,15,16])cs[i].clear();reminderDate=DateTime.now().add(const Duration(days:30));_message('Reminder saved.');}
+        await _load();upd((){});
+      }catch(e){_message('Unable to save: $e');}finally{if(mounted)setState(()=>_saving=false);upd((){});}
+    }
+    try{
+      await showModalBottomSheet<void>(context:context,backgroundColor:Colors.transparent,isScrollControlled:true,useSafeArea:true,builder:(sheet)=>StatefulBuilder(builder:(ctx,setSheet){
+        final cards=[('Vehicle',Icons.directions_car_outlined,_green),('Fuel',Icons.local_gas_station_outlined,Theme.of(ctx).colorScheme.tertiary),('Expense',Icons.build_outlined,Theme.of(ctx).colorScheme.error),('Reminder',Icons.notifications_active_outlined,Theme.of(ctx).colorScheme.secondary)];
+        return Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SafeArea(top:false,child:Container(constraints:BoxConstraints(maxHeight:MediaQuery.sizeOf(ctx).height*.88),decoration:BoxDecoration(color:Theme.of(ctx).colorScheme.surface,borderRadius:const BorderRadius.vertical(top:Radius.circular(26))),padding:const EdgeInsets.fromLTRB(14,10,14,16),child:SingleChildScrollView(keyboardDismissBehavior:ScrollViewKeyboardDismissBehavior.onDrag,child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Center(child:Container(width:38,height:4,decoration:BoxDecoration(color:Theme.of(ctx).dividerColor,borderRadius:BorderRadius.circular(8)))),const SizedBox(height:12),
+          Text(heading(),style:TextStyle(fontSize:19,fontWeight:FontWeight.w800,color:_ink)),const SizedBox(height:8),
+          Row(children:cards.map((card){final active=tab==card.$1;return Expanded(child:Padding(padding:EdgeInsets.symmetric(horizontal:card.$1=='Vehicle'||card.$1=='Reminder'?0:4),child:InkWell(onTap:()=>setSheet(()=>tab=card.$1),child:Container(constraints:const BoxConstraints(minHeight:68),padding:const EdgeInsets.symmetric(horizontal:2,vertical:7),decoration:BoxDecoration(color:active?card.$3.withValues(alpha:.12):Theme.of(ctx).colorScheme.surfaceContainerHighest,borderRadius:BorderRadius.circular(12),border:Border.all(color:active?card.$3:Theme.of(ctx).colorScheme.outlineVariant,width:active?1.4:1)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(card.$2,color:card.$3,size:20),const SizedBox(height:4),Text(card.$1,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(fontSize:10,fontWeight:FontWeight.w800,color:_ink))]))));}).toList()),
+          const SizedBox(height:14),form(ctx,setSheet),const SizedBox(height:14),
+          Row(children:[Expanded(child:OutlinedButton(onPressed:()=>Navigator.pop(sheet),child:const Text('Cancel'))),const SizedBox(width:10),Expanded(child:ElevatedButton.icon(onPressed:_saving?null:()=>saveTab(setSheet),icon:const Icon(Icons.check_rounded),label:Text(tab=='Vehicle'?'Save Vehicle':tab=='Fuel'?'Save Fuel Entry':tab=='Expense'?'Save Expense':'Save Reminder'),style:ElevatedButton.styleFrom(backgroundColor:_green,foregroundColor:Theme.of(ctx).colorScheme.onPrimary,padding:const EdgeInsets.symmetric(vertical:13)))])
+        ])))));
+      }));
+    }finally{for(final ctrl in cs)ctrl.dispose();}
   }
 
   @override

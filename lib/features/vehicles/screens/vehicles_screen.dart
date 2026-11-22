@@ -894,7 +894,6 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
               ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error),
               ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary),
             ];
-            final selectedAction = actions.firstWhere((a) => a.$1 == selected);
             final heading = switch (selected) {
               'Vehicle' => 'Add Vehicle',
               'Fuel' => 'Add Fuel Entry',
@@ -934,21 +933,8 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: () {
+                                  setSheet(() => selected = action.$1);
                                   Navigator.pop(sheetContext);
-                                  switch (action.$1) {
-                                    case 'Vehicle':
-                                      _showVehicleForm();
-                                      break;
-                                    case 'Fuel':
-                                      _showFuelForm();
-                                      break;
-                                    case 'Expense':
-                                      _showExpenseForm();
-                                      break;
-                                    case 'Reminder':
-                                      _showReminderForm();
-                                      break;
-                                  }
                                 },
                                 child: Container(
                                   constraints: const BoxConstraints(minHeight: 70),
@@ -981,6 +967,22 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         );
       },
     );
+  }
+
+    switch (selected) {
+      case 'Vehicle':
+        await _showVehicleForm();
+        break;
+      case 'Fuel':
+        await _showFuelForm();
+        break;
+      case 'Expense':
+        await _showExpenseForm();
+        break;
+      case 'Reminder':
+        await _showReminderForm();
+        break;
+    }
   }
 
   @override

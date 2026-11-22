@@ -893,13 +893,12 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheet) {
-            final actions = [
-              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green, _showVehicleForm),
-              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary, _showFuelForm),
-              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error, _showExpenseForm),
-              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary, _showReminderForm),
+            final List<(String, String, IconData, Color, VoidCallback)> actions = [
+              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green, () { _showVehicleForm(); }),
+              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary, () { _showFuelForm(); }),
+              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error, () { _showExpenseForm(); }),
+              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary, () { _showReminderForm(); }),
             ];
-            String selected = selectedAtOpen;
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
               child: SafeArea(

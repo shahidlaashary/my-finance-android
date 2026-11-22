@@ -244,7 +244,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () => _loadData(),
-              child: ListView(
+              child: SafeArea(
+                top: false,
+                child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   Card(
@@ -398,6 +400,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                   ),
 
                 ],
+              ),
               ),
             ),
     );

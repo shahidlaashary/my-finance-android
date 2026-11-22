@@ -150,7 +150,7 @@ class MySpaceService {
   Future<List<Map<String, Object?>>> getSectionRecords(String section) async =>
       (await database).query(_sectionTable(section), orderBy: 'updated_at DESC');
 
-  Future<void> saveSectionRecord(String section, Map<String, Object?> record) async {
+  Future<int> saveSectionRecord(String section, Map<String, Object?> record) async {
     final table = _sectionTable(section);
     final db = await database;
     final now = DateTime.now().toIso8601String();
@@ -172,11 +172,13 @@ class MySpaceService {
     final id = record['id'] as int?;
     if (id == null) {
       values['created_at'] = now;
-      await db.insert(table, values);
+      return await db.insert(table, values);
     } else {
       await db.update(table, values, where: 'id = ?', whereArgs: [id]);
+      return id;
     }
   }
+
 
   Future<void> deleteSectionRecord(String section, int id) async {
     await (await database).delete(_sectionTable(section), where: 'id = ?', whereArgs: [id]);

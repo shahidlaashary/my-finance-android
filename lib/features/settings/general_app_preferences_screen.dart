@@ -135,8 +135,12 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: _loading ? Center(child: CircularProgressIndicator()) : ListView(
-        padding: const EdgeInsets.all(16),
+      body: _loading
+          ? Center(child: CircularProgressIndicator())
+          : SafeArea(
+              top: false,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
         children: [
           _choice('Date Format', 'Choose how dates appear', Icons.calendar_month, _dateFormat,
             const ['dd/MM/yyyy','MM/dd/yyyy','yyyy-MM-dd'], (v) { setState(() => _dateFormat=v); _save(() => _preferences.setDateFormat(v)); }),
@@ -161,8 +165,9 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
           Padding(padding: EdgeInsets.only(top: 8), child: Text(appText(context, "Resetting preferences does not delete wallets, transactions, or other financial records.", "Resetting preferences does not delete wallets, transactions, or other financial records."),
             textAlign: TextAlign.center, style: TextStyle(fontSize: 12),
           )),
-        ],
-      ),
+                ],
+              ),
+            ),
     );
   }
 }

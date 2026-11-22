@@ -377,33 +377,25 @@ class SpaceDocumentsScreenState extends State<SpaceDocumentsScreen> {
                             minLines: 2,
                             maxLines: 4,
                             textCapitalization: TextCapitalization.sentences,
-                            decoration: decoration('Notes (Optional)', Icons.notes_rounded),
-                          ),
-                          SizedBox(height: 14),
-                          Text(appText(context, "Attach Files", "Attach Files"), style: TextStyle(fontWeight: FontWeight.w700)),
-                          SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8, runSpacing: 8,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: chooseFiles,
-                                icon: Icon(Icons.attach_file_rounded),
-                                label: Text(appText(context, 'Browse Files', 'فائلیں براؤز کریں')),
+                            decoration: decoration('Notes (Optional)', Icons.notes_rounded).copyWith(
+                              suffixIcon: PopupMenuButton<String>(
+                                tooltip: 'Attach files',
+                                icon: const Icon(Icons.attach_file_rounded),
+                                onSelected: (value) {
+                                  if (value == 'files') chooseFiles();
+                                  if (value == 'camera') takePhoto();
+                                  if (value == 'gallery') chooseGallery();
+                                },
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(value: 'files', child: Text('Browse Files')),
+                                  PopupMenuItem(value: 'camera', child: Text('Scan / Camera')),
+                                  PopupMenuItem(value: 'gallery', child: Text('Gallery')),
+                                ],
                               ),
-                              OutlinedButton.icon(
-                                onPressed: takePhoto,
-                                icon: Icon(Icons.camera_alt_outlined),
-                                label: Text(appText(context, 'Scan / Camera', 'اسکین / کیمرہ')),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: chooseGallery,
-                                icon: Icon(Icons.photo_library_outlined),
-                                label: Text(appText(context, 'Gallery', 'Gallery')),
-                              ),
-                            ],
+                            ),
                           ),
                           if (selectedFiles.isNotEmpty) ...[
-                            SizedBox(height: 8),
+                            SizedBox(height: 6),
                             ...selectedFiles.asMap().entries.map((entry) => ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,

@@ -87,7 +87,16 @@ class MySpaceService {
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionsTable (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)');
     await db.execute('CREATE TABLE IF NOT EXISTS $_collectionItemsTable (collection_id INTEGER NOT NULL, item_id INTEGER NOT NULL UNIQUE, added_at TEXT NOT NULL, PRIMARY KEY (collection_id, item_id), FOREIGN KEY (collection_id) REFERENCES $_collectionsTable(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES $_tableName(id) ON DELETE CASCADE)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_space_collection_items_collection ON $_collectionItemsTable(collection_id)');
-    await db.execute('CREATE TABLE IF NOT EXISTS space_youtube_videos (video_id TEXT PRIMARY KEY, title TEXT NOT NULL, channel_title TEXT NOT NULL DEFAULT '', thumbnail_url TEXT NOT NULL DEFAULT '', saved_at TEXT NOT NULL, last_watched_at TEXT)');
+    await db.execute("""
+      CREATE TABLE IF NOT EXISTS space_youtube_videos (
+        video_id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        channel_title TEXT NOT NULL DEFAULT '',
+        thumbnail_url TEXT NOT NULL DEFAULT '',
+        saved_at TEXT NOT NULL,
+        last_watched_at TEXT
+      )
+    """);
   }
 
   Future<void> saveYouTubeVideo({required String videoId, required String title, String? channelTitle, String? thumbnailUrl}) async {

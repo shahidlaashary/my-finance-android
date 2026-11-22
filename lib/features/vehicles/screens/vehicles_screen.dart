@@ -888,11 +888,11 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheet) {
-            final actions = <(String, String, IconData, Color, VoidCallback)>[
-              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green, () => _showVehicleForm()),
-              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary, () => _showFuelForm()),
-              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error, () => _showExpenseForm()),
-              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary, () => _showReminderForm()),
+            final actions = <(String, String, IconData, Color)>[
+              ('Vehicle', 'Add Vehicle', Icons.directions_car_outlined, _green),
+              ('Fuel', 'Add Fuel', Icons.local_gas_station_outlined, Theme.of(context).colorScheme.tertiary),
+              ('Expense', 'Add Expense', Icons.build_outlined, Theme.of(context).colorScheme.error),
+              ('Reminder', 'Add Reminder', Icons.notifications_active_outlined, Theme.of(context).colorScheme.secondary),
             ];
             final selectedAction = actions.firstWhere((a) => a.$1 == selected);
             final heading = switch (selected) {
@@ -934,8 +934,21 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: () {
-                                  setSheet(() => selected = action.$1);
-                                  action.$5();
+                                  Navigator.pop(sheetContext);
+                                  switch (action.$1) {
+                                    case 'Vehicle':
+                                      _showVehicleForm();
+                                      break;
+                                    case 'Fuel':
+                                      _showFuelForm();
+                                      break;
+                                    case 'Expense':
+                                      _showExpenseForm();
+                                      break;
+                                    case 'Reminder':
+                                      _showReminderForm();
+                                      break;
+                                  }
                                 },
                                 child: Container(
                                   constraints: const BoxConstraints(minHeight: 70),

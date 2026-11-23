@@ -86,7 +86,7 @@ class WorkRecordsScreenState extends State<WorkRecordsScreen> {
                     if (value == 'edit') {
                       await Navigator.push(context, MaterialPageRoute(
                         builder: (_) => WorkRecordFormScreen(section: widget.section, record: row)));
-                      refresh();
+                      refreshWorkRecords();
                     } else if (value == 'delete') {
                       final yes = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
                         title: const Text('Delete item?'),
@@ -98,7 +98,7 @@ class WorkRecordsScreenState extends State<WorkRecordsScreen> {
                       ));
                       if (yes == true) {
                         await MySpaceService.instance.deleteWorkRecord(widget.section, row['id'] as int);
-                        refresh();
+                        refreshWorkRecords();
                       }
                     }
                   },

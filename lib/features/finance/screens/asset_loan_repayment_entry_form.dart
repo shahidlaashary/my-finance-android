@@ -74,12 +74,35 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
 
   Future<void> _loadRates() async {
     try {
-      final loanRate = await FinanceDB.instance.getExchangeRate(_loan.currency);
-      final wallet = _wallets.firstWhere((w) => (w['id'] as num).toInt() == _walletId);
-      final walletCurrency = (wallet['currency']?.toString() ?? 'PKR').toUpperCase();
-      final walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+      final wallet = _wallets.firstWhere(
+        (w) => (w['id'] as num).toInt() == _walletId,
+      );
+      final loanCurrency = _loan.currency.trim().toUpperCase();
+      final walletCurrency =
+          (wallet['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+
+      // Same-currency repayments need no exchange-rate lookup at all.
+      if (loanCurrency == walletCurrency) {
+        if (mounted) setState(() { _loanRate = 1.0; _walletRate = 1.0; });
+        return;
+      }
+
+      var loanRate = await FinanceDB.instance.getExchangeRate(loanCurrency);
+      var walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+
+      // Reuse the Exchange Rates module's provider and save any missing rates.
+      if (loanRate == null || walletRate == null) {
+        await FinanceDB.instance.refreshMissingExchangeRatesOnline(
+          currencies: [loanCurrency, walletCurrency],
+        );
+        loanRate = await FinanceDB.instance.getExchangeRate(loanCurrency);
+        walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+      }
+
       if (mounted) setState(() { _loanRate = loanRate; _walletRate = walletRate; });
-    } catch (_) { if (mounted) setState(() { _loanRate = null; _walletRate = null; }); }
+    } catch (_) {
+      if (mounted) setState(() { _loanRate = null; _walletRate = null; });
+    }
   }
 
   void _message(Object error) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))));

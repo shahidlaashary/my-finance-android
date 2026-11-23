@@ -21,12 +21,14 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
   final _key = GlobalKey<FormState>();
   final _amount = TextEditingController();
   final _notes = TextEditingController();
+  final _manualRate = TextEditingController();
   final _picker = ImagePicker();
   final List<Map<String, String>> _attachments = [];
   List<Map<String, dynamic>> _wallets = [];
   int? _walletId;
   DateTime _date = DateTime.now();
-  bool _loading = true, _saving = false;
+  bool _loading = true, _saving = false, _useManualRate = false;
+  double? _loanRate, _walletRate;
   LoansModel get _loan => widget.loan;
 
   @override
@@ -37,10 +39,33 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
   Future<void> _loadWallets() async {
     try {
       final wallets = await FinanceDB.instance.getWallets();
-      final matching = wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == _loan.currency.toUpperCase()).toList();
+      final matching = wallets;
       if (!mounted) return;
       setState(() { _wallets = matching; if (matching.isNotEmpty) _walletId = (matching.first['id'] as num).toInt(); _loading = false; });
+      if (matching.isNotEmpty) await _loadRates();
     } catch (e) { if (mounted) setState(() => _loading = false); _message(e); }
+  }
+
+  String get _walletCurrency => (_wallets.firstWhere((w) => (w['id'] as num).toInt() == _walletId, orElse: () => {'currency': _loan.currency})['currency']?.toString() ?? _loan.currency).toUpperCase();
+  double? get _convertedAmount {
+    final amount = double.tryParse(_amount.text.trim());
+    if (amount == null || amount <= 0) return null;
+    if (_useManualRate) {
+      final rate = double.tryParse(_manualRate.text.trim());
+      return rate == null || !rate.isFinite || rate <= 0 ? null : amount * rate;
+    }
+    if (_loanRate == null || _walletRate == null || _walletRate! <= 0) return null;
+    return amount * _loanRate! / _walletRate!;
+  }
+
+  Future<void> _loadRates() async {
+    try {
+      final loanRate = await FinanceDB.instance.getExchangeRate(_loan.currency);
+      final wallet = _wallets.firstWhere((w) => (w['id'] as num).toInt() == _walletId);
+      final walletCurrency = (wallet['currency']?.toString() ?? 'PKR').toUpperCase();
+      final walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+      if (mounted) setState(() { _loanRate = loanRate; _walletRate = walletRate; });
+    } catch (_) { if (mounted) setState(() { _loanRate = null; _walletRate = null; }); }
   }
 
   void _message(Object error) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))));
@@ -74,12 +99,17 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
     final amount = double.tryParse(_amount.text.trim());
     if (amount == null || !amount.isFinite || amount <= 0) return;
     if (amount > _loan.remainingAmount + 0.000001) { _message('Amount exceeds outstanding balance.'); return; }
-    if (_walletId == null) { _message('Create a ' + _loan.currency + ' wallet first.'); return; }
+    if (_walletId == null) { _message('Please select a wallet.'); return; }
+    final convertedAmount = _convertedAmount;
+    if (convertedAmount == null) { _message(_useManualRate ? 'Enter a valid manual exchange rate.' : 'Exchange rate is unavailable for the selected currencies.'); return; }
     setState(() => _saving = true);
     try {
       final id = await LoansService.addRepayment(RepaymentModel(
         loanId: _loan.id!, amount: amount, walletId: _walletId!,
         repaymentDate: DateFormat('yyyy-MM-dd').format(_date),
+        walletCurrency: _walletCurrency, walletAmount: convertedAmount,
+        exchangeRate: _useManualRate ? double.parse(_manualRate.text.trim()) : (_loanRate! / _walletRate!),
+        isManualRate: _useManualRate,
         paymentMethod: 'cash', notes: _notes.text.trim(),
         createdAt: DateTime.now().toIso8601String(),
       ));
@@ -101,7 +131,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
     if (_loading) return const AlertDialog(content: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())));
     if (_wallets.isEmpty) return AlertDialog(
       title: Text(isGiven ? 'Receive Repayment' : 'Pay Back Loan'),
-      content: Text('Create a ' + _loan.currency + ' wallet first.'),
+      content: const Text('Create at least one wallet first.'),
       actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Close'))],
     );
     return AlertDialog(
@@ -109,9 +139,17 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
       content: SizedBox(width: 420, child: Form(key: _key, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Align(alignment: Alignment.centerLeft, child: Text('Outstanding: ' + _loan.currency + ' ' + _loan.remainingAmount.toStringAsFixed(2))),
         const SizedBox(height: 12),
-        TextFormField(controller: _amount, autofocus: true, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Repayment Amount *'), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
+        TextFormField(controller: _amount, autofocus: true, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Repayment Amount *'), onChanged: (_) => setState(() {}), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
         const SizedBox(height: 12),
-        DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: InputDecoration(labelText: isGiven ? 'Receiving Wallet *' : 'Paying Wallet *'), items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(), onChanged: (v) => setState(() => _walletId = v)),
+        DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: InputDecoration(labelText: isGiven ? 'Receiving Wallet *' : 'Paying Wallet *'), items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(), onChanged: (v) async { setState(() => _walletId = v); await _loadRates(); setState(() {}); }),
+        SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Use Manual Rate'), subtitle: const Text('Override the app exchange rate for this repayment'), value: _useManualRate, onChanged: (v) => setState(() => _useManualRate = v)),
+        if (_useManualRate)
+          TextFormField(controller: _manualRate, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: '1 ${_loan.currency.toUpperCase()} = ? $_walletCurrency', hintText: 'Enter wallet currency per 1 loan currency', suffixText: _walletCurrency), onChanged: (_) => setState(() {}), validator: (v) { if (!_useManualRate) return null; final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid rate.' : null; }),
+        if (!_useManualRate && (_loanRate == null || _walletRate == null))
+          const Align(alignment: Alignment.centerLeft, child: Text('Exchange rate unavailable. Set the required currency rates or use a manual rate.', style: TextStyle(color: Colors.red, fontSize: 12))),
+        if (_convertedAmount != null)
+          Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.only(top: 6), child: Text('Wallet ${isGiven ? 'credit' : 'deduction'}: $_walletCurrency ${_convertedAmount!.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w700)))),
+
         ListTile(contentPadding: EdgeInsets.zero, title: const Text('Repayment Date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_date)), trailing: const Icon(Icons.calendar_month), onTap: _pickDate),
         TextFormField(controller: _notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Notes')),
         const SizedBox(height: 12),

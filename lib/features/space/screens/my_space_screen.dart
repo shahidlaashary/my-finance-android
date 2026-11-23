@@ -288,7 +288,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               children: [
                 _navItem(0, books_space_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
-                _navItem(2, Icons.handshake_outlined, 'Agreements'),
+                _navItem(2, Icons.handshake_outlined, 'Deals'), // Empty placeholder reserved for future use.
                 _navItem(3, Icons.description_outlined, 'Docs'),
                 Expanded(
                   child: PopupMenuButton<String>(

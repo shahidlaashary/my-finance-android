@@ -31,7 +31,6 @@ class SpaceWorkScreenState extends State<SpaceWorkScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Column(
       children: [
         Padding(
@@ -54,13 +53,7 @@ class SpaceWorkScreenState extends State<SpaceWorkScreen> {
               if (selection.isNotEmpty) showSection(selection.first);
             },
             showSelectedIcon: false,
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              foregroundColor: WidgetStateProperty.resolveWith((states) =>
-                  states.contains(WidgetState.selected) ? colors.onPrimary : colors.onSurface),
-              backgroundColor: WidgetStateProperty.resolveWith((states) =>
-                  states.contains(WidgetState.selected) ? colors.primary : colors.surface),
-            ),
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
           ),
         ),
         Expanded(

@@ -250,7 +250,7 @@ class AssetsService {
         createdAt: asset.createdAt ?? DateTime.now(),
       ).toMap()..remove('id');
       final id = await txn.insert('assets', map);
-      if (!isLoan) await _changeBalance(txn, walletId: anchorWalletId, amount: -asset.purchasePrice);
+      if (!isLoan) await _changeBalance(txn, walletId: assetWalletId, amount: -asset.purchasePrice);
       return id;
     });
     if (isLoan) {

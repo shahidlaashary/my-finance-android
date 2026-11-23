@@ -129,7 +129,7 @@ class _AssetSaleEntryFormState extends State<AssetSaleEntryForm> {
       'price': price, 'date': _date, 'walletId': _walletId ?? 0,
       'paymentType': _paymentType, 'partyId': _partyId,
       'walletAmount': walletCredit ?? 0.0, 'walletCurrency': _walletCurrency,
-      'exchangeRate': _paymentType == 'Wallet' ? (walletCredit! / (price == 0 ? 1 : price)) : 1.0,
+      'exchangeRate': _paymentType == 'Wallet' ? (price <= 0 ? 1.0 : walletCredit! / price) : 1.0,
       'isManualRate': _paymentType == 'Wallet' && _manualAmount && _walletCurrency != _assetCurrency,
     });
   }

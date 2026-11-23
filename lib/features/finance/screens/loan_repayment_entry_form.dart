@@ -13,7 +13,8 @@ import 'package:my_finance/features/finance/services/loans_service.dart';
 /// Dedicated form for repayments against ordinary or asset-linked loans.
 class LoanRepaymentEntryForm extends StatefulWidget {
   final LoansModel loan;
-  const LoanRepaymentEntryForm({super.key, required this.loan});
+  final RepaymentModel? existingRepayment;
+  const LoanRepaymentEntryForm({super.key, required this.loan, this.existingRepayment});
   @override
   State<LoanRepaymentEntryForm> createState() => _LoanRepaymentEntryFormState();
 }
@@ -33,7 +34,19 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
   LoansModel get _loan => widget.loan;
 
   @override
-  void initState() { super.initState(); _loadWallets(); }
+  void initState() {
+    super.initState();
+    final existing = widget.existingRepayment;
+    if (existing != null) {
+      _amount.text = existing.amount.toStringAsFixed(2);
+      _notes.text = existing.notes;
+      _walletId = existing.walletId;
+      _date = DateTime.tryParse(existing.repaymentDate) ?? DateTime.now();
+      _useManualRate = existing.isManualRate;
+      if (existing.isManualRate) _manualRate.text = existing.exchangeRate.toString();
+    }
+    _loadWallets();
+  }
   @override
   void dispose() { _amount.dispose(); _notes.dispose(); super.dispose(); }
 
@@ -42,7 +55,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
       final wallets = await FinanceDB.instance.getWallets();
       final matching = wallets;
       if (!mounted) return;
-      setState(() { _wallets = matching; if (matching.isNotEmpty) _walletId = (matching.first['id'] as num).toInt(); _loading = false; });
+      setState(() { _wallets = matching; if (matching.isNotEmpty && !matching.any((w) => (w['id'] as num).toInt() == _walletId)) _walletId = (matching.first['id'] as num).toInt(); _loading = false; });
       if (matching.isNotEmpty) await _loadRates();
     } catch (e) { if (mounted) setState(() => _loading = false); _message(e); }
   }
@@ -99,21 +112,30 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
     if (!_key.currentState!.validate()) return;
     final amount = double.tryParse(_amount.text.trim());
     if (amount == null || !amount.isFinite || amount <= 0) return;
-    if (amount > _loan.remainingAmount + 0.000001) { _message('Amount exceeds outstanding balance.'); return; }
+    final allowedOutstanding = _loan.remainingAmount + (widget.existingRepayment?.amount ?? 0);
+    if (amount > allowedOutstanding + 0.000001) { _message('Amount exceeds outstanding balance.'); return; }
     if (_walletId == null) { _message('Please select a wallet.'); return; }
     final convertedAmount = _convertedAmount;
     if (convertedAmount == null) { _message(_useManualRate ? 'Enter a valid manual exchange rate.' : 'Exchange rate is unavailable for the selected currencies.'); return; }
     setState(() => _saving = true);
     try {
-      final id = await LoansService.addRepayment(RepaymentModel(
+      final repayment = RepaymentModel(
+        id: widget.existingRepayment?.id,
         loanId: _loan.id!, amount: amount, walletId: _walletId!,
         repaymentDate: DateFormat('yyyy-MM-dd').format(_date),
         walletCurrency: _walletCurrency, walletAmount: convertedAmount,
         exchangeRate: _useManualRate ? double.parse(_manualRate.text.trim()) : (_loanRate! / _walletRate!),
         isManualRate: _useManualRate,
         paymentMethod: 'cash', notes: _notes.text.trim(),
-        createdAt: DateTime.now().toIso8601String(),
-      ));
+        createdAt: widget.existingRepayment?.createdAt ?? DateTime.now().toIso8601String(),
+      );
+      final int id;
+      if (widget.existingRepayment == null) {
+        id = await LoansService.addRepayment(repayment);
+      } else {
+        await LoansService.updateRepayment(repayment);
+        id = widget.existingRepayment!.id!;
+      }
       var failures = 0;
       for (final file in _attachments) {
         try {
@@ -132,7 +154,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
     final isGiven = _loan.loanType == 'given';
     if (_loading) return const AlertDialog(content: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())));
     if (_wallets.isEmpty) return AlertDialog(
-      title: Text(isGiven ? 'Receive Repayment' : 'Pay Back Loan'),
+      title: Text(widget.existingRepayment == null ? (isGiven ? 'Receive Repayment' : 'Pay Back Loan') : 'Edit Repayment'),
       content: const Text('Create at least one wallet first.'),
       actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Close'))],
     );
@@ -168,7 +190,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
       ])))),
       actions: [
         TextButton(onPressed: _saving ? null : () => Navigator.pop(context, false), child: const Text('Cancel')),
-        FilledButton(onPressed: _saving ? null : _save, child: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Text(isGiven ? 'Save Repayment' : 'Save Payment')),
+        FilledButton(onPressed: _saving ? null : _save, child: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Text(widget.existingRepayment == null ? (isGiven ? 'Save Repayment' : 'Save Payment') : 'Update Entry')),
       ],
     );
   }

@@ -150,17 +150,17 @@ class MySpaceService {
     }
   }
 
-  String _sectionTable(String section) {
-    if (section == 'deals') return 'space_deals';
+  String _workRecordTable(String section) {
+    if (section == 'agreements' || section == 'deals') return 'space_deals';
     if (section == 'projects') return 'space_projects';
     throw ArgumentError.value(section, 'section', 'Unsupported Space section');
   }
 
-  Future<List<Map<String, Object?>>> getSectionRecords(String section) async =>
-      (await database).query(_sectionTable(section), orderBy: 'updated_at DESC');
+  Future<List<Map<String, Object?>>> getWorkRecords(String section) async =>
+      (await database).query(_workRecordTable(section), orderBy: 'updated_at DESC');
 
-  Future<int> saveSectionRecord(String section, Map<String, Object?> record) async {
-    final table = _sectionTable(section);
+  Future<int> saveWorkRecord(String section, Map<String, Object?> record) async {
+    final table = _workRecordTable(section);
     final db = await database;
     final now = DateTime.now().toIso8601String();
     final values = <String, Object?>{
@@ -189,8 +189,8 @@ class MySpaceService {
   }
 
 
-  Future<void> deleteSectionRecord(String section, int id) async {
-    await (await database).delete(_sectionTable(section), where: 'id = ?', whereArgs: [id]);
+  Future<void> deleteWorkRecord(String section, int id) async {
+    await (await database).delete(_workRecordTable(section), where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, Object?>>> getItems({String? fileType}) async {

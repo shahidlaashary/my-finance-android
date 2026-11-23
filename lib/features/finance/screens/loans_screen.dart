@@ -688,6 +688,20 @@ class LoansScreenState extends State<LoansScreen> {
                                             color: repaymentColor,
                                           ),
                                         ),
+                                        if (repayment.walletCurrency.toUpperCase() != loan.currency.toUpperCase()) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Paid: ${repayment.walletCurrency} ${_money(repayment.walletAmount)}',
+                                            maxLines: 1,
+                                            style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
+                                          ),
+                                          if (repayment.exchangeRate > 0)
+                                            Text(
+                                              'Rate: 1 ${loan.currency} = ${repayment.walletCurrency} ${repayment.exchangeRate.toStringAsFixed(4)}',
+                                              maxLines: 1,
+                                              style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor),
+                                            ),
+                                        ],
                                         if (repayment.id != null)
                                           PopupMenuButton<String>(
                                             padding: EdgeInsets.zero,

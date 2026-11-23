@@ -73,7 +73,7 @@ const Map<String, String> _urduTranslations = {
   "Stock Manager": "اسٹاک مینیجر",
   "Vehicle Manager": "گاڑیوں کا انتظام",
   "Settings": "ترتیبات",
-  "More Features": "مزید خصوصیات",  'No linked account': 'کوئی منسلک اکاؤنٹ نہیں',
+  "Modules & Tools": "ماڈیولز اور ٹولز",  'No linked account': 'کوئی منسلک اکاؤنٹ نہیں',
   'Continue': 'جاری رکھیں',
   'Withdraw': 'رقم نکالیں',
   'Savings Summary by Currency': 'کرنسی کے لحاظ سے بچت کا خلاصہ',

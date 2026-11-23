@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -315,6 +316,60 @@ class FinanceDB {
       if (rate != null) total += balance * rate / baseRate;
     }
     return total;
+  }
+
+  /// Refreshes missing currency rates from the same online provider used by
+  /// the Exchange Rates screen. Existing saved rates are left untouched.
+  Future<bool> refreshMissingExchangeRatesOnline({
+    required List<String> currencies,
+  }) async {
+    final required = currencies
+        .map((code) => code.trim().toUpperCase())
+        .where((code) => code.isNotEmpty && code != 'PKR')
+        .toSet();
+    if (required.isEmpty) return true;
+
+    final missing = <String>[];
+    for (final currency in required) {
+      if (await getExchangeRate(currency) == null) missing.add(currency);
+    }
+    if (missing.isEmpty) return true;
+
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 15);
+    try {
+      final request = await client
+          .getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))
+          .timeout(const Duration(seconds: 20));
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      final response = await request.close().timeout(const Duration(seconds: 20));
+      if (response.statusCode != HttpStatus.ok) return false;
+      final body = await response.transform(utf8.decoder).join()
+          .timeout(const Duration(seconds: 20));
+      final payload = jsonDecode(body) as Map<String, dynamic>;
+      if (payload['result'] != 'success') return false;
+      final rates = payload['rates'] as Map<String, dynamic>?;
+      if (rates == null) return false;
+
+      var savedAny = false;
+      for (final currency in missing) {
+        final providerRate = rates[currency];
+        if (providerRate is! num || providerRate <= 0) continue;
+        // Provider returns foreign units per PKR; app stores PKR per unit.
+        final pkrPerUnit = 1 / providerRate.toDouble();
+        if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
+        await saveExchangeRate(currency, pkrPerUnit, source: 'automatic');
+        savedAny = true;
+      }
+      for (final currency in missing) {
+        if (await getExchangeRate(currency) == null) return false;
+      }
+      return savedAny || missing.isEmpty;
+    } catch (_) {
+      return false;
+    } finally {
+      client.close(force: true);
+    }
   }
 
   Future<List<Map<String, dynamic>>> getExchangeRates() {

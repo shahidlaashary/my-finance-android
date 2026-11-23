@@ -216,6 +216,12 @@ class LoansScreenState extends State<LoansScreen> {
     );
     if (saved == true) {
       await _loadData();
+      if (!mounted) return;
+      final refreshed = _loans.where((item) => item.id == loan.id);
+      if (refreshed.isNotEmpty) {
+        Navigator.of(context).pop();
+        await _showLoanDetails(refreshed.first);
+      }
       if (mounted) _showMessage('Repayment entry updated successfully.');
     }
   }

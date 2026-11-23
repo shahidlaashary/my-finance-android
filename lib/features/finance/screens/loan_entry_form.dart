@@ -114,11 +114,47 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_wallets.isEmpty) return const Center(child: Text('Add a wallet first.'));
-    if (_parties.isEmpty) return Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Add a party to create a loan.'), TextButton.icon(onPressed: _createParty, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))])));
     return Form(key: _key, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 8, 18, 16), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       SegmentedButton<String>(segments: const [ButtonSegment(value: 'given', label: Text('Given')), ButtonSegment(value: 'taken', label: Text('Taken'))], selected: {_type}, onSelectionChanged: (v) => setState(() => _type = v.first)),
-      Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createParty, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))),
-      DropdownButtonFormField<int>(value: _partyId, isExpanded: true, decoration: _dec('Party *', icon: Icons.person_outline), items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(), onChanged: (v) => setState(() { _partyId = v; final p = _parties.firstWhere((x) => (x['id'] as num).toInt() == v); final c = (p['currency']?.toString() ?? 'PKR').toUpperCase(); final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == c); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); }), validator: (v) => v == null ? 'Select a party.' : null),
+      DropdownButtonFormField<String>(
+        value: _partyId?.toString(),
+        isExpanded: true,
+        decoration: _dec('Party *', icon: Icons.person_outline),
+        hint: Text(_parties.isEmpty ? 'Create Party' : 'Select Party'),
+        items: [
+          ..._parties.map((p) => DropdownMenuItem<String>(
+            value: (p['id'] as num).toInt().toString(),
+            child: Text(p['name'].toString()),
+          )),
+          const DropdownMenuItem<String>(
+            value: '__create_party__',
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.person_add_alt_1, size: 18),
+              SizedBox(width: 8),
+              Text('Create Party'),
+            ]),
+          ),
+        ],
+        onChanged: (value) {
+          if (value == '__create_party__') {
+            setState(() => _partyId = null);
+            _createParty();
+            return;
+          }
+          final id = int.tryParse(value ?? '');
+          setState(() {
+            _partyId = id;
+            if (id != null) {
+              final p = _parties.firstWhere((x) => (x['id'] as num).toInt() == id);
+              final currency = (p['currency']?.toString() ?? 'PKR').toUpperCase();
+              final match = _wallets.where((w) =>
+                  (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency);
+              if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt();
+            }
+          });
+        },
+        validator: (_) => _partyId == null ? 'Select a party.' : null,
+      ),
       const SizedBox(height: 12),
       TextFormField(controller: _amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Amount', icon: Icons.payments_outlined), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
       const SizedBox(height: 12),

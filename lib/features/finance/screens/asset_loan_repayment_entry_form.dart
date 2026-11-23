@@ -63,11 +63,11 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
   double? get _convertedAmount {
     final amount = double.tryParse(_amount.text.trim());
     if (amount == null || amount <= 0) return null;
+    if (_loan.currency.toUpperCase() == _walletCurrency) return amount;
     if (_useManualRate) {
       final rate = double.tryParse(_manualRate.text.trim());
       return rate == null || !rate.isFinite || rate <= 0 ? null : rate;
     }
-    if (_loan.currency.toUpperCase() == _walletCurrency) return amount;
     if (_loanRate == null || _walletRate == null || _walletRate! <= 0) return null;
     return amount * _loanRate! / _walletRate!;
   }
@@ -148,7 +148,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
         repaymentDate: DateFormat('yyyy-MM-dd').format(_date),
         walletCurrency: _walletCurrency, walletAmount: convertedAmount,
         exchangeRate: _useManualRate ? (convertedAmount / amount) : (_loan.currency.toUpperCase() == _walletCurrency ? 1.0 : (_loanRate! / _walletRate!)),
-        isManualRate: _useManualRate,
+        isManualRate: _useManualRate && _loan.currency.toUpperCase() != _walletCurrency,
         paymentMethod: 'cash', notes: _notes.text.trim(),
         createdAt: widget.existingRepayment?.createdAt ?? DateTime.now().toIso8601String(),
       );
@@ -187,7 +187,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
         const SizedBox(height: 12),
         TextFormField(controller: _amount, autofocus: true, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Repayment Amount *'), onChanged: (_) => setState(() {}), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
         const SizedBox(height: 12),
-        DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: InputDecoration(labelText: isGiven ? 'Receiving Wallet *' : 'Paying Wallet *'), items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(), onChanged: (v) async { setState(() => _walletId = v); await _loadRates(); setState(() {}); }),
+        DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: InputDecoration(labelText: isGiven ? 'Receiving Wallet *' : 'Paying Wallet *'), items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(), onChanged: (v) async { setState(() { _walletId = v; if (_loan.currency.toUpperCase() == _walletCurrency) { _useManualRate = false; _manualRate.clear(); } }); await _loadRates(); setState(() {}); }),
         if (_loan.currency.toUpperCase() != _walletCurrency)
           SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Manual Wallet Amount'), subtitle: const Text('Enter the exact amount to deduct from the selected wallet'), value: _useManualRate, onChanged: (v) => setState(() => _useManualRate = v)),
         if (_useManualRate && _loan.currency.toUpperCase() != _walletCurrency)

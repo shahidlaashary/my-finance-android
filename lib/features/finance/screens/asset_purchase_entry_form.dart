@@ -71,7 +71,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       try {
         final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
         final parties = await LoansService.getParties();
-        if (mounted) setState(() { _parties = parties; _partyId = id; final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency.toUpperCase()); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); });
+        if (mounted) setState(() { _parties = parties; _partyId = id; });
       } catch (e) { _msg(e); }
     }
     name.dispose(); phone.dispose();
@@ -94,7 +94,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
 
     final purchase = double.tryParse(_purchase.text.trim());
     final current = double.tryParse(_current.text.trim());
-    if (purchase == null || current == null || _walletId == null) return;
+    if (purchase == null || current == null || (_payment == 'Wallet' && _walletId == null)) return;
     if (_payment == 'Loan' && _partyId == null) {
       _msg('Select a party for loan-funded asset.');
       return;
@@ -105,11 +105,6 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
     final currency = _payment == 'Loan'
         ? (party?['currency']?.toString() ?? 'PKR').toUpperCase()
         : (_wallet?['currency']?.toString() ?? 'PKR').toUpperCase();
-    if (_payment == 'Loan' &&
-        (_wallet?['currency']?.toString() ?? 'PKR').toUpperCase() != currency) {
-      _msg('Select a $currency wallet.');
-      return;
-    }
 
     final attachments = <Map<String, String>>[];
     if (_image != null) {
@@ -132,7 +127,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
           purchasePrice: purchase,
           currentValue: current,
           purchaseDate: _purchaseDate,
-          walletId: _walletId!,
+          walletId: _walletId ?? 0,
           paymentType: _payment,
           partyId: _payment == 'Loan' ? _partyId : null,
           currency: currency,
@@ -166,10 +161,12 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(value: _category, decoration: _dec('Category'), items: const ['Property','Vehicles','Gold','Jewellery','Electronics','Investments','Livestock','Business'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) { if (v != null) setState(() => _category = v); }),
       const SizedBox(height: 12),
-      DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Cash','Bank','Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
+      DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
       if (_payment == 'Loan') ...[
         Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createParty, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))),
         DropdownButtonFormField<int>(value: _partyId, decoration: _dec('Loan party'), items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(), onChanged: (v) => setState(() { _partyId = v; if (v != null) { final p = _parties.firstWhere((x) => (x['id'] as num).toInt() == v); final c = (p['currency']?.toString() ?? 'PKR').toUpperCase(); final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == c); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); } }), validator: (v) => _payment == 'Loan' && v == null ? 'Select a party.' : null),
+      ] else ...[
+        DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v), validator: (v) => v == null ? 'Select a wallet.' : null),
       ],
       const SizedBox(height: 12),
       TextFormField(controller: _purchase, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Purchase price *'), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid purchase price.' : null; }),
@@ -177,8 +174,6 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       TextFormField(controller: _current, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Current value *'), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter a valid current value.' : null; }),
       ListTile(contentPadding: EdgeInsets.zero, title: const Text('Purchase date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_purchaseDate)), onTap: _pickDate),
       SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Include in consolidated balance'), value: _includeBalance, onChanged: (v) => setState(() => _includeBalance = v)),
-      DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v)),
-      const SizedBox(height: 12),
       TextFormField(controller: _notes, maxLines: 2, decoration: _dec('Notes (Optional)').copyWith(suffixIcon: IconButton(onPressed: _attachments, icon: const Icon(Icons.attach_file_rounded)))),
       if (_image != null || _pdfs.isNotEmpty) Text('${_image == null ? '' : '1 image, '}${_pdfs.length} PDF(s)', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       const SizedBox(height: 16),

@@ -1400,6 +1400,9 @@ class AssetDetailsScreen extends StatelessWidget {
               ? 'Sold on credit to ${_partyName(asset.salePartyId)}'
               : 'Received in ${_walletName(asset.saleWalletId ?? asset.walletId)}',
           'amount': asset.salePrice ?? 0.0,
+          'wallet_amount': asset.saleWalletAmount,
+          'wallet_currency': asset.saleWalletCurrency,
+          'exchange_rate': asset.saleExchangeRate,
           'type': 'credit',
           'icon': Icons.sell_outlined,
         },

@@ -63,10 +63,6 @@ class AssetsService {
       'sale_wallet_currency': "ALTER TABLE assets ADD COLUMN sale_wallet_currency TEXT NOT NULL DEFAULT 'PKR'",
       'sale_exchange_rate': 'ALTER TABLE assets ADD COLUMN sale_exchange_rate REAL NOT NULL DEFAULT 1',
       'sale_is_manual_rate': 'ALTER TABLE assets ADD COLUMN sale_is_manual_rate INTEGER NOT NULL DEFAULT 0',
-      'sale_wallet_amount': 'ALTER TABLE assets ADD COLUMN sale_wallet_amount REAL',
-      'sale_wallet_currency': "ALTER TABLE assets ADD COLUMN sale_wallet_currency TEXT NOT NULL DEFAULT 'PKR'",
-      'sale_exchange_rate': 'ALTER TABLE assets ADD COLUMN sale_exchange_rate REAL NOT NULL DEFAULT 1',
-      'sale_is_manual_rate': 'ALTER TABLE assets ADD COLUMN sale_is_manual_rate INTEGER NOT NULL DEFAULT 0',
       'sale_party_id': 'ALTER TABLE assets ADD COLUMN sale_party_id INTEGER',
       'sale_linked_loan_id': 'ALTER TABLE assets ADD COLUMN sale_linked_loan_id INTEGER',
     };

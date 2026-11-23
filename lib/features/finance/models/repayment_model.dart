@@ -27,7 +27,6 @@ class RepaymentModel {
     this.exchangeRate = 1.0,
     this.isManualRate = false,
   }) : walletAmount = walletAmount ?? amount;
-  });
 
   Map<String, dynamic> toMap() {
     return {

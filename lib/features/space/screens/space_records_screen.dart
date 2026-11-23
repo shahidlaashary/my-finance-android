@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 
@@ -181,6 +182,7 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
   late String _status;
   bool _saving = false;
   final List<Map<String, String>> _selectedAttachments = [];
+  final ImagePicker _imagePicker = ImagePicker();
 
   bool get _deals => widget.section == 'deals';
 
@@ -207,6 +209,12 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
     super.dispose();
   }
 
+  Future<void> _addSelectedAttachment(String path, String name) async {
+    if (_selectedAttachments.any((item) => item['path'] == path)) return;
+    if (!mounted) return;
+    setState(() => _selectedAttachments.add({'path': path, 'name': name}));
+  }
+
   Future<void> _pickAttachments() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -218,17 +226,36 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
         ],
       );
       if (result == null) return;
-      setState(() {
-        for (final file in result.files) {
-          if (file.path != null &&
-              !_selectedAttachments.any((item) => item['path'] == file.path)) {
-            _selectedAttachments.add({'path': file.path!, 'name': file.name});
-          }
-        }
-      });
+      for (final file in result.files) {
+        if (file.path != null) await _addSelectedAttachment(file.path!, file.name);
+      }
     } catch (error) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('File select nahi ho saki: $error')),
+      );
+    }
+  }
+
+  Future<void> _takePhoto() async {
+    try {
+      final photo = await _imagePicker.pickImage(source: ImageSource.camera, imageQuality: 90);
+      if (photo != null) await _addSelectedAttachment(photo.path, photo.name);
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Camera error: $error')),
+      );
+    }
+  }
+
+  Future<void> _chooseGallery() async {
+    try {
+      final photos = await _imagePicker.pickMultiImage(imageQuality: 90);
+      for (final photo in photos) {
+        await _addSelectedAttachment(photo.path, photo.name);
+      }
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gallery error: $error')),
       );
     }
   }
@@ -244,10 +271,19 @@ class _SpaceRecordFormScreenState extends State<SpaceRecordFormScreen> {
             border: const OutlineInputBorder(),
             isDense: true,
             suffixIcon: label == 'Notes'
-                ? IconButton(
+                ? PopupMenuButton<String>(
                     tooltip: 'Attach files',
                     icon: const Icon(Icons.attach_file_rounded),
-                    onPressed: _pickAttachments,
+                    onSelected: (value) {
+                      if (value == 'files') _pickAttachments();
+                      if (value == 'camera') _takePhoto();
+                      if (value == 'gallery') _chooseGallery();
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'files', child: Text('Browse Files')),
+                      PopupMenuItem(value: 'camera', child: Text('Scan / Camera')),
+                      PopupMenuItem(value: 'gallery', child: Text('Gallery')),
+                    ],
                   )
                 : null,
           ),

@@ -156,7 +156,7 @@ class RecycleBinService {
         if (walletRows.isEmpty) throw Exception('The asset purchase wallet no longer exists.');
         if ((walletRows.first['balance'] as num).toDouble() < purchase) throw Exception('Insufficient wallet balance to restore this asset.');
         await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [purchase, walletId]);
-        if ((record['is_sold'] as num?)?.toInt() == 1 && record['sale_price'] != null) {
+        if ((record['is_sold'] as num?)?.toInt() == 1 && record['sale_price'] != null && (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') != 'loan') {
           final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
           final saleExists = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [saleWalletId], limit: 1);
           if (saleExists.isEmpty) throw Exception('The asset sale wallet no longer exists.');

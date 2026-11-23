@@ -11,6 +11,7 @@ import 'package:my_finance/features/space/screens/space_tools_screen.dart';
 import 'package:my_finance/features/space/screens/space_video_player_screen.dart';
 import 'package:my_finance/features/space/screens/space_documents_screen.dart';
 import 'package:my_finance/features/space/screens/space_records_screen.dart';
+import 'package:my_finance/features/space/screens/space_work_screen.dart';
 import 'package:my_finance/features/space/screens/youtube_explore_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/services/space_documents_service.dart';
@@ -29,8 +30,7 @@ class MySpaceScreen extends StatefulWidget {
 class _MySpaceScreenState extends State<MySpaceScreen> {
   final _space = MySpaceService.instance;
   final _documentsKey = GlobalKey<SpaceDocumentsScreenState>();
-  final _dealsKey = GlobalKey<SpaceRecordsScreenState>();
-  final _projectsKey = GlobalKey<SpaceRecordsScreenState>();
+  final _workKey = GlobalKey<SpaceWorkScreenState>();
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
@@ -53,12 +53,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
   }
 
   Future<void> _openRecordForm(String section) async {
+    if (!mounted) return;
+    setState(() => _selectedTabIndex = 7);
+    _workKey.currentState?.showSection(section);
     await Navigator.push(context, MaterialPageRoute(
       builder: (_) => SpaceRecordFormScreen(section: section),
     ));
     if (!mounted) return;
-    if (section == 'deals') _dealsKey.currentState?.refresh();
-    if (section == 'projects') _projectsKey.currentState?.refresh();
+    _workKey.currentState?.refresh(section);
   }
 
   Future<void> _openSpaceSearch() async {
@@ -334,8 +336,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                 ),
                 _navItem(4, Icons.headphones_outlined, 'Music'),
                 _navItem(5, Icons.photo_outlined, 'Photos'),
-                _navItem(6, Icons.work_outline_rounded, 'Projects'),
-                _navItem(7, Icons.video_library_outlined, 'Videos'),
+                _navItem(6, Icons.video_library_outlined, 'Videos'),
+                _navItem(7, Icons.work_outline_rounded, 'Work'),
               ],
             ),
           ),
@@ -346,12 +348,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         children: [
           _buildItems(_allItems, 'Your space is empty', 'Add books, deals, docs, music, photos, videos and projects.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your space.'),
-          SpaceRecordsScreen(key: _dealsKey, section: 'deals'),
+          const SizedBox.shrink(),
           SpaceDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your space.'),
           _buildItems(_photosItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
-          SpaceRecordsScreen(key: _projectsKey, section: 'projects'),
           _buildItems(_videosItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
+          SpaceWorkScreen(key: _workKey),
         ],
       ),
     );

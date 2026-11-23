@@ -63,6 +63,10 @@ class AssetsService {
       'sale_wallet_currency': "ALTER TABLE assets ADD COLUMN sale_wallet_currency TEXT NOT NULL DEFAULT 'PKR'",
       'sale_exchange_rate': 'ALTER TABLE assets ADD COLUMN sale_exchange_rate REAL NOT NULL DEFAULT 1',
       'sale_is_manual_rate': 'ALTER TABLE assets ADD COLUMN sale_is_manual_rate INTEGER NOT NULL DEFAULT 0',
+      'sale_wallet_amount': 'ALTER TABLE assets ADD COLUMN sale_wallet_amount REAL',
+      'sale_wallet_currency': "ALTER TABLE assets ADD COLUMN sale_wallet_currency TEXT NOT NULL DEFAULT 'PKR'",
+      'sale_exchange_rate': 'ALTER TABLE assets ADD COLUMN sale_exchange_rate REAL NOT NULL DEFAULT 1',
+      'sale_is_manual_rate': 'ALTER TABLE assets ADD COLUMN sale_is_manual_rate INTEGER NOT NULL DEFAULT 0',
       'sale_party_id': 'ALTER TABLE assets ADD COLUMN sale_party_id INTEGER',
       'sale_linked_loan_id': 'ALTER TABLE assets ADD COLUMN sale_linked_loan_id INTEGER',
     };
@@ -366,22 +370,17 @@ class AssetsService {
         if (saleCurrency != actualWalletCurrency) throw Exception('Receiving wallet currency changed. Please reopen the sale form.');
         if (!actualWalletAmount.isFinite || actualWalletAmount < 0) throw Exception('Please enter a valid wallet amount received.');
         if (!appliedExchangeRate.isFinite || appliedExchangeRate <= 0) throw Exception('Invalid asset sale exchange rate.');
-        if (salePrice > 0 && (actualWalletAmount / salePrice - appliedExchangeRate).abs() > 0.000001) {
-          throw Exception('Sale conversion details are inconsistent. Please retry.');
-        }
+        if (salePrice > 0 && (actualWalletAmount / salePrice - appliedExchangeRate).abs() > 0.000001) throw Exception('Sale conversion details are inconsistent. Please retry.');
         await _changeBalance(txn, walletId: anchorWalletId, amount: actualWalletAmount);
       }
       await txn.update('assets', {
-        'is_sold': 1,
-        'sale_date': saleDate.toIso8601String(),
-        'sale_price': salePrice,
-        'sale_wallet_id': anchorWalletId,
+        'is_sold': 1, 'sale_date': saleDate.toIso8601String(),
+        'sale_price': salePrice, 'sale_wallet_id': anchorWalletId,
         'sale_wallet_amount': isLoan ? null : actualWalletAmount,
         'sale_wallet_currency': actualWalletCurrency,
         'sale_exchange_rate': appliedExchangeRate,
         'sale_is_manual_rate': isManualRate ? 1 : 0,
-        'sale_payment_type': paymentType,
-        'sale_party_id': isLoan ? partyId : null,
+        'sale_payment_type': paymentType, 'sale_party_id': isLoan ? partyId : null,
       }, where: 'id = ?', whereArgs: [assetId]);
     });
     if (isLoan) {
@@ -389,16 +388,15 @@ class AssetsService {
         final loanId = await LoansService.createAssetLinkedLoan(
           partyId: partyId!, loanType: 'given', amount: salePrice,
           lendingDate: saleDate.toIso8601String().split('T').first,
-          sourceType: 'asset_sale', sourceId: assetId,
-          notes: 'Asset sale: ' + asset.name,
+          sourceType: 'asset_sale', sourceId: assetId, notes: 'Asset sale: ' + asset.name,
         );
         await db.update('assets', {'sale_linked_loan_id': loanId}, where: 'id = ?', whereArgs: [assetId]);
       } catch (_) {
         await db.update('assets', {
-          'is_sold': 0, 'sale_date': null, 'sale_price': null,
-          'sale_wallet_id': null, 'sale_wallet_amount': null,
-          'sale_wallet_currency': asset.currency, 'sale_exchange_rate': 1,
-          'sale_is_manual_rate': 0, 'sale_payment_type': 'Wallet', 'sale_party_id': null,
+          'is_sold': 0, 'sale_date': null, 'sale_price': null, 'sale_wallet_id': null,
+          'sale_wallet_amount': null, 'sale_wallet_currency': asset.currency,
+          'sale_exchange_rate': 1, 'sale_is_manual_rate': 0,
+          'sale_payment_type': 'Wallet', 'sale_party_id': null,
         }, where: 'id = ?', whereArgs: [assetId]);
         rethrow;
       }

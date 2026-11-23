@@ -130,7 +130,7 @@ class MySpaceService {
   }
 
   Future<void> _ensureSectionTables(Database db) async {
-    for (final table in ['space_agreements', 'space_work_projects']) {
+    for (final table in ['space_agreements']) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS $table (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,17 +150,11 @@ class MySpaceService {
     }
   }
 
-  String _workRecordTable(String section) {
-    if (section == 'agreements') return 'space_agreements';
-    if (section == 'projects') return 'space_work_projects';
-    throw ArgumentError.value(section, 'section', 'Unsupported Space section');
-  }
+  Future<List<Map<String, Object?>>> getAgreements() async =>
+      (await database).query('space_agreements', orderBy: 'updated_at DESC');
 
-  Future<List<Map<String, Object?>>> getWorkRecords(String section) async =>
-      (await database).query(_workRecordTable(section), orderBy: 'updated_at DESC');
-
-  Future<int> saveWorkRecord(String section, Map<String, Object?> record) async {
-    final table = _workRecordTable(section);
+  Future<int> saveAgreement(Map<String, Object?> record) async {
+    const table = 'space_agreements';
     final db = await database;
     final now = DateTime.now().toIso8601String();
     final values = <String, Object?>{
@@ -189,8 +183,8 @@ class MySpaceService {
   }
 
 
-  Future<void> deleteWorkRecord(String section, int id) async {
-    await (await database).delete(_workRecordTable(section), where: 'id = ?', whereArgs: [id]);
+  Future<void> deleteAgreement(int id) async {
+    await (await database).delete('space_agreements', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, Object?>>> getItems({String? fileType}) async {

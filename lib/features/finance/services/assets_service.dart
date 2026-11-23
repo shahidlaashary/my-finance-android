@@ -182,7 +182,7 @@ class AssetsService {
         ).toMap()..remove('id');
         final id = await txn.insert('assets', assetMap);
         if (!isLoan) {
-          await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [asset.purchasePrice, anchorWalletId]);
+          await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [asset.purchasePrice, assetWalletId]);
         } else {
           final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
           if (parties.isEmpty) throw Exception('Selected party was not found.');
@@ -511,7 +511,7 @@ class AssetsService {
       SELECT s.currency AS currency,
              COALESCE(SUM(s.purchase_price), 0) AS total
       FROM assets s
-      INNER JOIN wallets a ON a.id = s.wallet_id
+      LEFT JOIN wallets a ON a.id = s.wallet_id AND s.wallet_id > 0
       WHERE s.is_sold = 0
       GROUP BY s.currency
     ''');

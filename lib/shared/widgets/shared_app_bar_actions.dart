@@ -5,9 +5,9 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/features/finance/models/budgets_model.dart';
 import 'package:my_finance/features/finance/services/budgets_service.dart';
 import 'package:my_finance/features/search/screens/global_search_screen.dart';
-import 'package:my_finance/app/screens/more_features_page.dart';
+import 'package:my_finance/app/screens/modules_tools_page.dart';
 
-/// Consistent notification and settings actions for every main section.
+/// Consistent notification and Modules & Tools actions for every main section.
 List<Widget> buildSharedAppBarActions(BuildContext context) {
   return [
     IconButton(
@@ -27,7 +27,7 @@ List<Widget> buildSharedAppBarActions(BuildContext context) {
       tooltip: 'Modules & Tools',
       onPressed: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const MoreFeaturesPage()),
+        MaterialPageRoute(builder: (_) => const ModulesToolsPage()),
       ),
       icon: const Icon(Icons.join_inner_rounded),
     ),
@@ -247,9 +247,9 @@ List<Widget> buildMainSectionAppBarActions(BuildContext context) {
       icon: const Icon(Icons.notifications_none_rounded),
     ),
     IconButton(
-      tooltip: 'Settings',
-      onPressed: () => Navigator.pushNamed(context, '/settings'),
-      icon: const Icon(Icons.settings_outlined),
+      tooltip: 'Modules & Tools',
+      onPressed: () => Navigator.pushNamed(context, '/modules-tools'),
+      icon: const Icon(Icons.join_inner_rounded),
     ),
   ];
 }

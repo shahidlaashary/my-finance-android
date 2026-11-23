@@ -600,13 +600,16 @@ class LoansService {
   ) async {
     final walletCurrency = await _getWalletCurrency(txn, repayment.walletId);
     double appliedRate;
+    double walletAmount;
     if (repayment.isManualRate) {
-      appliedRate = repayment.exchangeRate;
-      if (!appliedRate.isFinite || appliedRate <= 0) {
-        throw Exception('Manual exchange rate must be greater than zero.');
+      walletAmount = repayment.walletAmount;
+      if (!walletAmount.isFinite || walletAmount <= 0) {
+        throw Exception('Manual wallet amount must be greater than zero.');
       }
+      appliedRate = walletAmount / repayment.amount;
     } else if (loanCurrency.trim().toUpperCase() == walletCurrency) {
       appliedRate = 1.0;
+      walletAmount = repayment.amount;
     } else {
       final loanRate = await _getCurrencyRate(txn, loanCurrency);
       final walletRate = await _getCurrencyRate(txn, walletCurrency);
@@ -614,10 +617,11 @@ class LoansService {
         throw Exception('Exchange rate missing for $loanCurrency or $walletCurrency. Please set both currency rates first.');
       }
       appliedRate = loanRate / walletRate;
+      walletAmount = repayment.amount * appliedRate;
     }
-    final walletAmount = repayment.amount * appliedRate;
-    if (!walletAmount.isFinite || walletAmount <= 0) {
-      throw Exception('Converted wallet amount is invalid.');
+    if (!appliedRate.isFinite || appliedRate <= 0 ||
+        !walletAmount.isFinite || walletAmount <= 0) {
+      throw Exception('Converted wallet amount or exchange rate is invalid.');
     }
     return repayment.copyWith(
       walletCurrency: walletCurrency,

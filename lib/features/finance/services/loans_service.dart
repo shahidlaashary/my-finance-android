@@ -154,6 +154,10 @@ class LoansService {
         payment_method TEXT NOT NULL DEFAULT 'cash',
         notes TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL,
+        wallet_currency TEXT NOT NULL DEFAULT 'PKR',
+        wallet_amount REAL NOT NULL DEFAULT 0,
+        exchange_rate REAL NOT NULL DEFAULT 1,
+        is_manual_rate INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (loan_id) REFERENCES loans(id)
           ON DELETE CASCADE
       )
@@ -594,94 +598,116 @@ class LoansService {
     AppRefreshController.notifyChanged();
   }
 
-  /// Loan ki currency wale wallet mein repayment ka record banata hai.
+  static Future<double?> _getCurrencyRate(Transaction txn, String currency) async {
+    final normalized = currency.trim().toUpperCase();
+    if (normalized == 'PKR') return 1.0;
+    final rows = await txn.query('exchange_rates', columns: ['rate'],
+      where: 'UPPER(currency) = ?', whereArgs: [normalized], limit: 1);
+    if (rows.isEmpty) return null;
+    final rate = (rows.first['rate'] as num).toDouble();
+    return rate.isFinite && rate > 0 ? rate : null;
+  }
+
+  static Future<RepaymentModel> _snapshotRepayment(
+    Transaction txn, RepaymentModel repayment, String loanCurrency,
+  ) async {
+    final walletCurrency = await _getWalletCurrency(txn, repayment.walletId);
+    double appliedRate;
+    if (repayment.isManualRate) {
+      appliedRate = repayment.exchangeRate;
+      if (!appliedRate.isFinite || appliedRate <= 0) {
+        throw Exception('Manual exchange rate must be greater than zero.');
+      }
+    } else {
+      final loanRate = await _getCurrencyRate(txn, loanCurrency);
+      final walletRate = await _getCurrencyRate(txn, walletCurrency);
+      if (loanRate == null || walletRate == null) {
+        throw Exception('Exchange rate missing for $loanCurrency or $walletCurrency. Please set both currency rates first.');
+      }
+      appliedRate = loanRate / walletRate;
+    }
+    final walletAmount = repayment.amount * appliedRate;
+    if (!walletAmount.isFinite || walletAmount <= 0) {
+      throw Exception('Converted wallet amount is invalid.');
+    }
+    return repayment.copyWith(
+      walletCurrency: walletCurrency,
+      walletAmount: walletAmount,
+      exchangeRate: appliedRate,
+    );
+  }
+
   static Future<int> addRepayment(RepaymentModel repayment) async {
     final db = await _database;
-
     if (!repayment.amount.isFinite || repayment.amount <= 0) {
-      throw Exception(
-        'Repayment amount must be a valid amount greater than zero.',
-      );
+      throw Exception('Repayment amount must be a valid amount greater than zero.');
     }
-
-    if (repayment.walletId <= 0) {
-      throw Exception('Please select a valid receiving wallet.');
+    if (repayment.walletId <= 0 || repayment.loanId <= 0) {
+      throw Exception('Please select a valid wallet and loan.');
     }
-
-    if (repayment.loanId <= 0) {
-      throw Exception('Invalid loan selected.');
-    }
-
     final repaymentId = await db.transaction((txn) async {
-      final loans = await txn.query(
-        'loans',
-        where: 'id = ?',
-        whereArgs: [repayment.loanId],
-        limit: 1,
-      );
-
-      if (loans.isEmpty) {
-        throw Exception('Loan was not found.');
-      }
-
+      final loans = await txn.query('loans', where: 'id = ?', whereArgs: [repayment.loanId], limit: 1);
+      if (loans.isEmpty) throw Exception('Loan was not found.');
       final loan = LoansModel.fromMap(loans.first);
-
-      if (loan.remainingAmount <= 0) {
-        throw Exception('This loan has already been fully repaid.');
-      }
-
+      if (loan.remainingAmount <= 0) throw Exception('This loan has already been fully repaid.');
       if (repayment.amount > loan.remainingAmount + 0.000001) {
-        throw Exception(
-          'Repayment cannot exceed the outstanding balance.',
-        );
+        throw Exception('Repayment cannot exceed the outstanding balance.');
       }
-
-      final loanCurrency = loan.currency.toUpperCase();
-
-      final receivingCurrency =
-          await _getWalletCurrency(txn, repayment.walletId);
-
-      if (loanCurrency != receivingCurrency) {
-        throw Exception(
-          'The receiving wallet must use the same currency as the loan '
-          'source wallet ($loanCurrency).',
-        );
+      final snapshot = await _snapshotRepayment(txn, repayment, loan.currency);
+      final walletBalance = await _getWalletBalance(txn, snapshot.walletId);
+      if (loan.loanType == 'taken' && walletBalance + 0.000001 < snapshot.walletAmount) {
+        throw Exception('Insufficient wallet balance. Required: ${snapshot.walletCurrency} ${snapshot.walletAmount.toStringAsFixed(2)}.');
       }
-
-      if (loan.loanType == 'taken' &&
-          await _getWalletBalance(txn, repayment.walletId) < repayment.amount) {
-        throw Exception('Insufficient wallet balance to pay this loan.');
-      }
-
-      final newRemaining = (loan.remainingAmount - repayment.amount)
-          .clamp(0.0, loan.amount)
-          .toDouble();
-
-      final repaymentId = await txn.insert(
-        'loan_repayments',
-        repayment.toMap()..remove('id'),
-      );
-
-      await txn.update(
-        'loans',
-        {
-          'remaining_amount': newRemaining,
-          'status': newRemaining <= 0 ? 'paid' : 'active',
-        },
-        where: 'id = ?',
-        whereArgs: [repayment.loanId],
-      );
-
-      await _changeWalletBalance(
-        txn,
-        walletId: repayment.walletId,
-        amount: loan.loanType == 'given' ? repayment.amount : -repayment.amount,
-      );
-
-      return repaymentId;
+      final newRemaining = (loan.remainingAmount - snapshot.amount).clamp(0.0, loan.amount).toDouble();
+      final id = await txn.insert('loan_repayments', snapshot.toMap()..remove('id'));
+      await txn.update('loans', {
+        'remaining_amount': newRemaining, 'status': newRemaining <= 0 ? 'paid' : 'active',
+      }, where: 'id = ?', whereArgs: [repayment.loanId]);
+      await _changeWalletBalance(txn, walletId: snapshot.walletId,
+        amount: loan.loanType == 'given' ? snapshot.walletAmount : -snapshot.walletAmount);
+      return id;
     });
     AppRefreshController.notifyChanged();
     return repaymentId;
+  }
+
+  /// Recalculate sirf selected repayment ko reverse karke usi entry ka naya effect apply karta hai.
+  static Future<void> updateRepayment(RepaymentModel repayment) async {
+    if (repayment.id == null) throw Exception('Repayment ID is required.');
+    final db = await _database;
+    await db.transaction((txn) async {
+      final oldRows = await txn.query('loan_repayments', where: 'id = ?', whereArgs: [repayment.id], limit: 1);
+      if (oldRows.isEmpty) throw Exception('Repayment entry was not found.');
+      final old = RepaymentModel.fromMap(oldRows.first);
+      if (old.loanId != repayment.loanId) throw Exception('A repayment cannot be moved to another loan.');
+      final loanRows = await txn.query('loans', where: 'id = ?', whereArgs: [old.loanId], limit: 1);
+      if (loanRows.isEmpty) throw Exception('Related loan was not found.');
+      final loan = LoansModel.fromMap(loanRows.first);
+      final oldWalletAmount = old.walletAmount;
+      await _getWallet(txn, old.walletId);
+      // Restore the old transaction only inside this atomic DB transaction.
+      await _changeWalletBalance(txn, walletId: old.walletId,
+        amount: loan.loanType == 'given' ? -oldWalletAmount : oldWalletAmount);
+      final remainingAfterOld = loan.remainingAmount + old.amount;
+      if (!repayment.amount.isFinite || repayment.amount <= 0 ||
+          repayment.amount > remainingAfterOld + 0.000001) {
+        throw Exception('Updated repayment amount exceeds the available loan balance.');
+      }
+      final snapshot = await _snapshotRepayment(txn, repayment, loan.currency);
+      final walletBalance = await _getWalletBalance(txn, snapshot.walletId);
+      if (loan.loanType == 'taken' && walletBalance + 0.000001 < snapshot.walletAmount) {
+        throw Exception('Insufficient wallet balance for this repayment.');
+      }
+      final newRemaining = (remainingAfterOld - snapshot.amount).clamp(0.0, loan.amount).toDouble();
+      await txn.update('loan_repayments', snapshot.toMap()..remove('id'),
+        where: 'id = ?', whereArgs: [repayment.id]);
+      await _changeWalletBalance(txn, walletId: snapshot.walletId,
+        amount: loan.loanType == 'given' ? snapshot.walletAmount : -snapshot.walletAmount);
+      await txn.update('loans', {
+        'remaining_amount': newRemaining, 'status': newRemaining <= 0 ? 'paid' : 'active',
+      }, where: 'id = ?', whereArgs: [old.loanId]);
+    });
+    AppRefreshController.notifyChanged();
   }
 
   /// Tamam loans naye se purane order mein deta hai.
@@ -821,7 +847,7 @@ class LoansService {
       await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
-        amount: loan.loanType == 'given' ? -repayment.amount : repayment.amount,
+        amount: loan.loanType == 'given' ? -repayment.walletAmount : repayment.walletAmount,
       );
 
       await txn.update(
@@ -954,7 +980,7 @@ class LoansService {
         await _changeWalletBalance(
           txn,
           walletId: repayment.walletId,
-          amount: loan.loanType == 'given' ? -repayment.amount : repayment.amount,
+          amount: loan.loanType == 'given' ? -repayment.walletAmount : repayment.walletAmount,
         );
       }
 

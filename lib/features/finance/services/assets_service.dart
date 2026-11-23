@@ -478,7 +478,7 @@ class AssetsService {
       SELECT s.currency AS currency,
              COALESCE(SUM(s.current_value), 0) AS total
       FROM assets s
-      INNER JOIN wallets a ON a.id = s.wallet_id
+      LEFT JOIN wallets a ON a.id = s.wallet_id AND s.wallet_id > 0
       WHERE s.is_sold = 0
       GROUP BY s.currency
     ''');

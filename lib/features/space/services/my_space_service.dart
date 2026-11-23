@@ -130,7 +130,7 @@ class MySpaceService {
   }
 
   Future<void> _ensureSectionTables(Database db) async {
-    for (final table in ['space_deals', 'space_projects']) {
+    for (final table in ['space_agreements', 'space_projects']) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS $table (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,7 +151,7 @@ class MySpaceService {
   }
 
   String _workRecordTable(String section) {
-    if (section == 'agreements' || section == 'deals') return 'space_deals';
+    if (section == 'agreements') return 'space_agreements';
     if (section == 'projects') return 'space_projects';
     throw ArgumentError.value(section, 'section', 'Unsupported Space section');
   }

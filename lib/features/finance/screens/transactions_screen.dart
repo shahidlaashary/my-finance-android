@@ -132,12 +132,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               'id': 'loan_repayment_${repayment.id}',
               'source_record': true,
               'type': 'loan',
-              'amount': repayment.amount,
+              // Wallet history must use the exact saved wallet-side snapshot.
+              // Loan/Asset Details continue to use repayment.amount in loan currency.
+              'amount': repayment.walletAmount,
               'wallet_id': repayment.walletId,
               'category': 'Loan Repayment',
-              'note': loan.loanType == 'given' ? 'Received loan repayment' : 'Paid loan repayment',
+              'note': 'Loan Repayment (${loan.currency} ${repayment.amount.toStringAsFixed(2)})',
               'date': repayment.repaymentDate,
-              'wallet_currency': loan.currency,
+              'wallet_currency': repayment.walletCurrency,
             });
           }
         }

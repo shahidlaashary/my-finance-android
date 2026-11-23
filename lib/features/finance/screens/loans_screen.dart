@@ -209,6 +209,17 @@ class LoansScreenState extends State<LoansScreen> {
     return '$name • $type';
   }
 
+  Future<void> _editRepaymentEntry(LoansModel loan, RepaymentModel repayment) async {
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => LoanRepaymentEntryForm(loan: loan, existingRepayment: repayment),
+    );
+    if (saved == true) {
+      await _loadData();
+      if (mounted) _showMessage('Repayment entry updated successfully.');
+    }
+  }
+
   Future<void> _showRepaymentAttachments(int repaymentId) async {
     await showModalBottomSheet<void>(
       context: context,
@@ -689,6 +700,10 @@ class LoansScreenState extends State<LoansScreen> {
                                             ),
                                             onSelected: (value) async {
                                               if (value == 'edit') {
+                                                await _editRepaymentEntry(loan, repayment);
+                                                return;
+                                              }
+                                              if (value == 'attachments') {
                                                 await _showRepaymentAttachments(repayment.id!);
                                                 return;
                                               }
@@ -729,7 +744,17 @@ class LoansScreenState extends State<LoansScreen> {
                                                   children: [
                                                     Icon(Icons.edit_outlined, size: 18),
                                                     SizedBox(width: 9),
-                                                    Text('Edit Entry / Attachments'),
+                                                    Text('Edit Entry'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const PopupMenuItem(
+                                                value: 'attachments',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.attach_file, size: 18),
+                                                    SizedBox(width: 9),
+                                                    Text('Attachments'),
                                                   ],
                                                 ),
                                               ),

@@ -11,7 +11,7 @@ import 'package:my_finance/features/space/screens/space_tools_screen.dart';
 import 'package:my_finance/features/space/screens/space_video_player_screen.dart';
 import 'package:my_finance/features/space/screens/space_documents_screen.dart';
 import 'package:my_finance/features/space/screens/work_records_screen.dart';
-import 'package:my_finance/features/space/screens/space_work_screen.dart';
+import 'package:my_finance/features/space/screens/work_screen.dart';
 import 'package:my_finance/features/space/screens/youtube_explore_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/services/space_documents_service.dart';
@@ -30,7 +30,7 @@ class MySpaceScreen extends StatefulWidget {
 class _MySpaceScreenState extends State<MySpaceScreen> {
   final _space = MySpaceService.instance;
   final _documentsKey = GlobalKey<SpaceDocumentsScreenState>();
-  final _workKey = GlobalKey<SpaceWorkScreenState>();
+  final _workKey = GlobalKey<WorkScreenState>();
   late Future<List<Map<String, Object?>>> _allItems;
   late Future<List<Map<String, Object?>>> _bookItems;
   late Future<List<Map<String, Object?>>> _audioItems;
@@ -353,7 +353,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your space.'),
           _buildItems(_photosItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
           _buildItems(_videosItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
-          SpaceWorkScreen(key: _workKey),
+          WorkScreen(key: _workKey),
         ],
       ),
     );

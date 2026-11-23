@@ -22,7 +22,9 @@ class AttachmentOwnerTypes {
   static const String document = 'document';
   static const String party = 'party';
   static const String recurring = 'recurring';
-  static const String deal = 'deal';
+  static const String agreement = 'deal';
+  // Legacy alias keeps existing attachment owner references compatible.
+  static const String deal = agreement;
   static const String project = 'project';
 
   static const List<String> all = [
@@ -37,7 +39,7 @@ class AttachmentOwnerTypes {
     document,
     party,
     recurring,
-    deal,
+    agreement,
     project,
   ];
 }

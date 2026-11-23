@@ -137,9 +137,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               'amount': repayment.walletAmount,
               'wallet_id': repayment.walletId,
               'category': 'Loan Repayment',
-              'note': 'Loan Repayment (${loan.currency} ${repayment.amount.toStringAsFixed(2)})',
+              'note': 'Loan Repayment',
               'date': repayment.repaymentDate,
               'wallet_currency': repayment.walletCurrency,
+              'original_currency': loan.currency,
+              'original_amount': repayment.amount,
+              'exchange_rate': repayment.exchangeRate,
             });
           }
         }
@@ -1247,6 +1250,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final category = item['category']?.toString().trim() ?? '';
                               final currency = item['wallet_currency']?.toString() ?? '';
                               final amount = (item['amount'] as num?)?.toDouble() ?? 0.0;
+                              final originalAmount = (item['original_amount'] as num?)?.toDouble();
+                              final originalCurrency = item['original_currency']?.toString() ?? '';
+                              final exchangeRate = (item['exchange_rate'] as num?)?.toDouble();
+                              final showOriginalAmount = isLoanRecord && originalAmount != null &&
+                                  originalCurrency.isNotEmpty && originalCurrency.toUpperCase() != currency.toUpperCase();
                               final fee = (item['transfer_fee'] as num?)?.toDouble() ?? 0.0;
                               final parsedDate = DateTime.tryParse(item['date']?.toString() ?? '');
                               final dateLabel = parsedDate == null
@@ -1326,6 +1334,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               ),
                                             ),
                                             const SizedBox(height: 2),
+                                            if (showOriginalAmount) ...[
+                                              Text(
+                                                'Loan amount: $originalCurrency ${money(originalAmount, conceal: false)}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor),
+                                              ),
+                                              if (exchangeRate != null && exchangeRate > 0)
+                                                Text(
+                                                  'Rate: 1 $originalCurrency = $currency ${exchangeRate.toStringAsFixed(4)}',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(fontSize: 9.5, color: Theme.of(context).hintColor),
+                                                ),
+                                              const SizedBox(height: 2),
+                                            ],
                                             Text(
                                               dateLabel,
                                               maxLines: 1,
@@ -1481,6 +1505,12 @@ class TransactionDetailScreen extends StatelessWidget {
                   : 'Committee Ledger → Personal Wallet'),
             _detailRow(context, 'Category', category.isEmpty ? (isTransfer ? 'Transfer' : 'No category') : category),
             _detailRow(context, 'Description / Note', note.isEmpty ? '—' : note),
+            if (transaction['original_amount'] is num && (transaction['original_currency']?.toString().isNotEmpty ?? false))
+              _detailRow(context, 'Original loan amount',
+                '${transaction['original_currency']} ${((transaction['original_amount'] as num).toDouble()).toStringAsFixed(2)}'),
+            if (transaction['exchange_rate'] is num && (transaction['original_currency']?.toString().toUpperCase() != currency.toUpperCase()))
+              _detailRow(context, 'Applied rate',
+                '1 ${transaction['original_currency']} = $currency ${((transaction['exchange_rate'] as num).toDouble()).toStringAsFixed(4)}'),
           ];
 
           return ListView(

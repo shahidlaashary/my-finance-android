@@ -15,7 +15,7 @@ This directory contains the Flutter application source code, organized by applic
 - `app/my_finance_app.dart` — root Material application, routes, theme and app-lock gate.
 - `app/screens/main_screen.dart` — primary bottom navigation and central create-action sheet.
 - `app/screens/modules_tools_page.dart` — Modules & Tools navigation.
-- `app/screens/more_features_screen.dart` — settings and appearance entry points.
+- `app/screens/app_settings_screen.dart` — settings and appearance entry points.
 
 ## Feature Modules
 

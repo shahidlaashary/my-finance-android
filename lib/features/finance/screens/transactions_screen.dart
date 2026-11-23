@@ -1336,7 +1336,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                             const SizedBox(height: 2),
                                             if (showOriginalAmount) ...[
                                               Text(
-                                                'Loan amount: $originalCurrency ${money(originalAmount, conceal: false)}',
+                                                'Loan amount: $originalCurrency ${money(originalAmount)}',
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor),

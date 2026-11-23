@@ -163,8 +163,35 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
       if (_payment == 'Loan') ...[
-        Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _createParty, icon: const Icon(Icons.person_add_alt_1), label: const Text('Create Party'))),
-        DropdownButtonFormField<int>(value: _partyId, decoration: _dec('Loan party'), items: _parties.map((p) => DropdownMenuItem<int>(value: (p['id'] as num).toInt(), child: Text(p['name'].toString()))).toList(), onChanged: (v) => setState(() => _partyId = v), validator: (v) => _payment == 'Loan' && v == null ? 'Select a party.' : null),
+        DropdownButtonFormField<String>(
+          value: _partyId?.toString(),
+          isExpanded: true,
+          decoration: _dec('Loan party *', icon: Icons.person_outline),
+          hint: Text(_parties.isEmpty ? 'Create Party' : 'Select Party'),
+          items: [
+            ..._parties.map((p) => DropdownMenuItem<String>(
+              value: (p['id'] as num).toInt().toString(),
+              child: Text(p['name'].toString()),
+            )),
+            const DropdownMenuItem<String>(
+              value: '__create_party__',
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.person_add_alt_1, size: 18),
+                SizedBox(width: 8),
+                Text('Create Party'),
+              ]),
+            ),
+          ],
+          onChanged: (value) {
+            if (value == '__create_party__') {
+              setState(() => _partyId = null);
+              _createParty();
+              return;
+            }
+            setState(() => _partyId = int.tryParse(value ?? ''));
+          },
+          validator: (_) => _payment == 'Loan' && _partyId == null ? 'Select a party.' : null,
+        ),
       ] else ...[
         DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v), validator: (v) => v == null ? 'Select a wallet.' : null),
       ],

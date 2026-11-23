@@ -38,14 +38,14 @@ class WorkScreenState extends State<WorkScreen> {
           child: SegmentedButton<String>(
             segments: const [
               ButtonSegment<String>(
-                value: 'projects',
-                icon: Icon(Icons.work_outline_rounded),
-                label: Text('Projects'),
-              ),
-              ButtonSegment<String>(
                 value: 'agreements',
                 icon: Icon(Icons.handshake_outlined),
                 label: Text('Agreements'),
+              ),
+              ButtonSegment<String>(
+                value: 'projects',
+                icon: Icon(Icons.work_outline_rounded),
+                label: Text('Projects'),
               ),
             ],
             selected: {_selectedWorkSection},

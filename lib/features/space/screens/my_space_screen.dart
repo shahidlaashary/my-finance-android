@@ -10,7 +10,6 @@ import 'package:my_finance/features/space/screens/space_epub_reader_screen.dart'
 import 'package:my_finance/features/space/screens/space_tools_screen.dart';
 import 'package:my_finance/features/space/screens/space_video_player_screen.dart';
 import 'package:my_finance/features/space/screens/space_documents_screen.dart';
-import 'package:my_finance/features/space/screens/work_records_screen.dart';
 import 'package:my_finance/features/space/screens/work_screen.dart';
 import 'package:my_finance/features/space/screens/youtube_explore_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
@@ -52,15 +51,14 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     _videosItems = _space.getItems(fileType: 'videos');
   }
 
-  Future<void> _openWorkRecordForm(String section) async {
+  Future<void> _openAgreementForm() async {
     if (!mounted) return;
     setState(() => _selectedTabIndex = 7);
-    _workKey.currentState?.showWorkSection(section);
     await Navigator.push(context, MaterialPageRoute(
-      builder: (_) => WorkRecordFormScreen(section: section),
+      builder: (_) => const AgreementFormScreen(),
     ));
     if (!mounted) return;
-    _workKey.currentState?.refreshWorkRecords(section);
+    _workKey.currentState?.refreshAgreements();
   }
 
   Future<void> _openSpaceSearch() async {
@@ -307,8 +305,6 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                         _documentsKey.currentState?.showAddDocumentForm();
                       } else if (type == 'deal') {
                         // Reserved placeholder; no Deal/Agreement workflow is launched here.
-                      } else if (type == 'work') {
-                        _openWorkRecordForm('projects');
                       } else {
                         _addFile(mediaType: type);
                       }
@@ -330,7 +326,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photos', Icons.photo_outlined, 'Add Photo'),
                       _addMenuItem('videos', Icons.video_library_outlined, 'Add Video'),
-                      _addMenuItem('work', Icons.work_outline_rounded, 'Add Work'),
+                      _addMenuItem('agreement', Icons.handshake_outlined, 'Add Agreement'),
                     ],
                   ),
                 ),
@@ -346,7 +342,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       body: IndexedStack(
         index: _selectedTabIndex,
         children: [
-          _buildItems(_allItems, 'Your space is empty', 'Add books, agreements, docs, music, photos, videos and projects.'),
+          _buildItems(_allItems, 'Your space is empty', 'Add books, agreements, docs, music, photos and videos.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your space.'),
           const SizedBox.shrink(),
           SpaceDocumentsScreen(key: _documentsKey),
@@ -428,7 +424,7 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
   int _request = 0;
   static const _types = <String, String>{
     'All': 'All', 'book': 'Books', 'document': 'Docs', 'audio': 'Music',
-    'photos': 'Photos', 'videos': 'Videos', 'agreements': 'Agreements', 'projects': 'Projects',
+    'photos': 'Photos', 'videos': 'Videos', 'agreements': 'Agreements',
   };
   static const _categories = [
     'All', 'Personal', 'Vehicle', 'Education', 'Property',
@@ -487,16 +483,15 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
           if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.document(document));
         }
       }
-      for (final section in ['agreements', 'projects']) {
-        if (_type != 'All' && _type != section) continue;
-        final records = await widget.space.getWorkRecords(section);
+      if (_type == 'All' || _type == 'agreements') {
+        final records = await widget.space.getAgreements();
         for (final record in records) {
           final searchable = [
             record['title'], record['category'], record['party_one'], record['party_two'],
             record['status'], record['start_date'], record['end_date'],
             record['description'], record['notes'],
           ].whereType<Object>().join(' ');
-          if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.record(record, section));
+          if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.record(record, 'agreements'));
         }
       }
       results.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
@@ -572,15 +567,15 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
     }
     if (result.section != null) {
       final record = result.record!;
-      final isAgreement = result.section == 'agreements';
+      const isAgreement = true;
       final detail = [
         record['category'], record['status'],
         if (isAgreement) record['party_one'], if (isAgreement) record['party_two'],
       ].whereType<Object>().where((v) => v.toString().trim().isNotEmpty).join(' • ');
       return ListTile(
-        leading: CircleAvatar(child: Icon(isAgreement ? Icons.handshake_outlined : Icons.work_outline_rounded)),
+        leading: const CircleAvatar(child: Icon(Icons.handshake_outlined)),
         title: Text(record['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text((isAgreement ? 'Agreement' : 'Project') + (detail.isEmpty ? '' : ' • ' + detail),
+        subtitle: Text('Agreement' + (detail.isEmpty ? '' : ' • ' + detail),
             maxLines: 2, overflow: TextOverflow.ellipsis),
         onTap: () {
           Navigator.pop(context);

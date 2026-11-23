@@ -160,7 +160,7 @@ class RecycleBinService {
           final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
           final saleExists = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [saleWalletId], limit: 1);
           if (saleExists.isEmpty) throw Exception('The asset sale wallet no longer exists.');
-          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [(record['sale_price'] as num).toDouble(), saleWalletId]);
+          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [((record['sale_wallet_amount'] as num?)?.toDouble() ?? (record['sale_price'] as num).toDouble()), saleWalletId]);
         }
         await txn.insert('assets', record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

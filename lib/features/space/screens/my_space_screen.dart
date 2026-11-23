@@ -11,6 +11,7 @@ import 'package:my_finance/features/space/screens/space_tools_screen.dart';
 import 'package:my_finance/features/space/screens/space_video_player_screen.dart';
 import 'package:my_finance/features/space/screens/space_documents_screen.dart';
 import 'package:my_finance/features/space/screens/work_screen.dart';
+import 'package:my_finance/features/space/screens/agreements_screen.dart';
 import 'package:my_finance/features/space/screens/youtube_explore_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/services/space_documents_service.dart';
@@ -304,7 +305,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       if (type == 'document') {
                         _documentsKey.currentState?.showAddDocumentForm();
                       } else if (type == 'deal') {
-                        // Reserved placeholder; no Deal/Agreement workflow is launched here.
+                        // Reserved placeholder.
+                      } else if (type == 'agreement') {
+                        _openAgreementForm();
                       } else {
                         _addFile(mediaType: type);
                       }

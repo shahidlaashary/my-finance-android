@@ -304,7 +304,7 @@ class AssetsScreenState extends State<AssetsScreen> {
     final currentController = TextEditingController(text: asset?.currentValue.toString() ?? '');
     final notesController = TextEditingController(text: asset?.notes ?? '');
     int? selectedWallet = asset?.walletId;
-    String selectedPaymentType = asset?.paymentType ?? 'Wallet';
+    String selectedPaymentType = asset?.paymentType.toLowerCase() == 'loan' ? 'Loan' : 'Wallet';
     final defaultAssetCurrency = asset?.currency ?? await FinanceDB.instance.getBaseCurrency();
     String newPartyCurrency =
         CurrencyCatalog.supported.contains(defaultAssetCurrency.toUpperCase())

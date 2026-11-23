@@ -29,7 +29,7 @@ class ModulesToolsPage extends StatelessWidget {
       },
       {
         'title': 'My Space',
-        'subtitle': 'Organize books, agreements, docs, music, photos, videos and projects in one place',
+        'subtitle': 'Organize books, agreements, docs, music, photos and videos in one place',
         'icon': Icons.folder_special_outlined,
       },
       {

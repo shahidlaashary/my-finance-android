@@ -720,6 +720,10 @@ class AssetsScreenState extends State<AssetsScreen> {
         saleWalletId: result['walletId'] as int,
         paymentType: result['paymentType'] as String,
         partyId: result['partyId'] as int?,
+        walletAmount: result['walletAmount'] as double?,
+        walletCurrency: result['walletCurrency'] as String?,
+        exchangeRate: (result['exchangeRate'] as num?)?.toDouble() ?? 1.0,
+        isManualRate: result['isManualRate'] as bool? ?? false,
       );
       await SoundSettingsService.instance.play('income');
       await _loadData();

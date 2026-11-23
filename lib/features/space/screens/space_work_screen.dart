@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/features/space/screens/space_records_screen.dart';
+import 'package:my_finance/features/space/screens/work_records_screen.dart';
 
-/// Combines the existing Deals and Projects workflows under one My Space tab.
+/// Combines the existing Agreements and Projects workflows under one My Space tab.
 /// Each section keeps its own local records table and form behavior.
 class SpaceWorkScreen extends StatefulWidget {
   const SpaceWorkScreen({super.key});
@@ -11,21 +11,21 @@ class SpaceWorkScreen extends StatefulWidget {
 }
 
 class SpaceWorkScreenState extends State<SpaceWorkScreen> {
-  final _projectsKey = GlobalKey<SpaceRecordsScreenState>();
-  final _dealsKey = GlobalKey<SpaceRecordsScreenState>();
-  String _section = 'projects';
+  final _projectsKey = GlobalKey<WorkRecordsScreenState>();
+  final _agreementsKey = GlobalKey<WorkRecordsScreenState>();
+  String _selectedWorkSection = 'projects';
 
-  void showSection(String section) {
-    if (section != 'deals' && section != 'projects') return;
-    if (mounted) setState(() => _section = section);
+  void showWorkSection(String section) {
+    if (section != 'agreements' && section != 'projects') return;
+    if (mounted) setState(() => _selectedWorkSection = section);
   }
 
-  void refresh([String? section]) {
+  void refreshWorkRecords([String? section]) {
     if (section == null || section == 'projects') {
-      _projectsKey.currentState?.refresh();
+      _projectsKey.currentState?.refreshWorkRecords();
     }
-    if (section == null || section == 'deals') {
-      _dealsKey.currentState?.refresh();
+    if (section == null || section == 'agreements') {
+      _agreementsKey.currentState?.refreshWorkRecords();
     }
   }
 
@@ -43,14 +43,14 @@ class SpaceWorkScreenState extends State<SpaceWorkScreen> {
                 label: Text('Projects'),
               ),
               ButtonSegment<String>(
-                value: 'deals',
+                value: 'agreements',
                 icon: Icon(Icons.handshake_outlined),
-                label: Text('Deals'),
+                label: Text('Agreements'),
               ),
             ],
-            selected: {_section},
+            selected: {_selectedWorkSection},
             onSelectionChanged: (selection) {
-              if (selection.isNotEmpty) showSection(selection.first);
+              if (selection.isNotEmpty) showWorkSection(selection.first);
             },
             showSelectedIcon: false,
             style: const ButtonStyle(visualDensity: VisualDensity.compact),
@@ -58,10 +58,10 @@ class SpaceWorkScreenState extends State<SpaceWorkScreen> {
         ),
         Expanded(
           child: IndexedStack(
-            index: _section == 'deals' ? 1 : 0,
+            index: _selectedWorkSection == 'agreements' ? 1 : 0,
             children: [
-              SpaceRecordsScreen(key: _projectsKey, section: 'projects'),
-              SpaceRecordsScreen(key: _dealsKey, section: 'deals'),
+              WorkRecordsScreen(key: _projectsKey, section: 'projects'),
+              WorkRecordsScreen(key: _agreementsKey, section: 'agreements'),
             ],
           ),
         ),

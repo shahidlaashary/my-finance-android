@@ -21,7 +21,7 @@ This directory contains the Flutter application source code, organized by applic
 
 - `features/dashboard/` — home dashboard and financial snapshot.
 - `features/finance/` — wallets, transactions, categories, loans, parties, assets, budgets, goals, recurring schedules, statistics, reports, exchange rates and WhatsApp automation UI.
-- `features/space/` — My Space screens and local content services, including Books, Docs, Music, Photo, Video and the combined Work area (Projects and Deals).
+- `features/space/` — My Space screens and local content services, including Books, Docs, Music, Photo, Video and the combined Work area (Projects and Agreements).
 - `features/notifications/` — reminders and local notification scheduling.
 - `features/search/` — global record search.
 - `features/recycle_bin/` — supported deleted-record archive and restore flows.

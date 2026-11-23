@@ -1,0 +1,490 @@
+import 'package:flutter/material.dart';
+
+import 'package:my_finance/core/localization/app_text.dart';
+import 'package:my_finance/core/theme/appearance_settings_service.dart';
+import 'package:my_finance/features/backup_restore/screens/backup_restore_screen.dart';
+import 'package:my_finance/features/security/app_lock_screen.dart';
+import 'package:my_finance/features/settings/general_app_preferences_screen.dart';
+import 'package:my_finance/core/preferences/general_preferences.dart';
+import 'package:my_finance/features/settings/base_currency_screen.dart';
+import 'package:my_finance/features/settings/language_settings_screen.dart';
+import 'package:my_finance/features/settings/sound_settings_screen.dart';
+import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
+import 'package:my_finance/features/notifications/screens/reminders_screen.dart';
+import 'package:my_finance/app/screens/about_hub_screen.dart';
+import 'package:my_finance/features/finance/screens/whatsapp_automation_screen.dart';
+
+class AppSettingsScreen extends StatelessWidget {
+  const AppSettingsScreen({super.key});
+
+  void _openScreen(BuildContext context, Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          appText(context, 'Settings', 'ترتیبات'),
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const _YourNameSettingsTile(),
+          _SettingsInfoTile(
+            icon: Icons.tune_rounded,
+            title: 'App Settings',
+            subtitle: 'Manage your My Finance preferences.',
+            onTap: () => _openScreen(
+              context,
+              const GeneralAppPreferencesScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.palette_outlined,
+            title: 'Appearance',
+            subtitle: 'Customize theme mode and app colors',
+            onTap: () => _openScreen(
+              context,
+              const AppearanceScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.backup_rounded,
+            title: 'Backup & Restore',
+            subtitle: 'Create a manual backup or restore your finance data',
+            onTap: () => _openScreen(
+              context,
+              const BackupRestoreScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.security_rounded,
+            title: 'App Lock & Security',
+            subtitle: 'Protect with PIN, Face Unlock or Fingerprint',
+            onTap: () => _openScreen(
+              context,
+              const AppLockScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.currency_exchange_rounded,
+            title: 'Base Currency',
+            subtitle: 'Choose the currency for consolidated totals',
+            onTap: () => _openScreen(context, const BaseCurrencyScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.notifications_active_outlined,
+            title: 'Notifications & Reminders',
+            subtitle: 'Schedule bill, loan and personal finance reminders',
+            onTap: () => _openScreen(context, const RemindersScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.volume_up_rounded,
+            title: 'Sound Settings',
+            subtitle: 'Control app launch music, action effects and individual sound styles',
+            onTap: () => _openScreen(
+              context,
+              const SoundSettingsScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.chat_rounded,
+            title: 'WhatsApp Automation',
+            subtitle: 'Automate finance updates and messages on WhatsApp',
+            onTap: () => _openScreen(
+              context,
+              const WhatsAppAutomationScreen(),
+            ),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.delete_outline_rounded,
+            title: 'Recycle Bin',
+            subtitle: 'Restore deleted records or permanently remove them',
+            onTap: () => _openScreen(context, const RecycleBinScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.language_rounded,
+            title: 'Languages',
+            subtitle: 'Choose your preferred language from the available options',
+            onTap: () => _openScreen(context, const LanguageSettingsScreen()),
+          ),
+          _SettingsInfoTile(
+            icon: Icons.info_outline_rounded,
+            title: 'About',
+            subtitle: 'App information, version and developer details',
+            onTap: () => _openScreen(context, const AboutHubScreen()),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================
+// App ki zahiri soorat ka safha
+// =====================================================
+
+class AppearanceScreen extends StatefulWidget {
+  const AppearanceScreen({super.key});
+
+  @override
+  State<AppearanceScreen> createState() => _AppearanceScreenState();
+}
+
+class _AppearanceScreenState extends State<AppearanceScreen> {
+  final AppearanceSettingsService _settings =
+      AppearanceSettingsService.instance;
+
+  Future<void> _changeThemePreset(AppThemePreset preset) async {
+    try {
+      await _settings.setThemePreset(preset);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to save theme: $e')),
+      );
+    }
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            primary,
+            Color.lerp(primary, Theme.of(context).colorScheme.surface, 0.25)!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.palette_rounded,
+            color: Theme.of(context).colorScheme.onPrimary,
+            size: 34,
+          ),
+          SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  appText(context, 'Personalize Your App', 'اپنی ایپ کو اپنی پسند کے مطابق بنائیں'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  appText(context, 'Customize the look and feel of My Finance.', 'My Finance ایپ کی شکل و صورت تبدیل کریں۔'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .78),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveSection({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String description,
+    required List<Widget> children,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 13),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: primary.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: primary, size: 23),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.secondary, size: 19),
+              ],
+            ),
+            SizedBox(height: 14),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeOptions() {
+    return ValueListenableBuilder<AppThemePreset>(
+      valueListenable: _settings.themePreset,
+      builder: (context, selectedPreset, _) {
+        final options = [
+          (AppThemePreset.emeraldGreen, 'Emerald Green', Icons.eco_outlined),
+          (AppThemePreset.lightMode, 'Light Mode', Icons.light_mode_outlined),
+          (AppThemePreset.darkMode, 'Dark Mode', Icons.dark_mode_outlined),
+          (AppThemePreset.midnightGold, 'Midnight Gold', Icons.nights_stay_outlined),
+        ];
+
+        return Column(
+          children: options.map((option) {
+            return RadioListTile<AppThemePreset>(
+              value: option.$1,
+              groupValue: selectedPreset,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: Text(option.$2),
+              secondary: Icon(option.$3),
+              onChanged: (value) {
+                if (value != null) _changeThemePreset(value);
+              },
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          appText(context, 'Appearance', 'ظاہری شکل'),
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildHeader(context),
+          SizedBox(height: 20),
+          _buildActiveSection(
+            context: context,
+            icon: Icons.dark_mode_rounded,
+            title: 'App Theme',
+            description: 'Choose a color theme for the entire app',
+            children: [_buildThemeOptions()],
+          ),
+          SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================
+// Jald anay wali sahulat ka paigham
+// =====================================================
+
+class _ComingSoonNotice extends StatelessWidget {
+  final String message;
+
+  const _ComingSoonNotice({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.tertiary),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 12, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================
+// Settings ka option
+// =====================================================
+
+class _SettingsInfoTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  const _SettingsInfoTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 7),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 13,
+          vertical: 1,
+        ),
+        leading: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+          size: 23,
+        ),
+        title: Text(
+          appText(context, title, title),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Text(
+          appText(context, subtitle, subtitle),
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: onTap != null
+            ? const Icon(Icons.chevron_right_rounded)
+            : null,
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+
+class _YourNameSettingsTile extends StatefulWidget {
+  const _YourNameSettingsTile();
+  @override
+  State<_YourNameSettingsTile> createState() => _YourNameSettingsTileState();
+}
+class _YourNameSettingsTileState extends State<_YourNameSettingsTile> {
+  final _preferences = GeneralPreferences.instance;
+  Future<void> _changeName() async {
+    final controller = TextEditingController(text: await _preferences.yourName);
+    if (!mounted) { controller.dispose(); return; }
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Change Your Name'),
+        content: TextField(controller: controller, autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Your Name', hintText: 'Enter your name')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (saved == true) await _preferences.setYourName(controller.text);
+    controller.dispose();
+  }
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<int>(
+    valueListenable: _preferences.revision,
+    builder: (context, _, __) => FutureBuilder<String>(
+      future: _preferences.yourName,
+      builder: (context, snapshot) {
+        final name = snapshot.data?.trim() ?? '';
+        return Card(
+          elevation: 1,
+          margin: const EdgeInsets.only(bottom: 7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 2,
+            ),
+            leading: Icon(
+              Icons.person_outline_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              size: 23,
+            ),
+            title: const Text(
+              'Your Name',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            subtitle: Text(
+              name.isEmpty ? 'Name not set' : name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _changeName,
+          ),
+        );
+      },
+    ),
+  );
+}

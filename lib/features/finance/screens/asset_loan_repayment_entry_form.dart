@@ -47,7 +47,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
     _loadWallets();
   }
   @override
-  void dispose() { _amount.dispose(); _notes.dispose(); super.dispose(); }
+  void dispose() { _amount.dispose(); _notes.dispose(); _manualRate.dispose(); super.dispose(); }
 
   Future<void> _loadWallets() async {
     try {
@@ -157,7 +157,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
       actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Close'))],
     );
     return AlertDialog(
-      title: Text(isGiven ? 'Receive Repayment' : 'Pay Back Loan'),
+      title: Text(widget.existingRepayment == null ? (isGiven ? 'Receive Repayment' : 'Pay Back Loan') : 'Edit Repayment'),
       content: SizedBox(width: 420, child: Form(key: _key, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Align(alignment: Alignment.centerLeft, child: Text('Outstanding: ' + _loan.currency + ' ' + _loan.remainingAmount.toStringAsFixed(2))),
         const SizedBox(height: 12),

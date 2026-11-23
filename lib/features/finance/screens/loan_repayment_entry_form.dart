@@ -196,6 +196,8 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
         if (!_useManualRate && (_loanRate == null || _walletRate == null))
           const Align(alignment: Alignment.centerLeft, child: Text('Exchange rate unavailable. Set the required currency rates or enter a manual wallet amount.', style: TextStyle(color: Colors.red, fontSize: 12))),
         
+        if (_useManualRate && _loan.currency.toUpperCase() != _walletCurrency && _loanRate != null && _walletRate != null && _walletRate! > 0)
+          Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.only(top: 4), child: Text('Automatic reference: $_walletCurrency ${(_loanRate! / _walletRate!).toStringAsFixed(2)}', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)))),
         if (_convertedAmount != null)
           Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.only(top: 6), child: Text('Wallet ${isGiven ? 'credit' : 'deduction'}: $_walletCurrency ${_convertedAmount!.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w700)))),
 

@@ -153,7 +153,7 @@ class AssetsService {
       final db = await _database;
       await _ensureTables(db);
       final isLoan = asset.paymentType.toLowerCase() == 'loan';
-      var anchorWalletId = asset.walletId;
+      var assetWalletId = asset.walletId;
       var currency = asset.currency.toUpperCase();
 
       if (isLoan) {
@@ -161,26 +161,20 @@ class AssetsService {
         final parties = await db.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
         if (parties.isEmpty) throw Exception('Selected party was not found.');
         currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
-        final matching = await db.query(
-          'wallets', columns: ['id'],
-          where: "UPPER(TRIM(COALESCE(currency, 'PKR'))) = ?",
-          whereArgs: [currency], orderBy: 'id ASC', limit: 1,
-        );
-        if (matching.isEmpty) throw Exception('Create a $currency wallet first. It is required for future loan repayments.');
-        anchorWalletId = (matching.first['id'] as num).toInt();
+        assetWalletId = 0;
       }
 
       final assetId = await db.transaction((txn) async {
-        final wallet = await _getWallet(txn, anchorWalletId);
-        final walletCurrency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
-        if (isLoan && walletCurrency != currency) throw Exception('Asset currency does not match its party currency.');
-        if (!isLoan) currency = walletCurrency;
-        if (!isLoan && (wallet['balance'] as num).toDouble() < asset.purchasePrice) {
-          throw Exception('Insufficient wallet balance.');
+        if (!isLoan) {
+          final wallet = await _getWallet(txn, assetWalletId);
+          currency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
+          if ((wallet['balance'] as num).toDouble() < asset.purchasePrice) {
+            throw Exception('Insufficient wallet balance.');
+          }
         }
 
         final assetMap = asset.copyWith(
-          walletId: anchorWalletId,
+          walletId: assetWalletId,
           currency: currency,
           name: asset.name.trim(),
           category: asset.category.trim().isEmpty ? 'Other' : asset.category.trim(),
@@ -197,7 +191,7 @@ class AssetsService {
             'loan_type': 'taken',
             'amount': asset.purchasePrice,
             'remaining_amount': asset.purchasePrice,
-            'wallet_id': anchorWalletId,
+            'wallet_id': 0,
             'currency': currency,
             'source_type': 'asset_purchase',
             'source_id': id,
@@ -234,25 +228,23 @@ class AssetsService {
     final db = await _database;
     await _ensureTables(db);
     final isLoan = asset.paymentType.toLowerCase() == 'loan';
-    var anchorWalletId = asset.walletId;
+    var assetWalletId = asset.walletId;
     var currency = asset.currency.toUpperCase();
     if (isLoan) {
       if (asset.partyId == null) throw Exception('Please select a party for this loan purchase.');
       final party = await LoansService.getPartyById(asset.partyId!);
       if (party == null) throw Exception('Selected party was not found.');
       currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-      final matching = await db.query('wallets', columns: ['id'], where: "UPPER(TRIM(COALESCE(currency, 'PKR'))) = ?", whereArgs: [currency], limit: 1);
-      if (matching.isEmpty) throw Exception('Create a ' + currency + ' wallet first. It is required for future loan repayments.');
-      anchorWalletId = (matching.first['id'] as num).toInt();
+      assetWalletId = 0;
     }
     final assetId = await db.transaction((txn) async {
-      final wallet = await _getWallet(txn, anchorWalletId);
-      final walletCurrency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
-      if (isLoan && walletCurrency != currency) throw Exception('Asset currency does not match its party currency.');
-      if (!isLoan) currency = walletCurrency;
-      if (!isLoan && (wallet['balance'] as num).toDouble() < asset.purchasePrice) throw Exception('Insufficient wallet balance.');
+      if (!isLoan) {
+        final wallet = await _getWallet(txn, assetWalletId);
+        currency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
+        if ((wallet['balance'] as num).toDouble() < asset.purchasePrice) throw Exception('Insufficient wallet balance.');
+      }
       final map = asset.copyWith(
-        walletId: anchorWalletId, currency: currency,
+        walletId: assetWalletId, currency: currency,
         name: asset.name.trim(),
         category: asset.category.trim().isEmpty ? 'Other' : asset.category.trim(),
         createdAt: asset.createdAt ?? DateTime.now(),
@@ -347,16 +339,14 @@ class AssetsService {
       if (party == null) throw Exception('Selected buyer party was not found.');
       final buyerCurrency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
       if (buyerCurrency != asset.currency.toUpperCase()) throw Exception('Buyer party currency must match the asset currency (' + asset.currency + ').');
-      final matching = await db.query('wallets', columns: ['id'], where: "UPPER(TRIM(COALESCE(currency, 'PKR'))) = ?", whereArgs: [buyerCurrency], limit: 1);
-      if (matching.isEmpty) throw Exception('Create a ' + buyerCurrency + ' wallet first for future loan repayments.');
-      anchorWalletId = (matching.first['id'] as num).toInt();
+      anchorWalletId = 0;
     }
     await db.transaction((txn) async {
-      final purchaseWallet = await _getWallet(txn, asset.walletId);
-      final saleWallet = await _getWallet(txn, anchorWalletId);
-      final purchaseCurrency = (purchaseWallet['currency'] ?? asset.currency).toString().toUpperCase();
-      final saleCurrency = (saleWallet['currency'] ?? 'PKR').toString().toUpperCase();
-      if (purchaseCurrency != saleCurrency) throw Exception('Asset sale must use the same currency as its purchase.');
+      if (!isLoan) {
+        final saleWallet = await _getWallet(txn, anchorWalletId);
+        final saleCurrency = (saleWallet['currency'] ?? 'PKR').toString().toUpperCase();
+        if (saleCurrency != asset.currency.toUpperCase()) throw Exception('Asset sale must use the same currency as its purchase.');
+      }
       if (!isLoan) await _changeBalance(txn, walletId: anchorWalletId, amount: salePrice);
       await txn.update('assets', {
         'is_sold': 1, 'sale_date': saleDate.toIso8601String(),

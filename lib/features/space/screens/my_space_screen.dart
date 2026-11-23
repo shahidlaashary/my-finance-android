@@ -305,9 +305,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     onSelected: (type) {
                       if (type == 'document') {
                         _documentsKey.currentState?.showAddDocumentForm();
-                      } else if (type == 'agreement') {
-                        _openWorkRecordForm('agreements');
-                      } else if (type == 'project') {
+                      } else if (type == 'deal') {
+                        // Reserved placeholder; no Deal/Agreement workflow is launched here.
+                      } else if (type == 'work') {
                         _openWorkRecordForm('projects');
                       } else {
                         _addFile(mediaType: type);
@@ -325,12 +325,12 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     ),
                     itemBuilder: (_) => [
                       _addMenuItem('book', Icons.menu_book_outlined, 'Add Book'),
-                      _addMenuItem('agreement', Icons.handshake_outlined, 'Add Agreement'),
+                      _addMenuItem('deal', Icons.handshake_outlined, 'Add Deal'),
                       _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photos', Icons.photo_outlined, 'Add Photo'),
                       _addMenuItem('videos', Icons.video_library_outlined, 'Add Video'),
-                      _addMenuItem('project', Icons.work_outline_rounded, 'Add Project'),
+                      _addMenuItem('work', Icons.work_outline_rounded, 'Add Work'),
                     ],
                   ),
                 ),

@@ -122,7 +122,7 @@ class _QuickTourPageState extends State<_QuickTourPage>{
     (Icons.swap_horiz_rounded,'Transactions','Record income, expenses and transfers, and review your transaction history.'),
     (Icons.pie_chart_outline,'Budgets & Goals','Set spending limits and track progress towards savings targets.'),
     (Icons.handshake,'Loans','Track money lent to others and money borrowed.'),
-    (Icons.inventory_2_outlined,'More Features','Explore stock management, documents, vehicles, exchange rates and other tools.'),
+    (Icons.inventory_2_outlined,'Modules & Tools','Explore stock management, documents, vehicles, exchange rates and other tools.'),
     (Icons.shield_outlined,'Keep your data safe','Review storage information and create backups regularly using the available backup tools.'),
   ];
   @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text(appText(context, "Quick Tour", "Quick Tour"))),body:Column(children:[

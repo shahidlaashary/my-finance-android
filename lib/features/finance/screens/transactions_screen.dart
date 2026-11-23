@@ -97,12 +97,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             'id': 'asset_sale_${asset.id}',
             'source_record': true,
             'type': 'asset',
-            'amount': asset.salePrice,
+            'amount': asset.saleWalletAmount ?? asset.salePrice,
             'wallet_id': asset.saleWalletId ?? asset.walletId,
             'category': 'Asset Sale',
             'note': 'Sold: ${asset.name}',
             'date': asset.saleDate!.toIso8601String(),
-            'wallet_currency': asset.currency,
+            'wallet_currency': asset.saleWalletCurrency,
             'payment_type': asset.salePaymentType,
           });
         }

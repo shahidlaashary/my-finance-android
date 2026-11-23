@@ -163,7 +163,6 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
       if (_payment == 'Loan') ...[
-        const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           value: _partyId?.toString(),
           isExpanded: true,
@@ -194,6 +193,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
           validator: (_) => _payment == 'Loan' && _partyId == null ? 'Select a party.' : null,
         ),
       ] else ...[
+        const SizedBox(height: 12),
         DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v), validator: (v) => v == null ? 'Select a wallet.' : null),
       ],
       const SizedBox(height: 12),

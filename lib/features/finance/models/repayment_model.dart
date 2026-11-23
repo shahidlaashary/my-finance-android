@@ -8,6 +8,10 @@ class RepaymentModel {
   final String paymentMethod;
   final String notes;
   final String createdAt;
+  final String walletCurrency;
+  final double walletAmount;
+  final double exchangeRate;
+  final bool isManualRate;
 
   const RepaymentModel({
     this.id,
@@ -18,6 +22,11 @@ class RepaymentModel {
     this.paymentMethod = 'cash',
     this.notes = '',
     required this.createdAt,
+    this.walletCurrency = 'PKR',
+    double? walletAmount,
+    this.exchangeRate = 1.0,
+    this.isManualRate = false,
+  }) : walletAmount = walletAmount ?? amount;
   });
 
   Map<String, dynamic> toMap() {
@@ -30,6 +39,10 @@ class RepaymentModel {
       'payment_method': paymentMethod,
       'notes': notes,
       'created_at': createdAt,
+      'wallet_currency': walletCurrency,
+      'wallet_amount': walletAmount,
+      'exchange_rate': exchangeRate,
+      'is_manual_rate': isManualRate ? 1 : 0,
     };
   }
 
@@ -44,6 +57,10 @@ class RepaymentModel {
           map['payment_method'] as String? ?? 'cash',
       notes: map['notes'] as String? ?? '',
       createdAt: map['created_at'] as String,
+      walletCurrency: (map['wallet_currency']?.toString() ?? 'PKR').toUpperCase(),
+      walletAmount: (map['wallet_amount'] as num?)?.toDouble() ?? (map['amount'] as num).toDouble(),
+      exchangeRate: (map['exchange_rate'] as num?)?.toDouble() ?? 1.0,
+      isManualRate: (map['is_manual_rate'] as num?)?.toInt() == 1,
     );
   }
 
@@ -56,6 +73,10 @@ class RepaymentModel {
     String? paymentMethod,
     String? notes,
     String? createdAt,
+    String? walletCurrency,
+    double? walletAmount,
+    double? exchangeRate,
+    bool? isManualRate,
   }) {
     return RepaymentModel(
       id: id ?? this.id,
@@ -66,6 +87,10 @@ class RepaymentModel {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
+      walletCurrency: walletCurrency ?? this.walletCurrency,
+      walletAmount: walletAmount ?? this.walletAmount,
+      exchangeRate: exchangeRate ?? this.exchangeRate,
+      isManualRate: isManualRate ?? this.isManualRate,
     );
   }
 }

@@ -22,7 +22,7 @@ class AttachmentOwnerTypes {
   static const String document = 'document';
   static const String party = 'party';
   static const String recurring = 'recurring';
-  static const String agreement = 'deal';
+  static const String agreement = 'agreement';
   static const String project = 'project';
 
   static const List<String> all = [

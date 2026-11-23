@@ -18,10 +18,10 @@ class WorkRecordsScreenState extends State<WorkRecordsScreen> {
   @override
   void initState() {
     super.initState();
-    refresh();
+    refreshWorkRecords();
   }
 
-  void refresh() {
+  void refreshWorkRecords() {
     _records = MySpaceService.instance.getWorkRecords(widget.section);
     if (mounted) setState(() {});
   }

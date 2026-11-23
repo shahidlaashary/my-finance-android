@@ -16,6 +16,10 @@ class AssetsModel {
   final DateTime? saleDate;
   final double? salePrice;
   final int? saleWalletId;
+  final double? saleWalletAmount;
+  final String saleWalletCurrency;
+  final double saleExchangeRate;
+  final bool saleIsManualRate;
   final String salePaymentType;
   final int? salePartyId;
   final int? saleLinkedLoanId;
@@ -28,6 +32,7 @@ class AssetsModel {
     this.paymentType = 'Wallet', this.partyId, this.currency = 'PKR',
     this.linkedLoanId, this.notes = '', this.isSold = false,
     this.saleDate, this.salePrice, this.saleWalletId,
+    this.saleWalletAmount, this.saleWalletCurrency = 'PKR', this.saleExchangeRate = 1.0, this.saleIsManualRate = false,
     this.salePaymentType = 'Wallet', this.salePartyId,
     this.saleLinkedLoanId, this.createdAt,
     this.includeInConsolidatedBalance = false,
@@ -53,6 +58,10 @@ class AssetsModel {
     saleDate: map['sale_date'] == null ? null : DateTime.tryParse(map['sale_date'].toString()),
     salePrice: (map['sale_price'] as num?)?.toDouble(),
     saleWalletId: (map['sale_wallet_id'] as num?)?.toInt(),
+    saleWalletAmount: (map['sale_wallet_amount'] as num?)?.toDouble(),
+    saleWalletCurrency: (map['sale_wallet_currency'] ?? map['currency'] ?? 'PKR').toString().toUpperCase(),
+    saleExchangeRate: (map['sale_exchange_rate'] as num?)?.toDouble() ?? 1.0,
+    saleIsManualRate: (map['sale_is_manual_rate'] as num?)?.toInt() == 1,
     salePaymentType: (map['sale_payment_type'] ?? 'Wallet').toString(),
     salePartyId: (map['sale_party_id'] as num?)?.toInt(),
     saleLinkedLoanId: (map['sale_linked_loan_id'] as num?)?.toInt(),
@@ -67,6 +76,8 @@ class AssetsModel {
     'linked_loan_id': linkedLoanId, 'notes': notes,
     'is_sold': isSold ? 1 : 0, 'include_in_consolidated_balance': includeInConsolidatedBalance ? 1 : 0, 'sale_date': saleDate?.toIso8601String(),
     'sale_price': salePrice, 'sale_wallet_id': saleWalletId,
+    'sale_wallet_amount': saleWalletAmount, 'sale_wallet_currency': saleWalletCurrency.toUpperCase(),
+    'sale_exchange_rate': saleExchangeRate, 'sale_is_manual_rate': saleIsManualRate ? 1 : 0,
     'sale_payment_type': salePaymentType, 'sale_party_id': salePartyId,
     'sale_linked_loan_id': saleLinkedLoanId, 'created_at': createdAt?.toIso8601String(),
   };
@@ -77,6 +88,7 @@ class AssetsModel {
     String? paymentType, int? partyId, String? currency, int? linkedLoanId,
     String? notes, bool? isSold, bool? includeInConsolidatedBalance, Object? saleDate = _unset,
     Object? salePrice = _unset, Object? saleWalletId = _unset,
+    Object? saleWalletAmount = _unset, String? saleWalletCurrency, double? saleExchangeRate, bool? saleIsManualRate,
     String? salePaymentType, Object? salePartyId = _unset,
     Object? saleLinkedLoanId = _unset, Object? createdAt = _unset,
   }) => AssetsModel(
@@ -92,6 +104,10 @@ class AssetsModel {
     saleDate: identical(saleDate, _unset) ? this.saleDate : saleDate as DateTime?,
     salePrice: identical(salePrice, _unset) ? this.salePrice : salePrice as double?,
     saleWalletId: identical(saleWalletId, _unset) ? this.saleWalletId : saleWalletId as int?,
+    saleWalletAmount: identical(saleWalletAmount, _unset) ? this.saleWalletAmount : saleWalletAmount as double?,
+    saleWalletCurrency: saleWalletCurrency ?? this.saleWalletCurrency,
+    saleExchangeRate: saleExchangeRate ?? this.saleExchangeRate,
+    saleIsManualRate: saleIsManualRate ?? this.saleIsManualRate,
     salePaymentType: salePaymentType ?? this.salePaymentType,
     salePartyId: identical(salePartyId, _unset) ? this.salePartyId : salePartyId as int?,
     saleLinkedLoanId: identical(saleLinkedLoanId, _unset) ? this.saleLinkedLoanId : saleLinkedLoanId as int?,

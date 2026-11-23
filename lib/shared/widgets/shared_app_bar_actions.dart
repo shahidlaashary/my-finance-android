@@ -29,7 +29,7 @@ List<Widget> buildSharedAppBarActions(BuildContext context) {
         context,
         MaterialPageRoute(builder: (_) => const ModulesToolsPage()),
       ),
-      icon: const Icon(Icons.join_inner_rounded),
+      icon: const _CombineIcon(),
     ),
   ];
 }
@@ -249,7 +249,83 @@ List<Widget> buildMainSectionAppBarActions(BuildContext context) {
     IconButton(
       tooltip: 'Modules & Tools',
       onPressed: () => Navigator.pushNamed(context, '/modules-tools'),
-      icon: const Icon(Icons.join_inner_rounded),
+      icon: const _CombineIcon(),
     ),
   ];
+}
+
+
+/// Lucide-style Combine icon used for the Modules & Tools action.
+class _CombineIcon extends StatelessWidget {
+  const _CombineIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = IconTheme.of(context).color ??
+        Theme.of(context).colorScheme.onSurface;
+    return CustomPaint(
+      size: const Size(24, 24),
+      painter: _CombineIconPainter(color),
+    );
+  }
+}
+
+class _CombineIconPainter extends CustomPainter {
+  const _CombineIconPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 24, size.height / 24);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final topRightOne = Path()
+      ..moveTo(14, 3)
+      ..cubicTo(14.552, 3, 15, 3.448, 15, 4)
+      ..lineTo(15, 9)
+      ..cubicTo(15, 9.552, 14.552, 10, 14, 10);
+    final topRightTwo = Path()
+      ..moveTo(19, 3)
+      ..cubicTo(19.552, 3, 20, 3.448, 20, 4)
+      ..lineTo(20, 9)
+      ..cubicTo(20, 9.552, 19.552, 10, 19, 10);
+    final lowerLeft = Path()
+      ..moveTo(7, 15)
+      ..lineTo(10, 18)
+      ..moveTo(7, 21)
+      ..lineTo(10, 18)
+      ..lineTo(5, 18)
+      ..cubicTo(3.895, 18, 3, 17.105, 3, 16)
+      ..lineTo(3, 14);
+
+    canvas.drawPath(topRightOne, paint);
+    canvas.drawPath(topRightTwo, paint);
+    canvas.drawPath(lowerLeft, paint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(14, 14, 7, 7),
+        const Radius.circular(1),
+      ),
+      paint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(3, 3, 7, 7),
+        const Radius.circular(1),
+      ),
+      paint,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _CombineIconPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

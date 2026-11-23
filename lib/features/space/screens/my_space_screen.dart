@@ -10,7 +10,7 @@ import 'package:my_finance/features/space/screens/space_epub_reader_screen.dart'
 import 'package:my_finance/features/space/screens/space_tools_screen.dart';
 import 'package:my_finance/features/space/screens/space_video_player_screen.dart';
 import 'package:my_finance/features/space/screens/space_documents_screen.dart';
-import 'package:my_finance/features/space/screens/space_records_screen.dart';
+import 'package:my_finance/features/space/screens/work_records_screen.dart';
 import 'package:my_finance/features/space/screens/space_work_screen.dart';
 import 'package:my_finance/features/space/screens/youtube_explore_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
@@ -52,15 +52,15 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     _videosItems = _space.getItems(fileType: 'videos');
   }
 
-  Future<void> _openRecordForm(String section) async {
+  Future<void> _openWorkRecordForm(String section) async {
     if (!mounted) return;
     setState(() => _selectedTabIndex = 7);
-    _workKey.currentState?.showSection(section);
+    _workKey.currentState?.showWorkSection(section);
     await Navigator.push(context, MaterialPageRoute(
-      builder: (_) => SpaceRecordFormScreen(section: section),
+      builder: (_) => WorkRecordFormScreen(section: section),
     ));
     if (!mounted) return;
-    _workKey.currentState?.refresh(section);
+    _workKey.currentState?.refreshWorkRecords(section);
   }
 
   Future<void> _openSpaceSearch() async {
@@ -288,7 +288,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               children: [
                 _navItem(0, books_space_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
-                _navItem(2, Icons.handshake_outlined, 'Deals'),
+                _navItem(2, Icons.handshake_outlined, 'Agreements'),
                 _navItem(3, Icons.description_outlined, 'Docs'),
                 Expanded(
                   child: PopupMenuButton<String>(
@@ -305,10 +305,10 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     onSelected: (type) {
                       if (type == 'document') {
                         _documentsKey.currentState?.showAddDocumentForm();
-                      } else if (type == 'deal') {
-                        _openRecordForm('deals');
+                      } else if (type == 'agreement') {
+                        _openWorkRecordForm('agreements');
                       } else if (type == 'project') {
-                        _openRecordForm('projects');
+                        _openWorkRecordForm('projects');
                       } else {
                         _addFile(mediaType: type);
                       }
@@ -325,7 +325,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     ),
                     itemBuilder: (_) => [
                       _addMenuItem('book', Icons.menu_book_outlined, 'Add Book'),
-                      _addMenuItem('deal', Icons.handshake_outlined, 'Add Deal'),
+                      _addMenuItem('agreement', Icons.handshake_outlined, 'Add Agreement'),
                       _addMenuItem('audio', Icons.music_note_outlined, 'Add Music'),
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photos', Icons.photo_outlined, 'Add Photo'),
@@ -346,7 +346,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
       body: IndexedStack(
         index: _selectedTabIndex,
         children: [
-          _buildItems(_allItems, 'Your space is empty', 'Add books, deals, docs, music, photos, videos and projects.'),
+          _buildItems(_allItems, 'Your space is empty', 'Add books, agreements, docs, music, photos, videos and projects.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your space.'),
           const SizedBox.shrink(),
           SpaceDocumentsScreen(key: _documentsKey),
@@ -428,7 +428,7 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
   int _request = 0;
   static const _types = <String, String>{
     'All': 'All', 'book': 'Books', 'document': 'Docs', 'audio': 'Music',
-    'photos': 'Photos', 'videos': 'Videos', 'deals': 'Deals', 'projects': 'Projects',
+    'photos': 'Photos', 'videos': 'Videos', 'agreements': 'Agreements', 'projects': 'Projects',
   };
   static const _categories = [
     'All', 'Personal', 'Vehicle', 'Education', 'Property',
@@ -487,9 +487,9 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
           if (_containsAllTerms(searchable, q)) results.add(_SpaceSearchResult.document(document));
         }
       }
-      for (final section in ['deals', 'projects']) {
+      for (final section in ['agreements', 'projects']) {
         if (_type != 'All' && _type != section) continue;
-        final records = await widget.space.getSectionRecords(section);
+        final records = await widget.space.getWorkRecords(section);
         for (final record in records) {
           final searchable = [
             record['title'], record['category'], record['party_one'], record['party_two'],
@@ -572,15 +572,15 @@ class _SpaceSearchScreenState extends State<_SpaceSearchScreen> {
     }
     if (result.section != null) {
       final record = result.record!;
-      final isDeal = result.section == 'deals';
+      final isAgreement = result.section == 'agreements';
       final detail = [
         record['category'], record['status'],
-        if (isDeal) record['party_one'], if (isDeal) record['party_two'],
+        if (isAgreement) record['party_one'], if (isAgreement) record['party_two'],
       ].whereType<Object>().where((v) => v.toString().trim().isNotEmpty).join(' • ');
       return ListTile(
-        leading: CircleAvatar(child: Icon(isDeal ? Icons.handshake_outlined : Icons.work_outline_rounded)),
+        leading: CircleAvatar(child: Icon(isAgreement ? Icons.handshake_outlined : Icons.work_outline_rounded)),
         title: Text(record['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text((isDeal ? 'Deal' : 'Project') + (detail.isEmpty ? '' : ' • ' + detail),
+        subtitle: Text((isAgreement ? 'Agreement' : 'Project') + (detail.isEmpty ? '' : ' • ' + detail),
             maxLines: 2, overflow: TextOverflow.ellipsis),
         onTap: () {
           Navigator.pop(context);

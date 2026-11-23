@@ -618,6 +618,8 @@ class LoansService {
       if (!appliedRate.isFinite || appliedRate <= 0) {
         throw Exception('Manual exchange rate must be greater than zero.');
       }
+    } else if (loanCurrency.trim().toUpperCase() == walletCurrency) {
+      appliedRate = 1.0;
     } else {
       final loanRate = await _getCurrencyRate(txn, loanCurrency);
       final walletRate = await _getCurrencyRate(txn, walletCurrency);

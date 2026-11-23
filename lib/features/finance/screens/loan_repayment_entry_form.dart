@@ -68,6 +68,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
       final rate = double.tryParse(_manualRate.text.trim());
       return rate == null || !rate.isFinite || rate <= 0 ? null : amount * rate;
     }
+    if (_loan.currency.toUpperCase() == _walletCurrency) return amount;
     if (_loanRate == null || _walletRate == null || _walletRate! <= 0) return null;
     return amount * _loanRate! / _walletRate!;
   }
@@ -124,7 +125,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
         loanId: _loan.id!, amount: amount, walletId: _walletId!,
         repaymentDate: DateFormat('yyyy-MM-dd').format(_date),
         walletCurrency: _walletCurrency, walletAmount: convertedAmount,
-        exchangeRate: _useManualRate ? double.parse(_manualRate.text.trim()) : (_loanRate! / _walletRate!),
+        exchangeRate: _useManualRate ? double.parse(_manualRate.text.trim()) : (_loan.currency.toUpperCase() == _walletCurrency ? 1.0 : (_loanRate! / _walletRate!)),
         isManualRate: _useManualRate,
         paymentMethod: 'cash', notes: _notes.text.trim(),
         createdAt: widget.existingRepayment?.createdAt ?? DateTime.now().toIso8601String(),

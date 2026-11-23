@@ -59,15 +59,22 @@ class RecycleBinService {
       if (table == 'loan_repayments') {
         final loanId = (record['loan_id'] as num).toInt();
         final amount = (record['amount'] as num).toDouble();
+        final walletAmount = (record['wallet_amount'] as num?)?.toDouble() ?? amount;
         final walletId = (record['wallet_id'] as num).toInt();
         final loans = await txn.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
         if (loans.isEmpty) throw Exception('Restore the related loan first.');
-        final wallet = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+        final wallet = await txn.query('wallets', columns: ['id', 'balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
         if (wallet.isEmpty) throw Exception('The repayment wallet no longer exists.');
         final loan = loans.first;
         final remaining = (loan['remaining_amount'] as num).toDouble();
         if (remaining + 0.000001 < amount) throw Exception('Loan balance is not sufficient to restore this repayment.');
-        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [amount, walletId]);
+        final isGiven = (loan['loan_type']?.toString() ?? 'given') == 'given';
+        final walletDelta = isGiven ? walletAmount : -walletAmount;
+        final walletBalance = (wallet.first['balance'] as num).toDouble();
+        if (walletDelta < 0 && walletBalance + 0.000001 < walletAmount) {
+          throw Exception('Insufficient wallet balance to restore this repayment.');
+        }
+        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [walletDelta, walletId]);
         final next = (remaining - amount).clamp(0.0, (loan['amount'] as num).toDouble()).toDouble();
         await txn.update('loans', {'remaining_amount':next,'status':next <= 0 ? 'paid' : 'active'}, where: 'id = ?', whereArgs: [loanId]);
         await txn.insert('loan_repayments', record);

@@ -163,6 +163,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
       if (_payment == 'Loan') ...[
+        const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           value: _partyId?.toString(),
           isExpanded: true,

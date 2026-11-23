@@ -536,24 +536,13 @@ class LoansService {
       final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [partyId], limit: 1);
       if (parties.isEmpty) throw Exception('Selected party was not found.');
       final currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
-      final wallets = await txn.query(
-        'wallets',
-        columns: ['id'],
-        where: 'UPPER(TRIM(COALESCE(currency, \'PKR\'))) = ?',
-        whereArgs: [currency],
-        orderBy: 'id ASC',
-        limit: 1,
-      );
-      if (wallets.isEmpty) {
-        throw Exception('Create a $currency wallet first. A matching-currency wallet is required for future repayments.');
-      }
-      final walletId = (wallets.first['id'] as num).toInt();
       return txn.insert('loans', {
         'party_id': partyId,
         'loan_type': loanType,
         'amount': amount,
         'remaining_amount': amount,
-        'wallet_id': walletId,
+        // Asset-linked loans do not require a wallet until a repayment is recorded.
+        'wallet_id': 0,
         'currency': currency,
         'source_type': sourceType,
         'source_id': sourceId,
@@ -586,11 +575,9 @@ class LoansService {
       final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [partyId], limit: 1);
       if (parties.isEmpty) throw Exception('Selected party was not found.');
       final currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
-      final wallets = await txn.query('wallets', columns: ['id'], where: 'UPPER(TRIM(COALESCE(currency, \'PKR\'))) = ?', whereArgs: [currency], limit: 1);
-      if (wallets.isEmpty) throw Exception('Create a $currency wallet first for future repayments.');
       await txn.update('loans', {
         'party_id': partyId, 'loan_type': loanType, 'amount': amount,
-        'remaining_amount': amount, 'wallet_id': wallets.first['id'],
+        'remaining_amount': amount, 'wallet_id': 0,
         'currency': currency, 'lending_date': lendingDate,
         'notes': notes, 'status': 'active',
       }, where: 'id = ?', whereArgs: [loanId]);
@@ -767,8 +754,8 @@ class LoansService {
         loans.loan_type AS loan_type,
         COALESCE(SUM(loans.remaining_amount), 0) AS total
       FROM loans
-      INNER JOIN wallets
-        ON wallets.id = loans.wallet_id
+      LEFT JOIN wallets
+        ON wallets.id = loans.wallet_id AND loans.wallet_id > 0
       WHERE loans.remaining_amount > 0
       GROUP BY UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))), loans.loan_type
       ORDER BY currency ASC, loans.loan_type ASC

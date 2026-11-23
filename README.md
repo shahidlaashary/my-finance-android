@@ -132,11 +132,10 @@ My Space is the app's personal file and record area. Its internal sections are:
 
 - **All** — combined view of supported My Space items.
 - **Books** — PDF and EPUB books with in-app reading screens.
-- **Deals** — structured deal/agreement records.
 - **Docs** — document records and related files.
 - **Music** — audio files with an in-app audio player.
 - **Photo** — image files with an in-app image viewer.
-- **Projects** — structured project records.
+- **Work** — combined workspace with separate **Projects** and **Deals** sections. Projects retain their project records; Deals retain agreement records, parties, dates, terms and attachments.
 - **Video** — video files with an in-app video player.
 
 Additional My Space capabilities include:

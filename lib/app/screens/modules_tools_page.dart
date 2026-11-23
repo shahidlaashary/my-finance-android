@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/core/theme/app_colors.dart';
-import 'package:my_finance/app/screens/more_features_screen.dart' show AppSettingsScreen;
+import 'package:my_finance/app/screens/app_settings_screen.dart' show AppSettingsScreen;
 import 'package:my_finance/features/space/screens/my_space_screen.dart';
 import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';

@@ -23,7 +23,6 @@ class AttachmentOwnerTypes {
   static const String party = 'party';
   static const String recurring = 'recurring';
   static const String agreement = 'agreement';
-  static const String project = 'work_project';
 
   static const List<String> all = [
     transaction,
@@ -38,7 +37,6 @@ class AttachmentOwnerTypes {
     party,
     recurring,
     agreement,
-    project,
   ];
 }
 

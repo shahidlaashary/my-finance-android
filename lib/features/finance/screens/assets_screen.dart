@@ -1404,6 +1404,9 @@ class AssetDetailsScreen extends StatelessWidget {
         'title': 'Loan Repayment',
         'subtitle': '${_walletName(payment.walletId)} • ${payment.notes.isEmpty ? 'Payment to ${_partyName(purchaseLoan?.partyId)}' : payment.notes}',
         'amount': payment.amount,
+        'wallet_amount': payment.walletAmount,
+        'wallet_currency': payment.walletCurrency,
+        'exchange_rate': payment.exchangeRate,
         'type': 'debit',
         'icon': Icons.payments_outlined,
       }),
@@ -1412,6 +1415,9 @@ class AssetDetailsScreen extends StatelessWidget {
         'title': 'Payment Received',
         'subtitle': '${_walletName(payment.walletId)} • ${payment.notes.isEmpty ? 'Received from ${_partyName(saleLoan?.partyId)}' : payment.notes}',
         'amount': payment.amount,
+        'wallet_amount': payment.walletAmount,
+        'wallet_currency': payment.walletCurrency,
+        'exchange_rate': payment.exchangeRate,
         'type': 'credit',
         'icon': Icons.call_received_rounded,
       }),
@@ -1528,10 +1534,30 @@ class AssetDetailsScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                   ])),
                   const SizedBox(width: 8),
-                  Text('${isCredit ? '+' : '−'}$currency ${_money(amount)}',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
-                      color: isCredit ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.tertiary)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('${isCredit ? '+' : '−'}$currency ${_money(amount)}',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
+                          color: isCredit ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.tertiary)),
+                      if (event['wallet_amount'] is num &&
+                          (event['wallet_currency']?.toString().toUpperCase() ?? currency) != currency) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '${event['wallet_currency']} ${_money((event['wallet_amount'] as num).toDouble())}',
+                          textAlign: TextAlign.end,
+                          style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
+                        ),
+                        if (event['exchange_rate'] is num && (event['exchange_rate'] as num).toDouble() > 0)
+                          Text(
+                            'Rate: 1 $currency = ${event['wallet_currency']} ${((event['exchange_rate'] as num).toDouble()).toStringAsFixed(4)}',
+                            textAlign: TextAlign.end,
+                            style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor),
+                          ),
+                      ],
+                    ],
+                  ),
                 ]),
               );
             }),

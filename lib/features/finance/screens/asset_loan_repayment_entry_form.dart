@@ -42,7 +42,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
       _walletId = existing.walletId;
       _date = DateTime.tryParse(existing.repaymentDate) ?? DateTime.now();
       _useManualRate = existing.isManualRate;
-      if (existing.isManualRate && existing.exchangeRate > 0) _manualRate.text = (1.0 / existing.exchangeRate).toString();
+      if (existing.isManualRate && existing.walletAmount > 0) _manualRate.text = existing.walletAmount.toString();
     }
     _loadWallets();
   }
@@ -65,7 +65,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
     if (amount == null || amount <= 0) return null;
     if (_useManualRate) {
       final rate = double.tryParse(_manualRate.text.trim());
-      return rate == null || !rate.isFinite || rate <= 0 ? null : amount / rate;
+      return rate == null || !rate.isFinite || rate <= 0 ? null : rate;
     }
     if (_loan.currency.toUpperCase() == _walletCurrency) return amount;
     if (_loanRate == null || _walletRate == null || _walletRate! <= 0) return null;
@@ -139,7 +139,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
     if (amount > allowedOutstanding + 0.000001) { _message('Amount exceeds outstanding balance.'); return; }
     if (_walletId == null) { _message('Please select a wallet.'); return; }
     final convertedAmount = _convertedAmount;
-    if (convertedAmount == null) { _message(_useManualRate ? 'Enter a valid manual exchange rate.' : 'Exchange rate is unavailable for the selected currencies.'); return; }
+    if (convertedAmount == null) { _message(_useManualRate ? 'Enter a valid wallet amount to deduct.' : 'Exchange rate is unavailable for the selected currencies.'); return; }
     setState(() => _saving = true);
     try {
       final repayment = RepaymentModel(
@@ -147,7 +147,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
         loanId: _loan.id!, amount: amount, walletId: _walletId!,
         repaymentDate: DateFormat('yyyy-MM-dd').format(_date),
         walletCurrency: _walletCurrency, walletAmount: convertedAmount,
-        exchangeRate: _useManualRate ? (1.0 / double.parse(_manualRate.text.trim())) : (_loan.currency.toUpperCase() == _walletCurrency ? 1.0 : (_loanRate! / _walletRate!)),
+        exchangeRate: _useManualRate ? (convertedAmount / amount) : (_loan.currency.toUpperCase() == _walletCurrency ? 1.0 : (_loanRate! / _walletRate!)),
         isManualRate: _useManualRate,
         paymentMethod: 'cash', notes: _notes.text.trim(),
         createdAt: widget.existingRepayment?.createdAt ?? DateTime.now().toIso8601String(),
@@ -188,13 +188,12 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
         TextFormField(controller: _amount, autofocus: true, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Repayment Amount *'), onChanged: (_) => setState(() {}), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
         const SizedBox(height: 12),
         DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: InputDecoration(labelText: isGiven ? 'Receiving Wallet *' : 'Paying Wallet *'), items: _wallets.map((w) => DropdownMenuItem<int>(value: (w['id'] as num).toInt(), child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(), onChanged: (v) async { setState(() => _walletId = v); await _loadRates(); setState(() {}); }),
-        SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Use Manual Rate'), subtitle: const Text('Override the app exchange rate for this repayment'), value: _useManualRate, onChanged: (v) => setState(() => _useManualRate = v)),
+        SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Manual Wallet Amount'), subtitle: const Text('Enter the exact amount to deduct from the selected wallet'), value: _useManualRate, onChanged: (v) => setState(() => _useManualRate = v)),
         if (_useManualRate)
-          TextFormField(controller: _manualRate, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: '1 $_walletCurrency = ? ${_loan.currency.toUpperCase()}', hintText: 'Enter loan currency per 1 wallet currency', suffixText: _loan.currency.toUpperCase()), onChanged: (_) => setState(() {}), validator: (v) { if (!_useManualRate) return null; final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid rate.' : null; }),
+          TextFormField(controller: _manualRate, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: 'Wallet Amount to Deduct ($_walletCurrency)', hintText: 'Enter wallet amount', suffixText: _walletCurrency), onChanged: (_) => setState(() {}), validator: (v) { if (!_useManualRate) return null; final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid rate.' : null; }),
         if (!_useManualRate && (_loanRate == null || _walletRate == null))
           const Align(alignment: Alignment.centerLeft, child: Text('Exchange rate unavailable. Set the required currency rates or use a manual rate.', style: TextStyle(color: Colors.red, fontSize: 12))),
-        if (_useManualRate && _loan.currency.toUpperCase() != _walletCurrency && _loanRate != null && _walletRate != null && _loanRate! > 0)
-          Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.only(top: 4), child: Text('Automatic reference: 1 $_walletCurrency = ${(_walletRate! / _loanRate!).toStringAsFixed(6)} ${_loan.currency.toUpperCase()}', style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)))),
+        
         if (_convertedAmount != null)
           Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.only(top: 6), child: Text('Wallet ${isGiven ? 'credit' : 'deduction'}: $_walletCurrency ${_convertedAmount!.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w700)))),
 

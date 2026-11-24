@@ -35,7 +35,7 @@ class AgreementPdfService {
 
   Future<Uint8List> build(Map<String, Object?> data) async {
     final document = pw.Document();
-    final title = _value(data, 'template_title_snapshot', 'Music Rights Agreement');
+    final title = _value(data, 'title', _value(data, 'template_title_snapshot', 'Music Rights Agreement'));
     final clauses = renderClauses(data);
     final tracks = _value(data, 'track_details');
     final trackRows = tracks.split('\n').map((line) => line.trim())
@@ -94,7 +94,7 @@ class AgreementPdfService {
         pw.Text('Terms and Conditions', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
         pw.SizedBox(height: 8),
         ...clauseParts.asMap().entries.expand((part) => <pw.Widget>[
-          ...part.value.split(RegExp(r'(?=\\d+\\.\\s)')).where((s) => s.trim().isNotEmpty).map((clause) =>
+          ...part.value.split(RegExp(r'(?=\d+\.\s)')).where((s) => s.trim().isNotEmpty).map((clause) =>
             pw.Padding(padding: const pw.EdgeInsets.only(bottom: 9),
               child: pw.Text(clause.trim(), textAlign: pw.TextAlign.justify,
                 style: const pw.TextStyle(fontSize: 10.5, lineSpacing: 3)))),

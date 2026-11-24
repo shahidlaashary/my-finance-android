@@ -536,20 +536,6 @@ class AssetsService {
           'loan': loanRecord,
           'repayments': repaymentRows,
         });
-        final partyId = (loanRecord['party_id'] as num?)?.toInt();
-        final partyRows = partyId == null
-            ? <Map<String, Object?>>[]
-            : await txn.query(
-                'loan_parties',
-                columns: ['name'],
-                where: 'id = ?',
-                whereArgs: [partyId],
-                limit: 1,
-              );
-        final title = partyRows.isEmpty
-            ? 'Asset Loan'
-            : (partyRows.first['name']?.toString() ?? 'Asset Loan');
-
         // Linked loans are stored inside the parent Asset archive payload.
 
         final loanType = (loanRecord['loan_type']?.toString() ?? 'given').toLowerCase();

@@ -73,6 +73,25 @@ class RecycleBinService {
       final item = rows.first;
       final table = item['source_table'].toString();
       final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
+      if (table == 'loan_parties') {
+        final partyId = (record['id'] as num?)?.toInt();
+        if (partyId == null || partyId <= 0) {
+          throw Exception('The archived Loan Party has an invalid ID.');
+        }
+        final existing = await txn.query(
+          'loan_parties',
+          columns: ['id'],
+          where: 'id = ?',
+          whereArgs: [partyId],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) {
+          throw Exception('This Loan Party already exists.');
+        }
+        await txn.insert('loan_parties', record);
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
       if (table == 'loan_repayments') {
         final loanId = (record['loan_id'] as num).toInt();
         final amount = (record['amount'] as num).toDouble();

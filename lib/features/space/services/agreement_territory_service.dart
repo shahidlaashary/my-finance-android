@@ -59,6 +59,7 @@ class AgreementTerritoryService {
   static String normalizeForPdf(Iterable<String> values) {
     final selected = values.map((v) => v.trim()).where((v) => v.isNotEmpty).toSet();
     if (selected.contains('Worldwide') || selected.isEmpty) return 'Worldwide';
-    return selected.toList()..sort();
+    final names = selected.toList()..sort();
+    return names.join(', ');
   }
 }

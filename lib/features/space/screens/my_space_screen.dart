@@ -264,6 +264,10 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
     );
   }
 
+  Future<void> _openManagement() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const ManagementScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -274,7 +278,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           IconButton(
             tooltip: 'Manage companies, labels, artists, templates and My Space trash',
             icon: const Icon(Icons.manage_accounts_outlined),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MySpaceManagementScreen())),
+            onPressed: _openManagement,
           ),
           IconButton(tooltip: 'Explore videos', icon: const Icon(Icons.ondemand_video_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const YouTubeExploreScreen()))),
           IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const SpaceToolsScreen())); if (mounted) setState(_refresh); }),

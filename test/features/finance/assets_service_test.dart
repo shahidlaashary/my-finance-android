@@ -415,6 +415,51 @@ void main() {
   });
 
 
+
+  test('reducing Loan Taken amount is blocked if wallet cannot reverse the credit', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Loan Taken Amount Edit Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'taken',
+        amount: 500,
+        remainingAmount: 500,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'balance': 100},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      LoansService.updateLoanDetails(
+        loanId: loanId,
+        amount: 300,
+        lendingDate: '2026-11-20',
+        dueDate: null,
+        notes: 'Updated amount',
+      ),
+      throwsA(isA<Exception>()),
+    );
+
+    final savedLoan = await LoansService.getLoanById(loanId);
+    final wallet = await FinanceDB.instance.getWallet(walletId);
+    expect(savedLoan, isNotNull);
+    expect(savedLoan!.amount, 500);
+    expect(savedLoan.remainingAmount, 500);
+    expect((wallet!['balance'] as num).toDouble(), 100);
+  });
+
   test('restoring a Loan Given with same-wallet repayments validates the net balance', () async {
     final walletId = await createWallet(1000);
     final partyId = await LoansService.addParty(

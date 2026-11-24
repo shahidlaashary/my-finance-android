@@ -269,6 +269,15 @@ class RecycleBinService {
           sale_date TEXT, sale_price REAL, sale_wallet_id INTEGER, created_at TEXT NOT NULL)''');
         final isLoanPurchase =
             (record['payment_type']?.toString().toLowerCase() ?? 'wallet') == 'loan';
+        final isLoanSale = (record['is_sold'] as num?)?.toInt() == 1 &&
+            (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') == 'loan';
+        final assetId = (record['id'] as num).toInt();
+        final purchaseLoanId = (record['linked_loan_id'] as num?)?.toInt();
+        final saleLoanId = (record['sale_linked_loan_id'] as num?)?.toInt();
+        if (isLoanPurchase != (purchaseLoanId != null) ||
+            isLoanSale != (saleLoanId != null)) {
+          throw Exception('The archived Asset has missing or inconsistent linked loan references.');
+        }
         final walletId = (record['wallet_id'] as num?)?.toInt() ?? 0;
         if (!isLoanPurchase) {
           final purchase = (record['purchase_price'] as num).toDouble();
@@ -301,18 +310,39 @@ class RecycleBinService {
         // from the asset's grouped snapshot. Their base wallet effect is not
         // replayed because asset-linked loans never move a wallet on creation.
         final linkedRaw = item['related_payload']?.toString();
-        if (linkedRaw != null && linkedRaw.isNotEmpty) {
-          final linkedSnapshots = (jsonDecode(linkedRaw) as List)
-              .whereType<Map>()
-              .map((entry) => Map<String, dynamic>.from(entry))
-              .toList();
-          for (final snapshot in linkedSnapshots) {
+        final linkedSnapshots = linkedRaw == null || linkedRaw.isEmpty
+            ? <Map<String, dynamic>>[]
+            : (jsonDecode(linkedRaw) as List)
+                .whereType<Map>()
+                .map((entry) => Map<String, dynamic>.from(entry))
+                .toList();
+        final restoredLoanIds = <int>{};
+        for (final snapshot in linkedSnapshots) {
             final loan = Map<String, dynamic>.from(snapshot['loan'] as Map);
             final repayments = (snapshot['repayments'] as List? ?? const [])
                 .whereType<Map>()
                 .map((entry) => Map<String, dynamic>.from(entry))
                 .toList();
             final loanId = (loan['id'] as num).toInt();
+            final sourceType = loan['source_type']?.toString();
+            final isPurchaseLoan = loanId == purchaseLoanId;
+            final expectedSource = isPurchaseLoan ? 'asset_purchase' : 'asset_sale';
+            final expectedType = isPurchaseLoan ? 'taken' : 'given';
+            final loanAmount = (loan['amount'] as num).toDouble();
+            final loanRemaining = (loan['remaining_amount'] as num).toDouble();
+            if (!restoredLoanIds.add(loanId) ||
+                (loanId != purchaseLoanId && loanId != saleLoanId) ||
+                sourceType != expectedSource ||
+                (loan['source_id'] as num?)?.toInt() != assetId ||
+                loan['loan_type']?.toString().toLowerCase() != expectedType ||
+                (loan['wallet_id'] as num?)?.toInt() != 0 ||
+                !loanAmount.isFinite ||
+                loanAmount <= 0 ||
+                !loanRemaining.isFinite ||
+                loanRemaining < 0 ||
+                loanRemaining > loanAmount + 0.000001) {
+              throw Exception('The archived linked loan does not match this Asset.');
+            }
             final alreadyExists = await txn.query(
               'loans', columns: ['id'], where: 'id = ?', whereArgs: [loanId], limit: 1,
             );
@@ -322,8 +352,17 @@ class RecycleBinService {
             final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
             for (final repayment in repayments) {
               final repaymentWalletId = (repayment['wallet_id'] as num).toInt();
+              final repaymentAmount = (repayment['amount'] as num).toDouble();
               final walletAmount = (repayment['wallet_amount'] as num?)?.toDouble()
-                  ?? (repayment['amount'] as num).toDouble();
+                  ?? repaymentAmount;
+              if ((repayment['loan_id'] as num?)?.toInt() != loanId ||
+                  !repaymentAmount.isFinite ||
+                  repaymentAmount <= 0 ||
+                  !walletAmount.isFinite ||
+                  walletAmount <= 0 ||
+                  repaymentWalletId <= 0) {
+                throw Exception('An archived linked loan repayment contains invalid details.');
+              }
               final wallets = await txn.query(
                 'wallets', columns: ['balance'], where: 'id = ?',
                 whereArgs: [repaymentWalletId], limit: 1,
@@ -351,7 +390,14 @@ class RecycleBinService {
               where: "source_table = 'loans' AND source_id = ?",
               whereArgs: [loanId.toString()],
             );
-          }
+        }
+        final expectedLoanIds = <int>{
+          if (purchaseLoanId != null) purchaseLoanId,
+          if (saleLoanId != null) saleLoanId,
+        };
+        if (restoredLoanIds.length != expectedLoanIds.length ||
+            !restoredLoanIds.containsAll(expectedLoanIds)) {
+          throw Exception('The Asset archive is missing one or more linked loan records.');
         }
         await txn.insert('assets', record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

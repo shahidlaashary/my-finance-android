@@ -219,11 +219,6 @@ class AppTheme {
       popupMenuTheme: PopupMenuThemeData(
         color: p.surface,
         surfaceTintColor: Colors.transparent,
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(13),
-          side: BorderSide(color: p.outline.withOpacity(.8)),
-        ),
         textStyle: TextStyle(color: p.text, fontFamily: fontFamily),
       ),
       drawerTheme: DrawerThemeData(backgroundColor: p.surface),

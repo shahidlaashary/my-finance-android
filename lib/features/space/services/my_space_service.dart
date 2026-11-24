@@ -242,6 +242,7 @@ class MySpaceService {
     for (final row in rows) {
       final id = row['id'] as int;
       final signingDate = DateTime.tryParse(row['signing_date']?.toString() ?? '');
+      final explicitEndDate = DateTime.tryParse(row['end_date']?.toString() ?? '');
       final years = int.tryParse(row['term_years']?.toString() ?? '') ?? 10;
       var status = 'Draft';
       if (row['termination_date']?.toString().trim().isNotEmpty == true ||
@@ -249,7 +250,9 @@ class MySpaceService {
         status = 'Terminated';
       } else if (signingDate != null) {
         final signedDay = DateTime(signingDate.year, signingDate.month, signingDate.day);
-        final expiry = DateTime(signingDate.year + years, signingDate.month, signingDate.day);
+        final expiry = explicitEndDate != null
+            ? DateTime(explicitEndDate.year, explicitEndDate.month, explicitEndDate.day)
+            : DateTime(signingDate.year + years, signingDate.month, signingDate.day);
         if (today.isBefore(signedDay)) {
           status = 'Draft';
         } else if (!today.isBefore(expiry)) {

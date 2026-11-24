@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -100,7 +99,10 @@ class AgreementPdfService {
         pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [
           pw.Expanded(child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
             pw.Text('Name: ${_value(data, 'party_one')}'),
-            pw.SizedBox(height: 25),
+            pw.SizedBox(height: 8),
+            if (_value(data, 'signature_data').isNotEmpty)
+              pw.Image(pw.MemoryImage(base64Decode(_value(data, 'signature_data'))), width: 145, height: 48, fit: pw.BoxFit.contain),
+            pw.SizedBox(height: 8),
             pw.Text('Designation: ${_value(data, 'designation', 'Artist / Producer / Owner')}'),
             pw.SizedBox(height: 28),
             pw.Container(width: 180, height: 1, color: PdfColors.black),

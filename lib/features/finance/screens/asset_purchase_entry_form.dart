@@ -220,6 +220,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
         const SizedBox(width:12),
         Expanded(child:TextFormField(controller: _current, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Current value *'), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter a valid current value.' : null; })),
       ]),
+      const SizedBox(height: 12),
       Row(children: [
         Expanded(
           child: InkWell(
@@ -251,6 +252,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
           ),
         ),
       ]),
+      const SizedBox(height: 12),
       TextFormField(controller: _notes, maxLines: 2, decoration: _dec('Notes (Optional)').copyWith(suffixIcon: IconButton(onPressed: _attachments, icon: const Icon(Icons.attach_file_rounded)))),
       if (_image != null || _pdfs.isNotEmpty) Text('${_image == null ? '' : '1 image, '}${_pdfs.length} PDF(s)', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       const SizedBox(height: 16),

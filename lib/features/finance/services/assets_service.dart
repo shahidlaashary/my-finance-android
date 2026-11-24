@@ -621,9 +621,20 @@ class AssetsService {
           throw Exception('A linked asset loan is missing. Asset deletion was cancelled.');
         }
         final loanRecord = loanRows.first;
+        final expectedAmount = isPurchaseLoan ? asset.purchasePrice : asset.salePrice;
+        final expectedPartyId = isPurchaseLoan ? asset.partyId : asset.salePartyId;
+        final loanAmount = (loanRecord['amount'] as num?)?.toDouble();
         if (loanRecord['source_type'] != expectedSource ||
             (loanRecord['source_id'] as num?)?.toInt() != assetId ||
-            loanRecord['loan_type']?.toString().toLowerCase() != expectedLoanType) {
+            loanRecord['loan_type']?.toString().toLowerCase() != expectedLoanType ||
+            (loanRecord['wallet_id'] as num?)?.toInt() != 0 ||
+            (loanRecord['party_id'] as num?)?.toInt() != expectedPartyId ||
+            loanAmount == null ||
+            !loanAmount.isFinite ||
+            expectedAmount == null ||
+            (loanAmount - expectedAmount).abs() > 0.000001 ||
+            (loanRecord['currency']?.toString() ?? 'PKR').toUpperCase() !=
+                asset.currency.toUpperCase()) {
           throw Exception('The linked asset loan does not match this asset. Asset deletion was cancelled.');
         }
         final repaymentRows = await txn.query(
@@ -687,15 +698,24 @@ class AssetsService {
           asset.salePrice != null &&
           asset.salePaymentType.toLowerCase() != 'loan') {
         final receivingWalletId = asset.saleWalletId ?? asset.walletId;
-        await _getWallet(txn, receivingWalletId);
+        final receivedAmount = asset.saleWalletAmount ?? asset.salePrice!;
+        if (receivingWalletId <= 0 ||
+            !receivedAmount.isFinite ||
+            receivedAmount < 0) {
+          throw Exception('The asset sale wallet details are invalid. Asset deletion was cancelled.');
+        }
         await _changeBalance(
           txn,
           walletId: receivingWalletId,
-          amount: -(asset.saleWalletAmount ?? asset.salePrice!),
+          amount: -receivedAmount,
         );
       }
       if (asset.paymentType.toLowerCase() != 'loan') {
-        await _getWallet(txn, asset.walletId);
+        if (asset.walletId <= 0 ||
+            !asset.purchasePrice.isFinite ||
+            asset.purchasePrice <= 0) {
+          throw Exception('The asset purchase wallet details are invalid. Asset deletion was cancelled.');
+        }
         await _changeBalance(
           txn,
           walletId: asset.walletId,

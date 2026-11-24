@@ -171,7 +171,11 @@ class AssetsService {
         ).toMap()..remove('id');
         final id = await txn.insert('assets', assetMap);
         if (!isLoan) {
-          await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [asset.purchasePrice, assetWalletId]);
+          await _changeBalance(
+            txn,
+            walletId: assetWalletId,
+            amount: -asset.purchasePrice,
+          );
         } else {
           final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
           if (parties.isEmpty) throw Exception('Selected party was not found.');

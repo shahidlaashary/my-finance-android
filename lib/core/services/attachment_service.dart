@@ -154,6 +154,8 @@ class AttachmentService {
   static Future<List<Map<String, dynamic>>> prepareAssetAttachments(
     List<Map<String, String>> sources,
   ) async {
+    if (sources.isEmpty) return const <Map<String, dynamic>>[];
+
     final staged = <Map<String, dynamic>>[];
     try {
       final tempRoot = await getTemporaryDirectory();
@@ -194,6 +196,8 @@ class AttachmentService {
     required List<String> createdPaths,
   }) async {
     if (assetId <= 0) throw ArgumentError('A valid asset ID is required.');
+    if (prepared.isEmpty) return;
+
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final directory = Directory(p.join(
       documentsDirectory.path,

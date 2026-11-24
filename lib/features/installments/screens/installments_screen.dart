@@ -177,6 +177,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
                                   onChanged: (v) { if (v != null) setD(() => walletId = v); },
                                 ),
                                 DropdownButtonFormField<String>(
+                                  isExpanded: true,
                                   value: frequency,
                                   decoration: const InputDecoration(labelText: 'Installment frequency'),
                                   items: ['Weekly', 'Bi-weekly', 'Monthly'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),

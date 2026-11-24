@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_finance/shared/widgets/width_matched_dropdown_form_field.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -377,7 +378,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _walletField() {
-    return DropdownButtonFormField<int>(
+    return WidthMatchedDropdownFormField<int>(
       value: selectedWalletId,
       isExpanded: true,
       decoration: decoration(
@@ -396,7 +397,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _destinationWalletField() {
-    return DropdownButtonFormField<int>(
+    return WidthMatchedDropdownFormField<int>(
       value: selectedDestinationWalletId,
       isExpanded: true,
       decoration: decoration(
@@ -441,7 +442,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _categoryField() {
-    return DropdownButtonFormField<String>(
+    return WidthMatchedDropdownFormField<String>(
       value: transactionCategories.any(
         (category) => category['name'] == selectedCategory,
       ) ? selectedCategory : null,

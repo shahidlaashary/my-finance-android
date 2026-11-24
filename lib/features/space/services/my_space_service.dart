@@ -390,6 +390,28 @@ class MySpaceService {
   Future<void> deleteAgreementCompany(int id) async =>
       (await database).delete('space_agreement_companies', where: 'id = ?', whereArgs: [id]);
 
+  Future<void> terminateAgreement(
+    int id, {
+    required String terminationDate,
+    String reason = '',
+  }) async {
+    final date = terminationDate.trim();
+    if (date.isEmpty) {
+      throw const FormatException('Termination date is required.');
+    }
+    await (await database).update(
+      'space_agreements',
+      {
+        'status': 'Terminated',
+        'termination_date': date,
+        'termination_reason': reason.trim(),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> deleteAgreement(int id) async {
     await (await database).delete('space_agreements', where: 'id = ?', whereArgs: [id]);
   }

@@ -343,6 +343,21 @@ class RecycleBinService {
                 : (record['sale_price'] as num?)?.toDouble();
             final expectedPartyId = (record[
                 isPurchaseLoan ? 'party_id' : 'sale_party_id'] as num?)?.toInt();
+            if (expectedPartyId == null || expectedPartyId <= 0) {
+              throw Exception('The archived Asset is missing its linked party. Restore was cancelled.');
+            }
+            final partyRows = await txn.query(
+              'loan_parties',
+              columns: ['id', 'currency'],
+              where: 'id = ?',
+              whereArgs: [expectedPartyId],
+              limit: 1,
+            );
+            if (partyRows.isEmpty) {
+              throw Exception('Restore the linked party before restoring this Asset.');
+            }
+            final partyCurrency =
+                (partyRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
             final loanAmount = (loan['amount'] as num).toDouble();
             final loanRemaining = (loan['remaining_amount'] as num).toDouble();
             if (!restoredLoanIds.add(loanId) ||
@@ -351,9 +366,9 @@ class RecycleBinService {
                 (loan['source_id'] as num?)?.toInt() != assetId ||
                 loan['loan_type']?.toString().toLowerCase() != expectedType ||
                 (loan['wallet_id'] as num?)?.toInt() != 0 ||
-                expectedPartyId == null ||
-                expectedPartyId <= 0 ||
                 (loan['party_id'] as num?)?.toInt() != expectedPartyId ||
+                partyCurrency !=
+                    (record['currency']?.toString() ?? 'PKR').toUpperCase() ||
                 expectedAmount == null ||
                 (loanAmount - expectedAmount).abs() > 0.000001 ||
                 (loan['currency']?.toString() ?? 'PKR').toUpperCase() !=

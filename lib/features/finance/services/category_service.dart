@@ -16,10 +16,6 @@ class CategoryService {
     throw ArgumentError.value(type, 'type', 'Expected income or expense.');
   }
 
-  static Future<void> closeDatabase() async {
-    // FinanceDB owns the shared connection and is closed by the restore flow.
-  }
-
   static Future<List<FinanceCategory>> getCategories(
     String type, {
     int? parentId,

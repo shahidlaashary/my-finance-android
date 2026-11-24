@@ -399,12 +399,57 @@ class MySpaceService {
     if (date.isEmpty) {
       throw const FormatException('Termination date is required.');
     }
+    if (reason.trim().isEmpty) {
+      throw const FormatException('Termination reason is required.');
+    }
     await (await database).update(
       'space_agreements',
       {
         'status': 'Terminated',
         'termination_date': date,
         'termination_reason': reason.trim(),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> reinstateAgreement(int id) async {
+    final db = await database;
+    final rows = await db.query(
+      'space_agreements',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return;
+    final row = rows.first;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final signingDate = DateTime.tryParse(row['signing_date']?.toString() ?? '');
+    final explicitEndDate = DateTime.tryParse(row['end_date']?.toString() ?? '');
+    final years = int.tryParse(row['term_years']?.toString() ?? '') ?? 10;
+    var status = 'Draft';
+    if (signingDate != null) {
+      final signedDay = DateTime(signingDate.year, signingDate.month, signingDate.day);
+      final expiry = explicitEndDate != null
+          ? DateTime(explicitEndDate.year, explicitEndDate.month, explicitEndDate.day)
+          : DateTime(signingDate.year + years, signingDate.month, signingDate.day);
+      if (today.isBefore(signedDay)) {
+        status = 'Draft';
+      } else if (!today.isBefore(expiry)) {
+        status = 'Expired';
+      } else {
+        status = 'Active';
+      }
+    }
+    await db.update(
+      'space_agreements',
+      {
+        'status': status,
+        'termination_date': '',
+        'termination_reason': '',
         'updated_at': DateTime.now().toIso8601String(),
       },
       where: 'id = ?',

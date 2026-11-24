@@ -243,11 +243,6 @@ class RecycleBinService {
             record['sale_price'] != null &&
             (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') != 'loan') {
           final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
-          final saleExists = await txn.query(
-            'wallets', columns: ['id'], where: 'id = ?',
-            whereArgs: [saleWalletId], limit: 1,
-          );
-          if (saleExists.isEmpty) throw Exception('The asset sale wallet no longer exists.');
           await _applyWalletDelta(
             txn,
             walletId: saleWalletId,

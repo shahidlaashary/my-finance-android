@@ -180,6 +180,8 @@ class MySpaceService {
 
 2. I am the Artist, producer and copyright owner of the content and the track(s) listed in this agreement. The listed material is my own copyrighted material.
 
+{{track_details_table}}
+
 3. No other service provider or party is authorized to sell or offer this content to any platform or claim any rights for the content.
 
 4. I authorize the rights for the track(s) listed below to be distributed and released worldwide.

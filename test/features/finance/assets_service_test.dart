@@ -8,6 +8,7 @@ import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
+import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 void main() {
@@ -28,6 +29,7 @@ void main() {
   });
 
   tearDown(() async {
+    await TransactionsService.closeDatabase();
     await LoansService.closeDatabase();
     await FinanceDB.instance.close();
     if (await databaseDirectory.exists()) {

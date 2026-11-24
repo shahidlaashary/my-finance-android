@@ -150,6 +150,42 @@ void main() {
     expect(updatedLoan!.remainingAmount, 300);
   });
 
+  test('deleting sold asset is blocked if reversing sale would make wallet negative', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Spent Sale Proceeds Asset', price: 400, walletId: walletId),
+      const [],
+    );
+
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: walletId,
+      paymentType: 'Wallet',
+      walletAmount: 500,
+      walletCurrency: 'PKR',
+    );
+
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'balance': 50},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      assets.deleteAsset(assetId),
+      throwsA(isA<Exception>()),
+    );
+
+    final saved = await assets.getAssetById(assetId);
+    final wallet = await FinanceDB.instance.getWallet(walletId);
+    expect(saved, isNotNull);
+    expect(saved!.isSold, isTrue);
+    expect((wallet!['balance'] as num).toDouble(), 50);
+  });
+
   test('restoring asset with deleted linked party requires party restoration first',
       () async {
     final partyId = await LoansService.addParty(

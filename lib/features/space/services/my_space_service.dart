@@ -143,10 +143,56 @@ class MySpaceService {
           end_date TEXT NOT NULL DEFAULT '',
           description TEXT NOT NULL DEFAULT '',
           notes TEXT NOT NULL DEFAULT '',
+          template_id INTEGER,
+          template_title_snapshot TEXT NOT NULL DEFAULT '',
+          template_body_snapshot TEXT NOT NULL DEFAULT '',
+          label_name TEXT NOT NULL DEFAULT '',
+          address TEXT NOT NULL DEFAULT '',
+          territory TEXT NOT NULL DEFAULT 'Worldwide',
+          term_years TEXT NOT NULL DEFAULT '10',
+          track_details TEXT NOT NULL DEFAULT '',
+          designation TEXT NOT NULL DEFAULT '',
+          agreement_date TEXT NOT NULL DEFAULT '',
+          witness_name TEXT NOT NULL DEFAULT '',
+          signature_data TEXT NOT NULL DEFAULT '',
+          stamp_attachment_id INTEGER,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )
       ''');
+    }
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS space_agreement_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        is_default INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    final templateCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM space_agreement_templates')) ?? 0;
+    if (templateCount == 0) {
+      await db.insert('space_agreement_templates', {
+        'title': 'Music Rights Agreement',
+        'body': '''1. This is to certify that I, {{first_party}}, residing at {{address}}, and duly authorized signatory for the content listed in this agreement, authorize {{label_name}} as a Digital Content Partner to distribute and administer the content on national and international platforms for the territories stated below.
+
+2. I am the Artist, producer and copyright owner of the content and the track(s) listed in this agreement. The listed material is my own copyrighted material.
+
+3. No other service provider or party is authorized to sell or offer this content to any platform or claim any rights for the content.
+
+4. I authorize the rights for the track(s) listed below to be distributed and released worldwide.
+
+5. All rights of this content, including Audio/Visual, FM Radio, Cable Network, Television Channel Broadcasting, Publishing, Physical/Digital Formats, Mobile Ring Back Tones (CRBTs) and future formats worldwide, are granted to the Label. No other service provider or party is authorized to sell or offer the content to any platform or claim any rights.
+
+6. I accept that if any rights violations or online disputes are found, I will be responsible for the legal and financial consequences arising from the same.
+
+7. This agreement is valid for {{term_years}} years from the date of signing.''',
+        'is_default': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
     }
   }
 
@@ -167,6 +213,19 @@ class MySpaceService {
       'end_date': (record['end_date'] ?? '').toString().trim(),
       'description': (record['description'] ?? '').toString().trim(),
       'notes': (record['notes'] ?? '').toString().trim(),
+      'template_id': record['template_id'],
+      'template_title_snapshot': (record['template_title_snapshot'] ?? '').toString(),
+      'template_body_snapshot': (record['template_body_snapshot'] ?? '').toString(),
+      'label_name': (record['label_name'] ?? '').toString().trim(),
+      'address': (record['address'] ?? '').toString().trim(),
+      'territory': (record['territory'] ?? 'Worldwide').toString().trim(),
+      'term_years': (record['term_years'] ?? '10').toString().trim(),
+      'track_details': (record['track_details'] ?? '').toString().trim(),
+      'designation': (record['designation'] ?? '').toString().trim(),
+      'agreement_date': (record['agreement_date'] ?? '').toString().trim(),
+      'witness_name': (record['witness_name'] ?? '').toString().trim(),
+      'signature_data': (record['signature_data'] ?? '').toString(),
+      'stamp_attachment_id': record['stamp_attachment_id'],
       'updated_at': now,
     };
     if ((values['title'] as String).isEmpty) {

@@ -718,8 +718,14 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           ]))
         else ...[
         _field(_title, 'Agreement Title', required: true),
-        _field(_partyOne, 'First Party'),
-        _field(_partyTwo, 'Second Party'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(children: [
+            Expanded(child: _field(_partyOne, 'First Party')),
+            const SizedBox(width: 10),
+            Expanded(child: _field(_partyTwo, 'Second Party')),
+          ]),
+        ),
         FutureBuilder<List<Map<String, Object?>>>(
           future: MySpaceService.instance.getAgreementLabels(),
           builder: (context, snapshot) {
@@ -748,29 +754,38 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         _field(_address, 'Address', lines: 2),
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: InkWell(
-            onTap: _selectTerritories,
-            borderRadius: BorderRadius.circular(4),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: 'Territory',
-                border: OutlineInputBorder(),
-                isDense: true,
-                suffixIcon: Icon(Icons.arrow_drop_down),
-              ),
-              child: Text(
-                _territory.text.trim().isEmpty ? 'Worldwide' : _territory.text,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              flex: 3,
+              child: InkWell(
+                onTap: _selectTerritories,
+                borderRadius: BorderRadius.circular(4),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Territory',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    suffixIcon: Icon(Icons.arrow_drop_down),
+                  ),
+                  child: Text(
+                    _territory.text.trim().isEmpty ? 'Worldwide' : _territory.text,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        DropdownButtonFormField<String>(
-          value: selectedTerm,
-          decoration: const InputDecoration(labelText: 'Agreement Term', border: OutlineInputBorder(), isDense: true),
-          items: terms.map((v) => DropdownMenuItem(value: v, child: Text('$v Years'))).toList(),
-          onChanged: (v) => setState(() => _termYears.text = v ?? '10'),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: DropdownButtonFormField<String>(
+                value: selectedTerm,
+                decoration: const InputDecoration(labelText: 'Agreement Term', border: OutlineInputBorder(), isDense: true),
+                items: terms.map((v) => DropdownMenuItem(value: v, child: Text('$v Years'))).toList(),
+                onChanged: (v) => setState(() => _termYears.text = v ?? '10'),
+              ),
+            ),
+          ]),
         ),
         _field(_tracks, 'Track Details (one track per line)', lines: 4),
         DropdownButtonFormField<String>(

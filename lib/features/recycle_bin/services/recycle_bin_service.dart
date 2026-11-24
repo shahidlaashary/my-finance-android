@@ -279,24 +279,23 @@ class RecycleBinService {
           throw Exception('The archived Asset has missing or inconsistent linked loan references.');
         }
         final walletId = (record['wallet_id'] as num?)?.toInt() ?? 0;
+        final walletDeltas = <int, double>{};
+        void addWalletDelta(int id, double delta) {
+          if (id <= 0 || !delta.isFinite) {
+            throw Exception('The archived Asset contains invalid wallet accounting details.');
+          }
+          final next = (walletDeltas[id] ?? 0) + delta;
+          if (!next.isFinite) {
+            throw Exception('The archived Asset wallet balance change is invalid.');
+          }
+          walletDeltas[id] = next;
+        }
         if (!isLoanPurchase) {
           final purchase = (record['purchase_price'] as num).toDouble();
           if (!purchase.isFinite || purchase <= 0 || walletId <= 0) {
             throw Exception('The archived Asset purchase amount or wallet is invalid.');
           }
-          final walletRows = await txn.query(
-            'wallets', columns: ['balance'], where: 'id = ?',
-            whereArgs: [walletId], limit: 1,
-          );
-          if (walletRows.isEmpty) throw Exception('The asset purchase wallet no longer exists.');
-          if ((walletRows.first['balance'] as num).toDouble() < purchase) {
-            throw Exception('Insufficient wallet balance to restore this asset.');
-          }
-          await _applyWalletDelta(
-            txn,
-            walletId: walletId,
-            amount: -purchase,
-          );
+          addWalletDelta(walletId, -purchase);
         }
         if ((record['is_sold'] as num?)?.toInt() == 1 &&
             record['sale_price'] != null &&
@@ -310,11 +309,7 @@ class RecycleBinService {
               saleWalletAmount < 0) {
             throw Exception('The archived Asset sale wallet details are invalid.');
           }
-          await _applyWalletDelta(
-            txn,
-            walletId: saleWalletId,
-            amount: saleWalletAmount,
-          );
+          addWalletDelta(saleWalletId, saleWalletAmount);
         }
         // Restore the linked purchase/sale loans and their repayment history
         // from the asset's grouped snapshot. Their base wallet effect is not
@@ -400,23 +395,8 @@ class RecycleBinService {
                   repaymentWalletId <= 0) {
                 throw Exception('An archived linked loan repayment contains invalid details.');
               }
-              final wallets = await txn.query(
-                'wallets', columns: ['balance'], where: 'id = ?',
-                whereArgs: [repaymentWalletId], limit: 1,
-              );
-              if (wallets.isEmpty) {
-                throw Exception('A linked loan repayment wallet no longer exists.');
-              }
               final delta = loanType == 'given' ? walletAmount : -walletAmount;
-              final balance = (wallets.first['balance'] as num).toDouble();
-              if (delta < 0 && balance + 0.000001 < -delta) {
-                throw Exception('Insufficient wallet balance to restore linked loan repayments.');
-              }
-              await _applyWalletDelta(
-                txn,
-                walletId: repaymentWalletId,
-                amount: delta,
-              );
+              addWalletDelta(repaymentWalletId, delta);
             }
             await txn.insert('loans', loan);
             for (final repayment in repayments) {
@@ -435,6 +415,33 @@ class RecycleBinService {
         if (restoredLoanIds.length != expectedLoanIds.length ||
             !restoredLoanIds.containsAll(expectedLoanIds)) {
           throw Exception('The Asset archive is missing one or more linked loan records.');
+        }
+        // Apply the complete restore as one net wallet movement per wallet.
+        // A sale receipt or repayment may fund the purchase reversal, so
+        // validating each effect in isolation can reject a valid restore.
+        for (final entry in walletDeltas.entries) {
+          final wallets = await txn.query(
+            'wallets',
+            columns: ['balance'],
+            where: 'id = ?',
+            whereArgs: [entry.key],
+            limit: 1,
+          );
+          if (wallets.isEmpty) {
+            throw Exception('A linked Asset wallet no longer exists. Restore the wallet first.');
+          }
+          final balance = (wallets.first['balance'] as num).toDouble();
+          if (!balance.isFinite || balance + entry.value < -0.000001) {
+            throw Exception('Insufficient wallet balance to restore this Asset and its linked loan repayments.');
+          }
+        }
+        for (final entry in walletDeltas.entries) {
+          if (entry.value == 0) continue;
+          await _applyWalletDelta(
+            txn,
+            walletId: entry.key,
+            amount: entry.value,
+          );
         }
         await txn.insert('assets', record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

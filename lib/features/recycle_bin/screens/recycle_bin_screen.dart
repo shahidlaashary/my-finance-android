@@ -9,7 +9,8 @@ import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'dart:convert';
 
 class RecycleBinScreen extends StatefulWidget {
-  const RecycleBinScreen({super.key});
+  const RecycleBinScreen({super.key, this.embeddedInManagement = false});
+  final bool embeddedInManagement;
   @override
   State<RecycleBinScreen> createState() => _RecycleBinScreenState();
 }
@@ -73,7 +74,7 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
   }
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(tr('Recycle Bin'))),
+    appBar: widget.embeddedInManagement ? null : AppBar(title: Text(tr('Recycle Bin'))),
     body: _loading ? const Center(child: CircularProgressIndicator())
       : _items.isEmpty ? Center(child: Padding(padding: const EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.delete_outline_rounded, size: 58, color: Theme.of(context).colorScheme.onSurfaceVariant),

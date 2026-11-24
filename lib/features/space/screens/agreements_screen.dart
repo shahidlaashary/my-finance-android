@@ -86,6 +86,8 @@ class AgreementsScreenState extends State<AgreementsScreen> {
                   await _openForm(row);
                 } else if (value == 'terminate') {
                   await _terminateAgreement(row);
+                } else if (value == 'reinstate') {
+                  await _reinstateAgreement(row);
                 } else if (value == 'delete') {
                   final yes = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
                     title: const Text('Delete agreement?'),
@@ -103,7 +105,16 @@ class AgreementsScreenState extends State<AgreementsScreen> {
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                if (row['status']?.toString() != 'Terminated')
+                if (row['status']?.toString() == 'Terminated')
+                  const PopupMenuItem(
+                    value: 'reinstate',
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.restore_rounded, size: 18),
+                      SizedBox(width: 10),
+                      Text('Reinstate'),
+                    ]),
+                  )
+                else
                   const PopupMenuItem(
                     value: 'terminate',
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -125,7 +136,7 @@ class AgreementsScreenState extends State<AgreementsScreen> {
     final dateController = TextEditingController(
       text: DateTime.now().toIso8601String().split('T').first,
     );
-    final reasonController = TextEditingController();
+    String? selectedReason;
     var saving = false;
     try {
       final result = await showDialog<bool>(
@@ -164,15 +175,25 @@ class AgreementsScreenState extends State<AgreementsScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: reasonController,
-                  minLines: 2,
-                  maxLines: 4,
+                DropdownButtonFormField<String>(
+                  value: selectedReason,
+                  isExpanded: true,
                   decoration: const InputDecoration(
-                    labelText: 'Termination Reason (optional)',
+                    labelText: 'Termination Reason',
                     border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
                   ),
+                  items: const [
+                    'Mutual Agreement',
+                    'Contract Breach',
+                    'Payment Issues',
+                    'Rights Reversion',
+                    'Early Termination',
+                    'Other',
+                  ].map((reason) => DropdownMenuItem(
+                    value: reason,
+                    child: Text(reason),
+                  )).toList(),
+                  onChanged: (value) => setDialogState(() => selectedReason = value),
                 ),
               ]),
             ),
@@ -182,7 +203,7 @@ class AgreementsScreenState extends State<AgreementsScreen> {
                 child: const Text('Cancel'),
               ),
               FilledButton.icon(
-                onPressed: saving || dateController.text.trim().isEmpty
+                onPressed: saving || dateController.text.trim().isEmpty || selectedReason == null
                     ? null
                     : () => Navigator.pop(dialogContext, true),
                 icon: const Icon(Icons.block_outlined),
@@ -196,7 +217,7 @@ class AgreementsScreenState extends State<AgreementsScreen> {
       await MySpaceService.instance.terminateAgreement(
         row['id'] as int,
         terminationDate: dateController.text.trim(),
-        reason: reasonController.text.trim(),
+        reason: selectedReason!,
       );
       refreshAgreements();
       if (mounted) {
@@ -206,7 +227,32 @@ class AgreementsScreenState extends State<AgreementsScreen> {
       }
     } finally {
       dateController.dispose();
-      reasonController.dispose();
+    }
+  }
+
+  Future<void> _reinstateAgreement(Map<String, Object?> row) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reinstate Agreement?'),
+        content: Text('“${row['title']}” will be restored from Terminated status. Its active status will be recalculated using its signing and expiry dates.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.restore_rounded),
+            label: const Text('Reinstate'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await MySpaceService.instance.reinstateAgreement(row['id'] as int);
+    refreshAgreements();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Agreement reinstated successfully.')),
+      );
     }
   }
 

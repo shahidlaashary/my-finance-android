@@ -604,6 +604,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         content: SizedBox(width: 440, child: Column(mainAxisSize: MainAxisSize.min, children: [
           Row(children: [
             Expanded(child: DropdownButtonFormField<int>(
+              isExpanded: true,
               value: companies.any((e) => e['id'] == companyId) ? companyId : null,
               decoration: const InputDecoration(labelText: 'Company', border: OutlineInputBorder(), isDense: true),
               items: companies.map((e) => DropdownMenuItem<int>(value: e['id'] as int, child: Text(e['name'].toString()))).toList(),
@@ -823,6 +824,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             final selectedTemplateExists = matchingTemplates.any((t) => t['id'] == _templateId);
             return Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: selectedType,
                 decoration: const InputDecoration(labelText: 'Agreement Type', border: OutlineInputBorder(), isDense: true),
                 items: types.map((type) => DropdownMenuItem(value: type, child: Text(type, overflow: TextOverflow.ellipsis))).toList(),
@@ -835,6 +837,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
               )),
               const SizedBox(width: 10),
               Expanded(child: DropdownButtonFormField<int>(
+                isExpanded: true,
                 value: selectedTemplateExists ? _templateId : null,
                 decoration: const InputDecoration(labelText: 'Agreement Template', border: OutlineInputBorder(), isDense: true),
                 hint: Text(selectedType == null ? 'Select type first' : 'Select template'),
@@ -923,6 +926,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             IconButton(tooltip: 'Manage Companies & Labels', onPressed: _manageLabels, icon: const Icon(Icons.add_business_outlined)),
             const SizedBox(width: 4),
             Expanded(child: DropdownButtonFormField<String>(
+              isExpanded: true,
               value: designations.contains(_designation.text) ? _designation.text : null,
               decoration: const InputDecoration(labelText: 'Designation', border: OutlineInputBorder(), isDense: true),
               items: designations.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
@@ -955,6 +959,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: selectedTerm,
                 decoration: const InputDecoration(labelText: 'Agreement Term', border: OutlineInputBorder(), isDense: true),
                 items: terms.map((v) => DropdownMenuItem(value: v, child: Text('$v Years'))).toList(),

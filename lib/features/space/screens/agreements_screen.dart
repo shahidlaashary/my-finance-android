@@ -455,5 +455,5 @@ class _AgreementSignaturePainter extends CustomPainter {
     }
   }
   @override
-  bool shouldRepaint(covariant _AgreementSignaturePainter oldDelegate) => oldDelegate.points != points;
+  bool shouldRepaint(covariant _AgreementSignaturePainter oldDelegate) => true;
 }

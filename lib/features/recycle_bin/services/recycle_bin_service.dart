@@ -82,6 +82,10 @@ class RecycleBinService {
         return;
       }
       if (table == 'loans') {
+        final linkedSource = record['source_type']?.toString();
+        if (const {'asset_purchase', 'asset_sale'}.contains(linkedSource)) {
+          throw Exception('Restore the related Asset first. Its linked loan and repayment history are restored together.');
+        }
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
           id INTEGER PRIMARY KEY AUTOINCREMENT, party_id INTEGER,
           loan_type TEXT NOT NULL DEFAULT 'given', amount REAL NOT NULL,
@@ -216,6 +220,61 @@ class RecycleBinService {
             'UPDATE wallets SET balance = balance + ? WHERE id = ?',
             [((record['sale_wallet_amount'] as num?)?.toDouble() ?? (record['sale_price'] as num).toDouble()), saleWalletId],
           );
+        }
+        // Restore the linked purchase/sale loans and their repayment history
+        // from the asset's grouped snapshot. Their base wallet effect is not
+        // replayed because asset-linked loans never move a wallet on creation.
+        final linkedRaw = item['related_payload']?.toString();
+        if (linkedRaw != null && linkedRaw.isNotEmpty) {
+          final linkedSnapshots = (jsonDecode(linkedRaw) as List)
+              .whereType<Map>()
+              .map((entry) => Map<String, dynamic>.from(entry))
+              .toList();
+          for (final snapshot in linkedSnapshots) {
+            final loan = Map<String, dynamic>.from(snapshot['loan'] as Map);
+            final repayments = (snapshot['repayments'] as List? ?? const [])
+                .whereType<Map>()
+                .map((entry) => Map<String, dynamic>.from(entry))
+                .toList();
+            final loanId = (loan['id'] as num).toInt();
+            final alreadyExists = await txn.query(
+              'loans', columns: ['id'], where: 'id = ?', whereArgs: [loanId], limit: 1,
+            );
+            if (alreadyExists.isNotEmpty) {
+              throw Exception('A linked asset loan already exists. Resolve it before restoring this asset.');
+            }
+            final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
+            for (final repayment in repayments) {
+              final repaymentWalletId = (repayment['wallet_id'] as num).toInt();
+              final walletAmount = (repayment['wallet_amount'] as num?)?.toDouble()
+                  ?? (repayment['amount'] as num).toDouble();
+              final wallets = await txn.query(
+                'wallets', columns: ['balance'], where: 'id = ?',
+                whereArgs: [repaymentWalletId], limit: 1,
+              );
+              if (wallets.isEmpty) {
+                throw Exception('A linked loan repayment wallet no longer exists.');
+              }
+              final delta = loanType == 'given' ? walletAmount : -walletAmount;
+              final balance = (wallets.first['balance'] as num).toDouble();
+              if (delta < 0 && balance + 0.000001 < -delta) {
+                throw Exception('Insufficient wallet balance to restore linked loan repayments.');
+              }
+              await txn.rawUpdate(
+                'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+                [delta, repaymentWalletId],
+              );
+            }
+            await txn.insert('loans', loan);
+            for (final repayment in repayments) {
+              await txn.insert('loan_repayments', repayment);
+            }
+            await txn.delete(
+              'recycle_bin',
+              where: "source_table = 'loans' AND source_id = ?",
+              whereArgs: [loanId.toString()],
+            );
+          }
         }
         await txn.insert('assets', record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

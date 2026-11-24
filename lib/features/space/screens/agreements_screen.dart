@@ -417,6 +417,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
               _templateId = first['id'] as int;
               _templateTitleSnapshot = first['title'].toString();
               _templateBodySnapshot = first['body'].toString();
+              _agreementContent.text = _templateBodySnapshot;
               if (_title.text.isEmpty) _title.text = _templateTitleSnapshot;
             }
             return Padding(padding: const EdgeInsets.only(bottom: 12), child: DropdownButtonFormField<int>(

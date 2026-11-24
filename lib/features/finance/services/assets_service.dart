@@ -315,12 +315,8 @@ class AssetsService {
 
     if (isLoan) {
       if (partyId == null) throw Exception('Please select the buyer party.');
-      final party = await LoansService.getPartyById(partyId);
-      if (party == null) throw Exception('Selected buyer party was not found.');
-      final buyerCurrency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-      if (buyerCurrency != asset.currency.toUpperCase()) {
-        throw Exception('Buyer party currency must match the asset currency (' + asset.currency + ').');
-      }
+      // Party existence and currency are checked again inside the transaction,
+      // so the loan and asset cannot be saved against a stale party record.
       actualWalletAmount = 0;
       actualWalletCurrency = asset.currency.toUpperCase();
       appliedExchangeRate = 1.0;

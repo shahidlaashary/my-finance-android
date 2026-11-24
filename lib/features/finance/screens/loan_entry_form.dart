@@ -160,8 +160,11 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
       TextFormField(controller: _amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Amount', icon: Icons.payments_outlined), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
       const SizedBox(height: 12),
       DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v)),
-      ListTile(contentPadding: EdgeInsets.zero, title: const Text('Lending date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_date)), onTap: () => _pickDate(false)),
-      ListTile(contentPadding: EdgeInsets.zero, title: const Text('Due date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_due)), onTap: () => _pickDate(true)),
+      Row(children:[
+        Expanded(child:ListTile(contentPadding: EdgeInsets.zero, title: const Text('Lending date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_date)), onTap: () => _pickDate(false))),
+        const SizedBox(width:12),
+        Expanded(child:ListTile(contentPadding: EdgeInsets.zero, title: const Text('Due date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_due)), onTap: () => _pickDate(true))),
+      ]),
       TextFormField(controller: _notes, maxLines: 2, decoration: _dec('Notes (Optional)').copyWith(suffixIcon: IconButton(onPressed: _attachments, icon: const Icon(Icons.attach_file_rounded)))),
       if (_image != null || _pdfs.isNotEmpty) Text('${_image == null ? '' : '1 image, '}${_pdfs.length} PDF(s)', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       const SizedBox(height: 16),

@@ -550,18 +550,7 @@ class AssetsService {
             ? 'Asset Loan'
             : (partyRows.first['name']?.toString() ?? 'Asset Loan');
 
-        await txn.insert('recycle_bin', {
-          'entity_type': 'Loan',
-          'entity_title': title,
-          'source_table': 'loans',
-          'source_id': loanId.toString(),
-          'payload': jsonEncode(loanRecord),
-          'related_payload': repaymentRows.isEmpty ? null : jsonEncode(repaymentRows),
-          'deleted_at': DateTime.now().toIso8601String(),
-          'expires_at': DateTime.now().add(
-            const Duration(days: RecycleBinService.retentionDays),
-          ).toIso8601String(),
-        });
+        // Linked loans are stored inside the parent Asset archive payload.
 
         final loanType = (loanRecord['loan_type']?.toString() ?? 'given').toLowerCase();
         final isAssetLinked = const {'asset_purchase', 'asset_sale'}

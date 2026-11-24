@@ -268,13 +268,32 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         ? <String>{'Worldwide'}
         : _territory.text.split(',').map((v) => v.trim()).where((v) => v.isNotEmpty).toSet();
     final searchController = TextEditingController();
+    final continents = AgreementTerritoryService.regions.entries.take(6).toList();
     final result = await showDialog<Set<String>>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
           final query = searchController.text.trim().toLowerCase();
-          final options = AgreementTerritoryService.selectableNames
-              .where((name) => name.toLowerCase().contains(query)).toList();
+          final worldwideMatches = 'worldwide'.contains(query);
+          final visibleContinents = continents.where((entry) =>
+              entry.key.toLowerCase().contains(query) ||
+              entry.value.any((country) => country.toLowerCase().contains(query))).toList();
+          void toggle(String name, bool? value) {
+            setDialogState(() {
+              if (name == 'Worldwide' && value == true) {
+                selected..clear()..add('Worldwide');
+                return;
+              }
+              selected.remove('Worldwide');
+              if (value == true) {
+                selected.add(name);
+              } else {
+                selected.remove(name);
+              }
+              if (selected.isEmpty) selected.add('Worldwide');
+            });
+          }
+
           return AlertDialog(
             title: const Text('Select Territories'),
             content: SizedBox(
@@ -284,7 +303,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
                 TextField(
                   controller: searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search territories or countries',
+                    hintText: 'Search continents or countries',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.clear),
@@ -296,33 +315,62 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
                   onChanged: (_) => setDialogState(() {}),
                 ),
                 const SizedBox(height: 8),
-                Expanded(child: ListView.builder(
-                  itemCount: options.length,
-                  itemBuilder: (_, index) {
-                    final name = options[index];
-                    final checked = selected.contains(name);
-                    return CheckboxListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(name),
-                      value: checked,
-                      onChanged: (value) {
-                        setDialogState(() {
-                          if (name == 'Worldwide' && value == true) {
-                            selected..clear()..add('Worldwide');
-                          } else {
-                            selected.remove('Worldwide');
-                            if (value == true) {
-                              selected.add(name);
-                            } else {
-                              selected.remove(name);
-                            }
-                            if (selected.isEmpty) selected.add('Worldwide');
-                          }
-                        });
-                      },
-                    );
-                  },
+                Expanded(child: ListView(
+                  children: [
+                    if (worldwideMatches)
+                      CheckboxListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Worldwide', style: TextStyle(fontWeight: FontWeight.w600)),
+                        value: selected.contains('Worldwide'),
+                        onChanged: (value) => toggle('Worldwide', value),
+                      ),
+                    ...visibleContinents.map((entry) {
+                      final continent = entry.key;
+                      final countries = entry.value.where((country) =>
+                          query.isEmpty ||
+                          continent.toLowerCase().contains(query) ||
+                          country.toLowerCase().contains(query)).toList();
+                      final allSelected = selected.contains(continent) ||
+                          (entry.value.isNotEmpty && entry.value.every(selected.contains));
+                      final someSelected = selected.contains(continent) ||
+                          entry.value.any(selected.contains);
+                      return ExpansionTile(
+                        key: PageStorageKey<String>('territory-$continent'),
+                        tilePadding: EdgeInsets.zero,
+                        childrenPadding: const EdgeInsets.only(left: 12),
+                        initiallyExpanded: query.isNotEmpty,
+                        title: Text(continent, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        leading: Checkbox(
+                          value: allSelected ? true : (someSelected ? null : false),
+                          tristate: true,
+                          onChanged: (value) {
+                            setDialogState(() {
+                              selected.remove('Worldwide');
+                              if (value == true) {
+                                selected.removeWhere(entry.value.contains);
+                                selected.add(continent);
+                              } else {
+                                selected.remove(continent);
+                                selected.removeWhere(entry.value.contains);
+                              }
+                              if (selected.isEmpty) selected.add('Worldwide');
+                            });
+                          },
+                        ),
+                        children: countries.map((country) => CheckboxListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(country),
+                          value: selected.contains(continent) || selected.contains(country),
+                          onChanged: (value) {
+                            selected.remove(continent);
+                            toggle(country, value);
+                          },
+                        )).toList(),
+                      );
+                    }),
+                  ],
                 )),
                 Align(
                   alignment: Alignment.centerLeft,

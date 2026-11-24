@@ -30,6 +30,7 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
   DateTime _date = DateTime.now();
   bool _loading = true, _saving = false, _useManualRate = false;
   double? _loanRate, _walletRate;
+  int _rateRequestId = 0;
   LoansModel get _loan => widget.loan;
 
   @override
@@ -73,9 +74,11 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
   }
 
   Future<void> _loadRates() async {
+    final requestId = ++_rateRequestId;
+    final selectedWalletId = _walletId;
     try {
       final wallet = _wallets.firstWhere(
-        (w) => (w['id'] as num).toInt() == _walletId,
+        (w) => (w['id'] as num).toInt() == selectedWalletId,
       );
       final loanCurrency = _loan.currency.trim().toUpperCase();
       final walletCurrency =
@@ -83,7 +86,11 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
 
       // Same-currency repayments need no exchange-rate lookup at all.
       if (loanCurrency == walletCurrency) {
-        if (mounted) setState(() { _loanRate = 1.0; _walletRate = 1.0; });
+        if (mounted &&
+            requestId == _rateRequestId &&
+            selectedWalletId == _walletId) {
+          setState(() { _loanRate = 1.0; _walletRate = 1.0; });
+        }
         return;
       }
 
@@ -99,9 +106,17 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
         walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
       }
 
-      if (mounted) setState(() { _loanRate = loanRate; _walletRate = walletRate; });
+      if (mounted &&
+          requestId == _rateRequestId &&
+          selectedWalletId == _walletId) {
+        setState(() { _loanRate = loanRate; _walletRate = walletRate; });
+      }
     } catch (_) {
-      if (mounted) setState(() { _loanRate = null; _walletRate = null; });
+      if (mounted &&
+          requestId == _rateRequestId &&
+          selectedWalletId == _walletId) {
+        setState(() { _loanRate = null; _walletRate = null; });
+      }
     }
   }
 

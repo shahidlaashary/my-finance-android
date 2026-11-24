@@ -590,6 +590,16 @@ class AssetsService {
       // Archive the asset and both linked loans inside the same transaction.
       // Each loan archive contains its repayment snapshot, so restoration can
       // rebuild the loan history without leaving orphaned rows.
+      if ((asset.paymentType.toLowerCase() == 'loan') !=
+          (asset.linkedLoanId != null)) {
+        throw Exception('Asset purchase loan link is missing or inconsistent.');
+      }
+      if (asset.isSold &&
+          (asset.salePaymentType.toLowerCase() == 'loan') !=
+              (asset.saleLinkedLoanId != null)) {
+        throw Exception('Asset sale loan link is missing or inconsistent.');
+      }
+
       final linkedLoanIds = <int>{
         if (asset.linkedLoanId != null) asset.linkedLoanId!,
         if (asset.saleLinkedLoanId != null) asset.saleLinkedLoanId!,
@@ -598,14 +608,24 @@ class AssetsService {
       final linkedLoanSnapshots = <Map<String, dynamic>>[];
 
       for (final loanId in linkedLoanIds) {
+        final isPurchaseLoan = loanId == asset.linkedLoanId;
+        final expectedSource = isPurchaseLoan ? 'asset_purchase' : 'asset_sale';
+        final expectedLoanType = isPurchaseLoan ? 'taken' : 'given';
         final loanRows = await txn.query(
           'loans',
           where: 'id = ?',
           whereArgs: [loanId],
           limit: 1,
         );
-        if (loanRows.isEmpty) continue;
+        if (loanRows.isEmpty) {
+          throw Exception('A linked asset loan is missing. Asset deletion was cancelled.');
+        }
         final loanRecord = loanRows.first;
+        if (loanRecord['source_type'] != expectedSource ||
+            (loanRecord['source_id'] as num?)?.toInt() != assetId ||
+            loanRecord['loan_type']?.toString().toLowerCase() != expectedLoanType) {
+          throw Exception('The linked asset loan does not match this asset. Asset deletion was cancelled.');
+        }
         final repaymentRows = await txn.query(
           'loan_repayments',
           where: 'loan_id = ?',
@@ -617,33 +637,26 @@ class AssetsService {
         });
         // Linked loans are stored inside the parent Asset archive payload.
 
-        final loanType = (loanRecord['loan_type']?.toString() ?? 'given').toLowerCase();
-        final isAssetLinked = const {'asset_purchase', 'asset_sale'}
-            .contains(loanRecord['source_type']?.toString());
         for (final repayment in repaymentRows) {
+          final repaymentAmount = (repayment['amount'] as num).toDouble();
           final repaymentWalletId = (repayment['wallet_id'] as num).toInt();
           final repaymentWalletAmount =
               (repayment['wallet_amount'] as num?)?.toDouble() ??
-              (repayment['amount'] as num).toDouble();
-          await _getWallet(txn, repaymentWalletId);
+              repaymentAmount;
+          if (repayment['loan_id'] != loanId ||
+              !repaymentAmount.isFinite ||
+              repaymentAmount <= 0 ||
+              !repaymentWalletAmount.isFinite ||
+              repaymentWalletAmount <= 0 ||
+              repaymentWalletId <= 0) {
+            throw Exception('A linked loan repayment contains invalid data. Asset deletion was cancelled.');
+          }
           await _changeBalance(
             txn,
             walletId: repaymentWalletId,
-            amount: loanType == 'given'
+            amount: expectedLoanType == 'given'
                 ? -repaymentWalletAmount
                 : repaymentWalletAmount,
-          );
-        }
-
-        if (!isAssetLinked) {
-          final loanWalletId = (loanRecord['wallet_id'] as num).toInt();
-          await _getWallet(txn, loanWalletId);
-          await _changeBalance(
-            txn,
-            walletId: loanWalletId,
-            amount: loanType == 'given'
-                ? (loanRecord['amount'] as num).toDouble()
-                : -(loanRecord['amount'] as num).toDouble(),
           );
         }
 

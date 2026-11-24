@@ -162,11 +162,13 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   late String _status;
   bool _saving = false;
   String _signatureData = '';
+  String _signatureDataTwo = '';
+  bool _isTerminated = false;
   int? _templateId;
   String _templateTitleSnapshot = '';
   String _templateBodySnapshot = '';
   late Future<List<Map<String, Object?>>> _templateOptions;
-  late final TextEditingController _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName;
+  late final TextEditingController _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _signingDate, _witnessName, _terminationDate, _terminationReason;
   final List<Map<String, String>> _selectedAttachments = [];
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -184,6 +186,8 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _notes = TextEditingController(text: r['notes']?.toString() ?? '');
     _status = r['status']?.toString() ?? 'Draft';
     _signatureData = r['signature_data']?.toString() ?? '';
+    _signatureDataTwo = r['signature_data_two']?.toString() ?? '';
+    _isTerminated = r['status']?.toString() == 'Terminated';
     _templateId = r['template_id'] as int?;
     _templateTitleSnapshot = r['template_title_snapshot']?.toString() ?? '';
     _templateBodySnapshot = r['template_body_snapshot']?.toString() ?? '';
@@ -194,14 +198,17 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _tracks = TextEditingController(text: r['track_details']?.toString() ?? '');
     _designation = TextEditingController(text: r['designation']?.toString() ?? '');
     _agreementDate = TextEditingController(text: r['agreement_date']?.toString() ?? '');
+    _signingDate = TextEditingController(text: r['signing_date']?.toString() ?? r['start_date']?.toString() ?? '');
     _witnessName = TextEditingController(text: r['witness_name']?.toString() ?? '');
+    _terminationDate = TextEditingController(text: r['termination_date']?.toString() ?? '');
+    _terminationReason = TextEditingController(text: r['termination_reason']?.toString() ?? '');
     _templateOptions = AgreementTemplateService.instance.getTemplates();
   }
 
   @override
   void dispose() {
     for (final c in [_title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes,
-      _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName]) { c.dispose(); }
+      _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _signingDate, _witnessName, _terminationDate, _terminationReason]) { c.dispose(); }
     super.dispose();
   }
 
@@ -339,24 +346,143 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     }
   }
 
-  Future<void> _captureSignature() async {
+  Future<void> _captureSignature({required bool secondParty}) async {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => const _AgreementSignatureDialog(),
     );
-    if (result != null && mounted) setState(() => _signatureData = result);
+    if (result != null && mounted) setState(() {
+      if (secondParty) { _signatureDataTwo = result; } else { _signatureData = result; }
+    });
+  }
+
+  DateTime? get _signingDateValue => DateTime.tryParse(_signingDate.text);
+  DateTime? get _calculatedExpiryDate {
+    final signed = _signingDateValue;
+    if (signed == null) return null;
+    final years = int.tryParse(_termYears.text) ?? 10;
+    return DateTime(signed.year + years, signed.month, signed.day);
+  }
+  String get _effectiveStatus {
+    if (_isTerminated) return 'Terminated';
+    final signed = _signingDateValue;
+    if (signed == null) return 'Draft';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final signingDay = DateTime(signed.year, signed.month, signed.day);
+    if (today.isBefore(signingDay)) return 'Draft';
+    final expiry = _calculatedExpiryDate;
+    if (expiry != null && !today.isBefore(expiry)) return 'Expired';
+    return 'Active';
+  }
+
+  Future<void> _terminateAgreement() async {
+    final yes = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Terminate Agreement?'),
+      content: const Text('This agreement will be marked Terminated. Record the termination date and an optional reason.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Terminate')),
+      ],
+    ));
+    if (yes == true && mounted) setState(() {
+      _isTerminated = true;
+      if (_terminationDate.text.isEmpty) {
+        final now = DateTime.now();
+        _terminationDate.text = now.toIso8601String().split('T').first;
+      }
+    });
+  }
+
+  Future<void> _manageLabels() async {
+    final service = MySpaceService.instance;
+    var companies = await service.getAgreementCompanies();
+    var labels = await service.getAgreementLabels();
+    if (!mounted) return;
+    final labelController = TextEditingController();
+    int? companyId = companies.isEmpty ? null : companies.first['id'] as int;
+    await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: const Text('Manage Companies & Labels'),
+        content: SizedBox(width: 440, child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            Expanded(child: DropdownButtonFormField<int>(
+              value: companies.any((e) => e['id'] == companyId) ? companyId : null,
+              decoration: const InputDecoration(labelText: 'Company', border: OutlineInputBorder(), isDense: true),
+              items: companies.map((e) => DropdownMenuItem<int>(value: e['id'] as int, child: Text(e['name'].toString()))).toList(),
+              onChanged: (v) => setDialogState(() => companyId = v),
+            )),
+            IconButton(tooltip: 'Create Company', icon: const Icon(Icons.add_business_outlined),
+              onPressed: () async {
+                final name = await showDialog<String>(context: dialogContext, builder: (ctx) {
+                  final controller = TextEditingController();
+                  return AlertDialog(title: const Text('Create Company'),
+                    content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Company Name')),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                      FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Create')),
+                    ]);
+                });
+                if (name != null && name.trim().isNotEmpty) {
+                  await service.createAgreementCompany(name);
+                  companies = await service.getAgreementCompanies();
+                  for (final company in companies) {
+                    if (company['name'].toString().toLowerCase() == name.toLowerCase()) companyId = company['id'] as int;
+                  }
+                  setDialogState(() {});
+                }
+              }),
+          ]),
+          const SizedBox(height: 10),
+          TextField(controller: labelController, decoration: const InputDecoration(labelText: 'New Label Name', border: OutlineInputBorder(), isDense: true)),
+          Align(alignment: Alignment.centerRight, child: FilledButton.icon(
+            onPressed: companyId == null || labelController.text.trim().isEmpty ? null : () async {
+              try {
+                await service.createAgreementLabel(companyId: companyId!, name: labelController.text);
+                labelController.clear();
+                labels = await service.getAgreementLabels();
+                setDialogState(() {});
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to add label: $e')));
+              }
+            },
+            icon: const Icon(Icons.add), label: const Text('Add Label'),
+          )),
+          const Divider(),
+          SizedBox(height: 220, child: ListView(shrinkWrap: true, children: labels.map((label) => ListTile(
+            dense: true, title: Text(label['name'].toString()), subtitle: Text(label['company_name'].toString()),
+            trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
+              await service.deleteAgreementLabel(label['id'] as int);
+              labels = await service.getAgreementLabels();
+              setDialogState(() {});
+            }),
+          )).toList())),
+        ])),
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done'))],
+      ),
+    ));
+    labelController.dispose();
+    if (mounted) setState(() {});
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_signingDate.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signing Date is required.')));
+      return;
+    }
     setState(() => _saving = true);
     try {
       final id = await MySpaceService.instance.saveAgreement({
         'id': widget.record?['id'], 'title': _title.text, 'category': _category.text,
-        'party_one': _partyOne.text, 'party_two': _partyTwo.text, 'status': _status,
+        'party_one': _partyOne.text, 'party_two': _partyTwo.text, 'status': _effectiveStatus,
         'start_date': _start.text, 'end_date': _end.text,
         'description': _description.text, 'notes': _notes.text,
         'signature_data': _signatureData,
+        'signature_data_two': _signatureDataTwo,
+        'signing_date': _signingDate.text,
+        'termination_date': _terminationDate.text,
+        'termination_reason': _terminationReason.text,
         'template_id': _templateId,
         'template_title_snapshot': _templateTitleSnapshot,
         'template_body_snapshot': _templateBodySnapshot,
@@ -429,12 +555,16 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       'category': _category.text,
       'party_one': _partyOne.text,
       'party_two': _partyTwo.text,
-      'status': _status,
+      'status': _effectiveStatus,
       'start_date': _start.text,
       'end_date': _end.text,
       'description': _description.text,
       'notes': _notes.text,
       'signature_data': _signatureData,
+      'signature_data_two': _signatureDataTwo,
+      'signing_date': _signingDate.text,
+      'termination_date': _terminationDate.text,
+      'termination_reason': _terminationReason.text,
       'template_id': _templateId,
       'template_title_snapshot': _templateTitleSnapshot,
       'template_body_snapshot': _templateBodySnapshot,
@@ -445,6 +575,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       'track_details': _tracks.text,
       'designation': _designation.text,
       'agreement_date': _agreementDate.text,
+      'signing_date': _signingDate.text,
       'witness_name': _witnessName.text,
     };
     await AgreementPdfService.instance.printAgreement(data);
@@ -452,7 +583,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const statuses = ['Draft', 'Active', 'Expired', 'Terminated'];
     const terms = ['2', '5', '10', '15', '20'];
     const designations = ['Owner', 'Authorized'];
     final selectedTerm = terms.contains(_termYears.text) ? _termYears.text : '10';
@@ -502,20 +632,23 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         _field(_category, 'Agreement Type'),
         _field(_partyOne, 'First Party'),
         _field(_partyTwo, 'Second Party'),
-        DropdownButtonFormField<String>(
-          value: null,
-          decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
-          items: const [
-            DropdownMenuItem<String>(
-              value: '',
-              enabled: false,
-              child: Text('No labels added yet'),
-            ),
-          ],
-          onChanged: (value) {
-            if (value != null && value.isNotEmpty) {
-              setState(() => _labelName.text = value);
-            }
+        FutureBuilder<List<Map<String, Object?>>>(
+          future: MySpaceService.instance.getAgreementLabels(),
+          builder: (context, snapshot) {
+            final labels = snapshot.data ?? [];
+            final exists = labels.any((e) => e['name'] == _labelName.text);
+            return Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(children: [
+              Expanded(child: DropdownButtonFormField<String>(
+                value: exists ? _labelName.text : null,
+                decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
+                items: labels.map((e) => DropdownMenuItem<String>(
+                  value: e['name'].toString(),
+                  child: Text('${e['name']} • ${e['company_name']}', overflow: TextOverflow.ellipsis),
+                )).toList(),
+                onChanged: (v) => setState(() => _labelName.text = v ?? ''),
+              )),
+              IconButton(tooltip: 'Manage Companies & Labels', onPressed: _manageLabels, icon: const Icon(Icons.add_business_outlined)),
+            ]));
           },
         ),
         _field(_address, 'Address', lines: 2),
@@ -553,28 +686,44 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           onChanged: (v) => setState(() => _designation.text = v ?? 'Owner'),
         ),
         _dateField(_agreementDate, 'Agreement Date'),
-        DropdownButtonFormField<String>(
-          value: statuses.contains(_status) ? _status : statuses.first,
-          decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder(), isDense: true),
-          items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-          onChanged: (v) => setState(() => _status = v ?? statuses.first),
-        ),
+        _dateField(_signingDate, 'Signing Date'),
+        Padding(padding: const EdgeInsets.only(bottom: 12), child: InputDecorator(
+          decoration: const InputDecoration(labelText: 'Agreement Status (automatic)', border: OutlineInputBorder(), isDense: true),
+          child: Text(_effectiveStatus, style: const TextStyle(fontWeight: FontWeight.w600)),
+        )),
+        if (_calculatedExpiryDate != null)
+          Padding(padding: const EdgeInsets.only(bottom: 12), child: InputDecorator(
+            decoration: const InputDecoration(labelText: 'Calculated Expiry Date', border: OutlineInputBorder(), isDense: true),
+            child: Text(_calculatedExpiryDate!.toIso8601String().split('T').first),
+          )),
         _dateField(_start, 'Start Date'),
-        _dateField(_end, 'End / Expiry Date', optional: true),
+        _dateField(_end, 'End / Expiry Date (optional)', optional: true),
+        if (widget.record != null && !_isTerminated)
+          Padding(padding: const EdgeInsets.only(bottom: 12), child: OutlinedButton.icon(
+            onPressed: _saving ? null : _terminateAgreement,
+            icon: const Icon(Icons.block_outlined), label: const Text('Terminate Agreement'),
+          )),
+        if (_isTerminated) ...[
+          _dateField(_terminationDate, 'Termination Date'),
+          _field(_terminationReason, 'Termination Reason (optional)', lines: 2),
+        ],
         _field(_witnessName, 'Witness Name (optional)'),
         OutlinedButton.icon(
-          onPressed: _saving ? null : _captureSignature,
+          onPressed: _saving ? null : () => _captureSignature(secondParty: false),
           icon: const Icon(Icons.draw_outlined),
-          label: Text(_signatureData.isEmpty ? 'Add Digital Signature' : 'Update Digital Signature'),
+          label: Text(_signatureData.isEmpty ? 'First Party Signature' : 'Update First Party Signature'),
         ),
         if (_signatureData.isNotEmpty)
           const Padding(padding: EdgeInsets.only(top: 4, bottom: 8),
-            child: Text('Signature captured for this agreement.', style: TextStyle(fontSize: 12))),
+            child: Text('First Party signature captured.', style: TextStyle(fontSize: 12))),
         OutlinedButton.icon(
-          onPressed: _saving ? null : _pickFiles,
-          icon: const Icon(Icons.verified_outlined),
-          label: const Text('Attach Stamp / E-Stamp Document'),
+          onPressed: _saving ? null : () => _captureSignature(secondParty: true),
+          icon: const Icon(Icons.draw_outlined),
+          label: Text(_signatureDataTwo.isEmpty ? 'Second Party Signature' : 'Update Second Party Signature'),
         ),
+        if (_signatureDataTwo.isNotEmpty)
+          const Padding(padding: EdgeInsets.only(top: 4, bottom: 8),
+            child: Text('Second Party signature captured.', style: TextStyle(fontSize: 12))),
         _field(_description, 'Additional Agreement Details / Terms', lines: 3),
         _field(_notes, 'Notes', lines: 2),
         ExpansionTile(

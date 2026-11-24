@@ -155,7 +155,6 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_wallets.isEmpty) return const Center(child: Text('Add a wallet first.'));
     return Form(key: _key, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 8, 18, 16), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       TextFormField(controller: _name, decoration: _dec('Asset name *', icon: Icons.inventory_2_outlined), validator: (v) => v == null || v.trim().isEmpty ? 'Enter asset name.' : null),
       const SizedBox(height: 12),
@@ -212,6 +211,11 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
           validator: (_) => _payment == 'Loan' && _partyId == null ? 'Select a party.' : null,
         ),
       ] else ...[
+        if (_wallets.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text('No wallet available. Add a wallet or choose Loan payment type.'),
+          ),
         DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v), validator: (v) => v == null ? 'Select a wallet.' : null),
       ],
       const SizedBox(height: 12),

@@ -9,6 +9,11 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class LoansService {
+  static void _validateLoanType(String loanType) {
+    if (loanType != 'given' && loanType != 'taken') {
+      throw Exception('Loan type must be either Loan Given or Loan Taken.');
+    }
+  }
 
   // Restore se pehle is service ka database connection band karta hai.
   static Future<void> closeDatabase() async {
@@ -451,6 +456,7 @@ class LoansService {
   /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.
   static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;
+    _validateLoanType(loan.loanType);
     if (!loan.amount.isFinite || loan.amount <= 0) {
       throw Exception(
         'Loan amount must be a valid amount greater than zero.',
@@ -569,6 +575,7 @@ class LoansService {
       final loans = await txn.query('loans', where: 'id = ?', whereArgs: [repayment.loanId], limit: 1);
       if (loans.isEmpty) throw Exception('Loan was not found.');
       final loan = LoansModel.fromMap(loans.first);
+      _validateLoanType(loan.loanType);
       if (loan.remainingAmount <= 0) throw Exception('This loan has already been fully repaid.');
       if (repayment.amount > loan.remainingAmount + 0.000001) {
         throw Exception('Repayment cannot exceed the outstanding balance.');
@@ -603,6 +610,7 @@ class LoansService {
       final loanRows = await txn.query('loans', where: 'id = ?', whereArgs: [old.loanId], limit: 1);
       if (loanRows.isEmpty) throw Exception('Related loan was not found.');
       final loan = LoansModel.fromMap(loanRows.first);
+      _validateLoanType(loan.loanType);
       final oldWalletAmount = old.walletAmount;
       await _getWallet(txn, old.walletId);
       // Restore the old transaction only inside this atomic DB transaction.
@@ -751,6 +759,7 @@ class LoansService {
       }
 
       final loan = LoansModel.fromMap(loanRows.first);
+      _validateLoanType(loan.loanType);
       await _getWallet(txn, repayment.walletId);
 
       final restoredRemaining = (loan.remainingAmount + repayment.amount)
@@ -814,6 +823,7 @@ class LoansService {
       final rows = await txn.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
       if (rows.isEmpty) throw Exception('Loan not found.');
       final loan = LoansModel.fromMap(rows.first);
+      _validateLoanType(loan.loanType);
       if (loan.isAssetLinked) {
         throw Exception('Asset-linked loans must be edited from Asset Section.');
       }
@@ -881,6 +891,7 @@ class LoansService {
       }
 
       final loan = LoansModel.fromMap(loanRecord);
+      _validateLoanType(loan.loanType);
       final repayments = await txn.query(
         'loan_repayments',
         where: 'loan_id = ?',

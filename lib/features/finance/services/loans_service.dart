@@ -856,25 +856,11 @@ class LoansService {
   }
 
   /// Loan delete karta hai aur us se mutaliq wallet balance changes wapas karta hai.
-  static Future<void> deleteLoan(int loanId, {bool fromAssetDelete = false}) async {
+  /// Loan ko wallet effects ke saath aik atomic transaction mein recycle karta hai.
+  static Future<void> deleteLoan(int loanId) async {
     final db = await _database;
+    await RecycleBinService.ensureTable();
 
-    final loanSnapshot = await db.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
-    if (loanSnapshot.isEmpty) return;
-    if (loanSnapshot.first['source_type'] != null && !fromAssetDelete) {
-      throw Exception('This loan is linked to an asset. Delete the related asset from Asset Section instead.');
-    }
-    final repaymentSnapshot = await db.query('loan_repayments', where: 'loan_id = ?', whereArgs: [loanId]);
-    final partyId = (loanSnapshot.first['party_id'] as num?)?.toInt();
-    final party = partyId == null ? null : await getPartyById(partyId);
-    await RecycleBinService.archive(
-      type: 'Loan',
-      title: party?['name']?.toString() ?? 'Loan',
-      table: 'loans',
-      id: loanId,
-      record: loanSnapshot.first,
-      related: repaymentSnapshot,
-    );
     await db.transaction((txn) async {
       final loanRows = await txn.query(
         'loans',
@@ -882,53 +868,74 @@ class LoansService {
         whereArgs: [loanId],
         limit: 1,
       );
-
       if (loanRows.isEmpty) return;
 
-      final loan = LoansModel.fromMap(loanRows.first);
+      final loanRecord = loanRows.first;
+      if (loanRecord['source_type'] != null) {
+        throw Exception('This loan is linked to an asset. Delete the related asset from Asset Section instead.');
+      }
 
-      if (!loan.isAssetLinked) await _getWallet(txn, loan.walletId);
-
+      final loan = LoansModel.fromMap(loanRecord);
       final repayments = await txn.query(
         'loan_repayments',
         where: 'loan_id = ?',
         whereArgs: [loanId],
       );
 
-      // Sab se pehle har repayment ka jama hua amount wapas minus karta hai.
+      if (!loan.isAssetLinked) await _getWallet(txn, loan.walletId);
+
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
-
         await _getWallet(txn, repayment.walletId);
-
         await _changeWalletBalance(
           txn,
           walletId: repayment.walletId,
-          amount: loan.loanType == 'given' ? -repayment.walletAmount : repayment.walletAmount,
+          amount: loan.loanType == 'given'
+              ? -repayment.walletAmount
+              : repayment.walletAmount,
         );
       }
 
-      // Asset-linked loans never moved their reference wallet on creation.
-      if (!loan.isAssetLinked) {
-        await _changeWalletBalance(
-          txn,
-          walletId: loan.walletId,
-          amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
-        );
-      }
+      await _changeWalletBalance(
+        txn,
+        walletId: loan.walletId,
+        amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
+      );
+
+      final partyId = (loanRecord['party_id'] as num?)?.toInt();
+      final partyRows = partyId == null
+          ? <Map<String, Object?>>[]
+          : await txn.query(
+              'loan_parties',
+              columns: ['name'],
+              where: 'id = ?',
+              whereArgs: [partyId],
+              limit: 1,
+            );
+
+      await txn.insert('recycle_bin', {
+        'entity_type': 'Loan',
+        'entity_title': partyRows.isEmpty
+            ? 'Loan'
+            : partyRows.first['name']?.toString() ?? 'Loan',
+        'source_table': 'loans',
+        'source_id': loanId.toString(),
+        'payload': jsonEncode(loanRecord),
+        'related_payload': repayments.isEmpty ? null : jsonEncode(repayments),
+        'deleted_at': DateTime.now().toIso8601String(),
+        'expires_at': DateTime.now()
+            .add(const Duration(days: RecycleBinService.retentionDays))
+            .toIso8601String(),
+      });
 
       await txn.delete(
         'loan_repayments',
         where: 'loan_id = ?',
         whereArgs: [loanId],
       );
-
-      await txn.delete(
-        'loans',
-        where: 'id = ?',
-        whereArgs: [loanId],
-      );
+      await txn.delete('loans', where: 'id = ?', whereArgs: [loanId]);
     });
+
     AppRefreshController.notifyChanged();
   }
 }

@@ -84,7 +84,19 @@ class RecycleBinService {
       if (table == 'loans') {
         final linkedSource = record['source_type']?.toString();
         if (const {'asset_purchase', 'asset_sale'}.contains(linkedSource)) {
-          throw Exception('Restore the related Asset first. Its linked loan and repayment history are restored together.');
+          final sourceAssetId = (record['source_id'] as num?)?.toInt();
+          final sourceAsset = sourceAssetId == null
+              ? <Map<String, Object?>>[]
+              : await txn.query(
+                  'assets',
+                  columns: ['id'],
+                  where: 'id = ?',
+                  whereArgs: [sourceAssetId],
+                  limit: 1,
+                );
+          if (sourceAsset.isEmpty) {
+            throw Exception('Restore the related Asset first. Its linked loan belongs to that Asset.');
+          }
         }
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
           id INTEGER PRIMARY KEY AUTOINCREMENT, party_id INTEGER,

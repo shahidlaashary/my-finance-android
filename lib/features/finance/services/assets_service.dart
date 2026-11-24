@@ -230,55 +230,6 @@ class AssetsService {
     }
   }
 
-  Future<int> addAsset(AssetsModel asset) async {
-    _validateAsset(asset);
-    if (asset.isSold) throw Exception('Please add the asset first, then record its sale.');
-    final db = await _database;
-    await _ensureTables(db);
-    final isLoan = asset.paymentType.toLowerCase() == 'loan';
-    var assetWalletId = asset.walletId;
-    var currency = asset.currency.toUpperCase();
-    if (isLoan) {
-      if (asset.partyId == null) throw Exception('Please select a party for this loan purchase.');
-      final party = await LoansService.getPartyById(asset.partyId!);
-      if (party == null) throw Exception('Selected party was not found.');
-      currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-      assetWalletId = 0;
-    }
-    final assetId = await db.transaction((txn) async {
-      if (!isLoan) {
-        final wallet = await _getWallet(txn, assetWalletId);
-        currency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
-        if ((wallet['balance'] as num).toDouble() < asset.purchasePrice) throw Exception('Insufficient wallet balance.');
-      }
-      final map = asset.copyWith(
-        walletId: assetWalletId, currency: currency,
-        name: asset.name.trim(),
-        category: asset.category.trim().isEmpty ? 'Other' : asset.category.trim(),
-        createdAt: asset.createdAt ?? DateTime.now(),
-      ).toMap()..remove('id');
-      final id = await txn.insert('assets', map);
-      if (!isLoan) await _changeBalance(txn, walletId: assetWalletId, amount: -asset.purchasePrice);
-      return id;
-    });
-    if (isLoan) {
-      try {
-        final loanId = await LoansService.createAssetLinkedLoan(
-          partyId: asset.partyId!, loanType: 'taken', amount: asset.purchasePrice,
-          lendingDate: asset.purchaseDate.toIso8601String().split('T').first,
-          sourceType: 'asset_purchase', sourceId: assetId,
-          notes: 'Asset purchase: ' + asset.name,
-        );
-        await db.update('assets', {'linked_loan_id': loanId}, where: 'id = ?', whereArgs: [assetId]);
-      } catch (_) {
-        await db.delete('assets', where: 'id = ?', whereArgs: [assetId]);
-        rethrow;
-      }
-    }
-    AppRefreshController.notifyChanged();
-    return assetId;
-  }
-
   Future<List<AssetsModel>> getAssets({
     bool includeSold = true,
   }) async {

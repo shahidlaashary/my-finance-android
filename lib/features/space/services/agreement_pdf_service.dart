@@ -28,7 +28,6 @@ class AgreementPdfService {
       '{{label_name}}': _value(data, 'label_name', '[Label]'),
       '{{territory}}': territory,
       '{{term_years}}': _value(data, 'term_years', '10'),
-      '{{agreement_date}}': _value(data, 'agreement_date', '[Date]'),
       '{{signing_date}}': _value(data, 'signing_date', '[Signing Date]'),
     };
     replacements.forEach((key, value) => body = body.replaceAll(key, value));
@@ -91,7 +90,6 @@ class AgreementPdfService {
           style: pw.TextStyle(fontSize: 19, fontWeight: pw.FontWeight.bold,
             decoration: pw.TextDecoration.underline))),
         pw.SizedBox(height: 20),
-        field('Agreement Date', _value(data, 'agreement_date')),
         field('Signing Date', _value(data, 'signing_date')),
         field('First Party / Artist', _value(data, 'party_one')),
         field('Second Party / Label', _value(data, 'party_two')),

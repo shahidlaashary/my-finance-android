@@ -421,8 +421,18 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         DropdownButtonFormField<String>(
           value: null,
           decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
-          items: const [],
-          onChanged: null,
+          items: const [
+            DropdownMenuItem<String>(
+              value: '',
+              enabled: false,
+              child: Text('No labels added yet'),
+            ),
+          ],
+          onChanged: (value) {
+            if (value != null && value.isNotEmpty) {
+              setState(() => _labelName.text = value);
+            }
+          },
         ),
         _field(_address, 'Address', lines: 2),
         DropdownButtonFormField<String>(

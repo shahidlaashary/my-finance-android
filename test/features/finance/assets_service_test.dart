@@ -461,6 +461,94 @@ void main() {
   });
 
 
+
+  test('cross-currency repayment edit and delete use the saved wallet-side amount', () async {
+    final usdWalletId = await FinanceDB.instance.addWallet(
+      name: 'USD Loan Wallet',
+      type: 'Bank',
+      currency: 'USD',
+      openingBalance: 1000,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final pkrWalletId = await FinanceDB.instance.addWallet(
+      name: 'PKR Repayment Wallet',
+      type: 'Cash',
+      currency: 'PKR',
+      openingBalance: 1000,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final partyId = await LoansService.addParty(
+      name: 'USD Repayment Party',
+      currency: 'USD',
+    );
+    await FinanceDB.instance.db.insert('exchange_rates', {
+      'currency': 'USD',
+      'rate': 280.0,
+      'updated_at': DateTime(2026, 11, 20).toIso8601String(),
+    });
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 100,
+        remainingAmount: 100,
+        walletId: usdWalletId,
+        currency: 'USD',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 10,
+        walletId: pkrWalletId,
+        repaymentDate: '2026-11-21',
+        createdAt: DateTime(2026, 11, 21).toIso8601String(),
+      ),
+    );
+    expect(
+      (await FinanceDB.instance.getWallet(pkrWalletId))!['balance'],
+      3800,
+    );
+
+    await FinanceDB.instance.db.update(
+      'exchange_rates',
+      {'rate': 300.0},
+      where: 'currency = ?',
+      whereArgs: ['USD'],
+    );
+    await LoansService.updateRepayment(
+      RepaymentModel(
+        id: repaymentId,
+        loanId: loanId,
+        amount: 20,
+        walletId: pkrWalletId,
+        repaymentDate: '2026-11-22',
+        createdAt: DateTime(2026, 11, 22).toIso8601String(),
+      ),
+    );
+
+    final editedRepayment = (await LoansService.getRepayments(loanId)).single;
+    expect(editedRepayment.walletCurrency, 'PKR');
+    expect(editedRepayment.walletAmount, 6000);
+    expect(
+      (await FinanceDB.instance.getWallet(pkrWalletId))!['balance'],
+      7000,
+    );
+
+    await LoansService.deleteRepayment(repaymentId);
+    final finalLoan = await LoansService.getLoanById(loanId);
+    expect(finalLoan!.remainingAmount, 100);
+    expect(
+      (await FinanceDB.instance.getWallet(pkrWalletId))!['balance'],
+      1000,
+    );
+  });
+
   test('restoring an ordinary loan is blocked if its source wallet currency changed', () async {
     final walletId = await createWallet(1000);
     final partyId = await LoansService.addParty(

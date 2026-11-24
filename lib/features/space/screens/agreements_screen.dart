@@ -434,7 +434,8 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
               }),
           ]),
           const SizedBox(height: 10),
-          TextField(controller: labelController, decoration: const InputDecoration(labelText: 'New Label Name', border: OutlineInputBorder(), isDense: true)),
+          TextField(controller: labelController, onChanged: (_) => setDialogState(() {}),
+            decoration: const InputDecoration(labelText: 'New Label Name', border: OutlineInputBorder(), isDense: true)),
           Align(alignment: Alignment.centerRight, child: FilledButton.icon(
             onPressed: companyId == null || labelController.text.trim().isEmpty ? null : () async {
               try {
@@ -575,7 +576,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       'track_details': _tracks.text,
       'designation': _designation.text,
       'agreement_date': _agreementDate.text,
-      'signing_date': _signingDate.text,
       'witness_name': _witnessName.text,
     };
     await AgreementPdfService.instance.printAgreement(data);

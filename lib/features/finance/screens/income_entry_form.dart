@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/shared/widgets/width_matched_dropdown_form_field.dart';
+import 'package:my_finance/shared/widgets/measured_width_dropdown_form_field.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -378,7 +379,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _walletField() {
-    return WidthMatchedDropdownFormField<int>(
+    return MeasuredWidthDropdownFormField<int>(
       value: selectedWalletId,
       isExpanded: true,
       decoration: decoration(

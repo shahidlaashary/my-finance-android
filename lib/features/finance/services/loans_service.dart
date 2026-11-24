@@ -720,10 +720,6 @@ class LoansService {
         throw Exception('Updated repayment amount exceeds the available loan balance.');
       }
       final snapshot = await _snapshotRepayment(txn, repayment, loan.currency);
-      final walletBalance = await _getWalletBalance(txn, snapshot.walletId);
-      if (loan.loanType == 'taken' && walletBalance + 0.000001 < snapshot.walletAmount) {
-        throw Exception('Insufficient wallet balance for this repayment.');
-      }
       final newRemaining = (remainingAfterOld - snapshot.amount).clamp(0.0, loan.amount).toDouble();
       await txn.update('loan_repayments', snapshot.toMap()..remove('id'),
         where: 'id = ?', whereArgs: [repayment.id]);

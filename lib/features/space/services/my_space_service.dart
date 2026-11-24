@@ -193,6 +193,20 @@ class MySpaceService {
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_agreement_labels_company ON space_agreement_labels(company_id)');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS space_artists (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        stage_name TEXT NOT NULL DEFAULT '',
+        phone TEXT NOT NULL DEFAULT '',
+        email TEXT NOT NULL DEFAULT '',
+        genre TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
     final templateCount = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM space_agreement_templates')) ?? 0;
     if (templateCount == 0) {
@@ -329,6 +343,48 @@ class MySpaceService {
       'created_at': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.abort);
   }
+
+
+  Future<void> updateAgreementCompany(int id, String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Company name is required.');
+    await (await database).update('space_agreement_companies', {'name': clean},
+      where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> updateAgreementLabel({required int id, required int companyId, required String name}) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Label name is required.');
+    await (await database).update('space_agreement_labels',
+      {'company_id': companyId, 'name': clean}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Map<String, Object?>>> getArtists() async =>
+      (await database).query('space_artists', orderBy: 'name COLLATE NOCASE');
+
+  Future<int> saveArtist(Map<String, Object?> artist) async {
+    final name = (artist['name'] ?? '').toString().trim();
+    if (name.isEmpty) throw const FormatException('Artist name is required.');
+    final values = <String, Object?>{
+      'name': name,
+      'stage_name': (artist['stage_name'] ?? '').toString().trim(),
+      'phone': (artist['phone'] ?? '').toString().trim(),
+      'email': (artist['email'] ?? '').toString().trim(),
+      'genre': (artist['genre'] ?? '').toString().trim(),
+      'notes': (artist['notes'] ?? '').toString().trim(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    final id = artist['id'] as int?;
+    if (id == null) {
+      values['created_at'] = DateTime.now().toIso8601String();
+      return (await database).insert('space_artists', values);
+    }
+    await (await database).update('space_artists', values, where: 'id = ?', whereArgs: [id]);
+    return id;
+  }
+
+  Future<void> deleteArtist(int id) async =>
+      (await database).delete('space_artists', where: 'id = ?', whereArgs: [id]);
 
   Future<void> deleteAgreementLabel(int id) async =>
       (await database).delete('space_agreement_labels', where: 'id = ?', whereArgs: [id]);

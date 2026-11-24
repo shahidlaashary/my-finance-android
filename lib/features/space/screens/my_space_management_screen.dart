@@ -3,13 +3,13 @@ import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/screens/agreement_templates_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 
-class MySpaceManagementScreen extends StatefulWidget {
-  const MySpaceManagementScreen({super.key});
+class ManagementScreen extends StatefulWidget {
+  const ManagementScreen({super.key});
   @override
-  State<MySpaceManagementScreen> createState() => _MySpaceManagementScreenState();
+  State<ManagementScreen> createState() => _ManagementScreenState();
 }
 
-class _MySpaceManagementScreenState extends State<MySpaceManagementScreen> with SingleTickerProviderStateMixin {
+class _ManagementScreenState extends State<ManagementScreen> with SingleTickerProviderStateMixin {
   final _service = MySpaceService.instance;
   late final TabController _tabs;
   Future<List<Map<String, Object?>>>? _companies, _labels, _artists;

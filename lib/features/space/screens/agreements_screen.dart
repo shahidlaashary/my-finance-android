@@ -167,6 +167,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   String _signatureDataTwo = '';
   bool _isTerminated = false;
   int? _templateId;
+  int? _selectedLabelId;
   String _templateTitleSnapshot = '';
   String _templateBodySnapshot = '';
   late Future<List<Map<String, Object?>>> _templateOptions;
@@ -194,6 +195,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _templateTitleSnapshot = r['template_title_snapshot']?.toString() ?? '';
     _templateBodySnapshot = r['template_body_snapshot']?.toString() ?? '';
     _labelName = TextEditingController(text: r['label_name']?.toString() ?? '');
+    _selectedLabelId = r['label_id'] as int?;
     _address = TextEditingController(text: r['address']?.toString() ?? '');
     _territory = TextEditingController(text: r['territory']?.toString() ?? 'Worldwide');
     _termYears = TextEditingController(text: r['term_years']?.toString() ?? '10');
@@ -505,7 +507,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         'template_id': _templateId,
         'template_title_snapshot': _templateTitleSnapshot,
         'template_body_snapshot': _templateBodySnapshot,
-        'label_name': _labelName.text, 'address': _address.text,
+        'label_name': _labelName.text, 'label_id': _selectedLabelId, 'address': _address.text,
         'territory': _territory.text, 'term_years': _termYears.text,
         'track_details': _tracks.text, 'designation': _designation.text,
         'agreement_date': _agreementDate.text, 'witness_name': _witnessName.text,
@@ -654,16 +656,22 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           future: MySpaceService.instance.getAgreementLabels(),
           builder: (context, snapshot) {
             final labels = snapshot.data ?? [];
-            final exists = labels.any((e) => e['name'] == _labelName.text);
+            final exists = labels.any((e) => e['id'] == _selectedLabelId);
             return Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(children: [
-              Expanded(child: DropdownButtonFormField<String>(
-                value: exists ? _labelName.text : null,
+              Expanded(child: DropdownButtonFormField<int>(
+                value: exists ? _selectedLabelId : null,
                 decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
-                items: labels.map((e) => DropdownMenuItem<String>(
-                  value: e['name'].toString(),
+                items: labels.map((e) => DropdownMenuItem<int>(
+                  value: e['id'] as int,
                   child: Text('${e['name']} • ${e['company_name']}', overflow: TextOverflow.ellipsis),
                 )).toList(),
-                onChanged: (v) => setState(() => _labelName.text = v ?? ''),
+                onChanged: (id) {
+                  final selected = labels.where((e) => e['id'] == id);
+                  setState(() {
+                    _selectedLabelId = id;
+                    if (selected.isNotEmpty) _labelName.text = selected.first['name'].toString();
+                  });
+                },
               )),
               IconButton(tooltip: 'Manage Companies & Labels', onPressed: _manageLabels, icon: const Icon(Icons.add_business_outlined)),
             ]));

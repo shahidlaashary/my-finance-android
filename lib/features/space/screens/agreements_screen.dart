@@ -84,6 +84,8 @@ class AgreementsScreenState extends State<AgreementsScreen> {
               onSelected: (value) async {
                 if (value == 'edit') {
                   await _openForm(row);
+                } else if (value == 'terminate') {
+                  await _terminateAgreement(row);
                 } else if (value == 'delete') {
                   final yes = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
                     title: const Text('Delete agreement?'),
@@ -99,9 +101,18 @@ class AgreementsScreenState extends State<AgreementsScreen> {
                   }
                 }
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                if (row['status']?.toString() != 'Terminated')
+                  const PopupMenuItem(
+                    value: 'terminate',
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.block_outlined, size: 18),
+                      SizedBox(width: 10),
+                      Text('Terminate'),
+                    ]),
+                  ),
+                const PopupMenuItem(value: 'delete', child: Text('Delete')),
               ],
             ),
           ));
@@ -109,6 +120,95 @@ class AgreementsScreenState extends State<AgreementsScreen> {
       );
     },
   );
+
+  Future<void> _terminateAgreement(Map<String, Object?> row) async {
+    final dateController = TextEditingController(
+      text: DateTime.now().toIso8601String().split('T').first,
+    );
+    final reasonController = TextEditingController();
+    var saving = false;
+    try {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) => AlertDialog(
+            title: const Text('Terminate Agreement'),
+            content: SizedBox(
+              width: 420,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                  '“${row['title']}” will be marked as Terminated. This will not delete the agreement.',
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: dateController,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Termination Date',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    suffixIcon: Icon(Icons.calendar_month_outlined),
+                  ),
+                  onTap: () async {
+                    final initial = DateTime.tryParse(dateController.text) ?? DateTime.now();
+                    final picked = await showDatePicker(
+                      context: dialogContext,
+                      initialDate: initial,
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      dateController.text = picked.toIso8601String().split('T').first;
+                      setDialogState(() {});
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reasonController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Termination Reason (optional)',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ]),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton.icon(
+                onPressed: saving || dateController.text.trim().isEmpty
+                    ? null
+                    : () => Navigator.pop(dialogContext, true),
+                icon: const Icon(Icons.block_outlined),
+                label: const Text('Terminate Agreement'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (result != true || !mounted) return;
+      await MySpaceService.instance.terminateAgreement(
+        row['id'] as int,
+        terminationDate: dateController.text.trim(),
+        reason: reasonController.text.trim(),
+      );
+      refreshAgreements();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Agreement terminated successfully.')),
+        );
+      }
+    } finally {
+      dateController.dispose();
+      reasonController.dispose();
+    }
+  }
 
   void _showDetails(BuildContext context, Map<String, Object?> row) {
     showModalBottomSheet<void>(

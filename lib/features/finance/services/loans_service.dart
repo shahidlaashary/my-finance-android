@@ -198,7 +198,7 @@ class LoansService {
       where: 'id = ?',
       whereArgs: [partyId],
     );
-    if (changed == 0) throw Exception('Party was not found.');
+    if (changed != 1) throw Exception('Party was not found or could not be updated.');
     AppRefreshController.notifyChanged();
   }
 
@@ -681,7 +681,6 @@ class LoansService {
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
       final oldWalletAmount = _validatedRepaymentWalletAmount(old);
-      await _getWallet(txn, old.walletId);
       // Restore the old transaction only inside this atomic DB transaction.
       await _changeWalletBalance(txn, walletId: old.walletId,
         amount: loan.loanType == 'given' ? -oldWalletAmount : oldWalletAmount);
@@ -966,8 +965,6 @@ class LoansService {
         where: 'loan_id = ?',
         whereArgs: [loanId],
       );
-
-      await _getWallet(txn, loan.walletId);
 
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);

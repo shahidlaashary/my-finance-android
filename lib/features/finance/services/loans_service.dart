@@ -524,8 +524,10 @@ class LoansService {
 
   static Future<void> _applyWalletDeltasSafely(
     Transaction txn,
-    Map<int, double> deltas,
-  ) async {
+    Map<int, double> deltas, {
+    String insufficientBalanceMessage =
+        'Insufficient wallet balance to reverse this repayment.',
+  }) async {
     for (final entry in deltas.entries) {
       if (entry.key <= 0 || !entry.value.isFinite) {
         throw Exception('Wallet balance change contains invalid details.');
@@ -542,7 +544,7 @@ class LoansService {
       }
       final balance = (rows.first['balance'] as num).toDouble();
       if (!balance.isFinite || balance + entry.value < -0.000001) {
-        throw Exception('Insufficient wallet balance to reverse this repayment.');
+        throw Exception(insufficientBalanceMessage);
       }
     }
     for (final entry in deltas.entries) {
@@ -1011,22 +1013,37 @@ class LoansService {
         whereArgs: [loanId],
       );
 
+      // Calculate the complete delete effect before changing any wallet.
+      // A repayment may have been received into a different wallet and spent;
+      // deleting the loan must not silently push that wallet below zero.
+      final walletDeltas = <int, double>{};
+      void addWalletDelta(int walletId, double delta) {
+        final next = (walletDeltas[walletId] ?? 0) + delta;
+        if (!next.isFinite) {
+          throw Exception('Loan deletion wallet balance change is invalid.');
+        }
+        walletDeltas[walletId] = next;
+      }
+
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
         final repaymentWalletAmount = _validatedRepaymentWalletAmount(repayment);
-        await _changeWalletBalance(
-          txn,
-          walletId: repayment.walletId,
-          amount: loan.loanType == 'given'
+        addWalletDelta(
+          repayment.walletId,
+          loan.loanType == 'given'
               ? -repaymentWalletAmount
               : repaymentWalletAmount,
         );
       }
-
-      await _changeWalletBalance(
+      addWalletDelta(
+        loan.walletId,
+        loan.loanType == 'given' ? loan.amount : -loan.amount,
+      );
+      await _applyWalletDeltasSafely(
         txn,
-        walletId: loan.walletId,
-        amount: loan.loanType == 'given' ? loan.amount : -loan.amount,
+        walletDeltas,
+        insufficientBalanceMessage:
+            'Insufficient wallet balance to delete this loan and reverse its repayments.',
       );
 
       final partyId = (loanRecord['party_id'] as num?)?.toInt();

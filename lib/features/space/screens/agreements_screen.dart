@@ -620,36 +620,56 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         FutureBuilder<List<Map<String, Object?>>>(
           future: _templateOptions,
           builder: (context, snapshot) {
-            final templates = snapshot.data ?? [];
-            if (templates.isEmpty) return const SizedBox.shrink();
-            if (_templateId == null && _templateBodySnapshot.isEmpty) {
-              final first = templates.first;
-              _templateId = first['id'] as int;
-              _templateTitleSnapshot = first['title'].toString();
-              _templateBodySnapshot = first['body'].toString();
-              if (_title.text.isEmpty) _title.text = _templateTitleSnapshot;
-              if (_category.text.isEmpty) _category.text = _templateTitleSnapshot;
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(padding: EdgeInsets.only(bottom: 12), child: LinearProgressIndicator());
             }
-            return Padding(padding: const EdgeInsets.only(bottom: 12), child: DropdownButtonFormField<int>(
-              value: templates.any((t) => t['id'] == _templateId) ? _templateId : null,
-              decoration: const InputDecoration(labelText: 'Agreement Template', border: OutlineInputBorder(), isDense: true),
-              items: templates.map((t) => DropdownMenuItem<int>(value: t['id'] as int, child: Text(t['title'].toString()))).toList(),
-              onChanged: (id) {
-                if (id == null) return;
-                final selected = templates.firstWhere((t) => t['id'] == id);
-                setState(() {
-                  _templateId = id;
-                  _templateTitleSnapshot = selected['title'].toString();
-                  _templateBodySnapshot = selected['body'].toString();
-                  _title.text = _templateTitleSnapshot;
-                  _category.text = _templateTitleSnapshot;
-                });
-              },
-            ));
+            final allTemplates = snapshot.data ?? [];
+            final types = allTemplates.map((t) => (t['agreement_type']?.toString().trim().isNotEmpty ?? false)
+                ? t['agreement_type'].toString().trim() : 'General').toSet().toList()..sort();
+            final selectedType = types.contains(_category.text) ? _category.text : null;
+            final matchingTemplates = selectedType == null ? <Map<String, Object?>>[] : allTemplates.where((t) =>
+              ((t['agreement_type']?.toString().trim().isNotEmpty ?? false) ? t['agreement_type'].toString().trim() : 'General') == selectedType).toList();
+            final selectedTemplateExists = matchingTemplates.any((t) => t['id'] == _templateId);
+            return Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(child: DropdownButtonFormField<String>(
+                value: selectedType,
+                decoration: const InputDecoration(labelText: 'Agreement Type', border: OutlineInputBorder(), isDense: true),
+                items: types.map((type) => DropdownMenuItem(value: type, child: Text(type, overflow: TextOverflow.ellipsis))).toList(),
+                onChanged: (type) => setState(() {
+                  _category.text = type ?? '';
+                  _templateId = null;
+                  _templateTitleSnapshot = '';
+                  _templateBodySnapshot = '';
+                }),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: DropdownButtonFormField<int>(
+                value: selectedTemplateExists ? _templateId : null,
+                decoration: const InputDecoration(labelText: 'Agreement Template', border: OutlineInputBorder(), isDense: true),
+                hint: Text(selectedType == null ? 'Select type first' : 'Select template'),
+                items: matchingTemplates.map((t) => DropdownMenuItem<int>(value: t['id'] as int, child: Text(t['title'].toString(), overflow: TextOverflow.ellipsis))).toList(),
+                onChanged: selectedType == null ? null : (id) {
+                  if (id == null) return;
+                  final selected = matchingTemplates.firstWhere((t) => t['id'] == id);
+                  setState(() {
+                    _templateId = id;
+                    _templateTitleSnapshot = selected['title'].toString();
+                    _templateBodySnapshot = selected['body'].toString();
+                    _title.text = _templateTitleSnapshot;
+                  });
+                },
+              )),
+            ]));
           },
         ),
+        if (_templateId == null)
+          Padding(padding: const EdgeInsets.symmetric(vertical: 28), child: Column(children: [
+            Icon(Icons.description_outlined, size: 42, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(height: 10),
+            const Text('Select Agreement Type and Agreement Template to open its form.', textAlign: TextAlign.center),
+          ]))
+        else ...[
         _field(_title, 'Agreement Title', required: true),
-        _field(_category, 'Agreement Type'),
         _field(_partyOne, 'First Party'),
         _field(_partyTwo, 'Second Party'),
         FutureBuilder<List<Map<String, Object?>>>(
@@ -792,6 +812,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             label: Text(_saving ? 'Saving...' : 'Save'),
           )),
         ]),
+        ],
       ])),
     );
   }

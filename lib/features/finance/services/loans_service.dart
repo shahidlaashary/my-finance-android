@@ -957,14 +957,12 @@ class LoansService {
       }
       final difference = amount - loan.amount;
       if (difference != 0) {
-        final balance = await _getWalletBalance(txn, loan.walletId);
-        if (loan.loanType == 'given' && difference > 0 && balance < difference) {
-          throw Exception('Insufficient wallet balance for the increased loan amount.');
-        }
-        await _changeWalletBalance(
+        final walletDelta = loan.loanType == 'given' ? -difference : difference;
+        await _applyWalletDeltasSafely(
           txn,
-          walletId: loan.walletId,
-          amount: loan.loanType == 'given' ? -difference : difference,
+          {loan.walletId: walletDelta},
+          insufficientBalanceMessage:
+              'Insufficient wallet balance to update this loan amount.',
         );
       }
       final remaining = amount - repaid;

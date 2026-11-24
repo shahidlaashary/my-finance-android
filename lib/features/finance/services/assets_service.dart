@@ -667,6 +667,8 @@ class AssetsService {
             (loanRecord['source_id'] as num?)?.toInt() != assetId ||
             loanRecord['loan_type']?.toString().toLowerCase() != expectedLoanType ||
             (loanRecord['wallet_id'] as num?)?.toInt() != 0 ||
+            expectedPartyId == null ||
+            expectedPartyId <= 0 ||
             (loanRecord['party_id'] as num?)?.toInt() != expectedPartyId ||
             loanAmount == null ||
             !loanAmount.isFinite ||

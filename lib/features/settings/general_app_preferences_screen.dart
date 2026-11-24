@@ -49,9 +49,6 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
     });
   }
 
-  @override
-  void dispose() { super.dispose(); }
-
   Future<void> _save(Future<void> Function() action) async {
     await action();
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(

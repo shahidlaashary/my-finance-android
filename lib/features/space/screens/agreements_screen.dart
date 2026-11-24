@@ -450,7 +450,19 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             icon: const Icon(Icons.add), label: const Text('Add Label'),
           )),
           const Divider(),
-          SizedBox(height: 220, child: ListView(shrinkWrap: true, children: labels.map((label) => ListTile(
+          Align(alignment: Alignment.centerLeft, child: Text('Companies', style: Theme.of(context).textTheme.titleSmall)),
+          SizedBox(height: 90, child: ListView(shrinkWrap: true, children: companies.map((company) => ListTile(
+            dense: true, title: Text(company['name'].toString()),
+            trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
+              await service.deleteAgreementCompany(company['id'] as int);
+              companies = await service.getAgreementCompanies();
+              labels = await service.getAgreementLabels();
+              companyId = companies.isEmpty ? null : companies.first['id'] as int;
+              setDialogState(() {});
+            }),
+          )).toList())),
+          Align(alignment: Alignment.centerLeft, child: Text('Labels', style: Theme.of(context).textTheme.titleSmall)),
+          SizedBox(height: 180, child: ListView(shrinkWrap: true, children: labels.map((label) => ListTile(
             dense: true, title: Text(label['name'].toString()), subtitle: Text(label['company_name'].toString()),
             trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
               await service.deleteAgreementLabel(label['id'] as int);

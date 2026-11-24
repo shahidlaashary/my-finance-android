@@ -462,15 +462,36 @@ class AssetsService {
 
         final loanRows = await txn.query(
           'loans',
-          columns: ['id', 'source_type', 'source_id'],
+          columns: [
+            'id', 'source_type', 'source_id', 'loan_type', 'party_id',
+            'amount', 'remaining_amount', 'wallet_id', 'currency',
+          ],
           where: 'id = ?',
           whereArgs: [oldAsset.linkedLoanId],
           limit: 1,
         );
-        if (loanRows.isEmpty ||
-            loanRows.first['source_type'] != 'asset_purchase' ||
-            (loanRows.first['source_id'] as num?)?.toInt() != updatedAsset.id) {
+        if (loanRows.isEmpty) {
           throw Exception('Linked asset loan was not found.');
+        }
+        final linkedLoan = loanRows.first;
+        final linkedAmount = (linkedLoan['amount'] as num?)?.toDouble();
+        final linkedRemaining =
+            (linkedLoan['remaining_amount'] as num?)?.toDouble();
+        if (linkedLoan['source_type'] != 'asset_purchase' ||
+            (linkedLoan['source_id'] as num?)?.toInt() != updatedAsset.id ||
+            linkedLoan['loan_type']?.toString().toLowerCase() != 'taken' ||
+            (linkedLoan['party_id'] as num?)?.toInt() != oldAsset.partyId ||
+            (linkedLoan['wallet_id'] as num?)?.toInt() != 0 ||
+            linkedAmount == null ||
+            !linkedAmount.isFinite ||
+            (linkedAmount - oldAsset.purchasePrice).abs() > 0.000001 ||
+            linkedRemaining == null ||
+            !linkedRemaining.isFinite ||
+            linkedRemaining < 0 ||
+            linkedRemaining > linkedAmount + 0.000001 ||
+            (linkedLoan['currency']?.toString() ?? 'PKR').toUpperCase() !=
+                oldAsset.currency.toUpperCase()) {
+          throw Exception('Linked asset loan does not match the saved Asset details.');
         }
 
         if (loanTermsChanged) {

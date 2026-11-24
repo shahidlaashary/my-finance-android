@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -18,6 +19,14 @@ void main() {
   final assets = AssetsService();
 
   setUpAll(() {
+    const pathProviderChannel = MethodChannel('plugins.flutter.io/path_provider');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel, (call) async {
+      if (call.method == 'getTemporaryDirectory') {
+        return Directory.systemTemp.path;
+      }
+      throw MissingPluginException('Unsupported path_provider method: ${call.method}');
+    });
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   });

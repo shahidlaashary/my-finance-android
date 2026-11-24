@@ -259,7 +259,7 @@ class AssetsService {
       where: 'id = ? AND is_sold = 0',
       whereArgs: [assetId],
     );
-    if (result == 0) {
+    if (result != 1) {
       throw Exception('Asset not found or already sold.');
     }
     AppRefreshController.notifyChanged();

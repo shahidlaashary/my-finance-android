@@ -216,8 +216,21 @@ class AppTheme {
           fontWeight: FontWeight.w700, fontFamily: fontFamily),
         contentTextStyle: TextStyle(color: p.text, fontFamily: fontFamily),
       ),
+      dropdownButtonTheme: DropdownButtonThemeData(
+        dropdownColor: p.surface,
+        elevation: 8,
+        borderRadius: BorderRadius.circular(13),
+        menuMaxHeight: 320,
+        style: TextStyle(color: p.text, fontFamily: fontFamily),
+      ),
       popupMenuTheme: PopupMenuThemeData(
-        color: p.surface, surfaceTintColor: Colors.transparent,
+        color: p.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(13),
+          side: BorderSide(color: p.outline.withOpacity(.8)),
+        ),
         textStyle: TextStyle(color: p.text, fontFamily: fontFamily),
       ),
       drawerTheme: DrawerThemeData(backgroundColor: p.surface),

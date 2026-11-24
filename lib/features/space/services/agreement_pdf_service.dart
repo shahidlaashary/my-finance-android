@@ -5,7 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-/// Creates a printable A4 Music Rights Agreement from the saved template
+/// Creates a printable Legal-size agreement PDF from the saved template
 /// snapshot. The user's saved document is never re-rendered from a later edit
 /// to the template library.
 class AgreementPdfService {
@@ -50,7 +50,7 @@ class AgreementPdfService {
     );
 
     document.addPage(pw.MultiPage(
-      pageFormat: PdfPageFormat.a4,
+      pageFormat: PdfPageFormat.legal,
       margin: const pw.EdgeInsets.fromLTRB(48, 48, 48, 48),
       theme: pw.ThemeData.withFont(
         base: pw.Font.helvetica(),

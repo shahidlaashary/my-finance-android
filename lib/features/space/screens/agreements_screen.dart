@@ -869,38 +869,71 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             Expanded(child: _field(_partyTwo, 'Second Party')),
           ]),
         ),
-        _field(_address, 'Address', lines: 2),
-        FutureBuilder<List<Map<String, Object?>>>(
-          future: MySpaceService.instance.getAgreementLabels(),
-          builder: (context, snapshot) {
-            final labels = snapshot.data ?? [];
-            final exists = labels.any((e) => e['id'] == _selectedLabelId);
-            return Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(children: [
-              Expanded(child: DropdownButtonFormField<int>(
-                value: exists ? _selectedLabelId : null,
-                decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
-                items: labels.map((e) => DropdownMenuItem<int>(
-                  value: e['id'] as int,
-                  child: Text('${e['name']} • ${e['company_name']}', overflow: TextOverflow.ellipsis),
-                )).toList(),
-                onChanged: (id) {
-                  final selected = labels.where((e) => e['id'] == id);
-                  setState(() {
-                    _selectedLabelId = id;
-                    if (selected.isNotEmpty) _labelName.text = selected.first['name'].toString();
-                  });
-                },
-              )),
-              IconButton(tooltip: 'Manage Companies & Labels', onPressed: _manageLabels, icon: const Icon(Icons.add_business_outlined)),
-            ]));
-          },
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              OutlinedButton.icon(
+                onPressed: _saving ? null : () => _captureSignature(secondParty: false),
+                icon: const Icon(Icons.draw_outlined),
+                label: Text(_signatureData.isEmpty ? 'First Party Signature' : 'Update First Signature'),
+              ),
+              if (_signatureData.isNotEmpty)
+                const Text('Signature captured.', style: TextStyle(fontSize: 12)),
+            ])),
+            const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              OutlinedButton.icon(
+                onPressed: _saving ? null : () => _captureSignature(secondParty: true),
+                icon: const Icon(Icons.draw_outlined),
+                label: Text(_signatureDataTwo.isEmpty ? 'Second Party Signature' : 'Update Second Signature'),
+              ),
+              if (_signatureDataTwo.isNotEmpty)
+                const Text('Signature captured.', style: TextStyle(fontSize: 12)),
+            ])),
+          ]),
         ),
-
+        _field(_address, 'Address', lines: 2),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: Builder(builder: (context) => FutureBuilder<List<Map<String, Object?>>>(
+              future: MySpaceService.instance.getAgreementLabels(),
+              builder: (context, snapshot) {
+                final labels = snapshot.data ?? [];
+                final exists = labels.any((e) => e['id'] == _selectedLabelId);
+                return DropdownButtonFormField<int>(
+                  value: exists ? _selectedLabelId : null,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
+                  items: labels.map((e) => DropdownMenuItem<int>(
+                    value: e['id'] as int,
+                    child: Text('${e['name']} • ${e['company_name']}', overflow: TextOverflow.ellipsis),
+                  )).toList(),
+                  onChanged: (id) {
+                    final selected = labels.where((e) => e['id'] == id);
+                    setState(() {
+                      _selectedLabelId = id;
+                      if (selected.isNotEmpty) _labelName.text = selected.first['name'].toString();
+                    });
+                  },
+                );
+              },
+            ))),
+            IconButton(tooltip: 'Manage Companies & Labels', onPressed: _manageLabels, icon: const Icon(Icons.add_business_outlined)),
+            const SizedBox(width: 4),
+            Expanded(child: DropdownButtonFormField<String>(
+              value: designations.contains(_designation.text) ? _designation.text : null,
+              decoration: const InputDecoration(labelText: 'Designation', border: OutlineInputBorder(), isDense: true),
+              items: designations.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+              onChanged: (v) => setState(() => _designation.text = v ?? 'Owner'),
+            )),
+          ]),
+        ),
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(
-              flex: 3,
               child: InkWell(
                 onTap: _selectTerritories,
                 borderRadius: BorderRadius.circular(4),
@@ -921,7 +954,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              flex: 2,
               child: DropdownButtonFormField<String>(
                 value: selectedTerm,
                 decoration: const InputDecoration(labelText: 'Agreement Term', border: OutlineInputBorder(), isDense: true),
@@ -932,12 +964,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           ]),
         ),
         _field(_tracks, 'Track Details (one track per line)', lines: 4),
-        DropdownButtonFormField<String>(
-          value: designations.contains(_designation.text) ? _designation.text : null,
-          decoration: const InputDecoration(labelText: 'Designation', border: OutlineInputBorder(), isDense: true),
-          items: designations.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-          onChanged: (v) => setState(() => _designation.text = v ?? 'Owner'),
-        ),
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -960,22 +986,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           _field(_terminationReason, 'Termination Reason (optional)', lines: 2),
         ],
         _field(_witnessName, 'Witness Name (optional)'),
-        OutlinedButton.icon(
-          onPressed: _saving ? null : () => _captureSignature(secondParty: false),
-          icon: const Icon(Icons.draw_outlined),
-          label: Text(_signatureData.isEmpty ? 'First Party Signature' : 'Update First Party Signature'),
-        ),
-        if (_signatureData.isNotEmpty)
-          const Padding(padding: EdgeInsets.only(top: 4, bottom: 8),
-            child: Text('First Party signature captured.', style: TextStyle(fontSize: 12))),
-        OutlinedButton.icon(
-          onPressed: _saving ? null : () => _captureSignature(secondParty: true),
-          icon: const Icon(Icons.draw_outlined),
-          label: Text(_signatureDataTwo.isEmpty ? 'Second Party Signature' : 'Update Second Party Signature'),
-        ),
-        if (_signatureDataTwo.isNotEmpty)
-          const Padding(padding: EdgeInsets.only(top: 4, bottom: 8),
-            child: Text('Second Party signature captured.', style: TextStyle(fontSize: 12))),
         _field(_description, 'Additional Agreement Details / Terms', lines: 3),
         _field(_notes, 'Notes', lines: 2),
         ExpansionTile(

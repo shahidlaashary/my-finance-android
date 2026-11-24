@@ -159,6 +159,114 @@ void main() {
     expect(updatedLoan!.remainingAmount, 300);
   });
 
+  test('deleting credit-sale repayment is blocked when received funds were spent', () async {
+    final walletId = await createWallet(1000);
+    final buyerId = await LoansService.addParty(
+      name: 'Repayment Delete Buyer',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Credit Sale Repayment Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: 0,
+      paymentType: 'Loan',
+      partyId: buyerId,
+      walletAmount: 0,
+      walletCurrency: 'PKR',
+    );
+    final loan = (await LoansService.getLoans())
+        .singleWhere((entry) => entry.sourceType == 'asset_sale');
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loan.id!,
+        amount: 200,
+        walletId: walletId,
+        repaymentDate: '2026-11-11',
+        createdAt: DateTime(2026, 11, 11).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'balance': 50},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      LoansService.deleteRepayment(repaymentId),
+      throwsA(isA<Exception>()),
+    );
+
+    final savedLoan = await LoansService.getLoanById(loan.id!);
+    final savedRepayments = await LoansService.getRepayments(loan.id!);
+    final wallet = await FinanceDB.instance.getWallet(walletId);
+    expect(savedLoan!.remainingAmount, 300);
+    expect(savedRepayments, hasLength(1));
+    expect((wallet!['balance'] as num).toDouble(), 50);
+  });
+
+  test('updating a repayment validates the combined wallet reversal and replacement', () async {
+    final walletId = await createWallet(1000);
+    final buyerId = await LoansService.addParty(
+      name: 'Repayment Update Buyer',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Credit Sale Update Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: 0,
+      paymentType: 'Loan',
+      partyId: buyerId,
+      walletAmount: 0,
+      walletCurrency: 'PKR',
+    );
+    final loan = (await LoansService.getLoans())
+        .singleWhere((entry) => entry.sourceType == 'asset_sale');
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loan.id!,
+        amount: 200,
+        walletId: walletId,
+        repaymentDate: '2026-11-11',
+        createdAt: DateTime(2026, 11, 11).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'balance': 50},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await LoansService.updateRepayment(
+      RepaymentModel(
+        id: repaymentId,
+        loanId: loan.id!,
+        amount: 150,
+        walletId: walletId,
+        repaymentDate: '2026-11-12',
+        createdAt: DateTime(2026, 11, 12).toIso8601String(),
+      ),
+    );
+
+    final updatedLoan = await LoansService.getLoanById(loan.id!);
+    final updatedRepayments = await LoansService.getRepayments(loan.id!);
+    final wallet = await FinanceDB.instance.getWallet(walletId);
+    expect(updatedLoan!.remainingAmount, 350);
+    expect(updatedRepayments.single.amount, 150);
+    expect((wallet!['balance'] as num).toDouble(), 0);
+  });
+
   test('deleting sold asset is blocked if reversing sale would make wallet negative', () async {
     final walletId = await createWallet(1000);
     final assetId = await assets.addAssetWithAttachments(

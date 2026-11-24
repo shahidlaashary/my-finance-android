@@ -22,6 +22,23 @@ class RecycleBinService {
 
   static const int retentionDays = 30;
 
+  static Future<void> _applyWalletDelta(
+    Transaction txn, {
+    required int walletId,
+    required double amount,
+  }) async {
+    if (!amount.isFinite) {
+      throw Exception('Wallet balance change must be a valid number.');
+    }
+    final changed = await txn.rawUpdate(
+      'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+      [amount, walletId],
+    );
+    if (changed != 1) {
+      throw Exception('The linked wallet no longer exists. Restore the wallet first.');
+    }
+  }
+
   static Future<int> archive({
     required String type, required String title, required String table,
     required Object id, required Map<String, dynamic> record,
@@ -74,7 +91,7 @@ class RecycleBinService {
         if (walletDelta < 0 && walletBalance + 0.000001 < walletAmount) {
           throw Exception('Insufficient wallet balance to restore this repayment.');
         }
-        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [walletDelta, walletId]);
+        await _applyWalletDelta(txn, walletId: walletId, amount: walletDelta);
         final next = (remaining - amount).clamp(0.0, (loan['amount'] as num).toDouble()).toDouble();
         await txn.update('loans', {'remaining_amount':next,'status':next <= 0 ? 'paid' : 'active'}, where: 'id = ?', whereArgs: [loanId]);
         await txn.insert('loan_repayments', record);
@@ -130,9 +147,10 @@ class RecycleBinService {
           if (originalDelta < 0 && sourceBalance + 0.000001 < -originalDelta) {
             throw Exception('Insufficient wallet balance to restore this loan.');
           }
-          await txn.rawUpdate(
-            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
-            [originalDelta, loanWallet],
+          await _applyWalletDelta(
+            txn,
+            walletId: loanWallet,
+            amount: originalDelta,
           );
         }
 
@@ -151,9 +169,10 @@ class RecycleBinService {
           if (delta < 0 && balance + 0.000001 < -delta) {
             throw Exception('Insufficient wallet balance to restore a loan repayment.');
           }
-          await txn.rawUpdate(
-            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
-            [delta, walletId],
+          await _applyWalletDelta(
+            txn,
+            walletId: walletId,
+            amount: delta,
           );
         }
 
@@ -214,9 +233,10 @@ class RecycleBinService {
           if ((walletRows.first['balance'] as num).toDouble() < purchase) {
             throw Exception('Insufficient wallet balance to restore this asset.');
           }
-          await txn.rawUpdate(
-            'UPDATE wallets SET balance = balance - ? WHERE id = ?',
-            [purchase, walletId],
+          await _applyWalletDelta(
+            txn,
+            walletId: walletId,
+            amount: -purchase,
           );
         }
         if ((record['is_sold'] as num?)?.toInt() == 1 &&
@@ -228,9 +248,11 @@ class RecycleBinService {
             whereArgs: [saleWalletId], limit: 1,
           );
           if (saleExists.isEmpty) throw Exception('The asset sale wallet no longer exists.');
-          await txn.rawUpdate(
-            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
-            [((record['sale_wallet_amount'] as num?)?.toDouble() ?? (record['sale_price'] as num).toDouble()), saleWalletId],
+          await _applyWalletDelta(
+            txn,
+            walletId: saleWalletId,
+            amount: (record['sale_wallet_amount'] as num?)?.toDouble() ??
+                (record['sale_price'] as num).toDouble(),
           );
         }
         // Restore the linked purchase/sale loans and their repayment history
@@ -272,9 +294,10 @@ class RecycleBinService {
               if (delta < 0 && balance + 0.000001 < -delta) {
                 throw Exception('Insufficient wallet balance to restore linked loan repayments.');
               }
-              await txn.rawUpdate(
-                'UPDATE wallets SET balance = balance + ? WHERE id = ?',
-                [delta, repaymentWalletId],
+              await _applyWalletDelta(
+                txn,
+                walletId: repaymentWalletId,
+                amount: delta,
               );
             }
             await txn.insert('loans', loan);

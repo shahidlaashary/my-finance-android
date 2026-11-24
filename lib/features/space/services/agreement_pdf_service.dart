@@ -35,7 +35,7 @@ class AgreementPdfService {
     // instead of the territory placeholder. Keep their wording consistent
     // with the selected territory without ever expanding region membership.
     if (territory.toLowerCase() != 'worldwide') {
-      body = body.replaceAll(RegExp(r'\\bworldwide\\b', caseSensitive: false), 'in ' + territory);
+      body = body.replaceAll(RegExp(r'\bworldwide\b', caseSensitive: false), 'in ' + territory);
     }
     return body;
   }

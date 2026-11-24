@@ -198,7 +198,7 @@ class AssetsService {
             'status': 'active',
             'created_at': DateTime.now().toIso8601String(),
           });
-          await txn.update('assets', {'linked_loan_id': loanId}, where: 'id = ?', whereArgs: ['$id']);
+          await txn.update('assets', {'linked_loan_id': loanId}, where: 'id = ?', whereArgs: [id]);
         }
 
         await AttachmentService.insertPreparedAssetAttachments(
@@ -391,8 +391,8 @@ class AssetsService {
         where: 'id = ? AND is_sold = 0',
         whereArgs: [assetId],
       );
-      if (updated == 0) {
-        throw Exception('This asset has already been sold.');
+      if (updated != 1) {
+        throw Exception('This asset has already been sold or could not be updated.');
       }
     });
 

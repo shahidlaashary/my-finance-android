@@ -153,9 +153,12 @@ class MySpaceService {
           track_details TEXT NOT NULL DEFAULT '',
           designation TEXT NOT NULL DEFAULT '',
           agreement_date TEXT NOT NULL DEFAULT '',
+          signing_date TEXT NOT NULL DEFAULT '',
           witness_name TEXT NOT NULL DEFAULT '',
           signature_data TEXT NOT NULL DEFAULT '',
-          stamp_attachment_id INTEGER,
+          signature_data_two TEXT NOT NULL DEFAULT '',
+          termination_date TEXT NOT NULL DEFAULT '',
+          termination_reason TEXT NOT NULL DEFAULT '',
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )
@@ -171,6 +174,24 @@ class MySpaceService {
         updated_at TEXT NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS space_agreement_companies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS space_agreement_labels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company_id INTEGER NOT NULL,
+        name TEXT NOT NULL COLLATE NOCASE,
+        created_at TEXT NOT NULL,
+        UNIQUE(company_id, name),
+        FOREIGN KEY(company_id) REFERENCES space_agreement_companies(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_agreement_labels_company ON space_agreement_labels(company_id)');
     final templateCount = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM space_agreement_templates')) ?? 0;
     if (templateCount == 0) {
@@ -225,9 +246,12 @@ class MySpaceService {
       'track_details': (record['track_details'] ?? '').toString().trim(),
       'designation': (record['designation'] ?? '').toString().trim(),
       'agreement_date': (record['agreement_date'] ?? '').toString().trim(),
+      'signing_date': (record['signing_date'] ?? '').toString().trim(),
       'witness_name': (record['witness_name'] ?? '').toString().trim(),
       'signature_data': (record['signature_data'] ?? '').toString(),
-      'stamp_attachment_id': record['stamp_attachment_id'],
+      'signature_data_two': (record['signature_data_two'] ?? '').toString(),
+      'termination_date': (record['termination_date'] ?? '').toString().trim(),
+      'termination_reason': (record['termination_reason'] ?? '').toString().trim(),
       'updated_at': now,
     };
     if ((values['title'] as String).isEmpty) {
@@ -243,6 +267,40 @@ class MySpaceService {
     }
   }
 
+
+  Future<List<Map<String, Object?>>> getAgreementLabels() async =>
+      (await database).rawQuery('''
+        SELECT l.id, l.name, l.company_id, c.name AS company_name
+        FROM space_agreement_labels l
+        INNER JOIN space_agreement_companies c ON c.id = l.company_id
+        ORDER BY c.name COLLATE NOCASE, l.name COLLATE NOCASE
+      ''');
+
+  Future<List<Map<String, Object?>>> getAgreementCompanies() async =>
+      (await database).query('space_agreement_companies', orderBy: 'name COLLATE NOCASE');
+
+  Future<int> createAgreementCompany(String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Company name is required.');
+    return (await database).insert('space_agreement_companies', {
+      'name': clean, 'created_at': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<int> createAgreementLabel({required int companyId, required String name}) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw const FormatException('Label name is required.');
+    return (await database).insert('space_agreement_labels', {
+      'company_id': companyId, 'name': clean,
+      'created_at': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.abort);
+  }
+
+  Future<void> deleteAgreementLabel(int id) async =>
+      (await database).delete('space_agreement_labels', where: 'id = ?', whereArgs: [id]);
+
+  Future<void> deleteAgreementCompany(int id) async =>
+      (await database).delete('space_agreement_companies', where: 'id = ?', whereArgs: [id]);
 
   Future<void> deleteAgreement(int id) async {
     await (await database).delete('space_agreements', where: 'id = ?', whereArgs: [id]);

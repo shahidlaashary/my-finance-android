@@ -28,7 +28,7 @@ class _AgreementTemplatesScreenState extends State<AgreementTemplatesScreen> {
             decoration: const InputDecoration(labelText: 'Agreement Clauses', alignLabelWithHint: true, border: OutlineInputBorder()),
             validator: (v) => v == null || v.trim().isEmpty ? 'Clauses are required' : null),
           const SizedBox(height: 8),
-          const Text('Placeholders: {{first_party}}, {{second_party}}, {{address}}, {{label_name}}, {{territory}}, {{term_years}}, {{agreement_date}}',
+          const Text('Placeholders: {{first_party}}, {{second_party}}, {{address}}, {{label_name}}, {{territory}}, {{term_years}}, {{agreement_date}}, {{signing_date}}',
             style: TextStyle(fontSize: 11)),
         ],
       )))),

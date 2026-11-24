@@ -226,44 +226,53 @@ class LoansService {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) throw Exception('Party name is required.');
     final normalizedPhone = phone?.trim() ?? '';
-    final existing = await db.query(
-      'loan_parties',
-      columns: ['id', 'currency'],
-      where: normalizedPhone.isEmpty
-          ? 'LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, \'\') = \'\''
-          : 'LOWER(TRIM(name)) = LOWER(?) AND phone = ?',
-      whereArgs: normalizedPhone.isEmpty
-          ? [normalizedName]
-          : [normalizedName, normalizedPhone],
-      limit: 1,
-    );
-    if (existing.isNotEmpty) {
-      final existingCurrency = (existing.first['currency']?.toString() ?? 'PKR').toUpperCase();
-      if (existingCurrency != currency.trim().toUpperCase()) {
-        throw Exception('A party with this name and phone already exists in ' + existingCurrency + '. Edit that party to change its currency.');
+    final normalizedCurrency = currency.trim().toUpperCase();
+    if (normalizedCurrency.isEmpty) throw Exception('Party currency is required.');
+
+    final id = await db.transaction((txn) async {
+      final existing = await txn.query(
+        'loan_parties',
+        columns: ['id', 'currency'],
+        where: normalizedPhone.isEmpty
+            ? "LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ''"
+            : "LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ?",
+        whereArgs: normalizedPhone.isEmpty
+            ? [normalizedName]
+            : [normalizedName, normalizedPhone],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) {
+        final existingCurrency =
+            (existing.first['currency']?.toString() ?? 'PKR').toUpperCase();
+        if (existingCurrency != normalizedCurrency) {
+          throw Exception(
+            'A party with this name and phone already exists in $existingCurrency. Edit that party to change its currency.',
+          );
+        }
+        return (existing.first['id'] as num).toInt();
       }
-      return existing.first['id'] as int;
-    }
-    final id = await db.insert('loan_parties', {
-      'name': normalizedName,
-      'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
-      'address': address.trim(),
-      'currency': currency.trim().toUpperCase(),
-      'notes': notes.trim(),
-      'email': email.trim(),
-      'party_type': partyType,
-      'country': country.trim(),
-      'city': city.trim(),
-      'postal_code': postalCode.trim(),
-      'opening_balance': openingBalance,
-      'credit_limit': creditLimit,
-      'payment_terms': paymentTerms,
-      'cnic': cnic.trim(),
-      'business_name': businessName.trim(),
-      'tax_number': taxNumber.trim(),
-      'reference_person': referencePerson.trim(),
-      'profile_image_path': profileImagePath,
-      'created_at': DateTime.now().toIso8601String(),
+
+      return txn.insert('loan_parties', {
+        'name': normalizedName,
+        'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
+        'address': address.trim(),
+        'currency': normalizedCurrency,
+        'notes': notes.trim(),
+        'email': email.trim(),
+        'party_type': partyType,
+        'country': country.trim(),
+        'city': city.trim(),
+        'postal_code': postalCode.trim(),
+        'opening_balance': openingBalance,
+        'credit_limit': creditLimit,
+        'payment_terms': paymentTerms,
+        'cnic': cnic.trim(),
+        'business_name': businessName.trim(),
+        'tax_number': taxNumber.trim(),
+        'reference_person': referencePerson.trim(),
+        'profile_image_path': profileImagePath,
+        'created_at': DateTime.now().toIso8601String(),
+      });
     });
     AppRefreshController.notifyChanged();
     return id;
@@ -294,74 +303,123 @@ class LoansService {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) throw Exception('Party name is required.');
     final normalizedPhone = phone?.trim() ?? '';
-    final duplicate = await db.query(
-      'loan_parties',
-      where: "id != ? AND LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ?",
-      whereArgs: [id, normalizedName, normalizedPhone],
-      limit: 1,
-    );
-    if (duplicate.isNotEmpty) {
-      throw Exception('A party with this name and phone number already exists.');
-    }
-    final changed = await db.update(
-      'loan_parties',
-      {
-        'name': normalizedName,
-        'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
-        'address': address.trim(),
-        'currency': currency.trim().toUpperCase(),
-        'notes': notes.trim(),
-        'email': email.trim(),
-        'party_type': partyType,
-        'country': country.trim(),
-        'city': city.trim(),
-        'postal_code': postalCode.trim(),
-        'opening_balance': openingBalance,
-        'credit_limit': creditLimit,
-        'payment_terms': paymentTerms,
-        'cnic': cnic.trim(),
-        'business_name': businessName.trim(),
-        'tax_number': taxNumber.trim(),
-        'reference_person': referencePerson.trim(),
-        'profile_image_path': profileImagePath,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (changed == 0) throw Exception('Party was not found.');
+    final normalizedCurrency = currency.trim().toUpperCase();
+    if (normalizedCurrency.isEmpty) throw Exception('Party currency is required.');
+
+    await db.transaction((txn) async {
+      final currentRows = await txn.query(
+        'loan_parties',
+        columns: ['id', 'currency'],
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (currentRows.isEmpty) throw Exception('Party was not found.');
+
+      final currentCurrency =
+          (currentRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
+      if (currentCurrency != normalizedCurrency) {
+        final linkedLoans = await txn.query(
+          'loans',
+          columns: ['id'],
+          where: 'party_id = ?',
+          whereArgs: [id],
+          limit: 1,
+        );
+        if (linkedLoans.isNotEmpty) {
+          throw Exception(
+            'Party currency cannot be changed while loan history is linked to this party.',
+          );
+        }
+      }
+
+      final duplicate = await txn.query(
+        'loan_parties',
+        columns: ['id'],
+        where: "id != ? AND LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ?",
+        whereArgs: [id, normalizedName, normalizedPhone],
+        limit: 1,
+      );
+      if (duplicate.isNotEmpty) {
+        throw Exception('A party with this name and phone number already exists.');
+      }
+
+      final changed = await txn.update(
+        'loan_parties',
+        {
+          'name': normalizedName,
+          'phone': normalizedPhone.isEmpty ? null : normalizedPhone,
+          'address': address.trim(),
+          'currency': normalizedCurrency,
+          'notes': notes.trim(),
+          'email': email.trim(),
+          'party_type': partyType,
+          'country': country.trim(),
+          'city': city.trim(),
+          'postal_code': postalCode.trim(),
+          'opening_balance': openingBalance,
+          'credit_limit': creditLimit,
+          'payment_terms': paymentTerms,
+          'cnic': cnic.trim(),
+          'business_name': businessName.trim(),
+          'tax_number': taxNumber.trim(),
+          'reference_person': referencePerson.trim(),
+          'profile_image_path': profileImagePath,
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (changed != 1) throw Exception('Party could not be updated.');
+    });
     AppRefreshController.notifyChanged();
   }
 
   /// Party sirf tab delete hoti hai jab us ke sath koi loan linked na ho.
   static Future<void> deleteParty(int partyId) async {
     final db = await _database;
-    final linkedLoans = await db.query(
-      'loans',
-      columns: ['id'],
-      where: 'party_id = ?',
-      whereArgs: [partyId],
-      limit: 1,
-    );
-    if (linkedLoans.isNotEmpty) {
-      throw Exception(
-        'This party has loan history. Delete is blocked to protect linked loans and ledger records.',
+    await RecycleBinService.ensureTable();
+
+    await db.transaction((txn) async {
+      final linkedLoans = await txn.query(
+        'loans',
+        columns: ['id'],
+        where: 'party_id = ?',
+        whereArgs: [partyId],
+        limit: 1,
       );
-    }
-    final rows = await db.query(
-      'loan_parties',
-      where: 'id = ?',
-      whereArgs: [partyId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return;
-    await RecycleBinService.archive(
-      type: 'Loan Party',
-      title: rows.first['name']?.toString() ?? 'Party',
-      table: 'loan_parties',
-      id: partyId,
-      record: rows.first,
-    );
-    await db.delete('loan_parties', where: 'id = ?', whereArgs: [partyId]);
+      if (linkedLoans.isNotEmpty) {
+        throw Exception(
+          'This party has loan history. Delete is blocked to protect linked loans and ledger records.',
+        );
+      }
+
+      final rows = await txn.query(
+        'loan_parties',
+        where: 'id = ?',
+        whereArgs: [partyId],
+        limit: 1,
+      );
+      if (rows.isEmpty) return;
+
+      final now = DateTime.now();
+      await txn.insert('recycle_bin', {
+        'entity_type': 'Loan Party',
+        'entity_title': rows.first['name']?.toString() ?? 'Party',
+        'source_table': 'loan_parties',
+        'source_id': partyId.toString(),
+        'payload': jsonEncode(rows.first),
+        'deleted_at': now.toIso8601String(),
+        'expires_at': now
+            .add(const Duration(days: RecycleBinService.retentionDays))
+            .toIso8601String(),
+      });
+      final deleted = await txn.delete(
+        'loan_parties',
+        where: 'id = ?',
+        whereArgs: [partyId],
+      );
+      if (deleted != 1) throw Exception('Party could not be deleted.');
+    });
     AppRefreshController.notifyChanged();
   }
 

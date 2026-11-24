@@ -103,6 +103,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     value: category,
                     decoration: const InputDecoration(
                       labelText: 'Reminder type',

@@ -583,6 +583,39 @@ class RecycleBinService {
     if (ownerType != null && sourceId != null) {
       await AttachmentService.deleteOwnerAttachments(ownerType: ownerType, ownerId: sourceId);
     }
+    if (table == 'assets') {
+      final raw = item['related_payload']?.toString();
+      if (raw != null && raw.isNotEmpty) {
+        final snapshots = (jsonDecode(raw) as List).whereType<Map>();
+        for (final snapshot in snapshots) {
+          final loan = snapshot['loan'];
+          if (loan is! Map) continue;
+          final loanId = (loan['id'] as num?)?.toInt();
+          if (loanId == null) continue;
+          await AttachmentService.deleteOwnerAttachments(
+            ownerType: 'loan',
+            ownerId: loanId,
+          );
+          final repayments = (snapshot['repayments'] as List? ?? const [])
+              .whereType<Map>();
+          for (final repayment in repayments) {
+            final repaymentId = (repayment['id'] as num?)?.toInt();
+            if (repaymentId != null) {
+              await AttachmentService.deleteOwnerAttachments(
+                ownerType: 'repayment',
+                ownerId: repaymentId,
+              );
+            }
+          }
+          // Grouped asset deletion owns these child loan archive records.
+          await db.delete(
+            'recycle_bin',
+            where: "source_table = 'loans' AND source_id = ?",
+            whereArgs: [loanId.toString()],
+          );
+        }
+      }
+    }
     if (table == 'loans' || table == 'goals') {
       final raw = item['related_payload']?.toString();
       if (raw != null && raw.isNotEmpty) {

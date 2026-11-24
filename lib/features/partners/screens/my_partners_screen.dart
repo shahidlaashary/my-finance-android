@@ -100,6 +100,7 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
       onSave: () { if (key.currentState?.validate() == true) Navigator.pop(context, true); },
       body: (context, setS) => Form(key: key, child: Column(children: [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           value: type, decoration: const InputDecoration(labelText: 'Partner Type'),
           items: const [DropdownMenuItem(value: 'Business', child: Text('Business Partner')), DropdownMenuItem(value: 'Personal', child: Text('Personal Partner'))],
           onChanged: (v) => setS(() => type = v ?? type),
@@ -321,6 +322,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       },
       body: (context, setS) => Column(children: [
         DropdownButtonFormField<bool>(
+          isExpanded: true,
           value: walletToPartner,
           decoration: const InputDecoration(labelText: 'Transfer Direction'),
           items: const [
@@ -384,7 +386,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       if (n == null || !n.isFinite || n <= 0) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid amount.'))); return; }
       Navigator.pop(context, true);
     }, body: (context, setS) => Column(children: [
-      DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Transaction Type'), items: types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(), onChanged: (v) => setS(() => type = v ?? type)),
+      DropdownButtonFormField<String>(isExpanded: true, value: type, decoration: const InputDecoration(labelText: 'Transaction Type'), items: types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(), onChanged: (v) => setS(() => type = v ?? type)),
       TextFormField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Amount *')),
       DropdownButtonFormField<int>(value: walletId, isExpanded: true, decoration: const InputDecoration(labelText: 'Wallet'), items: _wallets.map((w) => DropdownMenuItem(value: w['id'] as int, child: Text(w['name'].toString() + ' (' + w['currency'].toString() + ')'))).toList(), onChanged: (v) => setS(() => walletId = v)),
       TextFormField(controller: category, decoration: const InputDecoration(labelText: 'Category')),

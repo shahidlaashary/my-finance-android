@@ -17,6 +17,7 @@ class AgreementTemplateService {
   Future<int> saveTemplate({
     int? id,
     required String title,
+    required String agreementType,
     required String body,
   }) async {
     final cleanTitle = title.trim();
@@ -28,6 +29,7 @@ class AgreementTemplateService {
     if (id == null) {
       return db.insert('space_agreement_templates', {
         'title': cleanTitle,
+        'agreement_type': agreementType.trim(),
         'body': cleanBody,
         'is_default': 0,
         'created_at': now,
@@ -36,6 +38,7 @@ class AgreementTemplateService {
     }
     await db.update('space_agreement_templates', {
       'title': cleanTitle,
+      'agreement_type': agreementType.trim(),
       'body': cleanBody,
       'updated_at': now,
     }, where: 'id = ?', whereArgs: [id]);
@@ -50,6 +53,7 @@ class AgreementTemplateService {
     final title = '${source['title']} (Copy)';
     return db.insert('space_agreement_templates', {
       'title': title,
+      'agreement_type': source['agreement_type'] ?? 'General',
       'body': source['body'],
       'is_default': 0,
       'created_at': DateTime.now().toIso8601String(),

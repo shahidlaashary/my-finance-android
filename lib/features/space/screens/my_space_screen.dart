@@ -329,7 +329,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                       _addMenuItem('document', Icons.description_outlined, 'Add Doc'),
                       _addMenuItem('photos', Icons.photo_outlined, 'Add Photo'),
                       _addMenuItem('videos', Icons.video_library_outlined, 'Add Video'),
-                      _addMenuItem('agreement', Icons.handshake_outlined, 'Add Agreement'),
+                      _addMenuItem('agreement', Icons.work_outline_rounded, 'Add Work'),
                     ],
                   ),
                 ),

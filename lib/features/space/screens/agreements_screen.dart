@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -157,6 +160,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   late final TextEditingController _title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes;
   late String _status;
   bool _saving = false;
+  String _signatureData = '';
   int? _templateId;
   String _templateTitleSnapshot = '';
   String _templateBodySnapshot = '';
@@ -178,6 +182,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _description = TextEditingController(text: r['description']?.toString() ?? '');
     _notes = TextEditingController(text: r['notes']?.toString() ?? '');
     _status = r['status']?.toString() ?? 'Draft';
+    _signatureData = r['signature_data']?.toString() ?? '';
     _templateId = r['template_id'] as int?;
     _templateTitleSnapshot = r['template_title_snapshot']?.toString() ?? '';
     _templateBodySnapshot = r['template_body_snapshot']?.toString() ?? '';
@@ -245,6 +250,14 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       validator: required ? (v) => v == null || v.trim().isEmpty ? 'Required' : null : null,
     ));
 
+  Future<void> _captureSignature() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => const _AgreementSignatureDialog(),
+    );
+    if (result != null && mounted) setState(() => _signatureData = result);
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -254,6 +267,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         'party_one': _partyOne.text, 'party_two': _partyTwo.text, 'status': _status,
         'start_date': _start.text, 'end_date': _end.text,
         'description': _description.text, 'notes': _notes.text,
+        'signature_data': _signatureData,
         'template_id': _templateId,
         'template_title_snapshot': _templateTitleSnapshot,
         'template_body_snapshot': _templateBodySnapshot,
@@ -345,6 +359,19 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         _field(_start, 'Start Date'),
         _field(_end, 'End / Expiry Date (optional)'),
         _field(_witnessName, 'Witness Name'),
+        OutlinedButton.icon(
+          onPressed: _saving ? null : _captureSignature,
+          icon: const Icon(Icons.draw_outlined),
+          label: Text(_signatureData.isEmpty ? 'Add Digital Signature' : 'Update Digital Signature'),
+        ),
+        if (_signatureData.isNotEmpty)
+          const Padding(padding: EdgeInsets.only(top: 4, bottom: 8),
+            child: Text('Signature captured for this agreement.', style: TextStyle(fontSize: 12))),
+        OutlinedButton.icon(
+          onPressed: _saving ? null : _pickFiles,
+          icon: const Icon(Icons.stamp_outlined),
+          label: const Text('Attach Stamp / E-Stamp Document'),
+        ),
         _field(_description, 'Additional Agreement Details / Terms', lines: 4),
         _field(_notes, 'Notes', lines: 3),
         if (_selectedAttachments.isNotEmpty) ..._selectedAttachments.asMap().entries.map((entry) => ListTile(
@@ -363,4 +390,70 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       ])),
     );
   }
+}
+
+
+class _AgreementSignatureDialog extends StatefulWidget {
+  const _AgreementSignatureDialog();
+  @override
+  State<_AgreementSignatureDialog> createState() => _AgreementSignatureDialogState();
+}
+
+class _AgreementSignatureDialogState extends State<_AgreementSignatureDialog> {
+  final _key = GlobalKey();
+  final List<Offset?> _points = [];
+
+  Future<void> _finish() async {
+    final boundary = _key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null || _points.whereType<Offset>().isEmpty) return;
+    final image = await boundary.toImage(pixelRatio: 3);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (bytes == null || !mounted) return;
+    Navigator.pop(context, base64Encode(bytes.buffer.asUint8List()));
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Draw Signature'),
+    content: SizedBox(width: 420, child: Column(mainAxisSize: MainAxisSize.min, children: [
+      const Text('Sign inside the box using your finger or stylus.'),
+      const SizedBox(height: 10),
+      RepaintBoundary(key: _key, child: GestureDetector(
+        onPanStart: (d) => setState(() => _points.add(d.localPosition)),
+        onPanUpdate: (d) => setState(() => _points.add(d.localPosition)),
+        onPanEnd: (_) => setState(() => _points.add(null)),
+        child: Container(
+          height: 170, width: double.infinity,
+          decoration: BoxDecoration(color: Colors.white, border: Border.all(color: Colors.grey)),
+          child: CustomPaint(painter: _AgreementSignaturePainter(_points)),
+        ),
+      )),
+      Align(alignment: Alignment.centerRight, child: TextButton.icon(
+        onPressed: () => setState(_points.clear),
+        icon: const Icon(Icons.refresh), label: const Text('Clear')),
+      ),
+    ])),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      FilledButton(onPressed: _points.whereType<Offset>().isEmpty ? null : _finish,
+        child: const Text('Use Signature')),
+    ],
+  );
+}
+
+class _AgreementSignaturePainter extends CustomPainter {
+  const _AgreementSignaturePainter(this.points);
+  final List<Offset?> points;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.black..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    for (var i = 0; i < points.length - 1; i++) {
+      final a = points[i], b = points[i + 1];
+      if (a != null && b != null) canvas.drawLine(a, b, paint);
+    }
+  }
+  @override
+  bool shouldRepaint(covariant _AgreementSignaturePainter oldDelegate) => oldDelegate.points != points;
 }

@@ -121,6 +121,7 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
                               ),
                               const SizedBox(height: 10),
                               DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: frequency,
                                 decoration: const InputDecoration(labelText: 'Frequency'),
                                 items: ['Daily', 'Weekly', 'Monthly']
@@ -357,11 +358,11 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     final ok=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
       title:Text(type=='Installment'?'Record Installment Payment':'Record Member Payout'),
       content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
-        DropdownButtonFormField<int>(value:memberId,decoration:const InputDecoration(labelText:'Member'),
+        DropdownButtonFormField<int>(isExpanded: true, value:memberId,decoration:const InputDecoration(labelText:'Member'),
           items:eligibleMembers.map((m)=>DropdownMenuItem(value:(m['id'] as num).toInt(),child:Text(m['name'].toString()))).toList(),
           onChanged:(v){if(v!=null)setD(()=>memberId=v);}),
         TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:InputDecoration(labelText:'Amount (${committeeData['currency'] ?? 'PKR'})')),
-        DropdownButtonFormField<String>(value:paymentMethod,decoration:const InputDecoration(labelText:'Payment method'),
+        DropdownButtonFormField<String>(isExpanded: true, value:paymentMethod,decoration:const InputDecoration(labelText:'Payment method'),
           items:const [
             DropdownMenuItem(value:'Without Wallet',child:Text('Record Without Wallet')),
             DropdownMenuItem(value:'Existing Wallet',child:Text('Use Existing Wallet')),
@@ -369,7 +370,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
           onChanged:(v){if(v!=null)setD(()=>paymentMethod=v);}),
         if(paymentMethod=='Existing Wallet') ...[
           if(wallets.isEmpty) const Padding(padding:EdgeInsets.all(8),child:Text('No existing wallets available.')),
-          if(wallets.isNotEmpty) DropdownButtonFormField<int>(value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Pay from Wallet':'Receive into Wallet'),
+          if(wallets.isNotEmpty) DropdownButtonFormField<int>(isExpanded: true, value:walletId,decoration:InputDecoration(labelText:type=='Installment'?'Pay from Wallet':'Receive into Wallet'),
             items:wallets.map((w)=>DropdownMenuItem(value:(w['id'] as num).toInt(),child:Text('${w['name']} • ${w['currency']} ${money.format(w['balance'])}'))).toList(),
             onChanged:(v){setD(()=>walletId=v);}),
         ],
@@ -562,7 +563,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     String status=committeeData['status'].toString();
     final ok=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
       title:const Text('Committee status'),
-      content:DropdownButtonFormField<String>(value:status,items:['Upcoming','Active','Completed'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setD(()=>status=v);}),
+      content:DropdownButtonFormField<String>(isExpanded: true, value:status,items:['Upcoming','Active','Completed'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)setD(()=>status=v);}),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],
     )));
     if(ok==true){await CommitteeService.updateStatus(id,status);await SoundSettingsService.instance.play('update');committeeData['status']=status;if(mounted)setState(()=>{});_msg('Status updated.');}

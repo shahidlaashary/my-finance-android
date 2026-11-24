@@ -286,68 +286,107 @@ class AssetsService {
     double exchangeRate = 1.0,
     bool isManualRate = false,
   }) async {
-    if (!salePrice.isFinite || salePrice < 0) throw Exception('Please enter a valid sale price.');
+    if (!salePrice.isFinite || salePrice < 0) {
+      throw Exception('Please enter a valid sale price.');
+    }
     final db = await _database;
     await _ensureTables(db);
-    final rows = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
+    final rows = await db.query(
+      'assets',
+      where: 'id = ?',
+      whereArgs: [assetId],
+      limit: 1,
+    );
     if (rows.isEmpty) throw Exception('Asset was not found.');
     final asset = AssetsModel.fromMap(rows.first);
     if (asset.isSold) throw Exception('This asset has already been sold.');
-    if (saleDate.isBefore(asset.purchaseDate)) throw Exception('Sale date cannot be before purchase date.');
+    if (saleDate.isBefore(asset.purchaseDate)) {
+      throw Exception('Sale date cannot be before purchase date.');
+    }
+
     final isLoan = paymentType.toLowerCase() == 'loan';
-    var anchorWalletId = saleWalletId;
     var actualWalletAmount = walletAmount ?? salePrice;
     var actualWalletCurrency = (walletCurrency ?? asset.currency).toUpperCase();
     var appliedExchangeRate = exchangeRate;
+
     if (isLoan) {
       if (partyId == null) throw Exception('Please select the buyer party.');
       final party = await LoansService.getPartyById(partyId);
       if (party == null) throw Exception('Selected buyer party was not found.');
       final buyerCurrency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
-      if (buyerCurrency != asset.currency.toUpperCase()) throw Exception('Buyer party currency must match the asset currency (' + asset.currency + ').');
-      anchorWalletId = 0;
+      if (buyerCurrency != asset.currency.toUpperCase()) {
+        throw Exception('Buyer party currency must match the asset currency (' + asset.currency + ').');
+      }
       actualWalletAmount = 0;
       actualWalletCurrency = asset.currency.toUpperCase();
       appliedExchangeRate = 1.0;
     }
+
     await db.transaction((txn) async {
-      if (!isLoan) {
+      int? linkedLoanId;
+      var anchorWalletId = saleWalletId;
+
+      if (isLoan) {
+        final parties = await txn.query(
+          'loan_parties',
+          where: 'id = ?',
+          whereArgs: [partyId],
+          limit: 1,
+        );
+        if (parties.isEmpty) throw Exception('Selected buyer party was not found.');
+        final buyerCurrency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+        if (buyerCurrency != asset.currency.toUpperCase()) {
+          throw Exception('Buyer party currency must match the asset currency (' + asset.currency + ').');
+        }
+        anchorWalletId = 0;
+        linkedLoanId = await txn.insert('loans', {
+          'party_id': partyId,
+          'loan_type': 'given',
+          'amount': salePrice,
+          'remaining_amount': salePrice,
+          'wallet_id': 0,
+          'currency': buyerCurrency,
+          'source_type': 'asset_sale',
+          'source_id': assetId,
+          'lending_date': saleDate.toIso8601String().split('T').first,
+          'notes': 'Asset sale: ' + asset.name,
+          'status': 'active',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } else {
         final saleWallet = await _getWallet(txn, anchorWalletId);
         final saleCurrency = (saleWallet['currency'] ?? 'PKR').toString().toUpperCase();
-        if (saleCurrency != actualWalletCurrency) throw Exception('Receiving wallet currency changed. Please reopen the sale form.');
-        if (!actualWalletAmount.isFinite || actualWalletAmount < 0) throw Exception('Please enter a valid wallet amount received.');
-        if (!appliedExchangeRate.isFinite || appliedExchangeRate <= 0) throw Exception('Invalid asset sale exchange rate.');
-        if (salePrice > 0 && (actualWalletAmount / salePrice - appliedExchangeRate).abs() > 0.000001) throw Exception('Sale conversion details are inconsistent. Please retry.');
+        if (saleCurrency != actualWalletCurrency) {
+          throw Exception('Receiving wallet currency changed. Please reopen the sale form.');
+        }
+        if (!actualWalletAmount.isFinite || actualWalletAmount < 0) {
+          throw Exception('Please enter a valid wallet amount received.');
+        }
+        if (!appliedExchangeRate.isFinite || appliedExchangeRate <= 0) {
+          throw Exception('Invalid asset sale exchange rate.');
+        }
+        if (salePrice > 0 &&
+            (actualWalletAmount / salePrice - appliedExchangeRate).abs() > 0.000001) {
+          throw Exception('Sale conversion details are inconsistent. Please retry.');
+        }
         await _changeBalance(txn, walletId: anchorWalletId, amount: actualWalletAmount);
       }
+
       await txn.update('assets', {
-        'is_sold': 1, 'sale_date': saleDate.toIso8601String(),
-        'sale_price': salePrice, 'sale_wallet_id': anchorWalletId,
+        'is_sold': 1,
+        'sale_date': saleDate.toIso8601String(),
+        'sale_price': salePrice,
+        'sale_wallet_id': anchorWalletId,
         'sale_wallet_amount': isLoan ? null : actualWalletAmount,
         'sale_wallet_currency': actualWalletCurrency,
         'sale_exchange_rate': appliedExchangeRate,
         'sale_is_manual_rate': isManualRate ? 1 : 0,
-        'sale_payment_type': paymentType, 'sale_party_id': isLoan ? partyId : null,
+        'sale_payment_type': paymentType,
+        'sale_party_id': isLoan ? partyId : null,
+        'sale_linked_loan_id': linkedLoanId,
       }, where: 'id = ?', whereArgs: [assetId]);
     });
-    if (isLoan) {
-      try {
-        final loanId = await LoansService.createAssetLinkedLoan(
-          partyId: partyId!, loanType: 'given', amount: salePrice,
-          lendingDate: saleDate.toIso8601String().split('T').first,
-          sourceType: 'asset_sale', sourceId: assetId, notes: 'Asset sale: ' + asset.name,
-        );
-        await db.update('assets', {'sale_linked_loan_id': loanId}, where: 'id = ?', whereArgs: [assetId]);
-      } catch (_) {
-        await db.update('assets', {
-          'is_sold': 0, 'sale_date': null, 'sale_price': null, 'sale_wallet_id': null,
-          'sale_wallet_amount': null, 'sale_wallet_currency': asset.currency,
-          'sale_exchange_rate': 1, 'sale_is_manual_rate': 0,
-          'sale_payment_type': 'Wallet', 'sale_party_id': null,
-        }, where: 'id = ?', whereArgs: [assetId]);
-        rethrow;
-      }
-    }
+
     AppRefreshController.notifyChanged();
   }
 

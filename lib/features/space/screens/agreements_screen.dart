@@ -131,7 +131,9 @@ class AgreementsScreenState extends State<AgreementsScreen> {
             const SizedBox(height: 12),
             for (final field in <String, String>{
               'Type': 'category', 'First Party': 'party_one', 'Second Party': 'party_two',
-              'Status': 'status', 'Start Date': 'start_date', 'End Date': 'end_date',
+              'Status': 'status', 'Agreement Date': 'agreement_date',
+              'Signing Date': 'signing_date', 'Start Date': 'start_date', 'End Date': 'end_date',
+              'Termination Date': 'termination_date', 'Termination Reason': 'termination_reason',
               'Details': 'description', 'Notes': 'notes',
             }.entries)
               if ((row[field.value]?.toString() ?? '').trim().isNotEmpty)

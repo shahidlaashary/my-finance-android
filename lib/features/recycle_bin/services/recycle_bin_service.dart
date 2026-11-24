@@ -191,26 +191,28 @@ class RecycleBinService {
           throw Exception('The archived asset loan direction does not match its source.');
         }
 
-        // Asset-linked loans never move a reference wallet at creation.
-        if (!isAssetLinked) {
-          final source = await txn.query(
-            'wallets', columns: ['balance'], where: 'id = ?',
-            whereArgs: [loanWallet], limit: 1,
-          );
-          if (source.isEmpty) throw Exception('The loan wallet no longer exists.');
-          final originalDelta = loanType == 'given' ? -loanAmount : loanAmount;
-          final sourceBalance = (source.first['balance'] as num).toDouble();
-          if (originalDelta < 0 && sourceBalance + 0.000001 < -originalDelta) {
-            throw Exception('Insufficient wallet balance to restore this loan.');
+        // Restore the original loan and every repayment as one net effect
+        // per wallet. For Loan Given, the original lending debit may be
+        // offset by repayments received into that same wallet.
+        final walletDeltas = <int, double>{};
+        void addWalletDelta(int walletId, double delta) {
+          if (walletId <= 0 || !delta.isFinite) {
+            throw Exception('The archived loan contains invalid wallet accounting details.');
           }
-          await _applyWalletDelta(
-            txn,
-            walletId: loanWallet,
-            amount: originalDelta,
+          final next = (walletDeltas[walletId] ?? 0) + delta;
+          if (!next.isFinite) {
+            throw Exception('The archived loan wallet balance change is invalid.');
+          }
+          walletDeltas[walletId] = next;
+        }
+        if (!isAssetLinked) {
+          addWalletDelta(
+            loanWallet,
+            loanType == 'given' ? -loanAmount : loanAmount,
           );
         }
 
-        // Reapply each repayment using its wallet-side converted amount.
+        // Reapply each repayment using its saved wallet-side converted amount.
         for (final repayment in repayments) {
           final walletId = (repayment['wallet_id'] as num).toInt();
           final repaymentAmount = (repayment['amount'] as num).toDouble();
@@ -225,20 +227,34 @@ class RecycleBinService {
               walletId <= 0) {
             throw Exception('An archived loan repayment contains invalid details.');
           }
-          final walletRows = await txn.query(
-            'wallets', columns: ['balance'], where: 'id = ?',
-            whereArgs: [walletId], limit: 1,
+          addWalletDelta(
+            walletId,
+            loanType == 'given' ? walletAmount : -walletAmount,
           );
-          if (walletRows.isEmpty) throw Exception('A repayment wallet no longer exists.');
-          final delta = loanType == 'given' ? walletAmount : -walletAmount;
-          final balance = (walletRows.first['balance'] as num).toDouble();
-          if (delta < 0 && balance + 0.000001 < -delta) {
-            throw Exception('Insufficient wallet balance to restore a loan repayment.');
+        }
+
+        for (final entry in walletDeltas.entries) {
+          final walletRows = await txn.query(
+            'wallets',
+            columns: ['balance'],
+            where: 'id = ?',
+            whereArgs: [entry.key],
+            limit: 1,
+          );
+          if (walletRows.isEmpty) {
+            throw Exception('A linked loan wallet no longer exists. Restore the wallet first.');
           }
+          final balance = (walletRows.first['balance'] as num).toDouble();
+          if (!balance.isFinite || balance + entry.value < -0.000001) {
+            throw Exception('Insufficient wallet balance to restore this loan and its repayments.');
+          }
+        }
+        for (final entry in walletDeltas.entries) {
+          if (entry.value == 0) continue;
           await _applyWalletDelta(
             txn,
-            walletId: walletId,
-            amount: delta,
+            walletId: entry.key,
+            amount: entry.value,
           );
         }
 

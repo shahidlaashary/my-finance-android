@@ -159,9 +159,27 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
     return Form(key: _key, child: SingleChildScrollView(primary: false, keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 8, 18, 16), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       TextFormField(controller: _name, decoration: _dec('Asset name *', icon: Icons.inventory_2_outlined), validator: (v) => v == null || v.trim().isEmpty ? 'Enter asset name.' : null),
       const SizedBox(height: 12),
-      DropdownButtonFormField<String>(value: _category, decoration: _dec('Category'), items: const ['Property','Vehicles','Gold','Jewellery','Electronics','Investments','Livestock','Business'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) { if (v != null) setState(() => _category = v); }),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(value: _payment, decoration: _dec('Payment type'), items: const ['Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _payment = v ?? 'Wallet')),
+      Row(children: [
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            value: _category,
+            isExpanded: true,
+            decoration: _dec('Category'),
+            items: const ['Property','Vehicles','Gold','Jewellery','Electronics','Investments','Livestock','Business'].map((v) => DropdownMenuItem(value: v, child: Text(v, overflow: TextOverflow.ellipsis))).toList(),
+            onChanged: (v) { if (v != null) setState(() => _category = v); },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            value: _payment,
+            isExpanded: true,
+            decoration: _dec('Payment type'),
+            items: const ['Wallet','Loan'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+            onChanged: (v) => setState(() => _payment = v ?? 'Wallet'),
+          ),
+        ),
+      ]),
       const SizedBox(height: 12),
       if (_payment == 'Loan') ...[
         DropdownButtonFormField<String>(
@@ -202,8 +220,37 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
         const SizedBox(width:12),
         Expanded(child:TextFormField(controller: _current, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Current value *'), validator: (v) { final n = double.tryParse(v ?? ''); return n == null || !n.isFinite || n < 0 ? 'Enter a valid current value.' : null; })),
       ]),
-      ListTile(contentPadding: EdgeInsets.zero, title: const Text('Purchase date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_purchaseDate)), onTap: _pickDate),
-      SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Include in consolidated balance'), value: _includeBalance, onChanged: (v) => setState(() => _includeBalance = v)),
+      Row(children: [
+        Expanded(
+          child: InkWell(
+            onTap: _pickDate,
+            borderRadius: BorderRadius.circular(12),
+            child: InputDecorator(
+              decoration: _dec('Purchase date'),
+              child: Row(
+                children: [
+                  Expanded(child: Text(DateFormat('dd MMM yyyy').format(_purchaseDate), overflow: TextOverflow.ellipsis)),
+                  const Icon(Icons.calendar_today_outlined, size: 18),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text('Consolidated Balance', style: TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
+              ),
+              Switch(
+                value: _includeBalance,
+                onChanged: (v) => setState(() => _includeBalance = v),
+              ),
+            ],
+          ),
+        ),
+      ]),
       TextFormField(controller: _notes, maxLines: 2, decoration: _dec('Notes (Optional)').copyWith(suffixIcon: IconButton(onPressed: _attachments, icon: const Icon(Icons.attach_file_rounded)))),
       if (_image != null || _pdfs.isNotEmpty) Text('${_image == null ? '' : '1 image, '}${_pdfs.length} PDF(s)', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
       const SizedBox(height: 16),

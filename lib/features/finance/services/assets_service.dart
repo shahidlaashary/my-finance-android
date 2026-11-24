@@ -748,6 +748,27 @@ class AssetsService {
             .toIso8601String(),
       });
 
+      // Reversing a sale or repayment must never push a wallet below
+      // zero when its proceeds have already been spent. Validate every net
+      // wallet effect before applying any of them.
+      for (final entry in walletDeltas.entries) {
+        final walletRows = await txn.query(
+          'wallets',
+          columns: ['balance'],
+          where: 'id = ?',
+          whereArgs: [entry.key],
+          limit: 1,
+        );
+        if (walletRows.isEmpty) {
+          throw Exception('The linked wallet no longer exists. Restore the wallet first.');
+        }
+        final balance = (walletRows.first['balance'] as num).toDouble();
+        if (!balance.isFinite || balance + entry.value < -0.000001) {
+          throw Exception(
+            'Insufficient wallet balance to delete this Asset and reverse its sale or loan repayments.',
+          );
+        }
+      }
       for (final entry in walletDeltas.entries) {
         if (entry.value == 0) continue;
         await _changeBalance(

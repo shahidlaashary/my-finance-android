@@ -82,8 +82,8 @@ class _ManagementScreenState extends State<ManagementScreen> with SingleTickerPr
       _buildManagementList(_companies,empty:'No companies yet',tile:(r)=>Card(child:ListTile(leading:const Icon(Icons.business_outlined),title:Text(r['name'].toString()),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='edit')_manageCompany(r);if(v=='delete')_deleteManagementItem('company',()=>_service.deleteAgreementCompany(r['id'] as int));},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('Edit')),PopupMenuItem(value:'delete',child:Text('Delete'))])))),
       _buildManagementList(_manageLabels,empty:'No labels yet',tile:(r)=>Card(child:ListTile(leading:const Icon(Icons.label_outline),title:Text(r['name'].toString()),subtitle:Text(r['company_name']?.toString()??''),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='edit')_manageLabel(r);if(v=='delete')_deleteManagementItem('label',()=>_service.deleteAgreementLabel(r['id'] as int));},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('Edit')),PopupMenuItem(value:'delete',child:Text('Delete'))])))),
       _buildManagementList(_manageArtists,empty:'No artists yet',tile:(r)=>Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.mic_none)),title:Text(r['name'].toString()),subtitle:Text([r['stage_name'],r['genre'],r['phone']].where((x)=>x!=null&&x.toString().isNotEmpty).join(' • ')),onTap:()=>_manageArtist(r),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='edit')_manageArtist(r);if(v=='delete')_deleteManagementItem('artist',()=>_service.deleteArtist(r['id'] as int));},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('Edit')),PopupMenuItem(value:'delete',child:Text('Delete'))])))),
-      const AgreementTemplatesScreen(embeddedInManagement: true),
-      const RecycleBinScreen(embeddedInManagement: true),
+      const AgreementTemplatesScreen(),
+      const RecycleBinScreen(),
     ]),
     floatingActionButton:AnimatedBuilder(animation:_tabs,builder:(ctx,_){
       if(_tabs.index>=3)return const SizedBox.shrink();

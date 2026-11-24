@@ -29,6 +29,7 @@ class _AssetSaleEntryFormState extends State<AssetSaleEntryForm> {
   int? _walletId, _partyId;
   String _paymentType = 'Wallet';
   bool _manualAmount = false, _loadingRate = false;
+  int _rateRequest = 0;
   double? _assetRate, _walletRate;
 
   @override
@@ -64,22 +65,51 @@ class _AssetSaleEntryFormState extends State<AssetSaleEntryForm> {
   }
 
   Future<void> _loadRates() async {
-    if (_walletCurrency == _assetCurrency) {
-      if (mounted) setState(() { _assetRate = 1; _walletRate = 1; });
+    final request = ++_rateRequest;
+    final assetCurrency = _assetCurrency;
+    final walletCurrency = _walletCurrency;
+
+    if (walletCurrency == assetCurrency) {
+      if (mounted) {
+        setState(() {
+          _assetRate = 1;
+          _walletRate = 1;
+          _loadingRate = false;
+        });
+      }
       return;
     }
-    setState(() => _loadingRate = true);
+
+    if (mounted) setState(() => _loadingRate = true);
     try {
-      var assetRate = await FinanceDB.instance.getExchangeRate(_assetCurrency);
-      var walletRate = await FinanceDB.instance.getExchangeRate(_walletCurrency);
+      var assetRate = await FinanceDB.instance.getExchangeRate(assetCurrency);
+      var walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
       if (assetRate == null || walletRate == null) {
-        await FinanceDB.instance.refreshMissingExchangeRatesOnline(currencies: [_assetCurrency, _walletCurrency]);
-        assetRate = await FinanceDB.instance.getExchangeRate(_assetCurrency);
-        walletRate = await FinanceDB.instance.getExchangeRate(_walletCurrency);
+        await FinanceDB.instance.refreshMissingExchangeRatesOnline(
+          currencies: [assetCurrency, walletCurrency],
+        );
+        assetRate = await FinanceDB.instance.getExchangeRate(assetCurrency);
+        walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
       }
-      if (mounted) setState(() { _assetRate = assetRate; _walletRate = walletRate; _loadingRate = false; });
+      if (mounted && request == _rateRequest &&
+          assetCurrency == _assetCurrency &&
+          walletCurrency == _walletCurrency) {
+        setState(() {
+          _assetRate = assetRate;
+          _walletRate = walletRate;
+          _loadingRate = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() { _assetRate = null; _walletRate = null; _loadingRate = false; });
+      if (mounted && request == _rateRequest &&
+          assetCurrency == _assetCurrency &&
+          walletCurrency == _walletCurrency) {
+        setState(() {
+          _assetRate = null;
+          _walletRate = null;
+          _loadingRate = false;
+        });
+      }
     }
   }
 

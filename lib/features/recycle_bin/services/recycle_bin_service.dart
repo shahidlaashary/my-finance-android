@@ -108,19 +108,32 @@ class RecycleBinService {
       }
       if (table == 'loans') {
         final linkedSource = record['source_type']?.toString();
-        if (const {'asset_purchase', 'asset_sale'}.contains(linkedSource)) {
+        if (linkedSource != null &&
+            linkedSource != 'asset_purchase' &&
+            linkedSource != 'asset_sale') {
+          throw Exception('The archived loan has an unsupported linked source.');
+        }
+        if (linkedSource != null) {
           final sourceAssetId = (record['source_id'] as num?)?.toInt();
           final sourceAsset = sourceAssetId == null
               ? <Map<String, Object?>>[]
               : await txn.query(
                   'assets',
-                  columns: ['id'],
+                  columns: ['id', 'linked_loan_id', 'sale_linked_loan_id'],
                   where: 'id = ?',
                   whereArgs: [sourceAssetId],
                   limit: 1,
                 );
           if (sourceAsset.isEmpty) {
             throw Exception('Restore the related Asset first. Its linked loan belongs to that Asset.');
+          }
+          final expectedLoanId = (record['id'] as num).toInt();
+          final linkedId = (sourceAsset.first[
+              linkedSource == 'asset_purchase'
+                  ? 'linked_loan_id'
+                  : 'sale_linked_loan_id'] as num?)?.toInt();
+          if (linkedId != expectedLoanId) {
+            throw Exception('This loan is not the linked loan recorded by the related Asset.');
           }
         }
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
@@ -138,10 +151,26 @@ class RecycleBinService {
         final relatedRaw = item['related_payload']?.toString() ?? '[]';
         final repayments = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
         final loanType = record['loan_type']?.toString().toLowerCase() ?? 'given';
+        if (loanType != 'given' && loanType != 'taken') {
+          throw Exception('The archived loan has an invalid loan type.');
+        }
         final isAssetLinked = const {'asset_purchase', 'asset_sale'}
             .contains(record['source_type']?.toString());
         final loanAmount = (record['amount'] as num).toDouble();
         final loanWallet = (record['wallet_id'] as num).toInt();
+        final remainingAmount = (record['remaining_amount'] as num).toDouble();
+        if (!loanAmount.isFinite || loanAmount <= 0 ||
+            !remainingAmount.isFinite ||
+            remainingAmount < 0 ||
+            remainingAmount > loanAmount + 0.000001 ||
+            (isAssetLinked ? loanWallet != 0 : loanWallet <= 0)) {
+          throw Exception('The archived loan contains invalid amount or wallet details.');
+        }
+        if (isAssetLinked &&
+            ((linkedSource == 'asset_purchase' && loanType != 'taken') ||
+             (linkedSource == 'asset_sale' && loanType != 'given'))) {
+          throw Exception('The archived asset loan direction does not match its source.');
+        }
 
         // Asset-linked loans never move a reference wallet at creation.
         if (!isAssetLinked) {
@@ -165,8 +194,18 @@ class RecycleBinService {
         // Reapply each repayment using its wallet-side converted amount.
         for (final repayment in repayments) {
           final walletId = (repayment['wallet_id'] as num).toInt();
+          final repaymentAmount = (repayment['amount'] as num).toDouble();
           final walletAmount = (repayment['wallet_amount'] as num?)?.toDouble()
-              ?? (repayment['amount'] as num).toDouble();
+              ?? repaymentAmount;
+          if ((repayment['loan_id'] as num?)?.toInt() !=
+                  (record['id'] as num).toInt() ||
+              !repaymentAmount.isFinite ||
+              repaymentAmount <= 0 ||
+              !walletAmount.isFinite ||
+              walletAmount <= 0 ||
+              walletId <= 0) {
+            throw Exception('An archived loan repayment contains invalid details.');
+          }
           final walletRows = await txn.query(
             'wallets', columns: ['balance'], where: 'id = ?',
             whereArgs: [walletId], limit: 1,

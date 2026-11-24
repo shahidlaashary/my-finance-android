@@ -281,6 +281,9 @@ class RecycleBinService {
         final walletId = (record['wallet_id'] as num?)?.toInt() ?? 0;
         if (!isLoanPurchase) {
           final purchase = (record['purchase_price'] as num).toDouble();
+          if (!purchase.isFinite || purchase <= 0 || walletId <= 0) {
+            throw Exception('The archived Asset purchase amount or wallet is invalid.');
+          }
           final walletRows = await txn.query(
             'wallets', columns: ['balance'], where: 'id = ?',
             whereArgs: [walletId], limit: 1,
@@ -299,11 +302,18 @@ class RecycleBinService {
             record['sale_price'] != null &&
             (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') != 'loan') {
           final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
+          final saleWalletAmount =
+              (record['sale_wallet_amount'] as num?)?.toDouble() ??
+                  (record['sale_price'] as num).toDouble();
+          if (saleWalletId <= 0 ||
+              !saleWalletAmount.isFinite ||
+              saleWalletAmount < 0) {
+            throw Exception('The archived Asset sale wallet details are invalid.');
+          }
           await _applyWalletDelta(
             txn,
             walletId: saleWalletId,
-            amount: (record['sale_wallet_amount'] as num?)?.toDouble() ??
-                (record['sale_price'] as num).toDouble(),
+            amount: saleWalletAmount,
           );
         }
         // Restore the linked purchase/sale loans and their repayment history
@@ -328,6 +338,11 @@ class RecycleBinService {
             final isPurchaseLoan = loanId == purchaseLoanId;
             final expectedSource = isPurchaseLoan ? 'asset_purchase' : 'asset_sale';
             final expectedType = isPurchaseLoan ? 'taken' : 'given';
+            final expectedAmount = isPurchaseLoan
+                ? (record['purchase_price'] as num).toDouble()
+                : (record['sale_price'] as num?)?.toDouble();
+            final expectedPartyId = (record[
+                isPurchaseLoan ? 'party_id' : 'sale_party_id'] as num?)?.toInt();
             final loanAmount = (loan['amount'] as num).toDouble();
             final loanRemaining = (loan['remaining_amount'] as num).toDouble();
             if (!restoredLoanIds.add(loanId) ||
@@ -336,6 +351,11 @@ class RecycleBinService {
                 (loan['source_id'] as num?)?.toInt() != assetId ||
                 loan['loan_type']?.toString().toLowerCase() != expectedType ||
                 (loan['wallet_id'] as num?)?.toInt() != 0 ||
+                (loan['party_id'] as num?)?.toInt() != expectedPartyId ||
+                expectedAmount == null ||
+                (loanAmount - expectedAmount).abs() > 0.000001 ||
+                (loan['currency']?.toString() ?? 'PKR').toUpperCase() !=
+                    (record['currency']?.toString() ?? 'PKR').toUpperCase() ||
                 !loanAmount.isFinite ||
                 loanAmount <= 0 ||
                 !loanRemaining.isFinite ||

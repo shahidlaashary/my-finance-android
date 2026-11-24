@@ -522,6 +522,39 @@ class LoansService {
     }
   }
 
+  static Future<void> _applyWalletDeltasSafely(
+    Transaction txn,
+    Map<int, double> deltas,
+  ) async {
+    for (final entry in deltas.entries) {
+      if (entry.key <= 0 || !entry.value.isFinite) {
+        throw Exception('Wallet balance change contains invalid details.');
+      }
+      final rows = await txn.query(
+        'wallets',
+        columns: ['balance'],
+        where: 'id = ?',
+        whereArgs: [entry.key],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        throw Exception('The linked wallet no longer exists. Restore the wallet first.');
+      }
+      final balance = (rows.first['balance'] as num).toDouble();
+      if (!balance.isFinite || balance + entry.value < -0.000001) {
+        throw Exception('Insufficient wallet balance to reverse this repayment.');
+      }
+    }
+    for (final entry in deltas.entries) {
+      if (entry.value == 0) continue;
+      await _changeWalletBalance(
+        txn,
+        walletId: entry.key,
+        amount: entry.value,
+      );
+    }
+  }
+
   /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.
   static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;
@@ -681,9 +714,6 @@ class LoansService {
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
       final oldWalletAmount = _validatedRepaymentWalletAmount(old);
-      // Restore the old transaction only inside this atomic DB transaction.
-      await _changeWalletBalance(txn, walletId: old.walletId,
-        amount: loan.loanType == 'given' ? -oldWalletAmount : oldWalletAmount);
       final remainingAfterOld = loan.remainingAmount + old.amount;
       if (!repayment.amount.isFinite || repayment.amount <= 0 ||
           repayment.amount > remainingAfterOld + 0.000001) {
@@ -697,8 +727,26 @@ class LoansService {
       final newRemaining = (remainingAfterOld - snapshot.amount).clamp(0.0, loan.amount).toDouble();
       await txn.update('loan_repayments', snapshot.toMap()..remove('id'),
         where: 'id = ?', whereArgs: [repayment.id]);
-      await _changeWalletBalance(txn, walletId: snapshot.walletId,
-        amount: loan.loanType == 'given' ? snapshot.walletAmount : -snapshot.walletAmount);
+      // Reverse the old repayment and apply the replacement as one net
+      // movement per wallet. This avoids temporary negatives when both
+      // entries affect the same wallet and prevents a negative final balance.
+      final walletDeltas = <int, double>{};
+      void addWalletDelta(int walletId, double delta) {
+        final next = (walletDeltas[walletId] ?? 0) + delta;
+        if (!next.isFinite) {
+          throw Exception('Repayment wallet balance change is invalid.');
+        }
+        walletDeltas[walletId] = next;
+      }
+      addWalletDelta(
+        old.walletId,
+        loan.loanType == 'given' ? -oldWalletAmount : oldWalletAmount,
+      );
+      addWalletDelta(
+        snapshot.walletId,
+        loan.loanType == 'given' ? snapshot.walletAmount : -snapshot.walletAmount,
+      );
+      await _applyWalletDeltasSafely(txn, walletDeltas);
       await txn.update('loans', {
         'remaining_amount': newRemaining, 'status': newRemaining <= 0 ? 'paid' : 'active',
       }, where: 'id = ?', whereArgs: [old.loanId]);
@@ -834,12 +882,13 @@ class LoansService {
           .clamp(0.0, loan.amount)
           .toDouble();
 
-      await _changeWalletBalance(
+      await _applyWalletDeltasSafely(
         txn,
-        walletId: repayment.walletId,
-        amount: loan.loanType == 'given'
-            ? -repaymentWalletAmount
-            : repaymentWalletAmount,
+        {
+          repayment.walletId: loan.loanType == 'given'
+              ? -repaymentWalletAmount
+              : repaymentWalletAmount,
+        },
       );
 
       await txn.update(

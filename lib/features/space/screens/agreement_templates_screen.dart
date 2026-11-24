@@ -15,12 +15,16 @@ class _AgreementTemplatesScreenState extends State<AgreementTemplatesScreen> {
 
   Future<void> _edit([Map<String, Object?>? template]) async {
     final title = TextEditingController(text: template?['title']?.toString() ?? '');
+    final agreementType = TextEditingController(text: template?['agreement_type']?.toString() ?? 'General');
     final body = TextEditingController(text: template?['body']?.toString() ?? AgreementTemplateService.builtInClauses);
     final key = GlobalKey<FormState>();
     final saved = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
       title: Text(template == null ? 'Create Template' : 'Edit Template'),
       content: SizedBox(width: 520, child: Form(key: key, child: SingleChildScrollView(child: Column(
         mainAxisSize: MainAxisSize.min, children: [
+          TextFormField(controller: agreementType, decoration: const InputDecoration(labelText: 'Agreement Type', border: OutlineInputBorder()),
+            validator: (v) => v == null || v.trim().isEmpty ? 'Agreement type is required' : null),
+          const SizedBox(height: 12),
           TextFormField(controller: title, decoration: const InputDecoration(labelText: 'Template Title', border: OutlineInputBorder()),
             validator: (v) => v == null || v.trim().isEmpty ? 'Title is required' : null),
           const SizedBox(height: 12),
@@ -41,10 +45,10 @@ class _AgreementTemplatesScreenState extends State<AgreementTemplatesScreen> {
     ));
     if (saved == true) {
       await AgreementTemplateService.instance.saveTemplate(
-        id: template?['id'] as int?, title: title.text, body: body.text);
+        id: template?['id'] as int?, title: title.text, agreementType: agreementType.text, body: body.text);
       _refresh();
     }
-    title.dispose(); body.dispose();
+    title.dispose(); agreementType.dispose(); body.dispose();
   }
 
   @override
@@ -68,7 +72,7 @@ class _AgreementTemplatesScreenState extends State<AgreementTemplatesScreen> {
             return Card(child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.description_outlined)),
               title: Text(row['title']?.toString() ?? ''),
-              subtitle: Text(isDefault ? 'Built-in template' : 'Custom template'),
+              subtitle: Text('${row['agreement_type'] ?? 'General'} • ${isDefault ? 'Built-in template' : 'Custom template'}'),
               trailing: PopupMenuButton<String>(
                 onSelected: (action) async {
                   try {

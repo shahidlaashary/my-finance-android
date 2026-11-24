@@ -157,9 +157,32 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
         validator: (_) => _partyId == null ? 'Select a party.' : null,
       ),
       const SizedBox(height: 12),
-      TextFormField(controller: _amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _dec('Amount', icon: Icons.payments_outlined), validator: (v) { final n = double.tryParse(v?.trim() ?? ''); return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null; }),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<int>(value: _walletId, isExpanded: true, decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined), items: _wallets.map((w) => DropdownMenuItem<int>(value: w['id'] as int, child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis))).toList(), onChanged: (v) => setState(() => _walletId = v)),
+      Row(children: [
+        Expanded(
+          child: TextFormField(
+            controller: _amount,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: _dec('Amount', icon: Icons.payments_outlined),
+            validator: (v) {
+              final n = double.tryParse(v?.trim() ?? '');
+              return n == null || !n.isFinite || n <= 0 ? 'Enter a valid amount.' : null;
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: DropdownButtonFormField<int>(
+            value: _walletId,
+            isExpanded: true,
+            decoration: _dec('Wallet', icon: Icons.account_balance_wallet_outlined),
+            items: _wallets.map((w) => DropdownMenuItem<int>(
+              value: w['id'] as int,
+              child: Text('${w['name']} (${w['currency']})', overflow: TextOverflow.ellipsis),
+            )).toList(),
+            onChanged: (v) => setState(() => _walletId = v),
+          ),
+        ),
+      ]),
       Row(children:[
         Expanded(child:ListTile(contentPadding: EdgeInsets.zero, title: const Text('Lending date'), subtitle: Text(DateFormat('dd MMM yyyy').format(_date)), onTap: () => _pickDate(false))),
         const SizedBox(width:12),

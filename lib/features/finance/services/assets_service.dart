@@ -516,6 +516,8 @@ class AssetsService {
         if (asset.saleLinkedLoanId != null) asset.saleLinkedLoanId!,
       };
 
+      final linkedLoanSnapshots = <Map<String, dynamic>>[];
+
       for (final loanId in linkedLoanIds) {
         final loanRows = await txn.query(
           'loans',
@@ -530,6 +532,10 @@ class AssetsService {
           where: 'loan_id = ?',
           whereArgs: [loanId],
         );
+        linkedLoanSnapshots.add({
+          'loan': loanRecord,
+          'repayments': repaymentRows,
+        });
         final partyId = (loanRecord['party_id'] as num?)?.toInt();
         final partyRows = partyId == null
             ? <Map<String, Object?>>[]
@@ -601,7 +607,9 @@ class AssetsService {
         'source_table': 'assets',
         'source_id': assetId.toString(),
         'payload': jsonEncode(assetRecord),
-        'related_payload': null,
+        'related_payload': linkedLoanSnapshots.isEmpty
+            ? null
+            : jsonEncode(linkedLoanSnapshots),
         'deleted_at': DateTime.now().toIso8601String(),
         'expires_at': DateTime.now().add(
           const Duration(days: RecycleBinService.retentionDays),

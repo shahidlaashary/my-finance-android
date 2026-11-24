@@ -267,6 +267,56 @@ void main() {
     expect((wallet!['balance'] as num).toDouble(), 0);
   });
 
+  test('updating asset-purchase repayment uses net wallet effect for Loan Taken', () async {
+    final walletId = await createWallet(1000);
+    final sellerId = await LoansService.addParty(
+      name: 'Purchase Repayment Update Seller',
+      currency: 'PKR',
+    );
+    await assets.addAssetWithAttachments(
+      asset(
+        name: 'Credit Purchase Repayment Update Asset',
+        price: 500,
+        walletId: 0,
+        paymentType: 'Loan',
+        partyId: sellerId,
+      ),
+      const [],
+    );
+    final loan = (await LoansService.getLoans()).single;
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loan.id!,
+        amount: 200,
+        walletId: walletId,
+        repaymentDate: '2026-11-11',
+        createdAt: DateTime(2026, 11, 11).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'balance': 50},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await LoansService.updateRepayment(
+      RepaymentModel(
+        id: repaymentId,
+        loanId: loan.id!,
+        amount: 250,
+        walletId: walletId,
+        repaymentDate: '2026-11-12',
+        createdAt: DateTime(2026, 11, 12).toIso8601String(),
+      ),
+    );
+
+    final updatedLoan = await LoansService.getLoanById(loan.id!);
+    final wallet = await FinanceDB.instance.getWallet(walletId);
+    expect(updatedLoan!.remainingAmount, 250);
+    expect((wallet!['balance'] as num).toDouble(), 0);
+  });
+
   test('deleting sold asset is blocked if reversing sale would make wallet negative', () async {
     final walletId = await createWallet(1000);
     final assetId = await assets.addAssetWithAttachments(

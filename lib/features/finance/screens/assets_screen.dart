@@ -646,18 +646,21 @@ class AssetsScreenState extends State<AssetsScreen> {
                                   setSheetState(() => saving = true);
                                   final int assetId;
                                   if (asset == null) {
-                                    assetId = await _service.addAsset(model);
+                                    assetId = await _service.addAssetWithAttachments(
+                                      model,
+                                      pendingFiles,
+                                    );
                                   } else {
                                     await _service.updateAsset(model);
                                     assetId = asset.id!;
-                                  }
-                                  for (final file in pendingFiles) {
-                                    await AttachmentService.addAttachment(
-                                      ownerType: 'asset',
-                                      ownerId: assetId,
-                                      sourcePath: file['path']!,
-                                      originalFileName: file['name'],
-                                    );
+                                    for (final file in pendingFiles) {
+                                      await AttachmentService.addAttachment(
+                                        ownerType: 'asset',
+                                        ownerId: assetId,
+                                        sourcePath: file['path']!,
+                                        originalFileName: file['name'],
+                                      );
+                                    }
                                   }
                                   if (!sheetContext.mounted) return;
                                   _closeAssetForm(sheetContext);

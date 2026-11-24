@@ -56,6 +56,7 @@ class SoundSettingsScreen extends StatelessWidget {
                   child: Row(children: [
                     Expanded(child: Text(entry.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
                     SizedBox(width: 142, child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       value: settings.choices[entry.key] ?? 'modern', isDense: true,
                       decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 9, vertical: 7)),
                       items: SoundSettingsService.presets.entries.map((p) => DropdownMenuItem(value: p.key,

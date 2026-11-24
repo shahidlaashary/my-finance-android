@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/features/space/services/agreement_template_service.dart';
 
 class AgreementTemplatesScreen extends StatefulWidget {
-  const AgreementTemplatesScreen({super.key, this.embeddedInManagement = false});
-  final bool embeddedInManagement;
+  const AgreementTemplatesScreen({super.key});
   @override
   State<AgreementTemplatesScreen> createState() => _AgreementTemplatesScreenState();
 }
@@ -54,7 +53,6 @@ class _AgreementTemplatesScreenState extends State<AgreementTemplatesScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: widget.embeddedInManagement ? null : AppBar(title: const Text('Agreement Templates')),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: () => _edit(), icon: const Icon(Icons.add), label: const Text('New Template')),
     body: FutureBuilder<List<Map<String, Object?>>>(

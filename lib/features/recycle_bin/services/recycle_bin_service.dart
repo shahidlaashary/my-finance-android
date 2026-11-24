@@ -351,6 +351,8 @@ class RecycleBinService {
                 (loan['source_id'] as num?)?.toInt() != assetId ||
                 loan['loan_type']?.toString().toLowerCase() != expectedType ||
                 (loan['wallet_id'] as num?)?.toInt() != 0 ||
+                expectedPartyId == null ||
+                expectedPartyId <= 0 ||
                 (loan['party_id'] as num?)?.toInt() != expectedPartyId ||
                 expectedAmount == null ||
                 (loanAmount - expectedAmount).abs() > 0.000001 ||

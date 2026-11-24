@@ -3,7 +3,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/finance/services/transactions_service.dart';
-import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class AssetsService {
@@ -51,30 +50,6 @@ class AssetsService {
   }
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
-    final columns = await db.rawQuery('PRAGMA table_info(assets)');
-    final existing = columns.map((row) => row['name']).toSet();
-    final migrations = <String, String>{
-      'payment_type': "ALTER TABLE assets ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'Wallet'",
-      'include_in_consolidated_balance': 'ALTER TABLE assets ADD COLUMN include_in_consolidated_balance INTEGER NOT NULL DEFAULT 0',
-      'party_id': 'ALTER TABLE assets ADD COLUMN party_id INTEGER',
-      'currency': "ALTER TABLE assets ADD COLUMN currency TEXT NOT NULL DEFAULT 'PKR'",
-      'linked_loan_id': 'ALTER TABLE assets ADD COLUMN linked_loan_id INTEGER',
-      'sale_payment_type': "ALTER TABLE assets ADD COLUMN sale_payment_type TEXT NOT NULL DEFAULT 'Wallet'",
-      'sale_wallet_amount': 'ALTER TABLE assets ADD COLUMN sale_wallet_amount REAL',
-      'sale_wallet_currency': "ALTER TABLE assets ADD COLUMN sale_wallet_currency TEXT NOT NULL DEFAULT 'PKR'",
-      'sale_exchange_rate': 'ALTER TABLE assets ADD COLUMN sale_exchange_rate REAL NOT NULL DEFAULT 1',
-      'sale_is_manual_rate': 'ALTER TABLE assets ADD COLUMN sale_is_manual_rate INTEGER NOT NULL DEFAULT 0',
-      'sale_party_id': 'ALTER TABLE assets ADD COLUMN sale_party_id INTEGER',
-      'sale_linked_loan_id': 'ALTER TABLE assets ADD COLUMN sale_linked_loan_id INTEGER',
-    };
-    for (final entry in migrations.entries) {
-      if (!existing.contains(entry.key)) {
-        await db.execute(entry.value);
-        if (entry.key == 'currency') {
-          await db.execute("UPDATE assets SET currency = COALESCE((SELECT currency FROM wallets WHERE wallets.id = assets.wallet_id), 'PKR')");
-        }
-      }
-    }
     await db.execute('CREATE INDEX IF NOT EXISTS idx_assets_linked_loan ON assets(linked_loan_id, sale_linked_loan_id)');
   }
   Future<Map<String, dynamic>> _getWallet(

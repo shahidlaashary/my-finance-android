@@ -40,6 +40,26 @@ class AgreementPdfService {
     final tracks = _value(data, 'track_details');
     final trackRows = tracks.split('\n').map((line) => line.trim())
         .where((line) => line.isNotEmpty).toList();
+    final clauseParts = clauses.split('{{track_details_table}}');
+    final trackTable = pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+      pw.Text('Track Details', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+      pw.SizedBox(height: 6),
+      pw.Table(
+        border: pw.TableBorder.all(color: PdfColors.grey700, width: .6),
+        columnWidths: {0: const pw.FlexColumnWidth(1), 1: const pw.FlexColumnWidth(4)},
+        children: [
+          pw.TableRow(decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+            children: ['Sr.', 'Track Details'].map((v) =>
+              pw.Padding(padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(v, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)))).toList()),
+          ...trackRows.asMap().entries.map((entry) => pw.TableRow(children: [
+            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${entry.key + 1}')),
+            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(entry.value)),
+          ])),
+        ],
+      ),
+      pw.SizedBox(height: 16),
+    ]);
 
     pw.Widget field(String label, String value) => pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 7),
@@ -71,31 +91,15 @@ class AgreementPdfService {
         field('Territory', _value(data, 'territory', 'Worldwide')),
         field('Term', '${_value(data, 'term_years', '10')} years'),
         pw.SizedBox(height: 12),
-        if (trackRows.isNotEmpty) ...[
-          pw.Text('Track Details', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
-          pw.SizedBox(height: 6),
-          pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.grey700, width: .6),
-            columnWidths: {0: const pw.FlexColumnWidth(1), 1: const pw.FlexColumnWidth(4)},
-            children: [
-              pw.TableRow(decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                children: ['Sr.', 'Track / Album / Artist / Label'].map((v) =>
-                  pw.Padding(padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(v, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)))).toList()),
-              ...trackRows.asMap().entries.map((entry) => pw.TableRow(children: [
-                pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${entry.key + 1}')),
-                pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(entry.value)),
-              ])),
-            ],
-          ),
-          pw.SizedBox(height: 16),
-        ],
         pw.Text('Terms and Conditions', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
         pw.SizedBox(height: 8),
-        ...clauses.split(RegExp(r'(?=\d+\.\s)')).where((s) => s.trim().isNotEmpty).map((clause) =>
-          pw.Padding(padding: const pw.EdgeInsets.only(bottom: 9),
-            child: pw.Text(clause.trim(), textAlign: pw.TextAlign.justify,
-              style: const pw.TextStyle(fontSize: 10.5, lineSpacing: 3)))),
+        ...clauseParts.asMap().entries.expand((part) => <pw.Widget>[
+          ...part.value.split(RegExp(r'(?=\\d+\\.\\s)')).where((s) => s.trim().isNotEmpty).map((clause) =>
+            pw.Padding(padding: const pw.EdgeInsets.only(bottom: 9),
+              child: pw.Text(clause.trim(), textAlign: pw.TextAlign.justify,
+                style: const pw.TextStyle(fontSize: 10.5, lineSpacing: 3)))),
+          if (part.key < clauseParts.length - 1 && trackRows.isNotEmpty) trackTable,
+        ]),
         pw.SizedBox(height: 28),
         pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [
           pw.Expanded(child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [

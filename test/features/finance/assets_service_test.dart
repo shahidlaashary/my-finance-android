@@ -462,6 +462,68 @@ void main() {
 
 
 
+
+  test('restoring a repayment is blocked if its wallet currency changed', () async {
+    final lendingWalletId = await createWallet(1000);
+    final repaymentWalletId = await FinanceDB.instance.addWallet(
+      name: 'Archived Repayment Wallet',
+      type: 'Cash',
+      currency: 'PKR',
+      openingBalance: 1000,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final partyId = await LoansService.addParty(
+      name: 'Archived Repayment Currency Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: lendingWalletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 100,
+        walletId: repaymentWalletId,
+        repaymentDate: '2026-11-21',
+        createdAt: DateTime(2026, 11, 21).toIso8601String(),
+      ),
+    );
+    await LoansService.deleteRepayment(repaymentId);
+    final archivedRepayment = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'loan_repayments' &&
+          item['source_id'].toString() == repaymentId.toString(),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [repaymentWalletId],
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archivedRepayment['id'] as int),
+      throwsA(isA<Exception>()),
+    );
+
+    final savedLoan = await LoansService.getLoanById(loanId);
+    expect(savedLoan!.remainingAmount, 300);
+    expect(await LoansService.getRepayments(loanId), isEmpty);
+    expect(
+      (await FinanceDB.instance.getWallet(repaymentWalletId))!['currency'],
+      'USD',
+    );
+  });
+
   test('cross-currency repayment edit and delete use the saved wallet-side amount', () async {
     final usdWalletId = await FinanceDB.instance.addWallet(
       name: 'USD Loan Wallet',

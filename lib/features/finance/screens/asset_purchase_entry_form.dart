@@ -242,7 +242,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
           child: Row(
             children: [
               const Expanded(
-                child: Text('Consolidated Balance', style: TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
+                child: Text('Add Asset In Consolidated', style: TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
               ),
               Switch(
                 value: _includeBalance,

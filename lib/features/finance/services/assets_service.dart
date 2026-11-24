@@ -454,26 +454,26 @@ class AssetsService {
         if (parties.isEmpty) throw Exception('Selected party was not found.');
         final currency =
             (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+        if (currency != oldAsset.currency.toUpperCase()) {
+          throw Exception(
+            'Party currency must remain ${oldAsset.currency} for this asset.',
+          );
+        }
+
+        final loanRows = await txn.query(
+          'loans',
+          columns: ['id', 'source_type', 'source_id'],
+          where: 'id = ?',
+          whereArgs: [oldAsset.linkedLoanId],
+          limit: 1,
+        );
+        if (loanRows.isEmpty ||
+            loanRows.first['source_type'] != 'asset_purchase' ||
+            (loanRows.first['source_id'] as num?)?.toInt() != updatedAsset.id) {
+          throw Exception('Linked asset loan was not found.');
+        }
 
         if (loanTermsChanged) {
-          if (currency != oldAsset.currency.toUpperCase()) {
-            throw Exception(
-              'Party currency must remain ${oldAsset.currency} for this asset.',
-            );
-          }
-
-          final loanRows = await txn.query(
-            'loans',
-            columns: ['id', 'source_type'],
-            where: 'id = ?',
-            whereArgs: [oldAsset.linkedLoanId],
-            limit: 1,
-          );
-          if (loanRows.isEmpty ||
-              loanRows.first['source_type'] != 'asset_purchase') {
-            throw Exception('Linked asset loan was not found.');
-          }
-
           final repayments = await txn.query(
             'loan_repayments',
             columns: ['id'],

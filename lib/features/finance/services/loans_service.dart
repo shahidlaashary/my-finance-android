@@ -887,7 +887,7 @@ class LoansService {
         whereArgs: [loanId],
       );
 
-      if (!loan.isAssetLinked) await _getWallet(txn, loan.walletId);
+      await _getWallet(txn, loan.walletId);
 
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);

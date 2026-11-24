@@ -131,8 +131,7 @@ class AgreementsScreenState extends State<AgreementsScreen> {
             const SizedBox(height: 12),
             for (final field in <String, String>{
               'Type': 'category', 'First Party': 'party_one', 'Second Party': 'party_two',
-              'Status': 'status', 'Agreement Date': 'agreement_date',
-              'Signing Date': 'signing_date', 'Start Date': 'start_date', 'End Date': 'end_date',
+              'Status': 'status', 'Signing Date': 'signing_date', 'End / Expiry Date': 'end_date',
               'Termination Date': 'termination_date', 'Termination Reason': 'termination_reason',
               'Details': 'description', 'Notes': 'notes',
             }.entries)
@@ -171,7 +170,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   String _templateTitleSnapshot = '';
   String _templateBodySnapshot = '';
   late Future<List<Map<String, Object?>>> _templateOptions;
-  late final TextEditingController _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _signingDate, _witnessName, _terminationDate, _terminationReason;
+  late final TextEditingController _labelName, _address, _territory, _termYears, _tracks, _designation, _signingDate, _witnessName, _terminationDate, _terminationReason;
   final List<Map<String, String>> _selectedAttachments = [];
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -183,7 +182,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _category = TextEditingController(text: r['category']?.toString() ?? '');
     _partyOne = TextEditingController(text: r['party_one']?.toString() ?? '');
     _partyTwo = TextEditingController(text: r['party_two']?.toString() ?? '');
-    _start = TextEditingController(text: r['start_date']?.toString() ?? '');
     _end = TextEditingController(text: r['end_date']?.toString() ?? '');
     _description = TextEditingController(text: r['description']?.toString() ?? '');
     _notes = TextEditingController(text: r['notes']?.toString() ?? '');
@@ -201,8 +199,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _termYears = TextEditingController(text: r['term_years']?.toString() ?? '10');
     _tracks = TextEditingController(text: r['track_details']?.toString() ?? '');
     _designation = TextEditingController(text: r['designation']?.toString() ?? '');
-    _agreementDate = TextEditingController(text: r['agreement_date']?.toString() ?? '');
-    _signingDate = TextEditingController(text: r['signing_date']?.toString() ?? r['start_date']?.toString() ?? '');
+    _signingDate = TextEditingController(text: r['signing_date']?.toString() ?? '');
     _witnessName = TextEditingController(text: r['witness_name']?.toString() ?? '');
     _terminationDate = TextEditingController(text: r['termination_date']?.toString() ?? '');
     _terminationReason = TextEditingController(text: r['termination_reason']?.toString() ?? '');
@@ -211,8 +208,8 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes,
-      _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _signingDate, _witnessName, _terminationDate, _terminationReason]) { c.dispose(); }
+    for (final c in [_title, _category, _partyOne, _partyTwo, _end, _description, _notes,
+      _labelName, _address, _territory, _termYears, _tracks, _designation, _signingDate, _witnessName, _terminationDate, _terminationReason]) { c.dispose(); }
     super.dispose();
   }
 
@@ -410,6 +407,8 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
 
   DateTime? get _signingDateValue => DateTime.tryParse(_signingDate.text);
   DateTime? get _calculatedExpiryDate {
+    final enteredExpiry = DateTime.tryParse(_end.text);
+    if (enteredExpiry != null) return enteredExpiry;
     final signed = _signingDateValue;
     if (signed == null) return null;
     final years = int.tryParse(_termYears.text) ?? 10;
@@ -545,7 +544,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       final id = await MySpaceService.instance.saveAgreement({
         'id': widget.record?['id'], 'title': _title.text, 'category': _category.text,
         'party_one': _partyOne.text, 'party_two': _partyTwo.text, 'status': _effectiveStatus,
-        'start_date': _start.text, 'end_date': _end.text,
+        'end_date': _end.text,
         'description': _description.text, 'notes': _notes.text,
         'signature_data': _signatureData,
         'signature_data_two': _signatureDataTwo,
@@ -558,7 +557,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         'label_name': _labelName.text, 'label_id': _selectedLabelId, 'address': _address.text,
         'territory': _territory.text, 'term_years': _termYears.text,
         'track_details': _tracks.text, 'designation': _designation.text,
-        'agreement_date': _agreementDate.text, 'witness_name': _witnessName.text,
+        'witness_name': _witnessName.text,
       });
       var failures = 0;
       for (final file in _selectedAttachments) {
@@ -625,7 +624,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       'party_one': _partyOne.text,
       'party_two': _partyTwo.text,
       'status': _effectiveStatus,
-      'start_date': _start.text,
       'end_date': _end.text,
       'description': _description.text,
       'notes': _notes.text,
@@ -643,7 +641,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       'term_years': _termYears.text,
       'track_details': _tracks.text,
       'designation': _designation.text,
-      'agreement_date': _agreementDate.text,
       'witness_name': _witnessName.text,
     };
     await AgreementPdfService.instance.printAgreement(data);
@@ -726,6 +723,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             Expanded(child: _field(_partyTwo, 'Second Party')),
           ]),
         ),
+        _field(_address, 'Address', lines: 2),
         FutureBuilder<List<Map<String, Object?>>>(
           future: MySpaceService.instance.getAgreementLabels(),
           builder: (context, snapshot) {
@@ -751,7 +749,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             ]));
           },
         ),
-        _field(_address, 'Address', lines: 2),
+
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -794,19 +792,18 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           items: designations.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
           onChanged: (v) => setState(() => _designation.text = v ?? 'Owner'),
         ),
-        _dateField(_agreementDate, 'Agreement Date'),
-        _dateField(_signingDate, 'Signing Date'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: _dateField(_signingDate, 'Signing Date')),
+            const SizedBox(width: 10),
+            Expanded(child: _dateField(_end, 'End / Expiry Date', optional: true)),
+          ]),
+        ),
         Padding(padding: const EdgeInsets.only(bottom: 12), child: InputDecorator(
           decoration: const InputDecoration(labelText: 'Agreement Status (automatic)', border: OutlineInputBorder(), isDense: true),
           child: Text(_effectiveStatus, style: const TextStyle(fontWeight: FontWeight.w600)),
         )),
-        if (_calculatedExpiryDate != null)
-          Padding(padding: const EdgeInsets.only(bottom: 12), child: InputDecorator(
-            decoration: const InputDecoration(labelText: 'Calculated Expiry Date', border: OutlineInputBorder(), isDense: true),
-            child: Text(_calculatedExpiryDate!.toIso8601String().split('T').first),
-          )),
-        _dateField(_start, 'Start Date'),
-        _dateField(_end, 'End / Expiry Date (optional)', optional: true),
         if (widget.record != null && !_isTerminated)
           Padding(padding: const EdgeInsets.only(bottom: 12), child: OutlinedButton.icon(
             onPressed: _saving ? null : _terminateAgreement,

@@ -20,16 +20,23 @@ class AgreementPdfService {
   String renderClauses(Map<String, Object?> data) {
     var body = _value(data, 'template_body_snapshot',
         'Agreement terms have not been added.');
+    final territory = _value(data, 'territory', 'Worldwide');
     final replacements = <String, String>{
       '{{first_party}}': _value(data, 'party_one', '[First Party]'),
       '{{second_party}}': _value(data, 'party_two', '[Second Party]'),
       '{{address}}': _value(data, 'address', '[Address]'),
       '{{label_name}}': _value(data, 'label_name', '[Label]'),
-      '{{territory}}': _value(data, 'territory', 'Worldwide'),
+      '{{territory}}': territory,
       '{{term_years}}': _value(data, 'term_years', '10'),
       '{{agreement_date}}': _value(data, 'agreement_date', '[Date]'),
     };
     replacements.forEach((key, value) => body = body.replaceAll(key, value));
+    // Older saved template snapshots may contain a literal "worldwide"
+    // instead of the territory placeholder. Keep their wording consistent
+    // with the selected territory without ever expanding region membership.
+    if (territory.toLowerCase() != 'worldwide') {
+      body = body.replaceAll(RegExp('worldwide', caseSensitive: false), territory);
+    }
     return body;
   }
 

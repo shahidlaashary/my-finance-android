@@ -78,14 +78,22 @@ class RecycleBinService {
         final amount = (record['amount'] as num).toDouble();
         final walletAmount = (record['wallet_amount'] as num?)?.toDouble() ?? amount;
         final walletId = (record['wallet_id'] as num).toInt();
+        if (!amount.isFinite || amount <= 0 ||
+            !walletAmount.isFinite || walletAmount <= 0 || walletId <= 0) {
+          throw Exception('The archived repayment contains invalid amount or wallet details.');
+        }
         final loans = await txn.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
         if (loans.isEmpty) throw Exception('Restore the related loan first.');
         final wallet = await txn.query('wallets', columns: ['id', 'balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
         if (wallet.isEmpty) throw Exception('The repayment wallet no longer exists.');
         final loan = loans.first;
+        final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
+        if (loanType != 'given' && loanType != 'taken') {
+          throw Exception('The related loan has an invalid loan type.');
+        }
         final remaining = (loan['remaining_amount'] as num).toDouble();
-        if (remaining + 0.000001 < amount) throw Exception('Loan balance is not sufficient to restore this repayment.');
-        final isGiven = (loan['loan_type']?.toString() ?? 'given') == 'given';
+        if (!remaining.isFinite || remaining + 0.000001 < amount) throw Exception('Loan balance is not sufficient to restore this repayment.');
+        final isGiven = loanType == 'given';
         final walletDelta = isGiven ? walletAmount : -walletAmount;
         final walletBalance = (wallet.first['balance'] as num).toDouble();
         if (walletDelta < 0 && walletBalance + 0.000001 < walletAmount) {

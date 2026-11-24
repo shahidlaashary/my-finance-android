@@ -12,6 +12,8 @@ import 'package:my_finance/features/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory databaseDirectory;
   final assets = AssetsService();
 

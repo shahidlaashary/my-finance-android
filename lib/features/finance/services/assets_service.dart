@@ -406,20 +406,10 @@ class AssetsService {
   }
 
   Future<void> _deleteAssetLinkedLoan(int loanId) async {
-    final repayments = await LoansService.getRepayments(loanId);
+    // Keep loan and repayment attachments with their Recycle Bin snapshots.
+    // RecycleBinService.permanentlyDelete removes them after retention expires
+    // or when the user explicitly deletes the archived loan permanently.
     await LoansService.deleteLoan(loanId, fromAssetDelete: true);
-    await AttachmentService.deleteOwnerAttachments(
-      ownerType: AttachmentOwnerTypes.loan,
-      ownerId: loanId,
-    );
-    for (final repayment in repayments) {
-      if (repayment.id != null) {
-        await AttachmentService.deleteOwnerAttachments(
-          ownerType: AttachmentOwnerTypes.repayment,
-          ownerId: repayment.id!,
-        );
-      }
-    }
   }
 
   Future<void> deleteAsset(int assetId) async {

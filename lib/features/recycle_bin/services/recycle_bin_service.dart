@@ -191,6 +191,28 @@ class RecycleBinService {
           throw Exception('The archived asset loan direction does not match its source.');
         }
 
+        if (!isAssetLinked) {
+          final sourceWalletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [loanWallet],
+            limit: 1,
+          );
+          if (sourceWalletRows.isEmpty) {
+            throw Exception('The loan wallet no longer exists. Restore the wallet first.');
+          }
+          final sourceCurrency =
+              (sourceWalletRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
+          final loanCurrency =
+              (record['currency']?.toString() ?? 'PKR').toUpperCase();
+          if (sourceCurrency != loanCurrency) {
+            throw Exception(
+              'The loan wallet currency has changed. Correct the wallet currency before restoring this loan.',
+            );
+          }
+        }
+
         // Restore the original loan and every repayment as one net effect
         // per wallet. For Loan Given, the original lending debit may be
         // offset by repayments received into that same wallet.

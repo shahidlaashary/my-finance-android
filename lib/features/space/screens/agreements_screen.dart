@@ -233,6 +233,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   Widget _field(TextEditingController controller, String label, {int lines = 1, bool required = false}) =>
     Padding(padding: const EdgeInsets.only(bottom: 12), child: TextFormField(
       controller: controller, maxLines: lines,
+      onChanged: (_) { if (mounted) setState(() {}); },
       decoration: InputDecoration(
         labelText: label, border: const OutlineInputBorder(), isDense: true,
         suffixIcon: label == 'Notes' ? PopupMenuButton<String>(
@@ -435,25 +436,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             ));
           },
         ),
-        const SizedBox(height: 4),
-        Text('Agreement Content', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: _agreementContent,
-          minLines: 12,
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-            hintText: 'Selected template content will appear here. Edit clauses and wording as needed.',
-            border: OutlineInputBorder(),
-            alignLabelWithHint: true,
-            helperText: 'Edit the agreement wording here. The preview below updates instantly.',
-          ),
-        ),
-        const SizedBox(height: 14),
-        _buildLivePreview(),
-        const SizedBox(height: 18),
         _field(_title, 'Agreement Title', required: true),
         _field(_category, 'Agreement Type'),
         _field(_partyOne, 'First Party'),
@@ -490,6 +472,25 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         ),
         _field(_description, 'Additional Agreement Details / Terms', lines: 4),
         _field(_notes, 'Notes', lines: 3),
+        const SizedBox(height: 4),
+        Text('Agreement Content', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: _agreementContent,
+          minLines: 12,
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+            hintText: 'Selected template content will appear here. Edit clauses and wording as needed.',
+            border: OutlineInputBorder(),
+            alignLabelWithHint: true,
+            helperText: 'Edit the agreement wording here. The preview below updates instantly.',
+          ),
+        ),
+        const SizedBox(height: 14),
+        _buildLivePreview(),
+        const SizedBox(height: 18),
         if (_selectedAttachments.isNotEmpty) ..._selectedAttachments.asMap().entries.map((entry) => ListTile(
           dense: true, contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.insert_drive_file_outlined),

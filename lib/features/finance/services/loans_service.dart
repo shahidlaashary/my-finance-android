@@ -732,11 +732,8 @@ class LoansService {
   /// Repayment delete karta hai aur wallet aur loan balances ko pehli halat mein lata hai.
   static Future<void> deleteRepayment(int repaymentId) async {
     final db = await _database;
+    await RecycleBinService.ensureTable();
 
-    final repaymentSnapshot = await db.query('loan_repayments', where: 'id = ?', whereArgs: [repaymentId], limit: 1);
-    if (repaymentSnapshot.isEmpty) return;
-    await RecycleBinService.archive(type: 'Loan Repayment', title: 'Repayment • ${repaymentSnapshot.first['amount']}',
-      table: 'loan_repayments', id: repaymentId, record: repaymentSnapshot.first);
     await db.transaction((txn) async {
       final rows = await txn.query(
         'loan_repayments',
@@ -744,35 +741,33 @@ class LoansService {
         whereArgs: [repaymentId],
         limit: 1,
       );
-
       if (rows.isEmpty) return;
 
-      final repayment = RepaymentModel.fromMap(rows.first);
-
+      final repaymentRecord = rows.first;
+      final repayment = RepaymentModel.fromMap(repaymentRecord);
       final loanRows = await txn.query(
         'loans',
         where: 'id = ?',
         whereArgs: [repayment.loanId],
         limit: 1,
       );
-
       if (loanRows.isEmpty) {
         throw Exception('Related loan was not found.');
       }
 
       final loan = LoansModel.fromMap(loanRows.first);
-
       await _getWallet(txn, repayment.walletId);
 
-      final restoredRemaining =
-          (loan.remainingAmount + repayment.amount)
-              .clamp(0.0, loan.amount)
-              .toDouble();
+      final restoredRemaining = (loan.remainingAmount + repayment.amount)
+          .clamp(0.0, loan.amount)
+          .toDouble();
 
       await _changeWalletBalance(
         txn,
         walletId: repayment.walletId,
-        amount: loan.loanType == 'given' ? -repayment.walletAmount : repayment.walletAmount,
+        amount: loan.loanType == 'given'
+            ? -repayment.walletAmount
+            : repayment.walletAmount,
       );
 
       await txn.update(
@@ -785,14 +780,28 @@ class LoansService {
         whereArgs: [repayment.loanId],
       );
 
+      await txn.insert('recycle_bin', {
+        'entity_type': 'Loan Repayment',
+        'entity_title': 'Repayment • ${repaymentRecord['amount']}',
+        'source_table': 'loan_repayments',
+        'source_id': repaymentId.toString(),
+        'payload': jsonEncode(repaymentRecord),
+        'deleted_at': DateTime.now().toIso8601String(),
+        'expires_at': DateTime.now()
+            .add(const Duration(days: RecycleBinService.retentionDays))
+            .toIso8601String(),
+      });
+
       await txn.delete(
         'loan_repayments',
         where: 'id = ?',
         whereArgs: [repaymentId],
       );
     });
+
     AppRefreshController.notifyChanged();
   }
+
 
   /// Existing non-asset loan ki amount aur descriptive details update karta hai.
   static Future<void> updateLoanDetails({

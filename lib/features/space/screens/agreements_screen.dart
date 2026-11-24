@@ -159,7 +159,7 @@ class AgreementFormScreen extends StatefulWidget {
 
 class _AgreementFormScreenState extends State<AgreementFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes;
+  late final TextEditingController _title, _category, _partyOne, _partyTwo, _end, _description, _notes;
   late String _status;
   bool _saving = false;
   String _signatureData = '';

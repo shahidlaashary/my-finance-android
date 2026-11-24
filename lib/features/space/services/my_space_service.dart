@@ -211,7 +211,7 @@ class MySpaceService {
 
 6. I accept that if any rights violations or online disputes are found, I will be responsible for the legal and financial consequences arising from the same.
 
-7. This agreement is valid for {{term_years}} years from the date of signing.''',
+7. This agreement is valid for {{term_years}} years from the Signing Date ({{signing_date}}).''',
         'is_default': 1,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),

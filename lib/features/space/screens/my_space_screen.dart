@@ -12,6 +12,7 @@ import 'package:my_finance/features/space/screens/space_video_player_screen.dart
 import 'package:my_finance/features/space/screens/space_documents_screen.dart';
 import 'package:my_finance/features/space/screens/work_screen.dart';
 import 'package:my_finance/features/space/screens/agreements_screen.dart';
+import 'package:my_finance/features/space/screens/my_space_management_screen.dart';
 import 'package:my_finance/features/space/screens/youtube_explore_screen.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/services/space_documents_service.dart';
@@ -270,6 +271,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         title: Text(appText(context, 'My Space', 'مائی اسپیس')),
         actions: [
           IconButton(tooltip: 'Search My Space', icon: const Icon(Icons.search_rounded), onPressed: _openSpaceSearch),
+          IconButton(tooltip: 'My Space Management', icon: const Icon(Icons.manage_accounts_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MySpaceManagementScreen()))),
           IconButton(tooltip: 'Explore videos', icon: const Icon(Icons.ondemand_video_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const YouTubeExploreScreen()))),
           IconButton(tooltip: 'Playlists, folders and storage', icon: const Icon(Icons.tune_rounded), onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const SpaceToolsScreen())); if (mounted) setState(_refresh); }),
         ],

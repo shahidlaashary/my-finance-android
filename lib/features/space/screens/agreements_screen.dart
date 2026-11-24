@@ -164,7 +164,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   int? _templateId;
   String _templateTitleSnapshot = '';
   String _templateBodySnapshot = '';
-  late final TextEditingController _agreementContent;
   late Future<List<Map<String, Object?>>> _templateOptions;
   late final TextEditingController _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName;
   final List<Map<String, String>> _selectedAttachments = [];
@@ -187,7 +186,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _templateId = r['template_id'] as int?;
     _templateTitleSnapshot = r['template_title_snapshot']?.toString() ?? '';
     _templateBodySnapshot = r['template_body_snapshot']?.toString() ?? '';
-    _agreementContent = TextEditingController(text: _templateBodySnapshot);
     _labelName = TextEditingController(text: r['label_name']?.toString() ?? '');
     _address = TextEditingController(text: r['address']?.toString() ?? '');
     _territory = TextEditingController(text: r['territory']?.toString() ?? 'Worldwide');
@@ -202,7 +200,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   @override
   void dispose() {
     for (final c in [_title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes,
-      _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName, _agreementContent]) { c.dispose(); }
+      _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName]) { c.dispose(); }
     super.dispose();
   }
 
@@ -253,100 +251,6 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       validator: required ? (v) => v == null || v.trim().isEmpty ? 'Required' : null : null,
     ));
 
-  String _resolvedAgreementContent() {
-    var body = _agreementContent.text;
-    final values = <String, String>{
-      '{{first_party}}': _partyOne.text.trim().isEmpty ? '[First Party]' : _partyOne.text.trim(),
-      '{{second_party}}': _partyTwo.text.trim().isEmpty ? '[Second Party]' : _partyTwo.text.trim(),
-      '{{address}}': _address.text.trim().isEmpty ? '[Address]' : _address.text.trim(),
-      '{{label_name}}': _labelName.text.trim().isEmpty ? '[Label]' : _labelName.text.trim(),
-      '{{territory}}': _territory.text.trim().isEmpty ? 'Worldwide' : _territory.text.trim(),
-      '{{term_years}}': _termYears.text.trim().isEmpty ? '10' : _termYears.text.trim(),
-      '{{agreement_date}}': _agreementDate.text.trim().isEmpty ? '[Date]' : _agreementDate.text.trim(),
-    };
-    values.forEach((key, value) => body = body.replaceAll(key, value));
-    return body;
-  }
-
-  Widget _buildLivePreview() {
-    final theme = Theme.of(context);
-    final content = _resolvedAgreementContent();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(
-          color: theme.colorScheme.shadow.withOpacity(.06),
-          blurRadius: 12,
-          offset: const Offset(0, 3),
-        )],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(Icons.description_outlined, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(child: Text('LIVE DOCUMENT PREVIEW',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.primary, fontWeight: FontWeight.w800, letterSpacing: .6))),
-          const Icon(Icons.sync, size: 16),
-        ]),
-        const Divider(height: 24),
-        Center(child: Text(
-          _title.text.trim().isEmpty ? (_templateTitleSnapshot.isEmpty ? 'AGREEMENT' : _templateTitleSnapshot.toUpperCase()) : _title.text.toUpperCase(),
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        )),
-        const SizedBox(height: 18),
-        for (final item in <String, String>{
-          'Agreement Date': _agreementDate.text,
-          'First Party': _partyOne.text,
-          'Second Party': _partyTwo.text,
-          'Label': _labelName.text,
-          'Address': _address.text,
-          'Territory': _territory.text,
-          'Term': _termYears.text.isEmpty ? '' : '${_termYears.text} years',
-        }.entries)
-          if (item.value.trim().isNotEmpty)
-            Padding(padding: const EdgeInsets.only(bottom: 6), child: RichText(text: TextSpan(
-              style: theme.textTheme.bodyMedium,
-              children: [
-                TextSpan(text: '${item.key}: ', style: const TextStyle(fontWeight: FontWeight.w700)),
-                TextSpan(text: item.value),
-              ],
-            ))),
-        if (_tracks.text.trim().isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Text('Track Details', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text(_tracks.text, style: theme.textTheme.bodyMedium),
-        ],
-        const Divider(height: 24),
-        Text(content.isEmpty ? 'Agreement clauses will appear here.' : content,
-          textAlign: TextAlign.justify,
-          style: theme.textTheme.bodyMedium?.copyWith(height: 1.55)),
-        const SizedBox(height: 26),
-        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Divider(color: Colors.black),
-            Text('First Party Signature', style: theme.textTheme.labelSmall),
-          ])),
-          const SizedBox(width: 24),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Divider(color: Colors.black),
-            Text('Second Party Signature', style: theme.textTheme.labelSmall),
-          ])),
-        ]),
-        if (_witnessName.text.trim().isNotEmpty) ...[
-          const SizedBox(height: 18),
-          Text('Witness: ${_witnessName.text}', style: theme.textTheme.bodySmall),
-        ],
-      ]),
-    );
-  }
-
   Future<void> _captureSignature() async {
     final result = await showDialog<String>(
       context: context,
@@ -367,7 +271,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         'signature_data': _signatureData,
         'template_id': _templateId,
         'template_title_snapshot': _templateTitleSnapshot,
-        'template_body_snapshot': _agreementContent.text,
+        'template_body_snapshot': _templateBodySnapshot,
         'label_name': _labelName.text, 'address': _address.text,
         'territory': _territory.text, 'term_years': _termYears.text,
         'track_details': _tracks.text, 'designation': _designation.text,
@@ -394,9 +298,81 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     }
   }
 
+  Future<void> _pickDate(TextEditingController controller) async {
+    final now = DateTime.now();
+    DateTime initial = DateTime.tryParse(controller.text) ?? now;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1950),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && mounted) {
+      controller.text = picked.toIso8601String().split('T').first;
+      setState(() {});
+    }
+  }
+
+  Widget _dateField(TextEditingController controller, String label, {bool optional = false}) =>
+    Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        readOnly: true,
+        onTap: () => _pickDate(controller),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: optional ? 'Optional' : 'Select date',
+          border: const OutlineInputBorder(),
+          isDense: true,
+          suffixIcon: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (optional && controller.text.isNotEmpty)
+              IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(controller.clear)),
+            const Icon(Icons.calendar_month_outlined),
+            const SizedBox(width: 10),
+          ]),
+        ),
+      ),
+    );
+
+  Future<void> _previewAgreement() async {
+    final data = <String, Object?>{
+      'title': _title.text,
+      'category': _category.text,
+      'party_one': _partyOne.text,
+      'party_two': _partyTwo.text,
+      'status': _status,
+      'start_date': _start.text,
+      'end_date': _end.text,
+      'description': _description.text,
+      'notes': _notes.text,
+      'signature_data': _signatureData,
+      'template_id': _templateId,
+      'template_title_snapshot': _templateTitleSnapshot,
+      'template_body_snapshot': _templateBodySnapshot,
+      'label_name': _labelName.text,
+      'address': _address.text,
+      'territory': _territory.text,
+      'term_years': _termYears.text,
+      'track_details': _tracks.text,
+      'designation': _designation.text,
+      'agreement_date': _agreementDate.text,
+      'witness_name': _witnessName.text,
+    };
+    await AgreementPdfService.instance.printAgreement(data);
+  }
+
   @override
   Widget build(BuildContext context) {
     const statuses = ['Draft', 'Active', 'Expired', 'Terminated'];
+    const terms = ['2', '5', '10', '15', '20'];
+    const territories = ['Worldwide', 'Selected Territories'];
+    const designations = ['Owner', 'Authorized'];
+    final selectedTerm = terms.contains(_termYears.text) ? _termYears.text : '10';
+    final selectedTerritory = territories.contains(_territory.text)
+        ? _territory.text
+        : (_territory.text.trim().isEmpty ? 'Worldwide' : 'Selected Territories');
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.record == null ? 'Add' : 'Edit'} Agreement'),
@@ -417,21 +393,22 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
               _templateId = first['id'] as int;
               _templateTitleSnapshot = first['title'].toString();
               _templateBodySnapshot = first['body'].toString();
-              _agreementContent.text = _templateBodySnapshot;
               if (_title.text.isEmpty) _title.text = _templateTitleSnapshot;
+              if (_category.text.isEmpty) _category.text = _templateTitleSnapshot;
             }
             return Padding(padding: const EdgeInsets.only(bottom: 12), child: DropdownButtonFormField<int>(
               value: templates.any((t) => t['id'] == _templateId) ? _templateId : null,
               decoration: const InputDecoration(labelText: 'Agreement Template', border: OutlineInputBorder(), isDense: true),
               items: templates.map((t) => DropdownMenuItem<int>(value: t['id'] as int, child: Text(t['title'].toString()))).toList(),
               onChanged: (id) {
+                if (id == null) return;
                 final selected = templates.firstWhere((t) => t['id'] == id);
                 setState(() {
                   _templateId = id;
                   _templateTitleSnapshot = selected['title'].toString();
                   _templateBodySnapshot = selected['body'].toString();
-                  _agreementContent.text = _templateBodySnapshot;
-                  if (_title.text.isEmpty || _title.text == 'Music Rights Agreement') _title.text = _templateTitleSnapshot;
+                  _title.text = _templateTitleSnapshot;
+                  _category.text = _templateTitleSnapshot;
                 });
               },
             ));
@@ -440,24 +417,45 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         _field(_title, 'Agreement Title', required: true),
         _field(_category, 'Agreement Type'),
         _field(_partyOne, 'First Party'),
-        _field(_partyTwo, 'Second Party / Label'),
-        _field(_labelName, 'Label Name'),
-        _field(_address, 'Artist / First Party Address', lines: 2),
-        _field(_territory, 'Territory'),
-        _field(_termYears, 'Agreement Term (Years)'),
+        _field(_partyTwo, 'Second Party'),
+        DropdownButtonFormField<String>(
+          value: null,
+          decoration: const InputDecoration(labelText: 'Label Name', hintText: 'Select Label', border: OutlineInputBorder(), isDense: true),
+          items: const [],
+          onChanged: null,
+        ),
+        _field(_address, 'Address', lines: 2),
+        DropdownButtonFormField<String>(
+          value: selectedTerritory,
+          decoration: const InputDecoration(labelText: 'Territory', border: OutlineInputBorder(), isDense: true),
+          items: territories.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+          onChanged: (v) => setState(() => _territory.text = v ?? 'Worldwide'),
+        ),
+        if (selectedTerritory == 'Selected Territories')
+          _field(_territory, 'Enter Selected Territories (e.g. Pakistan, UAE)', lines: 2),
+        DropdownButtonFormField<String>(
+          value: selectedTerm,
+          decoration: const InputDecoration(labelText: 'Agreement Term', border: OutlineInputBorder(), isDense: true),
+          items: terms.map((v) => DropdownMenuItem(value: v, child: Text('$v Years'))).toList(),
+          onChanged: (v) => setState(() => _termYears.text = v ?? '10'),
+        ),
         _field(_tracks, 'Track Details (one track per line)', lines: 4),
-        _field(_designation, 'Designation'),
-        _field(_agreementDate, 'Agreement Date'),
+        DropdownButtonFormField<String>(
+          value: designations.contains(_designation.text) ? _designation.text : null,
+          decoration: const InputDecoration(labelText: 'Designation', border: OutlineInputBorder(), isDense: true),
+          items: designations.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+          onChanged: (v) => setState(() => _designation.text = v ?? 'Owner'),
+        ),
+        _dateField(_agreementDate, 'Agreement Date'),
         DropdownButtonFormField<String>(
           value: statuses.contains(_status) ? _status : statuses.first,
           decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder(), isDense: true),
           items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
           onChanged: (v) => setState(() => _status = v ?? statuses.first),
         ),
-        const SizedBox(height: 12),
-        _field(_start, 'Start Date'),
-        _field(_end, 'End / Expiry Date (optional)'),
-        _field(_witnessName, 'Witness Name'),
+        _dateField(_start, 'Start Date'),
+        _dateField(_end, 'End / Expiry Date', optional: true),
+        _field(_witnessName, 'Witness Name (optional)'),
         OutlinedButton.icon(
           onPressed: _saving ? null : _captureSignature,
           icon: const Icon(Icons.draw_outlined),
@@ -471,27 +469,27 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           icon: const Icon(Icons.verified_outlined),
           label: const Text('Attach Stamp / E-Stamp Document'),
         ),
-        _field(_description, 'Additional Agreement Details / Terms', lines: 4),
-        _field(_notes, 'Notes', lines: 3),
-        const SizedBox(height: 4),
-        Text('Agreement Content', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: _agreementContent,
-          minLines: 12,
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-            hintText: 'Selected template content will appear here. Edit clauses and wording as needed.',
-            border: OutlineInputBorder(),
-            alignLabelWithHint: true,
-            helperText: 'Edit the agreement wording here. The preview below updates instantly.',
-          ),
+        _field(_description, 'Additional Agreement Details / Terms', lines: 3),
+        _field(_notes, 'Notes', lines: 2),
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: const Text('Edit Agreement Clauses'),
+          subtitle: const Text('Template clauses are included automatically; expand to edit wording'),
+          children: [
+            TextFormField(
+              key: ValueKey('clauses-$_templateId'),
+              initialValue: _templateBodySnapshot,
+              minLines: 8,
+              maxLines: null,
+              onChanged: (value) => _templateBodySnapshot = value,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                alignLabelWithHint: true,
+                hintText: 'Edit the agreement clauses here',
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 14),
-        _buildLivePreview(),
-        const SizedBox(height: 18),
         if (_selectedAttachments.isNotEmpty) ..._selectedAttachments.asMap().entries.map((entry) => ListTile(
           dense: true, contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.insert_drive_file_outlined),
@@ -499,22 +497,24 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           trailing: IconButton(icon: const Icon(Icons.close_rounded, size: 18),
             onPressed: () => setState(() => _selectedAttachments.removeAt(entry.key))),
         )),
-        const SizedBox(height: 8),
-        FilledButton.icon(
-          onPressed: _saving ? null : _save,
-          icon: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_outlined),
-          label: Text(_saving ? 'Saving...' : 'Save'),
-        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: _previewAgreement,
+            icon: const Icon(Icons.visibility_outlined),
+            label: const Text('Preview'),
+          )),
+          const SizedBox(width: 12),
+          Expanded(child: FilledButton.icon(
+            onPressed: _saving ? null : _save,
+            icon: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_outlined),
+            label: Text(_saving ? 'Saving...' : 'Save'),
+          )),
+        ]),
       ])),
     );
   }
 }
-
-
-class _AgreementSignatureDialog extends StatefulWidget {
-  const _AgreementSignatureDialog();
-  @override
-  State<_AgreementSignatureDialog> createState() => _AgreementSignatureDialogState();
 }
 
 class _AgreementSignatureDialogState extends State<_AgreementSignatureDialog> {

@@ -147,14 +147,21 @@ class AssetsService {
 
       if (isLoan) {
         if (asset.partyId == null) throw Exception('Please select a party for this loan purchase.');
-        final parties = await db.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
-        if (parties.isEmpty) throw Exception('Selected party was not found.');
-        currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
         assetWalletId = 0;
       }
 
       final assetId = await db.transaction((txn) async {
-        if (!isLoan) {
+        if (isLoan) {
+          final parties = await txn.query(
+            'loan_parties',
+            columns: ['id', 'currency'],
+            where: 'id = ?',
+            whereArgs: [asset.partyId],
+            limit: 1,
+          );
+          if (parties.isEmpty) throw Exception('Selected party was not found.');
+          currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+        } else {
           final wallet = await _getWallet(txn, assetWalletId);
           currency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
           if ((wallet['balance'] as num).toDouble() < asset.purchasePrice) {
@@ -177,8 +184,6 @@ class AssetsService {
             amount: -asset.purchasePrice,
           );
         } else {
-          final parties = await txn.query('loan_parties', where: 'id = ?', whereArgs: [asset.partyId], limit: 1);
-          if (parties.isEmpty) throw Exception('Selected party was not found.');
           final loanId = await txn.insert('loans', {
             'party_id': asset.partyId,
             'loan_type': 'taken',

@@ -3,6 +3,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
+import 'package:my_finance/features/space/services/agreement_template_service.dart';
+import 'package:my_finance/features/space/services/agreement_pdf_service.dart';
+import 'package:my_finance/features/space/screens/agreement_templates_screen.dart';
 
 class AgreementsScreen extends StatefulWidget {
   const AgreementsScreen({super.key});
@@ -113,6 +116,15 @@ class AgreementsScreenState extends State<AgreementsScreen> {
           children: [
             Text(row['title']?.toString() ?? '', style: Theme.of(ctx).textTheme.titleLarge),
             const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              OutlinedButton.icon(
+                onPressed: () => AgreementPdfService.instance.printAgreement(row),
+                icon: const Icon(Icons.picture_as_pdf_outlined), label: const Text('Preview / Print PDF')),
+              OutlinedButton.icon(
+                onPressed: () => AgreementPdfService.instance.shareAgreement(row),
+                icon: const Icon(Icons.share_outlined), label: const Text('Share PDF')),
+            ]),
+            const SizedBox(height: 12),
             for (final field in <String, String>{
               'Type': 'category', 'First Party': 'party_one', 'Second Party': 'party_two',
               'Status': 'status', 'Start Date': 'start_date', 'End Date': 'end_date',
@@ -145,6 +157,11 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   late final TextEditingController _title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes;
   late String _status;
   bool _saving = false;
+  int? _templateId;
+  String _templateTitleSnapshot = '';
+  String _templateBodySnapshot = '';
+  late Future<List<Map<String, Object?>>> _templateOptions;
+  late final TextEditingController _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName;
   final List<Map<String, String>> _selectedAttachments = [];
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -161,11 +178,24 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     _description = TextEditingController(text: r['description']?.toString() ?? '');
     _notes = TextEditingController(text: r['notes']?.toString() ?? '');
     _status = r['status']?.toString() ?? 'Draft';
+    _templateId = r['template_id'] as int?;
+    _templateTitleSnapshot = r['template_title_snapshot']?.toString() ?? '';
+    _templateBodySnapshot = r['template_body_snapshot']?.toString() ?? '';
+    _labelName = TextEditingController(text: r['label_name']?.toString() ?? '');
+    _address = TextEditingController(text: r['address']?.toString() ?? '');
+    _territory = TextEditingController(text: r['territory']?.toString() ?? 'Worldwide');
+    _termYears = TextEditingController(text: r['term_years']?.toString() ?? '10');
+    _tracks = TextEditingController(text: r['track_details']?.toString() ?? '');
+    _designation = TextEditingController(text: r['designation']?.toString() ?? '');
+    _agreementDate = TextEditingController(text: r['agreement_date']?.toString() ?? '');
+    _witnessName = TextEditingController(text: r['witness_name']?.toString() ?? '');
+    _templateOptions = AgreementTemplateService.instance.getTemplates();
   }
 
   @override
   void dispose() {
-    for (final c in [_title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes]) { c.dispose(); }
+    for (final c in [_title, _category, _partyOne, _partyTwo, _start, _end, _description, _notes,
+      _labelName, _address, _territory, _termYears, _tracks, _designation, _agreementDate, _witnessName]) { c.dispose(); }
     super.dispose();
   }
 
@@ -224,6 +254,13 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         'party_one': _partyOne.text, 'party_two': _partyTwo.text, 'status': _status,
         'start_date': _start.text, 'end_date': _end.text,
         'description': _description.text, 'notes': _notes.text,
+        'template_id': _templateId,
+        'template_title_snapshot': _templateTitleSnapshot,
+        'template_body_snapshot': _templateBodySnapshot,
+        'label_name': _labelName.text, 'address': _address.text,
+        'territory': _territory.text, 'term_years': _termYears.text,
+        'track_details': _tracks.text, 'designation': _designation.text,
+        'agreement_date': _agreementDate.text, 'witness_name': _witnessName.text,
       });
       var failures = 0;
       for (final file in _selectedAttachments) {
@@ -250,12 +287,54 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   Widget build(BuildContext context) {
     const statuses = ['Draft', 'Active', 'Expired', 'Terminated'];
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.record == null ? 'Add' : 'Edit'} Agreement')),
+      appBar: AppBar(
+        title: Text('${widget.record == null ? 'Add' : 'Edit'} Agreement'),
+        actions: [IconButton(
+          tooltip: 'Manage Templates',
+          icon: const Icon(Icons.library_books_outlined),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AgreementTemplatesScreen())),
+        )],
+      ),
       body: Form(key: _formKey, child: ListView(padding: const EdgeInsets.all(16), children: [
+        FutureBuilder<List<Map<String, Object?>>>(
+          future: _templateOptions,
+          builder: (context, snapshot) {
+            final templates = snapshot.data ?? [];
+            if (templates.isEmpty) return const SizedBox.shrink();
+            if (_templateId == null && _templateBodySnapshot.isEmpty) {
+              final first = templates.first;
+              _templateId = first['id'] as int;
+              _templateTitleSnapshot = first['title'].toString();
+              _templateBodySnapshot = first['body'].toString();
+              if (_title.text.isEmpty) _title.text = _templateTitleSnapshot;
+            }
+            return Padding(padding: const EdgeInsets.only(bottom: 12), child: DropdownButtonFormField<int>(
+              value: templates.any((t) => t['id'] == _templateId) ? _templateId : null,
+              decoration: const InputDecoration(labelText: 'Agreement Template', border: OutlineInputBorder(), isDense: true),
+              items: templates.map((t) => DropdownMenuItem<int>(value: t['id'] as int, child: Text(t['title'].toString()))).toList(),
+              onChanged: (id) {
+                final selected = templates.firstWhere((t) => t['id'] == id);
+                setState(() {
+                  _templateId = id;
+                  _templateTitleSnapshot = selected['title'].toString();
+                  _templateBodySnapshot = selected['body'].toString();
+                  if (_title.text.isEmpty || _title.text == 'Music Rights Agreement') _title.text = _templateTitleSnapshot;
+                });
+              },
+            ));
+          },
+        ),
         _field(_title, 'Agreement Title', required: true),
         _field(_category, 'Agreement Type'),
         _field(_partyOne, 'First Party'),
-        _field(_partyTwo, 'Second Party'),
+        _field(_partyTwo, 'Second Party / Label'),
+        _field(_labelName, 'Label Name'),
+        _field(_address, 'Artist / First Party Address', lines: 2),
+        _field(_territory, 'Territory'),
+        _field(_termYears, 'Agreement Term (Years)'),
+        _field(_tracks, 'Track Details (one track per line)', lines: 4),
+        _field(_designation, 'Designation'),
+        _field(_agreementDate, 'Agreement Date'),
         DropdownButtonFormField<String>(
           value: statuses.contains(_status) ? _status : statuses.first,
           decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder(), isDense: true),
@@ -265,7 +344,8 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
         const SizedBox(height: 12),
         _field(_start, 'Start Date'),
         _field(_end, 'End / Expiry Date (optional)'),
-        _field(_description, 'Agreement Details / Terms', lines: 4),
+        _field(_witnessName, 'Witness Name'),
+        _field(_description, 'Additional Agreement Details / Terms', lines: 4),
         _field(_notes, 'Notes', lines: 3),
         if (_selectedAttachments.isNotEmpty) ..._selectedAttachments.asMap().entries.map((entry) => ListTile(
           dense: true, contentPadding: EdgeInsets.zero,

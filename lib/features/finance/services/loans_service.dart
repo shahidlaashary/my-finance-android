@@ -15,6 +15,17 @@ class LoansService {
     }
   }
 
+  static double _validatedRepaymentWalletAmount(RepaymentModel repayment) {
+    if (repayment.walletId <= 0 ||
+        !repayment.amount.isFinite ||
+        repayment.amount <= 0 ||
+        !repayment.walletAmount.isFinite ||
+        repayment.walletAmount <= 0) {
+      throw Exception('Repayment contains an invalid wallet amount or wallet.');
+    }
+    return repayment.walletAmount;
+  }
+
   // Restore se pehle is service ka database connection band karta hai.
   static Future<void> closeDatabase() async {
     final currentDatabase = _databaseInstance;
@@ -611,7 +622,7 @@ class LoansService {
       if (loanRows.isEmpty) throw Exception('Related loan was not found.');
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
-      final oldWalletAmount = old.walletAmount;
+      final oldWalletAmount = _validatedRepaymentWalletAmount(old);
       await _getWallet(txn, old.walletId);
       // Restore the old transaction only inside this atomic DB transaction.
       await _changeWalletBalance(txn, walletId: old.walletId,
@@ -760,7 +771,7 @@ class LoansService {
 
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
-      await _getWallet(txn, repayment.walletId);
+      final repaymentWalletAmount = _validatedRepaymentWalletAmount(repayment);
 
       final restoredRemaining = (loan.remainingAmount + repayment.amount)
           .clamp(0.0, loan.amount)
@@ -770,8 +781,8 @@ class LoansService {
         txn,
         walletId: repayment.walletId,
         amount: loan.loanType == 'given'
-            ? -repayment.walletAmount
-            : repayment.walletAmount,
+            ? -repaymentWalletAmount
+            : repaymentWalletAmount,
       );
 
       await txn.update(
@@ -902,13 +913,13 @@ class LoansService {
 
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
-        await _getWallet(txn, repayment.walletId);
+        final repaymentWalletAmount = _validatedRepaymentWalletAmount(repayment);
         await _changeWalletBalance(
           txn,
           walletId: repayment.walletId,
           amount: loan.loanType == 'given'
-              ? -repayment.walletAmount
-              : repayment.walletAmount,
+              ? -repaymentWalletAmount
+              : repaymentWalletAmount,
         );
       }
 

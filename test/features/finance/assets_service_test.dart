@@ -460,6 +460,49 @@ void main() {
     expect((wallet!['balance'] as num).toDouble(), 100);
   });
 
+
+  test('restoring an ordinary loan is blocked if its source wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Loan Restore Currency Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await LoansService.deleteLoan(loanId);
+    final archivedLoan = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'loans' &&
+          item['source_id'].toString() == loanId.toString(),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archivedLoan['id'] as int),
+      throwsA(isA<Exception>()),
+    );
+
+    expect(await LoansService.getLoanById(loanId), isNull);
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['currency'],
+      'USD',
+    );
+  });
+
   test('restoring a Loan Given with same-wallet repayments validates the net balance', () async {
     final walletId = await createWallet(1000);
     final partyId = await LoansService.addParty(

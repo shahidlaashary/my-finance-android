@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/screens/agreement_templates_screen.dart';
+import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 
 class MySpaceManagementScreen extends StatefulWidget {
   const MySpaceManagementScreen({super.key});
@@ -13,7 +14,7 @@ class _MySpaceManagementScreenState extends State<MySpaceManagementScreen> with 
   late final TabController _tabs;
   Future<List<Map<String, Object?>>>? _companies, _labels, _artists;
   @override
-  void initState() { super.initState(); _tabs = TabController(length: 4, vsync: this); _refresh(); }
+  void initState() { super.initState(); _tabs = TabController(length: 5, vsync: this); _refresh(); }
   @override
   void dispose() { _tabs.dispose(); super.dispose(); }
   void _refresh() { _companies = _service.getAgreementCompanies(); _labels = _service.getAgreementLabels(); _artists = _service.getArtists(); }
@@ -76,15 +77,16 @@ class _MySpaceManagementScreenState extends State<MySpaceManagementScreen> with 
   Widget _list(Future<List<Map<String,Object?>>>? future,{required String empty,required Widget Function(Map<String,Object?>) tile}) => FutureBuilder<List<Map<String,Object?>>>(future:future,builder:(ctx,s){if(s.connectionState==ConnectionState.waiting)return const Center(child:CircularProgressIndicator());if(s.hasError)return Center(child:Text('Unable to load: ${s.error}'));final rows=s.data??[];if(rows.isEmpty)return Center(child:Text(empty));return ListView(padding:const EdgeInsets.all(12),children:rows.map(tile).toList());});
   @override
   Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('My Space Management'),bottom:TabBar(controller:_tabs,isScrollable:true,tabs:const[Tab(text:'Companies'),Tab(text:'Labels'),Tab(text:'Artists'),Tab(text:'Templates')])),
+    appBar:AppBar(title:const Text('My Space Management'),bottom:TabBar(controller:_tabs,isScrollable:true,tabs:const[Tab(text:'Companies'),Tab(text:'Labels'),Tab(text:'Artists'),Tab(text:'Templates'),Tab(text:'Trash')])),
     body:TabBarView(controller:_tabs,children:[
       _list(_companies,empty:'No companies yet',tile:(r)=>Card(child:ListTile(leading:const Icon(Icons.business_outlined),title:Text(r['name'].toString()),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='edit')_company(r);if(v=='delete')_delete('company',()=>_service.deleteAgreementCompany(r['id'] as int));},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('Edit')),PopupMenuItem(value:'delete',child:Text('Delete'))])))),
       _list(_labels,empty:'No labels yet',tile:(r)=>Card(child:ListTile(leading:const Icon(Icons.label_outline),title:Text(r['name'].toString()),subtitle:Text(r['company_name']?.toString()??''),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='edit')_label(r);if(v=='delete')_delete('label',()=>_service.deleteAgreementLabel(r['id'] as int));},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('Edit')),PopupMenuItem(value:'delete',child:Text('Delete'))])))),
       _list(_artists,empty:'No artists yet',tile:(r)=>Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.mic_none)),title:Text(r['name'].toString()),subtitle:Text([r['stage_name'],r['genre'],r['phone']].where((x)=>x!=null&&x.toString().isNotEmpty).join(' • ')),onTap:()=>_artist(r),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='edit')_artist(r);if(v=='delete')_delete('artist',()=>_service.deleteArtist(r['id'] as int));},itemBuilder:(_)=>const[PopupMenuItem(value:'edit',child:Text('Edit')),PopupMenuItem(value:'delete',child:Text('Delete'))])))),
       const AgreementTemplatesScreen(),
+      const RecycleBinScreen(),
     ]),
     floatingActionButton:AnimatedBuilder(animation:_tabs,builder:(ctx,_){
-      if(_tabs.index==3)return const SizedBox.shrink();
+      if(_tabs.index>=3)return const SizedBox.shrink();
       final actions=[_company,_label,_artist];
       return FloatingActionButton.extended(onPressed:()=>actions[_tabs.index](),icon:const Icon(Icons.add),label:Text(['Add Company','Add Label','Add Artist'][_tabs.index]));
     }),

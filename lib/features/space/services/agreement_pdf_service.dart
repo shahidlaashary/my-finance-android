@@ -29,6 +29,7 @@ class AgreementPdfService {
       '{{territory}}': territory,
       '{{term_years}}': _value(data, 'term_years', '10'),
       '{{agreement_date}}': _value(data, 'agreement_date', '[Date]'),
+      '{{signing_date}}': _value(data, 'signing_date', '[Signing Date]'),
     };
     replacements.forEach((key, value) => body = body.replaceAll(key, value));
     // Older saved template snapshots may contain a literal "worldwide"
@@ -91,12 +92,15 @@ class AgreementPdfService {
             decoration: pw.TextDecoration.underline))),
         pw.SizedBox(height: 20),
         field('Agreement Date', _value(data, 'agreement_date')),
+        field('Signing Date', _value(data, 'signing_date')),
         field('First Party / Artist', _value(data, 'party_one')),
         field('Second Party / Label', _value(data, 'party_two')),
         field('Label Name', _value(data, 'label_name')),
         field('Address', _value(data, 'address')),
         field('Territory', _value(data, 'territory', 'Worldwide')),
         field('Term', '${_value(data, 'term_years', '10')} years'),
+        if (_value(data, 'termination_date').isNotEmpty) field('Termination Date', _value(data, 'termination_date')),
+        if (_value(data, 'termination_reason').isNotEmpty) field('Termination Reason', _value(data, 'termination_reason')),
         pw.SizedBox(height: 12),
         pw.Text('Terms and Conditions', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
         pw.SizedBox(height: 8),
@@ -123,8 +127,11 @@ class AgreementPdfService {
           pw.SizedBox(width: 24),
           pw.Expanded(child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
             pw.Text('Name: ${_value(data, 'party_two')}'),
-            pw.SizedBox(height: 25),
-            pw.Text('Date: ${_value(data, 'agreement_date')}'),
+            pw.SizedBox(height: 8),
+            if (_value(data, 'signature_data_two').isNotEmpty)
+              pw.Image(pw.MemoryImage(base64Decode(_value(data, 'signature_data_two'))), width: 145, height: 48, fit: pw.BoxFit.contain),
+            pw.SizedBox(height: 8),
+            pw.Text('Date: ${_value(data, 'signing_date')}'),
             pw.SizedBox(height: 28),
             pw.Container(width: 180, height: 1, color: PdfColors.black),
             pw.Text('Signature of Second Party', style: const pw.TextStyle(fontSize: 9)),
@@ -132,9 +139,7 @@ class AgreementPdfService {
         ]),
         pw.SizedBox(height: 28),
         pw.Text('Witness: ${_value(data, 'witness_name', '____________________________')}'),
-        pw.SizedBox(height: 25),
-        pw.Text('Stamp / E-Stamp: Attach the applicable stamp document separately.',
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+
       ],
     ));
     return document.save();

@@ -216,13 +216,6 @@ class AppTheme {
           fontWeight: FontWeight.w700, fontFamily: fontFamily),
         contentTextStyle: TextStyle(color: p.text, fontFamily: fontFamily),
       ),
-      dropdownButtonTheme: DropdownButtonThemeData(
-        dropdownColor: p.surface,
-        elevation: 8,
-        borderRadius: BorderRadius.circular(13),
-        menuMaxHeight: 320,
-        style: TextStyle(color: p.text, fontFamily: fontFamily),
-      ),
       popupMenuTheme: PopupMenuThemeData(
         color: p.surface,
         surfaceTintColor: Colors.transparent,

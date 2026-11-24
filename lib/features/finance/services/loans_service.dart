@@ -443,7 +443,10 @@ class LoansService {
     required int walletId,
     required double amount,
   }) async {
-    await txn.rawUpdate(
+    if (!amount.isFinite) {
+      throw Exception('Wallet balance change must be a valid number.');
+    }
+    final changed = await txn.rawUpdate(
       '''
       UPDATE wallets
       SET balance = balance + ?
@@ -451,6 +454,9 @@ class LoansService {
       ''',
       [amount, walletId],
     );
+    if (changed != 1) {
+      throw Exception('The linked wallet no longer exists. Restore the wallet first.');
+    }
   }
 
   /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.

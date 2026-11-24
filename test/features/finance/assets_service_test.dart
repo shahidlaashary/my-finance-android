@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
+import 'package:my_finance/features/finance/models/loans_model.dart';
 import 'package:my_finance/features/finance/models/repayment_model.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
@@ -351,6 +352,66 @@ void main() {
     expect(saved, isNotNull);
     expect(saved!.isSold, isTrue);
     expect((wallet!['balance'] as num).toDouble(), 50);
+  });
+
+
+  test('deleting a loan is blocked if reversing repayments would make a wallet negative', () async {
+    final lendingWalletId = await createWallet(1000);
+    final repaymentWalletId = await FinanceDB.instance.addWallet(
+      name: 'Repayment Test Wallet',
+      type: 'Cash',
+      currency: 'PKR',
+      openingBalance: 100,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final partyId = await LoansService.addParty(
+      name: 'Ordinary Loan Delete Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 500,
+        remainingAmount: 500,
+        walletId: lendingWalletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 200,
+        walletId: repaymentWalletId,
+        repaymentDate: '2026-11-21',
+        createdAt: DateTime(2026, 11, 21).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'balance': 100},
+      where: 'id = ?',
+      whereArgs: [repaymentWalletId],
+    );
+
+    await expectLater(
+      LoansService.deleteLoan(loanId),
+      throwsA(isA<Exception>()),
+    );
+
+    expect(await LoansService.getLoanById(loanId), isNotNull);
+    expect(await LoansService.getRepayments(loanId), hasLength(1));
+    expect(
+      (await FinanceDB.instance.getWallet(lendingWalletId))!['balance'],
+      500,
+    );
+    expect(
+      (await FinanceDB.instance.getWallet(repaymentWalletId))!['balance'],
+      100,
+    );
   });
 
   test('restoring asset with deleted linked party requires party restoration first',

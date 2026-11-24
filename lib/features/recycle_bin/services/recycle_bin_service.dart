@@ -96,22 +96,57 @@ class RecycleBinService {
           created_at TEXT NOT NULL, FOREIGN KEY(loan_id) REFERENCES loans(id) ON DELETE CASCADE)''');
         final relatedRaw = item['related_payload']?.toString() ?? '[]';
         final repayments = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        final loanType = record['loan_type']?.toString().toLowerCase() ?? 'given';
+        final isAssetLinked = const {'asset_purchase', 'asset_sale'}
+            .contains(record['source_type']?.toString());
+        final loanAmount = (record['amount'] as num).toDouble();
+        final loanWallet = (record['wallet_id'] as num).toInt();
+
+        // Asset-linked loans never move a reference wallet at creation.
+        if (!isAssetLinked) {
+          final source = await txn.query(
+            'wallets', columns: ['balance'], where: 'id = ?',
+            whereArgs: [loanWallet], limit: 1,
+          );
+          if (source.isEmpty) throw Exception('The loan wallet no longer exists.');
+          final originalDelta = loanType == 'given' ? -loanAmount : loanAmount;
+          final sourceBalance = (source.first['balance'] as num).toDouble();
+          if (originalDelta < 0 && sourceBalance + 0.000001 < -originalDelta) {
+            throw Exception('Insufficient wallet balance to restore this loan.');
+          }
+          await txn.rawUpdate(
+            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+            [originalDelta, loanWallet],
+          );
+        }
+
+        // Reapply each repayment using its wallet-side converted amount.
         for (final repayment in repayments) {
           final walletId = (repayment['wallet_id'] as num).toInt();
-          final exists = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [walletId], limit: 1);
-          if (exists.isEmpty) throw Exception('A repayment wallet no longer exists.');
-          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [(repayment['amount'] as num).toDouble(), walletId]);
+          final walletAmount = (repayment['wallet_amount'] as num?)?.toDouble()
+              ?? (repayment['amount'] as num).toDouble();
+          final walletRows = await txn.query(
+            'wallets', columns: ['balance'], where: 'id = ?',
+            whereArgs: [walletId], limit: 1,
+          );
+          if (walletRows.isEmpty) throw Exception('A repayment wallet no longer exists.');
+          final delta = loanType == 'given' ? walletAmount : -walletAmount;
+          final balance = (walletRows.first['balance'] as num).toDouble();
+          if (delta < 0 && balance + 0.000001 < -delta) {
+            throw Exception('Insufficient wallet balance to restore a loan repayment.');
+          }
+          await txn.rawUpdate(
+            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+            [delta, walletId],
+          );
         }
-        final loanWallet = (record['wallet_id'] as num).toInt();
-        final loanAmount = (record['amount'] as num).toDouble();
-        final source = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [loanWallet], limit: 1);
-        if (source.isEmpty) throw Exception('The loan wallet no longer exists.');
-        if ((source.first['balance'] as num).toDouble() < loanAmount) throw Exception('Insufficient wallet balance to restore this loan.');
-        await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [loanAmount, loanWallet]);
+
         record.remove('borrower_name');
         record.remove('borrower_phone');
         await txn.insert('loans', record);
-        for (final repayment in repayments) { await txn.insert('loan_repayments', repayment); }
+        for (final repayment in repayments) {
+          await txn.insert('loan_repayments', repayment);
+        }
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
@@ -150,17 +185,37 @@ class RecycleBinService {
           current_value REAL NOT NULL, purchase_date TEXT NOT NULL, wallet_id INTEGER NOT NULL,
           notes TEXT NOT NULL DEFAULT '', is_sold INTEGER NOT NULL DEFAULT 0,
           sale_date TEXT, sale_price REAL, sale_wallet_id INTEGER, created_at TEXT NOT NULL)''');
-        final walletId = (record['wallet_id'] as num).toInt();
-        final purchase = (record['purchase_price'] as num).toDouble();
-        final walletRows = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
-        if (walletRows.isEmpty) throw Exception('The asset purchase wallet no longer exists.');
-        if ((walletRows.first['balance'] as num).toDouble() < purchase) throw Exception('Insufficient wallet balance to restore this asset.');
-        await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [purchase, walletId]);
-        if ((record['is_sold'] as num?)?.toInt() == 1 && record['sale_price'] != null && (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') != 'loan') {
+        final isLoanPurchase =
+            (record['payment_type']?.toString().toLowerCase() ?? 'wallet') == 'loan';
+        final walletId = (record['wallet_id'] as num?)?.toInt() ?? 0;
+        if (!isLoanPurchase) {
+          final purchase = (record['purchase_price'] as num).toDouble();
+          final walletRows = await txn.query(
+            'wallets', columns: ['balance'], where: 'id = ?',
+            whereArgs: [walletId], limit: 1,
+          );
+          if (walletRows.isEmpty) throw Exception('The asset purchase wallet no longer exists.');
+          if ((walletRows.first['balance'] as num).toDouble() < purchase) {
+            throw Exception('Insufficient wallet balance to restore this asset.');
+          }
+          await txn.rawUpdate(
+            'UPDATE wallets SET balance = balance - ? WHERE id = ?',
+            [purchase, walletId],
+          );
+        }
+        if ((record['is_sold'] as num?)?.toInt() == 1 &&
+            record['sale_price'] != null &&
+            (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') != 'loan') {
           final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
-          final saleExists = await txn.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [saleWalletId], limit: 1);
+          final saleExists = await txn.query(
+            'wallets', columns: ['id'], where: 'id = ?',
+            whereArgs: [saleWalletId], limit: 1,
+          );
           if (saleExists.isEmpty) throw Exception('The asset sale wallet no longer exists.');
-          await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [((record['sale_wallet_amount'] as num?)?.toDouble() ?? (record['sale_price'] as num).toDouble()), saleWalletId]);
+          await txn.rawUpdate(
+            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+            [((record['sale_wallet_amount'] as num?)?.toDouble() ?? (record['sale_price'] as num).toDouble()), saleWalletId],
+          );
         }
         await txn.insert('assets', record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);

@@ -369,7 +369,7 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
             child: Text('Signature captured for this agreement.', style: TextStyle(fontSize: 12))),
         OutlinedButton.icon(
           onPressed: _saving ? null : _pickFiles,
-          icon: const Icon(Icons.stamp_outlined),
+          icon: const Icon(Icons.verified_outlined),
           label: const Text('Attach Stamp / E-Stamp Document'),
         ),
         _field(_description, 'Additional Agreement Details / Terms', lines: 4),

@@ -796,6 +796,12 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
     );
   }
 }
+
+class _AgreementSignatureDialog extends StatefulWidget {
+  const _AgreementSignatureDialog();
+
+  @override
+  State<_AgreementSignatureDialog> createState() => _AgreementSignatureDialogState();
 }
 
 class _AgreementSignatureDialogState extends State<_AgreementSignatureDialog> {

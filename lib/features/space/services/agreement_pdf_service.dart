@@ -91,7 +91,7 @@ class AgreementPdfService {
         ],
         pw.Text('Terms and Conditions', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
         pw.SizedBox(height: 8),
-        ...clauses.split(RegExp(r'(?=\\d+\\.\\s)')).where((s) => s.trim().isNotEmpty).map((clause) =>
+        ...clauses.split(RegExp(r'(?=\d+\.\s)')).where((s) => s.trim().isNotEmpty).map((clause) =>
           pw.Padding(padding: const pw.EdgeInsets.only(bottom: 9),
             child: pw.Text(clause.trim(), textAlign: pw.TextAlign.justify,
               style: const pw.TextStyle(fontSize: 10.5, lineSpacing: 3)))),

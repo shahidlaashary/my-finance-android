@@ -305,6 +305,9 @@ class AssetsService {
     }
 
     final isLoan = paymentType.toLowerCase() == 'loan';
+    if (isLoan && salePrice <= 0) {
+      throw Exception('Loan sale price must be greater than zero.');
+    }
     var actualWalletAmount = walletAmount ?? salePrice;
     var actualWalletCurrency = (walletCurrency ?? asset.currency).toUpperCase();
     var appliedExchangeRate = exchangeRate;

@@ -502,7 +502,7 @@ class AssetsService {
               'status': 'active',
             },
             where: 'id = ? AND source_type = ? AND source_id = ?',
-            whereArgs: ['${oldAsset.linkedLoanId}', 'asset_purchase', updatedAsset.id],
+            whereArgs: [oldAsset.linkedLoanId, 'asset_purchase', updatedAsset.id],
           );
           if (loanUpdated != 1) {
             throw Exception('Linked asset loan could not be updated.');

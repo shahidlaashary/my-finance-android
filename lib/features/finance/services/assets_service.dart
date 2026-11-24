@@ -404,29 +404,73 @@ class AssetsService {
     final newIsLoan = updatedAsset.paymentType.toLowerCase() == 'loan';
     if (oldIsLoan != newIsLoan) throw Exception('Payment Type cannot be changed after saving. Delete and recreate the asset to change it.');
     if (oldIsLoan) {
-      if (updatedAsset.partyId == null || oldAsset.linkedLoanId == null) throw Exception('Linked loan or party is missing.');
-      final party = await LoansService.getPartyById(updatedAsset.partyId!);
-      if (party == null) throw Exception('Selected party was not found.');
-      final currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
+      if (updatedAsset.partyId == null || oldAsset.linkedLoanId == null) {
+        throw Exception('Linked loan or party is missing.');
+      }
       final loanTermsChanged =
           updatedAsset.purchasePrice != oldAsset.purchasePrice ||
           updatedAsset.partyId != oldAsset.partyId ||
-          !updatedAsset.purchaseDate.isAtSameMomentAs(oldAsset.purchaseDate);
-      if (loanTermsChanged && currency != oldAsset.currency.toUpperCase()) {
-        throw Exception('Party currency must remain ' + oldAsset.currency + ' for this asset.');
-      }
-      if (loanTermsChanged) {
-        await LoansService.updateAssetLinkedLoan(
-          loanId: oldAsset.linkedLoanId!, partyId: updatedAsset.partyId!,
-          loanType: 'taken', amount: updatedAsset.purchasePrice,
-          lendingDate: updatedAsset.purchaseDate.toIso8601String().split('T').first,
-          notes: 'Asset purchase: ' + updatedAsset.name,
+          !updatedAsset.purchaseDate.isAtSameMomentAs(oldAsset.purchaseDate) ||
+          updatedAsset.name != oldAsset.name;
+
+      await db.transaction((txn) async {
+        final parties = await txn.query(
+          'loan_parties',
+          where: 'id = ?',
+          whereArgs: [updatedAsset.partyId],
+          limit: 1,
         );
-      }
-      await db.update('assets', updatedAsset.copyWith(
-        walletId: oldAsset.walletId, currency: oldAsset.currency,
-        linkedLoanId: oldAsset.linkedLoanId, createdAt: oldAsset.createdAt,
-      ).toMap()..remove('id'), where: 'id = ?', whereArgs: [updatedAsset.id]);
+        if (parties.isEmpty) throw Exception('Selected party was not found.');
+        final currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+
+        if (loanTermsChanged) {
+          if (currency != oldAsset.currency.toUpperCase()) {
+            throw Exception('Party currency must remain ' + oldAsset.currency + ' for this asset.');
+          }
+          final loanRows = await txn.query(
+            'loans',
+            where: 'id = ?',
+            whereArgs: [oldAsset.linkedLoanId],
+            limit: 1,
+          );
+          if (loanRows.isEmpty || loanRows.first['source_type'] == null) {
+            throw Exception('Linked asset loan was not found.');
+          }
+          final repayments = await txn.query(
+            'loan_repayments',
+            columns: ['id'],
+            where: 'loan_id = ?',
+            whereArgs: [oldAsset.linkedLoanId],
+            limit: 1,
+          );
+          if (repayments.isNotEmpty) {
+            throw Exception('This asset already has loan repayments. Its linked loan details cannot be changed.');
+          }
+          await txn.update('loans', {
+            'party_id': updatedAsset.partyId,
+            'loan_type': 'taken',
+            'amount': updatedAsset.purchasePrice,
+            'remaining_amount': updatedAsset.purchasePrice,
+            'wallet_id': 0,
+            'currency': currency,
+            'lending_date': updatedAsset.purchaseDate.toIso8601String().split('T').first,
+            'notes': 'Asset purchase: ' + updatedAsset.name,
+            'status': 'active',
+          }, where: 'id = ?', whereArgs: [oldAsset.linkedLoanId]);
+        }
+
+        await txn.update(
+          'assets',
+          updatedAsset.copyWith(
+            walletId: oldAsset.walletId,
+            currency: oldAsset.currency,
+            linkedLoanId: oldAsset.linkedLoanId,
+            createdAt: oldAsset.createdAt,
+          ).toMap()..remove('id'),
+          where: 'id = ?',
+          whereArgs: [updatedAsset.id],
+        );
+      });
     } else {
       await db.transaction((txn) async {
         final oldWallet = await _getWallet(txn, oldAsset.walletId);

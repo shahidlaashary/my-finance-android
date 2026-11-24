@@ -435,6 +435,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             SizedBox(height: 14),
 
             DropdownButtonFormField<String?>(
+              isExpanded: true,
               value: _selectedCurrency,
               decoration: InputDecoration(
                 labelText: appText(context, 'Currency', 'کرنسی'),

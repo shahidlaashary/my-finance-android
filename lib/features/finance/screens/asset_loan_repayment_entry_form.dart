@@ -76,6 +76,9 @@ class _AssetLoanRepaymentEntryFormState extends State<AssetLoanRepaymentEntryFor
   Future<void> _loadRates() async {
     final requestId = ++_rateRequestId;
     final selectedWalletId = _walletId;
+    if (mounted) {
+      setState(() { _loanRate = null; _walletRate = null; });
+    }
     try {
       final wallet = _wallets.firstWhere(
         (w) => (w['id'] as num).toInt() == selectedWalletId,

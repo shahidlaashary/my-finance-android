@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -491,36 +492,144 @@ class AssetsService {
     AppRefreshController.notifyChanged();
   }
 
-  Future<void> _deleteAssetLinkedLoan(int loanId) async {
-    // Keep loan and repayment attachments with their Recycle Bin snapshots.
-    // RecycleBinService.permanentlyDelete removes them after retention expires
-    // or when the user explicitly deletes the archived loan permanently.
-    await LoansService.deleteLoan(loanId, fromAssetDelete: true);
-  }
-
   Future<void> deleteAsset(int assetId) async {
     final db = await _database;
     await _ensureTables(db);
-    final existing = await db.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
-    if (existing.isEmpty) return;
-    final asset = AssetsModel.fromMap(existing.first);
-    if (asset.linkedLoanId != null) await _deleteAssetLinkedLoan(asset.linkedLoanId!);
-    if (asset.saleLinkedLoanId != null) await _deleteAssetLinkedLoan(asset.saleLinkedLoanId!);
-    await RecycleBinService.archive(type: 'Asset', title: asset.name, table: 'assets', id: assetId, record: existing.first);
+    await RecycleBinService.ensureTable();
+
     await db.transaction((txn) async {
-      final rows = await txn.query('assets', where: 'id = ?', whereArgs: [assetId], limit: 1);
-      if (rows.isEmpty) return;
-      final current = AssetsModel.fromMap(rows.first);
-      if (current.isSold && current.salePrice != null && current.salePaymentType.toLowerCase() != 'loan') {
-        await _getWallet(txn, current.saleWalletId ?? current.walletId);
-        await _changeBalance(txn, walletId: current.saleWalletId ?? current.walletId, amount: -(current.saleWalletAmount ?? current.salePrice!));
+      final assetRows = await txn.query(
+        'assets',
+        where: 'id = ?',
+        whereArgs: [assetId],
+        limit: 1,
+      );
+      if (assetRows.isEmpty) return;
+      final assetRecord = assetRows.first;
+      final asset = AssetsModel.fromMap(assetRecord);
+
+      // Archive the asset and both linked loans inside the same transaction.
+      // Each loan archive contains its repayment snapshot, so restoration can
+      // rebuild the loan history without leaving orphaned rows.
+      final linkedLoanIds = <int>{
+        if (asset.linkedLoanId != null) asset.linkedLoanId!,
+        if (asset.saleLinkedLoanId != null) asset.saleLinkedLoanId!,
+      };
+
+      for (final loanId in linkedLoanIds) {
+        final loanRows = await txn.query(
+          'loans',
+          where: 'id = ?',
+          whereArgs: [loanId],
+          limit: 1,
+        );
+        if (loanRows.isEmpty) continue;
+        final loanRecord = loanRows.first;
+        final repaymentRows = await txn.query(
+          'loan_repayments',
+          where: 'loan_id = ?',
+          whereArgs: [loanId],
+        );
+        final partyId = (loanRecord['party_id'] as num?)?.toInt();
+        final partyRows = partyId == null
+            ? <Map<String, Object?>>[]
+            : await txn.query(
+                'loan_parties',
+                columns: ['name'],
+                where: 'id = ?',
+                whereArgs: [partyId],
+                limit: 1,
+              );
+        final title = partyRows.isEmpty
+            ? 'Asset Loan'
+            : (partyRows.first['name']?.toString() ?? 'Asset Loan');
+
+        await txn.insert('recycle_bin', {
+          'entity_type': 'Loan',
+          'entity_title': title,
+          'source_table': 'loans',
+          'source_id': loanId.toString(),
+          'payload': jsonEncode(loanRecord),
+          'related_payload': repaymentRows.isEmpty ? null : jsonEncode(repaymentRows),
+          'deleted_at': DateTime.now().toIso8601String(),
+          'expires_at': DateTime.now().add(
+            const Duration(days: RecycleBinService.retentionDays),
+          ).toIso8601String(),
+        });
+
+        final loanType = (loanRecord['loan_type']?.toString() ?? 'given').toLowerCase();
+        final isAssetLinked = const {'asset_purchase', 'asset_sale'}
+            .contains(loanRecord['source_type']?.toString());
+        for (final repayment in repaymentRows) {
+          final repaymentWalletId = (repayment['wallet_id'] as num).toInt();
+          final repaymentWalletAmount =
+              (repayment['wallet_amount'] as num?)?.toDouble() ??
+              (repayment['amount'] as num).toDouble();
+          await _getWallet(txn, repaymentWalletId);
+          await _changeBalance(
+            txn,
+            walletId: repaymentWalletId,
+            amount: loanType == 'given'
+                ? -repaymentWalletAmount
+                : repaymentWalletAmount,
+          );
+        }
+
+        if (!isAssetLinked) {
+          final loanWalletId = (loanRecord['wallet_id'] as num).toInt();
+          await _getWallet(txn, loanWalletId);
+          await _changeBalance(
+            txn,
+            walletId: loanWalletId,
+            amount: loanType == 'given'
+                ? (loanRecord['amount'] as num).toDouble()
+                : -(loanRecord['amount'] as num).toDouble(),
+          );
+        }
+
+        await txn.delete(
+          'loan_repayments',
+          where: 'loan_id = ?',
+          whereArgs: [loanId],
+        );
+        await txn.delete('loans', where: 'id = ?', whereArgs: [loanId]);
       }
-      if (current.paymentType.toLowerCase() != 'loan') {
-        await _getWallet(txn, current.walletId);
-        await _changeBalance(txn, walletId: current.walletId, amount: current.purchasePrice);
+
+      await txn.insert('recycle_bin', {
+        'entity_type': 'Asset',
+        'entity_title': asset.name,
+        'source_table': 'assets',
+        'source_id': assetId.toString(),
+        'payload': jsonEncode(assetRecord),
+        'related_payload': null,
+        'deleted_at': DateTime.now().toIso8601String(),
+        'expires_at': DateTime.now().add(
+          const Duration(days: RecycleBinService.retentionDays),
+        ).toIso8601String(),
+      });
+
+      if (asset.isSold &&
+          asset.salePrice != null &&
+          asset.salePaymentType.toLowerCase() != 'loan') {
+        final receivingWalletId = asset.saleWalletId ?? asset.walletId;
+        await _getWallet(txn, receivingWalletId);
+        await _changeBalance(
+          txn,
+          walletId: receivingWalletId,
+          amount: -(asset.saleWalletAmount ?? asset.salePrice!),
+        );
+      }
+      if (asset.paymentType.toLowerCase() != 'loan') {
+        await _getWallet(txn, asset.walletId);
+        await _changeBalance(
+          txn,
+          walletId: asset.walletId,
+          amount: asset.purchasePrice,
+        );
       }
       await txn.delete('assets', where: 'id = ?', whereArgs: [assetId]);
     });
+
     AppRefreshController.notifyChanged();
   }
 

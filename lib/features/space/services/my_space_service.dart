@@ -169,6 +169,7 @@ class MySpaceService {
       CREATE TABLE IF NOT EXISTS space_agreement_templates (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
+        agreement_type TEXT NOT NULL DEFAULT 'General',
         body TEXT NOT NULL,
         is_default INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
@@ -212,6 +213,7 @@ class MySpaceService {
     if (templateCount == 0) {
       await db.insert('space_agreement_templates', {
         'title': 'Music Rights Agreement',
+        'agreement_type': 'Music Rights',
         'body': '''1. This is to certify that I, {{first_party}}, residing at {{address}}, and duly authorized signatory for the content listed in this agreement, authorize {{label_name}} as a Digital Content Partner to distribute and administer the content on national and international platforms for the territories stated below.
 
 2. I am the Artist, producer and copyright owner of the content and the track(s) listed in this agreement. The listed material is my own copyrighted material.

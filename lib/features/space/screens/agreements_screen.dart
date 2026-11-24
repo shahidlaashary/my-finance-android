@@ -8,6 +8,7 @@ import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 import 'package:my_finance/features/space/services/agreement_template_service.dart';
 import 'package:my_finance/features/space/services/agreement_pdf_service.dart';
+import 'package:my_finance/features/space/services/agreement_territory_service.dart';
 import 'package:my_finance/features/space/screens/agreement_templates_screen.dart';
 
 class AgreementsScreen extends StatefulWidget {
@@ -251,6 +252,93 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       validator: required ? (v) => v == null || v.trim().isEmpty ? 'Required' : null : null,
     ));
 
+  Future<void> _selectTerritories() async {
+    final selected = _territory.text.trim().isEmpty || _territory.text.trim() == 'Worldwide'
+        ? <String>{'Worldwide'}
+        : _territory.text.split(',').map((v) => v.trim()).where((v) => v.isNotEmpty).toSet();
+    final searchController = TextEditingController();
+    final result = await showDialog<Set<String>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final query = searchController.text.trim().toLowerCase();
+          final options = AgreementTerritoryService.selectableNames
+              .where((name) => name.toLowerCase().contains(query)).toList();
+          return AlertDialog(
+            title: const Text('Select Territories'),
+            content: SizedBox(
+              width: 420,
+              height: 460,
+              child: Column(children: [
+                TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search territories or countries',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () { searchController.clear(); setDialogState(() {}); },
+                    ),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+                const SizedBox(height: 8),
+                Expanded(child: ListView.builder(
+                  itemCount: options.length,
+                  itemBuilder: (_, index) {
+                    final name = options[index];
+                    final checked = selected.contains(name);
+                    return CheckboxListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(name),
+                      value: checked,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          if (name == 'Worldwide' && value == true) {
+                            selected..clear()..add('Worldwide');
+                          } else {
+                            selected.remove('Worldwide');
+                            if (value == true) {
+                              selected.add(name);
+                            } else {
+                              selected.remove(name);
+                            }
+                            if (selected.isEmpty) selected.add('Worldwide');
+                          }
+                        });
+                      },
+                    );
+                  },
+                )),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    selected.contains('Worldwide') ? 'Worldwide' : selected.length.toString() + ' selected',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ]),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, selected),
+                child: const Text('Apply'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    searchController.dispose();
+    if (result != null && mounted) {
+      setState(() => _territory.text = AgreementTerritoryService.normalizeForPdf(result));
+    }
+  }
+
   Future<void> _captureSignature() async {
     final result = await showDialog<String>(
       context: context,
@@ -366,12 +454,8 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
   Widget build(BuildContext context) {
     const statuses = ['Draft', 'Active', 'Expired', 'Terminated'];
     const terms = ['2', '5', '10', '15', '20'];
-    const territories = ['Worldwide', 'Selected Territories'];
     const designations = ['Owner', 'Authorized'];
     final selectedTerm = terms.contains(_termYears.text) ? _termYears.text : '10';
-    final selectedTerritory = territories.contains(_territory.text)
-        ? _territory.text
-        : (_territory.text.trim().isEmpty ? 'Worldwide' : 'Selected Territories');
 
     return Scaffold(
       appBar: AppBar(
@@ -435,14 +519,26 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
           },
         ),
         _field(_address, 'Address', lines: 2),
-        DropdownButtonFormField<String>(
-          value: selectedTerritory,
-          decoration: const InputDecoration(labelText: 'Territory', border: OutlineInputBorder(), isDense: true),
-          items: territories.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-          onChanged: (v) => setState(() => _territory.text = v ?? 'Worldwide'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: _selectTerritories,
+            borderRadius: BorderRadius.circular(4),
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                labelText: 'Territory',
+                border: OutlineInputBorder(),
+                isDense: true,
+                suffixIcon: Icon(Icons.arrow_drop_down),
+              ),
+              child: Text(
+                _territory.text.trim().isEmpty ? 'Worldwide' : _territory.text,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
         ),
-        if (selectedTerritory == 'Selected Territories')
-          _field(_territory, 'Enter Selected Territories (e.g. Pakistan, UAE)', lines: 2),
         DropdownButtonFormField<String>(
           value: selectedTerm,
           decoration: const InputDecoration(labelText: 'Agreement Term', border: OutlineInputBorder(), isDense: true),

@@ -24,7 +24,6 @@ dependencies:
   # Local Database
   sqflite: ^2.4.2
   sqflite_common_ffi: ^2.3.7
-  sqlite3: ^2.9.4
 
   # File and Path Management
   path: ^1.9.1

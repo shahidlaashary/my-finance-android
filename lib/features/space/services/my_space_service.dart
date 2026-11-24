@@ -219,8 +219,40 @@ class MySpaceService {
     }
   }
 
-  Future<List<Map<String, Object?>>> getAgreements() async =>
-      (await database).query('space_agreements', orderBy: 'updated_at DESC');
+  Future<List<Map<String, Object?>>> getAgreements() async {
+    final db = await database;
+    final rows = await db.query('space_agreements', orderBy: 'updated_at DESC');
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (final row in rows) {
+      final id = row['id'] as int;
+      final signingDate = DateTime.tryParse(row['signing_date']?.toString() ?? '');
+      final years = int.tryParse(row['term_years']?.toString() ?? '') ?? 10;
+      var status = 'Draft';
+      if (row['termination_date']?.toString().trim().isNotEmpty == true ||
+          row['status']?.toString() == 'Terminated') {
+        status = 'Terminated';
+      } else if (signingDate != null) {
+        final signedDay = DateTime(signingDate.year, signingDate.month, signingDate.day);
+        final expiry = DateTime(signingDate.year + years, signingDate.month, signingDate.day);
+        if (today.isBefore(signedDay)) {
+          status = 'Draft';
+        } else if (!today.isBefore(expiry)) {
+          status = 'Expired';
+        } else {
+          status = 'Active';
+        }
+      }
+      if (row['status']?.toString() != status) {
+        await db.update('space_agreements', {
+          'status': status,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, where: 'id = ?', whereArgs: [id]);
+        row['status'] = status;
+      }
+    }
+    return rows;
+  }
 
   Future<int> saveAgreement(Map<String, Object?> record) async {
     const table = 'space_agreements';

@@ -486,6 +486,10 @@ class _AgreementFormScreenState extends State<AgreementFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signing Date is required.')));
       return;
     }
+    if (_isTerminated && _terminationDate.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Termination Date is required.')));
+      return;
+    }
     setState(() => _saving = true);
     try {
       final id = await MySpaceService.instance.saveAgreement({

@@ -587,9 +587,6 @@ class AssetsService {
       final assetRecord = assetRows.first;
       final asset = AssetsModel.fromMap(assetRecord);
 
-      // Archive the asset and both linked loans inside the same transaction.
-      // Each loan archive contains its repayment snapshot, so restoration can
-      // rebuild the loan history without leaving orphaned rows.
       if ((asset.paymentType.toLowerCase() == 'loan') !=
           (asset.linkedLoanId != null)) {
         throw Exception('Asset purchase loan link is missing or inconsistent.');
@@ -599,18 +596,41 @@ class AssetsService {
               (asset.saleLinkedLoanId != null)) {
         throw Exception('Asset sale loan link is missing or inconsistent.');
       }
+      if (!asset.isSold && asset.saleLinkedLoanId != null) {
+        throw Exception('An unsold Asset cannot have a linked sale loan.');
+      }
+      if (asset.linkedLoanId != null &&
+          asset.linkedLoanId == asset.saleLinkedLoanId) {
+        throw Exception('Purchase and sale cannot reference the same linked loan.');
+      }
 
-      final linkedLoanIds = <int>{
-        if (asset.linkedLoanId != null) asset.linkedLoanId!,
+      // Net all wallet effects first. This avoids temporary balance changes
+      // depending on whether the purchase or sale loan is processed first.
+      final walletDeltas = <int, double>{};
+      void addWalletDelta(int walletId, double delta) {
+        if (walletId <= 0 || !delta.isFinite) {
+          throw Exception('The Asset contains invalid wallet accounting details.');
+        }
+        final next = (walletDeltas[walletId] ?? 0) + delta;
+        if (!next.isFinite) {
+          throw Exception('The Asset wallet balance change is invalid.');
+        }
+        walletDeltas[walletId] = next;
+      }
+
+      final linkedLoanIds = <int>[
         if (asset.saleLinkedLoanId != null) asset.saleLinkedLoanId!,
-      };
-
+        if (asset.linkedLoanId != null) asset.linkedLoanId!,
+      ];
       final linkedLoanSnapshots = <Map<String, dynamic>>[];
 
       for (final loanId in linkedLoanIds) {
         final isPurchaseLoan = loanId == asset.linkedLoanId;
         final expectedSource = isPurchaseLoan ? 'asset_purchase' : 'asset_sale';
         final expectedLoanType = isPurchaseLoan ? 'taken' : 'given';
+        final expectedAmount = isPurchaseLoan ? asset.purchasePrice : asset.salePrice;
+        final expectedPartyId = isPurchaseLoan ? asset.partyId : asset.salePartyId;
+
         final loanRows = await txn.query(
           'loans',
           where: 'id = ?',
@@ -621,8 +641,6 @@ class AssetsService {
           throw Exception('A linked asset loan is missing. Asset deletion was cancelled.');
         }
         final loanRecord = loanRows.first;
-        final expectedAmount = isPurchaseLoan ? asset.purchasePrice : asset.salePrice;
-        final expectedPartyId = isPurchaseLoan ? asset.partyId : asset.salePartyId;
         final loanAmount = (loanRecord['amount'] as num?)?.toDouble();
         if (loanRecord['source_type'] != expectedSource ||
             (loanRecord['source_id'] as num?)?.toInt() != assetId ||
@@ -637,6 +655,7 @@ class AssetsService {
                 asset.currency.toUpperCase()) {
           throw Exception('The linked asset loan does not match this asset. Asset deletion was cancelled.');
         }
+
         final repaymentRows = await txn.query(
           'loan_repayments',
           where: 'loan_id = ?',
@@ -646,39 +665,51 @@ class AssetsService {
           'loan': loanRecord,
           'repayments': repaymentRows,
         });
-        // Linked loans are stored inside the parent Asset archive payload.
 
         for (final repayment in repaymentRows) {
           final repaymentAmount = (repayment['amount'] as num).toDouble();
           final repaymentWalletId = (repayment['wallet_id'] as num).toInt();
           final repaymentWalletAmount =
               (repayment['wallet_amount'] as num?)?.toDouble() ??
-              repaymentAmount;
-          if (repayment['loan_id'] != loanId ||
+                  repaymentAmount;
+          if ((repayment['loan_id'] as num?)?.toInt() != loanId ||
               !repaymentAmount.isFinite ||
               repaymentAmount <= 0 ||
               !repaymentWalletAmount.isFinite ||
-              repaymentWalletAmount <= 0 ||
-              repaymentWalletId <= 0) {
+              repaymentWalletAmount <= 0) {
             throw Exception('A linked loan repayment contains invalid data. Asset deletion was cancelled.');
           }
-          await _changeBalance(
-            txn,
-            walletId: repaymentWalletId,
-            amount: expectedLoanType == 'given'
+          addWalletDelta(
+            repaymentWalletId,
+            expectedLoanType == 'given'
                 ? -repaymentWalletAmount
                 : repaymentWalletAmount,
           );
         }
-
-        await txn.delete(
-          'loan_repayments',
-          where: 'loan_id = ?',
-          whereArgs: [loanId],
-        );
-        await txn.delete('loans', where: 'id = ?', whereArgs: [loanId]);
       }
 
+      if (asset.isSold && asset.salePaymentType.toLowerCase() != 'loan') {
+        if (asset.salePrice == null ||
+            !asset.salePrice!.isFinite ||
+            asset.salePrice! < 0) {
+          throw Exception('The Asset sale details are invalid. Asset deletion was cancelled.');
+        }
+        final receivingWalletId = asset.saleWalletId ?? asset.walletId;
+        final receivedAmount = asset.saleWalletAmount ?? asset.salePrice!;
+        if (!receivedAmount.isFinite || receivedAmount < 0) {
+          throw Exception('The Asset sale wallet amount is invalid. Asset deletion was cancelled.');
+        }
+        addWalletDelta(receivingWalletId, -receivedAmount);
+      }
+
+      if (asset.paymentType.toLowerCase() != 'loan') {
+        if (!asset.purchasePrice.isFinite || asset.purchasePrice <= 0) {
+          throw Exception('The Asset purchase amount is invalid. Asset deletion was cancelled.');
+        }
+        addWalletDelta(asset.walletId, asset.purchasePrice);
+      }
+
+      final now = DateTime.now();
       await txn.insert('recycle_bin', {
         'entity_type': 'Asset',
         'entity_title': asset.name,
@@ -688,41 +719,38 @@ class AssetsService {
         'related_payload': linkedLoanSnapshots.isEmpty
             ? null
             : jsonEncode(linkedLoanSnapshots),
-        'deleted_at': DateTime.now().toIso8601String(),
-        'expires_at': DateTime.now().add(
-          const Duration(days: RecycleBinService.retentionDays),
-        ).toIso8601String(),
+        'deleted_at': now.toIso8601String(),
+        'expires_at': now
+            .add(const Duration(days: RecycleBinService.retentionDays))
+            .toIso8601String(),
       });
 
-      if (asset.isSold &&
-          asset.salePrice != null &&
-          asset.salePaymentType.toLowerCase() != 'loan') {
-        final receivingWalletId = asset.saleWalletId ?? asset.walletId;
-        final receivedAmount = asset.saleWalletAmount ?? asset.salePrice!;
-        if (receivingWalletId <= 0 ||
-            !receivedAmount.isFinite ||
-            receivedAmount < 0) {
-          throw Exception('The asset sale wallet details are invalid. Asset deletion was cancelled.');
-        }
+      for (final entry in walletDeltas.entries) {
+        if (entry.value == 0) continue;
         await _changeBalance(
           txn,
-          walletId: receivingWalletId,
-          amount: -receivedAmount,
+          walletId: entry.key,
+          amount: entry.value,
         );
       }
-      if (asset.paymentType.toLowerCase() != 'loan') {
-        if (asset.walletId <= 0 ||
-            !asset.purchasePrice.isFinite ||
-            asset.purchasePrice <= 0) {
-          throw Exception('The asset purchase wallet details are invalid. Asset deletion was cancelled.');
-        }
-        await _changeBalance(
-          txn,
-          walletId: asset.walletId,
-          amount: asset.purchasePrice,
+
+      for (final loanId in linkedLoanIds) {
+        await txn.delete(
+          'loan_repayments',
+          where: 'loan_id = ?',
+          whereArgs: [loanId],
         );
+        await txn.delete('loans', where: 'id = ?', whereArgs: [loanId]);
       }
-      await txn.delete('assets', where: 'id = ?', whereArgs: [assetId]);
+
+      final deleted = await txn.delete(
+        'assets',
+        where: 'id = ?',
+        whereArgs: [assetId],
+      );
+      if (deleted != 1) {
+        throw Exception('Asset could not be deleted. The transaction was cancelled.');
+      }
     });
 
     AppRefreshController.notifyChanged();

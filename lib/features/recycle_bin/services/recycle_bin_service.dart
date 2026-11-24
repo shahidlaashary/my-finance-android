@@ -103,8 +103,24 @@ class RecycleBinService {
         }
         final loans = await txn.query('loans', where: 'id = ?', whereArgs: [loanId], limit: 1);
         if (loans.isEmpty) throw Exception('Restore the related loan first.');
-        final wallet = await txn.query('wallets', columns: ['id', 'balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+        final wallet = await txn.query(
+          'wallets',
+          columns: ['id', 'balance', 'currency'],
+          where: 'id = ?',
+          whereArgs: [walletId],
+          limit: 1,
+        );
         if (wallet.isEmpty) throw Exception('The repayment wallet no longer exists.');
+        final archivedWalletCurrency =
+            record['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+        final currentWalletCurrency =
+            (wallet.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+        if (archivedWalletCurrency.isNotEmpty &&
+            archivedWalletCurrency != currentWalletCurrency) {
+          throw Exception(
+            'The repayment wallet currency has changed. Correct the wallet currency before restoring this repayment.',
+          );
+        }
         final loan = loans.first;
         final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
         if (loanType != 'given' && loanType != 'taken') {

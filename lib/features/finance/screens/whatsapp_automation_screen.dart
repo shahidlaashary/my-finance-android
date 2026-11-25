@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:my_finance/core/theme/app_colors.dart';
 
 class WhatsAppAutomationScreen extends StatefulWidget {
   const WhatsAppAutomationScreen({super.key});

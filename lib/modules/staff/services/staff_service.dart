@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
@@ -7,7 +8,7 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 
 class StaffService {
   static Future<void> ensureTables() async {
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS staff (
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
       phone TEXT NOT NULL DEFAULT '', role TEXT NOT NULL DEFAULT '',
@@ -25,12 +26,12 @@ class StaffService {
 
   static Future<List<Map<String, dynamic>>> getStaff() async {
     await ensureTables();
-    return FinanceDB.instance.db.query('staff', orderBy: 'name COLLATE NOCASE');
+    return DatabaseManager.instance.database.query('staff', orderBy: 'name COLLATE NOCASE');
   }
 
   static Future<List<Map<String, dynamic>>> getSalaries({int? staffId}) async {
     await ensureTables();
-    return FinanceDB.instance.db.query('staff_salaries',
+    return DatabaseManager.instance.database.query('staff_salaries',
       where: staffId == null ? null : 'staff_id = ?',
       whereArgs: staffId == null ? null : [staffId],
       orderBy: 'paid_at DESC, id DESC');
@@ -42,7 +43,7 @@ class StaffService {
     final args = <Object?>[];
     if (staffId != null) { where = 'staff_id = ?'; args.add(staffId); }
     if (month != null) { where = where == null ? 'attendance_date LIKE ?' : '$where AND attendance_date LIKE ?'; args.add('$month%'); }
-    return FinanceDB.instance.db.query('staff_attendance', where: where,
+    return DatabaseManager.instance.database.query('staff_attendance', where: where,
       whereArgs: args.isEmpty ? null : args, orderBy: 'attendance_date DESC, id DESC');
   }
 
@@ -52,7 +53,7 @@ class StaffService {
     if (name.trim().isEmpty || !salary.isFinite || salary < 0) throw Exception('Enter valid staff details.');
     final values = {'name': name.trim(), 'phone': phone.trim(), 'role': role.trim(),
       'salary': salary, 'joined_at': joinedAt.toIso8601String(), 'notes': notes.trim()};
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final result = id == null ? await db.insert('staff', values)
       : await db.update('staff', values, where: 'id = ?', whereArgs: [id]);
     if (id != null && result == 0) throw Exception('Staff member not found.');
@@ -62,7 +63,7 @@ class StaffService {
 
   static Future<void> deleteStaff(int id) async {
     await ensureTables();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final staffRows = await db.query('staff', where: 'id = ?', whereArgs: [id], limit: 1);
     if (staffRows.isEmpty) return;
     final salaries = await db.query('staff_salaries', where: 'staff_id = ?', whereArgs: [id]);
@@ -95,7 +96,7 @@ class StaffService {
     required int walletId, required DateTime date, required String note}) async {
     await ensureTables();
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid salary amount.');
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final staff = await db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
     if (staff.isEmpty) throw Exception('Staff member not found.');
     final wallets = await db.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [walletId], limit: 1);
@@ -106,14 +107,14 @@ class StaffService {
       note: 'Salary • $name${note.trim().isEmpty ? '' : ' • ${note.trim()}'}',
       date: date.toIso8601String());
     try {
-      final id = await FinanceDB.instance.db.insert('staff_salaries', {
+      final id = await DatabaseManager.instance.database.insert('staff_salaries', {
         'staff_id': staffId, 'amount': amount, 'wallet_id': walletId,
         'paid_at': date.toIso8601String(), 'note': note.trim(), 'transaction_id': txId,
       });
       AppRefreshController.notifyChanged();
       return id;
     } catch (_) {
-      await FinanceDB.instance.db.transaction((txn) async {
+      await DatabaseManager.instance.database.transaction((txn) async {
         final transactionRows = await txn.query(
           'transactions',
           where: 'id = ?',
@@ -147,7 +148,7 @@ class StaffService {
     await ensureTables();
     const allowed = ['Present', 'Absent', 'Late', 'Leave', 'Half Day'];
     if (!allowed.contains(status)) throw Exception('Select a valid attendance status.');
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final staff = await db.query('staff', columns: ['id'], where: 'id = ?', whereArgs: [staffId], limit: 1);
     if (staff.isEmpty) throw Exception('Staff member not found.');
     await db.insert('staff_attendance', {

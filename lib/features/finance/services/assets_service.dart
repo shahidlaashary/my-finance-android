@@ -494,6 +494,33 @@ class AssetsService {
           throw Exception('Linked asset loan does not match the saved Asset details.');
         }
 
+        final linkedRepayments = await txn.query(
+          'loan_repayments',
+          columns: ['amount'],
+          where: 'loan_id = ?',
+          whereArgs: [oldAsset.linkedLoanId],
+        );
+        var repaidTotal = 0.0;
+        for (final repayment in linkedRepayments) {
+          final repaymentAmount =
+              (repayment['amount'] as num?)?.toDouble();
+          if (repaymentAmount == null ||
+              !repaymentAmount.isFinite ||
+              repaymentAmount <= 0) {
+            throw Exception(
+              'Linked asset loan repayment history contains invalid amounts.',
+            );
+          }
+          repaidTotal += repaymentAmount;
+        }
+        if (!repaidTotal.isFinite ||
+            (repaidTotal - (linkedAmount - linkedRemaining)).abs() >
+                0.000001) {
+          throw Exception(
+            'Linked asset loan balance does not reconcile with its repayment history.',
+          );
+        }
+
         if (loanTermsChanged) {
           final repayments = await txn.query(
             'loan_repayments',

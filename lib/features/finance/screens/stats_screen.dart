@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart' as pdf;
 import 'package:printing/printing.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';

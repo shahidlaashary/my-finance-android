@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
-import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/space/services/my_space_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -77,43 +77,32 @@ class SpaceDocumentModel {
   );
 }
 
-/// Document metadata is stored in the existing app_settings key-value table.
-/// This avoids database-version changes, migrations, and changes to finance tables.
+/// Document metadata is stored in the My Space database (space.db).
+/// The module shares MySpaceService's connection and backup/restore lifecycle.
 class SpaceDocumentsService {
   SpaceDocumentsService._();
   static final SpaceDocumentsService instance = SpaceDocumentsService._();
 
-  static const String _storageKey = 'space_documents_records';
+  static const String _table = 'space_documents';
 
-  /// Uses the application's one shared my_finance.db connection.
-  Future<Database> get _db async => DatabaseManager.instance.database;
-
-  Future<List<Map<String, dynamic>>> _readMaps(DatabaseExecutor executor) async {
-    final rows = await executor.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [_storageKey],
-      limit: 1,
-    );
-    if (rows.isEmpty) return [];
-    final raw = rows.first['setting_value']?.toString() ?? '';
-    if (raw.isEmpty) return [];
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! List) return [];
-      return decoded.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<void> _writeMaps(DatabaseExecutor executor, List<Map<String, dynamic>> records) async {
-    await executor.insert(
-      'app_settings',
-      {'setting_key': _storageKey, 'setting_value': jsonEncode(records)},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<Database> get _db async {
+    final db = await MySpaceService.instance.database;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $_table (
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'Other',
+        document_number TEXT NOT NULL DEFAULT '',
+        issue_date TEXT,
+        expiry_date TEXT,
+        reminder_days INTEGER NOT NULL DEFAULT 30,
+        notes TEXT NOT NULL DEFAULT '',
+        is_favorite INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    return db;
   }
 
   Future<List<SpaceDocumentModel>> getDocuments({
@@ -121,81 +110,89 @@ class SpaceDocumentsService {
     String filter = 'All',
   }) async {
     final db = await _db;
-    final rows = await _readMaps(db);
+    final rows = await db.query(_table, orderBy: 'updated_at DESC');
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    return rows.map(SpaceDocumentModel.fromMap).where((document) {
+    return rows.map((row) => SpaceDocumentModel.fromMap(
+      Map<String, dynamic>.from(row),
+    )).where((document) {
       if (category != 'All' && document.category != category) return false;
       if (filter == 'Favorites' && !document.isFavorite) return false;
       if (filter == 'Expiring Soon') {
         final expiry = document.expiryDate;
         if (expiry == null) return false;
-        final days = DateTime(expiry.year, expiry.month, expiry.day).difference(today).inDays;
+        final days = DateTime(expiry.year, expiry.month, expiry.day)
+            .difference(today).inDays;
         if (days < 0 || days > document.reminderDays) return false;
       }
       if (filter == 'Expired') {
         final expiry = document.expiryDate;
-        if (expiry == null || !DateTime(expiry.year, expiry.month, expiry.day).isBefore(today)) return false;
+        if (expiry == null ||
+            !DateTime(expiry.year, expiry.month, expiry.day).isBefore(today)) {
+          return false;
+        }
       }
       return true;
-    }).toList()
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    }).toList();
   }
 
   Future<int> addDocument(SpaceDocumentModel document) async {
     final db = await _db;
-    return db.transaction((txn) async {
-      final records = await _readMaps(txn);
-      final id = DateTime.now().microsecondsSinceEpoch;
-      records.add(document.copyWith(id: id).toMap());
-      await _writeMaps(txn, records);
-      return id;
-    }).then((id) {
-      AppRefreshController.notifyChanged();
-      return id;
-    });
+    final id = document.id ?? DateTime.now().microsecondsSinceEpoch;
+    await db.insert(_table, document.copyWith(id: id).toMap());
+    AppRefreshController.notifyChanged();
+    return id;
   }
 
   Future<void> updateDocument(SpaceDocumentModel document) async {
     if (document.id == null) throw ArgumentError('Document ID is required.');
     final db = await _db;
-    await db.transaction((txn) async {
-      final records = await _readMaps(txn);
-      final index = records.indexWhere((item) => (item['id'] as num?)?.toInt() == document.id);
-      if (index < 0) throw StateError('Document not found.');
-      records[index] = document.toMap();
-      await _writeMaps(txn, records);
-    });
+    final changed = await db.update(
+      _table, document.toMap(),
+      where: 'id = ?', whereArgs: [document.id],
+    );
+    if (changed == 0) throw StateError('Document not found.');
     AppRefreshController.notifyChanged();
   }
 
   Future<void> toggleFavorite(SpaceDocumentModel document) async {
     if (document.id == null) return;
     final db = await _db;
-    await db.transaction((txn) async {
-      final records = await _readMaps(txn);
-      final index = records.indexWhere((item) => (item['id'] as num?)?.toInt() == document.id);
-      if (index < 0) return;
-      records[index]['is_favorite'] = !document.isFavorite;
-      records[index]['updated_at'] = DateTime.now().toIso8601String();
-      await _writeMaps(txn, records);
-    });
+    await db.update(_table, {
+      'is_favorite': document.isFavorite ? 0 : 1,
+      'updated_at': DateTime.now().toIso8601String(),
+    }, where: 'id = ?', whereArgs: [document.id]);
     AppRefreshController.notifyChanged();
   }
 
   Future<void> deleteDocument(int id) async {
     final db = await _db;
-    final current = await _readMaps(db);
-    final index = current.indexWhere((item) => (item['id'] as num?)?.toInt() == id);
-    if (index < 0) return;
-    final record = current[index];
-    await RecycleBinService.archive(type: 'Document',
+    final rows = await db.query(_table, where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    final record = Map<String, dynamic>.from(rows.first);
+    await RecycleBinService.archive(
+      type: 'Document',
       title: record['title']?.toString() ?? 'Document',
-      table: 'space_documents_records', id: id, record: record);
-    await db.transaction((txn) async {
-      final records = await _readMaps(txn);
-      records.removeWhere((item) => (item['id'] as num?)?.toInt() == id);
-      await _writeMaps(txn, records);
-    });
+      table: 'space_documents_records',
+      id: id,
+      record: record,
+    );
+    await db.delete(_table, where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
-  }}
+  }
+
+  /// Restores a document payload from the app-wide Recycle Bin into space.db.
+  Future<void> restoreArchivedRecord(Map<String, dynamic> record) async {
+    final db = await _db;
+    final id = (record['id'] as num?)?.toInt();
+    if (id == null) throw StateError('Archived document has an invalid ID.');
+    final existing = await db.query(
+      _table, columns: ['id'], where: 'id = ?', whereArgs: [id], limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      throw StateError('A document with this ID already exists.');
+    }
+    await db.insert(_table, record);
+    AppRefreshController.notifyChanged();
+  }
+}

@@ -1,10 +1,8 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
@@ -18,6 +16,8 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/screens/asset_loan_repayment_entry_form.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/screens/asset_valuation_entry_form.dart';
 import 'package:my_finance/modules/finance/screens/asset_sale_entry_form.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
@@ -114,12 +114,7 @@ class AssetsScreenState extends State<AssetsScreen> {
       final purchase =
           await _service.getTotalPurchaseValueByCurrency();
 
-      final Database db = await DatabaseManager.instance.database;
-
-      final wallets = await db.query(
-        'wallets',
-        orderBy: 'name ASC',
-      );
+      final wallets = await WalletService.getWallets(orderBy: 'name ASC');
       final parties = await PartyService.getParties();
       final linkedLoanIds = <int>{
         for (final asset in assets)
@@ -289,7 +284,7 @@ class AssetsScreenState extends State<AssetsScreen> {
     final notesController = TextEditingController(text: asset?.notes ?? '');
     int? selectedWallet = asset?.walletId;
     String selectedPaymentType = asset?.paymentType.toLowerCase() == 'loan' ? 'Loan' : 'Wallet';
-    final defaultAssetCurrency = asset?.currency ?? await FinanceDB.instance.getBaseCurrency();
+    final defaultAssetCurrency = asset?.currency ?? await CurrencyService.getBaseCurrency();
     String newPartyCurrency =
         CurrencyCatalog.supported.contains(defaultAssetCurrency.toUpperCase())
             ? defaultAssetCurrency.toUpperCase()

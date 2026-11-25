@@ -1,4 +1,5 @@
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
@@ -70,11 +71,8 @@ class MyPartnersService {
 
   }
 
-  Future<List<Map<String, dynamic>>> getWallets() async {
-    return DatabaseManager.instance.database.query(
-      'wallets',
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
+  Future<List<Map<String, dynamic>>> getWallets() {
+    return WalletService.getWallets();
   }
 
   Future<List<Map<String, dynamic>>> getPartners() async {

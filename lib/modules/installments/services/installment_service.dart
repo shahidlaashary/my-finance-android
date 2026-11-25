@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -5,7 +6,7 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 
 class InstallmentService {
   static Future<Database> get _db async {
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.execute("""
       CREATE TABLE IF NOT EXISTS installment_contracts (
         id INTEGER PRIMARY KEY AUTOINCREMENT, direction TEXT NOT NULL,

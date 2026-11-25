@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 class GoalsService {
 
   static Future<Database> get _database async {
@@ -363,7 +363,7 @@ class GoalsService {
     final goalSnapshot = await db.query('goals', where: 'id = ?', whereArgs: [goalId], limit: 1);
     if (goalSnapshot.isEmpty) return;
     final historySnapshot = await db.query('goal_contributions', where: 'goal_id = ?', whereArgs: [goalId]);
-    await RecycleBinService.archive(type: 'Savings Goal', title: goalSnapshot.first['name']?.toString() ?? 'Savings Goal',
+    await RecycleBinArchiveService.archive(type: 'Savings Goal', title: goalSnapshot.first['name']?.toString() ?? 'Savings Goal',
       table: 'goals', id: goalId, record: goalSnapshot.first, related: historySnapshot);
     await db.transaction((txn) async {
       final goalRows = await txn.query(

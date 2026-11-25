@@ -1,4 +1,3 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,6 +10,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
+import 'package:my_finance/features/dashboard/services/dashboard_data_service.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
@@ -81,29 +81,16 @@ class _HomePageState extends State<HomePage> {
     try {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
-      final db = DatabaseManager.instance.database;
       final selectedBaseCurrency = await CurrencyService.getBaseCurrency();
       final baseRate = await CurrencyService.getExchangeRate(selectedBaseCurrency) ?? 1.0;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
-      final totals = await db.rawQuery('''
-        SELECT UPPER(t.type) AS type,
-          COALESCE(SUM(
-            t.amount * COALESCE(
-              er.rate,
-              CASE WHEN UPPER(w.currency) = 'PKR' THEN 1.0 ELSE 0.0 END
-            ) / ?
-          ), 0) AS total
-        FROM transactions t
-        INNER JOIN wallets w ON w.id = t.wallet_id
-        LEFT JOIN exchange_rates er
-          ON UPPER(er.currency) = UPPER(w.currency)
-        WHERE UPPER(t.type) IN ('INCOME', 'EXPENSE')
-          AND date(t.date) >= date(?)
-          AND date(t.date) < date(?)
-        GROUP BY UPPER(t.type)
-      ''', [baseRate, monthStart.toIso8601String(), nextMonth.toIso8601String()]);
+      final totals = await DashboardDataService.getMonthlyIncomeExpense(
+        baseRate: baseRate,
+        monthStart: monthStart,
+        nextMonth: nextMonth,
+      );
 
       double income = 0;
       double expense = 0;
@@ -116,24 +103,12 @@ class _HomePageState extends State<HomePage> {
       final balance = await CurrencyService.getTotalBalanceInBaseCurrency();
       final includedAssetValues = await AssetsService().getConsolidatedIncludedCurrentValueByCurrency();
       final includedAssetsInBaseCurrency = await _convertValuesToPKR(includedAssetValues, baseRate);
-      final walletCurrencyRows = await db.rawQuery('''
-        SELECT UPPER(currency) AS currency, COALESCE(SUM(balance), 0) AS total
-        FROM wallets
-        WHERE COALESCE(exclude_total, 0) = 0
-        GROUP BY UPPER(currency)
-        ORDER BY UPPER(currency)
-      ''');
-      double baseCurrencyBalance = 0;
-      final foreignBalances = <String, double>{};
-      for (final row in walletCurrencyRows) {
-        final currency = (row['currency'] as String? ?? '').toUpperCase();
-        final amount = (row['total'] as num?)?.toDouble() ?? 0;
-        if (currency == selectedBaseCurrency.trim().toUpperCase()) {
-          baseCurrencyBalance = amount;
-        } else if (currency.isNotEmpty) {
-          foreignBalances[currency] = amount;
-        }
-      }
+      final walletTotalsByCurrency =
+          await DashboardDataService.getWalletTotalsByCurrency();
+      final baseCurrencyBalance =
+          walletTotalsByCurrency[selectedBaseCurrency.trim().toUpperCase()] ?? 0;
+      final foreignBalances = Map<String, double>.from(walletTotalsByCurrency)
+        ..remove(selectedBaseCurrency.trim().toUpperCase());
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
       final outstandingLoans =
@@ -223,7 +198,6 @@ class _HomePageState extends State<HomePage> {
   Future<List<String>> _checkBudgetThresholds(
     List<BudgetsModel> budgets,
   ) async {
-    final db = DatabaseManager.instance.database;
     final notifications = <String>[];
 
     for (final budget in budgets) {
@@ -244,18 +218,8 @@ class _HomePageState extends State<HomePage> {
                       ? 50
                       : 0;
       final key = 'budget_alert_level_${budget.id}';
-      final savedRows = await db.query(
-        'app_settings',
-        columns: ['setting_value'],
-        where: 'setting_key = ?',
-        whereArgs: [key],
-        limit: 1,
-      );
-      final previousLevel = savedRows.isEmpty
-          ? 0
-          : int.tryParse(
-                  savedRows.first['setting_value']?.toString() ?? '0') ??
-              0;
+      final previousLevel =
+          await DashboardDataService.getBudgetAlertLevel(budget.id!);
 
       if (currentLevel > previousLevel) {
         final status = currentLevel >= 100
@@ -265,13 +229,9 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (currentLevel != previousLevel) {
-        await db.insert(
-          'app_settings',
-          {
-            'setting_key': key,
-            'setting_value': currentLevel.toString(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
+        await DashboardDataService.saveBudgetAlertLevel(
+          budget.id!,
+          currentLevel,
         );
       }
     }

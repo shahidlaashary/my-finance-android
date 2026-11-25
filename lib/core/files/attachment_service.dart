@@ -1,11 +1,9 @@
 
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:my_finance/core/files/local_file_storage.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
@@ -41,6 +39,8 @@ class AttachmentOwnerTypes {
 }
 
 class AttachmentService {
+  static final LocalFileStorage _fileStorage = LocalFileStorage();
+
 
   // Restore se pehle is service ka database connection band karta hai.
   static Future<void> closeDatabase() async {
@@ -158,27 +158,26 @@ class AttachmentService {
 
     final staged = <Map<String, dynamic>>[];
     try {
-      final tempRoot = await getTemporaryDirectory();
-      final stagingDir = Directory(p.join(
-        tempRoot.path,
+      final tempRoot = await _fileStorage.getTemporaryPath();
+      final stagingDir = p.join(
+        tempRoot,
         'my_finance_asset_staging',
         DateTime.now().microsecondsSinceEpoch.toString(),
-      ));
-      await stagingDir.create(recursive: true);
+      );
+      await _fileStorage.createDirectory(stagingDir);
       for (final source in sources) {
         final sourcePath = source['path']!;
-        final sourceFile = File(sourcePath);
-        if (!await sourceFile.exists()) {
+        if (!await _fileStorage.fileExists(sourcePath)) {
           throw Exception('Selected attachment could not be found: ${source['name']}');
         }
         final name = source['name']!.trim().isEmpty
             ? p.basename(sourcePath)
             : source['name']!.trim();
-        final target = File(p.join(stagingDir.path, '${staged.length}_${p.basename(name)}'));
-        await sourceFile.copy(target.path);
-        final size = await target.length();
+        final targetPath = p.join(stagingDir, '${staged.length}_${p.basename(name)}');
+        await _fileStorage.copyFile(sourcePath: sourcePath, destinationPath: targetPath);
+        final size = await _fileStorage.fileLength(targetPath);
         if (size <= 0) throw Exception('Selected attachment is empty or could not be copied: $name');
-        staged.add({'path': target.path, 'name': name, 'size': size});
+        staged.add({'path': targetPath, 'name': name, 'size': size});
       }
       return staged;
     } catch (_) {
@@ -198,27 +197,27 @@ class AttachmentService {
     if (assetId <= 0) throw ArgumentError('A valid asset ID is required.');
     if (prepared.isEmpty) return;
 
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final directory = Directory(p.join(
-      documentsDirectory.path,
+    final documentsDirectory = await _fileStorage.getApplicationDocumentsPath();
+    final directory = p.join(
+      documentsDirectory,
       'my_finance_attachments',
       '${AttachmentOwnerTypes.asset}_$assetId',
-    ));
-    await directory.create(recursive: true);
+    );
+    await _fileStorage.createDirectory(directory);
     for (final item in prepared) {
       final name = item['name'] as String;
-      final stagedFile = File(item['path'] as String);
-      if (!await stagedFile.exists()) throw Exception('Prepared attachment is missing: $name');
+      final stagedPath = item['path'] as String;
+      if (!await _fileStorage.fileExists(stagedPath)) throw Exception('Prepared attachment is missing: $name');
       final uniqueName = '${DateTime.now().microsecondsSinceEpoch}_${p.basename(name)}';
-      final destination = File(p.join(directory.path, uniqueName));
-      await stagedFile.copy(destination.path);
-      createdPaths.add(destination.path);
-      final size = await destination.length();
+      final destinationPath = p.join(directory, uniqueName);
+      await _fileStorage.copyFile(sourcePath: stagedPath, destinationPath: destinationPath);
+      createdPaths.add(destinationPath);
+      final size = await _fileStorage.fileLength(destinationPath);
       if (size <= 0) throw Exception('Attachment could not be saved: $name');
       await txn.insert(_tableName, {
         'owner_type': AttachmentOwnerTypes.asset,
         'owner_id': assetId,
-        'file_path': destination.path,
+        'file_path': destinationPath,
         'file_name': name,
         'file_type': _getFileType(name),
         'file_size': size,
@@ -232,8 +231,7 @@ class AttachmentService {
   ) async {
     for (final item in prepared) {
       try {
-        final file = File(item['path'] as String);
-        if (await file.exists()) await file.delete();
+        await _fileStorage.deleteFile(item['path'] as String);
       } catch (error) {
         debugPrint('Could not clean staged asset attachment: $error');
       }
@@ -245,8 +243,7 @@ class AttachmentService {
   ) async {
     for (final path in paths) {
       try {
-        final file = File(path);
-        if (await file.exists()) await file.delete();
+        await _fileStorage.deleteFile(path);
       } catch (error) {
         debugPrint('Could not clean failed asset attachment: $error');
       }
@@ -266,9 +263,7 @@ class AttachmentService {
       throw ArgumentError('A valid owner ID is required.');
     }
 
-    final sourceFile = File(sourcePath);
-
-    if (!await sourceFile.exists()) {
+    if (!await _fileStorage.fileExists(sourcePath)) {
       throw Exception('Selected file could not be found.');
     }
 
@@ -277,28 +272,26 @@ class AttachmentService {
         : p.basename(sourcePath);
 
     final documentsDirectory =
-        await getApplicationDocumentsDirectory();
+        await _fileStorage.getApplicationDocumentsPath();
 
-    final attachmentDirectory = Directory(
-      p.join(
-        documentsDirectory.path,
+    final attachmentDirectory = p.join(
+        documentsDirectory,
         'my_finance_attachments',
         '${normalizedType}_$ownerId',
-      ),
-    );
+      );
 
-    await attachmentDirectory.create(recursive: true);
+    await _fileStorage.createDirectory(attachmentDirectory);
 
     final uniqueName =
         '${DateTime.now().microsecondsSinceEpoch}_${p.basename(fileName)}';
 
     final savedPath = p.join(
-      attachmentDirectory.path,
+      attachmentDirectory,
       uniqueName,
     );
 
-    final savedFile = await sourceFile.copy(savedPath);
-    final fileSize = await savedFile.length();
+    await _fileStorage.copyFile(sourcePath: sourcePath, destinationPath: savedPath);
+    final fileSize = await _fileStorage.fileLength(savedPath);
 
     final attachment = AttachmentModel(
       ownerType: normalizedType,
@@ -321,9 +314,7 @@ class AttachmentService {
 
       return attachment.copyWith(id: id);
     } catch (error) {
-      if (await savedFile.exists()) {
-        await savedFile.delete();
-      }
+      await _fileStorage.deleteFile(savedPath);
       rethrow;
     }
   }
@@ -414,12 +405,8 @@ class AttachmentService {
     );
     AppRefreshController.notifyChanged();
 
-    final file = File(attachment.filePath);
-
     try {
-      if (await file.exists()) {
-        await file.delete();
-      }
+      await _fileStorage.deleteFile(attachment.filePath);
     } catch (error) {
       debugPrint('Could not delete attachment file: $error');
     }

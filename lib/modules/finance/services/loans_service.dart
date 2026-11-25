@@ -7,7 +7,7 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class LoansService {
   static void _validateLoanType(String loanType) {
@@ -601,7 +601,7 @@ class LoansService {
   /// Repayment delete karta hai aur wallet aur loan balances ko pehli halat mein lata hai.
   static Future<void> deleteRepayment(int repaymentId) async {
     final db = await _database;
-    await RecycleBinService.ensureTable();
+    await RecycleBinArchiveService.ensureTable();
 
     await db.transaction((txn) async {
       final rows = await txn.query(
@@ -747,7 +747,7 @@ class LoansService {
   /// Loan ko wallet effects ke saath aik atomic transaction mein recycle karta hai.
   static Future<void> deleteLoan(int loanId) async {
     final db = await _database;
-    await RecycleBinService.ensureTable();
+    await RecycleBinArchiveService.ensureTable();
 
     await db.transaction((txn) async {
       final loanRows = await txn.query(

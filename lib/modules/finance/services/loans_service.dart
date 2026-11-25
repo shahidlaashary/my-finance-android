@@ -233,6 +233,103 @@ class LoansService {
     }
   }
 
+
+  /// Restores an archived repayment inside the caller's transaction.
+  /// Recycle Bin owns the archive envelope; LoansService owns loan accounting.
+  static Future<void> restoreArchivedRepayment(
+    Transaction txn,
+    Map<String, dynamic> record,
+  ) async {
+    final loanId = (record['loan_id'] as num).toInt();
+    final amount = (record['amount'] as num).toDouble();
+    final walletAmount =
+        (record['wallet_amount'] as num?)?.toDouble() ?? amount;
+    final walletId = (record['wallet_id'] as num).toInt();
+
+    if (!amount.isFinite ||
+        amount <= 0 ||
+        !walletAmount.isFinite ||
+        walletAmount <= 0 ||
+        walletId <= 0) {
+      throw Exception(
+        'The archived repayment contains invalid amount or wallet details.',
+      );
+    }
+
+    final loans = await txn.query(
+      'loans',
+      where: 'id = ?',
+      whereArgs: [loanId],
+      limit: 1,
+    );
+    if (loans.isEmpty) throw Exception('Restore the related loan first.');
+
+    final wallet = await txn.query(
+      'wallets',
+      columns: ['id', 'balance', 'currency'],
+      where: 'id = ?',
+      whereArgs: [walletId],
+      limit: 1,
+    );
+    if (wallet.isEmpty) {
+      throw Exception('The repayment wallet no longer exists.');
+    }
+
+    final archivedWalletCurrency =
+        record['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+    final currentWalletCurrency =
+        (wallet.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+    if (archivedWalletCurrency.isNotEmpty &&
+        archivedWalletCurrency != currentWalletCurrency) {
+      throw Exception(
+        'The repayment wallet currency has changed. Correct the wallet currency before restoring this repayment.',
+      );
+    }
+
+    final loan = loans.first;
+    final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
+    if (loanType != 'given' && loanType != 'taken') {
+      throw Exception('The related loan has an invalid loan type.');
+    }
+
+    final remaining = (loan['remaining_amount'] as num).toDouble();
+    final loanAmount = (loan['amount'] as num).toDouble();
+    if (!remaining.isFinite ||
+        !loanAmount.isFinite ||
+        remaining + 0.000001 < amount) {
+      throw Exception(
+        'Loan balance is not sufficient to restore this repayment.',
+      );
+    }
+
+    final walletDelta = loanType == 'given' ? walletAmount : -walletAmount;
+    final walletBalance = (wallet.first['balance'] as num).toDouble();
+    if (!walletBalance.isFinite ||
+        (walletDelta < 0 &&
+            walletBalance + 0.000001 < walletAmount)) {
+      throw Exception(
+        'Insufficient wallet balance to restore this repayment.',
+      );
+    }
+
+    await _changeWalletBalance(
+      txn,
+      walletId: walletId,
+      amount: walletDelta,
+    );
+    final next = (remaining - amount).clamp(0.0, loanAmount).toDouble();
+    await txn.update(
+      'loans',
+      {
+        'remaining_amount': next,
+        'status': next <= 0 ? 'paid' : 'active',
+      },
+      where: 'id = ?',
+      whereArgs: [loanId],
+    );
+    await txn.insert('loan_repayments', record);
+  }
+
   /// Loan banata hai aur di jane wali raqam source wallet se minus karta hai.
   static Future<int> addLoan(LoansModel loan) async {
     final db = await _database;

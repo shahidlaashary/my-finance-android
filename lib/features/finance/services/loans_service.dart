@@ -423,12 +423,6 @@ class LoansService {
     AppRefreshController.notifyChanged();
   }
 
-  static Future<Map<String, dynamic>?> getPartyById(int id) async {
-    final db = await _database;
-    final rows = await db.query('loan_parties', where: 'id = ?', whereArgs: [id], limit: 1);
-    return rows.isEmpty ? null : rows.first;
-  }
-
   static Future<List<LoansModel>> getLoansForParty(int partyId) async {
     final db = await _database;
     final rows = await db.query('loans', where: 'party_id = ?', whereArgs: [partyId], orderBy: 'lending_date DESC, id DESC');

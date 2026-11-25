@@ -29,10 +29,16 @@ class StaffService {
 
   static Future<List<Map<String, dynamic>>> getSalaries({int? staffId}) async {
     await ensureTables();
-    return DatabaseManager.instance.database.query('staff_salaries',
-      where: staffId == null ? null : 'staff_id = ?',
-      whereArgs: staffId == null ? null : [staffId],
-      orderBy: 'paid_at DESC, id DESC');
+    final staffFilter = staffId == null ? '' : 'AND s.staff_id = ?';
+    final args = staffId == null ? <Object>[] : <Object>[staffId];
+    return DatabaseManager.instance.database.rawQuery('''
+      SELECT s.*
+      FROM staff_salaries s
+      LEFT JOIN transactions t ON t.id = s.transaction_id
+      WHERE (s.transaction_id IS NULL OR t.id IS NOT NULL)
+      $staffFilter
+      ORDER BY s.paid_at DESC, s.id DESC
+    ''', args);
   }
 
   static Future<List<Map<String, dynamic>>> getAttendance({int? staffId, String? month}) async {

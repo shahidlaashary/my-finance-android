@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 class RecurringTransactionService {
   static const String _tableName = 'recurring_transactions';
 
@@ -275,7 +275,7 @@ class RecurringTransactionService {
     final db = await _database;
     final rows = await db.query(_tableName, where: 'id = ?', whereArgs: [id], limit: 1);
     if (rows.isEmpty) return 0;
-    await RecycleBinService.archive(type: 'Recurring Transaction', title: rows.first['title']?.toString() ?? 'Recurring Transaction', table: _tableName, id: id, record: rows.first);
+    await RecycleBinArchiveService.archive(type: 'Recurring Transaction', title: rows.first['title']?.toString() ?? 'Recurring Transaction', table: _tableName, id: id, record: rows.first);
     final count = await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
     if (count > 0) AppRefreshController.notifyChanged();
     return count;

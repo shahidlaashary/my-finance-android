@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -7,7 +8,7 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 /// touched only when the user explicitly chooses one for an installment/payout.
 class CommitteeService {
   static Future<void> _ensureSchema() async {
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS committees (
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
       frequency TEXT NOT NULL, installment_amount REAL NOT NULL,
@@ -34,7 +35,7 @@ class CommitteeService {
 
   static Future<List<Map<String, dynamic>>> getCommittees() async {
     await _ensureSchema();
-    return FinanceDB.instance.db.rawQuery('''
+    return DatabaseManager.instance.database.rawQuery('''
       SELECT c.*,
         (SELECT COUNT(*) FROM committee_members m WHERE m.committee_id=c.id) AS actual_members,
         COALESCE((SELECT SUM(e.amount) FROM committee_entries e WHERE e.committee_id=c.id AND e.entry_type='Installment'),0) AS collected,
@@ -47,7 +48,7 @@ class CommitteeService {
 
   static Future<List<Map<String, dynamic>>> getMembers(int committeeId) async {
     await _ensureSchema();
-    return FinanceDB.instance.db.rawQuery('''
+    return DatabaseManager.instance.database.rawQuery('''
       SELECT m.*,
         COALESCE((SELECT SUM(e.amount) FROM committee_entries e WHERE e.member_id=m.id AND e.entry_type='Installment'),0) AS paid,
         COALESCE((SELECT SUM(e.amount) FROM committee_entries e WHERE e.member_id=m.id AND e.entry_type='Payout'),0) AS received
@@ -57,7 +58,7 @@ class CommitteeService {
 
   static Future<List<Map<String, dynamic>>> getEntries(int committeeId) async {
     await _ensureSchema();
-    return FinanceDB.instance.db.rawQuery('''
+    return DatabaseManager.instance.database.rawQuery('''
       SELECT e.*, m.name AS member_name, w.name AS wallet_name,
         COALESCE(NULLIF(e.wallet_currency,''), w.currency) AS wallet_currency
       FROM committee_entries e
@@ -80,7 +81,7 @@ class CommitteeService {
         firstDueDate.isBefore(DateTime(startDate.year, startDate.month, startDate.day))) {
       throw Exception('Enter a name, valid installment and at least two members.');
     }
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final now = DateTime.now().toIso8601String();
     final id = await db.transaction((txn) async {
       final currencyRows = await txn.query('app_settings', columns: ['setting_value'],
@@ -107,7 +108,7 @@ class CommitteeService {
   static Future<void> addMember(int committeeId, String name, String phone) async {
     await _ensureSchema();
     if (name.trim().isEmpty) throw Exception('Enter member name.');
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final entryCount = Sqflite.firstIntValue(await db.rawQuery(
       'SELECT COUNT(*) FROM committee_entries WHERE committee_id=?', [committeeId])) ?? 0;
     if (entryCount > 0) throw Exception('Members cannot be added after committee transactions have started.');
@@ -123,7 +124,7 @@ class CommitteeService {
 
   static Future<void> reorderMembers(int committeeId, List<int> orderedMemberIds) async {
     await _ensureSchema();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
       final count = Sqflite.firstIntValue(await txn.rawQuery(
         'SELECT COUNT(*) FROM committee_entries WHERE committee_id=?', [committeeId])) ?? 0;
@@ -149,7 +150,7 @@ class CommitteeService {
     if (!amount.isFinite || amount <= 0 || !['Installment', 'Payout'].contains(entryType)) {
       throw Exception('Enter a valid amount.');
     }
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final result = await db.transaction((txn) async {
       final committeeRows = await txn.query('committees', where: 'id=?', whereArgs: [committeeId], limit: 1);
       final memberRows = await txn.query('committee_members',
@@ -266,7 +267,7 @@ class CommitteeService {
 
   static Future<void> deleteCommittee(int committeeId) async {
     await _ensureSchema();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final committees = await db.query('committees', where: 'id=?', whereArgs: [committeeId], limit: 1);
     if (committees.isEmpty) return;
     final committee = Map<String,dynamic>.from(committees.first);
@@ -305,7 +306,7 @@ class CommitteeService {
   static Future<void> updateStatus(int committeeId, String status) async {
     await _ensureSchema();
     if (!['Upcoming', 'Active', 'Completed'].contains(status)) throw Exception('Invalid status.');
-    await FinanceDB.instance.db.update('committees', {'status': status}, where: 'id=?', whereArgs: [committeeId]);
+    await DatabaseManager.instance.database.update('committees', {'status': status}, where: 'id=?', whereArgs: [committeeId]);
     AppRefreshController.notifyChanged();
   }
 }

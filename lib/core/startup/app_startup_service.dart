@@ -1,7 +1,6 @@
 
 import 'package:flutter/foundation.dart';
 
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
 class AppStartupService {
@@ -35,9 +34,8 @@ class AppStartupService {
   }
 
   static Future<void> _initializeServices() async {
-    // Transaction database aur zaroori category structure ko tayyar karta hai.
-    final database = DatabaseManager.instance.database;
-    if (!database.isOpen) throw StateError('Finance database is not open.');
+    // FinanceDB initialization is completed by AppBootstrapService before
+    // startup services run. RecurringTransactionService owns its own queries.
 
     // Jin recurring transactions ki date aa chuki ho unhein process karta hai.
     // Kisi bhi error ko log karta hai taake baad mein uski jaanch ho sake.

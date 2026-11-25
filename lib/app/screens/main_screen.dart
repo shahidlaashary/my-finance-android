@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
-import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/dashboard/home_screen.dart' show HomePage;
 import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
@@ -67,7 +66,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     return Scaffold(
       body: IndexedStack(
         index: selectedIndex,

@@ -434,6 +434,29 @@ class FinanceDB {
         !requestedCurrentBalance.isFinite) {
       throw Exception('Wallet name, currency aur current balance durust enter karein.');
     }
+    // Refresh missing currency rates before starting the conversion transaction.
+    // This prevents wallet currency changes from requiring a manual visit to
+    // the Exchange Rates screen. Only missing rates are fetched; saved rates
+    // remain unchanged.
+    final currentWalletRows = await db.query(
+      'wallets',
+      columns: ['currency'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (currentWalletRows.isNotEmpty) {
+      final currentCurrency = currentWalletRows.first['currency']
+          ?.toString()
+          .trim()
+          .toUpperCase() ?? '';
+      if (currentCurrency != currency) {
+        await refreshMissingExchangeRatesOnline(
+          currencies: [currentCurrency, currency],
+        );
+      }
+    }
+
     await db.transaction((txn) async {
       final rows = await txn.query(
         'wallets',

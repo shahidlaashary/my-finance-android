@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 
 class ReportsService {
-  Future<Database> get _database => DatabaseManager.instance.database;
+  Future<Database> get _database async => DatabaseManager.instance.database;
 
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);

@@ -239,7 +239,6 @@ class VehicleService {
     final oldVehicle = (data['vehicles'] as List).whereType<Map>().where((v) => v['id'] == old['vehicle_id']).toList();
     final oldVehicleName = oldVehicle.isEmpty ? 'Vehicle' : (oldVehicle.first['name'] ?? 'Vehicle').toString();
     final oldAmount = (old['amount'] as num).toDouble();
-    final oldOdometer = (old['odometer'] as num).toDouble();
     final oldWallet = (old['wallet_id'] as num).toInt();
     final oldCategory = (old['category'] ?? 'Other').toString();
     final oldVendor = (old['vendor'] ?? '').toString();

@@ -329,40 +329,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 }
 
 // =====================================================
-// Jald anay wali sahulat ka paigham
-// =====================================================
-
-class _ComingSoonNotice extends StatelessWidget {
-  final String message;
-
-  const _ComingSoonNotice({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.25),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.tertiary),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(fontSize: 12, height: 1.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =====================================================
 // Settings ka option
 // =====================================================
 

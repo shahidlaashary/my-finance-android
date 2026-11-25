@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
@@ -13,7 +14,7 @@ class VehicleService {
   static const String _storageKey = 'vehicle_manager_data_v1';
 
   static Future<Map<String, dynamic>> _read() async {
-    final db = await TransactionsService.database;
+    final db = await DatabaseManager.instance.database;
     final rows = await db.query('app_settings',
       columns: ['setting_value'], where: 'setting_key = ?',
       whereArgs: [_storageKey], limit: 1);
@@ -30,7 +31,7 @@ class VehicleService {
   }
 
   static Future<void> _write(Map<String, dynamic> data) async {
-    final db = await TransactionsService.database;
+    final db = await DatabaseManager.instance.database;
     await db.insert('app_settings',
       {'setting_key': _storageKey, 'setting_value': jsonEncode(data)},
       conflictAlgorithm: ConflictAlgorithm.replace);
@@ -60,7 +61,7 @@ class VehicleService {
   static Future<List<Map<String, dynamic>>> getExpenses({int? vehicleId}) => _getRows('expenses', vehicleId);
   static Future<List<Map<String, dynamic>>> getReminders({int? vehicleId}) => _getRows('reminders', vehicleId);
   static Future<List<Map<String, dynamic>>> getWallets() async {
-    final db = await TransactionsService.database;
+    final db = await DatabaseManager.instance.database;
     return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
       orderBy: 'name COLLATE NOCASE ASC');
   }

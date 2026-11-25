@@ -28,6 +28,9 @@ class StockMovement {
     quantity:(m['quantity'] as num).toDouble(), unitPrice:(m['unit_price'] as num).toDouble(),
     date:m['movement_date']?.toString()??'', note:m['note']?.toString()??'',
   );
+}
+
+class StockService {
   static Future<void> restoreArchivedItem(
     Transaction txn, {
     required Map<String, dynamic> record,
@@ -42,9 +45,6 @@ class StockMovement {
     }
   }
 
-}
-
-class StockService {
   static Future<void> _ensureTables() async {
     final db=DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS stock_items(

@@ -208,6 +208,30 @@ class RecycleBinService {
         }
 
         if (!isAssetLinked) {
+          final partyId = (record['party_id'] as num?)?.toInt();
+          if (partyId == null || partyId <= 0) {
+            throw Exception('The archived loan is missing its linked party. Restore is blocked.');
+          }
+          final partyRows = await txn.query(
+            'loan_parties',
+            columns: ['id', 'currency'],
+            where: 'id = ?',
+            whereArgs: [partyId],
+            limit: 1,
+          );
+          if (partyRows.isEmpty) {
+            throw Exception('Restore the linked party before restoring this loan.');
+          }
+          final partyCurrency =
+              (partyRows.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+          final archivedLoanCurrency =
+              (record['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+          if (partyCurrency != archivedLoanCurrency) {
+            throw Exception(
+              'The linked party currency has changed. Correct the party currency before restoring this loan.',
+            );
+          }
+
           final sourceWalletRows = await txn.query(
             'wallets',
             columns: ['currency'],

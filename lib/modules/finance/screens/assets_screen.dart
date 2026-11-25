@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';

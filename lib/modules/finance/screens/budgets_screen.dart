@@ -1,12 +1,11 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
@@ -65,9 +64,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       final budgets = await BudgetsService.getBudgets();
       final categoryItems = await CategoryService.getCategories('expense');
       final categories = categoryItems.map((item) => {'name': item.name}).toList();
-      // Wallet currencies central FinanceDB connection se load hoti hain.
-      final db = DatabaseManager.instance.database;
-      final wallets = await db.query('wallets');
+      final wallets = await WalletService.getWallets();
       final currencies = wallets
           .map((e) => e['currency']?.toString() ?? 'PKR')
           .toSet()

@@ -475,4 +475,15 @@ class RecurringTransactionService {
     }
     return processedCount;
   }
+  static Future<void> restoreArchivedTransaction(
+    Transaction txn, Map<String, dynamic> record,
+  ) async {
+    final duplicate = await txn.query(_tableName, columns: ['id'],
+      where: 'id = ?', whereArgs: [record['id']], limit: 1);
+    if (duplicate.isNotEmpty) {
+      throw Exception('This recurring transaction already exists.');
+    }
+    await txn.insert(_tableName, record);
+  }
+
 }

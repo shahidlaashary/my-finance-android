@@ -1,16 +1,15 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/platform/platform_info.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
@@ -58,13 +57,7 @@ class _RecurringTransactionsScreenState
   Future<void> _loadData() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
-      // Wallets ke liye app ka central database connection istemal karte hain.
-      final db = DatabaseManager.instance.database;
-
-      final wallets = await db.query(
-        'wallets',
-        orderBy: 'name ASC',
-      );
+      final wallets = await WalletService.getWallets(orderBy: 'name ASC');
 
       final categoryItems = [
         ...await CategoryService.getCategories('income'),

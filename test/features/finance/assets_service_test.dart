@@ -1135,4 +1135,118 @@ void main() {
     );
   });
 
+
+
+  test('editing a wallet-funded asset moves the purchase debit atomically', () async {
+    final originalWalletId = await createWallet(1000);
+    final replacementWalletId = await FinanceDB.instance.addWallet(
+      name: 'Replacement Asset Wallet',
+      type: 'Cash',
+      currency: 'PKR',
+      openingBalance: 1000,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Editable Wallet Asset', price: 400, walletId: originalWalletId),
+      const [],
+    );
+
+    final saved = await assets.getAssetById(assetId);
+    await assets.updateAsset(saved!.copyWith(
+      purchasePrice: 500,
+      currentValue: 450,
+      walletId: replacementWalletId,
+      notes: 'Updated purchase details',
+    ));
+
+    final updated = await assets.getAssetById(assetId);
+    expect(updated!.purchasePrice, 500);
+    expect(updated.currentValue, 450);
+    expect(updated.walletId, replacementWalletId);
+    expect(updated.notes, 'Updated purchase details');
+    expect((await FinanceDB.instance.getWallet(originalWalletId))!['balance'], 1000);
+    expect((await FinanceDB.instance.getWallet(replacementWalletId))!['balance'], 500);
+  });
+
+  test('editing a loan-funded asset updates its linked loan when no repayments exist', () async {
+    final originalPartyId = await LoansService.addParty(
+      name: 'Original Asset Seller',
+      currency: 'PKR',
+    );
+    final replacementPartyId = await LoansService.addParty(
+      name: 'Replacement Asset Seller',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(
+        name: 'Editable Credit Asset',
+        price: 500,
+        walletId: 0,
+        paymentType: 'Loan',
+        partyId: originalPartyId,
+      ),
+      const [],
+    );
+    final original = await assets.getAssetById(assetId);
+
+    await assets.updateAsset(original!.copyWith(
+      name: 'Updated Credit Asset',
+      purchasePrice: 600,
+      purchaseDate: DateTime(2026, 11, 5),
+      partyId: replacementPartyId,
+    ));
+
+    final updated = await assets.getAssetById(assetId);
+    final loan = await LoansService.getLoanById(original.linkedLoanId!);
+    expect(updated!.name, 'Updated Credit Asset');
+    expect(updated.purchasePrice, 600);
+    expect(updated.partyId, replacementPartyId);
+    expect(loan!.partyId, replacementPartyId);
+    expect(loan.amount, 600);
+    expect(loan.remainingAmount, 600);
+    expect(loan.lendingDate, '2026-11-05');
+  });
+
+  test('editing loan-funded asset terms is blocked after repayments exist', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Repaid Asset Seller',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(
+        name: 'Repaid Credit Asset',
+        price: 500,
+        walletId: 0,
+        paymentType: 'Loan',
+        partyId: partyId,
+      ),
+      const [],
+    );
+    final saved = await assets.getAssetById(assetId);
+    final loanId = saved!.linkedLoanId!;
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 100,
+        walletId: walletId,
+        repaymentDate: '2026-11-10',
+        createdAt: DateTime(2026, 11, 10).toIso8601String(),
+      ),
+    );
+
+    await expectLater(
+      assets.updateAsset(saved.copyWith(purchasePrice: 600)),
+      throwsA(isA<Exception>()),
+    );
+
+    final unchangedAsset = await assets.getAssetById(assetId);
+    final unchangedLoan = await LoansService.getLoanById(loanId);
+    expect(unchangedAsset!.purchasePrice, 500);
+    expect(unchangedLoan!.amount, 500);
+    expect(unchangedLoan.remainingAmount, 400);
+    expect(await LoansService.getRepayments(loanId), hasLength(1));
+  });
+
 }

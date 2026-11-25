@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:sqflite/sqflite.dart';
@@ -8,6 +9,45 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 /// DatabaseManager connection.
 class WalletService {
   WalletService._();
+
+  static Future<Map<String, String>> getWalletDisplaySettings() async {
+    final rows = await DatabaseManager.instance.database.query(
+      'app_settings',
+      columns: ['setting_key', 'setting_value'],
+      where: 'setting_key IN (?, ?)',
+      whereArgs: ['hidden_wallet_ids', 'wallet_display_order'],
+    );
+    return {
+      for (final row in rows)
+        row['setting_key'].toString(): row['setting_value']?.toString() ?? '',
+    };
+  }
+
+  static Future<void> saveWalletIdSettings(
+    String key,
+    List<int> ids,
+  ) async {
+    if (key != 'hidden_wallet_ids' && key != 'wallet_display_order') {
+      throw ArgumentError.value(key, 'key', 'Unsupported wallet setting');
+    }
+    await DatabaseManager.instance.database.insert(
+      'app_settings',
+      {'setting_key': key, 'setting_value': jsonEncode(ids)},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    AppRefreshController.notifyChanged();
+  }
+
+  static Future<Map<int, String>> getWalletCurrencyMap() async {
+    final rows = await DatabaseManager.instance.database.query(
+      'wallets',
+      columns: ['id', 'currency'],
+    );
+    return {
+      for (final row in rows)
+        (row['id'] as num).toInt(): row['currency']?.toString() ?? '',
+    };
+  }
 
   static Future<List<Map<String, dynamic>>> getWallets() {
     return DatabaseManager.instance.database.query(

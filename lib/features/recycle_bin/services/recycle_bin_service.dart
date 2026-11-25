@@ -88,6 +88,24 @@ class RecycleBinService {
         if (existing.isNotEmpty) {
           throw Exception('This Loan Party already exists.');
         }
+        final archivedName = (record['name']?.toString() ?? '').trim();
+        final archivedType =
+            (record['party_type']?.toString() ?? 'Individual').trim();
+        if (archivedName.isEmpty || archivedType.isEmpty) {
+          throw Exception('The archived Loan Party has an invalid name or type.');
+        }
+        final duplicate = await txn.query(
+          'loan_parties',
+          columns: ['id'],
+          where: 'LOWER(TRIM(name)) = LOWER(?) AND LOWER(TRIM(party_type)) = LOWER(?)',
+          whereArgs: [archivedName, archivedType],
+          limit: 1,
+        );
+        if (duplicate.isNotEmpty) {
+          throw Exception(
+            'A party with this name already exists under $archivedType type.',
+          );
+        }
         await txn.insert('loan_parties', record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;

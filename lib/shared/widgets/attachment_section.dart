@@ -9,7 +9,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:my_finance/modules/space/screens/space_pdf_reader_screen.dart';
 
 import 'package:my_finance/core/models/attachment_model.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 class AttachmentSection extends StatefulWidget {

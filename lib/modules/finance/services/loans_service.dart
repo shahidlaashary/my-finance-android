@@ -77,9 +77,6 @@ class LoansService {
     }
   }
 
-  // Shared connection is closed centrally by DatabaseManager.
-  static Future<void> closeDatabase() => DatabaseManager.instance.close();
-
   static Future<Database> get database async {
     final db = DatabaseManager.instance.database;
     await _createTables(db);

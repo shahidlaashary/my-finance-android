@@ -171,4 +171,24 @@ class StaffService {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     AppRefreshController.notifyChanged();
   }
+  static Future<void> restoreArchivedStaff(
+    Transaction txn, {
+    required Map<String, dynamic> record,
+    required List<Map<String, dynamic>> history,
+  }) async {
+    final duplicate = await txn.query('staff', columns: ['id'],
+      where: 'id = ?', whereArgs: [record['id']], limit: 1);
+    if (duplicate.isNotEmpty) throw Exception('This staff member already exists.');
+    await txn.insert('staff', record);
+    for (final row in history) {
+      final restored = Map<String, dynamic>.from(row);
+      final relatedType = restored.remove('_related_table')?.toString()
+          ?? 'staff_attendance';
+      if (!{'staff_salaries', 'staff_attendance'}.contains(relatedType)) {
+        throw Exception('Unsupported staff history record.');
+      }
+      await txn.insert(relatedType, restored);
+    }
+  }
+
 }

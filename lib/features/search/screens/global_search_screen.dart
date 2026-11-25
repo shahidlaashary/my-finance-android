@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/modules/finance/screens/categories_management_screen.dart';
 import 'package:my_finance/modules/finance/screens/transactions_screen.dart';
@@ -159,7 +160,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         }
       }),
       _collect(() async {
-        final rows = await FinanceDB.instance.getWallets();
+        final rows = await WalletService.getWallets();
         for (final row in rows) {
           final data = Map<String, dynamic>.from(row);
           final name = data['name']?.toString() ?? 'Wallet';

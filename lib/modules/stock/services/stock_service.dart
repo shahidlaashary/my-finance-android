@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
@@ -31,7 +32,7 @@ class StockMovement {
 
 class StockService {
   static Future<void> _ensureTables() async {
-    final db=FinanceDB.instance.db;
+    final db=DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS stock_items(
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, sku TEXT NOT NULL DEFAULT '',
       category TEXT NOT NULL DEFAULT 'General', unit TEXT NOT NULL DEFAULT 'pcs',
@@ -46,7 +47,7 @@ class StockService {
   }
   static Future<List<StockItem>> getItems() async {
     await _ensureTables();
-    final rows=await FinanceDB.instance.db.query('stock_items',orderBy:'name COLLATE NOCASE ASC');
+    final rows=await DatabaseManager.instance.database.query('stock_items',orderBy:'name COLLATE NOCASE ASC');
     return rows.map(StockItem.fromMap).toList();
   }
   static Future<int> saveItem(StockItem item) async {
@@ -54,7 +55,7 @@ class StockService {
     if(item.name.trim().isEmpty) throw Exception('Item name is required.');
     if(!item.quantity.isFinite||item.quantity<0||!item.lowStockAt.isFinite||item.lowStockAt<0||!item.purchasePrice.isFinite||item.purchasePrice<0||!item.salePrice.isFinite||item.salePrice<0) throw Exception('Enter valid stock values.');
     final values={'name':item.name.trim(),'sku':item.sku.trim(),'category':item.category.trim().isEmpty?'General':item.category.trim(),'unit':item.unit.trim().isEmpty?'pcs':item.unit.trim(),'quantity':item.quantity,'low_stock_at':item.lowStockAt,'purchase_price':item.purchasePrice,'sale_price':item.salePrice,'notes':item.notes.trim()};
-    final db=FinanceDB.instance.db;
+    final db=DatabaseManager.instance.database;
     int id;
     if(item.id==null){id=await db.insert('stock_items',{...values,'created_at':DateTime.now().toIso8601String()});}
     else {final editable=Map<String,dynamic>.from(values)..remove('quantity');await db.update('stock_items',editable,where:'id=?',whereArgs:[item.id]);id=item.id!;}
@@ -64,7 +65,7 @@ class StockService {
     await _ensureTables();
     if(!quantity.isFinite||quantity<=0||!unitPrice.isFinite||unitPrice<0) throw Exception('Enter a valid quantity and price.');
     if(type!='IN'&&type!='OUT') throw Exception('Invalid stock movement.');
-    final db=FinanceDB.instance.db;
+    final db=DatabaseManager.instance.database;
     await db.transaction((txn) async {
       final rows=await txn.query('stock_items',where:'id=?',whereArgs:[itemId],limit:1);
       if(rows.isEmpty) throw Exception('Stock item not found.');
@@ -78,12 +79,12 @@ class StockService {
   }
   static Future<List<StockMovement>> getMovements(int itemId) async {
     await _ensureTables();
-    final rows=await FinanceDB.instance.db.query('stock_movements',where:'item_id=?',whereArgs:[itemId],orderBy:'movement_date DESC,id DESC');
+    final rows=await DatabaseManager.instance.database.query('stock_movements',where:'item_id=?',whereArgs:[itemId],orderBy:'movement_date DESC,id DESC');
     return rows.map(StockMovement.fromMap).toList();
   }
   static Future<void> deleteItem(int id) async {
     await _ensureTables();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final rows = await db.query('stock_items', where: 'id = ?', whereArgs: [id], limit: 1);
     if (rows.isEmpty) return;
     final movements = await db.query('stock_movements', where: 'item_id = ?', whereArgs: [id]);

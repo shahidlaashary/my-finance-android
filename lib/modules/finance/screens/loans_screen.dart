@@ -1,7 +1,6 @@
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';

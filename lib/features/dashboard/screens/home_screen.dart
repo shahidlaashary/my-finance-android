@@ -10,7 +10,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
@@ -82,8 +82,8 @@ class _HomePageState extends State<HomePage> {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
       final db = DatabaseManager.instance.database;
-      final selectedBaseCurrency = await FinanceDB.instance.getBaseCurrency();
-      final baseRate = await FinanceDB.instance.getExchangeRate(selectedBaseCurrency) ?? 1.0;
+      final selectedBaseCurrency = await CurrencyService.getBaseCurrency();
+      final baseRate = await CurrencyService.getExchangeRate(selectedBaseCurrency) ?? 1.0;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
         if (row['type'] == 'EXPENSE') expense = value;
       }
 
-      final balance = await FinanceDB.instance.getTotalBalanceInBaseCurrency();
+      final balance = await CurrencyService.getTotalBalanceInBaseCurrency();
       final includedAssetValues = await AssetsService().getConsolidatedIncludedCurrentValueByCurrency();
       final includedAssetsInBaseCurrency = await _convertValuesToPKR(includedAssetValues, baseRate);
       final walletCurrencyRows = await db.rawQuery('''
@@ -284,7 +284,7 @@ class _HomePageState extends State<HomePage> {
   ) async {
     double total = 0;
     for (final entry in values.entries) {
-      final rate = await FinanceDB.instance.getExchangeRate(
+      final rate = await CurrencyService.getExchangeRate(
         entry.key.toUpperCase(),
       );
       if (rate != null) total += entry.value * rate / baseRate;
@@ -367,7 +367,7 @@ class _HomePageState extends State<HomePage> {
       baseCurrency.trim().toUpperCase(),
     }..remove('PKR');
 
-    final savedRates = await FinanceDB.instance.getExchangeRates();
+    final savedRates = await CurrencyService.getExchangeRates();
     final availableCurrencies = savedRates
         .map((row) => row['currency']?.toString().trim().toUpperCase() ?? '')
         .where((code) => code.isNotEmpty)
@@ -399,7 +399,7 @@ class _HomePageState extends State<HomePage> {
               // Provider gives foreign units per PKR; store PKR per unit.
               final pkrPerUnit = 1 / rawRate.toDouble();
               if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
-              await FinanceDB.instance.saveExchangeRate(
+              await CurrencyService.saveExchangeRate(
                 currency,
                 pkrPerUnit,
                 source: 'automatic',
@@ -414,7 +414,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    final savedRateRows = await FinanceDB.instance.getExchangeRates();
+    final savedRateRows = await CurrencyService.getExchangeRates();
     final ratesByCurrency = <String, double>{};
     for (final row in savedRateRows) {
       final code = row['currency']?.toString().trim().toUpperCase() ?? '';

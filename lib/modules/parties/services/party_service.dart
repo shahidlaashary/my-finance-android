@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/core/database/database_manager.dart';
@@ -245,6 +246,47 @@ class PartyService {
       if (deleted != 1) throw Exception('Party could not be deleted.');
     });
     AppRefreshController.notifyChanged();
+  }
+
+  /// Restores a deleted loan party inside the caller's active DB transaction.
+  /// The caller removes the Recycle Bin envelope in the same transaction.
+  static Future<void> restoreArchivedParty(
+    Transaction txn,
+    Map<String, dynamic> record,
+  ) async {
+    final partyId = (record['id'] as num?)?.toInt();
+    if (partyId == null || partyId <= 0) {
+      throw Exception('The archived Loan Party has an invalid ID.');
+    }
+    final existing = await txn.query(
+      'loan_parties',
+      columns: ['id'],
+      where: 'id = ?',
+      whereArgs: [partyId],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      throw Exception('This Loan Party already exists.');
+    }
+    final archivedName = (record['name']?.toString() ?? '').trim();
+    final archivedType =
+        (record['party_type']?.toString() ?? 'Individual').trim();
+    if (archivedName.isEmpty || archivedType.isEmpty) {
+      throw Exception('The archived Loan Party has an invalid name or type.');
+    }
+    final duplicate = await txn.query(
+      'loan_parties',
+      columns: ['id'],
+      where: 'LOWER(TRIM(name)) = LOWER(?) AND LOWER(TRIM(party_type)) = LOWER(?)',
+      whereArgs: [archivedName, archivedType],
+      limit: 1,
+    );
+    if (duplicate.isNotEmpty) {
+      throw Exception(
+        'A party with this name already exists under $archivedType type.',
+      );
+    }
+    await txn.insert('loan_parties', record);
   }
 
   static Future<List<LoansModel>> getLoansForParty(int partyId) async {

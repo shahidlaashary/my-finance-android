@@ -52,15 +52,6 @@ class LoansScreenState extends State<LoansScreen> {
         '${date.day.toString().padLeft(2, '0')}';
   }
   String _money(double amount) => _hideBalances ? '••••••' : amount.toStringAsFixed(2);
-  String _currencyForWallet(int walletId) {
-    final wallet = _wallets.cast<Map<String, dynamic>?>().firstWhere(
-      (item) => item?['id'] == walletId,
-      orElse: () => null,
-    );
-    return (wallet?['currency']?.toString() ?? 'PKR')
-        .trim()
-        .toUpperCase();
-  }
   String _currencyFlag(String currency) {
     switch (currency.trim().toUpperCase()) {
       case 'PKR':
@@ -1112,8 +1103,6 @@ class LoansScreenState extends State<LoansScreen> {
                     ..._loans.map((loan) {
                       final progress = loan.amount <= 0 ? 0.0 :
                           (loan.repaidAmount / loan.amount).clamp(0.0, 1.0).toDouble();
-                      final statusColor = loan.isOverdue
-                          ? const Color(0xFFD94841) : Theme.of(context).colorScheme.primary;
                       final statusLabel = loan.isPaid
                           ? appText(context, 'Paid', 'ادا شدہ')
                           : loan.isOverdue

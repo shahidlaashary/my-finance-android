@@ -147,6 +147,8 @@ jobs:
               else:
                   print(f"No legacy buildscript block found in {gradle_file}")
           PY
+      - name: Run Flutter static analysis
+        run: flutter analyze --no-pub
       - name: Run Flutter tests
         run: flutter test
       - name: Build APK with increasing version code

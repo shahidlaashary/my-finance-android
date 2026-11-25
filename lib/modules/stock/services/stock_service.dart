@@ -1,3 +1,4 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
@@ -27,6 +28,20 @@ class StockMovement {
     quantity:(m['quantity'] as num).toDouble(), unitPrice:(m['unit_price'] as num).toDouble(),
     date:m['movement_date']?.toString()??'', note:m['note']?.toString()??'',
   );
+  static Future<void> restoreArchivedItem(
+    Transaction txn, {
+    required Map<String, dynamic> record,
+    required List<Map<String, dynamic>> movements,
+  }) async {
+    final duplicate = await txn.query('stock_items', columns: ['id'],
+      where: 'id = ?', whereArgs: [record['id']], limit: 1);
+    if (duplicate.isNotEmpty) throw Exception('This stock item already exists.');
+    await txn.insert('stock_items', record);
+    for (final movement in movements) {
+      await txn.insert('stock_movements', movement);
+    }
+  }
+
 }
 
 class StockService {

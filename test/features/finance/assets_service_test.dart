@@ -390,6 +390,112 @@ void main() {
     expect((wallet!['balance'] as num).toDouble(), 0);
   });
 
+  test('deleting asset is blocked if purchase wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Purchase Currency Guard Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(assets.deleteAsset(assetId), throwsA(isA<Exception>()));
+    expect(await assets.getAssetById(assetId), isNotNull);
+    expect((await FinanceDB.instance.getWallet(walletId))!['currency'], 'USD');
+  });
+
+  test('deleting sold asset is blocked if sale wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Sale Currency Guard Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: walletId,
+      paymentType: 'Wallet',
+      walletAmount: 500,
+      walletCurrency: 'PKR',
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(assets.deleteAsset(assetId), throwsA(isA<Exception>()));
+    expect((await assets.getAssetById(assetId))!.isSold, isTrue);
+    expect((await FinanceDB.instance.getWallet(walletId))!['currency'], 'USD');
+  });
+
+  test('restoring asset is blocked if purchase wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Restore Purchase Currency Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.deleteAsset(assetId);
+    final archived = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'assets' &&
+          item['source_id'].toString() == assetId.toString(),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archived['id'] as int),
+      throwsA(isA<Exception>()),
+    );
+    expect(await assets.getAssetById(assetId), isNull);
+    expect((await FinanceDB.instance.getWallet(walletId))!['currency'], 'USD');
+  });
+
+  test('restoring sold asset is blocked if sale wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Restore Sale Currency Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: walletId,
+      paymentType: 'Wallet',
+      walletAmount: 500,
+      walletCurrency: 'PKR',
+    );
+    await assets.deleteAsset(assetId);
+    final archived = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'assets' &&
+          item['source_id'].toString() == assetId.toString(),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archived['id'] as int),
+      throwsA(isA<Exception>()),
+    );
+    expect(await assets.getAssetById(assetId), isNull);
+    expect((await FinanceDB.instance.getWallet(walletId))!['currency'], 'USD');
+  });
+
   test('deleting sold asset is blocked if reversing sale would make wallet negative', () async {
     final walletId = await createWallet(1000);
     final assetId = await assets.addAssetWithAttachments(

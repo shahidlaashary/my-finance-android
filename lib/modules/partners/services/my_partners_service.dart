@@ -3,7 +3,7 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class MyPartnersService {
   MyPartnersService._();
@@ -180,7 +180,7 @@ class MyPartnersService {
     final financeRows = await db.query('transactions',
       where: "category LIKE 'My Partner%' AND note IN (SELECT note FROM partners_transactions WHERE partner_id=?)",
       whereArgs: [partnerId]);
-    await RecycleBinService.archive(
+    await RecycleBinArchiveService.archive(
       type: 'Partner', title: partner['name']?.toString() ?? 'Partner',
       table: 'partners', id: partnerId, record: partner,
       related: [

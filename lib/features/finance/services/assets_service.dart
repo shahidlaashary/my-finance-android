@@ -699,8 +699,31 @@ class AssetsService {
               !repaymentAmount.isFinite ||
               repaymentAmount <= 0 ||
               !repaymentWalletAmount.isFinite ||
-              repaymentWalletAmount <= 0) {
+              repaymentWalletAmount <= 0 ||
+              repaymentWalletId <= 0) {
             throw Exception('A linked loan repayment contains invalid data. Asset deletion was cancelled.');
+          }
+          final repaymentWalletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [repaymentWalletId],
+            limit: 1,
+          );
+          if (repaymentWalletRows.isEmpty) {
+            throw Exception('A repayment wallet no longer exists. Restore the wallet first.');
+          }
+          final savedWalletCurrency =
+              repayment['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+          final currentWalletCurrency =
+              (repaymentWalletRows.first['currency']?.toString() ?? 'PKR')
+                  .trim()
+                  .toUpperCase();
+          if (savedWalletCurrency.isNotEmpty &&
+              savedWalletCurrency != currentWalletCurrency) {
+            throw Exception(
+              'A linked loan repayment wallet currency has changed. Correct the wallet currency before deleting this Asset.',
+            );
           }
           addWalletDelta(
             repaymentWalletId,

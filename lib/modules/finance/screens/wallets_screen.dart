@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/modules/finance/screens/transactions_screen.dart';
 
@@ -327,7 +328,7 @@ class _WalletsPageState extends State<WalletsPage> {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
       final result = List<Map<String, dynamic>>.from(
-        await FinanceDB.instance.getWallets(),
+        await WalletService.getWallets(),
       );
       final settings = await DatabaseManager.instance.database.query(
         'app_settings',

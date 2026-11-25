@@ -5,6 +5,15 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class TransactionsService {
+  static String _normalizeType(String type) {
+    switch (type.trim().toLowerCase()) {
+      case 'income': return 'Income';
+      case 'expense': return 'Expense';
+      case 'transfer': return 'Transfer';
+      default: throw Exception('Transaction type must be Income, Expense, or Transfer.');
+    }
+  }
+
 
   static Future<Database> get _database async =>
       DatabaseManager.instance.database;

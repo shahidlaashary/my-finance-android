@@ -6,7 +6,7 @@ import 'package:open_filex/open_filex.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/vehicles/services/vehicle_service.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/vehicles/services/vehicle_export_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';

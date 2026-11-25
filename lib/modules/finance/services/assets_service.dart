@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class AssetsService {
   Future<Database> get _database async {

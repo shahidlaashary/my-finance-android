@@ -5,7 +5,6 @@ import 'package:my_finance/app/screens/main_screen.dart' show MainScreen;
 import 'package:my_finance/app/screens/first_time_setup_screen.dart' show FirstTimeSetupScreen;
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/app/screens/modules_tools_page.dart' show ModulesToolsPage;
 import 'package:my_finance/core/startup/app_bootstrap_service.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';

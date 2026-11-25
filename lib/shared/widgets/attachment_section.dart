@@ -185,7 +185,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
       }
 
       // Sab se pehle nayi file save hogi.
-      final newAttachment = await AttachmentService.addAttachment(
+      await AttachmentService.addAttachment(
         ownerType: widget.ownerType,
         ownerId: widget.ownerId,
         sourcePath: path,

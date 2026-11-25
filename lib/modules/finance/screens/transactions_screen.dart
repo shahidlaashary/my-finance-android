@@ -1,5 +1,4 @@
 
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
@@ -162,12 +161,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
       // Upcoming recurring schedules are display-only; they do not affect balances.
       final recurringItems = await RecurringTransactionService().getRecurringTransactions(activeOnly: true);
-      final db = DatabaseManager.instance.database;
-      final walletRows = await db.query('wallets', columns: ['id', 'currency']);
-      final currencyByWallet = <int, String>{
-        for (final row in walletRows)
-          (row['id'] as num).toInt(): row['currency']?.toString() ?? '',
-      };
+      final currencyByWallet = await WalletService.getWalletCurrencyMap();
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final scheduledRows = <Map<String, dynamic>>[];

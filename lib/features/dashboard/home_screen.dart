@@ -8,7 +8,6 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/finance/models/budgets_model.dart';
@@ -17,11 +16,7 @@ import 'package:my_finance/features/finance/services/assets_service.dart';
 import 'package:my_finance/features/finance/services/loans_service.dart';
 import 'package:my_finance/features/finance/services/goals_service.dart';
 import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
-import 'package:my_finance/features/finance/screens/assets_screen.dart';
 import 'package:my_finance/features/finance/screens/budgets_screen.dart';
-import 'package:my_finance/features/finance/screens/goals_screen.dart';
-import 'package:my_finance/features/finance/screens/loans_screen.dart';
-import 'package:my_finance/features/finance/screens/recurring_transactions_screen.dart';
 
 /// Dashboard home screen and its existing data-loading/presentation logic.
 class HomePage extends StatefulWidget {

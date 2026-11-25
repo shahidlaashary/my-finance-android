@@ -319,12 +319,7 @@ class TransactionsService {
     }
     AppRefreshController.notifyChanged();
   }
-  static Future<void> setCategory({required int transactionId, required String? category}) async {
-    final db = await database;
-    await db.update('transactions', {'category': category ?? ''},
-      where: "id = ? AND type IN ('Income', 'Expense')", whereArgs: [transactionId]);
-    AppRefreshController.notifyChanged();
-  }
+
 
   static Future<List<Map<String, dynamic>>> getTransactions({int? walletId}) async {
     final db = await database;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 

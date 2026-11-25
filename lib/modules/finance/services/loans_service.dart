@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -103,51 +104,7 @@ class LoansService {
       )
     ''');
 
-    // Testing-mode reset: discard old party test data and start with the current schema.
-    const partyResetKey = 'party_archive_tabs_test_reset_v1';
-    final partyResetRows = await db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [partyResetKey],
-      limit: 1,
-    );
-    if (partyResetRows.isEmpty) {
-      await db.transaction((txn) async {
-        await txn.execute('UPDATE loans SET party_id = NULL WHERE party_id IS NOT NULL');
-        await txn.execute('DROP TABLE IF EXISTS loan_parties');
-        await txn.insert('app_settings', {
-          'setting_key': partyResetKey,
-          'setting_value': '1',
-        });
-      });
-    }
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS loan_parties (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        phone TEXT,
-        address TEXT NOT NULL DEFAULT '',
-        currency TEXT NOT NULL DEFAULT 'PKR',
-        notes TEXT NOT NULL DEFAULT '',
-        email TEXT NOT NULL DEFAULT '',
-        party_type TEXT NOT NULL DEFAULT 'Individual',
-        country TEXT NOT NULL DEFAULT '',
-        city TEXT NOT NULL DEFAULT '',
-        postal_code TEXT NOT NULL DEFAULT '',
-        opening_balance REAL NOT NULL DEFAULT 0,
-        credit_limit REAL NOT NULL DEFAULT 0,
-        payment_terms TEXT NOT NULL DEFAULT 'Due on Receipt',
-        cnic TEXT NOT NULL DEFAULT '',
-        business_name TEXT NOT NULL DEFAULT '',
-        tax_number TEXT NOT NULL DEFAULT '',
-        reference_person TEXT NOT NULL DEFAULT '',
-        profile_image_path TEXT NOT NULL DEFAULT '',
-        is_archived INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL
-      )
-    ''' );
+    await PartyService.ensureTables();
 
     await db.execute('CREATE INDEX IF NOT EXISTS idx_loans_source ON loans(source_type, source_id)');
 

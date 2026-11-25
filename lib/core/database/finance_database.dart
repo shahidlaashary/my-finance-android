@@ -684,40 +684,4 @@ class FinanceDB {
   // Tamam wallets ka majmoi balance
   // ----------------------------------------------------------
 
-  Future<double> getTotalBalancePKR() async {
-    final wallets = await db.query(
-      'wallets',
-      where: 'exclude_total = 0',
-    );
-
-    double total = 0;
-
-    for (final wallet in wallets) {
-      final currency = wallet['currency'] as String;
-      final balance = (wallet['balance'] as num).toDouble();
-      final rate = await getExchangeRate(currency);
-
-      // Unknown exchange rate ko 1 assume nahi karna.
-      if (rate != null) {
-        total += balance * rate;
-      }
-    }
-
-    return total;
-  }
-
-  // Income aur Expense ka total.
-  // Adjustment aur Transfer ko is total mein shamil nahi karna.
-  Future<double> totalByType(String type) async {
-    final result = await db.rawQuery(
-      '''
-      SELECT COALESCE(SUM(amount), 0) AS total
-      FROM transactions
-      WHERE type = ?
-      ''',
-      [type],
-    );
-
-    return (result.first['total'] as num).toDouble();
-  }
 }

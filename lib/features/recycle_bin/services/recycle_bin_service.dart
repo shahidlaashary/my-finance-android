@@ -1,3 +1,9 @@
+import 'package:my_finance/modules/vehicles/services/vehicle_service.dart';
+import 'package:my_finance/modules/staff/services/staff_service.dart';
+import 'package:my_finance/modules/stock/services/stock_service.dart';
+import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
+import 'package:my_finance/modules/finance/services/budgets_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/installments/services/installment_service.dart';
 import 'package:my_finance/modules/partners/services/my_partners_service.dart';
@@ -164,16 +170,12 @@ class RecycleBinService {
         return;
       }
       if (table.startsWith('vehicle_manager_data_v1:')) {
-        final arrayName = table.substring('vehicle_manager_data_v1:'.length);
-        const vehicleKeys = {'vehicles','fuel_logs','expenses','reminders'};
-        if (!vehicleKeys.contains(arrayName)) throw Exception('Unsupported vehicle record type.');
-        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['vehicle_manager_data_v1'], limit: 1);
-        final data = settings.isEmpty ? <String, dynamic>{'vehicles': [], 'fuel_logs': [], 'expenses': [], 'reminders': []} : Map<String, dynamic>.from(jsonDecode(settings.first['setting_value']?.toString() ?? '{}') as Map);
-        final current = (data[arrayName] as List? ?? []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
-        if (current.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A record with this ID already exists.');
-        current.add(record);
-        data[arrayName] = current;
-        await txn.insert('app_settings', {'setting_key':'vehicle_manager_data_v1','setting_value':jsonEncode(data)}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await VehicleService.restoreArchivedRecord(
+          txn,
+          table: table,
+          sourceId: item['source_id'].toString(),
+          record: record,
+        );
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
@@ -188,7 +190,7 @@ class RecycleBinService {
         return;
       }
       if (table == 'partners') {
-        await MyPartnersService.instance.restoreArchivedPartner(
+        await MyPartnersService.restoreArchivedPartner(
           txn,
           record: record,
           relatedPayload: item['related_payload']?.toString(),
@@ -222,26 +224,38 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      const allowed = {'wallets','budgets','recurring_transactions','stock_items','staff'};
-      if (!allowed.contains(table)) throw Exception('Restore for this record type is not available yet.');
-      await txn.insert(table, record);
-      final rawRelated = item['related_payload']?.toString();
-      if (rawRelated != null && rawRelated.isNotEmpty) {
-        final related = (jsonDecode(rawRelated) as List).whereType<Map>();
-        final relatedTable = table == 'stock_items' ? 'stock_movements' : null;
-        if (relatedTable != null) {
-          for (final row in related) {
-            await txn.insert(relatedTable, Map<String, dynamic>.from(row));
-          }
-        } else if (table == 'staff') {
-          for (final row in related) {
-            final restored = Map<String, dynamic>.from(row);
-            final relatedType = restored.remove('_related_table')?.toString() ?? 'staff_attendance';
-            if (!{'staff_salaries','staff_attendance'}.contains(relatedType)) throw Exception('Unsupported staff history record.');
-            await txn.insert(relatedType, restored);
-          }
-        }
+      if (table == 'wallets') {
+        await WalletService.restoreArchivedWallet(txn, record);
+      } else if (table == 'budgets') {
+        await BudgetsService.restoreArchivedBudget(txn, record);
+      } else if (table == 'recurring_transactions') {
+        await RecurringTransactionService.restoreArchivedTransaction(txn, record);
+      } else if (table == 'stock_items') {
+        final raw = item['related_payload']?.toString() ?? '[]';
+        final movements = (jsonDecode(raw) as List)
+            .whereType<Map>()
+            .map((entry) => Map<String, dynamic>.from(entry))
+            .toList();
+        await StockService.restoreArchivedItem(
+          txn,
+          record: record,
+          movements: movements,
+        );
+      } else if (table == 'staff') {
+        final raw = item['related_payload']?.toString() ?? '[]';
+        final history = (jsonDecode(raw) as List)
+            .whereType<Map>()
+            .map((entry) => Map<String, dynamic>.from(entry))
+            .toList();
+        await StaffService.restoreArchivedStaff(
+          txn,
+          record: record,
+          history: history,
+        );
+      } else {
+        throw Exception('Restore for this record type is not available yet.');
       }
+
       await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
     });
     AppRefreshController.notifyChanged();

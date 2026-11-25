@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
+import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/modules/finance/screens/categories_management_screen.dart';
 import 'package:my_finance/modules/finance/screens/transactions_screen.dart';

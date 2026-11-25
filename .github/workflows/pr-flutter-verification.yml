@@ -25,6 +25,41 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Apply repository Android configuration
+        run: python3 .github/scripts/configure_android.py
+      - name: Patch EPUB parser for current image package API
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          cache = Path(os.environ.get("PUB_CACHE", str(Path.home() / ".pub-cache")))
+          candidates = list(cache.glob("hosted/pub.dev/epubx-*/lib/src/readers/book_cover_reader.dart"))
+          candidates += list(cache.glob("hosted/pub.dartlang.org/epubx-*/lib/src/readers/book_cover_reader.dart"))
+          if len(candidates) != 1:
+              raise SystemExit(f"Expected one resolved epubx cover reader, found {len(candidates)}")
+          file = candidates[0]
+          source = file.read_text()
+          old = "images.decodeImage(coverImageContent)"
+          new = "images.decodeImage(Uint8List.fromList(coverImageContent))"
+          if old in source:
+              source = source.replace(old, new)
+              if "import 'dart:typed_data';" not in source:
+                  source = "import 'dart:typed_data';\\n" + source
+              file.write_text(source)
+          elif new not in source:
+              raise SystemExit("Could not find expected epubx cover image decode call")
+          PY
+      - name: Configure temporary release signing
+        run: |
+          set -euo pipefail
+          temp_password="$(openssl rand -hex 24)"
+          keytool -genkeypair -keystore android/app/temporary-test-signing.jks -storepass "$temp_password" -keypass "$temp_password" -alias myfinance-temporary -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=My Finance Temporary Test, OU=Development, O=My Finance, L=Unknown, ST=Unknown, C=PK"
+          {
+            echo "ANDROID_KEYSTORE_PATH=temporary-test-signing.jks"
+            echo "ANDROID_KEYSTORE_PASSWORD=$temp_password"
+            echo "ANDROID_KEY_ALIAS=myfinance-temporary"
+            echo "ANDROID_KEY_PASSWORD=$temp_password"
+          } >> "$GITHUB_ENV"
       - name: Run Flutter tests
         run: flutter test
       - name: Build release APK

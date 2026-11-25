@@ -26,14 +26,8 @@ import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 
 class RecycleBinService {
-  static Future<void> ensureTable() async {
-    await DatabaseManager.instance.database.execute('''CREATE TABLE IF NOT EXISTS recycle_bin (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      entity_type TEXT NOT NULL, entity_title TEXT NOT NULL,
-      source_table TEXT NOT NULL, source_id TEXT NOT NULL,
-      payload TEXT NOT NULL, related_payload TEXT,
-      deleted_at TEXT NOT NULL, expires_at TEXT)''');
-  }
+  static Future<void> ensureTable() =>
+      RecycleBinArchiveService.ensureTable();
 
   static const int retentionDays = RecycleBinArchiveService.retentionDays;
 

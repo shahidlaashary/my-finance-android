@@ -5,6 +5,13 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class StaffService {
+  static Future<List<Map<String, dynamic>>> getWallets() async {
+    return DatabaseManager.instance.database.query(
+      'wallets',
+      orderBy: 'name COLLATE NOCASE ASC',
+    );
+  }
+
   static Future<void> ensureTables() async {
     final db = DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS staff (

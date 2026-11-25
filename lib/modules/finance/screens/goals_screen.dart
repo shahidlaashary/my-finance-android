@@ -1,4 +1,3 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -8,8 +7,8 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
@@ -63,12 +62,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     if (mounted) setState(() => _loading = true);
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
-      // Wallet list shared FinanceDB connection se hasil karte hain.
-      final db = DatabaseManager.instance.database;
-      final wallets = await db.query(
-        'wallets',
-        orderBy: 'name ASC',
-      );
+      final wallets = await WalletService.getWallets(orderBy: 'name ASC');
       final goals = await GoalsService.getGoals();
       final saved = await GoalsService.getTotalSavedByCurrency();
       final target = await GoalsService.getTotalTargetByCurrency();

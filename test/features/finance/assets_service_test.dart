@@ -1828,5 +1828,57 @@ void main() {
     expect(parties.single['id'], replacementId);
   });
 
+  test('updating a loan-funded asset is blocked when repayments do not reconcile', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Asset Update Repayment Reconciliation Party',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(
+        name: 'Asset With Repayment History',
+        price: 500,
+        walletId: 0,
+        paymentType: 'Loan',
+        partyId: partyId,
+      ),
+      const [],
+    );
+    final savedAsset = await assets.getAssetById(assetId);
+    final loanId = savedAsset!.linkedLoanId!;
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 100,
+        walletId: walletId,
+        repaymentDate: '2026-11-21',
+        createdAt: DateTime(2026, 11, 21).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'loans',
+      {'remaining_amount': 350},
+      where: 'id = ?',
+      whereArgs: [loanId],
+    );
 
+    await expectLater(
+      assets.updateAsset(savedAsset.copyWith(currentValue: 450)),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('does not reconcile with its repayment history'),
+      )),
+    );
+
+    final unchangedAsset = await assets.getAssetById(assetId);
+    final unchangedLoan = await LoansService.getLoanById(loanId);
+    expect(unchangedAsset!.currentValue, 500);
+    expect(unchangedLoan!.remainingAmount, 350);
+    expect(await LoansService.getRepayments(loanId), hasLength(1));
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      900,
+    );
+  });
 }

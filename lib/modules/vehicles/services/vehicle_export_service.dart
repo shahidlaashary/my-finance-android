@@ -1,20 +1,21 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:archive/archive.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:my_finance/core/files/file_storage.dart';
+import 'package:my_finance/core/files/local_file_storage.dart';
 
 class VehicleExportService {
   VehicleExportService._();
 
-  static Future<File> _save(String name, List<int> bytes) async {
-    final root = await getApplicationDocumentsDirectory();
-    final dir = Directory(p.join(root.path, 'VehicleReports'));
-    await dir.create(recursive: true);
-    final file = File(p.join(dir.path, name));
-    await file.writeAsBytes(bytes, flush: true);
-    return file;
+  static final FileStorage _fileStorage = LocalFileStorage();
+
+  static Future<String> _save(String name, List<int> bytes) async {
+    final root = await _fileStorage.getApplicationDocumentsPath();
+    final dir = p.join(root, 'VehicleReports');
+    await _fileStorage.createDirectory(dir);
+    final path = p.join(dir, name);
+    await _fileStorage.writeBytes(path: path, bytes: bytes);
+    return path;
   }
 
   static String _cell(dynamic value) => (value ?? '').toString();
@@ -23,7 +24,7 @@ class VehicleExportService {
       .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
       .replaceAll("'", '&apos;');
 
-  static Future<File> exportExcel({
+  static Future<String> exportExcel({
     required List<Map<String, dynamic>> vehicles,
     required List<Map<String, dynamic>> fuel,
     required List<Map<String, dynamic>> expenses,
@@ -103,7 +104,7 @@ class VehicleExportService {
     return _save('vehicle_report_${DateTime.now().millisecondsSinceEpoch}.xlsx', zipped);
   }
 
-  static Future<File> exportPdf({
+  static Future<String> exportPdf({
     required List<Map<String, dynamic>> vehicles,
     required List<Map<String, dynamic>> fuel,
     required List<Map<String, dynamic>> expenses,

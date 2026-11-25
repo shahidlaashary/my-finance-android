@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:my_finance/modules/finance/models/loans_model.dart';
-import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -9,7 +9,7 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 /// The existing loan database and party table are retained without schema changes.
 class PartyService {
   static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     return db.query(
       'loan_parties',
       where: includeArchived ? null : 'COALESCE(is_archived, 0) = 0',
@@ -18,7 +18,7 @@ class PartyService {
   }
 
   static Future<void> setPartyArchived(int partyId, {required bool archived}) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     final changed = await db.update(
       'loan_parties',
       {'is_archived': archived ? 1 : 0},
@@ -49,7 +49,7 @@ class PartyService {
     String referencePerson = '',
     String profileImagePath = '',
   }) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) throw Exception('Party name is required.');
     final normalizedPhone = phone?.trim() ?? '';
@@ -117,7 +117,7 @@ class PartyService {
     String referencePerson = '',
     String profileImagePath = '',
   }) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) throw Exception('Party name is required.');
     final normalizedPhone = phone?.trim() ?? '';
@@ -196,7 +196,7 @@ class PartyService {
 
   /// Party sirf tab delete hoti hai jab us ke sath koi loan linked na ho.
   static Future<void> deleteParty(int partyId) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     await RecycleBinService.ensureTable();
 
     await db.transaction((txn) async {
@@ -244,13 +244,13 @@ class PartyService {
   }
 
   static Future<List<LoansModel>> getLoansForParty(int partyId) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     final rows = await db.query('loans', where: 'party_id = ?', whereArgs: [partyId], orderBy: 'lending_date DESC, id DESC');
     return rows.map(LoansModel.fromMap).toList();
   }
 
   static Future<Map<String, dynamic>> getPartySummary(int partyId) async {
-    final db = await LoansService.database;
+    final db = DatabaseManager.instance.database;
     final rows = await db.rawQuery('''
       SELECT
         UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))) AS currency,

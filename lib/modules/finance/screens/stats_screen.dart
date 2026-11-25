@@ -15,6 +15,7 @@ import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
@@ -125,7 +126,7 @@ class _StatsScreenState extends State<StatsScreen> {
       final budgets = await BudgetsService.getBudgets();
       final goals = await GoalsService.getGoals();
       final loans = await LoansService.getLoans();
-      final wallets = await TransactionsService.getWallets();
+      final wallets = await WalletService.getWallets();
       final balances = await _reports.getBalancesByCurrency();
       final allCurrencies = <String>{
         ...currencies,

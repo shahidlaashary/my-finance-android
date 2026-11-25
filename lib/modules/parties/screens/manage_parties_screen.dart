@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
@@ -175,7 +174,7 @@ class _ManagePartiesState extends State<ManageParties> {
     final openingBalance = TextEditingController(text: (party?['opening_balance'] ?? 0).toString());
     final creditLimit = TextEditingController(text: (party?['credit_limit'] ?? 0).toString());
     final notes = TextEditingController(text: party?['notes']?.toString() ?? '');
-    final baseCurrency = await FinanceDB.instance.getBaseCurrency();
+    final baseCurrency = await PartyService.getBaseCurrency();
     String currency = (party?['currency']?.toString() ?? baseCurrency).toUpperCase();
     String partyType = party?['party_type']?.toString() ?? 'Individual';
     String paymentTerms = party?['payment_terms']?.toString() ?? 'Due on Receipt';

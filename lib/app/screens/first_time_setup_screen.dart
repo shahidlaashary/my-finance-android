@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -91,7 +92,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
 
       // Fresh-install defaults: create only missing standard wallets, all
       // using the base currency selected during first-time setup.
-      final walletDb = FinanceDB.instance.db;
+      final walletDb = DatabaseManager.instance.database;
       await walletDb.transaction((txn) async {
         const defaults = <Map<String, dynamic>>[
           {

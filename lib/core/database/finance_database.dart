@@ -240,11 +240,17 @@ class FinanceDB {
     required int iconCode,
     required bool excludeTotal,
   }) async {
+    final normalizedName = name.trim();
+    final normalizedCurrency = currency.trim().toUpperCase();
+    if (normalizedName.isEmpty || normalizedCurrency.isEmpty ||
+        !openingBalance.isFinite) {
+      throw Exception('Wallet name, currency aur opening balance durust enter karein.');
+    }
     final id = await db.insert('wallets', {
-      'name': name.trim(),
+      'name': normalizedName,
       'type': type,
       'custom_type': customType,
-      'currency': currency,
+      'currency': normalizedCurrency,
       'balance': openingBalance,
       'opening_balance': openingBalance,
       'wallet_number': walletNumber,
@@ -313,7 +319,13 @@ class FinanceDB {
       final currency = (wallet['currency'] as String).toUpperCase();
       final balance = (wallet['balance'] as num).toDouble();
       final rate = await getExchangeRate(currency);
-      if (rate != null) total += balance * rate / baseRate;
+      if (rate == null) {
+        throw Exception(
+          'Exchange rate for $currency is missing. Set or refresh this rate '
+          'before viewing the consolidated wallet balance.',
+        );
+      }
+      total += balance * rate / baseRate;
     }
     return total;
   }
@@ -416,6 +428,12 @@ class FinanceDB {
     required int iconCode,
     required bool excludeTotal,
   }) async {
+    final normalizedName = name.trim();
+    currency = currency.trim().toUpperCase();
+    if (normalizedName.isEmpty || currency.isEmpty ||
+        !requestedCurrentBalance.isFinite) {
+      throw Exception('Wallet name, currency aur current balance durust enter karein.');
+    }
     await db.transaction((txn) async {
       final rows = await txn.query(
         'wallets',
@@ -429,7 +447,7 @@ class FinanceDB {
       }
 
       final oldWallet = rows.first;
-      final oldCurrency = oldWallet['currency'] as String;
+      final oldCurrency = (oldWallet['currency'] as String).trim().toUpperCase();
       final oldBalance = (oldWallet['balance'] as num).toDouble();
       final oldOpening =
           (oldWallet['opening_balance'] as num).toDouble();
@@ -550,6 +568,58 @@ class FinanceDB {
           AND (wallet_id = ? OR to_wallet_id = ?)
         ''', [id, id]);
 
+        // Committee transfer ka amount pehle hi source Transfer query mein convert ho chuka hai.
+        // Is ka balance_delta bhi convert hona zaroori hai warna committee delete par
+        // purana delta wallet balance ko ghalat rollback karega.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET balance_delta = balance_delta * ?
+          WHERE wallet_id = ?
+            AND type = 'Transfer'
+            AND category = 'Committee Transfer'
+            AND balance_delta IS NOT NULL
+        ''', [factor, id]);
+
+        final committeeEntriesTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'committee_entries'",
+        );
+        if (committeeEntriesTable.isNotEmpty) {
+          await txn.rawUpdate('''
+            UPDATE committee_entries
+            SET wallet_amount = wallet_amount * ?,
+                wallet_currency = ?
+            WHERE wallet_id = ?
+          ''', [factor, currency, id]);
+        }
+
+        // Recurring transfer schedules ko currency change ke baad same-currency
+        // rule todne se bachane ke liye block karein. Income/Expense schedules
+        // source wallet ki nayi currency mein convert ho jate hain.
+        final recurringTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+        );
+        if (recurringTable.isNotEmpty) {
+          final linkedRecurringTransfers = await txn.rawQuery('''
+            SELECT id FROM recurring_transactions
+            WHERE LOWER(type) = 'transfer'
+              AND (wallet_id = ? OR to_wallet_id = ?)
+            LIMIT 1
+          ''', [id, id]);
+          if (linkedRecurringTransfers.isNotEmpty) {
+            throw Exception(
+              'Wallet currency cannot be changed while a recurring transfer is linked. '
+              'Update or remove that schedule first.',
+            );
+          }
+          await txn.rawUpdate('''
+            UPDATE recurring_transactions
+            SET amount = amount * ?,
+                transfer_fee = transfer_fee * ?
+            WHERE wallet_id = ?
+              AND LOWER(type) IN ('income', 'expense')
+          ''', [factor, factor, id]);
+        }
+
         // Adjustment amounts convert.
         await txn.rawUpdate('''
           UPDATE transactions
@@ -566,7 +636,7 @@ class FinanceDB {
       await txn.update(
         'wallets',
         {
-          'name': name.trim(),
+          'name': normalizedName,
           'type': type,
           'custom_type': customType,
           'currency': currency,
@@ -606,20 +676,21 @@ class FinanceDB {
     Transaction txn,
     String currency,
   ) async {
-    if (currency == 'PKR') return 1.0;
+    final normalized = currency.trim().toUpperCase();
+    if (normalized == 'PKR') return 1.0;
 
     final rows = await txn.query(
       'exchange_rates',
       columns: ['rate'],
       where: 'currency = ?',
-      whereArgs: [currency],
+      whereArgs: [normalized],
       limit: 1,
     );
 
     if (rows.isEmpty) return null;
 
     final rate = (rows.first['rate'] as num).toDouble();
-    return rate > 0 ? rate : null;
+    return rate.isFinite && rate > 0 ? rate : null;
   }
 
   // ----------------------------------------------------------
@@ -627,6 +698,25 @@ class FinanceDB {
   // ----------------------------------------------------------
 
   Future<void> deleteWallet(int id) async {
+    final recurringTable = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+    );
+    if (recurringTable.isNotEmpty) {
+      final linkedRecurring = await db.query(
+        'recurring_transactions',
+        columns: ['id'],
+        where: 'wallet_id = ? OR to_wallet_id = ?',
+        whereArgs: [id, id],
+        limit: 1,
+      );
+      if (linkedRecurring.isNotEmpty) {
+        throw Exception(
+          'This wallet is linked to a recurring transaction. '
+          'Update or delete that schedule before deleting the wallet.',
+        );
+      }
+    }
+
     final linked = await db.query(
       'transactions',
       columns: ['id'],

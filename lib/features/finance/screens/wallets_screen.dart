@@ -1889,8 +1889,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                     : 'Opening Balance',
                               ),
                               validator: (value) {
-                                if (value == null ||
-                                    double.tryParse(value.trim()) == null) {
+                                final amount = double.tryParse(value?.trim() ?? '');
+                                if (amount == null || !amount.isFinite) {
                                   return 'Enter valid amount';
                                 }
                                 return null;

@@ -1,7 +1,7 @@
 /// Shared file operations used by app-wide services.
 ///
-/// Keep platform-specific filesystem APIs inside the implementation. Paths are
-/// opaque strings to callers and must not be assembled outside this boundary.
+/// Keep native filesystem objects and operations inside the implementation.
+/// Callers may compose child paths, but must not use dart:io directly.
 abstract interface class FileStorage {
   Future<String> getApplicationDocumentsPath();
 

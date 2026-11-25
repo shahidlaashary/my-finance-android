@@ -1,14 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
-import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/modules/finance/services/category_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 /// Central SQLite database for the My Finance application.
 ///
@@ -115,85 +110,16 @@ class FinanceDB {
   // Categories ke functions
   // ----------------------------------------------------------
 
-  List<Map<String, dynamic>> _defaultCategories(String type) {
-    final income = [
-      {'name': 'Salary', 'icon': Icons.account_balance_wallet_outlined.codePoint},
-      {'name': 'Business', 'icon': Icons.business_center_outlined.codePoint},
-      {'name': 'Investment', 'icon': Icons.trending_up_outlined.codePoint},
-      {'name': 'Gift', 'icon': Icons.card_giftcard_outlined.codePoint},
-      {'name': 'Rental Income', 'icon': Icons.home_work_outlined.codePoint},
-      {'name': 'Freelance', 'icon': Icons.laptop_mac_outlined.codePoint},
-      {'name': 'Interest / Profit', 'icon': Icons.savings_outlined.codePoint},
-      {'name': 'Other Income', 'icon': Icons.more_horiz_rounded.codePoint},
-    ];
-    final expense = [
-      {'name': 'Food & Dining', 'icon': Icons.restaurant_outlined.codePoint},
-      {'name': 'Transport', 'icon': Icons.directions_car_outlined.codePoint},
-      {'name': 'Shopping', 'icon': Icons.shopping_bag_outlined.codePoint},
-      {'name': 'Rent / Home', 'icon': Icons.home_outlined.codePoint},
-      {'name': 'Bills & Utilities', 'icon': Icons.receipt_long_outlined.codePoint},
-      {'name': 'Health', 'icon': Icons.health_and_safety_outlined.codePoint},
-      {'name': 'Education', 'icon': Icons.school_outlined.codePoint},
-      {'name': 'Clothing', 'icon': Icons.checkroom_outlined.codePoint},
-      {'name': 'Mobile & Internet', 'icon': Icons.phone_android_outlined.codePoint},
-      {'name': 'Family', 'icon': Icons.people_outline.codePoint},
-      {'name': 'Travel', 'icon': Icons.flight_outlined.codePoint},
-      {'name': 'Entertainment', 'icon': Icons.movie_outlined.codePoint},
-      {'name': 'Charity', 'icon': Icons.volunteer_activism_outlined.codePoint},
-      {'name': 'Other Expense', 'icon': Icons.more_horiz_rounded.codePoint},
-    ];
-    return (type == 'Income' ? income : expense)
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
-  }
-
-  Future<List<Map<String, dynamic>>> getCategories(String type) async {
-    final key = type == 'Income' ? 'income_categories' : 'expense_categories';
-    final rows = await _db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [key],
-      limit: 1,
-    );
-
-    if (rows.isEmpty || (rows.first['setting_value'] as String? ?? '').isEmpty) {
-      final defaults = _defaultCategories(type);
-      await saveCategories(type, defaults);
-      return defaults;
-    }
-
-    try {
-      final decoded = jsonDecode(rows.first['setting_value'] as String);
-      if (decoded is List) {
-        return decoded
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-      }
-    } catch (_) {
-      // Invalid stored data ko safe defaults se replace karna.
-    }
-
-    final defaults = _defaultCategories(type);
-    await saveCategories(type, defaults);
-    return defaults;
+  /// Compatibility facade: category persistence belongs to CategoryService.
+  Future<List<Map<String, dynamic>>> getCategories(String type) {
+    return CategoryService.getCategoryMaps(type);
   }
 
   Future<void> saveCategories(
     String type,
     List<Map<String, dynamic>> categories,
-  ) async {
-    final key = type == 'Income' ? 'income_categories' : 'expense_categories';
-    await _db.insert(
-      'app_settings',
-      {
-        'setting_key': key,
-        'setting_value': jsonEncode(categories),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    AppRefreshController.notifyChanged();
+  ) {
+    return CategoryService.saveCategoryMaps(type, categories);
   }
 
   Future<Map<String, dynamic>?> getWallet(int id) {
@@ -222,156 +148,35 @@ class FinanceDB {
     );
   }
 
-  // ----------------------------------------------------------
-  // Currency rate ke functions
-  // ----------------------------------------------------------
+  // Currency operations are owned by CurrencyService. These forwarding
+  // methods remain only as a compatibility facade for older callers.
+  Future<double?> getExchangeRate(String currency) =>
+      CurrencyService.getExchangeRate(currency);
 
-  Future<double?> getExchangeRate(String currency) async {
-    final normalized = currency.trim().toUpperCase();
-    if (normalized == 'PKR') return 1.0;
-    final rows = await _db.query(
-      'exchange_rates',
-      columns: ['rate'],
-      where: 'UPPER(currency) = ?',
-      whereArgs: [normalized],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    final rate = (rows.first['rate'] as num).toDouble();
-    return rate.isFinite && rate > 0 ? rate : null;
-  }
+  Future<String> getBaseCurrency() => CurrencyService.getBaseCurrency();
 
-  Future<String> getBaseCurrency() async {
-    final rows = await _db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: ['main_currency'],
-      limit: 1,
-    );
-    return (rows.isEmpty ? 'PKR' : rows.first['setting_value']?.toString() ?? 'PKR')
-        .toUpperCase();
-  }
+  Future<void> setBaseCurrency(String currency) =>
+      CurrencyService.setBaseCurrency(currency);
 
-  Future<void> setBaseCurrency(String currency) async {
-    final normalized = currency.trim().toUpperCase();
-    if (normalized.isEmpty) throw Exception('Base currency select karein.');
-    if (normalized != 'PKR' && await getExchangeRate(normalized) == null) {
-      throw Exception('Is currency ka exchange rate pehle set karein.');
-    }
-    await _db.insert(
-      'app_settings',
-      {'setting_key': 'main_currency', 'setting_value': normalized},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    AppRefreshController.notifyChanged();
-  }
+  Future<double> getTotalBalanceInBaseCurrency() =>
+      CurrencyService.getTotalBalanceInBaseCurrency();
 
-  Future<double> getTotalBalanceInBaseCurrency() async {
-    final baseCurrency = await getBaseCurrency();
-    final baseRate = await getExchangeRate(baseCurrency);
-    if (baseRate == null || baseRate <= 0) {
-      throw Exception('Base currency ka exchange rate available nahi.');
-    }
-    final wallets = await _db.query('wallets', where: 'exclude_total = 0');
-    double total = 0;
-    for (final wallet in wallets) {
-      final currency = (wallet['currency'] as String).toUpperCase();
-      final balance = (wallet['balance'] as num).toDouble();
-      final rate = await getExchangeRate(currency);
-      if (rate == null) {
-        throw Exception(
-          'Exchange rate for $currency is missing. Set or refresh this rate '
-          'before viewing the consolidated wallet balance.',
-        );
-      }
-      total += balance * rate / baseRate;
-    }
-    return total;
-  }
-
-  /// Refreshes missing currency rates from the same online provider used by
-  /// the Exchange Rates screen. Existing saved rates are left untouched.
   Future<bool> refreshMissingExchangeRatesOnline({
     required List<String> currencies,
-  }) async {
-    final required = currencies
-        .map((code) => code.trim().toUpperCase())
-        .where((code) => code.isNotEmpty && code != 'PKR')
-        .toSet();
-    if (required.isEmpty) return true;
+  }) =>
+      CurrencyService.refreshMissingExchangeRatesOnline(
+        currencies: currencies,
+      );
 
-    final missing = <String>[];
-    for (final currency in required) {
-      if (await getExchangeRate(currency) == null) missing.add(currency);
-    }
-    if (missing.isEmpty) return true;
-
-    final client = HttpClient()
-      ..connectionTimeout = const Duration(seconds: 15);
-    try {
-      final request = await client
-          .getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))
-          .timeout(const Duration(seconds: 20));
-      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-      final response = await request.close().timeout(const Duration(seconds: 20));
-      if (response.statusCode != HttpStatus.ok) return false;
-      final body = await response.transform(utf8.decoder).join()
-          .timeout(const Duration(seconds: 20));
-      final payload = jsonDecode(body) as Map<String, dynamic>;
-      if (payload['result'] != 'success') return false;
-      final rates = payload['rates'] as Map<String, dynamic>?;
-      if (rates == null) return false;
-
-      var savedAny = false;
-      for (final currency in missing) {
-        final providerRate = rates[currency];
-        if (providerRate is! num || providerRate <= 0) continue;
-        // Provider returns foreign units per PKR; app stores PKR per unit.
-        final pkrPerUnit = 1 / providerRate.toDouble();
-        if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
-        await saveExchangeRate(currency, pkrPerUnit, source: 'automatic');
-        savedAny = true;
-      }
-      for (final currency in missing) {
-        if (await getExchangeRate(currency) == null) return false;
-      }
-      return savedAny || missing.isEmpty;
-    } catch (_) {
-      return false;
-    } finally {
-      client.close(force: true);
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getExchangeRates() {
-    return _db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
-  }
+  Future<List<Map<String, dynamic>>> getExchangeRates() =>
+      CurrencyService.getExchangeRates();
 
   Future<void> saveExchangeRate(
     String currency,
     double rate, {
     String source = 'manual',
-  }) async {
-    final normalized = currency.trim().toUpperCase();
-    if (normalized == 'PKR' || normalized.isEmpty ||
-        !rate.isFinite || rate <= 0) {
-      throw Exception('Exchange rate durust nahi hai.');
-    }
-    final now = DateTime.now().toIso8601String();
-    await _db.transaction((txn) async {
-      await txn.insert(
-        'exchange_rates',
-        {
-          'currency': normalized,
-          'rate': rate,
-          'updated_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    });
-    AppRefreshController.notifyChanged();
-  }
+  }) =>
+      CurrencyService.saveExchangeRate(currency, rate, source: source);
 
   // ----------------------------------------------------------
   // Wallet update karna

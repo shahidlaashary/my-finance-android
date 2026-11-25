@@ -11,6 +11,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/finance/screens/categories_management_screen.dart' show CategoriesPage;
@@ -85,7 +86,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     final defaultDate = await GeneralPreferences.instance.defaultDate;
     final weekStart = await GeneralPreferences.instance.weekStart;
     final savedDate = prefs.getString('general_last_transaction_date');
-    final result = await FinanceDB.instance.getWallets();
+    final result = await WalletService.getWallets();
     final categories = isTransfer
         ? <Map<String, dynamic>>[]
         : await CategoryService.getCategoryMaps('Income');

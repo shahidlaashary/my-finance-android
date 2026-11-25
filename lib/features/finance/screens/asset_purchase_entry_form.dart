@@ -57,7 +57,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
         content: Form(key: key, child: Column(mainAxisSize: MainAxisSize.min, children: [
           TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Party name *'), validator: (v) => v == null || v.trim().isEmpty ? 'Enter party name.' : null),
           TextFormField(controller: phone, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
-          DropdownButtonFormField<String>(isExpanded: true, value: currency, decoration: const InputDecoration(labelText: 'Currency'),
+          DropdownButtonFormField<String>(value: currency, decoration: const InputDecoration(labelText: 'Currency'),
             items: CurrencyCatalog.supported.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
             onChanged: (v) { if (v != null) setDialogState(() => currency = v); }),
         ])),

@@ -253,7 +253,7 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
 
   Widget _buildDateTimeRecurringBox() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).dividerColor),
@@ -267,7 +267,7 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -291,14 +291,14 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
               ),
             ),
           ),
-          Container(width: 1, height: 30, color: Theme.of(context).dividerColor),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
           Expanded(
             flex: 1,
             child: InkWell(
               onTap: _pickTime,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -323,14 +323,14 @@ class _ExpenseEntryFormState extends State<ExpenseEntryForm> {
               ),
             ),
           ),
-          Container(width: 1, height: 30, color: Theme.of(context).dividerColor),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
           Expanded(
             flex: 1,
             child: InkWell(
               onTap: _showRecurringOptions,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [

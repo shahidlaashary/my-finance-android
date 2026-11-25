@@ -217,8 +217,7 @@ class AppTheme {
         contentTextStyle: TextStyle(color: p.text, fontFamily: fontFamily),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: p.surface,
-        surfaceTintColor: Colors.transparent,
+        color: p.surface, surfaceTintColor: Colors.transparent,
         textStyle: TextStyle(color: p.text, fontFamily: fontFamily),
       ),
       drawerTheme: DrawerThemeData(backgroundColor: p.surface),

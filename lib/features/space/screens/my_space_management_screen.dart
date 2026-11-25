@@ -41,7 +41,7 @@ class _ManagementScreenState extends State<ManagementScreen> with SingleTickerPr
     final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, refresh) => AlertDialog(
       title: Text(row == null ? 'Create Label' : 'Edit Label'),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
-        DropdownButtonFormField<int>(isExpanded: true, value: companyId, decoration: const InputDecoration(labelText: 'Company'), items: companies.map((c)=>DropdownMenuItem(value:c['id'] as int,child:Text(c['name'].toString()))).toList(), onChanged:(v){if(v!=null)refresh(()=>companyId=v);}),
+        DropdownButtonFormField<int>(value: companyId, decoration: const InputDecoration(labelText: 'Company'), items: companies.map((c)=>DropdownMenuItem(value:c['id'] as int,child:Text(c['name'].toString()))).toList(), onChanged:(v){if(v!=null)refresh(()=>companyId=v);}),
         const SizedBox(height:12), TextField(controller:name,decoration:const InputDecoration(labelText:'Label Name',border:OutlineInputBorder())),
       ]),
       actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save'))],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/shared/widgets/width_matched_dropdown_form_field.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -254,7 +253,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
 
   Widget _buildDateTimeRecurringBox() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).dividerColor),
@@ -268,7 +267,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -292,14 +291,14 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
               ),
             ),
           ),
-          Container(width: 1, height: 30, color: Theme.of(context).dividerColor),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
           Expanded(
             flex: 1,
             child: InkWell(
               onTap: _pickTime,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -324,14 +323,14 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
               ),
             ),
           ),
-          Container(width: 1, height: 30, color: Theme.of(context).dividerColor),
+          Container(width: 1, height: 34, color: Theme.of(context).dividerColor),
           Expanded(
             flex: 1,
             child: InkWell(
               onTap: _showRecurringOptions,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -397,7 +396,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _destinationWalletField() {
-    return WidthMatchedDropdownFormField<int>(
+    return DropdownButtonFormField<int>(
       value: selectedDestinationWalletId,
       isExpanded: true,
       decoration: decoration(
@@ -442,7 +441,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _categoryField() {
-    return WidthMatchedDropdownFormField<String>(
+    return DropdownButtonFormField<String>(
       value: transactionCategories.any(
         (category) => category['name'] == selectedCategory,
       ) ? selectedCategory : null,

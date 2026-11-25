@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -30,7 +31,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     try {
       final values = await Future.wait<dynamic>([
         InstallmentService.getContracts(),
-        FinanceDB.instance.db.query('wallets', orderBy: 'name'),
+        DatabaseManager.instance.database.query('wallets', orderBy: 'name'),
       ]);
       if (!mounted) return;
       setState(() {

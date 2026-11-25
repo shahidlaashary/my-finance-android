@@ -1,9 +1,8 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'dart:convert';
 
-import 'package:sqflite/sqflite.dart';
 
+import 'package:my_finance/core/settings/app_settings_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -14,14 +13,11 @@ class VehicleService {
   static const String _storageKey = 'vehicle_manager_data_v1';
 
   static Future<Map<String, dynamic>> _read() async {
-    final db = await DatabaseManager.instance.database;
-    final rows = await db.query('app_settings',
-      columns: ['setting_value'], where: 'setting_key = ?',
-      whereArgs: [_storageKey], limit: 1);
-    if (rows.isEmpty) {
+    final saved = await AppSettingsService.get(_storageKey);
+    if (saved == null) {
       return {'vehicles': [], 'fuel_logs': [], 'expenses': [], 'reminders': []};
     }
-    final decoded = jsonDecode(rows.first['setting_value']?.toString() ?? '');
+    final decoded = jsonDecode(saved);
     if (decoded is! Map) throw Exception('Vehicle data format is not valid.');
     final data = Map<String, dynamic>.from(decoded);
     for (final key in ['vehicles', 'fuel_logs', 'expenses', 'reminders']) {
@@ -31,10 +27,7 @@ class VehicleService {
   }
 
   static Future<void> _write(Map<String, dynamic> data) async {
-    final db = await DatabaseManager.instance.database;
-    await db.insert('app_settings',
-      {'setting_key': _storageKey, 'setting_value': jsonEncode(data)},
-      conflictAlgorithm: ConflictAlgorithm.replace);
+    await AppSettingsService.set(_storageKey, jsonEncode(data));
     AppRefreshController.notifyChanged();
   }
 

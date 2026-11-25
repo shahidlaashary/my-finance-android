@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -155,7 +156,7 @@ void main() {
   test('converts committee rollback delta and linked entry wallet amount', () async {
     final id = await wallet('USD', 'USD', 100);
     await setRate('USD', 280);
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.execute('''
       CREATE TABLE committee_entries (
         id INTEGER PRIMARY KEY,

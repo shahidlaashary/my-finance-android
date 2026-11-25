@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class _RecurringTransactionsScreenState
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
       // Wallets ke liye app ka central database connection istemal karte hain.
-      final db = FinanceDB.instance.db;
+      final db = DatabaseManager.instance.database;
 
       final wallets = await db.query(
         'wallets',

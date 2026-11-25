@@ -44,9 +44,7 @@ void main() {
   });
 
   tearDown(() async {
-    await TransactionsService.closeDatabase();
-    await LoansService.closeDatabase();
-    await FinanceDB.instance.close();
+    await DatabaseManager.instance.close();
     if (await databaseDirectory.exists()) {
       await databaseDirectory.delete(recursive: true);
     }

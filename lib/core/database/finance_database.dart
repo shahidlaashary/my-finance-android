@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart' as p;
 
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -17,42 +17,22 @@ class FinanceDB {
 
   static final FinanceDB instance = FinanceDB._();
 
-  Database? _database;
-
+  /// Initializes the shared finance database connection. FinanceDB keeps
+  /// ownership of the fresh-install schema while DatabaseManager owns the
+  /// single connection lifecycle used by all finance modules.
   Future<void> init() async {
-    if (_database != null) return;
-
-    final databasePath = await getDatabasesPath();
-    final fullPath = p.join(databasePath, 'my_finance.db');
-
-    // Fresh database: koi migration ya old-data conversion nahi.
-    _database = await openDatabase(
-      fullPath,
-      version: 1,
-      onCreate: _createDatabase,
-    );
+    await DatabaseManager.instance.initialize(onCreate: _createDatabase);
   }
 
-  Database get db {
-    if (_database == null) {
-      throw StateError('Database initialize nahi hua.');
-    }
-    return _database!;
-  }
+  /// Compatibility facade for existing FinanceDB repository methods.
+  /// Modules should migrate to DatabaseManager directly in subsequent steps.
+  Database get db => DatabaseManager.instance.database;
 
   // Database band karke restore ke baad dobara kholne ke liye.
-  Future<void> close() async {
-    final currentDatabase = _database;
-    _database = null;
-    if (currentDatabase != null && currentDatabase.isOpen) {
-      await currentDatabase.close();
-    }
-  }
+  Future<void> close() => DatabaseManager.instance.close();
 
   // Restore ke baad naya database connection shuru karta hai.
-  Future<void> reopen() async {
-    await init();
-  }
+  Future<void> reopen() => init();
 
   Future<void> _createDatabase(Database db, int version) async {
     // Wallets ka table.

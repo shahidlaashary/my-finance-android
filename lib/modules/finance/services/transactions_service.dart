@@ -1,50 +1,15 @@
-import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class TransactionsService {
 
-  // Restore se pehle is service ka database connection band karta hai.
-  static Future<void> closeDatabase() async {
-    final currentDatabase = _database;
-    _database = null;
-    _databaseFuture = null;
-    if (currentDatabase != null && currentDatabase.isOpen) {
-      await currentDatabase.close();
-    }
-  }
-  static Database? _database;
-  static Future<Database>? _databaseFuture;
+  // Shared connection is closed centrally by DatabaseManager.
+  static Future<void> closeDatabase() => DatabaseManager.instance.close();
 
-  static String _normalizeType(String type) {
-    switch (type.trim().toLowerCase()) {
-      case 'income': return 'Income';
-      case 'expense': return 'Expense';
-      case 'transfer': return 'Transfer';
-      default: throw Exception('Unknown transaction type: $type');
-    }
-  }
-
-  static Future<Database> get database async {
-    if (_database != null && _database!.isOpen) return _database!;
-    if (_databaseFuture != null) return _databaseFuture!;
-    final future = _openDatabase();
-    _databaseFuture = future;
-    try {
-      _database = await future;
-      return _database!;
-    } finally {
-      _databaseFuture = null;
-    }
-  }
-
-  static Future<Database> _openDatabase() async {
-    final path = await getDatabasesPath();
-    return openDatabase(p.join(path, 'my_finance.db'));
-  }
-
-
+  static Future<Database> get database async =>
+      DatabaseManager.instance.database;
 
   static Future<void> _changeBalance(Transaction txn, int walletId, double change) async {
     final changed = await txn.rawUpdate(

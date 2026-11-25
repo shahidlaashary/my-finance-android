@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
@@ -89,16 +89,16 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
         return;
       }
 
-      var loanRate = await FinanceDB.instance.getExchangeRate(loanCurrency);
-      var walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+      var loanRate = await CurrencyService.getExchangeRate(loanCurrency);
+      var walletRate = await CurrencyService.getExchangeRate(walletCurrency);
 
       // Reuse the Exchange Rates module's provider and save any missing rates.
       if (loanRate == null || walletRate == null) {
-        await FinanceDB.instance.refreshMissingExchangeRatesOnline(
+        await CurrencyService.refreshMissingExchangeRatesOnline(
           currencies: [loanCurrency, walletCurrency],
         );
-        loanRate = await FinanceDB.instance.getExchangeRate(loanCurrency);
-        walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+        loanRate = await CurrencyService.getExchangeRate(loanCurrency);
+        walletRate = await CurrencyService.getExchangeRate(walletCurrency);
       }
 
       if (mounted) setState(() { _loanRate = loanRate; _walletRate = walletRate; });

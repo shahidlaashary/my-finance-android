@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 /// Owns category persistence through the application's shared DatabaseManager connection.
 ///
@@ -222,7 +222,7 @@ class CategoryService {
     if (index < 0 || index >= items.length) return 0;
 
     final removed = items[index];
-    await RecycleBinService.archive(type: 'Category', title: removed.name,
+    await RecycleBinArchiveService.archive(type: 'Category', title: removed.name,
       table: normalizedType == 'Income' ? 'income_categories' : 'expense_categories',
       id: id, record: {'name': removed.name, 'icon': int.tryParse(removed.icon) ?? 0, '_index': index});
     items.removeAt(index);

@@ -1,4 +1,8 @@
-import 'package:my_finance/core/database/finance_database.dart';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -8,6 +12,49 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 /// manager, transaction forms, budgets and recurring transactions.
 class CategoryService {
   CategoryService._();
+
+  static List<Map<String, dynamic>> _defaultCategories(String type) {
+    final income = [
+      {'name': 'Salary', 'icon': Icons.account_balance_wallet_outlined.codePoint},
+      {'name': 'Business', 'icon': Icons.business_center_outlined.codePoint},
+      {'name': 'Investment', 'icon': Icons.trending_up_outlined.codePoint},
+      {'name': 'Gift', 'icon': Icons.card_giftcard_outlined.codePoint},
+      {'name': 'Rental Income', 'icon': Icons.home_work_outlined.codePoint},
+      {'name': 'Freelance', 'icon': Icons.laptop_mac_outlined.codePoint},
+      {'name': 'Interest / Profit', 'icon': Icons.savings_outlined.codePoint},
+      {'name': 'Other Income', 'icon': Icons.more_horiz_rounded.codePoint},
+    ];
+    final expense = [
+      {'name': 'Food & Dining', 'icon': Icons.restaurant_outlined.codePoint},
+      {'name': 'Transport', 'icon': Icons.directions_car_outlined.codePoint},
+      {'name': 'Shopping', 'icon': Icons.shopping_bag_outlined.codePoint},
+      {'name': 'Rent / Home', 'icon': Icons.home_outlined.codePoint},
+      {'name': 'Bills & Utilities', 'icon': Icons.receipt_long_outlined.codePoint},
+      {'name': 'Health', 'icon': Icons.health_and_safety_outlined.codePoint},
+      {'name': 'Education', 'icon': Icons.school_outlined.codePoint},
+      {'name': 'Clothing', 'icon': Icons.checkroom_outlined.codePoint},
+      {'name': 'Mobile & Internet', 'icon': Icons.phone_android_outlined.codePoint},
+      {'name': 'Family', 'icon': Icons.people_outline.codePoint},
+      {'name': 'Travel', 'icon': Icons.flight_outlined.codePoint},
+      {'name': 'Entertainment', 'icon': Icons.movie_outlined.codePoint},
+      {'name': 'Charity', 'icon': Icons.volunteer_activism_outlined.codePoint},
+      {'name': 'Other Expense', 'icon': Icons.more_horiz_rounded.codePoint},
+    ];
+    return (type == 'Income' ? income : expense)
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  static Future<void> _saveMaps(
+    String key,
+    List<Map<String, dynamic>> values,
+  ) async {
+    await DatabaseManager.instance.database.insert(
+      'app_settings',
+      {'setting_key': key, 'setting_value': jsonEncode(values)},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
 
   static String _normalizedType(String type) {
     final normalized = type.trim().toLowerCase();
@@ -23,7 +70,40 @@ class CategoryService {
     if (parentId != null) return [];
 
     final normalizedType = _normalizedType(type);
-    final stored = await FinanceDB.instance.getCategories(normalizedType);
+    final key = normalizedType == 'Income'
+        ? 'income_categories'
+        : 'expense_categories';
+    final db = DatabaseManager.instance.database;
+    final rows = await db.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+
+    List<Map<String, dynamic>> stored;
+    final raw = rows.isEmpty ? null : rows.first['setting_value']?.toString();
+    if (raw == null || raw.isEmpty) {
+      stored = _defaultCategories(normalizedType);
+      await _saveMaps(key, stored);
+    } else {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          stored = decoded
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList();
+        } else {
+          stored = _defaultCategories(normalizedType);
+          await _saveMaps(key, stored);
+        }
+      } catch (_) {
+        stored = _defaultCategories(normalizedType);
+        await _saveMaps(key, stored);
+      }
+    }
 
     return stored.asMap().entries.map((entry) {
       final value = entry.value;
@@ -53,7 +133,10 @@ class CategoryService {
       };
     }).toList();
 
-    await FinanceDB.instance.saveCategories(normalizedType, values);
+    final key = normalizedType == 'Income'
+        ? 'income_categories'
+        : 'expense_categories';
+    await _saveMaps(key, values);
   }
 
   static Future<int> addCategory(FinanceCategory category) async {

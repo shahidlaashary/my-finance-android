@@ -1062,4 +1062,21 @@ class LoansService {
         return;
   }
 
+  static Future<void> _applyWalletDelta(
+    Transaction txn, {
+    required int walletId,
+    required double amount,
+  }) async {
+    if (!amount.isFinite) {
+      throw Exception('Wallet balance change must be a valid number.');
+    }
+    final changed = await txn.rawUpdate(
+      'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+      [amount, walletId],
+    );
+    if (changed != 1) {
+      throw Exception('The linked wallet no longer exists. Restore the wallet first.');
+    }
+  }
+
 }

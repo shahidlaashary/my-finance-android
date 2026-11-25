@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 
@@ -17,7 +17,6 @@ class ExchangeRatesScreen extends StatefulWidget {
 
 class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   static final List<String> _currencies = CurrencyCatalog.supported.where((code) => code != 'PKR').toList();
-  final FinanceDB _database = FinanceDB.instance;
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];
   bool _loading = true;
@@ -57,7 +56,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
   Future<void> _loadData({bool autoUpdateIfStale = false}) async {
     try {
-      final rates = await _database.getExchangeRates();
+      final rates = await CurrencyService.getExchangeRates();
       if (!mounted) return;
       setState(() {
         _rates = rates;
@@ -132,7 +131,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         // App ko 1 foreign currency ki PKR value chahiye.
         final pkrPerUnit = 1 / rawRate.toDouble();
         if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
-        await _database.saveExchangeRate(
+        await CurrencyService.saveExchangeRate(
           currency,
           pkrPerUnit,
           source: 'automatic',
@@ -196,7 +195,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     controller.dispose();
     if (value == null) return;
     try {
-      await _database.saveExchangeRate(currency, value);
+      await CurrencyService.saveExchangeRate(currency, value);
       await _loadData();
       if (!mounted) return;
       setState(() {

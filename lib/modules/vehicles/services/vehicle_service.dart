@@ -290,7 +290,7 @@ class VehicleService {
       await _write(data);
       return id;
     } catch (_) {
-      await TransactionsService.deleteTransaction(txId);
+      await _deleteExpenseTransaction(txId);
       rethrow;
     }
   }

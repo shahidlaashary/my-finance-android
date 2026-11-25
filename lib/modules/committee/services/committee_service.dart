@@ -4,7 +4,7 @@ import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 /// Committee funds are maintained in a private ledger. Personal wallets are
 /// touched only when the user explicitly chooses one for an installment/payout.
@@ -279,7 +279,7 @@ class CommitteeService {
     final txIds = entries.map((e) => e['transaction_id']).whereType<int>().toList();
     final finance = txIds.isEmpty ? <Map<String,Object?>>[] :
       await db.query('transactions', where: 'id IN (${List.filled(txIds.length, '?').join(',')})', whereArgs: txIds);
-    await RecycleBinService.archive(
+    await RecycleBinArchiveService.archive(
       type: 'Committee', title: committee['name']?.toString() ?? 'Committee',
       table: 'committees', id: committeeId, record: committee,
       related: [

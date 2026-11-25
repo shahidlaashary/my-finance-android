@@ -1,3 +1,4 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'dart:convert';
@@ -444,4 +445,43 @@ class VehicleService {
     data['reminders'] = rows.where((e) => e['id'] != id).toList();
     await _write(data);
   }
+  static Future<void> restoreArchivedRecord(
+    Transaction txn, {
+    required String table,
+    required String sourceId,
+    required Map<String, dynamic> record,
+  }) async {
+    const allowed = {'vehicles', 'fuel_logs', 'expenses', 'reminders'};
+    const prefix = 'vehicle_manager_data_v1:';
+    if (!table.startsWith(prefix)) {
+      throw ArgumentError.value(table, 'table');
+    }
+    final arrayName = table.substring(prefix.length);
+    if (!allowed.contains(arrayName)) {
+      throw Exception('Unsupported vehicle record type.');
+    }
+    final settings = await txn.query('app_settings',
+      columns: ['setting_value'], where: 'setting_key = ?',
+      whereArgs: [_storageKey], limit: 1);
+    final data = settings.isEmpty
+        ? <String, dynamic>{
+            'vehicles': [], 'fuel_logs': [], 'expenses': [], 'reminders': []
+          }
+        : Map<String, dynamic>.from(
+            jsonDecode(settings.first['setting_value']?.toString() ?? '{}') as Map);
+    final current = (data[arrayName] as List? ?? [])
+        .whereType<Map>()
+        .map((entry) => Map<String, dynamic>.from(entry))
+        .toList();
+    if (current.any((entry) => entry['id'].toString() == sourceId)) {
+      throw Exception('A record with this ID already exists.');
+    }
+    current.add(record);
+    data[arrayName] = current;
+    await txn.insert('app_settings', {
+      'setting_key': _storageKey,
+      'setting_value': jsonEncode(data),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
 }

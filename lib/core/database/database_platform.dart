@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'package:my_finance/core/platform/platform_info.dart';
 
 /// Selects the SQLite implementation before the app opens its database.
 ///
@@ -10,12 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// Windows, macOS and Linux use the FFI implementation and store the
 /// database under the app's writable Application Support directory.
 Future<void> initializeDatabasePlatform() async {
-  final platform = defaultTargetPlatform;
-  final useDesktopFfi = platform == TargetPlatform.windows ||
-      platform == TargetPlatform.macOS ||
-      platform == TargetPlatform.linux;
-
-  if (useDesktopFfi) {
+  if (PlatformInfo.current.isDesktop) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 

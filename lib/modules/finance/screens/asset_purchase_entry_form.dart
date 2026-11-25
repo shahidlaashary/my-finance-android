@@ -7,7 +7,6 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
-import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 
 class AssetPurchaseEntryForm extends StatefulWidget {

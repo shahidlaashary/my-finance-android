@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';

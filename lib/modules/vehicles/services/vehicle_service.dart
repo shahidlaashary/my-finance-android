@@ -1,4 +1,5 @@
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
@@ -60,9 +61,15 @@ class VehicleService {
   static Future<List<Map<String, dynamic>>> getExpenses({int? vehicleId}) => _getRows('expenses', vehicleId);
   static Future<List<Map<String, dynamic>>> getReminders({int? vehicleId}) => _getRows('reminders', vehicleId);
   static Future<List<Map<String, dynamic>>> getWallets() async {
-    final db = await DatabaseManager.instance.database;
-    return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
-      orderBy: 'name COLLATE NOCASE ASC');
+    final wallets = await WalletService.getWallets();
+    return wallets
+        .map((wallet) => {
+              'id': wallet['id'],
+              'name': wallet['name'],
+              'currency': wallet['currency'],
+              'balance': wallet['balance'],
+            })
+        .toList();
   }
 
   static Future<int> _createExpenseTransaction({

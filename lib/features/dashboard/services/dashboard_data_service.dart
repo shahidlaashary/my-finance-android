@@ -1,5 +1,5 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/core/settings/app_settings_service.dart';
 
 /// Dashboard-specific read models and alert state persisted in my_finance.db.
 class DashboardDataService {
@@ -51,29 +51,17 @@ class DashboardDataService {
   }
 
   static Future<int> getBudgetAlertLevel(int budgetId) async {
-    final rows = await _db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: ['budget_alert_level_$budgetId'],
-      limit: 1,
-    );
-    return rows.isEmpty
-        ? 0
-        : int.tryParse(rows.first['setting_value']?.toString() ?? '0') ?? 0;
+    final saved = await AppSettingsService.get('budget_alert_level_$budgetId');
+    return int.tryParse(saved ?? '0') ?? 0;
   }
 
   static Future<void> saveBudgetAlertLevel(
     int budgetId,
     int level,
   ) async {
-    await _db.insert(
-      'app_settings',
-      {
-        'setting_key': 'budget_alert_level_$budgetId',
-        'setting_value': level.toString(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
+    await AppSettingsService.set(
+      'budget_alert_level_$budgetId',
+      level.toString(),
     );
   }
 }

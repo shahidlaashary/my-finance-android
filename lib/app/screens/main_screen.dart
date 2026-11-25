@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
-import 'package:my_finance/features/dashboard/home_screen.dart' show HomePage;
+import 'package:my_finance/features/dashboard/screens/home_screen.dart' show HomePage;
 import 'package:my_finance/modules/finance/screens/assets_screen.dart';
 import 'package:my_finance/modules/finance/screens/budgets_screen.dart';
 import 'package:my_finance/modules/finance/screens/goals_screen.dart';

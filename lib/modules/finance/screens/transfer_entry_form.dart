@@ -9,7 +9,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/finance/screens/categories_management_screen.dart' show CategoriesPage;
@@ -87,7 +87,7 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
     final result = await FinanceDB.instance.getWallets();
     final categories = isTransfer
         ? <Map<String, dynamic>>[]
-        : await FinanceDB.instance.getCategories('Transfer');
+        : await CategoryService.getCategoryMaps('Expense');
 
     if (!mounted) return;
 
@@ -420,8 +420,8 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
     );
 
     if (!mounted) return;
-    final categories = await FinanceDB.instance.getCategories(
-      'Transfer',
+    final categories = await CategoryService.getCategoryMaps(
+      'Expense',
     );
     if (!mounted) return;
 

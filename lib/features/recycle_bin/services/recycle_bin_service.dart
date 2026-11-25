@@ -375,6 +375,25 @@ class RecycleBinService {
         }
         final walletId = (record['wallet_id'] as num?)?.toInt() ?? 0;
         final walletDeltas = <int, double>{};
+        Future<void> validateWalletCurrency(int id, String expectedCurrency) async {
+          final walletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [id],
+            limit: 1,
+          );
+          if (walletRows.isEmpty) {
+            throw Exception('A linked Asset wallet no longer exists. Restore the wallet first.');
+          }
+          final currentCurrency =
+              (walletRows.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+          if (currentCurrency != expectedCurrency.trim().toUpperCase()) {
+            throw Exception(
+              'An Asset wallet currency has changed. Correct the wallet currency before restoring this Asset.',
+            );
+          }
+        }
         void addWalletDelta(int id, double delta) {
           if (id <= 0 || !delta.isFinite) {
             throw Exception('The archived Asset contains invalid wallet accounting details.');
@@ -390,6 +409,10 @@ class RecycleBinService {
           if (!purchase.isFinite || purchase <= 0 || walletId <= 0) {
             throw Exception('The archived Asset purchase amount or wallet is invalid.');
           }
+          await validateWalletCurrency(
+            walletId,
+            (record['currency']?.toString() ?? 'PKR'),
+          );
           addWalletDelta(walletId, -purchase);
         }
         if ((record['is_sold'] as num?)?.toInt() == 1 &&
@@ -404,6 +427,11 @@ class RecycleBinService {
               saleWalletAmount < 0) {
             throw Exception('The archived Asset sale wallet details are invalid.');
           }
+          await validateWalletCurrency(
+            saleWalletId,
+            (record['sale_wallet_currency']?.toString() ??
+                record['currency']?.toString() ?? 'PKR'),
+          );
           addWalletDelta(saleWalletId, saleWalletAmount);
         }
         // Restore the linked purchase/sale loans and their repayment history

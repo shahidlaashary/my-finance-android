@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
-import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
@@ -68,11 +67,6 @@ class CommitteeService {
       LEFT JOIN wallets w ON w.id=e.wallet_id
       WHERE e.committee_id=? ORDER BY e.entry_date DESC, e.id DESC
     ''', [committeeId]);
-  }
-
-  /// Wallet records are owned by WalletService; Committee owns its ledger.
-  static Future<List<Map<String, dynamic>>> getWallets() {
-    return WalletService.getWallets();
   }
 
   static Future<int> createCommittee({

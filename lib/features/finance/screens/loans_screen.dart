@@ -1855,7 +1855,29 @@ class _ManagePartiesState extends State<ManageParties> {
         }
         await _loadParties();
       } catch (error) {
-        if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Could not save party: $error')));
+        if (mounted) {
+          final message = error.toString();
+          if (message.toLowerCase().contains('already exists under')) {
+            await showDialog<void>(
+              context: this.context,
+              builder: (dialogContext) => AlertDialog(
+                icon: const Icon(Icons.error_outline_rounded),
+                title: const Text('Party Already Exists'),
+                content: Text(message.replaceFirst('Exception: ', '')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(this.context).showSnackBar(
+              SnackBar(content: Text('Could not save party: $error')),
+            );
+          }
+        }
       }
     }
     for (final c in [name, phone, email, cnic, referencePerson, country, city, address, postalCode, openingBalance, creditLimit, notes]) {

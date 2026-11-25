@@ -132,6 +132,21 @@ class RecycleBinService {
           record: record,
           relatedPayload: item['related_payload']?.toString(),
         );
+        final linkedRaw = item['related_payload']?.toString();
+        if (linkedRaw != null && linkedRaw.isNotEmpty) {
+          final snapshots = (jsonDecode(linkedRaw) as List).whereType<Map>();
+          for (final snapshot in snapshots) {
+            final loan = snapshot['loan'];
+            if (loan is! Map) continue;
+            final loanId = (loan['id'] as num?)?.toInt();
+            if (loanId == null) continue;
+            await txn.delete(
+              'recycle_bin',
+              where: "source_table = 'loans' AND source_id = ?",
+              whereArgs: [loanId.toString()],
+            );
+          }
+        }
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }

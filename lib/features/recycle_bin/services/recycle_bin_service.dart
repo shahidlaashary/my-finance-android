@@ -5,7 +5,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:sqflite/sqflite.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';

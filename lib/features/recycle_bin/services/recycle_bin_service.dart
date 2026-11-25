@@ -10,6 +10,7 @@ import 'package:my_finance/modules/partners/services/my_partners_service.dart';
 import 'package:my_finance/modules/committee/services/committee_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -34,22 +35,21 @@ class RecycleBinService {
       deleted_at TEXT NOT NULL, expires_at TEXT)''');
   }
 
-  static const int retentionDays = 30;
-
+  static const int retentionDays = RecycleBinArchiveService.retentionDays;
 
   static Future<int> archive({
     required String type, required String title, required String table,
     required Object id, required Map<String, dynamic> record,
     List<Map<String, dynamic>> related = const [],
-  }) async {
-    await ensureTable();
-    return DatabaseManager.instance.database.insert('recycle_bin', {
-      'entity_type': type, 'entity_title': title, 'source_table': table,
-      'source_id': id.toString(), 'payload': jsonEncode(record),
-      'related_payload': related.isEmpty ? null : jsonEncode(related),
-      'deleted_at': DateTime.now().toIso8601String(),
-      'expires_at': DateTime.now().add(const Duration(days: retentionDays)).toIso8601String(),
-    });
+  }) {
+    return RecycleBinArchiveService.archive(
+      type: type,
+      title: title,
+      table: table,
+      id: id,
+      record: record,
+      related: related,
+    );
   }
 
   static Future<List<Map<String, dynamic>>> getItems() async {

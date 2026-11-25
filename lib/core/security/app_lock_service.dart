@@ -1,4 +1,4 @@
-import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/core/settings/app_settings_service.dart';
 import 'dart:convert';
 import 'dart:math';
 
@@ -6,7 +6,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:sqflite/sqflite.dart';
 
 
 class AppLockService {
@@ -30,23 +29,11 @@ class AppLockService {
   static const int _maxFailedAttempts = 5;
   static const int _lockoutSeconds = 30;
 
-  static Future<String?> _getSetting(String key) async {
-    final rows = await DatabaseManager.instance.database.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: [key],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : rows.first['setting_value']?.toString();
-  }
+  static Future<String?> _getSetting(String key) =>
+      AppSettingsService.get(key);
 
   static Future<void> _saveSetting(String key, String value) async {
-    await DatabaseManager.instance.database.insert(
-      'app_settings',
-      {'setting_key': key, 'setting_value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await AppSettingsService.set(key, value);
     revision.value++;
   }
 

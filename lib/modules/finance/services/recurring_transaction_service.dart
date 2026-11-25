@@ -5,9 +5,6 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class RecurringTransactionService {
 
-  // Shared connection is closed centrally by DatabaseManager.
-  static Future<void> closeDatabase() => DatabaseManager.instance.close();
-
   final List<String> lastProcessingErrors = [];
 
   Future<Database> get _database async {

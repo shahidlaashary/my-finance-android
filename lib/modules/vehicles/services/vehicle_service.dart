@@ -1,6 +1,5 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
-import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'dart:convert';
 
 
@@ -55,18 +54,6 @@ class VehicleService {
   static Future<List<Map<String, dynamic>>> getFuelLogs({int? vehicleId}) => _getRows('fuel_logs', vehicleId);
   static Future<List<Map<String, dynamic>>> getExpenses({int? vehicleId}) => _getRows('expenses', vehicleId);
   static Future<List<Map<String, dynamic>>> getReminders({int? vehicleId}) => _getRows('reminders', vehicleId);
-  static Future<List<Map<String, dynamic>>> getWallets() async {
-    final wallets = await WalletService.getWallets();
-    return wallets
-        .map((wallet) => {
-              'id': wallet['id'],
-              'name': wallet['name'],
-              'currency': wallet['currency'],
-              'balance': wallet['balance'],
-            })
-        .toList();
-  }
-
   static Future<int> _createExpenseTransaction({
     required double amount,
     required int walletId,

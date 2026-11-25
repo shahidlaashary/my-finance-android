@@ -245,24 +245,15 @@ class LoansService {
     final id = await db.transaction((txn) async {
       final existing = await txn.query(
         'loan_parties',
-        columns: ['id', 'currency'],
-        where: normalizedPhone.isEmpty
-            ? "LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ''"
-            : "LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ?",
-        whereArgs: normalizedPhone.isEmpty
-            ? [normalizedName]
-            : [normalizedName, normalizedPhone],
+        columns: ['id'],
+        where: 'LOWER(TRIM(name)) = LOWER(?) AND LOWER(TRIM(party_type)) = LOWER(?)',
+        whereArgs: [normalizedName, partyType.trim()],
         limit: 1,
       );
       if (existing.isNotEmpty) {
-        final existingCurrency =
-            (existing.first['currency']?.toString() ?? 'PKR').toUpperCase();
-        if (existingCurrency != normalizedCurrency) {
-          throw Exception(
-            'A party with this name and phone already exists in $existingCurrency. Edit that party to change its currency.',
-          );
-        }
-        return (existing.first['id'] as num).toInt();
+        throw Exception(
+          'A party with this name already exists under $partyType type.',
+        );
       }
 
       return txn.insert('loan_parties', {
@@ -349,12 +340,14 @@ class LoansService {
       final duplicate = await txn.query(
         'loan_parties',
         columns: ['id'],
-        where: "id != ? AND LOWER(TRIM(name)) = LOWER(?) AND COALESCE(phone, '') = ?",
-        whereArgs: [id, normalizedName, normalizedPhone],
+        where: 'id != ? AND LOWER(TRIM(name)) = LOWER(?) AND LOWER(TRIM(party_type)) = LOWER(?)',
+        whereArgs: [id, normalizedName, partyType.trim()],
         limit: 1,
       );
       if (duplicate.isNotEmpty) {
-        throw Exception('A party with this name and phone number already exists.');
+        throw Exception(
+          'A party with this name already exists under $partyType type.',
+        );
       }
 
       final changed = await txn.update(

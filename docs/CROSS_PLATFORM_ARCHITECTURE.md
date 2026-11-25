@@ -2,30 +2,51 @@
 
 ## Goal
 
-Maintain one Flutter application and one shared feature codebase for Android,
-iOS, Windows and macOS. Linux remains a useful development target where the
+Maintain one Flutter application and one shared codebase for Android, iOS,
+Windows and macOS. Linux remains a useful development target where the
 required plugins support it. Platform folders and build workflows are enabled
 only when their native toolchains and plugin support are verified.
 
-## Current architectural layers
+## Application layers
 
-- `lib/app/`: application composition, navigation and responsive layout. The entry point is now a thin bootstrap that initializes startup services and composes the root app; navigation and feature screens live in their respective app and feature modules.
-- `lib/core/`: infrastructure shared by multiple features (database,
-  platform capabilities, files, security, notifications, startup and theme).
-- `lib/features/`: feature-owned screens, models and services.
+- `lib/app/`: application composition, navigation and responsive layout.
+- `lib/core/`: infrastructure shared by multiple modules and features,
+  including database, platform capabilities, files, security, notifications,
+  startup and theme.
+- `lib/modules/`: independent business/domain areas. Each module owns its
+  screens, models and services where applicable.
+- `lib/features/`: app-wide capabilities shared across domain modules.
 - `lib/shared/`: reusable UI, common models and utilities.
 
-## Target feature layout
+## Domain modules
 
-Each feature owns its presentation, domain models and application services.
-As a feature grows, split it into `presentation/`, `domain/` and
-`data/` only when that separation is useful; do not create empty layers.
+The current module structure is:
 
-- `features/finance/`
-- `features/vehicles/`
-- `features/space/screens/space_documents_screen.dart` and `features/space/services/space_documents_service.dart`
+- `modules/finance/` — wallets, transactions, assets, loans, budgets, goals,
+  reports, categories, recurring transactions and exchange rates.
+- `modules/parties/` — centralized party management and records reusable by
+  Finance, Installments, Committee, Staff, Stock, Vehicles and future modules.
+- `modules/committee/`
+- `modules/installments/`
+- `modules/partners/`
+- `modules/space/`
+- `modules/staff/`
+- `modules/stock/`
+- `modules/vehicles/`
+
+A shared domain record should have one authoritative owner. Modules that need
+party data should use the Parties module rather than maintaining duplicate
+party databases or management screens.
+
+## App-wide features
+
+- `features/dashboard/`
 - `features/backup_restore/`
-- future approved modules: `inventory/`, `business/` and `employees/`
+- `features/notifications/`
+- `features/recycle_bin/`
+- `features/search/`
+- `features/security/`
+- `features/settings/`
 
 ## Platform boundaries
 
@@ -37,14 +58,14 @@ As a feature grows, split it into `presentation/`, `domain/` and
   behind services so feature screens do not own plugin-specific behavior.
 - Prefer Flutter's cross-platform APIs and conditional imports when a native
   implementation is genuinely required.
-- Do not scatter `dart:io Platform` checks through shared UI or feature logic.
+- Do not scatter `dart:io Platform` checks through shared UI or domain logic.
 
 ## Responsive application
 
 Use the shared breakpoints in `app/responsive/`. Mobile keeps the existing
 navigation and interaction model. Tablet and desktop can progressively adopt
 wider content constraints, adaptive navigation, keyboard/mouse support and
-resizable-window layouts without duplicating feature logic.
+resizable-window layouts without duplicating module logic.
 
 ## Native projects and builds
 
@@ -78,8 +99,7 @@ preserved unless the product owner explicitly requests otherwise.
 
 1. Audit plugin/platform compatibility and current platform-specific code.
 2. Add shared platform, database and responsive foundations.
-3. Move startup, database, file, security and notification responsibilities
-   out of feature screens and the large entry-point file incrementally.
+3. Keep app-wide features separate from business/domain modules.
 4. Add native platform projects and dedicated build workflows.
 5. Test Android regression first, then validate each additional platform on
    its supported native toolchain.

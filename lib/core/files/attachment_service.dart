@@ -43,9 +43,6 @@ class AttachmentOwnerTypes {
 class AttachmentService {
   static final FileStorage _fileStorage = LocalFileStorage();
 
-  // Shared connection is closed centrally by DatabaseManager.
-  static Future<void> closeDatabase() => DatabaseManager.instance.close();
-
   static const String _tableName = 'finance_attachments';
 
   static Future<Database> get _database async {

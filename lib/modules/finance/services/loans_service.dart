@@ -77,13 +77,11 @@ class LoansService {
     }
   }
 
-  static Future<Database> get database async {
+  static Future<Database> get _database async {
     final db = DatabaseManager.instance.database;
     await _createTables(db);
     return db;
   }
-
-  static Future<Database> get _database => database;
 
   static Future<void> _createTables(Database db) async {
     await db.execute('''

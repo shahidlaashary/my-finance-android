@@ -10,13 +10,13 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/features/finance/models/budgets_model.dart';
-import 'package:my_finance/features/finance/services/budgets_service.dart';
-import 'package:my_finance/features/finance/services/assets_service.dart';
-import 'package:my_finance/features/finance/services/loans_service.dart';
-import 'package:my_finance/features/finance/services/goals_service.dart';
-import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
-import 'package:my_finance/features/finance/screens/budgets_screen.dart';
+import 'package:my_finance/modules/finance/models/budgets_model.dart';
+import 'package:my_finance/modules/finance/services/budgets_service.dart';
+import 'package:my_finance/modules/finance/services/assets_service.dart';
+import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/finance/services/goals_service.dart';
+import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
+import 'package:my_finance/modules/finance/screens/budgets_screen.dart';
 
 /// Dashboard home screen and its existing data-loading/presentation logic.
 class HomePage extends StatefulWidget {

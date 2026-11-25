@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 
@@ -82,14 +82,14 @@ class _AssetSaleEntryFormState extends State<AssetSaleEntryForm> {
 
     if (mounted) setState(() => _loadingRate = true);
     try {
-      var assetRate = await FinanceDB.instance.getExchangeRate(assetCurrency);
-      var walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+      var assetRate = await CurrencyService.getExchangeRate(assetCurrency);
+      var walletRate = await CurrencyService.getExchangeRate(walletCurrency);
       if (assetRate == null || walletRate == null) {
-        await FinanceDB.instance.refreshMissingExchangeRatesOnline(
+        await CurrencyService.refreshMissingExchangeRatesOnline(
           currencies: [assetCurrency, walletCurrency],
         );
-        assetRate = await FinanceDB.instance.getExchangeRate(assetCurrency);
-        walletRate = await FinanceDB.instance.getExchangeRate(walletCurrency);
+        assetRate = await CurrencyService.getExchangeRate(assetCurrency);
+        walletRate = await CurrencyService.getExchangeRate(walletCurrency);
       }
       if (mounted && request == _rateRequest &&
           assetCurrency == _assetCurrency &&

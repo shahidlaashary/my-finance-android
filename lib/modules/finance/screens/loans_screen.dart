@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -102,7 +103,7 @@ class LoansScreenState extends State<LoansScreen> {
           await LoansService.getTotalOutstandingByCurrency();
       final assetNames = <int, String>{};
       try {
-        final db = await TransactionsService.database;
+        final db = await DatabaseManager.instance.database;
         final assetRows = await db.query('assets', columns: ['id', 'name']);
         for (final row in assetRows) {
           assetNames[(row['id'] as num).toInt()] = row['name']?.toString() ?? 'Asset';

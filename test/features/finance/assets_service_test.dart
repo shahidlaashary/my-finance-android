@@ -1605,6 +1605,59 @@ void main() {
   });
 
 
+  test('cross-currency asset sale credits and reverses the saved wallet amount', () async {
+    final purchaseWalletId = await createWallet(1000);
+    final receivingWalletId = await FinanceDB.instance.addWallet(
+      name: 'USD Asset Sale Wallet',
+      type: 'Bank',
+      currency: 'USD',
+      openingBalance: 10,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Cross Currency Sale Asset', price: 400, walletId: purchaseWalletId),
+      const [],
+    );
+
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: receivingWalletId,
+      paymentType: 'Wallet',
+      walletAmount: 1,
+      walletCurrency: 'USD',
+      exchangeRate: 0.002,
+    );
+
+    expect(
+      (await FinanceDB.instance.getWallet(purchaseWalletId))!['balance'],
+      600,
+    );
+    expect(
+      (await FinanceDB.instance.getWallet(receivingWalletId))!['balance'],
+      11,
+    );
+
+    final sold = await assets.getAssetById(assetId);
+    expect(sold!.saleWalletAmount, 1);
+    expect(sold.saleWalletCurrency, 'USD');
+    expect(sold.saleExchangeRate, 0.002);
+
+    await assets.deleteAsset(assetId);
+
+    expect(
+      (await FinanceDB.instance.getWallet(purchaseWalletId))!['balance'],
+      1000,
+    );
+    expect(
+      (await FinanceDB.instance.getWallet(receivingWalletId))!['balance'],
+      10,
+    );
+    expect(await assets.getAssetById(assetId), isNull);
+  });
+
   test('consolidated balance includes current value only while asset is unsold', () async {
     final walletId = await createWallet(1000);
     final assetId = await assets.addAssetWithAttachments(

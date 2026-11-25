@@ -8,6 +8,21 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 /// Owns party records shared by Finance, Assets, Loans and future modules.
 /// The existing loan database and party table are retained without schema changes.
 class PartyService {
+  static Future<String> getBaseCurrency() async {
+    final db = DatabaseManager.instance.database;
+    final rows = await db.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: ['main_currency'],
+      limit: 1,
+    );
+    return (rows.isEmpty
+            ? 'PKR'
+            : rows.first['setting_value']?.toString() ?? 'PKR')
+        .toUpperCase();
+  }
+
   static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {
     final db = DatabaseManager.instance.database;
     return db.query(

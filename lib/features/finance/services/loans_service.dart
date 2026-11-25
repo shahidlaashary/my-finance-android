@@ -920,6 +920,12 @@ class LoansService {
       if (loan.isAssetLinked) {
         throw Exception('Asset-linked loans must be edited from Asset Section.');
       }
+      final currentWalletCurrency = await _getWalletCurrency(txn, loan.walletId);
+      if (currentWalletCurrency != loan.currency.trim().toUpperCase()) {
+        throw Exception(
+          'The loan wallet currency has changed. Correct the wallet currency before editing this loan.',
+        );
+      }
       final repayments = await txn.query(
         'loan_repayments',
         columns: ['amount'],
@@ -983,6 +989,12 @@ class LoansService {
 
       final loan = LoansModel.fromMap(loanRecord);
       _validateLoanType(loan.loanType);
+      final currentWalletCurrency = await _getWalletCurrency(txn, loan.walletId);
+      if (currentWalletCurrency != loan.currency.trim().toUpperCase()) {
+        throw Exception(
+          'The loan wallet currency has changed. Correct the wallet currency before deleting this loan.',
+        );
+      }
       final repayments = await txn.query(
         'loan_repayments',
         where: 'loan_id = ?',

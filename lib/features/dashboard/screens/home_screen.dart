@@ -217,7 +217,6 @@ class _HomePageState extends State<HomePage> {
                   : percent >= 50
                       ? 50
                       : 0;
-      final key = 'budget_alert_level_${budget.id}';
       final previousLevel =
           await DashboardDataService.getBudgetAlertLevel(budget.id!);
 

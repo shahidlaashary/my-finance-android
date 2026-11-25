@@ -5,6 +5,9 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 
 class TransactionsService {
 
+  static Future<Database> get _database async =>
+      DatabaseManager.instance.database;
+
   static Future<void> _changeBalance(Transaction txn, int walletId, double change) async {
     final changed = await txn.rawUpdate(
       'UPDATE wallets SET balance = balance + ? WHERE id = ?',
@@ -118,7 +121,7 @@ class TransactionsService {
     required String date,
     double transferFee = 0,
   }) async {
-    final db = await database;
+    final db = await _database;
     final normalized = _normalizeType(type);
     final transactionId = await db.transaction((txn) async {
       await _apply(txn, type: normalized, amount: amount, walletId: walletId,
@@ -163,7 +166,7 @@ class TransactionsService {
     required String date,
     double? transferFee,
   }) async {
-    final db = await database;
+    final db = await _database;
     final normalized = _normalizeType(type);
     await db.transaction((txn) async {
       final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
@@ -213,7 +216,7 @@ class TransactionsService {
     if (!balanceDelta.isFinite || balanceDelta == 0) {
       throw Exception('Balance change must be a non-zero amount.');
     }
-    final db = await database;
+    final db = await _database;
     await db.transaction((txn) async {
       final rows = await txn.query(
         'transactions',
@@ -239,7 +242,7 @@ class TransactionsService {
   }
 
   static Future<void> deleteTransaction(int id) async {
-    final db = await database;
+    final db = await _database;
     final existing = await db.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
     if (existing.isEmpty) throw Exception('Transaction not found.');
     if (existing.first['category']?.toString() == 'Committee Transfer') {
@@ -271,7 +274,7 @@ class TransactionsService {
 
 
   static Future<List<Map<String, dynamic>>> getTransactions({int? walletId}) async {
-    final db = await database;
+    final db = await _database;
     final walletFilter = walletId == null ? '' : 'WHERE t.wallet_id = ? OR t.to_wallet_id = ?';
     final args = walletId == null ? <Object>[] : <Object>[walletId, walletId];
     return db.rawQuery("""
@@ -289,7 +292,7 @@ class TransactionsService {
   }
 
   static Future<List<Map<String, dynamic>>> getWallets() async {
-    final db = await database;
+    final db = await _database;
     return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
       orderBy: 'name COLLATE NOCASE ASC');
   }

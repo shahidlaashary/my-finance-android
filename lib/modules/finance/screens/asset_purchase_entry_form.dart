@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
@@ -47,7 +47,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
 
   Future<void> _createParty() async {
     final name = TextEditingController(), phone = TextEditingController();
-    String currency = await FinanceDB.instance.getBaseCurrency();
+    String currency = await CurrencyService.getBaseCurrency();
     if (!CurrencyCatalog.supported.contains(currency.toUpperCase())) currency = 'PKR';
     if (!mounted) { name.dispose(); phone.dispose(); return; }
     final key = GlobalKey<FormState>();

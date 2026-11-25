@@ -252,34 +252,6 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(appText(context, 'Base Currency: PKR', 'بنیادی کرنسی: PKR'),
-                              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                          SizedBox(height: 6),
-                          Text('Har rate 1 foreign currency unit ki PKR value hai.'),
-                          SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
-                              onPressed: _updating ? null : () => _refreshRates(),
-                              icon: Icon(Icons.cloud_download_outlined),
-                              label: Text(_updating ? 'Updating rates...' : 'Update Rates Online'),
-                            ),
-                          ),
-                          SizedBox(height: 6),
-                          Text(
-                            'Rates open.er-api.com se milte hain. Screen khulne par 24 ghantay se puranay rates auto-refresh hotay hain.',
-                            style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
                           Text('Currency Converter',
                               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                           SizedBox(height: 12),

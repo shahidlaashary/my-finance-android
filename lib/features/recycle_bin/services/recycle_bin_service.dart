@@ -1,3 +1,7 @@
+import 'package:my_finance/modules/installments/services/installment_service.dart';
+import 'package:my_finance/modules/partners/services/my_partners_service.dart';
+import 'package:my_finance/modules/committee/services/committee_service.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -580,57 +584,11 @@ class RecycleBinService {
         return;
       }
       if (table == 'transactions') {
-        final type = (record['type'] ?? '').toString().toLowerCase();
-        final amount = (record['amount'] as num).toDouble();
-        final walletId = (record['wallet_id'] as num).toInt();
-        final fee = (record.remove('_transfer_fee') as num?)?.toDouble() ?? 0.0;
-        Future<void> change(int id, double delta) async {
-          final changed = await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [delta, id]);
-          if (changed == 0) throw Exception('A linked wallet no longer exists. Restore the wallet first.');
-        }
-        if (type == 'income') {
-          await change(walletId, amount);
-        } else if (type == 'expense') {
-          final wallets = await txn.query('wallets', columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
-          if (wallets.isEmpty) throw Exception('The linked wallet no longer exists.');
-          if ((wallets.first['balance'] as num).toDouble() < amount) throw Exception('Insufficient wallet balance to restore this expense.');
-          await change(walletId, -amount);
-        } else if (type == 'transfer') {
-          final toId = (record['to_wallet_id'] as num?)?.toInt();
-          if (toId == null) throw Exception('Transfer destination is missing.');
-          final received = (record['to_amount'] as num?)?.toDouble() ?? amount;
-          final wallets = await txn.query('wallets', columns: ['id','balance'], where: 'id = ? OR id = ?', whereArgs: [walletId,toId]);
-          if (wallets.length < 2) throw Exception('Both linked wallets must exist before restoring this transfer.');
-          final source = wallets.firstWhere((w) => w['id'] == walletId);
-          if ((source['balance'] as num).toDouble() < amount + fee) throw Exception('Insufficient source wallet balance to restore this transfer.');
-          await change(walletId, -(amount + fee));
-          await change(toId, received);
-        } else if (type == 'adjustment') {
-          final delta = (record['balance_delta'] as num?)?.toDouble();
-          if (delta == null) throw Exception('Adjustment balance change is missing.');
-          await change(walletId, delta);
-        } else {
-          throw Exception('Unknown transaction type.');
-        }
-        await txn.insert('transactions', record);
-        final salaryRaw = item['related_payload']?.toString();
-        if (salaryRaw != null && salaryRaw.isNotEmpty) {
-          await txn.execute('''CREATE TABLE IF NOT EXISTS staff_salaries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, staff_id INTEGER NOT NULL,
-            amount REAL NOT NULL, wallet_id INTEGER NOT NULL, paid_at TEXT NOT NULL,
-            note TEXT NOT NULL DEFAULT '', transaction_id INTEGER)''');
-          final salaryRows = (jsonDecode(salaryRaw) as List).whereType<Map>();
-          for (final row in salaryRows) {
-            final salary = Map<String, dynamic>.from(row);
-            final staffId = (salary['staff_id'] as num).toInt();
-            final staff = await txn.query('staff', columns: ['id'], where: 'id = ?', whereArgs: [staffId], limit: 1);
-            if (staff.isEmpty) throw Exception('Restore the related staff member before restoring this salary transaction.');
-            await txn.insert('staff_salaries', salary);
-          }
-        }
-        if (fee > 0) {
-          await txn.insert('app_settings', {'setting_key':'transaction_transfer_fee_${record['id']}','setting_value':fee.toString()}, conflictAlgorithm: ConflictAlgorithm.replace);
-        }
+        await TransactionsService.restoreArchivedTransaction(
+          txn,
+          record: record,
+          relatedPayload: item['related_payload']?.toString(),
+        );
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
@@ -659,135 +617,29 @@ class RecycleBinService {
       }
 
       if (table == 'committees') {
-        await txn.execute("""CREATE TABLE IF NOT EXISTS committees (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
-          frequency TEXT NOT NULL, installment_amount REAL NOT NULL,
-          member_count INTEGER NOT NULL, currency TEXT NOT NULL DEFAULT 'PKR',
-          start_date TEXT NOT NULL, first_due_date TEXT NOT NULL,
-          status TEXT NOT NULL DEFAULT 'Upcoming', created_at TEXT NOT NULL)""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS committee_members (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, committee_id INTEGER NOT NULL,
-          name TEXT NOT NULL, phone TEXT, turn_no INTEGER NOT NULL, created_at TEXT NOT NULL)""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS committee_entries (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, committee_id INTEGER NOT NULL,
-          member_id INTEGER NOT NULL, entry_type TEXT NOT NULL, amount REAL NOT NULL,
-          wallet_amount REAL NOT NULL DEFAULT 0, committee_currency TEXT NOT NULL DEFAULT 'PKR',
-          wallet_currency TEXT NOT NULL DEFAULT '', payment_method TEXT NOT NULL DEFAULT 'None',
-          wallet_id INTEGER NOT NULL DEFAULT -1, transaction_id INTEGER,
-          entry_date TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)""");
-        final duplicate = await txn.query('committees', columns: ['id'],
-          where: 'id=?', whereArgs: [record['id']], limit: 1);
-        if (duplicate.isNotEmpty) throw Exception('This committee already exists.');
-        final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
-          .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
-        final members = related.where((e) => e['_related_table']=='committee_members').toList();
-        final entries = related.where((e) => e['_related_table']=='committee_entries').toList();
-        final finance = related.where((e) => e['_related_table']=='transactions').toList();
-        for (final row in finance) {
-          final walletId = (row['wallet_id'] as num?)?.toInt();
-          final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
-          if (walletId != null && delta != 0) {
-            final wallet = await txn.query('wallets', columns: ['balance'],
-              where: 'id=?', whereArgs: [walletId], limit: 1);
-            if (wallet.isEmpty) throw Exception('A committee wallet no longer exists.');
-            if (delta < 0 && (wallet.first['balance'] as num).toDouble() < -delta) {
-              throw Exception('Insufficient wallet balance to restore committee activity.');
-            }
-            await txn.rawUpdate('UPDATE wallets SET balance=balance+? WHERE id=?', [delta,walletId]);
-          }
-        }
-        await txn.insert('committees', record);
-        for (final row in members) { row.remove('_related_table'); await txn.insert('committee_members', row); }
-        for (final row in finance) { row.remove('_related_table'); await txn.insert('transactions', row); }
-        for (final row in entries) { row.remove('_related_table'); await txn.insert('committee_entries', row); }
-        await txn.delete('recycle_bin', where: 'id=?', whereArgs: [recycleId]);
+        await CommitteeService.restoreArchivedCommittee(
+          txn,
+          record: record,
+          relatedPayload: item['related_payload']?.toString(),
+        );
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
       if (table == 'partners') {
-        await txn.execute("""CREATE TABLE IF NOT EXISTS partners (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
-          type TEXT NOT NULL CHECK(type IN ('Business','Personal')),
-          phone TEXT, notes TEXT NOT NULL DEFAULT '', profit_share REAL NOT NULL DEFAULT 50,
-          opening_balance REAL NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1,
-          created_at TEXT NOT NULL)""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS partners_wallet_links (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, partner_id INTEGER NOT NULL,
-          wallet_id INTEGER NOT NULL, created_at TEXT NOT NULL,
-          UNIQUE(partner_id,wallet_id))""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS partners_transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, partner_id INTEGER NOT NULL,
-          wallet_id INTEGER, type TEXT NOT NULL, amount REAL NOT NULL,
-          balance_delta REAL NOT NULL DEFAULT 0, category TEXT NOT NULL DEFAULT '',
-          note TEXT NOT NULL DEFAULT '', date TEXT NOT NULL, created_at TEXT NOT NULL)""");
-        final duplicate = await txn.query('partners', columns: ['id'],
-          where: 'id=?', whereArgs: [record['id']], limit: 1);
-        if (duplicate.isNotEmpty) throw Exception('This partner already exists.');
-        final related = (jsonDecode(item['related_payload']?.toString() ?? '[]') as List)
-          .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
-        final links = related.where((e) => e['_related_table']=='partners_wallet_links' || e['_related_table']=='partner_wallet_links').toList();
-        final ledger = related.where((e) => e['_related_table']=='partners_transactions' || e['_related_table']=='partner_transactions').toList();
-        final finance = related.where((e) => e['_related_table']=='transactions').toList();
-        for (final row in finance) {
-          final walletId = (row['wallet_id'] as num?)?.toInt();
-          if (walletId == null) continue;
-          final amount = (row['amount'] as num).toDouble();
-          final delta = row['type']?.toString().toLowerCase() == 'income' ? amount : -amount;
-          final wallet = await txn.query('wallets', columns: ['balance'],
-            where: 'id=?', whereArgs: [walletId], limit: 1);
-          if (wallet.isEmpty) throw Exception('A linked partner wallet no longer exists.');
-          if (delta < 0 && (wallet.first['balance'] as num).toDouble() < -delta) {
-            throw Exception('Insufficient wallet balance to restore partner transactions.');
-          }
-          await txn.rawUpdate('UPDATE wallets SET balance=balance+? WHERE id=?', [delta,walletId]);
-        }
-        await txn.insert('partners', record);
-        for (final row in links) { row.remove('_related_table'); await txn.insert('partners_wallet_links', row); }
-        for (final row in ledger) { row.remove('_related_table'); await txn.insert('partners_transactions', row); }
-        for (final row in finance) { row.remove('_related_table'); await txn.insert('transactions', row); }
-        await txn.delete('recycle_bin', where: 'id=?', whereArgs: [recycleId]);
+        await MyPartnersService.instance.restoreArchivedPartner(
+          txn,
+          record: record,
+          relatedPayload: item['related_payload']?.toString(),
+        );
+        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
       if (table == 'installment_contracts') {
-        await txn.execute("""CREATE TABLE IF NOT EXISTS installment_contracts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, direction TEXT NOT NULL,
-          item_name TEXT NOT NULL, party_name TEXT NOT NULL, phone TEXT,
-          total_amount REAL NOT NULL, paid_amount REAL NOT NULL DEFAULT 0,
-          wallet_id INTEGER NOT NULL, installment_amount REAL NOT NULL,
-          frequency TEXT NOT NULL DEFAULT 'Monthly', start_date TEXT NOT NULL,
-          notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',
-          created_at TEXT NOT NULL)""");
-        await txn.execute("""CREATE TABLE IF NOT EXISTS installment_payments (
-          id INTEGER PRIMARY KEY AUTOINCREMENT, contract_id INTEGER NOT NULL,
-          amount REAL NOT NULL, payment_date TEXT NOT NULL,
-          note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL)""");
-        final relatedRaw = item['related_payload']?.toString() ?? '[]';
-        final related = (jsonDecode(relatedRaw) as List)
-            .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
-        final payments = related.where((e) => e['_related_table'] == 'installment_payments').toList();
-        final transactions = related.where((e) => e['_related_table'] == 'transactions').toList();
-        final walletId = (record['wallet_id'] as num).toInt();
-        final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
-        final walletRows = await txn.query('wallets', columns: ['balance'],
-          where: 'id = ?', whereArgs: [walletId], limit: 1);
-        if (walletRows.isEmpty) throw Exception('The installment wallet no longer exists.');
-        final direction = record['direction']?.toString();
-        final delta = direction == 'sell' ? totalPaid : -totalPaid;
-        if (delta < 0 && (walletRows.first['balance'] as num).toDouble() < -delta) {
-          throw Exception('Insufficient wallet balance to restore this installment contract.');
-        }
-        final duplicate = await txn.query('installment_contracts',
-          columns: ['id'], where: 'id = ?', whereArgs: [record['id']], limit: 1);
-        if (duplicate.isNotEmpty) throw Exception('This installment contract already exists.');
-        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [delta, walletId]);
-        await txn.insert('installment_contracts', record);
-        for (final payment in payments) {
-          payment.remove('_related_table');
-          await txn.insert('installment_payments', payment);
-        }
-        for (final transaction in transactions) {
-          transaction.remove('_related_table');
-          await txn.insert('transactions', transaction);
-        }
+        await InstallmentService.restoreArchivedContract(
+          txn,
+          record: record,
+          relatedPayload: item['related_payload']?.toString(),
+        );
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }

@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class StockItem {
   final int? id;
@@ -102,7 +102,7 @@ class StockService {
     final rows = await db.query('stock_items', where: 'id = ?', whereArgs: [id], limit: 1);
     if (rows.isEmpty) return;
     final movements = await db.query('stock_movements', where: 'item_id = ?', whereArgs: [id]);
-    await RecycleBinService.archive(
+    await RecycleBinArchiveService.archive(
       type: 'Stock Item', title: rows.first['name']?.toString() ?? 'Stock Item',
       table: 'stock_items', id: id, record: rows.first, related: movements,
     );

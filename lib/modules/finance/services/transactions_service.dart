@@ -255,17 +255,10 @@ class TransactionsService {
       where: 'setting_key = ?', whereArgs: ['transaction_transfer_fee_$id'], limit: 1);
     final fee = feeRows.isEmpty ? 0.0 :
       (double.tryParse(feeRows.first['setting_value']?.toString() ?? '') ?? 0.0);
-    List<Map<String, dynamic>> salaryRows = [];
-    try {
-      salaryRows = (await db.query('staff_salaries', where: 'transaction_id = ?', whereArgs: [id]))
-          .map((row) => Map<String, dynamic>.from(row)).toList();
-    } catch (_) {
-      // Staff module tables may not have been created on this installation.
-    }
     final archived = Map<String, dynamic>.from(existing.first)..['_transfer_fee'] = fee;
     final recycleId = await RecycleBinService.archive(type: 'Transaction',
       title: '${existing.first['type']} • ${existing.first['amount']}',
-      table: 'transactions', id: id, record: archived, related: salaryRows);
+      table: 'transactions', id: id, record: archived);
     try {
       await db.transaction((txn) async {
         final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
@@ -274,9 +267,6 @@ class TransactionsService {
         await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
         await txn.delete('app_settings', where: 'setting_key = ?',
           whereArgs: ['transaction_transfer_fee_$id']);
-        if (salaryRows.isNotEmpty) {
-          await txn.delete('staff_salaries', where: 'transaction_id = ?', whereArgs: [id]);
-        }
       });
     } catch (_) {
       await RecycleBinService.discardArchive(recycleId);

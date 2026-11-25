@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_finance/core/platform/platform_info.dart';
 import 'package:my_finance/modules/space/services/my_space_service.dart';
 
 class SpaceToolsScreen extends StatefulWidget {
@@ -83,7 +82,7 @@ class _SpaceToolsScreenState extends State<SpaceToolsScreen> {
   }
 
   Future<Map<String, dynamic>?> _deviceStorage() async {
-    if (!Platform.isAndroid) return null;
+    if (!PlatformInfo.current.isAndroid) return null;
     try {
       return await const MethodChannel('my_finance/sound').invokeMapMethod<String, dynamic>('getStorageInfo');
     } catch (_) {

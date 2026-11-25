@@ -10,6 +10,7 @@ import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 
 class ManageParties extends StatefulWidget {
   final bool hideBalances;
@@ -51,13 +52,13 @@ class _ManagePartiesState extends State<ManageParties> {
   }
 
   Future<void> _loadParties() async {
-    final parties = await LoansService.getParties(includeArchived: true);
+    final parties = await PartyService.getParties(includeArchived: true);
     final receivable = <String, double>{};
     final payable = <String, double>{};
     var partiesWithBalance = 0;
     for (final party in parties) {
       if ((party['is_archived'] as num?)?.toInt() == 1) continue;
-      final summary = await LoansService.getPartySummary((party['id'] as num).toInt());
+      final summary = await PartyService.getPartySummary((party['id'] as num).toInt());
       final balances = (summary['balances'] as List<dynamic>?) ?? [];
       var hasBalance = false;
       for (final item in balances) {
@@ -419,14 +420,14 @@ class _ManagePartiesState extends State<ManageParties> {
         }
         int partyId;
         if (party == null) {
-          partyId = await LoansService.addParty(name: name.text, phone: phone.text, address: address.text, currency: currency,
+          partyId = await PartyService.addParty(name: name.text, phone: phone.text, address: address.text, currency: currency,
             email: email.text, partyType: partyType, country: country.text, city: city.text, postalCode: postalCode.text,
             openingBalance: opening, creditLimit: limit, paymentTerms: paymentTerms, cnic: cnic.text,
             businessName: '', taxNumber: '', referencePerson: referencePerson.text,
             notes: notes.text, profileImagePath: storedPhoto);
         } else {
           partyId = (party['id'] as num).toInt();
-          await LoansService.updateParty(id: partyId, name: name.text, phone: phone.text,
+          await PartyService.updateParty(id: partyId, name: name.text, phone: phone.text,
             address: address.text, currency: currency, email: email.text, partyType: partyType, country: country.text,
             city: city.text, postalCode: postalCode.text, openingBalance: opening, creditLimit: limit,
             paymentTerms: paymentTerms, cnic: cnic.text,
@@ -477,7 +478,7 @@ class _ManagePartiesState extends State<ManageParties> {
 
   Future<void> _togglePartyArchive(Map<String, dynamic> party, {required bool archive}) async {
     try {
-      await LoansService.setPartyArchived((party['id'] as num).toInt(), archived: archive);
+      await PartyService.setPartyArchived((party['id'] as num).toInt(), archived: archive);
       await _loadParties();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -516,7 +517,7 @@ class _ManagePartiesState extends State<ManageParties> {
     );
     if (confirmed != true) return;
     try {
-      await LoansService.deleteParty((party['id'] as num).toInt());
+      await PartyService.deleteParty((party['id'] as num).toInt());
       await _loadParties();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -534,7 +535,7 @@ class _ManagePartiesState extends State<ManageParties> {
 
   Future<void> _openLedger(Map<String, dynamic> party) async {
     final id = (party['id'] as num).toInt();
-    final loans = await LoansService.getLoansForParty(id);
+    final loans = await PartyService.getLoansForParty(id);
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -763,7 +764,7 @@ class _ManagePartiesState extends State<ManageParties> {
                         itemBuilder: (context, index) {
                           final party = filtered[index];
                           return FutureBuilder<Map<String, dynamic>>(
-                            future: LoansService.getPartySummary((party['id'] as num).toInt()),
+                            future: PartyService.getPartySummary((party['id'] as num).toInt()),
                             builder: (context, snapshot) {
                               final balances = (snapshot.data?['balances'] as List<dynamic>?) ?? [];
                               final phone = (party['phone'] ?? '').toString().trim();

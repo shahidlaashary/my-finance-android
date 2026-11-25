@@ -8,6 +8,7 @@ import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 
 class LoanEntryForm extends StatefulWidget {
   const LoanEntryForm({super.key});
@@ -36,7 +37,7 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
   Future<void> _load() async {
     try {
       final wallets = await FinanceDB.instance.getWallets();
-      final parties = await LoansService.getParties();
+      final parties = await PartyService.getParties();
       if (!mounted) return;
       setState(() { _wallets = wallets; _parties = parties; if (wallets.isNotEmpty) _walletId = wallets.first['id'] as int; _loading = false; });
     } catch (e) { if (mounted) setState(() => _loading = false); _msg(e); }
@@ -69,8 +70,8 @@ class _LoanEntryFormState extends State<LoanEntryForm> {
     ));
     if (result == true) {
       try {
-        final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
-        final parties = await LoansService.getParties();
+        final id = await PartyService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
+        final parties = await PartyService.getParties();
         if (mounted) setState(() { _parties = parties; _partyId = id; final match = _wallets.where((w) => (w['currency']?.toString() ?? 'PKR').toUpperCase() == currency.toUpperCase()); if (match.isNotEmpty) _walletId = (match.first['id'] as num).toInt(); });
       } catch (e) { _msg(e); }
     }

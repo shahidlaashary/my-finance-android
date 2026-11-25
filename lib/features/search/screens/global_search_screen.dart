@@ -9,6 +9,7 @@ import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/committee/services/committee_service.dart';
 import 'package:my_finance/modules/space/services/space_documents_service.dart';
@@ -196,7 +197,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       }),
       _collect(() async {
         final rows = await LoansService.getLoans();
-        final parties = await LoansService.getParties();
+        final parties = await PartyService.getParties();
         final partyNames = {
           for (final party in parties)
             (party['id'] as num).toInt(): party['name']?.toString() ?? '',

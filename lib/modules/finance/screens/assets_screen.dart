@@ -20,6 +20,7 @@ import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/finance/screens/asset_valuation_entry_form.dart';
 import 'package:my_finance/modules/finance/screens/asset_sale_entry_form.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
 import 'package:my_finance/modules/finance/screens/finance_graph_screens.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
@@ -119,7 +120,7 @@ class AssetsScreenState extends State<AssetsScreen> {
         'wallets',
         orderBy: 'name ASC',
       );
-      final parties = await LoansService.getParties();
+      final parties = await PartyService.getParties();
       final linkedLoanIds = <int>{
         for (final asset in assets)
           if (asset.linkedLoanId != null) asset.linkedLoanId!,
@@ -233,13 +234,13 @@ class AssetsScreenState extends State<AssetsScreen> {
     Map<String, dynamic>? createdParty;
     if (saved == true) {
       try {
-        final id = await LoansService.addParty(
+        final id = await PartyService.addParty(
           name: name.text.trim(),
           phone: phone.text.trim(),
           address: address.text.trim(),
           currency: selectedCurrency,
         );
-        final refreshed = await LoansService.getParties();
+        final refreshed = await PartyService.getParties();
         if (!mounted) return null;
         setState(() => _parties = refreshed);
         createdParty = refreshed.firstWhere(
@@ -611,12 +612,12 @@ class AssetsScreenState extends State<AssetsScreen> {
                                 try {
                                   if (createNewParty) {
                                     setSheetState(() => saving = true);
-                                    final createdId = await LoansService.addParty(
+                                    final createdId = await PartyService.addParty(
                                       name: newPartyNameController.text.trim(),
                                       phone: newPartyPhoneController.text.trim(),
                                       currency: newPartyCurrency,
                                     );
-                                    _parties = await LoansService.getParties();
+                                    _parties = await PartyService.getParties();
                                     selectedPartyId = createdId;
                                   }
                                   final model = AssetsModel(id: asset?.id, name: nameController.text.trim(), category: selectedCategory,

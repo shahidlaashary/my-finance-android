@@ -11,6 +11,7 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -80,7 +81,7 @@ void main() {
 
   Future<Map<String, int>> createLoanWithRepayment() async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Repayment Reconciliation Party',
       currency: 'PKR',
     );
@@ -119,12 +120,12 @@ void main() {
   }
 
   test('party names are unique only within the same party type', () async {
-    final individualId = await LoansService.addParty(
+    final individualId = await PartyService.addParty(
       name: 'Same Name Party',
       partyType: 'Individual',
       phone: '03000000001',
     );
-    final businessId = await LoansService.addParty(
+    final businessId = await PartyService.addParty(
       name: 'Same Name Party',
       partyType: 'Business',
       phone: '03000000002',
@@ -132,7 +133,7 @@ void main() {
 
     expect(businessId, isNot(individualId));
     await expectLater(
-      LoansService.addParty(
+      PartyService.addParty(
         name: ' same name party ',
         partyType: 'Individual',
         phone: '03000000003',
@@ -144,7 +145,7 @@ void main() {
       )),
     );
     await expectLater(
-      LoansService.addParty(
+      PartyService.addParty(
         name: 'Same Name Party',
         partyType: 'Business',
       ),
@@ -157,17 +158,17 @@ void main() {
   });
 
   test('updating a party blocks duplicate name and type but allows other type', () async {
-    final firstId = await LoansService.addParty(
+    final firstId = await PartyService.addParty(
       name: 'Update Party',
       partyType: 'Individual',
     );
-    final secondId = await LoansService.addParty(
+    final secondId = await PartyService.addParty(
       name: 'Other Party',
       partyType: 'Individual',
     );
 
     await expectLater(
-      LoansService.updateParty(
+      PartyService.updateParty(
         id: secondId,
         name: ' update party ',
         partyType: 'Individual',
@@ -179,19 +180,19 @@ void main() {
       )),
     );
 
-    await LoansService.updateParty(
+    await PartyService.updateParty(
       id: secondId,
       name: 'Update Party',
       partyType: 'Business',
     );
 
-    final parties = await LoansService.getParties();
+    final parties = await PartyService.getParties();
     expect(parties.where((party) => party['name'] == 'Update Party'), hasLength(2));
     expect(parties.map((party) => party['id']).toSet(), containsAll([firstId, secondId]));
   });
 
   test('loan-funded asset purchase works without any wallet', () async {
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Asset Seller',
       currency: 'PKR',
     );
@@ -225,7 +226,7 @@ void main() {
 
   test('credit asset sale creates receivable and repayments credit wallet', () async {
     final walletId = await createWallet(1000);
-    final buyerId = await LoansService.addParty(
+    final buyerId = await PartyService.addParty(
       name: 'Asset Buyer',
       currency: 'PKR',
     );
@@ -275,7 +276,7 @@ void main() {
 
   test('deleting credit-sale repayment is blocked when received funds were spent', () async {
     final walletId = await createWallet(1000);
-    final buyerId = await LoansService.addParty(
+    final buyerId = await PartyService.addParty(
       name: 'Repayment Delete Buyer',
       currency: 'PKR',
     );
@@ -326,7 +327,7 @@ void main() {
 
   test('updating a repayment validates the combined wallet reversal and replacement', () async {
     final walletId = await createWallet(1000);
-    final buyerId = await LoansService.addParty(
+    final buyerId = await PartyService.addParty(
       name: 'Repayment Update Buyer',
       currency: 'PKR',
     );
@@ -383,7 +384,7 @@ void main() {
 
   test('updating asset-purchase repayment uses net wallet effect for Loan Taken', () async {
     final walletId = await createWallet(1000);
-    final sellerId = await LoansService.addParty(
+    final sellerId = await PartyService.addParty(
       name: 'Purchase Repayment Update Seller',
       currency: 'PKR',
     );
@@ -584,7 +585,7 @@ void main() {
       iconCode: 1,
       excludeTotal: false,
     );
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Ordinary Loan Delete Party',
       currency: 'PKR',
     );
@@ -637,7 +638,7 @@ void main() {
 
   test('reducing Loan Taken amount is blocked if wallet cannot reverse the credit', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Taken Amount Edit Party',
       currency: 'PKR',
     );
@@ -692,7 +693,7 @@ void main() {
       iconCode: 1,
       excludeTotal: false,
     );
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Archived Repayment Currency Party',
       currency: 'PKR',
     );
@@ -760,7 +761,7 @@ void main() {
       iconCode: 1,
       excludeTotal: false,
     );
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'USD Repayment Party',
       currency: 'USD',
     );
@@ -833,7 +834,7 @@ void main() {
   test('restoring an ordinary loan is blocked if a repayment wallet currency changed', () async {
     final lendingWalletId = await createWallet(1000);
     final repaymentWalletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Restore Repayment Currency Party',
       currency: 'PKR',
     );
@@ -885,7 +886,7 @@ void main() {
 
   test('restoring an ordinary loan is blocked if its source wallet currency changed', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Restore Currency Party',
       currency: 'PKR',
     );
@@ -927,7 +928,7 @@ void main() {
 
   test('restoring an ordinary loan requires its deleted party to be restored first', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Restore Missing Party',
       currency: 'PKR',
     );
@@ -944,7 +945,7 @@ void main() {
       ),
     );
     await LoansService.deleteLoan(loanId);
-    await LoansService.deleteParty(partyId);
+    await PartyService.deleteParty(partyId);
 
     final archivedLoan = (await RecycleBinService.getItems()).singleWhere(
       (item) => item['source_table'] == 'loans' &&
@@ -974,7 +975,7 @@ void main() {
 
   test('restoring an ordinary loan is blocked if its party currency changed', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Restore Party Currency',
       currency: 'PKR',
     );
@@ -1015,7 +1016,7 @@ void main() {
 
   test('restoring a Loan Given with same-wallet repayments validates the net balance', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Restore Net Balance Party',
       currency: 'PKR',
     );
@@ -1066,7 +1067,7 @@ void main() {
 
   test('restoring asset with deleted linked party requires party restoration first',
       () async {
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Restore Asset Seller',
       currency: 'PKR',
     );
@@ -1082,7 +1083,7 @@ void main() {
     );
 
     await assets.deleteAsset(assetId);
-    await LoansService.deleteParty(partyId);
+    await PartyService.deleteParty(partyId);
 
     final assetArchive = (await RecycleBinService.getItems()).singleWhere(
       (item) => item['source_table'] == 'assets',
@@ -1151,7 +1152,7 @@ void main() {
 
   test('restoring a credit-sold asset is blocked if a repayment wallet currency changed', () async {
     final walletId = await createWallet(1000);
-    final buyerId = await LoansService.addParty(
+    final buyerId = await PartyService.addParty(
       name: 'Credit Sale Restore Currency Buyer',
       currency: 'PKR',
     );
@@ -1209,7 +1210,7 @@ void main() {
 
   test('restoring a credit-sold asset restores sale loan repayments and balances', () async {
     final walletId = await createWallet(1000);
-    final buyerId = await LoansService.addParty(
+    final buyerId = await PartyService.addParty(
       name: 'Credit Sale Restore Buyer',
       currency: 'PKR',
     );
@@ -1274,7 +1275,7 @@ void main() {
   test('editing or deleting a repayment is blocked if its wallet currency changed', () async {
     final lendingWalletId = await createWallet(1000);
     final repaymentWalletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Changed Repayment Wallet Currency Party',
       currency: 'PKR',
     );
@@ -1337,7 +1338,7 @@ void main() {
 
   test('deleting a credit-sold asset is blocked if a repayment wallet currency changed', () async {
     final walletId = await createWallet(1000);
-    final buyerId = await LoansService.addParty(
+    final buyerId = await PartyService.addParty(
       name: 'Credit Sale Delete Currency Buyer',
       currency: 'PKR',
     );
@@ -1390,7 +1391,7 @@ void main() {
 
   test('editing an ordinary loan is blocked if its source wallet currency changed', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Edit Source Currency Party',
       currency: 'PKR',
     );
@@ -1434,7 +1435,7 @@ void main() {
 
   test('deleting an ordinary loan is blocked if its source wallet currency changed', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Loan Delete Source Currency Party',
       currency: 'PKR',
     );
@@ -1480,7 +1481,7 @@ void main() {
   test('deleting an ordinary loan is blocked if a repayment wallet currency changed', () async {
     final lendingWalletId = await createWallet(1000);
     final repaymentWalletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Ordinary Loan Delete Currency Party',
       currency: 'PKR',
     );
@@ -1566,11 +1567,11 @@ void main() {
   });
 
   test('editing a loan-funded asset updates its linked loan when no repayments exist', () async {
-    final originalPartyId = await LoansService.addParty(
+    final originalPartyId = await PartyService.addParty(
       name: 'Original Asset Seller',
       currency: 'PKR',
     );
-    final replacementPartyId = await LoansService.addParty(
+    final replacementPartyId = await PartyService.addParty(
       name: 'Replacement Asset Seller',
       currency: 'PKR',
     );
@@ -1606,7 +1607,7 @@ void main() {
 
   test('editing loan-funded asset terms is blocked after repayments exist', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Repaid Asset Seller',
       currency: 'PKR',
     );
@@ -1735,7 +1736,7 @@ void main() {
 
   test('deleting a loan-funded asset is blocked when repayments do not reconcile', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Mismatch Asset Seller',
       currency: 'PKR',
     );
@@ -1781,7 +1782,7 @@ void main() {
 
   test('restoring an asset is blocked when archived loan repayments do not reconcile', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Archived Mismatch Seller',
       currency: 'PKR',
     );
@@ -1835,14 +1836,14 @@ void main() {
   });
 
   test('restoring a party is blocked when its name and type already exist', () async {
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Duplicate Restore Party',
       currency: 'PKR',
       partyType: 'Individual',
     );
-    await LoansService.deleteParty(partyId);
+    await PartyService.deleteParty(partyId);
 
-    final replacementId = await LoansService.addParty(
+    final replacementId = await PartyService.addParty(
       name: 'Duplicate Restore Party',
       currency: 'USD',
       partyType: 'Individual',
@@ -1862,7 +1863,7 @@ void main() {
       )),
     );
 
-    final parties = await LoansService.getParties();
+    final parties = await PartyService.getParties();
     expect(parties.where((party) =>
         (party['name'] as String) == 'Duplicate Restore Party'), hasLength(1));
     expect(parties.single['id'], replacementId);
@@ -1870,7 +1871,7 @@ void main() {
 
   test('updating a loan-funded asset is blocked when repayments do not reconcile', () async {
     final walletId = await createWallet(1000);
-    final partyId = await LoansService.addParty(
+    final partyId = await PartyService.addParty(
       name: 'Asset Update Repayment Reconciliation Party',
       currency: 'PKR',
     );

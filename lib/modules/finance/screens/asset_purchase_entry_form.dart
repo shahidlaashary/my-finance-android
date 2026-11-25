@@ -8,6 +8,7 @@ import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 
 class AssetPurchaseEntryForm extends StatefulWidget {
   const AssetPurchaseEntryForm({super.key});
@@ -35,7 +36,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
   Future<void> _load() async {
     try {
       final wallets = await FinanceDB.instance.getWallets();
-      final parties = await LoansService.getParties();
+      final parties = await PartyService.getParties();
       if (!mounted) return;
       setState(() { _wallets = wallets; _parties = parties; if (wallets.isNotEmpty) _walletId = wallets.first['id'] as int; _loading = false; });
     } catch (e) { if (mounted) setState(() => _loading = false); _msg(e); }
@@ -68,8 +69,8 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
     ));
     if (result == true) {
       try {
-        final id = await LoansService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
-        final parties = await LoansService.getParties();
+        final id = await PartyService.addParty(name: name.text.trim(), phone: phone.text.trim(), currency: currency);
+        final parties = await PartyService.getParties();
         if (mounted) setState(() { _parties = parties; _partyId = id; });
       } catch (e) { _msg(e); }
     }

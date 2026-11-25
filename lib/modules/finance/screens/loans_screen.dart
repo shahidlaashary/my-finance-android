@@ -15,6 +15,7 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/screens/loan_repayment_entry_form.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
@@ -96,7 +97,7 @@ class LoansScreenState extends State<LoansScreen> {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
       final wallets = await TransactionsService.getWallets();
       final loans = await LoansService.getLoans();
-      final parties = await LoansService.getParties();
+      final parties = await PartyService.getParties();
       final outstandingByCurrency =
           await LoansService.getTotalOutstandingByCurrency();
       final assetNames = <int, String>{};

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
@@ -54,6 +55,7 @@ class CategoryService {
       {'setting_key': key, 'setting_value': jsonEncode(values)},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    AppRefreshController.notifyChanged();
   }
 
   static String _normalizedType(String type) {

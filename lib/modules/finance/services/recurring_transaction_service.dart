@@ -4,6 +4,7 @@ import 'package:my_finance/modules/finance/models/recurring_transaction_model.da
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class RecurringTransactionService {
+  static const String _tableName = 'recurring_transactions';
 
   final List<String> lastProcessingErrors = [];
 

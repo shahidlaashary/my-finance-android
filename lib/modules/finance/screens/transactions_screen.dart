@@ -434,7 +434,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> editTransaction(
     Map<String, dynamic> item,
   ) async {
-    final wallets = await TransactionsService.getWallets();
+    final wallets = await WalletService.getWallets();
 
     if (!mounted) return;
 
@@ -1479,7 +1479,7 @@ class TransactionDetailScreen extends StatelessWidget {
         title: Text(appText(context, 'Transaction Details', 'Transaction Details')),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: TransactionsService.getWallets(),
+        future: WalletService.getWallets(),
         builder: (context, snapshot) {
           final wallets = snapshot.data ?? const <Map<String, dynamic>>[];
           String walletName(dynamic id) {

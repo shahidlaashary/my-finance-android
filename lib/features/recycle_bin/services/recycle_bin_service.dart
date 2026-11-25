@@ -9,6 +9,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
 import 'package:my_finance/modules/space/services/my_space_service.dart';
+import 'package:my_finance/modules/space/services/space_documents_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -67,6 +68,26 @@ class RecycleBinService {
   static Future<void> restore(int recycleId) async {
     await ensureTable();
     final db = DatabaseManager.instance.database;
+
+    // Space Documents live in space.db; only the app-wide archive envelope
+    // remains in the central Recycle Bin database.
+    final archivedRows = await db.query(
+      'recycle_bin',
+      where: 'id = ?',
+      whereArgs: [recycleId],
+      limit: 1,
+    );
+    if (archivedRows.isEmpty) throw Exception('Recycle Bin item not found.');
+    if (archivedRows.first['source_table']?.toString() == 'space_documents_records') {
+      final record = Map<String, dynamic>.from(
+        jsonDecode(archivedRows.first['payload'].toString()) as Map,
+      );
+      await SpaceDocumentsService.instance.restoreArchivedRecord(record);
+      await db.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+      AppRefreshController.notifyChanged();
+      return;
+    }
+
     await db.transaction((txn) async {
       final rows = await txn.query('recycle_bin', where: 'id = ?', whereArgs: [recycleId], limit: 1);
       if (rows.isEmpty) throw Exception('Recycle Bin item not found.');

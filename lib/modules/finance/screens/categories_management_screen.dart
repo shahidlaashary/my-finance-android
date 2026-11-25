@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 class CategoriesPage extends StatefulWidget {
@@ -65,7 +65,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
   Future<void> loadCategories() async {
     setState(() => loading = true);
-    final result = await FinanceDB.instance.getCategories(selectedType);
+    final result = await CategoryService.getCategoryMaps(selectedType);
     if (!mounted) return;
     setState(() {
       categories = result;
@@ -79,7 +79,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
       selectedType = type;
       loading = true;
     });
-    final result = await FinanceDB.instance.getCategories(type);
+    final result = await CategoryService.getCategoryMaps(type);
     if (!mounted) return;
     setState(() {
       categories = result;
@@ -88,7 +88,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Future<void> persistCategories() async {
-    await FinanceDB.instance.saveCategories(selectedType, categories);
+    await CategoryService.saveCategoryMaps(selectedType, categories);
   }
 
   Future<void> showCategoryDialog({int? index}) async {

@@ -4,15 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
-import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/finance/services/finance_transaction_operations.dart';
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart' show CategoriesPage;

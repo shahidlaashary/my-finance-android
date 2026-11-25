@@ -10,6 +10,24 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 class WalletService {
   WalletService._();
 
+  static Future<List<Map<String, dynamic>>> getWallets({
+    String orderBy = 'name COLLATE NOCASE ASC',
+  }) async {
+    const allowedOrderings = {
+      'name',
+      'name ASC',
+      'name COLLATE NOCASE ASC',
+      'id ASC',
+    };
+    if (!allowedOrderings.contains(orderBy)) {
+      throw ArgumentError.value(orderBy, 'orderBy');
+    }
+    return DatabaseManager.instance.database.query(
+      'wallets',
+      orderBy: orderBy,
+    );
+  }
+
   static Future<Map<String, String>> getWalletDisplaySettings() async {
     final rows = await DatabaseManager.instance.database.query(
       'app_settings',

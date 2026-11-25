@@ -628,6 +628,25 @@ class AssetsService {
       // Net all wallet effects first. This avoids temporary balance changes
       // depending on whether the purchase or sale loan is processed first.
       final walletDeltas = <int, double>{};
+      Future<void> validateWalletCurrency(int walletId, String expectedCurrency) async {
+        final walletRows = await txn.query(
+          'wallets',
+          columns: ['currency'],
+          where: 'id = ?',
+          whereArgs: [walletId],
+          limit: 1,
+        );
+        if (walletRows.isEmpty) {
+          throw Exception('A linked Asset wallet no longer exists. Restore the wallet first.');
+        }
+        final currentCurrency =
+            (walletRows.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+        if (currentCurrency != expectedCurrency.trim().toUpperCase()) {
+          throw Exception(
+            'An Asset wallet currency has changed. Correct the wallet currency before deleting this Asset.',
+          );
+        }
+      }
       void addWalletDelta(int walletId, double delta) {
         if (walletId <= 0 || !delta.isFinite) {
           throw Exception('The Asset contains invalid wallet accounting details.');
@@ -745,6 +764,7 @@ class AssetsService {
         if (!receivedAmount.isFinite || receivedAmount < 0) {
           throw Exception('The Asset sale wallet amount is invalid. Asset deletion was cancelled.');
         }
+        await validateWalletCurrency(receivingWalletId, asset.saleWalletCurrency);
         addWalletDelta(receivingWalletId, -receivedAmount);
       }
 
@@ -752,6 +772,7 @@ class AssetsService {
         if (!asset.purchasePrice.isFinite || asset.purchasePrice <= 0) {
           throw Exception('The Asset purchase amount is invalid. Asset deletion was cancelled.');
         }
+        await validateWalletCurrency(asset.walletId, asset.currency);
         addWalletDelta(asset.walletId, asset.purchasePrice);
       }
 

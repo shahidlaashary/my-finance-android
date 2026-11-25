@@ -20,14 +20,6 @@ class _AppLockScreenState extends State<AppLockScreen> {
   List<BiometricType> _availableBiometrics = [];
   bool _saving = false;
 
-  String get _biometricMethods {
-    final methods = <String>[];
-    if (_availableBiometrics.contains(BiometricType.face)) methods.add('Face');
-    if (_availableBiometrics.contains(BiometricType.fingerprint)) methods.add('Fingerprint');
-    if (methods.isEmpty && _availableBiometrics.isNotEmpty) return 'Device biometrics';
-    return methods.isEmpty ? 'Not reported by Android' : methods.join(' & ');
-  }
-
   @override
   void initState() {
     super.initState();

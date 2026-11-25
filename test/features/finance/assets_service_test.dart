@@ -746,4 +746,46 @@ void main() {
     expect(linkedLoan!.partyId, partyId);
     expect(linkedLoan.currency, 'PKR');
   });
+
+  test('restoring a sold wallet-funded asset replays purchase and sale balances', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Sold Asset Restore Balance', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: walletId,
+      paymentType: 'Wallet',
+      walletAmount: 500,
+      walletCurrency: 'PKR',
+    );
+
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      1100,
+    );
+    await assets.deleteAsset(assetId);
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      1000,
+    );
+
+    final archived = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'assets' &&
+          item['source_id'].toString() == assetId.toString(),
+    );
+    await RecycleBinService.restore(archived['id'] as int);
+
+    final restored = await assets.getAssetById(assetId);
+    expect(restored, isNotNull);
+    expect(restored!.isSold, isTrue);
+    expect(restored.salePrice, 500);
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      1100,
+    );
+  });
 }

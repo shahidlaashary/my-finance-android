@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -328,7 +329,7 @@ class _WalletsPageState extends State<WalletsPage> {
       final result = List<Map<String, dynamic>>.from(
         await FinanceDB.instance.getWallets(),
       );
-      final settings = await FinanceDB.instance.db.query(
+      final settings = await DatabaseManager.instance.database.query(
         'app_settings',
         where: 'setting_key IN (?, ?)',
         whereArgs: ['hidden_wallet_ids', 'wallet_display_order'],
@@ -2037,7 +2038,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
   }
 
   Future<void> _saveIds(String key, List<int> ids) async {
-    await FinanceDB.instance.db.insert('app_settings',
+    await DatabaseManager.instance.database.insert('app_settings',
       {'setting_key': key, 'setting_value': jsonEncode(ids)},
       conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -2046,7 +2047,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
     if (!mounted) return;
     setState(() { _loading = true; _loadError = null; });
     try {
-      final db = FinanceDB.instance.db;
+      final db = DatabaseManager.instance.database;
       final all = List<Map<String, dynamic>>.from(await db.query('wallets'));
       final rows = await db.query('app_settings',
         where: 'setting_key IN (?, ?)',

@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class TransactionsService {
   static String _normalizeType(String type) {
@@ -264,7 +264,7 @@ class TransactionsService {
     final fee = feeRows.isEmpty ? 0.0 :
       (double.tryParse(feeRows.first['setting_value']?.toString() ?? '') ?? 0.0);
     final archived = Map<String, dynamic>.from(existing.first)..['_transfer_fee'] = fee;
-    final recycleId = await RecycleBinService.archive(type: 'Transaction',
+    final recycleId = await RecycleBinArchiveService.archive(type: 'Transaction',
       title: '${existing.first['type']} • ${existing.first['amount']}',
       table: 'transactions', id: id, record: archived);
     try {

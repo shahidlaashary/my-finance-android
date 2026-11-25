@@ -5,12 +5,6 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 
 class TransactionsService {
 
-  // Shared connection is closed centrally by DatabaseManager.
-  static Future<void> closeDatabase() => DatabaseManager.instance.close();
-
-  static Future<Database> get database async =>
-      DatabaseManager.instance.database;
-
   static Future<void> _changeBalance(Transaction txn, int walletId, double change) async {
     final changed = await txn.rawUpdate(
       'UPDATE wallets SET balance = balance + ? WHERE id = ?',

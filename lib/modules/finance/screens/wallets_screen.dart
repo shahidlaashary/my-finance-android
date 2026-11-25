@@ -13,8 +13,9 @@ import 'package:intl/intl.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/theme/app_colors.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/modules/finance/screens/transactions_screen.dart';
 
@@ -427,7 +428,7 @@ class _WalletsPageState extends State<WalletsPage> {
 
     try {
       await SoundSettingsService.instance.play('delete_warning');
-      await FinanceDB.instance.deleteWallet(wallet['id'] as int);
+      await WalletService.deleteWallet(wallet['id'] as int);
       await SoundSettingsService.instance.play('delete_success');
       if (await GeneralPreferences.instance.hapticFeedback) {
         await HapticFeedback.selectionClick();
@@ -1328,7 +1329,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
   Future<void> _loadBaseCurrencyAsDefault() async {
     if (isEditing) return;
     try {
-      final baseCurrency = await FinanceDB.instance.getBaseCurrency();
+      final baseCurrency = await CurrencyService.getBaseCurrency();
       if (!mounted || !CurrencyCatalog.supported.contains(baseCurrency)) return;
       setState(() => selectedCurrency = baseCurrency);
     } catch (_) {
@@ -1357,7 +1358,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 
     try {
       if (isEditing) {
-        await FinanceDB.instance.updateWallet(
+        await WalletService.updateWallet(
           id: widget.wallet!['id'] as int,
           name: nameController.text,
           type: selectedType,
@@ -1373,7 +1374,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
           excludeTotal: excludeTotal,
         );
       } else {
-        await FinanceDB.instance.addWallet(
+        await WalletService.addWallet(
           name: nameController.text,
           type: selectedType,
           customType: selectedType == 'Custom'
@@ -2109,7 +2110,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
       actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:Text(appText(context,'Cancel','منسوخ کریں'))),
         FilledButton(onPressed:()=>Navigator.pop(c,true),child:Text(appText(context,'Delete','حذف کریں')))]));
     if(yes!=true)return;
-    try { await FinanceDB.instance.deleteWallet((wallet['id'] as num).toInt()); await _load(); }
+    try { await WalletService.deleteWallet((wallet['id'] as num).toInt()); await _load(); }
     catch(e) { if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString().replaceFirst('Exception: ','')))); }
   }
 

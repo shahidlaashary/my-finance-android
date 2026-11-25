@@ -24,10 +24,6 @@ class FinanceDB {
     await DatabaseManager.instance.initialize(onCreate: _createDatabase);
   }
 
-  /// Compatibility facade for existing FinanceDB repository methods.
-  /// Modules should migrate to DatabaseManager directly in subsequent steps.
-  Database get db => DatabaseManager.instance.database;
-
   // Database band karke restore ke baad dobara kholne ke liye.
   Future<void> close() => DatabaseManager.instance.close();
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
-import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
 class SimpleFeaturePage extends StatelessWidget {

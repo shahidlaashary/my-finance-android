@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as p;
@@ -12,7 +13,7 @@ import 'package:my_finance/modules/space/services/my_space_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
-    await FinanceDB.instance.db.execute('''CREATE TABLE IF NOT EXISTS recycle_bin (
+    await DatabaseManager.instance.database.execute('''CREATE TABLE IF NOT EXISTS recycle_bin (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       entity_type TEXT NOT NULL, entity_title TEXT NOT NULL,
       source_table TEXT NOT NULL, source_id TEXT NOT NULL,
@@ -45,7 +46,7 @@ class RecycleBinService {
     List<Map<String, dynamic>> related = const [],
   }) async {
     await ensureTable();
-    return FinanceDB.instance.db.insert('recycle_bin', {
+    return DatabaseManager.instance.database.insert('recycle_bin', {
       'entity_type': type, 'entity_title': title, 'source_table': table,
       'source_id': id.toString(), 'payload': jsonEncode(record),
       'related_payload': related.isEmpty ? null : jsonEncode(related),
@@ -56,7 +57,7 @@ class RecycleBinService {
 
   static Future<List<Map<String, dynamic>>> getItems() async {
     await ensureTable();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final expired = await db.query('recycle_bin', where: 'expires_at IS NOT NULL AND expires_at <= ?', whereArgs: [DateTime.now().toIso8601String()], columns: ['id']);
     for (final row in expired) {
       await permanentlyDelete((row['id'] as num).toInt());
@@ -66,7 +67,7 @@ class RecycleBinService {
 
   static Future<void> restore(int recycleId) async {
     await ensureTable();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
       final rows = await txn.query('recycle_bin', where: 'id = ?', whereArgs: [recycleId], limit: 1);
       if (rows.isEmpty) throw Exception('Recycle Bin item not found.');
@@ -917,12 +918,12 @@ class RecycleBinService {
 
   static Future<void> discardArchive(int id) async {
     await ensureTable();
-    await FinanceDB.instance.db.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
+    await DatabaseManager.instance.database.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
   }
 
   static Future<void> permanentlyDelete(int id) async {
     await ensureTable();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final rows = await db.query('recycle_bin', where: 'id = ?', whereArgs: [id], limit: 1);
     if (rows.isEmpty) return;
     final item = rows.first;

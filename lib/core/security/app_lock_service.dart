@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:math';
 
@@ -31,7 +32,7 @@ class AppLockService {
   static const int _lockoutSeconds = 30;
 
   static Future<String?> _getSetting(String key) async {
-    final rows = await FinanceDB.instance.db.query(
+    final rows = await DatabaseManager.instance.database.query(
       'app_settings',
       columns: ['setting_value'],
       where: 'setting_key = ?',
@@ -42,7 +43,7 @@ class AppLockService {
   }
 
   static Future<void> _saveSetting(String key, String value) async {
-    await FinanceDB.instance.db.insert(
+    await DatabaseManager.instance.database.insert(
       'app_settings',
       {'setting_key': key, 'setting_value': value},
       conflictAlgorithm: ConflictAlgorithm.replace,

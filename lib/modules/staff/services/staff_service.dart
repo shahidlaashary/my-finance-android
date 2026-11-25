@@ -1,9 +1,7 @@
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 class StaffService {
@@ -102,45 +100,48 @@ class StaffService {
     final wallets = await db.query('wallets', columns: ['id'], where: 'id = ?', whereArgs: [walletId], limit: 1);
     if (wallets.isEmpty) throw Exception('Select an available wallet.');
     final name = staff.first['name'].toString();
-    final txId = await TransactionsService.addTransaction(type: 'Expense', amount: amount,
-      walletId: walletId, category: 'Staff Salary',
-      note: 'Salary • $name${note.trim().isEmpty ? '' : ' • ${note.trim()}'}',
-      date: date.toIso8601String());
-    try {
-      final id = await DatabaseManager.instance.database.insert('staff_salaries', {
-        'staff_id': staffId, 'amount': amount, 'wallet_id': walletId,
-        'paid_at': date.toIso8601String(), 'note': note.trim(), 'transaction_id': txId,
+    final id = await db.transaction((txn) async {
+      final walletRows = await txn.query(
+        'wallets',
+        columns: ['balance'],
+        where: 'id = ?',
+        whereArgs: [walletId],
+        limit: 1,
+      );
+      if (walletRows.isEmpty) throw Exception('Select an available wallet.');
+      final balance = (walletRows.first['balance'] as num).toDouble();
+      if (balance < amount) throw Exception('Insufficient wallet balance.');
+
+      await txn.update(
+        'wallets',
+        {'balance': balance - amount},
+        where: 'id = ?',
+        whereArgs: [walletId],
+      );
+      final transactionId = await txn.insert('transactions', {
+        'type': 'Expense',
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': null,
+        'to_amount': null,
+        'exchange_rate': null,
+        'balance_delta': null,
+        'category': 'Staff Salary',
+        'note': 'Salary • $name${note.trim().isEmpty ? '' : ' • ${note.trim()}'}',
+        'date': date.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
       });
-      AppRefreshController.notifyChanged();
-      return id;
-    } catch (_) {
-      await DatabaseManager.instance.database.transaction((txn) async {
-        final transactionRows = await txn.query(
-          'transactions',
-          where: 'id = ?',
-          whereArgs: [txId],
-          limit: 1,
-        );
-        if (transactionRows.isNotEmpty) {
-          await txn.rawUpdate(
-            'UPDATE wallets SET balance = balance + ? WHERE id = ?',
-            [amount, walletId],
-          );
-          await txn.delete('transactions', where: 'id = ?', whereArgs: [txId]);
-          await txn.delete(
-            'app_settings',
-            where: 'setting_key = ?',
-            whereArgs: ['transaction_transfer_fee_$txId'],
-          );
-        }
-        await txn.delete(
-          'staff_salaries',
-          where: 'transaction_id = ?',
-          whereArgs: [txId],
-        );
+      return txn.insert('staff_salaries', {
+        'staff_id': staffId,
+        'amount': amount,
+        'wallet_id': walletId,
+        'paid_at': date.toIso8601String(),
+        'note': note.trim(),
+        'transaction_id': transactionId,
       });
-      rethrow;
-    }
+    });
+    AppRefreshController.notifyChanged();
+    return id;
   }
 
   static Future<void> saveAttendance({required int staffId, required DateTime date,

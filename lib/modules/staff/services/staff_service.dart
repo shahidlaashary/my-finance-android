@@ -1,16 +1,10 @@
 import 'package:my_finance/core/database/database_manager.dart';
-import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class StaffService {
-  /// Wallet records are owned by WalletService, not the Staff module.
-  static Future<List<Map<String, dynamic>>> getWallets() {
-    return WalletService.getWallets();
-  }
-
   static Future<void> ensureTables() async {
     final db = DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS staff (

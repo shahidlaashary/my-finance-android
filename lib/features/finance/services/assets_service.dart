@@ -862,17 +862,4 @@ class AssetsService {
       (double total, double value) => total + value,
     );
   }
-  Future<List<AssetsModel>> getAssetsByWallet(
-    int walletId,
-  ) async {
-    final db = await _database;
-    await _ensureTables(db);
-    final rows = await db.query(
-      'assets',
-      where: 'wallet_id = ?',
-      whereArgs: [walletId],
-      orderBy: 'purchase_date DESC',
-    );
-    return rows.map(AssetsModel.fromMap).toList();
-  }
 }

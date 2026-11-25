@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:my_finance/core/platform/platform_info.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
@@ -823,7 +824,7 @@ class _RecurringTransactionDialogState
               Row(children: [Icon(Icons.attach_file), SizedBox(width: 8), Expanded(child: Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold))), Text('${_pendingAttachments.length}')]),
               SizedBox(height: 10),
               Wrap(spacing: 8, runSpacing: 8, children: [
-                if (Platform.isAndroid || Platform.isIOS) OutlinedButton.icon(onPressed: _saving ? null : () => _stagePhotos(camera: true), icon: Icon(Icons.camera_alt), label: Text('Camera')),
+                if (PlatformInfo.current.isMobile) OutlinedButton.icon(onPressed: _saving ? null : () => _stagePhotos(camera: true), icon: Icon(Icons.camera_alt), label: Text('Camera')),
                 OutlinedButton.icon(onPressed: _saving ? null : () => _stagePhotos(), icon: Icon(Icons.photo_library), label: Text('Gallery')),
                 OutlinedButton.icon(onPressed: _saving ? null : _stagePdfs, icon: Icon(Icons.picture_as_pdf), label: Text('Add PDFs')),
               ]),

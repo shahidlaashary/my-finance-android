@@ -7,6 +7,7 @@ import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
 import 'package:my_finance/modules/space/services/my_space_service.dart';
 import 'package:my_finance/modules/space/services/space_documents_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -90,42 +91,12 @@ class RecycleBinService {
       if (rows.isEmpty) throw Exception('Recycle Bin item not found.');
       final item = rows.first;
       final table = item['source_table'].toString();
-      final record = Map<String, dynamic>.from(jsonDecode(item['payload'].toString()) as Map);
-      if (table == 'loan_parties') {
-        final partyId = (record['id'] as num?)?.toInt();
-        if (partyId == null || partyId <= 0) {
-          throw Exception('The archived Loan Party has an invalid ID.');
-        }
-        final existing = await txn.query(
-          'loan_parties',
-          columns: ['id'],
-          where: 'id = ?',
-          whereArgs: [partyId],
-          limit: 1,
-        );
-        if (existing.isNotEmpty) {
-          throw Exception('This Loan Party already exists.');
-        }
-        final archivedName = (record['name']?.toString() ?? '').trim();
-        final archivedType =
-            (record['party_type']?.toString() ?? 'Individual').trim();
-        if (archivedName.isEmpty || archivedType.isEmpty) {
-          throw Exception('The archived Loan Party has an invalid name or type.');
-        }
-        final duplicate = await txn.query(
-          'loan_parties',
-          columns: ['id'],
-          where: 'LOWER(TRIM(name)) = LOWER(?) AND LOWER(TRIM(party_type)) = LOWER(?)',
-          whereArgs: [archivedName, archivedType],
-          limit: 1,
-        );
-        if (duplicate.isNotEmpty) {
-          throw Exception(
-            'A party with this name already exists under $archivedType type.',
-          );
-        }
-        await txn.insert('loan_parties', record);
+      final record = M      if (table == 'loan_parties') {
+        await PartyService.restoreArchivedParty(txn, record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
+        return;
+      }
+_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
       if (table == 'loan_repayments') {

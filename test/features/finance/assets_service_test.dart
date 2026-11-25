@@ -1692,4 +1692,39 @@ void main() {
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 1100);
   });
 
+  test('restoring a party is blocked when its name and type already exist', () async {
+    final partyId = await LoansService.addParty(
+      name: 'Duplicate Restore Party',
+      currency: 'PKR',
+      partyType: 'Individual',
+    );
+    await LoansService.deleteParty(partyId);
+
+    final replacementId = await LoansService.addParty(
+      name: 'Duplicate Restore Party',
+      currency: 'USD',
+      partyType: 'Individual',
+    );
+    expect(replacementId, isNot(partyId));
+
+    final archivedParty = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'loan_parties' &&
+          item['source_id'].toString() == partyId.toString(),
+    );
+    await expectLater(
+      RecycleBinService.restore(archivedParty['id'] as int),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('A party with this name already exists under Individual type'),
+      )),
+    );
+
+    final parties = await LoansService.getParties();
+    expect(parties.where((party) =>
+        (party['name'] as String) == 'Duplicate Restore Party'), hasLength(1));
+    expect(parties.single['id'], replacementId);
+  });
+
+
 }

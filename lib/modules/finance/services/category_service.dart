@@ -63,12 +63,9 @@ class CategoryService {
     throw ArgumentError.value(type, 'type', 'Expected income or expense.');
   }
 
-  static Future<List<FinanceCategory>> getCategories(
-    String type, {
-    int? parentId,
-  }) async {
-    if (parentId != null) return [];
-
+  static Future<List<Map<String, dynamic>>> getCategoryMaps(
+    String type,
+  ) async {
     final normalizedType = _normalizedType(type);
     final key = normalizedType == 'Income'
         ? 'income_categories'
@@ -82,29 +79,55 @@ class CategoryService {
       limit: 1,
     );
 
-    List<Map<String, dynamic>> stored;
     final raw = rows.isEmpty ? null : rows.first['setting_value']?.toString();
     if (raw == null || raw.isEmpty) {
-      stored = _defaultCategories(normalizedType);
-      await _saveMaps(key, stored);
-    } else {
-      try {
-        final decoded = jsonDecode(raw);
-        if (decoded is List) {
-          stored = decoded
-              .whereType<Map>()
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList();
-        } else {
-          stored = _defaultCategories(normalizedType);
-          await _saveMaps(key, stored);
-        }
-      } catch (_) {
-        stored = _defaultCategories(normalizedType);
-        await _saveMaps(key, stored);
-      }
+      final defaults = _defaultCategories(normalizedType);
+      await _saveMaps(key, defaults);
+      return defaults;
     }
 
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      }
+    } catch (_) {
+      // Invalid stored data is replaced with the original defaults.
+    }
+
+    final defaults = _defaultCategories(normalizedType);
+    await _saveMaps(key, defaults);
+    return defaults;
+  }
+
+  static Future<void> saveCategoryMaps(
+    String type,
+    List<Map<String, dynamic>> categories,
+  ) async {
+    final normalizedType = _normalizedType(type);
+    final key = normalizedType == 'Income'
+        ? 'income_categories'
+        : 'expense_categories';
+    final values = categories.map((item) => <String, dynamic>{
+      'name': (item['name'] ?? '').toString().trim(),
+      'icon': item['icon'] is num
+          ? (item['icon'] as num).toInt()
+          : int.tryParse(item['icon']?.toString() ?? '') ?? 0,
+    }).toList();
+    await _saveMaps(key, values);
+  }
+
+  static Future<List<FinanceCategory>> getCategories(
+    String type, {
+    int? parentId,
+  }) async {
+    if (parentId != null) return [];
+
+    final normalizedType = _normalizedType(type);
+    final stored = await getCategoryMaps(normalizedType);
     return stored.asMap().entries.map((entry) {
       final value = entry.value;
       final rawIcon = value['icon'];
@@ -126,13 +149,10 @@ class CategoryService {
     List<FinanceCategory> categories,
   ) async {
     final normalizedType = _normalizedType(type);
-    final values = categories.map((item) {
-      return <String, dynamic>{
-        'name': item.name.trim(),
-        'icon': int.tryParse(item.icon) ?? 0,
-      };
+    final values = categories.map((item) => <String, dynamic>{
+      'name': item.name.trim(),
+      'icon': int.tryParse(item.icon) ?? 0,
     }).toList();
-
     final key = normalizedType == 'Income'
         ? 'income_categories'
         : 'expense_categories';

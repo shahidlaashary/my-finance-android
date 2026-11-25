@@ -78,6 +78,46 @@ void main() {
         currency: 'PKR',
       );
 
+  Future<Map<String, int>> createLoanWithRepayment() async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Repayment Reconciliation Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 500,
+        remainingAmount: 500,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-01',
+        createdAt: DateTime(2026, 11, 1).toIso8601String(),
+      ),
+    );
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 100,
+        walletId: walletId,
+        repaymentDate: '2026-11-02',
+        createdAt: DateTime(2026, 11, 2).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'loans',
+      {'remaining_amount': 350},
+      where: 'id = ?',
+      whereArgs: [loanId],
+    );
+    return {
+      'walletId': walletId,
+      'loanId': loanId,
+      'repaymentId': repaymentId,
+    };
+  }
+
   test('party names are unique only within the same party type', () async {
     final individualId = await LoansService.addParty(
       name: 'Same Name Party',
@@ -1881,4 +1921,72 @@ void main() {
       900,
     );
   });
+  test('adding repayment is blocked when existing loan history does not reconcile', () async {
+    final ids = await createLoanWithRepayment();
+    final walletBefore =
+        (await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'];
+    await expectLater(
+      LoansService.addRepayment(
+        RepaymentModel(
+          loanId: ids['loanId']!,
+          amount: 50,
+          walletId: ids['walletId']!,
+          repaymentDate: '2026-11-03',
+          createdAt: DateTime(2026, 11, 3).toIso8601String(),
+        ),
+      ),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('does not reconcile with its repayment history'),
+      )),
+    );
+    expect(await LoansService.getRepayments(ids['loanId']!), hasLength(1));
+    expect((await LoansService.getLoanById(ids['loanId']!))!.remainingAmount, 350);
+    expect((await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'], walletBefore);
+  });
+
+  test('updating repayment is blocked when existing loan history does not reconcile', () async {
+    final ids = await createLoanWithRepayment();
+    final walletBefore =
+        (await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'];
+    await expectLater(
+      LoansService.updateRepayment(
+        RepaymentModel(
+          id: ids['repaymentId']!,
+          loanId: ids['loanId']!,
+          amount: 120,
+          walletId: ids['walletId']!,
+          repaymentDate: '2026-11-03',
+          createdAt: DateTime(2026, 11, 3).toIso8601String(),
+        ),
+      ),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('does not reconcile with its repayment history'),
+      )),
+    );
+    expect(await LoansService.getRepayments(ids['loanId']!), hasLength(1));
+    expect((await LoansService.getLoanById(ids['loanId']!))!.remainingAmount, 350);
+    expect((await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'], walletBefore);
+  });
+
+  test('deleting repayment is blocked when existing loan history does not reconcile', () async {
+    final ids = await createLoanWithRepayment();
+    final walletBefore =
+        (await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'];
+    await expectLater(
+      LoansService.deleteRepayment(ids['repaymentId']!),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('does not reconcile with its repayment history'),
+      )),
+    );
+    expect(await LoansService.getRepayments(ids['loanId']!), hasLength(1));
+    expect((await LoansService.getLoanById(ids['loanId']!))!.remainingAmount, 350);
+    expect((await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'], walletBefore);
+  });
+
 }

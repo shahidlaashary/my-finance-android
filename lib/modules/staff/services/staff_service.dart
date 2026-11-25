@@ -3,7 +3,7 @@ import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class StaffService {
   /// Wallet records are owned by WalletService, not the Staff module.
@@ -82,7 +82,7 @@ class StaffService {
       ...salaries.map((row) => {...row, '_related_table':'staff_salaries'}),
       ...attendance.map((row) => {...row, '_related_table':'staff_attendance'}),
     ];
-    final recycleId = await RecycleBinService.archive(
+    final recycleId = await RecycleBinArchiveService.archive(
       type: 'Staff',
       title: staffRows.first['name']?.toString() ?? 'Staff',
       table: 'staff',

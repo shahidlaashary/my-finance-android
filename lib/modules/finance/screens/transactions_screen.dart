@@ -1,12 +1,14 @@
 
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+
 
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
@@ -156,7 +158,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             (row['type'] == 'asset' &&
                 row['payment_type']?.toString().trim().toLowerCase() == 'loan'));
       }
-      final wallet = widget.walletId == null ? null : await FinanceDB.instance.getWallet(widget.walletId!);
+      final wallet = widget.walletId == null ? null : await WalletService.getWallet(widget.walletId!);
 
       // Upcoming recurring schedules are display-only; they do not affect balances.
       final recurringItems = await RecurringTransactionService().getRecurringTransactions(activeOnly: true);
@@ -253,7 +255,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     controller.dispose();
     if (newBalance == null) return;
     try {
-      await FinanceDB.instance.updateWallet(
+      await WalletService.updateWallet(
         id: (wallet['id'] as num).toInt(),
         name: wallet['name'] as String,
         type: wallet['type'] as String,

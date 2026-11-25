@@ -964,4 +964,68 @@ void main() {
       800,
     );
   });
+  test('editing or deleting a repayment is blocked if its wallet currency changed', () async {
+    final lendingWalletId = await createWallet(1000);
+    final repaymentWalletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Changed Repayment Wallet Currency Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: lendingWalletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    final repaymentId = await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: loanId,
+        amount: 100,
+        walletId: repaymentWalletId,
+        repaymentDate: '2026-11-21',
+        createdAt: DateTime(2026, 11, 21).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [repaymentWalletId],
+    );
+
+    await expectLater(
+      LoansService.updateRepayment(
+        RepaymentModel(
+          id: repaymentId,
+          loanId: loanId,
+          amount: 80,
+          walletId: repaymentWalletId,
+          repaymentDate: '2026-11-22',
+          createdAt: DateTime(2026, 11, 22).toIso8601String(),
+        ),
+      ),
+      throwsA(isA<Exception>()),
+    );
+    await expectLater(
+      LoansService.deleteRepayment(repaymentId),
+      throwsA(isA<Exception>()),
+    );
+
+    final savedLoan = await LoansService.getLoanById(loanId);
+    final savedRepayments = await LoansService.getRepayments(loanId);
+    expect(savedLoan!.remainingAmount, 200);
+    expect(savedRepayments, hasLength(1));
+    expect(savedRepayments.single.amount, 100);
+    expect(
+      (await FinanceDB.instance.getWallet(repaymentWalletId))!['balance'],
+      1100,
+    );
+  });
+
 }

@@ -108,13 +108,6 @@ class WalletService {
     AppRefreshController.notifyChanged();
   }
 
-  static Future<List<Map<String, dynamic>>> getWallets() {
-    return DatabaseManager.instance.database.query(
-      'wallets',
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
-  }
-
   static Future<Map<String, dynamic>?> getWallet(int id) async {
     final rows = await DatabaseManager.instance.database.query(
       'wallets',

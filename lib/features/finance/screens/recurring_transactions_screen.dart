@@ -139,26 +139,6 @@ class _RecurringTransactionsScreenState
     );
   }
 
-  Future<void> _processDue() async {
-    try {
-      final count = await _service.processDueTransactions();
-
-      await _loadData();
-
-      final failed = _service.lastProcessingErrors;
-      if (failed.isEmpty) {
-        _showMessage('$count recurring transaction(s) processed.');
-      } else {
-        _showMessage(
-          '$count transaction(s) processed; ${failed.length} schedule(s) paused due to errors. Open and edit them, then resume.',
-          isError: true,
-        );
-      }
-    } catch (e) {
-      _showMessage('Processing failed: $e', isError: true);
-    }
-  }
-
   Future<void> _toggleStatus(
     RecurringTransactionModel item,
   ) async {

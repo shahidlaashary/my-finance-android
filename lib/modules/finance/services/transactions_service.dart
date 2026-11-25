@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
-import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
@@ -302,17 +301,6 @@ class TransactionsService {
     """, args);
   }
 
-  static Future<List<Map<String, dynamic>>> getWallets() async {
-    final wallets = await WalletService.getWallets();
-    return wallets
-        .map((wallet) => {
-              'id': wallet['id'],
-              'name': wallet['name'],
-              'currency': wallet['currency'],
-              'balance': wallet['balance'],
-            })
-        .toList();
-  }
   /// Restores the archived transactions record and related ledger entries atomically.
   static Future<void> restoreArchivedTransaction(
     Transaction txn, {

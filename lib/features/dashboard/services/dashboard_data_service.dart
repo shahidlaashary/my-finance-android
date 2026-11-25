@@ -1,3 +1,5 @@
+import 'package:sqflite/sqflite.dart';
+
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/settings/app_settings_service.dart';
 

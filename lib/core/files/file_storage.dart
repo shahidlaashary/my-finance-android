@@ -18,5 +18,10 @@ abstract interface class FileStorage {
 
   Future<int> fileLength(String path);
 
+  Future<void> writeBytes({
+    required String path,
+    required List<int> bytes,
+  });
+
   Future<void> deleteFile(String path);
 }

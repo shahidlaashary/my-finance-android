@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 
 class BaseCurrencyScreen extends StatefulWidget {
@@ -15,7 +15,6 @@ class BaseCurrencyScreen extends StatefulWidget {
 }
 
 class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
-  final FinanceDB _database = FinanceDB.instance;
   bool _loading = true;
   bool _saving = false;
   String _selected = 'PKR';
@@ -32,8 +31,8 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   Future<void> _load() async {
     try {
       final values = await Future.wait([
-        _database.getBaseCurrency(),
-        _database.getExchangeRates(),
+        CurrencyService.getBaseCurrency(),
+        CurrencyService.getExchangeRates(),
       ]);
       final selected = values[0] as String;
       var rows = values[1] as List<Map<String, dynamic>>;
@@ -53,7 +52,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
       if (needsRefresh) {
         try {
           await _refreshRatesOnline();
-          rows = await _database.getExchangeRates();
+          rows = await CurrencyService.getExchangeRates();
           rates = _parseRates(rows);
         } catch (_) {
           // Offline honay par pehle se saved rates available rehte hain.
@@ -144,7 +143,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
         // app ko 1 foreign currency ki PKR value chahiye.
         final pkrPerUnit = 1 / rawRate.toDouble();
         if (pkrPerUnit.isFinite && pkrPerUnit > 0) {
-          await _database.saveExchangeRate(
+          await CurrencyService.saveExchangeRate(
             currency,
             pkrPerUnit,
             source: 'automatic',
@@ -285,7 +284,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await _database.setBaseCurrency(_selected);
+      await CurrencyService.setBaseCurrency(_selected);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Base currency $_selected set ho gayi.')),

@@ -1010,6 +1010,7 @@ class LoansService {
 
       for (final row in repayments) {
         final repayment = RepaymentModel.fromMap(row);
+        await _validateRepaymentWalletCurrency(txn, repayment);
         final repaymentWalletAmount = _validatedRepaymentWalletAmount(repayment);
         addWalletDelta(
           repayment.walletId,

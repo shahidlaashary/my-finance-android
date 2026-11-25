@@ -847,4 +847,219 @@ class LoansService {
 
     AppRefreshController.notifyChanged();
   }
+  /// Restores a loan and its repayment ledger within the caller's transaction.
+  static Future<void> restoreArchivedLoan(
+    Transaction txn, {
+    required Map<String, dynamic> record,
+    String? relatedPayload,
+  }) async {
+        final linkedSource = record['source_type']?.toString();
+        if (linkedSource != null &&
+            linkedSource != 'asset_purchase' &&
+            linkedSource != 'asset_sale') {
+          throw Exception('The archived loan has an unsupported linked source.');
+        }
+        if (linkedSource != null) {
+          final sourceAssetId = (record['source_id'] as num?)?.toInt();
+          final sourceAsset = sourceAssetId == null
+              ? <Map<String, Object?>>[]
+              : await txn.query(
+                  'assets',
+                  columns: ['id', 'linked_loan_id', 'sale_linked_loan_id'],
+                  where: 'id = ?',
+                  whereArgs: [sourceAssetId],
+                  limit: 1,
+                );
+          if (sourceAsset.isEmpty) {
+            throw Exception('Restore the related Asset first. Its linked loan belongs to that Asset.');
+          }
+          final expectedLoanId = (record['id'] as num).toInt();
+          final linkedId = (sourceAsset.first[
+              linkedSource == 'asset_purchase'
+                  ? 'linked_loan_id'
+                  : 'sale_linked_loan_id'] as num?)?.toInt();
+          if (linkedId != expectedLoanId) {
+            throw Exception('This loan is not the linked loan recorded by the related Asset.');
+          }
+        }
+        await txn.execute('''CREATE TABLE IF NOT EXISTS loans (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, party_id INTEGER,
+          loan_type TEXT NOT NULL DEFAULT 'given', amount REAL NOT NULL,
+          remaining_amount REAL NOT NULL, wallet_id INTEGER NOT NULL,
+          lending_date TEXT NOT NULL, due_date TEXT,
+          notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL)''');
+        await txn.execute('''CREATE TABLE IF NOT EXISTS loan_repayments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, loan_id INTEGER NOT NULL,
+          amount REAL NOT NULL, wallet_id INTEGER NOT NULL, repayment_date TEXT NOT NULL,
+          payment_method TEXT NOT NULL DEFAULT 'cash', notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, FOREIGN KEY(loan_id) REFERENCES loans(id) ON DELETE CASCADE)''');
+        final relatedRaw = relatedPayload ?? '[]';
+        final repayments = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        final loanType = record['loan_type']?.toString().toLowerCase() ?? 'given';
+        if (loanType != 'given' && loanType != 'taken') {
+          throw Exception('The archived loan has an invalid loan type.');
+        }
+        final isAssetLinked = const {'asset_purchase', 'asset_sale'}
+            .contains(record['source_type']?.toString());
+        final loanAmount = (record['amount'] as num).toDouble();
+        final loanWallet = (record['wallet_id'] as num).toInt();
+        final remainingAmount = (record['remaining_amount'] as num).toDouble();
+        if (!loanAmount.isFinite || loanAmount <= 0 ||
+            !remainingAmount.isFinite ||
+            remainingAmount < 0 ||
+            remainingAmount > loanAmount + 0.000001 ||
+            (isAssetLinked ? loanWallet != 0 : loanWallet <= 0)) {
+          throw Exception('The archived loan contains invalid amount or wallet details.');
+        }
+        if (isAssetLinked &&
+            ((linkedSource == 'asset_purchase' && loanType != 'taken') ||
+             (linkedSource == 'asset_sale' && loanType != 'given'))) {
+          throw Exception('The archived asset loan direction does not match its source.');
+        }
+
+        if (!isAssetLinked) {
+          final partyId = (record['party_id'] as num?)?.toInt();
+          if (partyId == null || partyId <= 0) {
+            throw Exception('The archived loan is missing its linked party. Restore is blocked.');
+          }
+          final partyRows = await txn.query(
+            'loan_parties',
+            columns: ['id', 'currency'],
+            where: 'id = ?',
+            whereArgs: [partyId],
+            limit: 1,
+          );
+          if (partyRows.isEmpty) {
+            throw Exception('Restore the linked party before restoring this loan.');
+          }
+          final partyCurrency =
+              (partyRows.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+          final archivedLoanCurrency =
+              (record['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+          if (partyCurrency != archivedLoanCurrency) {
+            throw Exception(
+              'The linked party currency has changed. Correct the party currency before restoring this loan.',
+            );
+          }
+
+          final sourceWalletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [loanWallet],
+            limit: 1,
+          );
+          if (sourceWalletRows.isEmpty) {
+            throw Exception('The loan wallet no longer exists. Restore the wallet first.');
+          }
+          final sourceCurrency =
+              (sourceWalletRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
+          final loanCurrency =
+              (record['currency']?.toString() ?? 'PKR').toUpperCase();
+          if (sourceCurrency != loanCurrency) {
+            throw Exception(
+              'The loan wallet currency has changed. Correct the wallet currency before restoring this loan.',
+            );
+          }
+        }
+
+        // Restore the original loan and every repayment as one net effect
+        // per wallet. For Loan Given, the original lending debit may be
+        // offset by repayments received into that same wallet.
+        final walletDeltas = <int, double>{};
+        void addWalletDelta(int walletId, double delta) {
+          if (walletId <= 0 || !delta.isFinite) {
+            throw Exception('The archived loan contains invalid wallet accounting details.');
+          }
+          final next = (walletDeltas[walletId] ?? 0) + delta;
+          if (!next.isFinite) {
+            throw Exception('The archived loan wallet balance change is invalid.');
+          }
+          walletDeltas[walletId] = next;
+        }
+        if (!isAssetLinked) {
+          addWalletDelta(
+            loanWallet,
+            loanType == 'given' ? -loanAmount : loanAmount,
+          );
+        }
+
+        // Reapply each repayment using its saved wallet-side converted amount.
+        for (final repayment in repayments) {
+          final walletId = (repayment['wallet_id'] as num).toInt();
+          final repaymentAmount = (repayment['amount'] as num).toDouble();
+          final walletAmount = (repayment['wallet_amount'] as num?)?.toDouble()
+              ?? repaymentAmount;
+          if ((repayment['loan_id'] as num?)?.toInt() !=
+                  (record['id'] as num).toInt() ||
+              !repaymentAmount.isFinite ||
+              repaymentAmount <= 0 ||
+              !walletAmount.isFinite ||
+              walletAmount <= 0 ||
+              walletId <= 0) {
+            throw Exception('An archived loan repayment contains invalid details.');
+          }
+          final repaymentWalletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [walletId],
+            limit: 1,
+          );
+          if (repaymentWalletRows.isEmpty) {
+            throw Exception('A repayment wallet no longer exists. Restore the wallet first.');
+          }
+          final savedWalletCurrency =
+              repayment['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+          final currentWalletCurrency =
+              (repaymentWalletRows.first['currency']?.toString() ?? 'PKR')
+                  .trim()
+                  .toUpperCase();
+          if (savedWalletCurrency.isNotEmpty &&
+              savedWalletCurrency != currentWalletCurrency) {
+            throw Exception(
+              'A repayment wallet currency has changed. Correct the wallet currency before restoring this loan.',
+            );
+          }
+          addWalletDelta(
+            walletId,
+            loanType == 'given' ? walletAmount : -walletAmount,
+          );
+        }
+
+        for (final entry in walletDeltas.entries) {
+          final walletRows = await txn.query(
+            'wallets',
+            columns: ['balance'],
+            where: 'id = ?',
+            whereArgs: [entry.key],
+            limit: 1,
+          );
+          if (walletRows.isEmpty) {
+            throw Exception('A linked loan wallet no longer exists. Restore the wallet first.');
+          }
+          final balance = (walletRows.first['balance'] as num).toDouble();
+          if (!balance.isFinite || balance + entry.value < -0.000001) {
+            throw Exception('Insufficient wallet balance to restore this loan and its repayments.');
+          }
+        }
+        for (final entry in walletDeltas.entries) {
+          if (entry.value == 0) continue;
+          await _applyWalletDelta(
+            txn,
+            walletId: entry.key,
+            amount: entry.value,
+          );
+        }
+
+        record.remove('borrower_name');
+        record.remove('borrower_phone');
+        await txn.insert('loans', record);
+        for (final repayment in repayments) {
+          await txn.insert('loan_repayments', repayment);
+        }
+        return;
+  }
+
 }

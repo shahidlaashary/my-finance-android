@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -159,7 +160,7 @@ void main() {
       joinedAt: DateTime(2026, 1, 1),
       notes: '',
     );
-    await FinanceDB.instance.db.execute('''
+    await DatabaseManager.instance.database.execute('''
       CREATE TRIGGER fail_staff_salary_insert
       BEFORE INSERT ON staff_salaries
       BEGIN
@@ -179,7 +180,7 @@ void main() {
     );
 
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 500);
-    expect(await FinanceDB.instance.db.query('transactions'), isEmpty);
+    expect(await DatabaseManager.instance.database.query('transactions'), isEmpty);
     expect(await RecycleBinService.getItems(), isEmpty);
   });
 
@@ -216,7 +217,7 @@ void main() {
     final archived = (await RecycleBinService.getItems())
         .singleWhere((item) => item['source_table'] == 'staff');
 
-    await FinanceDB.instance.db.insert('staff', {
+    await DatabaseManager.instance.database.insert('staff', {
       'id': originalId,
       'name': 'Replacement Staff',
       'phone': '',
@@ -270,7 +271,7 @@ void main() {
       joinedAt: DateTime(2026, 1, 1),
       notes: '',
     );
-    await FinanceDB.instance.db.execute('''
+    await DatabaseManager.instance.database.execute('''
       CREATE TRIGGER fail_staff_delete
       BEFORE DELETE ON staff
       BEGIN
@@ -308,7 +309,7 @@ void main() {
         throwsA(isA<Exception>()),
       );
     }
-    expect(await FinanceDB.instance.db.query('transactions'), isEmpty);
+    expect(await DatabaseManager.instance.database.query('transactions'), isEmpty);
   });
 
   test('salary payment rejects a missing wallet without creating records', () async {
@@ -332,7 +333,7 @@ void main() {
       throwsA(isA<Exception>()),
     );
 
-    expect(await FinanceDB.instance.db.query('transactions'), isEmpty);
+    expect(await DatabaseManager.instance.database.query('transactions'), isEmpty);
     expect(await StaffService.getSalaries(staffId: staffId), isEmpty);
   });
 

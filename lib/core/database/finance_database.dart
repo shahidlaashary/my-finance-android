@@ -24,6 +24,9 @@ class FinanceDB {
     await DatabaseManager.instance.initialize(onCreate: _createDatabase);
   }
 
+  /// Internal repository handle. Other modules must use DatabaseManager.
+  Database get db => DatabaseManager.instance.database;
+
   // Database band karke restore ke baad dobara kholne ke liye.
   Future<void> close() => DatabaseManager.instance.close();
 

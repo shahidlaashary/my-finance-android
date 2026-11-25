@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
 import 'package:flutter/material.dart';
@@ -23,7 +24,6 @@ import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
 import 'package:my_finance/modules/finance/screens/finance_graph_screens.dart';
-import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
 class AssetsScreen extends StatefulWidget {
@@ -114,7 +114,7 @@ class AssetsScreenState extends State<AssetsScreen> {
       final purchase =
           await _service.getTotalPurchaseValueByCurrency();
 
-      final Database db = await TransactionsService.database;
+      final Database db = await DatabaseManager.instance.database;
 
       final wallets = await db.query(
         'wallets',

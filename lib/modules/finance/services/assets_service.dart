@@ -1165,11 +1165,6 @@ class AssetsService {
             for (final repayment in repayments) {
               await txn.insert('loan_repayments', repayment);
             }
-            await txn.delete(
-              'recycle_bin',
-              where: "source_table = 'loans' AND source_id = ?",
-              whereArgs: [loanId.toString()],
-            );
         }
         final expectedLoanIds = <int>{
           if (purchaseLoanId != null) purchaseLoanId,

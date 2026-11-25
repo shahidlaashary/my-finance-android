@@ -520,6 +520,16 @@ class RecycleBinService {
                 (partyRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
             final loanAmount = (loan['amount'] as num).toDouble();
             final loanRemaining = (loan['remaining_amount'] as num).toDouble();
+            final repaidTotal = repayments.fold<double>(
+              0,
+              (sum, row) => sum + ((row['amount'] as num?)?.toDouble() ?? double.nan),
+            );
+            if (!repaidTotal.isFinite ||
+                (repaidTotal - (loanAmount - loanRemaining)).abs() > 0.000001) {
+              throw Exception(
+                'The archived linked loan balance does not reconcile with its repayment history.',
+              );
+            }
             if (!restoredLoanIds.add(loanId) ||
                 (loanId != purchaseLoanId && loanId != saleLoanId) ||
                 sourceType != expectedSource ||

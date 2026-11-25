@@ -1028,4 +1028,57 @@ void main() {
     );
   });
 
+  test('deleting a credit-sold asset is blocked if a repayment wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final buyerId = await LoansService.addParty(
+      name: 'Credit Sale Delete Currency Buyer',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Credit Sale Delete Currency Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: 0,
+      paymentType: 'Loan',
+      partyId: buyerId,
+      walletAmount: 0,
+      walletCurrency: 'PKR',
+    );
+    final saleLoan = (await LoansService.getLoans()).singleWhere(
+      (loan) => loan.sourceType == 'asset_sale',
+    );
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: saleLoan.id!,
+        amount: 200,
+        walletId: walletId,
+        repaymentDate: '2026-11-11',
+        createdAt: DateTime(2026, 11, 11).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      assets.deleteAsset(assetId),
+      throwsA(isA<Exception>()),
+    );
+
+    expect(await assets.getAssetById(assetId), isNotNull);
+    expect(await LoansService.getLoanById(saleLoan.id!), isNotNull);
+    expect(await LoansService.getRepayments(saleLoan.id!), hasLength(1));
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      800,
+    );
+  });
+
 }

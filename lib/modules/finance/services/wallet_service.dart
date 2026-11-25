@@ -1,5 +1,8 @@
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
+import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Owns wallet data operations while sharing the application's single
 /// DatabaseManager connection.
@@ -57,5 +60,381 @@ class WalletService {
     });
     AppRefreshController.notifyChanged();
     return id;
+  }
+
+  static Future<void> updateWallet({
+    required int id,
+    required String name,
+    required String type,
+    String? customType,
+    required String currency,
+    required double requestedCurrentBalance,
+    String? walletNumber,
+    required int iconCode,
+    required bool excludeTotal,
+  }) async {
+    final normalizedName = name.trim();
+    currency = currency.trim().toUpperCase();
+    if (normalizedName.isEmpty || currency.isEmpty ||
+        !requestedCurrentBalance.isFinite) {
+      throw Exception('Wallet name, currency aur current balance durust enter karein.');
+    }
+    // Refresh missing currency rates before starting the conversion transaction.
+    // This prevents wallet currency changes from requiring a manual visit to
+    // the Exchange Rates screen. Only missing rates are fetched; saved rates
+    // remain unchanged.
+    final currentWalletRows = await DatabaseManager.instance.database.query(
+      'wallets',
+      columns: ['currency'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (currentWalletRows.isNotEmpty) {
+      final currentCurrency = currentWalletRows.first['currency']
+          ?.toString()
+          .trim()
+          .toUpperCase() ?? '';
+      if (currentCurrency != currency) {
+        await CurrencyService.refreshMissingExchangeRatesOnline(
+          currencies: [currentCurrency, currency],
+        );
+      }
+    }
+
+    await DatabaseManager.instance.database.transaction((txn) async {
+      final rows = await txn.query(
+        'wallets',
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+
+      if (rows.isEmpty) {
+        throw Exception('Wallet nahi mila.');
+      }
+
+      final oldWallet = rows.first;
+      final oldCurrency = (oldWallet['currency'] as String).trim().toUpperCase();
+      final oldBalance = (oldWallet['balance'] as num).toDouble();
+      final oldOpening =
+          (oldWallet['opening_balance'] as num).toDouble();
+
+      double newOpening = oldOpening;
+      double convertedOldBalance = oldBalance;
+
+      // Loan aur asset records ki currency fixed hoti hai. Un ke
+      // reference wallet ki currency badalne se purane records ghalat ho sakte hain.
+      if (oldCurrency != currency) {
+        final loanTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+        );
+        if (loanTable.isNotEmpty) {
+          final linkedLoans = await txn.query(
+            'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+          );
+          final linkedRepayments = await txn.query(
+            'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+          );
+          if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
+            throw Exception('Wallet currency cannot be changed while loans or repayments are linked to it.');
+          }
+        }
+        final assetTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
+        );
+        if (assetTable.isNotEmpty) {
+          final linkedAssets = await txn.query(
+            'assets',
+            columns: ['id'],
+            where: 'wallet_id = ? OR sale_wallet_id = ?',
+            whereArgs: [id, id],
+            limit: 1,
+          );
+          if (linkedAssets.isNotEmpty) {
+            throw Exception('Wallet currency cannot be changed while assets are linked to it.');
+          }
+        }
+        final oldRate = await _getRateInTransaction(txn, oldCurrency);
+        final newRate = await _getRateInTransaction(txn, currency);
+
+        if (oldRate == null || newRate == null) {
+          throw Exception(
+            'Currency change karne se pehle dono currencies ke '
+            'exchange rates set karein.',
+          );
+        }
+
+        final factor = oldRate / newRate;
+
+        newOpening = oldOpening * factor;
+        convertedOldBalance = oldBalance * factor;
+
+        // Income aur Expense amounts convert.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET amount = amount * ?
+          WHERE wallet_id = ?
+          AND type IN ('Income', 'Expense')
+        ''', [factor, id]);
+
+        // Transfer source amounts convert.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET amount = amount * ?
+          WHERE wallet_id = ?
+          AND type = 'Transfer'
+        ''', [factor, id]);
+
+        // Source wallet ki currency change hone par linked transfer fees bhi convert.
+        final feeTransactions = await txn.query(
+          'transactions',
+          columns: ['id'],
+          where: "wallet_id = ? AND type = 'Transfer'",
+          whereArgs: [id],
+        );
+        for (final transaction in feeTransactions) {
+          final transactionId = transaction['id'] as int;
+          final feeRows = await txn.query(
+            'app_settings',
+            columns: ['setting_value'],
+            where: 'setting_key = ?',
+            whereArgs: ['transaction_transfer_fee_$transactionId'],
+            limit: 1,
+          );
+          if (feeRows.isNotEmpty) {
+            final oldFee = double.tryParse(
+                  feeRows.first['setting_value']?.toString() ?? '',
+                ) ??
+                0;
+            await txn.update(
+              'app_settings',
+              {'setting_value': (oldFee * factor).toString()},
+              where: 'setting_key = ?',
+              whereArgs: ['transaction_transfer_fee_$transactionId'],
+            );
+          }
+        }
+
+        // Transfer destination amounts convert.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET to_amount = COALESCE(to_amount, amount) * ?
+          WHERE to_wallet_id = ?
+          AND type = 'Transfer'
+        ''', [factor, id]);
+
+        // Transfer exchange rates dobara calculate.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET exchange_rate =
+            CASE
+              WHEN to_amount IS NULL OR amount = 0 THEN NULL
+              ELSE to_amount / amount
+            END
+          WHERE type = 'Transfer'
+          AND (wallet_id = ? OR to_wallet_id = ?)
+        ''', [id, id]);
+
+        // Committee transfer ka amount pehle hi source Transfer query mein convert ho chuka hai.
+        // Is ka balance_delta bhi convert hona zaroori hai warna committee delete par
+        // purana delta wallet balance ko ghalat rollback karega.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET balance_delta = balance_delta * ?
+          WHERE wallet_id = ?
+            AND type = 'Transfer'
+            AND category = 'Committee Transfer'
+            AND balance_delta IS NOT NULL
+        ''', [factor, id]);
+
+        final committeeEntriesTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'committee_entries'",
+        );
+        if (committeeEntriesTable.isNotEmpty) {
+          await txn.rawUpdate('''
+            UPDATE committee_entries
+            SET wallet_amount = wallet_amount * ?,
+                wallet_currency = ?
+            WHERE wallet_id = ?
+          ''', [factor, currency, id]);
+        }
+
+        // Recurring transfer schedules ko currency change ke baad same-currency
+        // rule todne se bachane ke liye block karein. Income/Expense schedules
+        // source wallet ki nayi currency mein convert ho jate hain.
+        final recurringTable = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+        );
+        if (recurringTable.isNotEmpty) {
+          final linkedRecurringTransfers = await txn.rawQuery('''
+            SELECT id FROM recurring_transactions
+            WHERE LOWER(type) = 'transfer'
+              AND (wallet_id = ? OR to_wallet_id = ?)
+            LIMIT 1
+          ''', [id, id]);
+          if (linkedRecurringTransfers.isNotEmpty) {
+            throw Exception(
+              'Wallet currency cannot be changed while a recurring transfer is linked. '
+              'Update or remove that schedule first.',
+            );
+          }
+          await txn.rawUpdate('''
+            UPDATE recurring_transactions
+            SET amount = amount * ?,
+                transfer_fee = transfer_fee * ?
+            WHERE wallet_id = ?
+              AND LOWER(type) IN ('income', 'expense')
+          ''', [factor, factor, id]);
+        }
+
+        // Adjustment amounts convert.
+        await txn.rawUpdate('''
+          UPDATE transactions
+          SET amount = amount * ?,
+              balance_delta = balance_delta * ?
+          WHERE wallet_id = ?
+          AND type = 'Adjustment'
+        ''', [factor, factor, id]);
+      }
+
+      // Current balance ki manual change calculate karna.
+      final difference = requestedCurrentBalance - convertedOldBalance;
+
+      await txn.update(
+        'wallets',
+        {
+          'name': normalizedName,
+          'type': type,
+          'custom_type': customType,
+          'currency': currency,
+          'balance': requestedCurrentBalance,
+          'opening_balance': newOpening,
+          'wallet_number': walletNumber,
+          'icon_code': iconCode,
+          'exclude_total': excludeTotal ? 1 : 0,
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      // Manual balance change ka record history mein save karna.
+      if (difference.abs() > 0.000001) {
+        final now = DateTime.now().toIso8601String();
+
+        await txn.insert('transactions', {
+          'type': 'Adjustment',
+          'amount': difference.abs(),
+          'wallet_id': id,
+          'to_wallet_id': null,
+          'to_amount': null,
+          'exchange_rate': null,
+          'balance_delta': difference,
+          'category': 'Balance Adjustment',
+          'note': 'Manual wallet balance adjustment',
+          'date': now,
+          'created_at': now,
+        });
+      }
+    });
+    AppRefreshController.notifyChanged();
+  }
+
+  static Future<double?> _getRateInTransaction(
+    Transaction txn,
+    String currency,
+  ) async {
+    final normalized = currency.trim().toUpperCase();
+    if (normalized == 'PKR') return 1.0;
+
+    final rows = await txn.query(
+      'exchange_rates',
+      columns: ['rate'],
+      where: 'currency = ?',
+      whereArgs: [normalized],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) return null;
+
+    final rate = (rows.first['rate'] as num).toDouble();
+    return rate.isFinite && rate > 0 ? rate : null;
+  }
+
+  // ----------------------------------------------------------
+  // Wallet delete karna
+  // ----------------------------------------------------------
+
+  static Future<void> deleteWallet(int id) async {
+    final recurringTable = await DatabaseManager.instance.database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+    );
+    if (recurringTable.isNotEmpty) {
+      final linkedRecurring = await DatabaseManager.instance.database.query(
+        'recurring_transactions',
+        columns: ['id'],
+        where: 'wallet_id = ? OR to_wallet_id = ?',
+        whereArgs: [id, id],
+        limit: 1,
+      );
+      if (linkedRecurring.isNotEmpty) {
+        throw Exception(
+          'This wallet is linked to a recurring transaction. '
+          'Update or delete that schedule before deleting the wallet.',
+        );
+      }
+    }
+
+    final linked = await DatabaseManager.instance.database.query(
+      'transactions',
+      columns: ['id'],
+      where: 'wallet_id = ? OR to_wallet_id = ?',
+      whereArgs: [id, id],
+      limit: 1,
+    );
+
+    if (linked.isNotEmpty) {
+      throw Exception(
+        'Is wallet ke saath transactions linked hain. '
+        'Pehle un transactions ko manage karein.',
+      );
+    }
+
+    final loanTable = await DatabaseManager.instance.database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+    );
+    if (loanTable.isNotEmpty) {
+      final linkedLoans = await DatabaseManager.instance.database.query(
+        'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+      );
+      final linkedRepayments = await DatabaseManager.instance.database.query(
+        'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
+      );
+      if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
+        throw Exception('This wallet is linked to loan records or repayments. Remove or settle those records before deleting the wallet.');
+      }
+    }
+
+    final assetTable = await DatabaseManager.instance.database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
+    );
+    if (assetTable.isNotEmpty) {
+      final linkedAssets = await DatabaseManager.instance.database.query(
+        'assets',
+        columns: ['id'],
+        where: 'wallet_id = ? OR sale_wallet_id = ?',
+        whereArgs: [id, id],
+        limit: 1,
+      );
+      if (linkedAssets.isNotEmpty) {
+        throw Exception('This wallet is linked to an asset purchase or sale. Delete or update the asset before deleting the wallet.');
+      }
+    }
+
+    final walletRows = await DatabaseManager.instance.database.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (walletRows.isEmpty) return;
+    await RecycleBinService.archive(type: 'Wallet', title: walletRows.first['name']?.toString() ?? 'Wallet', table: 'wallets', id: id, record: walletRows.first);
+    await DatabaseManager.instance.database.delete('wallets', where: 'id = ?', whereArgs: [id]);
+    AppRefreshController.notifyChanged();
   }
 }

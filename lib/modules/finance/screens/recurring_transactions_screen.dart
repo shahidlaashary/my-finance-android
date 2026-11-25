@@ -13,7 +13,7 @@ import 'package:my_finance/modules/finance/models/recurring_transaction_model.da
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 
 class RecurringTransactionsScreen extends StatefulWidget {
   const RecurringTransactionsScreen({super.key});

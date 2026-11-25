@@ -7,7 +7,7 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
-/// Category operations backed by the application's single FinanceDB connection.
+/// Owns category persistence through the application's shared DatabaseManager connection.
 ///
 /// Categories are stored in app_settings and are shared by the category
 /// manager, transaction forms, budgets and recurring transactions.

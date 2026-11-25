@@ -1604,4 +1604,39 @@ void main() {
     expect(await LoansService.getRepayments(loanId), hasLength(1));
   });
 
+
+  test('consolidated balance includes current value only while asset is unsold', () async {
+    final walletId = await createWallet(1000);
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Consolidated Balance Asset', price: 400, walletId: walletId),
+      const [],
+    );
+
+    var included = await assets.getConsolidatedIncludedCurrentValueByCurrency();
+    expect(included, isEmpty);
+
+    final saved = await assets.getAssetById(assetId);
+    await assets.updateAsset(saved!.copyWith(
+      currentValue: 450,
+      includeInConsolidatedBalance: true,
+    ));
+
+    included = await assets.getConsolidatedIncludedCurrentValueByCurrency();
+    expect(included['PKR'], 450);
+
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: walletId,
+      paymentType: 'Wallet',
+      walletAmount: 500,
+      walletCurrency: 'PKR',
+    );
+
+    included = await assets.getConsolidatedIncludedCurrentValueByCurrency();
+    expect(included, isEmpty);
+    expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 1100);
+  });
+
 }

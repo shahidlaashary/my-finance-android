@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -63,7 +64,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
       // Wallet list shared FinanceDB connection se hasil karte hain.
-      final db = FinanceDB.instance.db;
+      final db = DatabaseManager.instance.database;
       final wallets = await db.query(
         'wallets',
         orderBy: 'name ASC',

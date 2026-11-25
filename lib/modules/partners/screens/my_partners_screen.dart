@@ -2,6 +2,7 @@ import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/modules/partners/services/my_partners_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
 class MyPartnersScreen extends StatefulWidget {
   const MyPartnersScreen({super.key});
@@ -260,7 +261,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       final partners = await _service.getPartners();
       final p = partners.firstWhere((v) => v['id'] == widget.partnerId);
       final tx = await _service.getTransactions(widget.partnerId);
-      final wallets = await _service.getWallets();
+      final wallets = await WalletService.getWallets();
       final linked = await _service.getWalletLinks(widget.partnerId);
       if (!mounted) return;
       setState(() { _partner = p; _transactions = tx; _wallets = wallets; _linked = linked; _loading = false; });

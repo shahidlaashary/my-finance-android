@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import 'package:my_finance/core/files/file_storage.dart';
 import 'package:my_finance/core/files/local_file_storage.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -39,8 +40,7 @@ class AttachmentOwnerTypes {
 }
 
 class AttachmentService {
-  static final LocalFileStorage _fileStorage = LocalFileStorage();
-
+  static final FileStorage _fileStorage = LocalFileStorage();
 
   // Restore se pehle is service ka database connection band karta hai.
   static Future<void> closeDatabase() async {
@@ -173,8 +173,14 @@ class AttachmentService {
         final name = source['name']!.trim().isEmpty
             ? p.basename(sourcePath)
             : source['name']!.trim();
-        final targetPath = p.join(stagingDir, '${staged.length}_${p.basename(name)}');
-        await _fileStorage.copyFile(sourcePath: sourcePath, destinationPath: targetPath);
+        final targetPath = p.join(
+          stagingDir,
+          '${staged.length}_${p.basename(name)}',
+        );
+        await _fileStorage.copyFile(
+          sourcePath: sourcePath,
+          destinationPath: targetPath,
+        );
         final size = await _fileStorage.fileLength(targetPath);
         if (size <= 0) throw Exception('Selected attachment is empty or could not be copied: $name');
         staged.add({'path': targetPath, 'name': name, 'size': size});
@@ -210,7 +216,10 @@ class AttachmentService {
       if (!await _fileStorage.fileExists(stagedPath)) throw Exception('Prepared attachment is missing: $name');
       final uniqueName = '${DateTime.now().microsecondsSinceEpoch}_${p.basename(name)}';
       final destinationPath = p.join(directory, uniqueName);
-      await _fileStorage.copyFile(sourcePath: stagedPath, destinationPath: destinationPath);
+      await _fileStorage.copyFile(
+        sourcePath: stagedPath,
+        destinationPath: destinationPath,
+      );
       createdPaths.add(destinationPath);
       final size = await _fileStorage.fileLength(destinationPath);
       if (size <= 0) throw Exception('Attachment could not be saved: $name');
@@ -275,10 +284,10 @@ class AttachmentService {
         await _fileStorage.getApplicationDocumentsPath();
 
     final attachmentDirectory = p.join(
-        documentsDirectory,
-        'my_finance_attachments',
-        '${normalizedType}_$ownerId',
-      );
+      documentsDirectory,
+      'my_finance_attachments',
+      '${normalizedType}_$ownerId',
+    );
 
     await _fileStorage.createDirectory(attachmentDirectory);
 
@@ -290,7 +299,10 @@ class AttachmentService {
       uniqueName,
     );
 
-    await _fileStorage.copyFile(sourcePath: sourcePath, destinationPath: savedPath);
+    await _fileStorage.copyFile(
+      sourcePath: sourcePath,
+      destinationPath: savedPath,
+    );
     final fileSize = await _fileStorage.fileLength(savedPath);
 
     final attachment = AttachmentModel(

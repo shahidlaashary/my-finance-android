@@ -77,6 +77,78 @@ void main() {
         currency: 'PKR',
       );
 
+  test('party names are unique only within the same party type', () async {
+    final individualId = await LoansService.addParty(
+      name: 'Same Name Party',
+      partyType: 'Individual',
+      phone: '03000000001',
+    );
+    final businessId = await LoansService.addParty(
+      name: 'Same Name Party',
+      partyType: 'Business',
+      phone: '03000000002',
+    );
+
+    expect(businessId, isNot(individualId));
+    await expectLater(
+      LoansService.addParty(
+        name: ' same name party ',
+        partyType: 'Individual',
+        phone: '03000000003',
+      ),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('already exists under Individual type'),
+      )),
+    );
+    await expectLater(
+      LoansService.addParty(
+        name: 'Same Name Party',
+        partyType: 'Business',
+      ),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('already exists under Business type'),
+      )),
+    );
+  });
+
+  test('updating a party blocks duplicate name and type but allows other type', () async {
+    final firstId = await LoansService.addParty(
+      name: 'Update Party',
+      partyType: 'Individual',
+    );
+    final secondId = await LoansService.addParty(
+      name: 'Other Party',
+      partyType: 'Individual',
+    );
+
+    await expectLater(
+      LoansService.updateParty(
+        id: secondId,
+        name: ' update party ',
+        partyType: 'Individual',
+      ),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('already exists under Individual type'),
+      )),
+    );
+
+    await LoansService.updateParty(
+      id: secondId,
+      name: 'Update Party',
+      partyType: 'Business',
+    );
+
+    final parties = await LoansService.getParties();
+    expect(parties.where((party) => party['name'] == 'Update Party'), hasLength(2));
+    expect(parties.map((party) => party['id']).toSet(), containsAll([firstId, secondId]));
+  });
+
   test('loan-funded asset purchase works without any wallet', () async {
     final partyId = await LoansService.addParty(
       name: 'Asset Seller',

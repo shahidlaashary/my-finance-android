@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -1690,6 +1691,107 @@ void main() {
     included = await assets.getConsolidatedIncludedCurrentValueByCurrency();
     expect(included, isEmpty);
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 1100);
+  });
+
+  test('deleting a loan-funded asset is blocked when repayments do not reconcile', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Mismatch Asset Seller',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(
+        name: 'Mismatch Credit Asset',
+        price: 500,
+        walletId: 0,
+        paymentType: 'Loan',
+        partyId: partyId,
+      ),
+      const [],
+    );
+    final saved = await assets.getAssetById(assetId);
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: saved!.linkedLoanId!,
+        amount: 100,
+        walletId: walletId,
+        repaymentDate: '2026-11-10',
+        createdAt: DateTime(2026, 11, 10).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'loans',
+      {'remaining_amount': 450},
+      where: 'id = ?',
+      whereArgs: [saved.linkedLoanId],
+    );
+
+    await expectLater(
+      assets.deleteAsset(assetId),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('does not reconcile with its repayment history'),
+      )),
+    );
+    expect(await assets.getAssetById(assetId), isNotNull);
+    expect(await LoansService.getLoanById(saved.linkedLoanId!), isNotNull);
+    expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 900);
+  });
+
+  test('restoring an asset is blocked when archived loan repayments do not reconcile', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Archived Mismatch Seller',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(
+        name: 'Archived Mismatch Asset',
+        price: 500,
+        walletId: 0,
+        paymentType: 'Loan',
+        partyId: partyId,
+      ),
+      const [],
+    );
+    final saved = await assets.getAssetById(assetId);
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: saved!.linkedLoanId!,
+        amount: 100,
+        walletId: walletId,
+        repaymentDate: '2026-11-10',
+        createdAt: DateTime(2026, 11, 10).toIso8601String(),
+      ),
+    );
+    await assets.deleteAsset(assetId);
+
+    final archive = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'assets' &&
+          item['source_id'].toString() == assetId.toString(),
+    );
+    final related = jsonDecode(archive['related_payload'] as String) as List;
+    final loanSnapshot = Map<String, dynamic>.from(related.single['loan'] as Map);
+    loanSnapshot['remaining_amount'] = 450;
+    related.single['loan'] = loanSnapshot;
+    await FinanceDB.instance.db.update(
+      'recycle_bin',
+      {'related_payload': jsonEncode(related)},
+      where: 'id = ?',
+      whereArgs: [archive['id']],
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archive['id'] as int),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('does not reconcile with its repayment history'),
+      )),
+    );
+    expect(await assets.getAssetById(assetId), isNull);
+    expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 1000);
   });
 
   test('restoring a party is blocked when its name and type already exist', () async {

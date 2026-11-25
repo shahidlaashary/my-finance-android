@@ -289,4 +289,13 @@ class BudgetsService {
     }
     return result;
   }
+  static Future<void> restoreArchivedBudget(
+    Transaction txn, Map<String, dynamic> record,
+  ) async {
+    final duplicate = await txn.query('budgets', columns: ['id'],
+      where: 'id = ?', whereArgs: [record['id']], limit: 1);
+    if (duplicate.isNotEmpty) throw Exception('This budget already exists.');
+    await txn.insert('budgets', record);
+  }
+
 }

@@ -11,6 +11,7 @@ import 'package:my_finance/modules/space/services/space_documents_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/finance/services/goals_service.dart';
+import 'package:my_finance/modules/finance/services/category_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {
@@ -634,13 +635,11 @@ class RecycleBinService {
         return;
       }
       if (table == 'income_categories' || table == 'expense_categories') {
-        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: [table], limit: 1);
-        final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
-        if (current.any((e) => (e['name'] ?? '').toString().toLowerCase() == (record['name'] ?? '').toString().toLowerCase())) throw Exception('A category with this name already exists.');
-        final index = (record.remove('_index') as num?)?.toInt() ?? current.length;
-        final position = index.clamp(0, current.length).toInt();
-        current.insert(position, record);
-        await txn.insert('app_settings', {'setting_key':table,'setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await CategoryService.restoreArchivedCategory(
+          txn,
+          settingKey: table,
+          record: record,
+        );
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }

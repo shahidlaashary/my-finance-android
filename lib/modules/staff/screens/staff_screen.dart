@@ -1,7 +1,6 @@
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
@@ -31,7 +30,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
       await StaffService.ensureTables();
       final values = await Future.wait([
         StaffService.getStaff(), StaffService.getSalaries(),
-        StaffService.getAttendance(), FinanceDB.instance.getWallets(),
+        StaffService.getAttendance(), StaffService.getWallets(),
       ]);
       if (!mounted) return;
       setState(() { _staff = values[0]; _salaries = values[1]; _attendance = values[2]; _wallets = values[3]; _loading = false; });

@@ -1,8 +1,5 @@
 import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
-import 'dart:io';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -892,13 +889,7 @@ class RecycleBinService {
         return;
       }
       if (table == 'space_items') {
-        final spaceDir = await getApplicationDocumentsDirectory();
-        final spaceDb = await openDatabase(p.join(spaceDir.path, 'my_space', 'space.db'));
-        try {
-          final existing = await spaceDb.query('space_items', where: 'id = ?', whereArgs: [record['id']], limit: 1);
-          if (existing.isNotEmpty) throw Exception('This Space item already exists.');
-          await spaceDb.insert('space_items', record);
-        } finally { await spaceDb.close(); }
+        await MySpaceService.instance.restoreArchivedSpaceItem(record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }

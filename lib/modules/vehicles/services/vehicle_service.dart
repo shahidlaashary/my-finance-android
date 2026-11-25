@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 /// Vehicle data uses the existing app_settings key-value table.
@@ -64,6 +63,128 @@ class VehicleService {
     final db = await DatabaseManager.instance.database;
     return db.query('wallets', columns: ['id', 'name', 'currency', 'balance'],
       orderBy: 'name COLLATE NOCASE ASC');
+  }
+
+  static Future<int> _createExpenseTransaction({
+    required double amount,
+    required int walletId,
+    required String category,
+    required String note,
+    required DateTime date,
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid expense amount.');
+    final db = DatabaseManager.instance.database;
+    final id = await db.transaction((txn) async {
+      final wallets = await txn.query(
+        'wallets',
+        columns: ['balance'],
+        where: 'id = ?',
+        whereArgs: [walletId],
+        limit: 1,
+      );
+      if (wallets.isEmpty) throw Exception('Selected wallet was not found.');
+      final balance = (wallets.first['balance'] as num).toDouble();
+      if (balance < amount) throw Exception('Insufficient wallet balance.');
+      await txn.update('wallets', {'balance': balance - amount},
+        where: 'id = ?', whereArgs: [walletId]);
+      return txn.insert('transactions', {
+        'type': 'Expense',
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': null,
+        'to_amount': null,
+        'exchange_rate': null,
+        'balance_delta': null,
+        'category': category,
+        'note': note,
+        'date': date.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    });
+    AppRefreshController.notifyChanged();
+    return id;
+  }
+
+  static Future<void> _updateExpenseTransaction({
+    required int id,
+    required double amount,
+    required int walletId,
+    required String category,
+    required String note,
+    required DateTime date,
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid expense amount.');
+    final db = DatabaseManager.instance.database;
+    await db.transaction((txn) async {
+      final rows = await txn.query('transactions',
+        where: 'id = ?', whereArgs: [id], limit: 1);
+      if (rows.isEmpty || rows.first['type']?.toString().toLowerCase() != 'expense') {
+        throw Exception('Linked vehicle expense transaction was not found.');
+      }
+      final oldAmount = (rows.first['amount'] as num).toDouble();
+      final oldWalletId = (rows.first['wallet_id'] as num).toInt();
+      final oldWallets = await txn.query('wallets',
+        columns: ['balance'], where: 'id = ?', whereArgs: [oldWalletId], limit: 1);
+      if (oldWallets.isEmpty) throw Exception('Original wallet was not found.');
+      final restoredBalance = (oldWallets.first['balance'] as num).toDouble() + oldAmount;
+      await txn.update('wallets', {'balance': restoredBalance},
+        where: 'id = ?', whereArgs: [oldWalletId]);
+
+      final newWallets = await txn.query('wallets',
+        columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+      if (newWallets.isEmpty) throw Exception('Selected wallet was not found.');
+      final newBalance = (newWallets.first['balance'] as num).toDouble();
+      if (newBalance < amount) throw Exception('Insufficient wallet balance.');
+      await txn.update('wallets', {'balance': newBalance - amount},
+        where: 'id = ?', whereArgs: [walletId]);
+      await txn.update('transactions', {
+        'type': 'Expense',
+        'amount': amount,
+        'wallet_id': walletId,
+        'to_wallet_id': null,
+        'to_amount': null,
+        'exchange_rate': null,
+        'balance_delta': null,
+        'category': category,
+        'note': note,
+        'date': date.toIso8601String(),
+      }, where: 'id = ?', whereArgs: [id]);
+    });
+    AppRefreshController.notifyChanged();
+  }
+
+  static Future<void> _deleteExpenseTransaction(int id) async {
+    final db = DatabaseManager.instance.database;
+    final rows = await db.query('transactions',
+      where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    final record = Map<String, dynamic>.from(rows.first);
+    if (record['type']?.toString().toLowerCase() != 'expense') {
+      throw Exception('Linked vehicle transaction is not an expense.');
+    }
+    final archiveId = await RecycleBinService.archive(
+      type: 'Transaction',
+      title: 'Expense • ${record['amount']}',
+      table: 'transactions',
+      id: id,
+      record: record,
+    );
+    try {
+      await db.transaction((txn) async {
+        final walletId = (record['wallet_id'] as num).toInt();
+        final amount = (record['amount'] as num).toDouble();
+        final changed = await txn.rawUpdate(
+          'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+          [amount, walletId],
+        );
+        if (changed == 0) throw Exception('Linked wallet was not found.');
+        await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
+      });
+      AppRefreshController.notifyChanged();
+    } catch (_) {
+      await RecycleBinService.discardArchive(archiveId);
+      rethrow;
+    }
   }
 
   static Future<void> saveVehicle(Map<String, dynamic> vehicle) async {
@@ -126,10 +247,10 @@ class VehicleService {
     }
     await _validateOdometer(vehicleId, odometer);
     final total = quantity * unitPrice;
-    final txId = await TransactionsService.addTransaction(type: 'Expense',
+    final txId = await _createExpenseTransaction(
       amount: total, walletId: walletId, category: 'Vehicle Fuel',
       note: 'Fuel • $vehicleName • ${quantity.toStringAsFixed(2)} $unit • ${odometer.toStringAsFixed(0)} km${station.isEmpty ? '' : ' • $station'}',
-      date: date.toIso8601String());
+      date: date);
     try {
       final data = await _read();
       final id = newId();
@@ -142,7 +263,7 @@ class VehicleService {
       await _write(data);
       return id;
     } catch (_) {
-      await TransactionsService.deleteTransaction(txId);
+      await _deleteExpenseTransaction(txId);
       rethrow;
     }
   }
@@ -154,10 +275,10 @@ class VehicleService {
   }) async {
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid amount.');
     await _validateOdometer(vehicleId, odometer);
-    final txId = await TransactionsService.addTransaction(type: 'Expense',
+    final txId = await _createExpenseTransaction(
       amount: amount, walletId: walletId, category: 'Vehicle • $category',
       note: 'Vehicle • $vehicleName • $category${vendor.isEmpty ? '' : ' • $vendor'}${notes.isEmpty ? '' : ' • $notes'}',
-      date: date.toIso8601String());
+      date: date);
     try {
       final data = await _read();
       final id = newId();
@@ -203,9 +324,9 @@ class VehicleService {
     final total = quantity * unitPrice;
     String note(String name, double qty, String measure, double km, String place) =>
       'Fuel • $name • ${qty.toStringAsFixed(2)} $measure • ${km.toStringAsFixed(0)} km${place.isEmpty ? '' : ' • $place'}';
-    await TransactionsService.updateTransaction(id: txId, type: 'Expense', amount: total,
-      walletId: walletId, category: 'Vehicle Fuel',
-      note: note(vehicleName, quantity, unit, odometer, station), date: date.toIso8601String());
+    await _updateExpenseTransaction(id: txId, amount: total, walletId: walletId,
+      category: 'Vehicle Fuel',
+      note: note(vehicleName, quantity, unit, odometer, station), date: date);
     rows[index] = {
       'id': id, 'vehicle_id': vehicleId, 'date': date.toIso8601String(),
       'odometer': odometer, 'quantity': quantity, 'unit_price': unitPrice,
@@ -216,9 +337,10 @@ class VehicleService {
     try {
       await _write(data);
     } catch (_) {
-      await TransactionsService.updateTransaction(id: txId, type: 'Expense', amount: oldTotal,
-        walletId: oldWallet, category: 'Vehicle Fuel',
-        note: note(oldVehicleName, oldQuantity, oldUnit, oldOdometer, oldStation), date: oldDate);
+      await _updateExpenseTransaction(id: txId, amount: oldTotal, walletId: oldWallet,
+        category: 'Vehicle Fuel',
+        note: note(oldVehicleName, oldQuantity, oldUnit, oldOdometer, oldStation),
+        date: DateTime.parse(oldDate));
       rethrow;
     }
   }
@@ -248,9 +370,9 @@ class VehicleService {
     final oldDate = (old['date'] ?? DateTime.now().toIso8601String()).toString();
     String note(String name, String type, String shop, String memo) =>
       'Vehicle • $name • $type${shop.isEmpty ? '' : ' • $shop'}${memo.isEmpty ? '' : ' • $memo'}';
-    await TransactionsService.updateTransaction(id: txId, type: 'Expense', amount: amount,
-      walletId: walletId, category: 'Vehicle • $category',
-      note: note(vehicleName, category, vendor, notes), date: date.toIso8601String());
+    await _updateExpenseTransaction(id: txId, amount: amount, walletId: walletId,
+      category: 'Vehicle • $category',
+      note: note(vehicleName, category, vendor, notes), date: date);
     rows[index] = {
       'id': id, 'vehicle_id': vehicleId, 'date': date.toIso8601String(),
       'amount': amount, 'odometer': odometer, 'wallet_id': walletId,
@@ -260,9 +382,10 @@ class VehicleService {
     try {
       await _write(data);
     } catch (_) {
-      await TransactionsService.updateTransaction(id: txId, type: 'Expense', amount: oldAmount,
-        walletId: oldWallet, category: 'Vehicle • $oldCategory',
-        note: note(oldVehicleName, oldCategory, oldVendor, oldNotes), date: oldDate);
+      await _updateExpenseTransaction(id: txId, amount: oldAmount, walletId: oldWallet,
+        category: 'Vehicle • $oldCategory',
+        note: note(oldVehicleName, oldCategory, oldVendor, oldNotes),
+        date: DateTime.parse(oldDate));
       rethrow;
     }
   }
@@ -281,7 +404,7 @@ class VehicleService {
     await _write(data);
     try {
       final txId = record['transaction_id'];
-      if (txId is int) await TransactionsService.deleteTransaction(txId);
+      if (txId is int) await _deleteExpenseTransaction(txId);
     } catch (_) {
       data[key] = previous;
       await _write(data);

@@ -1,4 +1,3 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -331,15 +330,7 @@ class _WalletsPageState extends State<WalletsPage> {
       final result = List<Map<String, dynamic>>.from(
         await WalletService.getWallets(),
       );
-      final settings = await DatabaseManager.instance.database.query(
-        'app_settings',
-        where: 'setting_key IN (?, ?)',
-        whereArgs: ['hidden_wallet_ids', 'wallet_display_order'],
-      );
-      final values = {
-        for (final row in settings)
-          row['setting_key'].toString(): row['setting_value']?.toString() ?? ''
-      };
+      final values = await WalletService.getWalletDisplaySettings();
       Set<int> hidden = {};
       List<int> order = [];
       try {
@@ -2040,21 +2031,15 @@ class _WalletManagementPageState extends State<WalletManagementPage> with Single
   }
 
   Future<void> _saveIds(String key, List<int> ids) async {
-    await DatabaseManager.instance.database.insert('app_settings',
-      {'setting_key': key, 'setting_value': jsonEncode(ids)},
-      conflictAlgorithm: ConflictAlgorithm.replace);
+    await WalletService.saveWalletIdSettings(key, ids);
   }
 
   Future<void> _load() async {
     if (!mounted) return;
     setState(() { _loading = true; _loadError = null; });
     try {
-      final db = DatabaseManager.instance.database;
-      final all = List<Map<String, dynamic>>.from(await db.query('wallets'));
-      final rows = await db.query('app_settings',
-        where: 'setting_key IN (?, ?)',
-        whereArgs: ['hidden_wallet_ids', 'wallet_display_order']);
-      final values = {for (final r in rows) r['setting_key'].toString(): r['setting_value']?.toString() ?? ''};
+      final all = List<Map<String, dynamic>>.from(await WalletService.getWallets());
+      final values = await WalletService.getWalletDisplaySettings();
       List<int> hidden = [], order = [];
       try { hidden = (jsonDecode(values['hidden_wallet_ids'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}
       try { order = (jsonDecode(values['wallet_display_order'] ?? '[]') as List).map((e)=>(e as num).toInt()).toList(); } catch (_) {}

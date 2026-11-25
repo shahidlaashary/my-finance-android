@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
@@ -52,7 +53,7 @@ class _LoanRepaymentEntryFormState extends State<LoanRepaymentEntryForm> {
 
   Future<void> _loadWallets() async {
     try {
-      final wallets = await FinanceDB.instance.getWallets();
+      final wallets = await WalletService.getWallets();
       final matching = wallets;
       if (!mounted) return;
       setState(() { _wallets = matching; if (matching.isNotEmpty && !matching.any((w) => (w['id'] as num).toInt() == _walletId)) _walletId = (matching.first['id'] as num).toInt(); _loading = false; });

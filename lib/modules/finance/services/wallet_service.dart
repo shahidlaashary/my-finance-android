@@ -3,7 +3,7 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 /// Owns wallet data operations while sharing the application's single
 /// DatabaseManager connection.
@@ -525,7 +525,7 @@ class WalletService {
 
     final walletRows = await DatabaseManager.instance.database.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);
     if (walletRows.isEmpty) return;
-    await RecycleBinService.archive(type: 'Wallet', title: walletRows.first['name']?.toString() ?? 'Wallet', table: 'wallets', id: id, record: walletRows.first);
+    await RecycleBinArchiveService.archive(type: 'Wallet', title: walletRows.first['name']?.toString() ?? 'Wallet', table: 'wallets', id: id, record: walletRows.first);
     await DatabaseManager.instance.database.delete('wallets', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }

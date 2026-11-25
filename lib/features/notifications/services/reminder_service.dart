@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -107,7 +107,7 @@ class ReminderService {
     final index = reminders.indexWhere((item) => (item['id'] as num?)?.toInt() == id);
     if (index < 0) return;
     final record = reminders[index];
-    await RecycleBinService.archive(
+    await RecycleBinArchiveService.archive(
       type: 'Reminder',
       title: record['title']?.toString() ?? 'Reminder',
       table: 'finance_reminders_v1',

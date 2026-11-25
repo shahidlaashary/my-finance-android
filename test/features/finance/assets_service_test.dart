@@ -914,7 +914,7 @@ void main() {
       throwsA(isA<Exception>().having(
         (error) => error.toString(),
         'message',
-        contains('Restore the linked party first'),
+        contains('Restore the linked party before restoring this loan'),
       )),
     );
     expect(await LoansService.getLoanById(loanId), isNull);

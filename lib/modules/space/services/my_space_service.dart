@@ -678,6 +678,27 @@ class MySpaceService {
     await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
   }
 
+  /// Restores a deleted Space item into the independent space.db database.
+  /// The archive envelope itself remains in the finance Recycle Bin.
+  Future<void> restoreArchivedSpaceItem(Map<String, dynamic> record) async {
+    final db = await database;
+    final id = (record['id'] as num?)?.toInt();
+    if (id == null || id <= 0) {
+      throw Exception('The archived Space item has an invalid ID.');
+    }
+    final existing = await db.query(
+      _tableName,
+      columns: ['id'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      throw Exception('This Space item already exists.');
+    }
+    await db.insert(_tableName, record);
+  }
+
   /// Closes the database before a whole-app backup/restore operation.
   Future<void> closeForBackupOrRestore() async {
     final db = _database;

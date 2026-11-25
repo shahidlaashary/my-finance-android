@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 
 import 'package:my_finance/core/files/file_storage.dart';
 import 'package:my_finance/core/files/local_file_storage.dart';
@@ -42,62 +43,16 @@ class AttachmentOwnerTypes {
 class AttachmentService {
   static final FileStorage _fileStorage = LocalFileStorage();
 
-  // Restore se pehle is service ka database connection band karta hai.
-  static Future<void> closeDatabase() async {
-    final currentDatabase = _databaseInstance;
-    _databaseInstance = null;
-    _databaseFuture = null;
-    if (currentDatabase != null && currentDatabase.isOpen) {
-      await currentDatabase.close();
-    }
-  }
-  static const String _databaseName = 'my_finance.db';
+  // Shared connection is closed centrally by DatabaseManager.
+  static Future<void> closeDatabase() => DatabaseManager.instance.close();
+
   static const String _tableName = 'finance_attachments';
 
-  static Database? _databaseInstance;
-  static Future<Database>? _databaseFuture;
-
   static Future<Database> get _database async {
-    if (_databaseInstance != null && _databaseInstance!.isOpen) {
-      return _databaseInstance!;
-    }
-
-    final pendingFuture = _databaseFuture;
-
-    if (pendingFuture != null) {
-      return pendingFuture;
-    }
-
-    final future = _openDatabase();
-    _databaseFuture = future;
-
-    try {
-      return await future;
-    } catch (_) {
-      if (identical(_databaseFuture, future)) {
-        _databaseFuture = null;
-      }
-      rethrow;
-    }
-  }
-
-  static Future<Database> _openDatabase() async {
-    final databasePath = await getDatabasesPath();
-    final path = p.join(databasePath, _databaseName);
-
-    // openDatabase may reuse FinanceDB's already-open connection, in
-    // which case its onOpen callback is not guaranteed to run.
-    final db = await openDatabase(path);
-
-    // Always ensure the attachment table exists on the shared connection.
-    // CREATE TABLE IF NOT EXISTS preserves existing attachment records.
+    final db = DatabaseManager.instance.database;
     await _createTable(db);
-
-    _databaseInstance = db;
     return db;
   }
-
-
 
   static Future<void> _createTable(Database db) async {
     await db.execute('''

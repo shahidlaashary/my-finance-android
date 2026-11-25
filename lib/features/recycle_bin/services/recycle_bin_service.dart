@@ -265,6 +265,28 @@ class RecycleBinService {
               walletId <= 0) {
             throw Exception('An archived loan repayment contains invalid details.');
           }
+          final repaymentWalletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [walletId],
+            limit: 1,
+          );
+          if (repaymentWalletRows.isEmpty) {
+            throw Exception('A repayment wallet no longer exists. Restore the wallet first.');
+          }
+          final savedWalletCurrency =
+              repayment['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+          final currentWalletCurrency =
+              (repaymentWalletRows.first['currency']?.toString() ?? 'PKR')
+                  .trim()
+                  .toUpperCase();
+          if (savedWalletCurrency.isNotEmpty &&
+              savedWalletCurrency != currentWalletCurrency) {
+            throw Exception(
+              'A repayment wallet currency has changed. Correct the wallet currency before restoring this loan.',
+            );
+          }
           addWalletDelta(
             walletId,
             loanType == 'given' ? walletAmount : -walletAmount,
@@ -467,6 +489,28 @@ class RecycleBinService {
                   walletAmount <= 0 ||
                   repaymentWalletId <= 0) {
                 throw Exception('An archived linked loan repayment contains invalid details.');
+              }
+              final repaymentWalletRows = await txn.query(
+                'wallets',
+                columns: ['currency'],
+                where: 'id = ?',
+                whereArgs: [repaymentWalletId],
+                limit: 1,
+              );
+              if (repaymentWalletRows.isEmpty) {
+                throw Exception('A linked repayment wallet no longer exists. Restore the wallet first.');
+              }
+              final savedWalletCurrency =
+                  repayment['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+              final currentWalletCurrency =
+                  (repaymentWalletRows.first['currency']?.toString() ?? 'PKR')
+                      .trim()
+                      .toUpperCase();
+              if (savedWalletCurrency.isNotEmpty &&
+                  savedWalletCurrency != currentWalletCurrency) {
+                throw Exception(
+                  'A linked repayment wallet currency has changed. Correct the wallet currency before restoring this Asset.',
+                );
               }
               final delta = loanType == 'given' ? walletAmount : -walletAmount;
               addWalletDelta(repaymentWalletId, delta);

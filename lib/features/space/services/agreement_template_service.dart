@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/space/services/my_space_service.dart';
 
 /// Local editable templates for Agreements. The built-in Music Rights Agreement

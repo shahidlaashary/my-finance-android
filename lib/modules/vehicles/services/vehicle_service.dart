@@ -6,7 +6,7 @@ import 'dart:convert';
 
 import 'package:my_finance/core/settings/app_settings_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 /// Vehicle data uses the existing app_settings key-value table.
 /// No database schema changes or migrations are required.
@@ -164,7 +164,7 @@ class VehicleService {
     if (record['type']?.toString().toLowerCase() != 'expense') {
       throw Exception('Linked vehicle transaction is not an expense.');
     }
-    final archiveId = await RecycleBinService.archive(
+    final archiveId = await RecycleBinArchiveService.archive(
       type: 'Transaction',
       title: 'Expense • ${record['amount']}',
       table: 'transactions',
@@ -214,7 +214,7 @@ class VehicleService {
     }
     final rows = (data['vehicles'] as List).whereType<Map>().where((e) => e['id'] == id).toList();
     if (rows.isEmpty) return;
-    await RecycleBinService.archive(type: 'Vehicle', title: rows.first['name']?.toString() ?? 'Vehicle',
+    await RecycleBinArchiveService.archive(type: 'Vehicle', title: rows.first['name']?.toString() ?? 'Vehicle',
       table: 'vehicle_manager_data_v1:vehicles', id: id, record: Map<String, dynamic>.from(rows.first));
     data['vehicles'] = (data['vehicles'] as List).where((e) => e is Map && e['id'] != id).toList();
     await _write(data);
@@ -398,7 +398,7 @@ class VehicleService {
     Map? record;
     for (final row in rows) { if (row['id'] == id) { record = row; break; } }
     if (record == null) return;
-    final archiveId = await RecycleBinService.archive(type: key == 'fuel_logs' ? 'Vehicle Fuel Log' : 'Vehicle Expense',
+    final archiveId = await RecycleBinArchiveService.archive(type: key == 'fuel_logs' ? 'Vehicle Fuel Log' : 'Vehicle Expense',
       title: record['notes']?.toString().isNotEmpty == true ? record['notes'].toString() : (key == 'fuel_logs' ? 'Fuel Log' : 'Vehicle Expense'),
       table: 'vehicle_manager_data_v1:$key', id: id, record: Map<String, dynamic>.from(record));
     final previous = data[key];
@@ -438,7 +438,7 @@ class VehicleService {
     final rows = (data['reminders'] as List).whereType<Map>().toList();
     final matches = rows.where((e) => e['id'] == id).toList();
     if (matches.isEmpty) return;
-    await RecycleBinService.archive(type: 'Vehicle Reminder',
+    await RecycleBinArchiveService.archive(type: 'Vehicle Reminder',
       title: matches.first['title']?.toString() ?? 'Vehicle Reminder',
       table: 'vehicle_manager_data_v1:reminders', id: id,
       record: Map<String, dynamic>.from(matches.first));

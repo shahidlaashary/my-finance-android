@@ -1,8 +1,8 @@
 
 import 'package:flutter/foundation.dart';
 
-import 'package:my_finance/features/finance/services/transactions_service.dart';
-import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
+import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
 class AppStartupService {
   AppStartupService._();

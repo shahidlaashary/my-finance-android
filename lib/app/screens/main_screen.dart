@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/features/dashboard/home_screen.dart' show HomePage;
-import 'package:my_finance/features/finance/screens/assets_screen.dart';
-import 'package:my_finance/features/finance/screens/budgets_screen.dart';
-import 'package:my_finance/features/finance/screens/goals_screen.dart';
-import 'package:my_finance/features/finance/screens/loans_screen.dart';
-import 'package:my_finance/features/finance/screens/stats_screen.dart';
-import 'package:my_finance/features/finance/screens/income_entry_form.dart' show IncomeEntryForm;
-import 'package:my_finance/features/finance/screens/expense_entry_form.dart' show ExpenseEntryForm;
-import 'package:my_finance/features/finance/screens/transfer_entry_form.dart' show TransferEntryForm;
-import 'package:my_finance/features/finance/screens/loan_entry_form.dart' show LoanEntryForm;
-import 'package:my_finance/features/finance/screens/asset_purchase_entry_form.dart' show AssetPurchaseEntryForm;
-import 'package:my_finance/features/finance/screens/transactions_screen.dart';
-import 'package:my_finance/features/finance/screens/wallets_screen.dart' show WalletsPage;
+import 'package:my_finance/modules/finance/screens/assets_screen.dart';
+import 'package:my_finance/modules/finance/screens/budgets_screen.dart';
+import 'package:my_finance/modules/finance/screens/goals_screen.dart';
+import 'package:my_finance/modules/finance/screens/loans_screen.dart';
+import 'package:my_finance/modules/finance/screens/stats_screen.dart';
+import 'package:my_finance/modules/finance/screens/income_entry_form.dart' show IncomeEntryForm;
+import 'package:my_finance/modules/finance/screens/expense_entry_form.dart' show ExpenseEntryForm;
+import 'package:my_finance/modules/finance/screens/transfer_entry_form.dart' show TransferEntryForm;
+import 'package:my_finance/modules/finance/screens/loan_entry_form.dart' show LoanEntryForm;
+import 'package:my_finance/modules/finance/screens/asset_purchase_entry_form.dart' show AssetPurchaseEntryForm;
+import 'package:my_finance/modules/finance/screens/transactions_screen.dart';
+import 'package:my_finance/modules/finance/screens/wallets_screen.dart' show WalletsPage;
 import 'package:my_finance/app/screens/simple_feature_page.dart' show SimpleFeaturePage;
 
 class MainScreen extends StatefulWidget {

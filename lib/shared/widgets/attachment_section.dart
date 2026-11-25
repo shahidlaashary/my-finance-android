@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:my_finance/features/space/screens/space_pdf_reader_screen.dart';
+import 'package:my_finance/modules/space/screens/space_pdf_reader_screen.dart';
 
 import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';

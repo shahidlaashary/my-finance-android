@@ -8,7 +8,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
-import 'package:my_finance/features/space/services/my_space_service.dart';
+import 'package:my_finance/modules/space/services/my_space_service.dart';
 
 class RecycleBinService {
   static Future<void> ensureTable() async {

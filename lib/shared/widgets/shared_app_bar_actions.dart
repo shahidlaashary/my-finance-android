@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
-import 'package:my_finance/features/finance/models/budgets_model.dart';
-import 'package:my_finance/features/finance/services/budgets_service.dart';
+import 'package:my_finance/modules/finance/models/budgets_model.dart';
+import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/features/search/screens/global_search_screen.dart';
 import 'package:my_finance/app/screens/modules_tools_page.dart';
 

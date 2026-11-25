@@ -5,7 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
-import 'package:my_finance/features/staff/services/staff_service.dart';
+import 'package:my_finance/modules/staff/services/staff_service.dart';
 
 void main() {
   late Directory databaseDirectory;

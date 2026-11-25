@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/features/finance/models/assets_model.dart';
-import 'package:my_finance/features/finance/models/loans_model.dart';
-import 'package:my_finance/features/finance/models/repayment_model.dart';
-import 'package:my_finance/features/finance/services/assets_service.dart';
-import 'package:my_finance/features/finance/services/loans_service.dart';
-import 'package:my_finance/features/finance/services/transactions_service.dart';
+import 'package:my_finance/modules/finance/models/assets_model.dart';
+import 'package:my_finance/modules/finance/models/loans_model.dart';
+import 'package:my_finance/modules/finance/models/repayment_model.dart';
+import 'package:my_finance/modules/finance/services/assets_service.dart';
+import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
 void main() {

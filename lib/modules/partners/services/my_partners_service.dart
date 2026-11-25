@@ -1,6 +1,5 @@
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 

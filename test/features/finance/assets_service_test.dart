@@ -884,6 +884,94 @@ void main() {
     );
   });
 
+  test('restoring an ordinary loan requires its deleted party to be restored first', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Loan Restore Missing Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await LoansService.deleteLoan(loanId);
+    await LoansService.deleteParty(partyId);
+
+    final archivedLoan = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'loans' &&
+          item['source_id'].toString() == loanId.toString(),
+    );
+    await expectLater(
+      RecycleBinService.restore(archivedLoan['id'] as int),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('Restore the linked party first'),
+      )),
+    );
+    expect(await LoansService.getLoanById(loanId), isNull);
+
+    final archivedParty = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'loan_parties' &&
+          item['source_id'].toString() == partyId.toString(),
+    );
+    await RecycleBinService.restore(archivedParty['id'] as int);
+    await RecycleBinService.restore(archivedLoan['id'] as int);
+
+    final restoredLoan = await LoansService.getLoanById(loanId);
+    expect(restoredLoan, isNotNull);
+    expect(restoredLoan!.partyId, partyId);
+  });
+
+  test('restoring an ordinary loan is blocked if its party currency changed', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Loan Restore Party Currency',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await LoansService.deleteLoan(loanId);
+    final archivedLoan = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'loans' &&
+          item['source_id'].toString() == loanId.toString(),
+    );
+    await FinanceDB.instance.db.update(
+      'loan_parties',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [partyId],
+    );
+
+    await expectLater(
+      RecycleBinService.restore(archivedLoan['id'] as int),
+      throwsA(isA<Exception>().having(
+        (error) => error.toString(),
+        'message',
+        contains('linked party currency has changed'),
+      )),
+    );
+    expect(await LoansService.getLoanById(loanId), isNull);
+  });
+
   test('restoring a Loan Given with same-wallet repayments validates the net balance', () async {
     final walletId = await createWallet(1000);
     final partyId = await LoansService.addParty(

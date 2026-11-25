@@ -1,4 +1,5 @@
 
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/services.dart';
@@ -159,7 +160,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
       // Upcoming recurring schedules are display-only; they do not affect balances.
       final recurringItems = await RecurringTransactionService().getRecurringTransactions(activeOnly: true);
-      final db = FinanceDB.instance.db;
+      final db = DatabaseManager.instance.database;
       final walletRows = await db.query('wallets', columns: ['id', 'currency']);
       final currencyByWallet = <int, String>{
         for (final row in walletRows)

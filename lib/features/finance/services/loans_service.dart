@@ -15,6 +15,44 @@ class LoansService {
     }
   }
 
+  static Future<void> _validateLoanRepaymentReconciliation(
+    Transaction txn,
+    LoansModel loan,
+  ) async {
+    if (!loan.amount.isFinite ||
+        loan.amount <= 0 ||
+        !loan.remainingAmount.isFinite ||
+        loan.remainingAmount < 0 ||
+        loan.remainingAmount > loan.amount + 0.000001) {
+      throw Exception(
+        'Loan balance does not reconcile with its repayment history. This repayment operation was cancelled.',
+      );
+    }
+    final rows = await txn.query(
+      'loan_repayments',
+      columns: ['amount'],
+      where: 'loan_id = ?',
+      whereArgs: [loan.id],
+    );
+    var repaidTotal = 0.0;
+    for (final row in rows) {
+      final amount = (row['amount'] as num?)?.toDouble();
+      if (amount == null || !amount.isFinite || amount <= 0) {
+        throw Exception(
+          'Loan balance does not reconcile with its repayment history. This repayment operation was cancelled.',
+        );
+      }
+      repaidTotal += amount;
+    }
+    if (!repaidTotal.isFinite ||
+        (repaidTotal - (loan.amount - loan.remainingAmount)).abs() >
+            0.000001) {
+      throw Exception(
+        'Loan balance does not reconcile with its repayment history. This repayment operation was cancelled.',
+      );
+    }
+  }
+
   static double _validatedRepaymentWalletAmount(RepaymentModel repayment) {
     if (repayment.walletId <= 0 ||
         !repayment.amount.isFinite ||
@@ -680,6 +718,7 @@ class LoansService {
       if (loans.isEmpty) throw Exception('Loan was not found.');
       final loan = LoansModel.fromMap(loans.first);
       _validateLoanType(loan.loanType);
+      await _validateLoanRepaymentReconciliation(txn, loan);
       if (loan.remainingAmount <= 0) throw Exception('This loan has already been fully repaid.');
       if (repayment.amount > loan.remainingAmount + 0.000001) {
         throw Exception('Repayment cannot exceed the outstanding balance.');
@@ -715,6 +754,7 @@ class LoansService {
       if (loanRows.isEmpty) throw Exception('Related loan was not found.');
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
+      await _validateLoanRepaymentReconciliation(txn, loan);
       await _validateRepaymentWalletCurrency(txn, old);
       final oldWalletAmount = _validatedRepaymentWalletAmount(old);
       final remainingAfterOld = loan.remainingAmount + old.amount;
@@ -851,6 +891,7 @@ class LoansService {
 
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
+      await _validateLoanRepaymentReconciliation(txn, loan);
       await _validateRepaymentWalletCurrency(txn, repayment);
       final repaymentWalletAmount = _validatedRepaymentWalletAmount(repayment);
 

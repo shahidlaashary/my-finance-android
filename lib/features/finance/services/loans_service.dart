@@ -26,6 +26,19 @@ class LoansService {
     return repayment.walletAmount;
   }
 
+  static Future<void> _validateRepaymentWalletCurrency(
+    Transaction txn,
+    RepaymentModel repayment,
+  ) async {
+    final savedCurrency = repayment.walletCurrency.trim().toUpperCase();
+    final currentCurrency = await _getWalletCurrency(txn, repayment.walletId);
+    if (savedCurrency.isNotEmpty && savedCurrency != currentCurrency) {
+      throw Exception(
+        'The repayment wallet currency has changed. Correct the wallet currency before editing or deleting this repayment.',
+      );
+    }
+  }
+
   // Restore se pehle is service ka database connection band karta hai.
   static Future<void> closeDatabase() async {
     final currentDatabase = _databaseInstance;
@@ -709,6 +722,7 @@ class LoansService {
       if (loanRows.isEmpty) throw Exception('Related loan was not found.');
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
+      await _validateRepaymentWalletCurrency(txn, old);
       final oldWalletAmount = _validatedRepaymentWalletAmount(old);
       final remainingAfterOld = loan.remainingAmount + old.amount;
       if (!repayment.amount.isFinite || repayment.amount <= 0 ||
@@ -844,6 +858,7 @@ class LoansService {
 
       final loan = LoansModel.fromMap(loanRows.first);
       _validateLoanType(loan.loanType);
+      await _validateRepaymentWalletCurrency(txn, repayment);
       final repaymentWalletAmount = _validatedRepaymentWalletAmount(repayment);
 
       final restoredRemaining = (loan.remainingAmount + repayment.amount)

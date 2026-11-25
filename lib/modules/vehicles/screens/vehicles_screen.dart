@@ -562,12 +562,12 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     final reportExpenses = _rangeRows(_expenses);
     final reportReminders = _rangeRows(_reminders);
     try {
-      final file = excel
+      final filePath = excel
         ? await VehicleExportService.exportExcel(vehicles: _vehicles, fuel: reportFuel, expenses: reportExpenses, reminders: reportReminders)
         : await VehicleExportService.exportPdf(vehicles: _vehicles, fuel: reportFuel, expenses: reportExpenses, reminders: reportReminders);
       if (!mounted) return;
-      _message('Report saved: ${file.path}');
-      await OpenFilex.open(file.path);
+      _message('Report saved: $filePath');
+      await OpenFilex.open(filePath);
     } catch (e) { _message('Report export failed: $e'); }
   }
 

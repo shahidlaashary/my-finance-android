@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -77,64 +77,16 @@ class LoansService {
     }
   }
 
-  // Restore se pehle is service ka database connection band karta hai.
-  static Future<void> closeDatabase() async {
-    final currentDatabase = _databaseInstance;
-    _databaseInstance = null;
-    _databaseFuture = null;
-    if (currentDatabase != null && currentDatabase.isOpen) {
-      await currentDatabase.close();
-    }
-  }
-  static const String _databaseName = 'my_finance.db';
+  // Shared connection is closed centrally by DatabaseManager.
+  static Future<void> closeDatabase() => DatabaseManager.instance.close();
 
-  static Database? _databaseInstance;
-  static Future<Database>? _databaseFuture;
-
-  // Shared database handle for module services that own related records.
-  static Future<Database> get database => _database;
-
-  static Future<Database> get _database async {
-    if (_databaseInstance != null && _databaseInstance!.isOpen) {
-      return _databaseInstance!;
-    }
-
-    final pendingFuture = _databaseFuture;
-
-    if (pendingFuture != null) {
-      return pendingFuture;
-    }
-
-    final future = _openDatabase();
-    _databaseFuture = future;
-
-    try {
-      return await future;
-    } catch (_) {
-      if (identical(_databaseFuture, future)) {
-        _databaseFuture = null;
-      }
-      rethrow;
-    }
-  }
-
-  static Future<Database> _openDatabase() async {
-    final databasePath = await getDatabasesPath();
-
-    // FinanceDB may already have this file open. In that case sqflite
-    // reuses its connection and does not run this service's onOpen callback.
-    // Create loan tables explicitly so they exist on fresh and existing DBs.
-    final db = await openDatabase(
-      p.join(databasePath, _databaseName),
-    );
-
+  static Future<Database> get database async {
+    final db = DatabaseManager.instance.database;
     await _createTables(db);
-
-    _databaseInstance = db;
     return db;
   }
 
-
+  static Future<Database> get _database => database;
 
   static Future<void> _createTables(Database db) async {
     await db.execute('''

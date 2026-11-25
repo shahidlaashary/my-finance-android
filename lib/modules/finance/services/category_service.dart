@@ -229,4 +229,46 @@ class CategoryService {
     await _save(normalizedType, items);
     return 1;
   }
+  /// Restores a deleted category at its original position inside the caller's
+  /// transaction. The recycle-bin envelope is removed by its coordinator.
+  static Future<void> restoreArchivedCategory(
+    Transaction txn, {
+    required String settingKey,
+    required Map<String, dynamic> record,
+  }) async {
+    if (settingKey != 'income_categories' &&
+        settingKey != 'expense_categories') {
+      throw ArgumentError.value(settingKey, 'settingKey');
+    }
+    final settings = await txn.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: [settingKey],
+      limit: 1,
+    );
+    final current = settings.isEmpty
+        ? <Map<String, dynamic>>[]
+        : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]')
+                as List)
+            .whereType<Map>()
+            .map((entry) => Map<String, dynamic>.from(entry))
+            .toList();
+    final name = (record['name'] ?? '').toString();
+    if (current.any((entry) =>
+        (entry['name'] ?? '').toString().toLowerCase() ==
+        name.toLowerCase())) {
+      throw Exception('A category with this name already exists.');
+    }
+    final index = (record.remove('_index') as num?)?.toInt() ??
+        current.length;
+    final position = index.clamp(0, current.length).toInt();
+    current.insert(position, record);
+    await txn.insert(
+      'app_settings',
+      {'setting_key': settingKey, 'setting_value': jsonEncode(current)},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
 }

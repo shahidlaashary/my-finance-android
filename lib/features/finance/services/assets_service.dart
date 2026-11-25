@@ -703,6 +703,22 @@ class AssetsService {
           where: 'loan_id = ?',
           whereArgs: [loanId],
         );
+        final loanRemaining =
+            (loanRecord['remaining_amount'] as num?)?.toDouble();
+        final repaidTotal = repaymentRows.fold<double>(
+          0,
+          (sum, row) => sum + ((row['amount'] as num?)?.toDouble() ?? double.nan),
+        );
+        if (loanRemaining == null ||
+            !loanRemaining.isFinite ||
+            loanRemaining < 0 ||
+            loanRemaining > loanAmount + 0.000001 ||
+            !repaidTotal.isFinite ||
+            (repaidTotal - (loanAmount - loanRemaining)).abs() > 0.000001) {
+          throw Exception(
+            'The linked asset loan balance does not reconcile with its repayment history. Asset deletion was cancelled.',
+          );
+        }
         linkedLoanSnapshots.add({
           'loan': loanRecord,
           'repayments': repaymentRows,

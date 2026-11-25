@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/modules/committee/services/committee_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
 class CommitteeScreen extends StatefulWidget {
   const CommitteeScreen({super.key});
@@ -303,7 +304,7 @@ class _CommitteeDetailScreenState extends State<CommitteeDetailScreen> with Sing
     try{
       final values=await Future.wait([
         CommitteeService.getMembers(id),CommitteeService.getEntries(id),
-        CommitteeService.getWallets(),
+        WalletService.getWallets(),
       ]);
       final currentCommittees=await CommitteeService.getCommittees();
       final current=currentCommittees.where((item)=>(item['id'] as num).toInt()==id);

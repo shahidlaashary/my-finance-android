@@ -1,7 +1,7 @@
 
 import 'package:flutter/foundation.dart';
 
-import 'package:my_finance/modules/finance/services/transactions_service.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
 class AppStartupService {
@@ -36,7 +36,7 @@ class AppStartupService {
 
   static Future<void> _initializeServices() async {
     // Transaction database aur zaroori category structure ko tayyar karta hai.
-    await TransactionsService.database;
+    DatabaseManager.instance.database;
 
     // Jin recurring transactions ki date aa chuki ho unhein process karta hai.
     // Kisi bhi error ko log karta hai taake baad mein uski jaanch ho sake.

@@ -49,6 +49,47 @@ class WalletService {
     };
   }
 
+  static Future<void> ensureDefaultWallets({
+    required String currency,
+    required List<Map<String, dynamic>> defaults,
+  }) async {
+    final normalizedCurrency = currency.trim().toUpperCase();
+    if (normalizedCurrency.isEmpty) {
+      throw ArgumentError.value(currency, 'currency');
+    }
+    await DatabaseManager.instance.database.transaction((txn) async {
+      for (final wallet in defaults) {
+        final name = wallet['name']?.toString().trim() ?? '';
+        final type = wallet['type']?.toString() ?? '';
+        final iconCode = wallet['icon_code'];
+        if (name.isEmpty || type.isEmpty || iconCode is! int) {
+          throw ArgumentError('Default wallet data is incomplete.');
+        }
+        final existing = await txn.query(
+          'wallets',
+          columns: ['id'],
+          where: 'LOWER(name) = ? AND type = ?',
+          whereArgs: [name.toLowerCase(), type],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) continue;
+        await txn.insert('wallets', {
+          'name': name,
+          'type': type,
+          'custom_type': null,
+          'currency': normalizedCurrency,
+          'balance': 0.0,
+          'opening_balance': 0.0,
+          'wallet_number': null,
+          'icon_code': iconCode,
+          'exclude_total': 0,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+    });
+    AppRefreshController.notifyChanged();
+  }
+
   static Future<List<Map<String, dynamic>>> getWallets() {
     return DatabaseManager.instance.database.query(
       'wallets',

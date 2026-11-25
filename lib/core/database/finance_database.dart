@@ -25,7 +25,7 @@ class FinanceDB {
   }
 
   /// Internal repository handle. Other modules must use DatabaseManager.
-  Database get db => DatabaseManager.instance.database;
+  Database get _db => DatabaseManager.instance.database;
 
   // Database band karke restore ke baad dobara kholne ke liye.
   Future<void> close() => DatabaseManager.instance.close();
@@ -107,7 +107,7 @@ class FinanceDB {
   // ----------------------------------------------------------
 
   Future<List<Map<String, dynamic>>> getWallets() {
-    return db.query(
+    return _db.query(
       'wallets',
       orderBy: 'name COLLATE NOCASE ASC',
     );
@@ -151,7 +151,7 @@ class FinanceDB {
 
   Future<List<Map<String, dynamic>>> getCategories(String type) async {
     final key = type == 'Income' ? 'income_categories' : 'expense_categories';
-    final rows = await db.query(
+    final rows = await _db.query(
       'app_settings',
       columns: ['setting_value'],
       where: 'setting_key = ?',
@@ -187,7 +187,7 @@ class FinanceDB {
     List<Map<String, dynamic>> categories,
   ) async {
     final key = type == 'Income' ? 'income_categories' : 'expense_categories';
-    await db.insert(
+    await _db.insert(
       'app_settings',
       {
         'setting_key': key,
@@ -199,7 +199,7 @@ class FinanceDB {
   }
 
   Future<Map<String, dynamic>?> getWallet(int id) async {
-    final rows = await db.query(
+    final rows = await _db.query(
       'wallets',
       where: 'id = ?',
       whereArgs: [id],
@@ -225,7 +225,7 @@ class FinanceDB {
         !openingBalance.isFinite) {
       throw Exception('Wallet name, currency aur opening balance durust enter karein.');
     }
-    final id = await db.insert('wallets', {
+    final id = await _db.insert('wallets', {
       'name': normalizedName,
       'type': type,
       'custom_type': customType,
@@ -248,7 +248,7 @@ class FinanceDB {
   Future<double?> getExchangeRate(String currency) async {
     final normalized = currency.trim().toUpperCase();
     if (normalized == 'PKR') return 1.0;
-    final rows = await db.query(
+    final rows = await _db.query(
       'exchange_rates',
       columns: ['rate'],
       where: 'UPPER(currency) = ?',
@@ -261,7 +261,7 @@ class FinanceDB {
   }
 
   Future<String> getBaseCurrency() async {
-    final rows = await db.query(
+    final rows = await _db.query(
       'app_settings',
       columns: ['setting_value'],
       where: 'setting_key = ?',
@@ -278,7 +278,7 @@ class FinanceDB {
     if (normalized != 'PKR' && await getExchangeRate(normalized) == null) {
       throw Exception('Is currency ka exchange rate pehle set karein.');
     }
-    await db.insert(
+    await _db.insert(
       'app_settings',
       {'setting_key': 'main_currency', 'setting_value': normalized},
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -292,7 +292,7 @@ class FinanceDB {
     if (baseRate == null || baseRate <= 0) {
       throw Exception('Base currency ka exchange rate available nahi.');
     }
-    final wallets = await db.query('wallets', where: 'exclude_total = 0');
+    final wallets = await _db.query('wallets', where: 'exclude_total = 0');
     double total = 0;
     for (final wallet in wallets) {
       final currency = (wallet['currency'] as String).toUpperCase();
@@ -364,7 +364,7 @@ class FinanceDB {
   }
 
   Future<List<Map<String, dynamic>>> getExchangeRates() {
-    return db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
+    return _db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
   }
 
   Future<void> saveExchangeRate(
@@ -378,7 +378,7 @@ class FinanceDB {
       throw Exception('Exchange rate durust nahi hai.');
     }
     final now = DateTime.now().toIso8601String();
-    await db.transaction((txn) async {
+    await _db.transaction((txn) async {
       await txn.insert(
         'exchange_rates',
         {
@@ -417,7 +417,7 @@ class FinanceDB {
     // This prevents wallet currency changes from requiring a manual visit to
     // the Exchange Rates screen. Only missing rates are fetched; saved rates
     // remain unchanged.
-    final currentWalletRows = await db.query(
+    final currentWalletRows = await _db.query(
       'wallets',
       columns: ['currency'],
       where: 'id = ?',
@@ -436,7 +436,7 @@ class FinanceDB {
       }
     }
 
-    await db.transaction((txn) async {
+    await _db.transaction((txn) async {
       final rows = await txn.query(
         'wallets',
         where: 'id = ?',
@@ -700,11 +700,11 @@ class FinanceDB {
   // ----------------------------------------------------------
 
   Future<void> deleteWallet(int id) async {
-    final recurringTable = await db.rawQuery(
+    final recurringTable = await _db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
     );
     if (recurringTable.isNotEmpty) {
-      final linkedRecurring = await db.query(
+      final linkedRecurring = await _db.query(
         'recurring_transactions',
         columns: ['id'],
         where: 'wallet_id = ? OR to_wallet_id = ?',
@@ -719,7 +719,7 @@ class FinanceDB {
       }
     }
 
-    final linked = await db.query(
+    final linked = await _db.query(
       'transactions',
       columns: ['id'],
       where: 'wallet_id = ? OR to_wallet_id = ?',
@@ -734,14 +734,14 @@ class FinanceDB {
       );
     }
 
-    final loanTable = await db.rawQuery(
+    final loanTable = await _db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
     );
     if (loanTable.isNotEmpty) {
-      final linkedLoans = await db.query(
+      final linkedLoans = await _db.query(
         'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
       );
-      final linkedRepayments = await db.query(
+      final linkedRepayments = await _db.query(
         'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
       );
       if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
@@ -749,11 +749,11 @@ class FinanceDB {
       }
     }
 
-    final assetTable = await db.rawQuery(
+    final assetTable = await _db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
     );
     if (assetTable.isNotEmpty) {
-      final linkedAssets = await db.query(
+      final linkedAssets = await _db.query(
         'assets',
         columns: ['id'],
         where: 'wallet_id = ? OR sale_wallet_id = ?',
@@ -765,10 +765,10 @@ class FinanceDB {
       }
     }
 
-    final walletRows = await db.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);
+    final walletRows = await _db.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);
     if (walletRows.isEmpty) return;
     await RecycleBinService.archive(type: 'Wallet', title: walletRows.first['name']?.toString() ?? 'Wallet', table: 'wallets', id: id, record: walletRows.first);
-    await db.delete('wallets', where: 'id = ?', whereArgs: [id]);
+    await _db.delete('wallets', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }
 

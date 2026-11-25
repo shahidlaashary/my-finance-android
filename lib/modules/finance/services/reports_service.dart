@@ -1,10 +1,10 @@
 
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:my_finance/modules/finance/services/transactions_service.dart';
 
 class ReportsService {
-  Future<Database> get _database => TransactionsService.database;
+  Future<Database> get _database => DatabaseManager.instance.database;
 
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);

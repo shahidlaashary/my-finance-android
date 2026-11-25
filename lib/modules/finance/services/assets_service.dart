@@ -9,6 +9,15 @@ class AssetsService {
   Future<Database> get _database async {
     return DatabaseManager.instance.database;
   }
+  Future<Map<int, String>> getAssetNames() async {
+    final db = await _database;
+    final rows = await db.query('assets', columns: ['id', 'name']);
+    return {
+      for (final row in rows)
+        (row['id'] as num).toInt(): row['name']?.toString() ?? 'Asset',
+    };
+  }
+
   Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS assets (

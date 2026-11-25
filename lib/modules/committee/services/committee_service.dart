@@ -1,4 +1,6 @@
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
@@ -67,13 +69,9 @@ class CommitteeService {
     ''', [committeeId]);
   }
 
-  /// Reads shared wallet records without depending on the FinanceDB facade.
-  /// Committee keeps its own ledger while using the common finance connection.
+  /// Wallet records are owned by WalletService; Committee owns its ledger.
   static Future<List<Map<String, dynamic>>> getWallets() {
-    return DatabaseManager.instance.database.query(
-      'wallets',
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
+    return WalletService.getWallets();
   }
 
   static Future<int> createCommittee({
@@ -88,11 +86,9 @@ class CommitteeService {
       throw Exception('Enter a name, valid installment and at least two members.');
     }
     final db = DatabaseManager.instance.database;
+    final currency = await CurrencyService.getBaseCurrency();
     final now = DateTime.now().toIso8601String();
     final id = await db.transaction((txn) async {
-      final currencyRows = await txn.query('app_settings', columns: ['setting_value'],
-        where: 'setting_key=?', whereArgs: ['main_currency'], limit: 1);
-      final currency = currencyRows.isEmpty ? 'PKR' : (currencyRows.first['setting_value']?.toString() ?? 'PKR');
       final committeeId = await txn.insert('committees', {
         'name': name.trim(), 'frequency': frequency, 'installment_amount': installmentAmount,
         'member_count': members.length, 'currency': currency,

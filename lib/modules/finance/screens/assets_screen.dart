@@ -5,7 +5,6 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/files/attachment_service.dart';

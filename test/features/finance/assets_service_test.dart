@@ -1259,6 +1259,95 @@ void main() {
     );
   });
 
+  test('editing an ordinary loan is blocked if its source wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Loan Edit Source Currency Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      LoansService.updateLoanDetails(
+        loanId: loanId,
+        amount: 350,
+        lendingDate: '2026-11-22',
+        dueDate: null,
+        notes: 'Should not be saved',
+      ),
+      throwsA(isA<Exception>()),
+    );
+
+    final savedLoan = await LoansService.getLoanById(loanId);
+    expect(savedLoan, isNotNull);
+    expect(savedLoan!.amount, 300);
+    expect(savedLoan.lendingDate, '2026-11-20');
+    expect(savedLoan.notes, isEmpty);
+    expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 700);
+  });
+
+  test('deleting an ordinary loan is blocked if its source wallet currency changed', () async {
+    final walletId = await createWallet(1000);
+    final partyId = await LoansService.addParty(
+      name: 'Loan Delete Source Currency Party',
+      currency: 'PKR',
+    );
+    final loanId = await LoansService.addLoan(
+      LoansModel(
+        partyId: partyId,
+        loanType: 'given',
+        amount: 300,
+        remainingAmount: 300,
+        walletId: walletId,
+        currency: 'PKR',
+        lendingDate: '2026-11-20',
+        createdAt: DateTime(2026, 11, 20).toIso8601String(),
+      ),
+    );
+    await FinanceDB.instance.db.update(
+      'wallets',
+      {'currency': 'USD'},
+      where: 'id = ?',
+      whereArgs: [walletId],
+    );
+
+    await expectLater(
+      LoansService.deleteLoan(loanId),
+      throwsA(isA<Exception>()),
+    );
+
+    final savedLoan = await LoansService.getLoanById(loanId);
+    expect(savedLoan, isNotNull);
+    expect(savedLoan!.amount, 300);
+    expect(await LoansService.getRepayments(loanId), isEmpty);
+    expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 700);
+    expect(
+      await FinanceDB.instance.db.query(
+        'recycle_bin',
+        where: 'source_table = ? AND source_id = ?',
+        whereArgs: ['loans', loanId.toString()],
+      ),
+      isEmpty,
+    );
+  });
+
   test('deleting an ordinary loan is blocked if a repayment wallet currency changed', () async {
     final lendingWalletId = await createWallet(1000);
     final repaymentWalletId = await createWallet(1000);

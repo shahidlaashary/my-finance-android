@@ -958,4 +958,256 @@ class AssetsService {
       (double total, double value) => total + value,
     );
   }
+  /// Restores an asset and its linked loan/repayment ledger atomically.
+  static Future<void> restoreArchivedAsset(
+    Transaction txn, {
+    required Map<String, dynamic> record,
+    String? relatedPayload,
+  }) async {
+        await txn.execute('''CREATE TABLE IF NOT EXISTS assets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+          category TEXT NOT NULL DEFAULT 'Other', purchase_price REAL NOT NULL,
+          current_value REAL NOT NULL, purchase_date TEXT NOT NULL, wallet_id INTEGER NOT NULL,
+          notes TEXT NOT NULL DEFAULT '', is_sold INTEGER NOT NULL DEFAULT 0,
+          sale_date TEXT, sale_price REAL, sale_wallet_id INTEGER, created_at TEXT NOT NULL)''');
+        final isLoanPurchase =
+            (record['payment_type']?.toString().toLowerCase() ?? 'wallet') == 'loan';
+        final isLoanSale = (record['is_sold'] as num?)?.toInt() == 1 &&
+            (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') == 'loan';
+        final assetId = (record['id'] as num).toInt();
+        final purchaseLoanId = (record['linked_loan_id'] as num?)?.toInt();
+        final saleLoanId = (record['sale_linked_loan_id'] as num?)?.toInt();
+        if (isLoanPurchase != (purchaseLoanId != null) ||
+            isLoanSale != (saleLoanId != null)) {
+          throw Exception('The archived Asset has missing or inconsistent linked loan references.');
+        }
+        final walletId = (record['wallet_id'] as num?)?.toInt() ?? 0;
+        final walletDeltas = <int, double>{};
+        Future<void> validateWalletCurrency(int id, String expectedCurrency) async {
+          final walletRows = await txn.query(
+            'wallets',
+            columns: ['currency'],
+            where: 'id = ?',
+            whereArgs: [id],
+            limit: 1,
+          );
+          if (walletRows.isEmpty) {
+            throw Exception('A linked Asset wallet no longer exists. Restore the wallet first.');
+          }
+          final currentCurrency =
+              (walletRows.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+          if (currentCurrency != expectedCurrency.trim().toUpperCase()) {
+            throw Exception(
+              'An Asset wallet currency has changed. Correct the wallet currency before restoring this Asset.',
+            );
+          }
+        }
+        void addWalletDelta(int id, double delta) {
+          if (id <= 0 || !delta.isFinite) {
+            throw Exception('The archived Asset contains invalid wallet accounting details.');
+          }
+          final next = (walletDeltas[id] ?? 0) + delta;
+          if (!next.isFinite) {
+            throw Exception('The archived Asset wallet balance change is invalid.');
+          }
+          walletDeltas[id] = next;
+        }
+        if (!isLoanPurchase) {
+          final purchase = (record['purchase_price'] as num).toDouble();
+          if (!purchase.isFinite || purchase <= 0 || walletId <= 0) {
+            throw Exception('The archived Asset purchase amount or wallet is invalid.');
+          }
+          await validateWalletCurrency(
+            walletId,
+            (record['currency']?.toString() ?? 'PKR'),
+          );
+          addWalletDelta(walletId, -purchase);
+        }
+        if ((record['is_sold'] as num?)?.toInt() == 1 &&
+            record['sale_price'] != null &&
+            (record['sale_payment_type']?.toString().toLowerCase() ?? 'wallet') != 'loan') {
+          final saleWalletId = (record['sale_wallet_id'] as num?)?.toInt() ?? walletId;
+          final saleWalletAmount =
+              (record['sale_wallet_amount'] as num?)?.toDouble() ??
+                  (record['sale_price'] as num).toDouble();
+          if (saleWalletId <= 0 ||
+              !saleWalletAmount.isFinite ||
+              saleWalletAmount < 0) {
+            throw Exception('The archived Asset sale wallet details are invalid.');
+          }
+          await validateWalletCurrency(
+            saleWalletId,
+            (record['sale_wallet_currency']?.toString() ??
+                record['currency']?.toString() ?? 'PKR'),
+          );
+          addWalletDelta(saleWalletId, saleWalletAmount);
+        }
+        // Restore the linked purchase/sale loans and their repayment history
+        // from the asset's grouped snapshot. Their base wallet effect is not
+        // replayed because asset-linked loans never move a wallet on creation.
+        final linkedRaw = relatedPayload;
+        final linkedSnapshots = linkedRaw == null || linkedRaw.isEmpty
+            ? <Map<String, dynamic>>[]
+            : (jsonDecode(linkedRaw) as List)
+                .whereType<Map>()
+                .map((entry) => Map<String, dynamic>.from(entry))
+                .toList();
+        final restoredLoanIds = <int>{};
+        for (final snapshot in linkedSnapshots) {
+            final loan = Map<String, dynamic>.from(snapshot['loan'] as Map);
+            final repayments = (snapshot['repayments'] as List? ?? const [])
+                .whereType<Map>()
+                .map((entry) => Map<String, dynamic>.from(entry))
+                .toList();
+            final loanId = (loan['id'] as num).toInt();
+            final sourceType = loan['source_type']?.toString();
+            final isPurchaseLoan = loanId == purchaseLoanId;
+            final expectedSource = isPurchaseLoan ? 'asset_purchase' : 'asset_sale';
+            final expectedType = isPurchaseLoan ? 'taken' : 'given';
+            final expectedAmount = isPurchaseLoan
+                ? (record['purchase_price'] as num).toDouble()
+                : (record['sale_price'] as num?)?.toDouble();
+            final expectedPartyId = (record[
+                isPurchaseLoan ? 'party_id' : 'sale_party_id'] as num?)?.toInt();
+            if (expectedPartyId == null || expectedPartyId <= 0) {
+              throw Exception('The archived Asset is missing its linked party. Restore was cancelled.');
+            }
+            final partyRows = await txn.query(
+              'loan_parties',
+              columns: ['id', 'currency'],
+              where: 'id = ?',
+              whereArgs: [expectedPartyId],
+              limit: 1,
+            );
+            if (partyRows.isEmpty) {
+              throw Exception('Restore the linked party before restoring this Asset.');
+            }
+            final partyCurrency =
+                (partyRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
+            final loanAmount = (loan['amount'] as num).toDouble();
+            final loanRemaining = (loan['remaining_amount'] as num).toDouble();
+            final repaidTotal = repayments.fold<double>(
+              0,
+              (sum, row) => sum + ((row['amount'] as num?)?.toDouble() ?? double.nan),
+            );
+            if (!repaidTotal.isFinite ||
+                (repaidTotal - (loanAmount - loanRemaining)).abs() > 0.000001) {
+              throw Exception(
+                'The archived linked loan balance does not reconcile with its repayment history.',
+              );
+            }
+            if (!restoredLoanIds.add(loanId) ||
+                (loanId != purchaseLoanId && loanId != saleLoanId) ||
+                sourceType != expectedSource ||
+                (loan['source_id'] as num?)?.toInt() != assetId ||
+                loan['loan_type']?.toString().toLowerCase() != expectedType ||
+                (loan['wallet_id'] as num?)?.toInt() != 0 ||
+                (loan['party_id'] as num?)?.toInt() != expectedPartyId ||
+                partyCurrency !=
+                    (record['currency']?.toString() ?? 'PKR').toUpperCase() ||
+                expectedAmount == null ||
+                (loanAmount - expectedAmount).abs() > 0.000001 ||
+                (loan['currency']?.toString() ?? 'PKR').toUpperCase() !=
+                    (record['currency']?.toString() ?? 'PKR').toUpperCase() ||
+                !loanAmount.isFinite ||
+                loanAmount <= 0 ||
+                !loanRemaining.isFinite ||
+                loanRemaining < 0 ||
+                loanRemaining > loanAmount + 0.000001) {
+              throw Exception('The archived linked loan does not match this Asset.');
+            }
+            final alreadyExists = await txn.query(
+              'loans', columns: ['id'], where: 'id = ?', whereArgs: [loanId], limit: 1,
+            );
+            if (alreadyExists.isNotEmpty) {
+              throw Exception('A linked asset loan already exists. Resolve it before restoring this asset.');
+            }
+            final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
+            for (final repayment in repayments) {
+              final repaymentWalletId = (repayment['wallet_id'] as num).toInt();
+              final repaymentAmount = (repayment['amount'] as num).toDouble();
+              final walletAmount = (repayment['wallet_amount'] as num?)?.toDouble()
+                  ?? repaymentAmount;
+              if ((repayment['loan_id'] as num?)?.toInt() != loanId ||
+                  !repaymentAmount.isFinite ||
+                  repaymentAmount <= 0 ||
+                  !walletAmount.isFinite ||
+                  walletAmount <= 0 ||
+                  repaymentWalletId <= 0) {
+                throw Exception('An archived linked loan repayment contains invalid details.');
+              }
+              final repaymentWalletRows = await txn.query(
+                'wallets',
+                columns: ['currency'],
+                where: 'id = ?',
+                whereArgs: [repaymentWalletId],
+                limit: 1,
+              );
+              if (repaymentWalletRows.isEmpty) {
+                throw Exception('A linked repayment wallet no longer exists. Restore the wallet first.');
+              }
+              final savedWalletCurrency =
+                  repayment['wallet_currency']?.toString().trim().toUpperCase() ?? '';
+              final currentWalletCurrency =
+                  (repaymentWalletRows.first['currency']?.toString() ?? 'PKR')
+                      .trim()
+                      .toUpperCase();
+              if (savedWalletCurrency.isNotEmpty &&
+                  savedWalletCurrency != currentWalletCurrency) {
+                throw Exception(
+                  'A linked repayment wallet currency has changed. Correct the wallet currency before restoring this Asset.',
+                );
+              }
+              final delta = loanType == 'given' ? walletAmount : -walletAmount;
+              addWalletDelta(repaymentWalletId, delta);
+            }
+            await txn.insert('loans', loan);
+            for (final repayment in repayments) {
+              await txn.insert('loan_repayments', repayment);
+            }
+            await txn.delete(
+              'recycle_bin',
+              where: "source_table = 'loans' AND source_id = ?",
+              whereArgs: [loanId.toString()],
+            );
+        }
+        final expectedLoanIds = <int>{
+          if (purchaseLoanId != null) purchaseLoanId,
+          if (saleLoanId != null) saleLoanId,
+        };
+        if (restoredLoanIds.length != expectedLoanIds.length ||
+            !restoredLoanIds.containsAll(expectedLoanIds)) {
+          throw Exception('The Asset archive is missing one or more linked loan records.');
+        }
+        // Apply the complete restore as one net wallet movement per wallet.
+        // A sale receipt or repayment may fund the purchase reversal, so
+        // validating each effect in isolation can reject a valid restore.
+        for (final entry in walletDeltas.entries) {
+          final wallets = await txn.query(
+            'wallets',
+            columns: ['balance'],
+            where: 'id = ?',
+            whereArgs: [entry.key],
+            limit: 1,
+          );
+          if (wallets.isEmpty) {
+            throw Exception('A linked Asset wallet no longer exists. Restore the wallet first.');
+          }
+          final balance = (wallets.first['balance'] as num).toDouble();
+          if (!balance.isFinite || balance + entry.value < -0.000001) {
+            throw Exception('Insufficient wallet balance to restore this Asset and its linked loan repayments.');
+          }
+        }
+        for (final entry in walletDeltas.entries) {
+          if (entry.value == 0) continue;
+          await _applyWalletDelta(
+            txn,
+            walletId: entry.key,
+            amount: entry.value,
+          );
+        }
+        await txn.insert('assets', record);
+        return;
+  }
+
 }

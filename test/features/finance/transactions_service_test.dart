@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -24,8 +25,7 @@ void main() {
 
   tearDown(() async {
     // Dono database connections band kar ke temporary test data saaf karte hain.
-    await TransactionsService.closeDatabase();
-    await FinanceDB.instance.close();
+    await DatabaseManager.instance.close();
     if (await databaseDirectory.exists()) {
       await databaseDirectory.delete(recursive: true);
     }

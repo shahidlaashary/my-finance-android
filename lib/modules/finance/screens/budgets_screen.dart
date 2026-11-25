@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
@@ -65,7 +66,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       final categoryItems = await CategoryService.getCategories('expense');
       final categories = categoryItems.map((item) => {'name': item.name}).toList();
       // Wallet currencies central FinanceDB connection se load hoti hain.
-      final db = FinanceDB.instance.db;
+      final db = DatabaseManager.instance.database;
       final wallets = await db.query('wallets');
       final currencies = wallets
           .map((e) => e['currency']?.toString() ?? 'PKR')

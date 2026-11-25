@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';

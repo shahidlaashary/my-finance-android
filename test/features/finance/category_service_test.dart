@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/features/finance/models/finance_category.dart';
-import 'package:my_finance/features/finance/services/category_service.dart';
+import 'package:my_finance/modules/finance/models/finance_category.dart';
+import 'package:my_finance/modules/finance/services/category_service.dart';
 
 void main() {
   late Directory databaseDirectory;

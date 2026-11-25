@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
-import 'package:my_finance/features/finance/models/recurring_transaction_model.dart';
-import 'package:my_finance/features/finance/services/recurring_transaction_service.dart';
+import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
+import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
 void main() {
   late Directory databaseDirectory;

@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 class BudgetsService {
 
   static Future<Database> get _database async {
@@ -215,7 +215,7 @@ class BudgetsService {
     final db = await _database;
     final rows = await db.query('budgets', where: 'id = ?', whereArgs: [budgetId], limit: 1);
     if (rows.isEmpty) return;
-    await RecycleBinService.archive(type: 'Budget', title: rows.first['name']?.toString() ?? 'Budget', table: 'budgets', id: budgetId, record: rows.first);
+    await RecycleBinArchiveService.archive(type: 'Budget', title: rows.first['name']?.toString() ?? 'Budget', table: 'budgets', id: budgetId, record: rows.first);
     await db.delete('budgets', where: 'id = ?', whereArgs: [budgetId]);
     AppRefreshController.notifyChanged();
   }

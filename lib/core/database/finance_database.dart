@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -107,10 +108,7 @@ class FinanceDB {
   // ----------------------------------------------------------
 
   Future<List<Map<String, dynamic>>> getWallets() {
-    return _db.query(
-      'wallets',
-      orderBy: 'name COLLATE NOCASE ASC',
-    );
+    return WalletService.getWallets();
   }
 
   // ----------------------------------------------------------
@@ -198,15 +196,8 @@ class FinanceDB {
     AppRefreshController.notifyChanged();
   }
 
-  Future<Map<String, dynamic>?> getWallet(int id) async {
-    final rows = await _db.query(
-      'wallets',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    return rows.isEmpty ? null : rows.first;
+  Future<Map<String, dynamic>?> getWallet(int id) {
+    return WalletService.getWallet(id);
   }
 
   Future<int> addWallet({
@@ -218,27 +209,17 @@ class FinanceDB {
     String? walletNumber,
     required int iconCode,
     required bool excludeTotal,
-  }) async {
-    final normalizedName = name.trim();
-    final normalizedCurrency = currency.trim().toUpperCase();
-    if (normalizedName.isEmpty || normalizedCurrency.isEmpty ||
-        !openingBalance.isFinite) {
-      throw Exception('Wallet name, currency aur opening balance durust enter karein.');
-    }
-    final id = await _db.insert('wallets', {
-      'name': normalizedName,
-      'type': type,
-      'custom_type': customType,
-      'currency': normalizedCurrency,
-      'balance': openingBalance,
-      'opening_balance': openingBalance,
-      'wallet_number': walletNumber,
-      'icon_code': iconCode,
-      'exclude_total': excludeTotal ? 1 : 0,
-      'created_at': DateTime.now().toIso8601String(),
-    });
-    AppRefreshController.notifyChanged();
-    return id;
+  }) {
+    return WalletService.addWallet(
+      name: name,
+      type: type,
+      customType: customType,
+      currency: currency,
+      openingBalance: openingBalance,
+      walletNumber: walletNumber,
+      iconCode: iconCode,
+      excludeTotal: excludeTotal,
+    );
   }
 
   // ----------------------------------------------------------

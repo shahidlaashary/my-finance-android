@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/core/theme/app_colors.dart';
 import 'package:my_finance/features/finance/screens/categories_management_screen.dart';
 import 'package:my_finance/features/finance/screens/transactions_screen.dart';
 import 'package:my_finance/features/finance/services/assets_service.dart';

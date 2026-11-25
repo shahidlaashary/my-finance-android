@@ -36,7 +36,8 @@ class AppStartupService {
 
   static Future<void> _initializeServices() async {
     // Transaction database aur zaroori category structure ko tayyar karta hai.
-    DatabaseManager.instance.database;
+    final database = DatabaseManager.instance.database;
+    if (!database.isOpen) throw StateError('Finance database is not open.');
 
     // Jin recurring transactions ki date aa chuki ho unhein process karta hai.
     // Kisi bhi error ko log karta hai taake baad mein uski jaanch ho sake.

@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -8,7 +9,7 @@ class MyPartnersService {
   static final MyPartnersService instance = MyPartnersService._();
 
   Future<void> _ensureTables() async {
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.execute('''
       CREATE TABLE IF NOT EXISTS partners (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,7 +73,7 @@ class MyPartnersService {
 
   Future<List<Map<String, dynamic>>> getPartners() async {
     await _ensureTables();
-    return FinanceDB.instance.db.rawQuery('''
+    return DatabaseManager.instance.database.rawQuery('''
       SELECT p.*,
         COALESCE((SELECT SUM(t.balance_delta) FROM partners_transactions t WHERE t.partner_id = p.id), 0) AS ledger_balance,
         p.opening_balance + COALESCE((SELECT SUM(t.balance_delta) FROM partners_transactions t WHERE t.partner_id = p.id), 0) AS current_balance,
@@ -104,7 +105,7 @@ class MyPartnersService {
       'profit_share': profitShare,
       'opening_balance': openingBalance,
     };
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     int result;
     if (id == null) {
       result = await db.insert('partners', {
@@ -121,7 +122,7 @@ class MyPartnersService {
 
   Future<void> setActive(int id, bool active) async {
     await _ensureTables();
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'partners', {'is_active': active ? 1 : 0},
       where: 'id = ?', whereArgs: [id],
     );
@@ -130,7 +131,7 @@ class MyPartnersService {
 
   Future<List<Map<String, dynamic>>> getWalletLinks(int partnerId) async {
     await _ensureTables();
-    return FinanceDB.instance.db.rawQuery('''
+    return DatabaseManager.instance.database.rawQuery('''
       SELECT w.*, l.id AS link_id FROM partners_wallet_links l
       INNER JOIN wallets w ON w.id = l.wallet_id
       WHERE l.partner_id = ? ORDER BY w.name COLLATE NOCASE
@@ -139,7 +140,7 @@ class MyPartnersService {
 
   Future<void> setWalletLinks(int partnerId, List<int> walletIds) async {
     await _ensureTables();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
       await txn.delete('partners_wallet_links', where: 'partner_id = ?', whereArgs: [partnerId]);
       for (final walletId in walletIds.toSet()) {
@@ -155,7 +156,7 @@ class MyPartnersService {
 
   Future<List<Map<String, dynamic>>> getTransactions(int partnerId) async {
     await _ensureTables();
-    return FinanceDB.instance.db.rawQuery('''
+    return DatabaseManager.instance.database.rawQuery('''
       SELECT t.*, w.name AS wallet_name, w.currency AS currency
       FROM partners_transactions t
       LEFT JOIN wallets w ON w.id = t.wallet_id
@@ -165,7 +166,7 @@ class MyPartnersService {
 
   Future<void> deletePartner(int partnerId) async {
     await _ensureTables();
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final partners = await db.query('partners', where: 'id=?', whereArgs: [partnerId], limit: 1);
     if (partners.isEmpty) return;
     final partner = Map<String,dynamic>.from(partners.first);
@@ -209,7 +210,7 @@ class MyPartnersService {
   }) async {
     await _ensureTables();
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid transfer amount.');
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
       final walletRows = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
       if (walletRows.isEmpty) throw Exception('Selected wallet not found.');
@@ -275,7 +276,7 @@ class MyPartnersService {
     final deltaFn = partnerDeltaByType[type];
     if (deltaFn == null) throw Exception('Invalid transaction type.');
     final delta = deltaFn(amount);
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
       if (walletId != null) {
         final rows = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);

@@ -1,5 +1,6 @@
 import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -91,12 +92,12 @@ class RecycleBinService {
       if (rows.isEmpty) throw Exception('Recycle Bin item not found.');
       final item = rows.first;
       final table = item['source_table'].toString();
-      final record = M      if (table == 'loan_parties') {
+      final record = Map<String, dynamic>.from(
+        jsonDecode(item['payload'].toString()) as Map,
+      );
+      if (table == 'loan_parties') {
         await PartyService.restoreArchivedParty(txn, record);
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
-        return;
-      }
-_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
       if (table == 'loan_repayments') {

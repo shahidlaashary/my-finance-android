@@ -1,14 +1,10 @@
-import 'dart:io';
-
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:open_filex/open_filex.dart';
 
-import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/services/attachment_service.dart';
 import 'package:my_finance/features/space/services/space_documents_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';

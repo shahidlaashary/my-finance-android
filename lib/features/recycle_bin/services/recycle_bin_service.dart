@@ -902,15 +902,6 @@ class RecycleBinService {
         await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
         return;
       }
-      if (table == 'space_documents_records') {
-        final settings = await txn.query('app_settings', columns: ['setting_value'], where: 'setting_key = ?', whereArgs: ['space_documents_records'], limit: 1);
-        final current = settings.isEmpty ? <Map<String, dynamic>>[] : (jsonDecode(settings.first['setting_value']?.toString() ?? '[]') as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
-        if (current.any((e) => e['id'].toString() == item['source_id'].toString())) throw Exception('A document with this ID already exists.');
-        current.add(record);
-        await txn.insert('app_settings', {'setting_key':'space_documents_records','setting_value':jsonEncode(current)}, conflictAlgorithm: ConflictAlgorithm.replace);
-        await txn.delete('recycle_bin', where: 'id = ?', whereArgs: [recycleId]);
-        return;
-      }
       const allowed = {'wallets','budgets','recurring_transactions','stock_items','staff'};
       if (!allowed.contains(table)) throw Exception('Restore for this record type is not available yet.');
       await txn.insert(table, record);

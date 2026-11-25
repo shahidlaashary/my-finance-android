@@ -10,6 +10,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/screens/loan_repayment_entry_form.dart';
@@ -95,7 +96,7 @@ class LoansScreenState extends State<LoansScreen> {
   Future<void> _loadData() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;
-      final wallets = await TransactionsService.getWallets();
+      final wallets = await WalletService.getWallets();
       final loans = await LoansService.getLoans();
       final parties = await PartyService.getParties();
       final outstandingByCurrency =

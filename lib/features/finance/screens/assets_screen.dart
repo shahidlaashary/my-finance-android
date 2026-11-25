@@ -152,23 +152,6 @@ class AssetsScreenState extends State<AssetsScreen> {
     }
   }
 
-  String _walletName(int walletId) {
-    final matches = _wallets.where(
-      (wallet) =>
-          (wallet['id'] as num).toInt() == walletId,
-    );
-
-    if (matches.isEmpty) return 'Unknown wallet';
-
-    return matches.first['name'].toString();
-  }
-
-  String _partyName(int? partyId) {
-    if (partyId == null) return '-';
-    final matches = _parties.where((party) => (party['id'] as num).toInt() == partyId);
-    return matches.isEmpty ? 'Unknown Party' : matches.first['name'].toString();
-  }
-
   Future<Map<String, dynamic>?> _createParty({
     required String initialCurrency,
     bool lockCurrency = false,

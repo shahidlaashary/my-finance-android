@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
@@ -93,7 +94,7 @@ class AppBootstrapService {
     final appearance = AppearanceSettingsService.instance;
     appearance.configure(
       readSetting: (key) async {
-        final rows = await FinanceDB.instance.db.query(
+        final rows = await DatabaseManager.instance.database.query(
           'app_settings',
           columns: ['setting_value'],
           where: 'setting_key = ?',
@@ -103,7 +104,7 @@ class AppBootstrapService {
         return rows.isEmpty ? null : rows.first['setting_value']?.toString();
       },
       writeSetting: (key, value) async {
-        await FinanceDB.instance.db.insert(
+        await DatabaseManager.instance.database.insert(
           'app_settings',
           {'setting_key': key, 'setting_value': value},
           conflictAlgorithm: ConflictAlgorithm.replace,

@@ -61,6 +61,15 @@ class DatabaseManager {
   }
 
   Future<void> close() async {
+    final pending = _opening;
+    if (pending != null) {
+      try {
+        await pending;
+      } catch (_) {
+        // A failed open has no live connection to close.
+      }
+    }
+
     final current = _database;
     _database = null;
     if (current != null && current.isOpen) {

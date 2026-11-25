@@ -44,6 +44,17 @@ void main() {
     expect(await File(destination).readAsString(), 'attachment content');
   });
 
+  test('writes bytes to a file and flushes the content', () async {
+    final path = '${sandbox.path}/written/report.bin';
+    final bytes = [0, 1, 2, 255];
+
+    await storage.createDirectory('${sandbox.path}/written');
+    await storage.writeBytes(path: path, bytes: bytes);
+
+    expect(await storage.fileExists(path), isTrue);
+    expect(await File(path).readAsBytes(), bytes);
+  });
+
   test('deletes files and safely ignores missing files', () async {
     final file = File('${sandbox.path}/remove.txt');
     await file.writeAsString('remove me');

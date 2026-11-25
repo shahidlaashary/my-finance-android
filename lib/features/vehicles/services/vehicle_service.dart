@@ -195,6 +195,7 @@ class VehicleService {
     final oldQuantity = (old['quantity'] as num).toDouble();
     final oldUnit = (old['unit'] ?? 'L').toString();
     final oldStation = (old['station'] ?? '').toString();
+    final oldOdometer = (old['odometer'] as num).toDouble();
     final oldDate = (old['date'] ?? DateTime.now().toIso8601String()).toString();
     final oldTotal = (old['total'] as num).toDouble();
     final oldWallet = (old['wallet_id'] as num).toInt();

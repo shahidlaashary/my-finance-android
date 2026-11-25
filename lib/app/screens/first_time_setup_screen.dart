@@ -232,7 +232,6 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencies = CurrencyCatalog.supported.toList()..sort();
     return Scaffold(
       body: SafeArea(
         child: Center(

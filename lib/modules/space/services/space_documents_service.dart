@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
@@ -83,32 +83,10 @@ class SpaceDocumentsService {
   SpaceDocumentsService._();
   static final SpaceDocumentsService instance = SpaceDocumentsService._();
 
-  static const String _databaseName = 'my_finance.db';
   static const String _storageKey = 'space_documents_records';
-  Database? _database;
-  Future<Database>? _opening;
 
-  Future<Database> get _db async {
-    if (_database != null && _database!.isOpen) return _database!;
-    final pending = _opening;
-    if (pending != null) return pending;
-    final future = _open();
-    _opening = future;
-    try {
-      return await future;
-    } catch (_) {
-      _opening = null;
-      rethrow;
-    }
-  }
-
-  Future<Database> _open() async {
-    final directory = await getDatabasesPath();
-    final db = await openDatabase(p.join(directory, _databaseName));
-    _database = db;
-    _opening = null;
-    return db;
-  }
+  /// Uses the application's one shared my_finance.db connection.
+  Future<Database> get _db async => DatabaseManager.instance.database;
 
   Future<List<Map<String, dynamic>>> _readMaps(DatabaseExecutor executor) async {
     final rows = await executor.query(

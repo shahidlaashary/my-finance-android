@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 /// Owns party records shared by Finance, Assets, Loans and future modules.
@@ -236,7 +236,7 @@ class PartyService {
   static Future<void> deleteParty(int partyId) async {
     await ensureTables();
     final db = DatabaseManager.instance.database;
-    await RecycleBinService.ensureTable();
+    await RecycleBinArchiveService.ensureTable();
 
     await db.transaction((txn) async {
       final linkedLoans = await txn.query(

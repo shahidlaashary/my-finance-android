@@ -590,7 +590,6 @@ class MySpaceService {
     final isPlaylist = table == 'space_playlists';
     final parentTable = isPlaylist ? _playlistsTable : _collectionsTable;
     final linkTable = isPlaylist ? _playlistItemsTable : _collectionItemsTable;
-    final parentKey = isPlaylist ? 'playlist_id' : 'collection_id';
     await db.transaction((txn) async {
       final existing = await txn.query(parentTable, where: 'id = ?', whereArgs: [record['id']], limit: 1);
       if (existing.isNotEmpty) throw StateError('This Space group already exists.');

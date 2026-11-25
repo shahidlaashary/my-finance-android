@@ -295,7 +295,7 @@ void main() {
     );
     final loan = (await LoansService.getLoans())
         .singleWhere((entry) => entry.sourceType == 'asset_sale');
-    await LoansService.addRepayment(
+    final repaymentId = await LoansService.addRepayment(
       RepaymentModel(
         loanId: loan.id!,
         amount: 200,

@@ -771,8 +771,6 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
 
   Widget _reportsTab() {
     final reportFuel = _rangeRows(_fuel);
-    final reportExpenses = _rangeRows(_expenses);
-    final reportReminders = _rangeRows(_reminders);
     final sortedFuel = [...reportFuel]..sort((a,b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
     return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: [
       DropdownButtonFormField<String>(value: _reportRange, decoration: _decoration('Report Period', Icons.date_range_outlined),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -30,7 +31,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
       await StaffService.ensureTables();
       final values = await Future.wait([
         StaffService.getStaff(), StaffService.getSalaries(),
-        StaffService.getAttendance(), StaffService.getWallets(),
+        StaffService.getAttendance(), WalletService.getWallets(),
       ]);
       if (!mounted) return;
       setState(() { _staff = values[0]; _salaries = values[1]; _attendance = values[2]; _wallets = values[3]; _loading = false; });

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
@@ -34,7 +35,7 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
   void dispose() { _name.dispose(); _purchase.dispose(); _current.dispose(); _notes.dispose(); super.dispose(); }
   Future<void> _load() async {
     try {
-      final wallets = await FinanceDB.instance.getWallets();
+      final wallets = await WalletService.getWallets();
       final parties = await PartyService.getParties();
       if (!mounted) return;
       setState(() { _wallets = wallets; _parties = parties; if (wallets.isNotEmpty) _walletId = wallets.first['id'] as int; _loading = false; });

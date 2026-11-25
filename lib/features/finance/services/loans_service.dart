@@ -821,30 +821,6 @@ class LoansService {
   }
 
   /// Un loans ki list deta hai jin ki due date guzar chuki aur raqam baqi hai.
-  static Future<List<LoansModel>> getOverdueLoans() async {
-    final db = await _database;
-
-    final today = DateTime.now();
-
-    final todayString =
-        '${today.year.toString().padLeft(4, '0')}-'
-        '${today.month.toString().padLeft(2, '0')}-'
-        '${today.day.toString().padLeft(2, '0')}';
-
-    final rows = await db.query(
-      'loans',
-      where: '''
-        remaining_amount > 0
-        AND due_date IS NOT NULL
-        AND due_date != ''
-        AND date(due_date) < date(?)
-      ''',
-      whereArgs: [todayString],
-      orderBy: 'due_date ASC',
-    );
-
-    return rows.map(LoansModel.fromMap).toList();
-  }
 
   /// Repayment delete karta hai aur wallet aur loan balances ko pehli halat mein lata hai.
   static Future<void> deleteRepayment(int repaymentId) async {

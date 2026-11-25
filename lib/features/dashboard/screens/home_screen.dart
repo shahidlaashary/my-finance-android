@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -80,7 +81,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
-      final db = FinanceDB.instance.db;
+      final db = DatabaseManager.instance.database;
       final selectedBaseCurrency = await FinanceDB.instance.getBaseCurrency();
       final baseRate = await FinanceDB.instance.getExchangeRate(selectedBaseCurrency) ?? 1.0;
       final now = DateTime.now();
@@ -222,7 +223,7 @@ class _HomePageState extends State<HomePage> {
   Future<List<String>> _checkBudgetThresholds(
     List<BudgetsModel> budgets,
   ) async {
-    final db = FinanceDB.instance.db;
+    final db = DatabaseManager.instance.database;
     final notifications = <String>[];
 
     for (final budget in budgets) {

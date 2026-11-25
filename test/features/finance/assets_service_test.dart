@@ -788,4 +788,69 @@ void main() {
       1100,
     );
   });
+
+  test('restoring a credit-sold asset restores sale loan repayments and balances', () async {
+    final walletId = await createWallet(1000);
+    final buyerId = await LoansService.addParty(
+      name: 'Credit Sale Restore Buyer',
+      currency: 'PKR',
+    );
+    final assetId = await assets.addAssetWithAttachments(
+      asset(name: 'Credit Sale Restore Asset', price: 400, walletId: walletId),
+      const [],
+    );
+    await assets.sellAsset(
+      assetId: assetId,
+      salePrice: 500,
+      saleDate: DateTime(2026, 11, 10),
+      saleWalletId: 0,
+      paymentType: 'Loan',
+      partyId: buyerId,
+      walletAmount: 0,
+      walletCurrency: 'PKR',
+    );
+    final saleLoan = (await LoansService.getLoans()).singleWhere(
+      (loan) => loan.sourceType == 'asset_sale',
+    );
+    await LoansService.addRepayment(
+      RepaymentModel(
+        loanId: saleLoan.id!,
+        amount: 200,
+        walletId: walletId,
+        repaymentDate: '2026-11-11',
+        createdAt: DateTime(2026, 11, 11).toIso8601String(),
+      ),
+    );
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      800,
+    );
+
+    await assets.deleteAsset(assetId);
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      1000,
+    );
+    expect(await LoansService.getLoanById(saleLoan.id!), isNull);
+
+    final archived = (await RecycleBinService.getItems()).singleWhere(
+      (item) => item['source_table'] == 'assets' &&
+          item['source_id'].toString() == assetId.toString(),
+    );
+    await RecycleBinService.restore(archived['id'] as int);
+
+    final restored = await assets.getAssetById(assetId);
+    final restoredLoan = await LoansService.getLoanById(saleLoan.id!);
+    final repayments = await LoansService.getRepayments(saleLoan.id!);
+    expect(restored, isNotNull);
+    expect(restored!.isSold, isTrue);
+    expect(restored.saleLinkedLoanId, saleLoan.id);
+    expect(restoredLoan, isNotNull);
+    expect(restoredLoan!.remainingAmount, 300);
+    expect(repayments, hasLength(1));
+    expect(
+      (await FinanceDB.instance.getWallet(walletId))!['balance'],
+      800,
+    );
+  });
 }

@@ -529,4 +529,13 @@ class WalletService {
     await DatabaseManager.instance.database.delete('wallets', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }
+  static Future<void> restoreArchivedWallet(
+    Transaction txn, Map<String, dynamic> record,
+  ) async {
+    final duplicate = await txn.query('wallets', columns: ['id'],
+      where: 'id = ?', whereArgs: [record['id']], limit: 1);
+    if (duplicate.isNotEmpty) throw Exception('This wallet already exists.');
+    await txn.insert('wallets', record);
+  }
+
 }

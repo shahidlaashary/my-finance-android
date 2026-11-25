@@ -49,6 +49,14 @@ class LocalFileStorage implements FileStorage {
   Future<int> fileLength(String path) => File(path).length();
 
   @override
+  Future<void> writeBytes({
+    required String path,
+    required List<int> bytes,
+  }) async {
+    await File(path).writeAsBytes(bytes, flush: true);
+  }
+
+  @override
   Future<void> deleteFile(String path) async {
     final file = File(path);
     if (await file.exists()) await file.delete();

@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_finance/core/database/finance_database.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/app/screens/main_screen.dart';
@@ -68,7 +68,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
       if (payload['result'] != 'success' || rate is! num || rate <= 0) {
         throw const FormatException('Selected currency rate is unavailable.');
       }
-      await FinanceDB.instance.saveExchangeRate(
+      await CurrencyService.saveExchangeRate(
         _currency, 1 / rate.toDouble(), source: 'automatic',
       );
     } finally {
@@ -88,7 +88,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     try {
       await _refreshSelectedRate();
       await GeneralPreferences.instance.setYourName(name);
-      await FinanceDB.instance.setBaseCurrency(_currency);
+      await CurrencyService.setBaseCurrency(_currency);
 
       // Fresh-install defaults: create only missing standard wallets, all
       // using the base currency selected during first-time setup.

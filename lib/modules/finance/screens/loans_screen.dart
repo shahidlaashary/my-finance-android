@@ -1,4 +1,3 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -16,6 +15,7 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/screens/loan_repayment_entry_form.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
@@ -103,11 +103,7 @@ class LoansScreenState extends State<LoansScreen> {
           await LoansService.getTotalOutstandingByCurrency();
       final assetNames = <int, String>{};
       try {
-        final db = await DatabaseManager.instance.database;
-        final assetRows = await db.query('assets', columns: ['id', 'name']);
-        for (final row in assetRows) {
-          assetNames[(row['id'] as num).toInt()] = row['name']?.toString() ?? 'Asset';
-        }
+        assetNames.addAll(await AssetsService().getAssetNames());
       } catch (_) {
         // Asset table may not exist until the Asset section is first opened.
       }

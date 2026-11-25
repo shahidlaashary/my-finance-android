@@ -1,4 +1,4 @@
-import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/core/settings/app_settings_service.dart';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/database/database_platform.dart';
 import 'package:my_finance/core/database/finance_database.dart';
@@ -93,23 +92,8 @@ class AppBootstrapService {
 
     final appearance = AppearanceSettingsService.instance;
     appearance.configure(
-      readSetting: (key) async {
-        final rows = await DatabaseManager.instance.database.query(
-          'app_settings',
-          columns: ['setting_value'],
-          where: 'setting_key = ?',
-          whereArgs: [key],
-          limit: 1,
-        );
-        return rows.isEmpty ? null : rows.first['setting_value']?.toString();
-      },
-      writeSetting: (key, value) async {
-        await DatabaseManager.instance.database.insert(
-          'app_settings',
-          {'setting_key': key, 'setting_value': value},
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      },
+      readSetting: AppSettingsService.get,
+      writeSetting: AppSettingsService.set,
     );
     await appearance.load();
     await LanguageSettingsService.instance.load();

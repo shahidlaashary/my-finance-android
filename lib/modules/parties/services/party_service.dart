@@ -4,24 +4,13 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 /// Owns party records shared by Finance, Assets, Loans and future modules.
 /// The existing loan database and party table are retained without schema changes.
 class PartyService {
-  static Future<String> getBaseCurrency() async {
-    final db = DatabaseManager.instance.database;
-    final rows = await db.query(
-      'app_settings',
-      columns: ['setting_value'],
-      where: 'setting_key = ?',
-      whereArgs: ['main_currency'],
-      limit: 1,
-    );
-    return (rows.isEmpty
-            ? 'PKR'
-            : rows.first['setting_value']?.toString() ?? 'PKR')
-        .toUpperCase();
-  }
+  /// Base-currency settings are owned by CurrencyService.
+  static Future<String> getBaseCurrency() => CurrencyService.getBaseCurrency();
 
   static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {
     final db = DatabaseManager.instance.database;

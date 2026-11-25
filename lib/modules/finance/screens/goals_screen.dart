@@ -11,7 +11,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
 import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
-import 'package:my_finance/core/services/attachment_service.dart';
+import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});

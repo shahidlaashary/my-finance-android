@@ -1,10 +1,9 @@
-import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
-import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/installments/services/installment_service.dart';
+import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
 class InstallmentsScreen extends StatefulWidget {
   const InstallmentsScreen({super.key});
@@ -31,7 +30,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
     try {
       final values = await Future.wait<dynamic>([
         InstallmentService.getContracts(),
-        DatabaseManager.instance.database.query('wallets', orderBy: 'name'),
+        WalletService.getWallets(orderBy: 'name'),
       ]);
       if (!mounted) return;
       setState(() {

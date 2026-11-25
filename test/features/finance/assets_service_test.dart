@@ -1,3 +1,4 @@
+import 'package:my_finance/core/database/database_manager.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -106,7 +107,7 @@ void main() {
         createdAt: DateTime(2026, 11, 2).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'loans',
       {'remaining_amount': 350},
       where: 'id = ?',
@@ -210,7 +211,7 @@ void main() {
 
     final saved = await assets.getAssetById(assetId);
     final loans = await LoansService.getLoans();
-    final walletRows = await FinanceDB.instance.db.query('wallets');
+    final walletRows = await DatabaseManager.instance.database.query('wallets');
 
     expect(saved, isNotNull);
     expect(saved!.paymentType.toLowerCase(), 'loan');
@@ -305,7 +306,7 @@ void main() {
         createdAt: DateTime(2026, 11, 11).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 50},
       where: 'id = ?',
@@ -356,7 +357,7 @@ void main() {
         createdAt: DateTime(2026, 11, 11).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 50},
       where: 'id = ?',
@@ -408,7 +409,7 @@ void main() {
         createdAt: DateTime(2026, 11, 11).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 50},
       where: 'id = ?',
@@ -438,7 +439,7 @@ void main() {
       asset(name: 'Purchase Currency Guard Asset', price: 400, walletId: walletId),
       const [],
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -465,7 +466,7 @@ void main() {
       walletAmount: 500,
       walletCurrency: 'PKR',
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -488,7 +489,7 @@ void main() {
       (item) => item['source_table'] == 'assets' &&
           item['source_id'].toString() == assetId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -523,7 +524,7 @@ void main() {
       (item) => item['source_table'] == 'assets' &&
           item['source_id'].toString() == assetId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -555,7 +556,7 @@ void main() {
       walletCurrency: 'PKR',
     );
 
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 50},
       where: 'id = ?',
@@ -610,7 +611,7 @@ void main() {
         createdAt: DateTime(2026, 11, 21).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 100},
       where: 'id = ?',
@@ -654,7 +655,7 @@ void main() {
         createdAt: DateTime(2026, 11, 20).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 100},
       where: 'id = ?',
@@ -723,7 +724,7 @@ void main() {
       (item) => item['source_table'] == 'loan_repayments' &&
           item['source_id'].toString() == repaymentId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -765,7 +766,7 @@ void main() {
       name: 'USD Repayment Party',
       currency: 'USD',
     );
-    await FinanceDB.instance.db.insert('exchange_rates', {
+    await DatabaseManager.instance.database.insert('exchange_rates', {
       'currency': 'USD',
       'rate': 280.0,
       'updated_at': DateTime(2026, 11, 20).toIso8601String(),
@@ -797,7 +798,7 @@ void main() {
       3800,
     );
 
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'exchange_rates',
       {'rate': 300.0},
       where: 'currency = ?',
@@ -864,7 +865,7 @@ void main() {
       (item) => item['source_table'] == 'loans' &&
           item['source_id'].toString() == loanId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -907,7 +908,7 @@ void main() {
       (item) => item['source_table'] == 'loans' &&
           item['source_id'].toString() == loanId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -996,7 +997,7 @@ void main() {
       (item) => item['source_table'] == 'loans' &&
           item['source_id'].toString() == loanId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'loan_parties',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1043,7 +1044,7 @@ void main() {
     );
     await LoansService.deleteLoan(loanId);
 
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'balance': 300},
       where: 'id = ?',
@@ -1187,7 +1188,7 @@ void main() {
       (item) => item['source_table'] == 'assets' &&
           item['source_id'].toString() == assetId.toString(),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1300,7 +1301,7 @@ void main() {
         createdAt: DateTime(2026, 11, 21).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1368,7 +1369,7 @@ void main() {
         createdAt: DateTime(2026, 11, 11).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1407,7 +1408,7 @@ void main() {
         createdAt: DateTime(2026, 11, 20).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1451,7 +1452,7 @@ void main() {
         createdAt: DateTime(2026, 11, 20).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1469,7 +1470,7 @@ void main() {
     expect(await LoansService.getRepayments(loanId), isEmpty);
     expect((await FinanceDB.instance.getWallet(walletId))!['balance'], 700);
     expect(
-      await FinanceDB.instance.db.query(
+      await DatabaseManager.instance.database.query(
         'recycle_bin',
         where: 'source_table = ? AND source_id = ?',
         whereArgs: ['loans', loanId.toString()],
@@ -1506,7 +1507,7 @@ void main() {
         createdAt: DateTime(2026, 11, 21).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'wallets',
       {'currency': 'USD'},
       where: 'id = ?',
@@ -1760,7 +1761,7 @@ void main() {
         createdAt: DateTime(2026, 11, 10).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'loans',
       {'remaining_amount': 450},
       where: 'id = ?',
@@ -1816,7 +1817,7 @@ void main() {
     final loanSnapshot = Map<String, dynamic>.from(related.single['loan'] as Map);
     loanSnapshot['remaining_amount'] = 450;
     related.single['loan'] = loanSnapshot;
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'recycle_bin',
       {'related_payload': jsonEncode(related)},
       where: 'id = ?',
@@ -1896,7 +1897,7 @@ void main() {
         createdAt: DateTime(2026, 11, 21).toIso8601String(),
       ),
     );
-    await FinanceDB.instance.db.update(
+    await DatabaseManager.instance.database.update(
       'loans',
       {'remaining_amount': 350},
       where: 'id = ?',

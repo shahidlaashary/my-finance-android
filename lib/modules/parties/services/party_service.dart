@@ -10,10 +10,41 @@ import 'package:my_finance/modules/finance/services/currency_service.dart';
 /// Owns party records shared by Finance, Assets, Loans and future modules.
 /// The existing loan database and party table are retained without schema changes.
 class PartyService {
+  /// Creates the shared party table. PartyService is its single owner.
+  static Future<void> ensureTables() async {
+    final db = DatabaseManager.instance.database;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS loan_parties (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT,
+        address TEXT NOT NULL DEFAULT '',
+        currency TEXT NOT NULL DEFAULT 'PKR',
+        notes TEXT NOT NULL DEFAULT '',
+        email TEXT NOT NULL DEFAULT '',
+        party_type TEXT NOT NULL DEFAULT 'Individual',
+        country TEXT NOT NULL DEFAULT '',
+        city TEXT NOT NULL DEFAULT '',
+        postal_code TEXT NOT NULL DEFAULT '',
+        opening_balance REAL NOT NULL DEFAULT 0,
+        credit_limit REAL NOT NULL DEFAULT 0,
+        payment_terms TEXT NOT NULL DEFAULT 'Due on Receipt',
+        cnic TEXT NOT NULL DEFAULT '',
+        business_name TEXT NOT NULL DEFAULT '',
+        tax_number TEXT NOT NULL DEFAULT '',
+        reference_person TEXT NOT NULL DEFAULT '',
+        profile_image_path TEXT NOT NULL DEFAULT '',
+        is_archived INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+      )
+    ''');
+  }
+
   /// Base-currency settings are owned by CurrencyService.
   static Future<String> getBaseCurrency() => CurrencyService.getBaseCurrency();
 
   static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {
+    await ensureTables();
     final db = DatabaseManager.instance.database;
     return db.query(
       'loan_parties',
@@ -23,6 +54,7 @@ class PartyService {
   }
 
   static Future<void> setPartyArchived(int partyId, {required bool archived}) async {
+    await ensureTables();
     final db = DatabaseManager.instance.database;
     final changed = await db.update(
       'loan_parties',
@@ -54,6 +86,7 @@ class PartyService {
     String referencePerson = '',
     String profileImagePath = '',
   }) async {
+    await ensureTables();
     final db = DatabaseManager.instance.database;
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) throw Exception('Party name is required.');
@@ -201,6 +234,7 @@ class PartyService {
 
   /// Party sirf tab delete hoti hai jab us ke sath koi loan linked na ho.
   static Future<void> deleteParty(int partyId) async {
+    await ensureTables();
     final db = DatabaseManager.instance.database;
     await RecycleBinService.ensureTable();
 
@@ -290,12 +324,14 @@ class PartyService {
   }
 
   static Future<List<LoansModel>> getLoansForParty(int partyId) async {
+    await ensureTables();
     final db = DatabaseManager.instance.database;
     final rows = await db.query('loans', where: 'party_id = ?', whereArgs: [partyId], orderBy: 'lending_date DESC, id DESC');
     return rows.map(LoansModel.fromMap).toList();
   }
 
   static Future<Map<String, dynamic>> getPartySummary(int partyId) async {
+    await ensureTables();
     final db = DatabaseManager.instance.database;
     final rows = await db.rawQuery('''
       SELECT

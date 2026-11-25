@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
-import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
+import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 class InstallmentService {
   static Future<Database> get _db async {
@@ -88,7 +88,7 @@ class InstallmentService {
     final walletId = (contract['wallet_id'] as num).toInt();
     final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
     final walletDelta = contract['direction'] == 'sell' ? -totalPaid : totalPaid;
-    await RecycleBinService.archive(
+    await RecycleBinArchiveService.archive(
       type: 'Installment Contract',
       title: contract['item_name']?.toString() ?? 'Installment',
       table: 'installment_contracts',

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/app/screens/app_settings_screen.dart' show AppSettingsScreen;
-import 'package:my_finance/features/space/screens/my_space_screen.dart';
-import 'package:my_finance/features/vehicles/screens/vehicles_screen.dart';
-import 'package:my_finance/features/finance/screens/exchange_rates_screen.dart';
-import 'package:my_finance/features/stock/screens/stock_manager_screen.dart';
-import 'package:my_finance/features/staff/screens/staff_screen.dart';
+import 'package:my_finance/modules/space/screens/my_space_screen.dart';
+import 'package:my_finance/modules/vehicles/screens/vehicles_screen.dart';
+import 'package:my_finance/modules/finance/screens/exchange_rates_screen.dart';
+import 'package:my_finance/modules/stock/screens/stock_manager_screen.dart';
+import 'package:my_finance/modules/staff/screens/staff_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
-import 'package:my_finance/features/installments/screens/installments_screen.dart';
-import 'package:my_finance/features/committee/screens/committee_screen.dart';
-import 'package:my_finance/features/partners/screens/my_partners_screen.dart';
-import 'package:my_finance/features/finance/screens/loans_screen.dart' show ManageParties;
+import 'package:my_finance/modules/installments/screens/installments_screen.dart';
+import 'package:my_finance/modules/committee/screens/committee_screen.dart';
+import 'package:my_finance/modules/partners/screens/my_partners_screen.dart';
+import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
 
 class ModulesToolsPage extends StatelessWidget {
   const ModulesToolsPage({super.key});

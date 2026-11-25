@@ -1,48 +1,19 @@
-import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 class BudgetsService {
 
-  // Restore se pehle is service ka database connection band karta hai.
-  static Future<void> closeDatabase() async {
-    final currentDatabase = _databaseInstance;
-    _databaseInstance = null;
-    _databaseFuture = null;
-    if (currentDatabase != null && currentDatabase.isOpen) {
-      await currentDatabase.close();
-    }
-  }
-  static const String _databaseName = 'my_finance.db';
-  static Database? _databaseInstance;
-  static Future<Database>? _databaseFuture;
+  // Shared connection is closed centrally by DatabaseManager.
+  static Future<void> closeDatabase() => DatabaseManager.instance.close();
+
   static Future<Database> get _database async {
-    if (_databaseInstance != null &&
-        _databaseInstance!.isOpen) {
-      return _databaseInstance!;
-    }
-    if (_databaseFuture != null) {
-      return _databaseFuture!;
-    }
-    _databaseFuture = _openDatabase();
-    try {
-      _databaseInstance = await _databaseFuture!;
-      return _databaseInstance!;
-    } finally {
-      _databaseFuture = null;
-    }
-  }
-  static Future<Database> _openDatabase() async {
-    final databasePath = await getDatabasesPath();
-    final db = await openDatabase(
-      p.join(databasePath, _databaseName),
-      onOpen: (db) async {
-        await _createTables(db);
-      },
-    );
+    final db = DatabaseManager.instance.database;
+    await _createTables(db);
     return db;
   }
+
   static Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS budgets (

@@ -71,6 +71,13 @@ class MyPartnersService {
 
   }
 
+  Future<List<Map<String, dynamic>>> getWallets() async {
+    return DatabaseManager.instance.database.query(
+      'wallets',
+      orderBy: 'name COLLATE NOCASE ASC',
+    );
+  }
+
   Future<List<Map<String, dynamic>>> getPartners() async {
     await _ensureTables();
     return DatabaseManager.instance.database.rawQuery('''

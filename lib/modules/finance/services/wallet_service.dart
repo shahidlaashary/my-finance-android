@@ -3,6 +3,8 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
+import 'package:my_finance/modules/finance/services/assets_service.dart';
+import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 /// Owns wallet data operations while sharing the application's single
@@ -218,34 +220,11 @@ class WalletService {
       // Loan aur asset records ki currency fixed hoti hai. Un ke
       // reference wallet ki currency badalne se purane records ghalat ho sakte hain.
       if (oldCurrency != currency) {
-        final loanTable = await txn.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
-        );
-        if (loanTable.isNotEmpty) {
-          final linkedLoans = await txn.query(
-            'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
-          );
-          final linkedRepayments = await txn.query(
-            'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
-          );
-          if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
-            throw Exception('Wallet currency cannot be changed while loans or repayments are linked to it.');
-          }
+        if (await LoansService.hasWalletReferences(txn, id)) {
+          throw Exception('Wallet currency cannot be changed while loans or repayments are linked to it.');
         }
-        final assetTable = await txn.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
-        );
-        if (assetTable.isNotEmpty) {
-          final linkedAssets = await txn.query(
-            'assets',
-            columns: ['id'],
-            where: 'wallet_id = ? OR sale_wallet_id = ?',
-            whereArgs: [id, id],
-            limit: 1,
-          );
-          if (linkedAssets.isNotEmpty) {
-            throw Exception('Wallet currency cannot be changed while assets are linked to it.');
-          }
+        if (await AssetsService.hasWalletReferences(txn, id)) {
+          throw Exception('Wallet currency cannot be changed while assets are linked to it.');
         }
         final oldRate = await _getRateInTransaction(txn, oldCurrency);
         final newRate = await _getRateInTransaction(txn, currency);
@@ -492,35 +471,18 @@ class WalletService {
       );
     }
 
-    final loanTable = await DatabaseManager.instance.database.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+    final db = DatabaseManager.instance.database;
+    final hasLoanReferences = await db.transaction(
+      (txn) => LoansService.hasWalletReferences(txn, id),
     );
-    if (loanTable.isNotEmpty) {
-      final linkedLoans = await DatabaseManager.instance.database.query(
-        'loans', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
-      );
-      final linkedRepayments = await DatabaseManager.instance.database.query(
-        'loan_repayments', columns: ['id'], where: 'wallet_id = ?', whereArgs: [id], limit: 1,
-      );
-      if (linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty) {
-        throw Exception('This wallet is linked to loan records or repayments. Remove or settle those records before deleting the wallet.');
-      }
+    if (hasLoanReferences) {
+      throw Exception('This wallet is linked to loan records or repayments. Remove or settle those records before deleting the wallet.');
     }
-
-    final assetTable = await DatabaseManager.instance.database.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
+    final hasAssetReferences = await db.transaction(
+      (txn) => AssetsService.hasWalletReferences(txn, id),
     );
-    if (assetTable.isNotEmpty) {
-      final linkedAssets = await DatabaseManager.instance.database.query(
-        'assets',
-        columns: ['id'],
-        where: 'wallet_id = ? OR sale_wallet_id = ?',
-        whereArgs: [id, id],
-        limit: 1,
-      );
-      if (linkedAssets.isNotEmpty) {
-        throw Exception('This wallet is linked to an asset purchase or sale. Delete or update the asset before deleting the wallet.');
-      }
+    if (hasAssetReferences) {
+      throw Exception('This wallet is linked to an asset purchase or sale. Delete or update the asset before deleting the wallet.');
     }
 
     final walletRows = await DatabaseManager.instance.database.query('wallets', where: 'id = ?', whereArgs: [id], limit: 1);

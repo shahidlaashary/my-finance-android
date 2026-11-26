@@ -25,6 +25,7 @@ import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
 import 'package:my_finance/modules/finance/screens/finance_graph_screens.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
+/// Assets list, filters aur asset-related actions ki main screen hai.
 class AssetsScreen extends StatefulWidget {
   const AssetsScreen({super.key});
 
@@ -830,7 +831,7 @@ class AssetsScreenState extends State<AssetsScreen> {
   }
 
 
-  // New comparison design. The original asset card remains available below it.
+  // Naya comparison design hai; original asset card neeche available rehta hai.
   Widget _redesignedAssetCard(AssetsModel asset) {
     final currency = asset.currency.toUpperCase();
     final displayedValue = asset.isSold && asset.salePrice != null
@@ -1308,6 +1309,7 @@ class AssetsScreenState extends State<AssetsScreen> {
 }
 
 
+/// Selected asset ki details, linked entries aur available actions show karta hai.
 class AssetDetailsScreen extends StatelessWidget {
   final AssetsModel asset;
   final LoansModel? purchaseLoan;

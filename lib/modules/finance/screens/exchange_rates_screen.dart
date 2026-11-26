@@ -21,6 +21,8 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   String _baseCurrency = 'PKR';
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];
+  List<Map<String, dynamic>> _manualPairs = [];
+  bool _online = true;
   bool _loading = true;
   bool _updating = false;
   String? _message;
@@ -36,13 +38,117 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     super.dispose();
   }
 
+  double? _manualRateFor(String from, String to) {
+    if (from == to) return 1.0;
+    final direct = _manualPairs.where((row) =>
+        row['from_currency'] == from && row['to_currency'] == to);
+    if (direct.isNotEmpty) return (direct.first['rate'] as num).toDouble();
+    final reverse = _manualPairs.where((row) =>
+        row['from_currency'] == to && row['to_currency'] == from);
+    if (reverse.isNotEmpty) {
+      final rate = (reverse.first['rate'] as num).toDouble();
+      return rate > 0 ? 1 / rate : null;
+    }
+    // Direct/reverse pair na ho to shared currency ke zariye cross-rate.
+    for (final pair in _manualPairs) {
+      final pivot = pair['to_currency']?.toString() ?? '';
+      if (pair['from_currency'] == from && pivot.isNotEmpty) {
+        final onward = _manualPairs.where((row) =>
+            row['from_currency'] == pivot && row['to_currency'] == to);
+        if (onward.isNotEmpty) {
+          return (pair['rate'] as num).toDouble() *
+              (onward.first['rate'] as num).toDouble();
+        }
+      }
+    }
+    return null;
+  }
+
   double? get _convertedAmount {
     final amount = double.tryParse(_convertAmount.text.trim());
+    if (amount == null || !amount.isFinite || amount < 0) return null;
+    if (!_online) {
+      final rate = _manualRateFor(_convertFrom, _convertTo);
+      return rate == null ? null : amount * rate;
+    }
     final fromRate = _rateFor(_convertFrom);
     final toRate = _rateFor(_convertTo);
-    if (amount == null || !amount.isFinite || amount < 0 ||
-        fromRate == null || toRate == null || toRate <= 0) return null;
+    if (fromRate == null || toRate == null || toRate <= 0) return null;
     return amount * fromRate / toRate;
+  }
+
+  Future<bool> _hasInternet() async {
+    try {
+      final result = await InternetAddress.lookup('example.com')
+          .timeout(const Duration(seconds: 3));
+      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _addManualPair() async {
+    String from = 'USD';
+    String to = 'PKR';
+    final rateController = TextEditingController();
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Add Manual Currency Pair'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: from,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'From currency'),
+                items: CurrencyCatalog.supported.map((code) =>
+                    DropdownMenuItem(value: code, child: Text(code))).toList(),
+                onChanged: (value) => setDialogState(() => from = value ?? from),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: to,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'To currency'),
+                items: CurrencyCatalog.supported.map((code) =>
+                    DropdownMenuItem(value: code, child: Text(code))).toList(),
+                onChanged: (value) => setDialogState(() => to = value ?? to),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: rateController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Exchange rate'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                final rate = double.tryParse(rateController.text.trim());
+                if (from == to || rate == null || !rate.isFinite || rate <= 0) return;
+                Navigator.pop(dialogContext, {'from': from, 'to': to, 'rate': rate});
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    rateController.dispose();
+    if (result == null) return;
+    await CurrencyService.saveManualCurrencyPair(
+        result['from'] as String, result['to'] as String, result['rate'] as double);
+    await _loadData();
+  }
+
+  Future<void> _removeManualPair(int id) async {
+    await CurrencyService.deleteManualCurrencyPair(id);
+    await _loadData();
   }
 
   @override
@@ -61,18 +167,24 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       final results = await Future.wait([
         CurrencyService.getExchangeRates(),
         CurrencyService.getBaseCurrency(),
+        CurrencyService.getManualCurrencyPairs(),
+        _hasInternet(),
       ]);
       final rates = results[0] as List<Map<String, dynamic>>;
       final baseCurrency = results[1] as String;
+      final manualPairs = results[2] as List<Map<String, dynamic>>;
+      final online = results[3] as bool;
       if (!mounted) return;
       setState(() {
         _baseCurrency = baseCurrency;
         _convertTo = baseCurrency;
         _rates = rates;
+        _manualPairs = manualPairs;
+        _online = online;
         _loading = false;
       });
 
-      if (autoUpdateIfStale) {
+      if (autoUpdateIfStale && online) {
         final now = DateTime.now();
         final isStale = _currencies.any((currency) {
           final matching = rates.where(

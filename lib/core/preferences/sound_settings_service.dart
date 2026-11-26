@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// App ke sound effects ki settings load, save aur playback control karta hai.
 class SoundSettingsService extends ChangeNotifier {
   SoundSettingsService._();
   static final SoundSettingsService instance = SoundSettingsService._();
@@ -28,6 +29,7 @@ class SoundSettingsService extends ChangeNotifier {
   final Map<String, String> choices = {for (final key in actions.keys) key: 'modern'};
   final Map<String, bool> actionEnabled = {for (final key in actions.keys) key: true};
 
+  /// Saved preferences ko memory mein load karke listeners ko update karta hai.
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     soundEnabled = prefs.getBool(_enabledKey) ?? false;
@@ -39,12 +41,14 @@ class SoundSettingsService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Tamam sound effects ka global ON/OFF status save karta hai.
   Future<void> setSoundEnabled(bool value) async {
     soundEnabled = value;
     notifyListeners();
     await (await SharedPreferences.getInstance()).setBool(_enabledKey, value);
   }
 
+  /// Sound volume ko 0.0 se 1.0 ke darmiyan rakh kar save karta hai.
   Future<void> setSoundVolume(double value) async {
     soundVolume = value.clamp(0.0, 1.0).toDouble();
     notifyListeners();
@@ -65,6 +69,7 @@ class SoundSettingsService extends ChangeNotifier {
     await (await SharedPreferences.getInstance()).setString('$_choicePrefix$action', preset);
   }
 
+  /// Action aur preset ke mutabiq frequency aur duration ka sound pattern banata hai.
   List<List<int>> _pattern(String action, String preset) {
     const patterns = <String, List<List<int>>>{
       'app_start': [[523, 110], [659, 110], [784, 160], [1047, 260]],
@@ -117,6 +122,7 @@ class SoundSettingsService extends ChangeNotifier {
     return waveforms[action] ?? 'soft';
   }
 
+  /// Enabled sound action ka pattern native channel ko bhejta hai.
   Future<void> play(String action, {String? presetOverride}) async {
     if (!soundEnabled || soundVolume <= 0 || !actions.containsKey(action) || actionEnabled[action] == false) return;
     final pattern = _pattern(action, presetOverride ?? choices[action] ?? 'modern');
@@ -131,6 +137,7 @@ class SoundSettingsService extends ChangeNotifier {
   Future<void> preview(String action) => play(action);
   Future<void> testSound() => play('save');
 
+  /// Sound settings ko default values par reset karke preferences save karta hai.
   Future<void> reset() async {
     soundEnabled = false;
     soundVolume = 0.60;

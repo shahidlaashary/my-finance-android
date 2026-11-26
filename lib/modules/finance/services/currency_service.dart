@@ -99,6 +99,63 @@ class CurrencyService {
   static Future<List<Map<String, dynamic>>> getExchangeRates() =>
       _db.query('exchange_rates', orderBy: 'currency COLLATE NOCASE ASC');
 
+  /// Manual currency pairs Base Currency se independent save hote hain.
+  static Future<List<Map<String, dynamic>>> getManualCurrencyPairs() =>
+      _db.query('manual_currency_pairs',
+          orderBy: 'from_currency COLLATE NOCASE ASC, to_currency COLLATE NOCASE ASC');
+
+  static Future<void> saveManualCurrencyPair(
+    String fromCurrency,
+    String toCurrency,
+    double rate,
+  ) async {
+    final from = fromCurrency.trim().toUpperCase();
+    final to = toCurrency.trim().toUpperCase();
+    if (from.isEmpty || to.isEmpty || from == to ||
+        !rate.isFinite || rate <= 0) {
+      throw Exception('Currency pair ya exchange rate durust nahi hai.');
+    }
+    await _db.insert(
+      'manual_currency_pairs',
+      {
+        'from_currency': from,
+        'to_currency': to,
+        'rate': rate,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    AppRefreshController.notifyChanged();
+  }
+
+  static Future<void> deleteManualCurrencyPair(int id) async {
+    await _db.delete('manual_currency_pairs', where: 'id = ?', whereArgs: [id]);
+    AppRefreshController.notifyChanged();
+  }
+
+  /// Direct pair ko priority deta hai; reverse pair ho to reciprocal use karta hai.
+  static Future<double?> getManualPairRate(String fromCurrency, String toCurrency) async {
+    final from = fromCurrency.trim().toUpperCase();
+    final to = toCurrency.trim().toUpperCase();
+    if (from == to) return 1.0;
+    final direct = await _db.query('manual_currency_pairs',
+        columns: ['rate'], where: 'from_currency = ? AND to_currency = ?',
+        whereArgs: [from, to], limit: 1);
+    if (direct.isNotEmpty) {
+      final value = (direct.first['rate'] as num).toDouble();
+      return value.isFinite && value > 0 ? value : null;
+    }
+    final reverse = await _db.query('manual_currency_pairs',
+        columns: ['rate'], where: 'from_currency = ? AND to_currency = ?',
+        whereArgs: [to, from], limit: 1);
+    if (reverse.isNotEmpty) {
+      final value = (reverse.first['rate'] as num).toDouble();
+      return value.isFinite && value > 0 ? 1 / value : null;
+    }
+    return null;
+  }
+
+
   static Future<void> saveExchangeRate(
     String currency,
     double rate, {

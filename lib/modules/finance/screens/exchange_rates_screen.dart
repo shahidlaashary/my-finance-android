@@ -521,57 +521,88 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     ),
                   ],
                   SizedBox(height: 18),
-                  Text(appText(context, 'Current Rates', 'موجودہ شرحیں'),
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                  SizedBox(height: 8),
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: CircleAvatar(child: Text(_baseCurrency)),
-                          title: Text('$_baseCurrency',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
-                          subtitle: Text('Base currency'),
-                          trailing: Text('1.0000 $_baseCurrency',
-                              style: TextStyle(fontWeight: FontWeight.w800)),
-                        ),
-                        const Divider(height: 1),
-                        for (final currency in _currencies)
-                          Column(
-                            children: [
-                              ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
-                                  child: Text(currency,
-                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
-                                ),
-                                title: Text('1 $currency',
-                                    style: TextStyle(fontWeight: FontWeight.w700)),
-                                subtitle: Text(_rateFor(currency) == null
-                                    ? 'Rate not set'
-                                    : 'Updated: ${_dateLabel(_rates.firstWhere((r) => r['currency'].toString().toUpperCase() == currency)['updated_at'])}'),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      _rateFor(currency) == null
-                                          ? '—'
-                                          : '$_baseCurrency ${_numberFormat.format(_rateFor(currency)!)}',
-                                      style: TextStyle(fontWeight: FontWeight.w800),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Edit rate',
-                                      onPressed: () => _editRate(currency),
-                                      icon: Icon(Icons.edit_outlined, size: 19),
-                                    ),
-                                  ],
-                                ),
+                  Text('Exchange Rate Sources',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Card(
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(9, 10, 9, 8),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(children: [
+                              Expanded(child: Text('Automatic', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800))),
+                              Icon(Icons.cloud_sync_outlined, size: 16, color: Theme.of(context).colorScheme.primary),
+                            ]),
+                            const SizedBox(height: 3),
+                            Text('1 currency → $_baseCurrency', style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor)),
+                            const Divider(height: 14),
+                            for (final currency in _currencies)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 5),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(currency, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                                  const SizedBox(height: 2),
+                                  Text(_rateFor(currency) == null ? 'Not available' : _numberFormat.format(_rateFor(currency)) + ' $_baseCurrency',
+                                    maxLines: 2, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
+                                  if (_rateFor(currency) != null)
+                                    Text(_dateLabel(_rates.firstWhere((r) => r['currency'].toString().toUpperCase() == currency)['updated_at']),
+                                      maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 8, color: Theme.of(context).hintColor)),
+                                ]),
                               ),
-                              if (currency != _currencies.last) const Divider(height: 1),
-                            ],
-                          ),
-                      ],
-                    ),
+                          ]),
+                        ),
+                      )),
+                      const SizedBox(width: 8),
+                      Expanded(child: Card(
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(9, 10, 9, 8),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(children: [
+                              Expanded(child: Text('Manual', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800))),
+                              IconButton(
+                                tooltip: 'Add currency pair',
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                onPressed: _addManualPair,
+                                icon: Icon(Icons.add_circle_outline_rounded, size: 19, color: Theme.of(context).colorScheme.primary),
+                              ),
+                            ]),
+                            Text('Independent pairs', style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor)),
+                            const Divider(height: 14),
+                            if (_manualPairs.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Text('No manual pairs yet', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                              ),
+                            for (final pair in _manualPairs)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 5),
+                                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Text('\${pair['from_currency']} → \${pair['to_currency']}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                                    const SizedBox(height: 3),
+                                    Text(_numberFormat.format((pair['rate'] as num).toDouble()),
+                                      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700)),
+                                  ])),
+                                  IconButton(
+                                    tooltip: 'Delete pair',
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                    onPressed: () => _removeManualPair(pair['id'] as int),
+                                    icon: Icon(Icons.close_rounded, size: 15, color: Theme.of(context).hintColor),
+                                  ),
+                                ]),
+                              ),
+                          ]),
+                        ),
+                      )),
+                    ],
                   ),
 
                 ],

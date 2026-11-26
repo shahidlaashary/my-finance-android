@@ -7,6 +7,23 @@ import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 class AssetsService {
+  /// Checks whether a wallet is referenced by an asset purchase or sale.
+  /// AssetsService owns the asset-table lookup.
+  static Future<bool> hasWalletReferences(Transaction txn, int walletId) async {
+    final table = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",
+    );
+    if (table.isEmpty) return false;
+    final rows = await txn.query(
+      'assets',
+      columns: ['id'],
+      where: 'wallet_id = ? OR sale_wallet_id = ?',
+      whereArgs: [walletId, walletId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
   Future<Database> get _database async {
     return DatabaseManager.instance.database;
   }

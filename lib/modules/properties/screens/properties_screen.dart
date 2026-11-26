@@ -12,13 +12,13 @@ class PropertiesScreen extends StatefulWidget {
 }
 class _PropertiesScreenState extends State<PropertiesScreen> {
   int tab=0; bool loading=true;
-  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[];
+  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[];
   String tr(String s)=>appText(context,s,s);
   @override void initState(){super.initState();load();}
   Future<void> load() async {
     setState(()=>loading=true);
-    try { final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts()]);
-      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; loading=false; });
+    try { final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners()]);
+      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }
   void message(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
@@ -67,6 +67,31 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     ]))));
     for(final c in [n,p1,e,identity,notes]){c.dispose();}
   }
+
+  Future<void> ownerForm({Map<String,dynamic>? row}) async {
+    final n=TextEditingController(text:row?['name']?.toString()??''),phone=TextEditingController(text:row?['phone']?.toString()??''),email=TextEditingController(text:row?['email']?.toString()??''),identity=TextEditingController(text:row?['identity_number']?.toString()??''),address=TextEditingController(text:row?['address']?.toString()??''),notes=TextEditingController(text:row?['notes']?.toString()??'');
+    await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(s).bottom),child:SingleChildScrollView(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[
+      Text(tr(row==null?'Add Owner':'Edit Owner'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
+      field(n,'Owner Name',requiredField:true),const SizedBox(height:10),field(phone,'Phone'),const SizedBox(height:10),field(email,'Email'),const SizedBox(height:10),field(identity,'ID / Passport Number'),const SizedBox(height:10),field(address,'Address',lines:2),const SizedBox(height:10),field(notes,'Notes',lines:2),const SizedBox(height:16),
+      FilledButton(onPressed:()async{try{await PropertiesService.saveOwner(id:row?['id'] as int?,name:n.text,phone:phone.text,email:email.text,identityNumber:identity.text,address:address.text,notes:notes.text);if(s.mounted)Navigator.pop(s);await load();}catch(e){message(e.toString());}},child:Text(tr(row==null?'Save Owner':'Update Owner'))),
+    ]))));
+    for(final c in [n,phone,email,identity,address,notes]){c.dispose();}
+  }
+
+  Future<void> rentPaymentForm(Map<String,dynamic> contract) async {
+    DateTime due=DateTime.now(),paid=DateTime.now();
+    final dueAmount=TextEditingController(text:contract['rent']?.toString()??''),paidAmount=TextEditingController(text:'0'),method=TextEditingController(),reference=TextEditingController(),notes=TextEditingController();
+    await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>StatefulBuilder(builder:(ctx,refresh)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SingleChildScrollView(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[
+      Text(tr('Record Rent Payment'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
+      ListTile(title:Text(tr('Due Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(due)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:due,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>due=d);}),
+      field(dueAmount,'Amount Due',keyboard:TextInputType.number),const SizedBox(height:10),field(paidAmount,'Amount Paid',keyboard:TextInputType.number),const SizedBox(height:10),
+      ListTile(title:Text(tr('Paid Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(paid)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:paid,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>paid=d);}),
+      field(method,'Payment Method'),const SizedBox(height:10),field(reference,'Reference / Cheque Number'),const SizedBox(height:10),field(notes,'Notes',lines:2),const SizedBox(height:16),
+      FilledButton(onPressed:()async{try{await PropertiesService.saveRentPayment(contractId:contract['id'] as int,dueDate:due.toIso8601String(),amountDue:double.parse(dueAmount.text),amountPaid:double.parse(paidAmount.text),paidDate:double.parse(paidAmount.text)>0?paid.toIso8601String():'',paymentMethod:method.text,reference:reference.text,notes:notes.text);if(s.mounted)Navigator.pop(s);message(tr('Rent payment saved.'));}catch(e){message(e.toString());}},child:Text(tr('Save Payment'))),
+    ])))));
+    for(final c in [dueAmount,paidAmount,method,reference,notes]){c.dispose();}
+  }
+
   Future<void> contractForm({Map<String,dynamic>? row}) async {
     if(properties.isEmpty||tenants.isEmpty){message(tr('Add a property and tenant first.'));return;}
     int propertyId=(row?['property_id'] as int?)??(properties.first['id'] as int),tenantId=(row?['tenant_id'] as int?)??(tenants.first['id'] as int);String kind=row?['contract_type']?.toString()??'Rental',frequency=row?['frequency']?.toString()??'Monthly',status=row?['status']?.toString()??'Active';DateTime start=DateTime.tryParse(row?['start_date']?.toString()??'')??DateTime.now();DateTime? end=DateTime.tryParse(row?['end_date']?.toString()??'');
@@ -99,6 +124,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     ListTile(leading:const Icon(Icons.home_work_outlined),title:Text(tr('Add Property')),onTap:(){Navigator.pop(s);propertyForm();}),
     ListTile(leading:const Icon(Icons.person_add_alt_1),title:Text(tr('Add Tenant')),onTap:(){Navigator.pop(s);tenantForm();}),
     ListTile(leading:const Icon(Icons.description_outlined),title:Text(tr('Add Contract')),onTap:(){Navigator.pop(s);contractForm();}),
+    ListTile(leading:const Icon(Icons.person_outline),title:Text(tr('Add Owner')),onTap:(){Navigator.pop(s);ownerForm();}),
   ])));
   Widget propertyTile(Map<String,dynamic> row)=>Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.home_work_outlined)),title:Text(row['name'].toString()),subtitle:Text('${row['type']} • ${row['status']}'),trailing:const Icon(Icons.chevron_right),onTap:()=>showProperty(row)));
   Widget listing(List<Map<String,dynamic>> rows,String kind){
@@ -106,7 +132,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     return ListView.builder(padding:const EdgeInsets.all(12),itemCount:rows.length,itemBuilder:(ctx,i){final r=rows[i];
       if(kind=='Properties')return propertyTile(r);
       if(kind=='Tenants')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.person_outline)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>tenantForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){try{await PropertiesService.deleteTenant(r['id'] as int);await load();}catch(e){message(e.toString());}}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
-      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
+      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }
   Widget overview()=>RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[
@@ -120,13 +146,13 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Widget stat(String title,int n,IconData icon)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,color:Theme.of(context).colorScheme.primary),const SizedBox(height:7),Text('$n',style:const TextStyle(fontSize:21,fontWeight:FontWeight.bold)),Text(tr(title),maxLines:1,overflow:TextOverflow.ellipsis,style:Theme.of(context).textTheme.bodySmall)])));
   Widget nav(int i,IconData icon,String label){final selected=tab==i;return Expanded(child:InkWell(onTap:()=>setState(()=>tab=i),child:SizedBox(height:66,child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,size:22,color:selected?Theme.of(context).colorScheme.primary:Theme.of(context).hintColor),const SizedBox(height:2),Text(tr(label),style:TextStyle(fontSize:10,fontWeight:FontWeight.w600,color:selected?Theme.of(context).colorScheme.primary:Theme.of(context).hintColor))]))));}
   @override Widget build(BuildContext context){
-    final pages=[overview(),listing(properties,'Properties'),listing(tenants,'Tenants'),listing(contracts,'Contracts')];
+    final pages=[overview(),listing(properties,'Properties'),listing(tenants,'Tenants'),listing(contracts,'Contracts'),listing(owners,'Owners')];
     return Scaffold(appBar:AppBar(title:Text(tr('Properties Manager')),actions:[IconButton(onPressed:load,icon:const Icon(Icons.refresh))]),
       body:loading?const Center(child:CircularProgressIndicator()):IndexedStack(index:tab,children:pages),
       bottomNavigationBar:Container(color:Theme.of(context).colorScheme.surface,child:SafeArea(top:false,child:SizedBox(height:66,child:Row(children:[
         nav(0,Icons.dashboard_outlined,'Overview'),nav(1,Icons.home_work_outlined,'Properties'),
         Expanded(child:InkWell(onTap:plusMenu,child:Center(child:Container(width:43,height:43,decoration:BoxDecoration(color:Theme.of(context).colorScheme.primary,borderRadius:BorderRadius.circular(15)),child:Icon(Icons.add_rounded,color:Theme.of(context).colorScheme.onPrimary,size:29))))),
-        nav(2,Icons.people_outline,'Tenants'),nav(3,Icons.description_outlined,'Contracts'),
+        nav(2,Icons.people_outline,'Tenants'),nav(3,Icons.description_outlined,'Contracts'),nav(4,Icons.badge_outlined,'Owners'),
       ])))),
     );
   }

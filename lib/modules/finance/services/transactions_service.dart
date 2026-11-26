@@ -6,6 +6,44 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
 
 class TransactionsService {
+  /// Checks whether the transaction ledger contains entries for a wallet.
+  static Future<bool> hasWalletReferences(
+    DatabaseExecutor db,
+    int walletId,
+  ) async {
+    final rows = await db.query(
+      'transactions',
+      columns: ['id'],
+      where: 'wallet_id = ? OR to_wallet_id = ?',
+      whereArgs: [walletId, walletId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  /// Adds a wallet balance adjustment to the transaction ledger.
+  static Future<void> addWalletBalanceAdjustment(
+    Transaction txn, {
+    required int walletId,
+    required double difference,
+    required DateTime date,
+  }) async {
+    final now = date.toIso8601String();
+    await txn.insert('transactions', {
+      'type': 'Adjustment',
+      'amount': difference.abs(),
+      'wallet_id': walletId,
+      'to_wallet_id': null,
+      'to_amount': null,
+      'exchange_rate': null,
+      'balance_delta': difference,
+      'category': 'Balance Adjustment',
+      'note': 'Manual wallet balance adjustment',
+      'date': now,
+      'created_at': now,
+    });
+  }
+
   /// Converts all ledger-owned values affected by a wallet currency change.
   /// Must run inside the caller's transaction to keep balances and history atomic.
   static Future<void> convertWalletCurrencyAmounts(

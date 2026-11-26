@@ -295,21 +295,12 @@ class WalletService {
 
       // Manual balance change ka record history mein save karna.
       if (difference.abs() > 0.000001) {
-        final now = DateTime.now().toIso8601String();
-
-        await txn.insert('transactions', {
-          'type': 'Adjustment',
-          'amount': difference.abs(),
-          'wallet_id': id,
-          'to_wallet_id': null,
-          'to_amount': null,
-          'exchange_rate': null,
-          'balance_delta': difference,
-          'category': 'Balance Adjustment',
-          'note': 'Manual wallet balance adjustment',
-          'date': now,
-          'created_at': now,
-        });
+        await TransactionsService.addWalletBalanceAdjustment(
+          txn,
+          walletId: id,
+          difference: difference,
+          date: DateTime.now(),
+        );
       }
     });
     AppRefreshController.notifyChanged();
@@ -350,15 +341,12 @@ class WalletService {
       );
     }
 
-    final linked = await DatabaseManager.instance.database.query(
-      'transactions',
-      columns: ['id'],
-      where: 'wallet_id = ? OR to_wallet_id = ?',
-      whereArgs: [id, id],
-      limit: 1,
+    final linkedTransactions = await TransactionsService.hasWalletReferences(
+      DatabaseManager.instance.database,
+      id,
     );
 
-    if (linked.isNotEmpty) {
+    if (linkedTransactions) {
       throw Exception(
         'Is wallet ke saath transactions linked hain. '
         'Pehle un transactions ko manage karein.',

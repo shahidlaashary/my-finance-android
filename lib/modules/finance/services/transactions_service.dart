@@ -125,6 +125,80 @@ class TransactionsService {
     }
   }
 
+  /// Creates a module-owned expense while keeping ledger and wallet balance atomic.
+  static Future<int> createExpenseLedgerEntry(
+    Transaction txn, {
+    required double amount,
+    required int walletId,
+    required String category,
+    required String note,
+    required String date,
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid expense amount.');
+    final wallets = await txn.query('wallets',
+      columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+    if (wallets.isEmpty) throw Exception('Selected wallet was not found.');
+    final balance = (wallets.first['balance'] as num).toDouble();
+    if (balance < amount) throw Exception('Insufficient wallet balance.');
+    await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [amount, walletId]);
+    return insertLedgerEntry(txn, {
+      'type': 'Expense', 'amount': amount, 'wallet_id': walletId,
+      'to_wallet_id': null, 'to_amount': null, 'exchange_rate': null,
+      'balance_delta': null, 'category': category, 'note': note,
+      'date': date, 'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Updates an existing module-owned expense and reverses/reapplies its balance effect.
+  static Future<void> updateExpenseLedgerEntry(
+    Transaction txn, {
+    required int id,
+    required double amount,
+    required int walletId,
+    required String category,
+    required String note,
+    required String date,
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid expense amount.');
+    final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty || rows.first['type']?.toString().toLowerCase() != 'expense') {
+      throw Exception('Linked expense transaction was not found.');
+    }
+    final oldAmount = (rows.first['amount'] as num).toDouble();
+    final oldWalletId = (rows.first['wallet_id'] as num).toInt();
+    final oldWallet = await txn.query('wallets', columns: ['balance'],
+      where: 'id = ?', whereArgs: [oldWalletId], limit: 1);
+    if (oldWallet.isEmpty) throw Exception('Original wallet was not found.');
+    await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [oldAmount, oldWalletId]);
+    final newWallet = await txn.query('wallets', columns: ['balance'],
+      where: 'id = ?', whereArgs: [walletId], limit: 1);
+    if (newWallet.isEmpty) throw Exception('Selected wallet was not found.');
+    if ((newWallet.first['balance'] as num).toDouble() < amount) {
+      throw Exception('Insufficient wallet balance.');
+    }
+    await txn.rawUpdate('UPDATE wallets SET balance = balance - ? WHERE id = ?', [amount, walletId]);
+    await txn.update('transactions', {
+      'type': 'Expense', 'amount': amount, 'wallet_id': walletId,
+      'to_wallet_id': null, 'to_amount': null, 'exchange_rate': null,
+      'balance_delta': null, 'category': category, 'note': note, 'date': date,
+    }, where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Removes a module-owned expense after restoring its wallet balance.
+  static Future<void> deleteExpenseLedgerEntry(Transaction txn, int id) async {
+    final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return;
+    if (rows.first['type']?.toString().toLowerCase() != 'expense') {
+      throw Exception('Linked transaction is not an expense.');
+    }
+    final walletId = (rows.first['wallet_id'] as num).toInt();
+    final amount = (rows.first['amount'] as num).toDouble();
+    final changed = await txn.rawUpdate(
+      'UPDATE wallets SET balance = balance + ? WHERE id = ?', [amount, walletId]);
+    if (changed == 0) throw Exception('Linked wallet was not found.');
+    await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
   /// Converts all ledger-owned values affected by a wallet currency change.
   /// Must run inside the caller's transaction to keep balances and history atomic.
   static Future<void> convertWalletCurrencyAmounts(

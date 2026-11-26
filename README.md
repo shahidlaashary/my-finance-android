@@ -159,7 +159,7 @@ File extensions currently listed by the My Space import filters:
 
 Actual playback or preview may also depend on the Android device and its media/codec support.
 
-### 13. Staff Management
+### 13. Staff Manager
 
 - Create and manage staff profiles.
 - Store contact, job, joining-date and salary details.

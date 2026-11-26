@@ -137,16 +137,21 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
         throw const FormatException('Currency rates missing hain.');
       }
 
-      for (final currency in _available.where((code) => code != 'PKR')) {
+      final currentBase = await CurrencyService.getBaseCurrency();
+      final baseProviderRate =
+          currentBase == 'PKR' ? 1.0 : latestRates[currentBase];
+      if (baseProviderRate is! num || baseProviderRate <= 0) {
+        throw const FormatException('Selected Base Currency ka rate missing hai.');
+      }
+      for (final currency in _available.where((code) => code != currentBase)) {
         final rawRate = latestRates[currency];
         if (rawRate is! num || rawRate <= 0) continue;
-        // Provider 1 PKR ki foreign currency value deta hai;
-        // app ko 1 foreign currency ki PKR value chahiye.
-        final pkrPerUnit = 1 / rawRate.toDouble();
-        if (pkrPerUnit.isFinite && pkrPerUnit > 0) {
+        // Provider PKR reference deta hai; app ki current Base Currency mein save karein.
+        final basePerUnit = baseProviderRate.toDouble() / rawRate.toDouble();
+        if (basePerUnit.isFinite && basePerUnit > 0) {
           await CurrencyService.saveExchangeRate(
             currency,
-            pkrPerUnit,
+            basePerUnit,
             source: 'automatic',
           );
         }

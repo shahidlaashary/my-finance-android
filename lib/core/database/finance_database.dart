@@ -92,6 +92,65 @@ class FinanceDB {
       'setting_key': 'main_currency',
       'setting_value': 'PKR',
     });
+
+    // Property Manager module ka schema bhi isi shared database mein rehta hai.
+    await db.execute('''
+      CREATE TABLE properties (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'House',
+        address TEXT NOT NULL DEFAULT '',
+        ownership TEXT NOT NULL DEFAULT 'Owned',
+        area TEXT NOT NULL DEFAULT '',
+        purchase_price REAL NOT NULL DEFAULT 0,
+        purchase_date TEXT NOT NULL DEFAULT '',
+        current_value REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'Active',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE property_tenants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL DEFAULT '',
+        email TEXT NOT NULL DEFAULT '',
+        identity_number TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE property_contracts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        property_id INTEGER NOT NULL,
+        tenant_id INTEGER NOT NULL,
+        contract_type TEXT NOT NULL DEFAULT 'Rental',
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL DEFAULT '',
+        rent REAL NOT NULL DEFAULT 0,
+        frequency TEXT NOT NULL DEFAULT 'Monthly',
+        deposit REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'Draft',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE property_documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        property_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        mime_type TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_property_contracts_property ON property_contracts(property_id)');
+    await db.execute('CREATE INDEX idx_property_contracts_tenant ON property_contracts(tenant_id)');
+    await db.execute('CREATE INDEX idx_property_documents_property ON property_documents(property_id)');
   }
 
   // ----------------------------------------------------------

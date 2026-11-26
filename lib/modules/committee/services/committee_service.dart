@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -248,7 +249,7 @@ class CommitteeService {
       int? transactionId;
       if (wallet != null) {
         final delta = entryType == 'Installment' ? -walletAmount : walletAmount;
-        transactionId = await txn.insert('transactions', {
+        transactionId = await TransactionsService.insertLedgerEntry(txn, {
           'type': 'Transfer', 'amount': walletAmount, 'wallet_id': walletId,
           'to_wallet_id': null, 'to_amount': null, 'exchange_rate': null,
           'balance_delta': delta, 'category': 'Committee Transfer',
@@ -370,7 +371,7 @@ class CommitteeService {
         }
         await txn.insert('committees', record);
         for (final row in members) { row.remove('_related_table'); await txn.insert('committee_members', row); }
-        for (final row in finance) { row.remove('_related_table'); await txn.insert('transactions', row); }
+        for (final row in finance) { row.remove('_related_table'); await TransactionsService.insertLedgerEntry(txn, Map<String, Object?>.from(row)); }
         for (final row in entries) { row.remove('_related_table'); await txn.insert('committee_entries', row); }
         return;
   }

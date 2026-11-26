@@ -786,7 +786,7 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                     child: Transform.translate(
                       offset: const Offset(0, -2),
                       child: Container(
-                      height: 49,
+                      height: 51,
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                       decoration: BoxDecoration(

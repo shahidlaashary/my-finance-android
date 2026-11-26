@@ -184,7 +184,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
           controller: controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: '$_baseCurrency exchange rate',
             hintText: 'Enter rate in $_baseCurrency',
           ),

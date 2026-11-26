@@ -160,6 +160,23 @@ class PropertiesService {
     if (!rent.isFinite || rent < 0 || !deposit.isFinite || deposit < 0) {
       throw ArgumentError('Enter valid contract amounts.');
     }
+    const supportedFrequencies = {'Monthly', 'Weekly', 'Quarterly', 'Yearly', 'One-time'};
+    const supportedTypes = {'Rental', 'Lease', 'Other'};
+    const supportedStatuses = {'Draft', 'Active', 'Expired', 'Terminated'};
+    if (!supportedFrequencies.contains(frequency) ||
+        !supportedTypes.contains(contractType) ||
+        !supportedStatuses.contains(status)) {
+      throw ArgumentError('Select valid contract type, frequency, and status.');
+    }
+    final parsedStart = DateTime.tryParse(startDate);
+    final parsedEnd = endDate.trim().isEmpty ? null : DateTime.tryParse(endDate);
+    if (parsedStart == null || (endDate.trim().isNotEmpty && parsedEnd == null)) {
+      throw ArgumentError('Enter valid contract dates.');
+    }
+    if (parsedEnd != null && DateTime(parsedEnd.year, parsedEnd.month, parsedEnd.day)
+        .isBefore(DateTime(parsedStart.year, parsedStart.month, parsedStart.day))) {
+      throw ArgumentError('Contract end date cannot be before its start date.');
+    }
     final db = DatabaseManager.instance.database;
     final property = await db.query('properties', columns: ['id'], where: 'id = ?', whereArgs: [propertyId], limit: 1);
     final tenant = await db.query('properties_tenants', columns: ['id'], where: 'id = ?', whereArgs: [tenantId], limit: 1);

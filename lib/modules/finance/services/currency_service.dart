@@ -297,3 +297,4 @@ class CurrencyService {
     }
     return total;
 }
+}

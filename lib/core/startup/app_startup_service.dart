@@ -3,12 +3,14 @@ import 'package:flutter/foundation.dart';
 
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
+/// Ye service app start par zaroori background startup tasks chalati hai.
 class AppStartupService {
   AppStartupService._();
 
   static bool _initialized = false;
   static Future<void>? _initializationFuture;
 
+  /// Startup initialization ko duplicate calls se bachate hue aik martaba chalata hai.
   static Future<void> initialize() async {
     if (_initialized) {
       return;
@@ -33,6 +35,7 @@ class AppStartupService {
     }
   }
 
+  /// Due recurring transactions ko process karta hai; errors log karta hai.
   static Future<void> _initializeServices() async {
     // FinanceDB initialization is completed by AppBootstrapService before
     // startup services run. RecurringTransactionService owns its own queries.

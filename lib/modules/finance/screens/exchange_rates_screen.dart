@@ -8,6 +8,7 @@ import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 
+/// Supported currencies ke exchange rates dekhne aur update karne ki screen.
 class ExchangeRatesScreen extends StatefulWidget {
   const ExchangeRatesScreen({super.key});
 

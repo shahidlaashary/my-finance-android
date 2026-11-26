@@ -9,6 +9,7 @@ const _bg = Color(0xFF101B2D), _card = Color(0xFF18263B), _card2 = Color(0xFF203
 const _line = Color(0xFF2B3D54), _muted = Color(0xFF9AABC0), _white = Color(0xFFF4F7FB);
 const _teal = Color(0xFF36C6B0), _blue = Color(0xFF65A8FF), _rose = Color(0xFFFF7D91);
 
+/// Asset values aur un se mutaliq financial progress ka graph dikhata hai.
 class AssetGraphScreen extends StatefulWidget {
   final bool hideBalances;
   const AssetGraphScreen({super.key, this.hideBalances = false});

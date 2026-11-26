@@ -13,6 +13,7 @@ import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
+/// Savings goals create, update aur track karne ki screen.
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
   @override

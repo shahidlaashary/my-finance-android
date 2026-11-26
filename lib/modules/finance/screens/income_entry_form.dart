@@ -17,6 +17,7 @@ import 'package:my_finance/modules/finance/screens/categories_management_screen.
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
+/// Naya income transaction enter aur save karne ka form.
 class IncomeEntryForm extends StatefulWidget {
   const IncomeEntryForm({super.key});
 

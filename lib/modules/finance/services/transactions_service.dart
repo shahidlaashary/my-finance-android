@@ -54,6 +54,77 @@ class TransactionsService {
     });
   }
 
+  /// Loads transaction-ledger rows for a set of IDs.
+  static Future<List<Map<String, Object?>>> getLedgerEntriesByIds(
+    DatabaseExecutor db,
+    List<int> ids,
+  ) async {
+    if (ids.isEmpty) return [];
+    return db.query(
+      'transactions',
+      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      whereArgs: ids,
+    );
+  }
+
+  /// Reverses and removes committee-owned ledger rows inside the caller transaction.
+  static Future<void> deleteCommitteeLedgerEntries(
+    Transaction txn,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    final ids = <int>[];
+    for (final row in rows) {
+      final id = (row['id'] as num?)?.toInt();
+      if (id != null) ids.add(id);
+      final walletId = (row['wallet_id'] as num?)?.toInt();
+      final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
+      if (walletId != null && delta != 0) {
+        final changed = await txn.rawUpdate(
+          'UPDATE wallets SET balance = balance - ? WHERE id = ?',
+          [delta, walletId],
+        );
+        if (changed == 0) throw Exception('A committee wallet no longer exists.');
+      }
+    }
+    if (ids.isNotEmpty) {
+      await txn.delete(
+        'transactions',
+        where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+        whereArgs: ids,
+      );
+    }
+  }
+
+  /// Restores archived committee ledger rows and their wallet balance effects.
+  static Future<void> restoreCommitteeLedgerEntries(
+    Transaction txn,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    for (final archived in rows) {
+      final row = Map<String, dynamic>.from(archived)..remove('_related_table');
+      final walletId = (row['wallet_id'] as num?)?.toInt();
+      final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
+      if (walletId != null && delta != 0) {
+        final wallets = await txn.query(
+          'wallets',
+          columns: ['balance'],
+          where: 'id = ?',
+          whereArgs: [walletId],
+          limit: 1,
+        );
+        if (wallets.isEmpty) throw Exception('A committee wallet no longer exists.');
+        if (delta < 0 && (wallets.first['balance'] as num).toDouble() < -delta) {
+          throw Exception('Insufficient wallet balance to restore committee activity.');
+        }
+        await txn.rawUpdate(
+          'UPDATE wallets SET balance = balance + ? WHERE id = ?',
+          [delta, walletId],
+        );
+      }
+      await insertLedgerEntry(txn, Map<String, Object?>.from(row));
+    }
+  }
+
   /// Converts all ledger-owned values affected by a wallet currency change.
   /// Must run inside the caller's transaction to keep balances and history atomic.
   static Future<void> convertWalletCurrencyAmounts(

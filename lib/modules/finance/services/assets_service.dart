@@ -5,6 +5,7 @@ import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
+import 'package:my_finance/modules/finance/services/loans_service.dart';
 class AssetsService {
   Future<Database> get _database async {
     return DatabaseManager.instance.database;
@@ -59,6 +60,8 @@ class AssetsService {
   }
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
+    // Assets create linked loans; ensure LoansService owns and initializes that schema.
+    await LoansService.ensureTables(db);
     await db.execute('CREATE INDEX IF NOT EXISTS idx_assets_linked_loan ON assets(linked_loan_id, sale_linked_loan_id)');
   }
   Future<Map<String, dynamic>> _getWallet(

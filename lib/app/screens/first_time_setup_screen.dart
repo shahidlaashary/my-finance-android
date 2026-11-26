@@ -20,8 +20,58 @@ class FirstTimeSetupScreen extends StatefulWidget {
 
 class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   final _nameController = TextEditingController();
-  String _currency = 'PKR';
+  // Country-to-currency suggestion is evaluated only when first-time setup
+  // is created. The selected value is then saved as the user's Base Currency.
+  String _currency = _detectInitialCurrency();
   bool _saving = false;
+
+  static const Map<String, String> _countryCurrency = {
+    'PK': 'PKR',
+    'US': 'USD', 'PR': 'USD', 'EC': 'USD', 'SV': 'USD', 'PA': 'USD',
+    'GB': 'GBP',
+    'SA': 'SAR',
+    'AE': 'AED',
+    'IN': 'INR',
+    'CA': 'CAD',
+    'AU': 'AUD',
+    'JP': 'JPY',
+    'CN': 'CNY',
+    'CH': 'CHF', 'LI': 'CHF',
+    'SG': 'SGD',
+    'NZ': 'NZD',
+    'KW': 'KWD',
+    'QA': 'QAR',
+    'BH': 'BHD',
+    'OM': 'OMR',
+    'MY': 'MYR',
+    'TR': 'TRY',
+    'ZA': 'ZAR',
+    'HK': 'HKD',
+    'ID': 'IDR',
+    'KR': 'KRW',
+    'TH': 'THB',
+    // Euro-area countries (including Croatia) share EUR.
+    'AT': 'EUR', 'BE': 'EUR', 'CY': 'EUR', 'DE': 'EUR',
+    'EE': 'EUR', 'ES': 'EUR', 'FI': 'EUR', 'FR': 'EUR',
+    'GR': 'EUR', 'HR': 'EUR', 'IE': 'EUR', 'IT': 'EUR',
+    'LT': 'EUR', 'LU': 'EUR', 'LV': 'EUR', 'MT': 'EUR',
+    'NL': 'EUR', 'PT': 'EUR', 'SI': 'EUR', 'SK': 'EUR',
+  };
+
+  static String _detectInitialCurrency() {
+    // Use the device's configured regional locale; no location permission,
+    // SIM access, or network request is required.
+    for (final locale in WidgetsBinding.instance.platformDispatcher.locales) {
+      final countryCode = locale.countryCode?.toUpperCase();
+      final currency = countryCode == null
+          ? null
+          : _countryCurrency[countryCode];
+      if (currency != null && CurrencyCatalog.supported.contains(currency)) {
+        return currency;
+      }
+    }
+    return 'PKR';
+  }
 
   static const _completedKey = 'first_time_setup_completed';
   List<String> get currencies => CurrencyCatalog.supported.toList()..sort();

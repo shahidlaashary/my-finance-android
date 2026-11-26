@@ -12,13 +12,13 @@ class PropertiesScreen extends StatefulWidget {
 }
 class _PropertiesScreenState extends State<PropertiesScreen> {
   int tab=0; bool loading=true;
-  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[], rentPayments=[];
+  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[], rentPayments=[], maintenanceItems=[];
   String tr(String s)=>appText(context,s,s);
   @override void initState(){super.initState();load();}
   Future<void> load() async {
     setState(()=>loading=true);
-    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments()]);
-      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; loading=false; });
+    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance()]);
+      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; maintenanceItems=v[5]; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }
   void message(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
@@ -78,6 +78,33 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     for(final c in [n,phone,email,identity,address,notes]){c.dispose();}
   }
 
+
+
+  Future<void> maintenanceForm({Map<String,dynamic>? row}) async {
+    if(properties.isEmpty){message(tr('Add a property first.'));return;}
+    int propertyId=(row?['property_id'] as int?)??(properties.first['id'] as int);
+    String category=row?['category']?.toString()??'General',priority=row?['priority']?.toString()??'Medium',status=row?['status']?.toString()??'Open';
+    DateTime? due=DateTime.tryParse(row?['due_date']?.toString()??''),completed=DateTime.tryParse(row?['completed_date']?.toString()??'');
+    String photoPath=row?['photo_path']?.toString()??'';
+    final title=TextEditingController(text:row?['title']?.toString()??''),description=TextEditingController(text:row?['description']?.toString()??''),assigned=TextEditingController(text:row?['assigned_to']?.toString()??''),estimated=TextEditingController(text:(row?['estimated_cost']??0).toString()),actual=TextEditingController(text:(row?['actual_cost']??0).toString());
+    await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(sheet)=>StatefulBuilder(builder:(ctx,refresh)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SizedBox(height:MediaQuery.sizeOf(ctx).height*.88,child:Padding(padding:const EdgeInsets.all(18),child:Column(children:[
+      Text(tr(row==null?'Add Maintenance':'Edit Maintenance'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:12),
+      Expanded(child:ListView(children:[
+        DropdownButtonFormField<int>(value:propertyId,decoration:InputDecoration(labelText:tr('Property'),border:const OutlineInputBorder()),items:properties.map((p)=>DropdownMenuItem(value:p['id'] as int,child:Text(p['name'].toString()))).toList(),onChanged:(v){if(v!=null)refresh(()=>propertyId=v);}),
+        const SizedBox(height:10),field(title,'Maintenance Title',requiredField:true),const SizedBox(height:10),field(description,'Description',lines:3),const SizedBox(height:10),
+        DropdownButtonFormField<String>(value:category,decoration:InputDecoration(labelText:tr('Category'),border:const OutlineInputBorder()),items:['General','Plumbing','Electrical','Painting','Cleaning','Appliance','Structural','Other'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>category=v);}),
+        const SizedBox(height:10),DropdownButtonFormField<String>(value:priority,decoration:InputDecoration(labelText:tr('Priority'),border:const OutlineInputBorder()),items:['Low','Medium','High','Urgent'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>priority=v);}),
+        const SizedBox(height:10),field(assigned,'Assigned To'),const SizedBox(height:10),field(estimated,'Estimated Cost',keyboard:const TextInputType.numberWithOptions(decimal:true)),const SizedBox(height:10),field(actual,'Actual Cost',keyboard:const TextInputType.numberWithOptions(decimal:true)),const SizedBox(height:10),
+        DropdownButtonFormField<String>(value:status,decoration:InputDecoration(labelText:tr('Status'),border:const OutlineInputBorder()),items:['Open','In Progress','On Hold','Completed','Cancelled'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>status=v);}),
+        ListTile(contentPadding:EdgeInsets.zero,title:Text(tr('Due Date')),subtitle:Text(due==null?tr('Not set'):MaterialLocalizations.of(ctx).formatMediumDate(due!)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:due??DateTime.now(),firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>due=d);}),
+        if(status=='Completed')ListTile(contentPadding:EdgeInsets.zero,title:Text(tr('Completed Date')),subtitle:Text(completed==null?tr('Not set'):MaterialLocalizations.of(ctx).formatMediumDate(completed!)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:completed??DateTime.now(),firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>completed=d);}),
+        OutlinedButton.icon(onPressed:()async{final pick=await FilePicker.platform.pickFiles(type:FileType.image);if(pick!=null&&pick.files.isNotEmpty){final stored=await FileStorageService.storePickedFile(pick.files.first,directory:'properties/maintenance');if(stored!=null)refresh(()=>photoPath=stored);}},icon:const Icon(Icons.photo_outlined),label:Text(tr(photoPath.isEmpty?'Attach Photo':'Replace Photo'))),
+        if(photoPath.isNotEmpty)Text(tr('Maintenance photo attached')),
+      ])),
+      SizedBox(width:double.infinity,child:FilledButton(onPressed:()async{try{await PropertiesService.saveMaintenance(id:row?['id'] as int?,propertyId:propertyId,title:title.text,description:description.text,category:category,priority:priority,assignedTo:assigned.text,estimatedCost:double.tryParse(estimated.text)??0,actualCost:double.tryParse(actual.text)??0,status:status,dueDate:due?.toIso8601String()??'',completedDate:status=='Completed'?(completed??DateTime.now()).toIso8601String():'',photoPath:photoPath);if(sheet.mounted)Navigator.pop(sheet);await load();}catch(e){message(e.toString());}},child:Text(tr(row==null?'Save Maintenance':'Update Maintenance')))),
+    ]))))));
+    for(final c in [title,description,assigned,estimated,actual]){c.dispose();}
+  }
 
   Future<void> rentScheduleForm(Map<String,dynamic> contract) async {
     DateTime start=DateTime.now(),next=DateTime.now();DateTime? end;
@@ -178,6 +205,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     ListTile(leading:const Icon(Icons.person_add_alt_1),title:Text(tr('Add Tenant')),onTap:(){Navigator.pop(s);tenantForm();}),
     ListTile(leading:const Icon(Icons.description_outlined),title:Text(tr('Add Contract')),onTap:(){Navigator.pop(s);contractForm();}),
     ListTile(leading:const Icon(Icons.person_outline),title:Text(tr('Add Owner')),onTap:(){Navigator.pop(s);ownerForm();}),
+    ListTile(leading:const Icon(Icons.handyman_outlined),title:Text(tr('Add Maintenance')),onTap:(){Navigator.pop(s);maintenanceForm();}),
   ])));
   Widget propertyTile(Map<String,dynamic> row)=>Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.home_work_outlined)),title:Text(row['name'].toString()),subtitle:Text('${row['type']} • ${row['status']}'),trailing:const Icon(Icons.chevron_right),onTap:()=>showProperty(row)));
   Widget listing(List<Map<String,dynamic>> rows,String kind){
@@ -186,6 +214,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       if(kind=='Properties')return propertyTile(r);
       if(kind=='Tenants')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.person_outline)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>tenantForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){try{await PropertiesService.deleteTenant(r['id'] as int);await load();}catch(e){message(e.toString());}}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
       if(kind=='Owners')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.badge_outlined)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>ownerForm(row:r),trailing:IconButton(icon:const Icon(Icons.edit_outlined),onPressed:()=>ownerForm(row:r))));
+      if(kind=='Maintenance')return Card(child:ListTile(leading:CircleAvatar(child:Icon(r['priority']=='Urgent'||r['priority']=='High'?Icons.warning_amber:Icons.handyman_outlined)),title:Text(r['title'].toString()),subtitle:Text('${r['property_name']} • ${r['priority']} • ${r['status']}'),onTap:()=>maintenanceForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit')await maintenanceForm(row:r);if(v=='delete'){await PropertiesService.deleteMaintenance(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
       return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='schedule'){rentScheduleForm(r);}if(v=='records'){rentRecordsSheet(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'schedule',child:Text(tr('Create Rent Schedule'))),PopupMenuItem(value:'records',child:Text(tr('View Rent Records'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }
@@ -202,13 +231,13 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Widget stat(String title,int n,IconData icon)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,color:Theme.of(context).colorScheme.primary),const SizedBox(height:7),Text('$n',style:const TextStyle(fontSize:21,fontWeight:FontWeight.bold)),Text(tr(title),maxLines:1,overflow:TextOverflow.ellipsis,style:Theme.of(context).textTheme.bodySmall)])));
   Widget nav(int i,IconData icon,String label){final selected=tab==i;return Expanded(child:InkWell(onTap:()=>setState(()=>tab=i),child:SizedBox(height:66,child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,size:22,color:selected?Theme.of(context).colorScheme.primary:Theme.of(context).hintColor),const SizedBox(height:2),Text(tr(label),style:TextStyle(fontSize:10,fontWeight:FontWeight.w600,color:selected?Theme.of(context).colorScheme.primary:Theme.of(context).hintColor))]))));}
   @override Widget build(BuildContext context){
-    final pages=[overview(),listing(properties,'Properties'),listing(tenants,'Tenants'),listing(contracts,'Contracts'),listing(owners,'Owners')];
+    final pages=[overview(),listing(properties,'Properties'),listing(tenants,'Tenants'),listing(contracts,'Contracts'),listing(owners,'Owners'),listing(maintenanceItems,'Maintenance')];
     return Scaffold(appBar:AppBar(title:Text(tr('Properties Manager')),actions:[IconButton(onPressed:load,icon:const Icon(Icons.refresh))]),
       body:loading?const Center(child:CircularProgressIndicator()):IndexedStack(index:tab,children:pages),
       bottomNavigationBar:Container(color:Theme.of(context).colorScheme.surface,child:SafeArea(top:false,child:SizedBox(height:66,child:Row(children:[
         nav(0,Icons.dashboard_outlined,'Overview'),nav(1,Icons.home_work_outlined,'Properties'),
         Expanded(child:InkWell(onTap:plusMenu,child:Center(child:Container(width:43,height:43,decoration:BoxDecoration(color:Theme.of(context).colorScheme.primary,borderRadius:BorderRadius.circular(15)),child:Icon(Icons.add_rounded,color:Theme.of(context).colorScheme.onPrimary,size:29))))),
-        nav(2,Icons.people_outline,'Tenants'),nav(3,Icons.description_outlined,'Contracts'),nav(4,Icons.badge_outlined,'Owners'),
+        nav(2,Icons.people_outline,'Tenants'),nav(3,Icons.description_outlined,'Contracts'),nav(4,Icons.badge_outlined,'Owners'),nav(5,Icons.handyman_outlined,'Maintenance'),
       ])))),
     );
   }

@@ -58,20 +58,40 @@ class PropertiesService {
       throw ArgumentError('Enter valid maintenance details.');
     }
     final db=DatabaseManager.instance.database;
-    final property=await db.query('properties',columns:['id'],where:'id = ?',whereArgs:[propertyId],limit:1);
-    if(property.isEmpty)throw StateError('Select a valid property.');
     final values=<String,Object?>{
       'property_id':propertyId,'title':title.trim(),'description':description.trim(),
       'category':category,'priority':priority,'assigned_to':assignedTo.trim(),
       'estimated_cost':estimatedCost,'actual_cost':actualCost,'status':status,
       'due_date':dueDate,'completed_date':completedDate,'photo_path':photoPath,
     };
-    final result=id==null
-      ? await db.insert('properties_maintenance',{...values,'created_at':DateTime.now().toIso8601String()})
-      : await db.update('properties_maintenance',values,where:'id = ?',whereArgs:[id]);
-    if(id!=null&&result==0)throw StateError('Maintenance record not found.');
+    final result=await db.transaction<int>((txn) async {
+      final property=await txn.query(
+        'properties',
+        columns:['id'],
+        where:'id = ?',
+        whereArgs:[propertyId],
+        limit:1,
+      );
+      if(property.isEmpty)throw StateError('Select a valid property.');
+
+      if(id==null) {
+        return txn.insert('properties_maintenance',{
+          ...values,
+          'created_at':DateTime.now().toIso8601String(),
+        });
+      }
+
+      final updated=await txn.update(
+        'properties_maintenance',
+        values,
+        where:'id = ?',
+        whereArgs:[id],
+      );
+      if(updated==0)throw StateError('Maintenance record not found.');
+      return id;
+    });
     AppRefreshController.notifyChanged();
-    return id??result;
+    return result;
   }
 
   static Future<void> deleteMaintenance(int id) async {

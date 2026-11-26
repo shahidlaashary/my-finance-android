@@ -19,7 +19,8 @@ import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 import 'package:my_finance/modules/finance/screens/budgets_screen.dart';
 
-/// Dashboard home screen and its existing data-loading/presentation logic.
+/// Dashboard ki home screen aur uska data loading aur display logic manage karti hai.
+/// Home dashboard ka main widget hai jo financial summary aur shortcuts show karta hai.
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.featurePageBuilder});
 
@@ -318,9 +319,9 @@ class _HomePageState extends State<HomePage> {
         .toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
-    // The Exchange Rates screen refreshes missing rates when it opens.
-    // The dashboard summary can be opened without visiting that screen, so
-    // fetch any rates required by this summary before reading the saved table.
+    // Exchange Rates screen khulne par missing rates refresh hoti hain.
+    // Dashboard summary us screen par jaye baghair bhi khul sakti hai, is liye
+    // saved table read karne se pehle zaroori rates fetch karein.
     final requiredCurrencies = <String>{
       ...entries.map((entry) => entry.key.trim().toUpperCase()),
       baseCurrency.trim().toUpperCase(),
@@ -355,7 +356,7 @@ class _HomePageState extends State<HomePage> {
             for (final currency in missingBeforeRefresh) {
               final rawRate = providerRates[currency];
               if (rawRate is! num || rawRate <= 0) continue;
-              // Provider gives foreign units per PKR; store PKR per unit.
+              // Provider foreign currency ki units per PKR deta hai; yahan PKR per aik unit save karein.
               final pkrPerUnit = 1 / rawRate.toDouble();
               if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
               await CurrencyService.saveExchangeRate(
@@ -367,7 +368,7 @@ class _HomePageState extends State<HomePage> {
           }
         }
       } catch (_) {
-        // Keep the summary usable offline; missing rates are shown below.
+        // Summary ko offline bhi usable rakhein; missing rates neeche show hoti hain.
       } finally {
         client.close(force: true);
       }
@@ -397,7 +398,7 @@ class _HomePageState extends State<HomePage> {
         missingRates.add(currency);
         continue;
       }
-      // Exchange rates are stored as PKR value per one unit of currency.
+      // Exchange rates aik currency unit ki PKR value ke taur par save hoti hain.
       foreignTotalPKR += entry.value * rate;
       if (selectedBaseRate != null && selectedBaseRate > 0) {
         convertedByCurrency[currency] =
@@ -644,7 +645,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           children: [
-            // Primary wallet balance.
+            // Primary wallet ka balance.
             Container(
               height: 110,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),

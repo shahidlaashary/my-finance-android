@@ -209,6 +209,7 @@ class FinanceDB {
     await db.execute('CREATE INDEX idx_properties_rent_schedules_contract ON properties_rent_schedules(contract_id)');
     await db.execute('CREATE INDEX idx_properties_rent_payments_contract ON properties_rent_payments(contract_id)');
     await db.execute('CREATE INDEX idx_properties_rent_payments_due ON properties_rent_payments(due_date, status)');
+    await db.execute('CREATE UNIQUE INDEX idx_properties_rent_schedule_due_unique ON properties_rent_payments(schedule_id, due_date)');
 
   }
 

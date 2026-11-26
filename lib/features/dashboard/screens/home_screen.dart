@@ -82,8 +82,8 @@ class _HomePageState extends State<HomePage> {
     try {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
-      final baseCurrency = await CurrencyService.getBaseCurrency();
-      final baseRate = await CurrencyService.getExchangeRate(baseCurrency) ?? 1.0;
+      final selectedBaseCurrency = await CurrencyService.getBaseCurrency();
+      final baseRate = await CurrencyService.getExchangeRate(selectedBaseCurrency) ?? 1.0;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
@@ -107,9 +107,9 @@ class _HomePageState extends State<HomePage> {
       final walletTotalsByCurrency =
           await DashboardDataService.getWalletTotalsByCurrency();
       final baseCurrencyBalance =
-          walletTotalsByCurrency[baseCurrency.trim().toUpperCase()] ?? 0;
+          walletTotalsByCurrency[selectedBaseCurrency.trim().toUpperCase()] ?? 0;
       final foreignBalances = Map<String, double>.from(walletTotalsByCurrency)
-        ..remove(baseCurrency.trim().toUpperCase());
+        ..remove(selectedBaseCurrency.trim().toUpperCase());
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
       final outstandingLoans =
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         hideBalances = hide;
         numberFormat = format;
-        baseCurrency = baseCurrency;
+        baseCurrency = selectedBaseCurrency;
         totalBalance = balance + includedAssetsInBaseCurrency;
         baseCurrencyWalletTotal = baseCurrencyBalance;
         otherCurrencyTotals = foreignBalances;

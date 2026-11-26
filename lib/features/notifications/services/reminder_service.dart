@@ -107,6 +107,78 @@ class ReminderService {
     return id;
   }
 
+
+  /// Module-linked reminders ko idempotently sync karta hai. Existing personal
+  /// reminders ko touch nahi karta; stale linked notifications cancel ho jati hain.
+  Future<void> syncLinkedReminders({
+    required String sourcePrefix,
+    required List<Map<String, dynamic>> desired,
+  }) async {
+    await initialize();
+    final reminders = await getReminders();
+    final wanted = <String, Map<String, dynamic>>{};
+    for (final item in desired) {
+      final key = item['source_key']?.toString() ?? '';
+      final when = item['when'];
+      if (!key.startsWith(sourcePrefix) || when is! DateTime ||
+          !when.isAfter(DateTime.now())) continue;
+      wanted[key] = item;
+    }
+    var changed = false;
+    final retained = <Map<String, dynamic>>[];
+    for (final existing in reminders) {
+      final key = existing['source_key']?.toString() ?? '';
+      if (!key.startsWith(sourcePrefix)) {
+        retained.add(existing);
+        continue;
+      }
+      final target = wanted.remove(key);
+      final same = target != null &&
+          existing['title'] == target['title'] &&
+          existing['note'] == target['note'] &&
+          existing['category'] == target['category'] &&
+          existing['when'] == (target['when'] as DateTime).toIso8601String();
+      if (same) {
+        retained.add(existing);
+      } else {
+        await _notifications.cancel((existing['id'] as num).toInt());
+        changed = true;
+      }
+    }
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'finance_reminders', 'Finance reminders',
+        channelDescription: 'Bills, loans and personal finance reminders',
+        importance: Importance.high, priority: Priority.high,
+      ),
+      iOS: const DarwinNotificationDetails(),
+    );
+    for (final entry in wanted.entries) {
+      final item = entry.value;
+      final when = item['when'] as DateTime;
+      final id = DateTime.now().microsecondsSinceEpoch.remainder(2147483647);
+      final record = <String, dynamic>{
+        'id': id, 'source_key': entry.key,
+        'title': item['title'].toString(),
+        'note': item['note']?.toString() ?? '',
+        'category': item['category']?.toString() ?? 'General',
+        'when': when.toIso8601String(),
+      };
+      await _notifications.zonedSchedule(
+        id, record['title'] as String,
+        (record['note'] as String).isEmpty ? 'My Finance reminder' : record['note'] as String,
+        tz.TZDateTime.from(when, tz.local), details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+      retained.add(record);
+      changed = true;
+    }
+    if (changed) {
+      await _save(retained);
+      AppRefreshController.notifyChanged();
+    }
+  }
+
   /// Reminder ko archive karke scheduled notification cancel aur record delete karta hai.
   Future<void> deleteReminder(int id) async {
     await initialize();

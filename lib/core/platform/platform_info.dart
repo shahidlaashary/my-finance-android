@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-/// Supported runtime targets for the shared My Finance codebase.
+/// My Finance ke shared code mein support kiye gaye runtime platforms.
 enum AppPlatform {
   android,
   ios,
@@ -11,21 +11,21 @@ enum AppPlatform {
   fuchsia,
 }
 
-/// Platform identification for shared app code.
+/// Shared app code ke liye current runtime platform ki pehchan deta hai.
 ///
-/// Uses Flutter's target platform APIs rather than importing dart:io, so this
-/// helper can be referenced by shared code and tests without native dependencies.
-/// Capability checks (camera, biometrics, notifications, etc.) should remain
-/// separate and use the relevant plugin/device APIs when needed.
+/// dart:io ke bajaye Flutter target APIs istemal karta hai, is liye shared code
+/// aur tests native dependencies ke baghair isay use kar sakte hain. Camera,
+/// biometrics aur notifications jaisi capabilities alag plugin APIs se check hon.
 class PlatformInfo {
   const PlatformInfo(this.platform);
 
   final AppPlatform platform;
 
-  /// Detects the current Flutter target at access time (not cached).
+  /// Har access par current Flutter target detect karta hai; result cache nahi hota.
   static PlatformInfo get current =>
       PlatformInfo.fromTarget(defaultTargetPlatform, isWeb: kIsWeb);
 
+  /// Flutter target ko app ke apne platform enum mein map karta hai.
   factory PlatformInfo.fromTarget(
     TargetPlatform target, {
     bool isWeb = false,

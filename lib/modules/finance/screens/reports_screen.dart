@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/services/reports_service.dart';
 
+/// Income, expenses aur financial trends ki reports display karta hai.
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
@@ -241,7 +242,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ),
       body: Column(
         children: [
-          // Keep PDF actions pinned at the top and visible even while reports load.
+          // PDF actions ko top par fixed rakhein taake reports load hote waqt bhi visible rahen.
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),

@@ -1,3 +1,4 @@
+/// Budget ki limit, spending, duration aur active status represent karta hai.
 class BudgetsModel {
   final int? id;
   final String name;
@@ -25,11 +26,13 @@ class BudgetsModel {
     this.createdAt,
   });
 
+  /// Budget limit mein se spending minus karke zero se kam na hone wali raqam deta hai.
   double get remainingAmount {
     final remaining = limitAmount - spentAmount;
     return remaining > 0 ? remaining : 0;
   }
 
+  /// Spending progress ko 0.0 se 1.0 ke darmiyan normalize karta hai.
   double get progress {
     if (limitAmount <= 0) return 0;
     return (spentAmount / limitAmount).clamp(0.0, 1.0).toDouble();
@@ -37,6 +40,7 @@ class BudgetsModel {
 
   bool get isExceeded => spentAmount > limitAmount;
 
+  /// Check karta hai ke aaj ki date budget ki active date range mein hai.
   bool get isCurrentlyActive {
     if (!isActive) return false;
     final now = DateTime.now();
@@ -46,6 +50,7 @@ class BudgetsModel {
     return !today.isBefore(start) && !today.isAfter(end);
   }
 
+  /// Database row se budget model tayyar karta hai.
   factory BudgetsModel.fromMap(Map<String, dynamic> map) {
     return BudgetsModel(
       id: map['id'] as int?,

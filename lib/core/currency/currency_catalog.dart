@@ -1,4 +1,4 @@
-/// Shared currency catalog used by Base Currency, Wallets and Exchange Rates.
+/// Base Currency, Wallets aur Exchange Rates mein istemal hone wala shared currency catalogue.
 class CurrencyCatalog {
   CurrencyCatalog._();
 

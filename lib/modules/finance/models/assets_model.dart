@@ -1,3 +1,4 @@
+/// Asset ki purchase, valuation, sale aur linked payment details represent karta hai.
 class AssetsModel {
   final int? id;
   final String name;
@@ -38,8 +39,10 @@ class AssetsModel {
     this.includeInConsolidatedBalance = false,
   });
 
+  /// Sold asset ka purchase price ke muqablay mein profit ya loss deta hai.
   double get profitOrLoss => !isSold || salePrice == null ? 0 : salePrice! - purchasePrice;
 
+  /// Database row ko typed asset model mein convert karta hai.
   factory AssetsModel.fromMap(Map<String, dynamic> map) => AssetsModel(
     id: (map['id'] as num?)?.toInt(),
     name: (map['name'] ?? '').toString(),

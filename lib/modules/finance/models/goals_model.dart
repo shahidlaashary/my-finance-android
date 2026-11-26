@@ -1,3 +1,4 @@
+/// Savings goal ka target, saved amount aur completion details represent karta hai.
 class GoalsModel {
   final int? id;
   final String name;
@@ -23,17 +24,20 @@ class GoalsModel {
     this.createdAt,
   });
 
+  /// Target se saved amount minus karke baqi raqam deta hai.
   double get remainingAmount {
     final remaining = targetAmount - savedAmount;
     return remaining > 0 ? remaining : 0;
   }
 
+  /// Goal progress ko 0.0 se 1.0 ke darmiyan normalize karta hai.
   double get progress {
     if (targetAmount <= 0) return 0;
     final value = savedAmount / targetAmount;
     return value.clamp(0.0, 1.0).toDouble();
   }
 
+  /// Completed na hone wale goal ki target date guzarne par true deta hai.
   bool get isOverdue {
     if (targetDate == null || isCompleted) return false;
     final today = DateTime.now();
@@ -46,6 +50,7 @@ class GoalsModel {
     return targetOnly.isBefore(dateOnly);
   }
 
+  /// Database row se savings goal model tayyar karta hai.
   factory GoalsModel.fromMap(Map<String, dynamic> map) {
     return GoalsModel(
       id: map['id'] as int?,

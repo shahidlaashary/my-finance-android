@@ -1,4 +1,5 @@
 
+/// Income ya expense category aur us ki parent category details represent karta hai.
 class FinanceCategory {
   final int? id;
   final String name;
@@ -16,6 +17,7 @@ class FinanceCategory {
     this.isDeleted = false,
   });
 
+  /// Category ko database columns ke mutabiq map mein convert karta hai.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -27,6 +29,7 @@ class FinanceCategory {
     };
   }
 
+  /// Database row se category model tayyar karta hai.
   factory FinanceCategory.fromMap(Map<String, dynamic> map) {
     return FinanceCategory(
       id: map['id'] as int?,

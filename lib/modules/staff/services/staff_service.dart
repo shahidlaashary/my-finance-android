@@ -91,7 +91,7 @@ class StaffService {
         await txn.delete('staff', where: 'id = ?', whereArgs: [id]);
       });
     } catch (_) {
-      await RecycleBinService.discardArchive(recycleId);
+      await RecycleBinArchiveService.discardArchive(recycleId);
       rethrow;
     }
     AppRefreshController.notifyChanged();

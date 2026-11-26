@@ -84,6 +84,9 @@ class LoansService {
     return db;
   }
 
+  /// Public schema initializer for modules that create linked loan records.
+  static Future<void> ensureTables(Database db) => _createTables(db);
+
   static Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loans (

@@ -12,6 +12,7 @@ import 'package:my_finance/core/models/attachment_model.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
+/// Kisi finance record ke attachments add, open aur remove karne wala shared widget.
 class AttachmentSection extends StatefulWidget {
   final String ownerType;
   final int ownerId;

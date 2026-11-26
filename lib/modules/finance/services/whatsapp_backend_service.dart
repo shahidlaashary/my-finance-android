@@ -3,10 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'package:my_finance/core/security/firebase_installation_auth_service.dart';
 
-/// Authenticated client for per-installation WhatsApp settings in Firebase.
+/// Firebase mein har app installation ki WhatsApp settings ka authenticated client.
 ///
-/// This service deliberately does not expose Meta credentials. The callable
-/// functions use the Firebase anonymous-auth identity established at startup.
+/// Ye service Meta credentials expose nahi karti. Callable functions startup par
+/// establish hone wali Firebase anonymous-auth identity istemal karte hain.
 class WhatsAppBackendService {
   WhatsAppBackendService._();
 

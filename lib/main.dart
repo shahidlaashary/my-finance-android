@@ -9,6 +9,7 @@ import 'package:my_finance/app/screens/modules_tools_page.dart' show ModulesTool
 import 'package:my_finance/core/startup/app_bootstrap_service.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
+/// Flutter app ko initialize karke startup flow aur root widget launch karta hai.
 Future<void> main() async {
   await AppBootstrapService.initialize();
 

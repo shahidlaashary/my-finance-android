@@ -7,7 +7,7 @@ import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/features/search/screens/global_search_screen.dart';
 import 'package:my_finance/app/screens/modules_tools_page.dart';
 
-/// Consistent notification and Modules & Tools actions for every main section.
+/// Har main section ke liye mushtarka notifications aur Modules & Tools actions banata hai.
 List<Widget> buildSharedAppBarActions(BuildContext context) {
   return [
     IconButton(

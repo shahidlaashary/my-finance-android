@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
+/// My Partners module ke records aur un ke finance links manage karta hai.
 class MyPartnersService {
   MyPartnersService._();
   static final MyPartnersService instance = MyPartnersService._();

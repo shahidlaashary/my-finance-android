@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
+import 'package:my_finance/modules/finance/services/loans_service.dart';
 
 /// Owns party records shared by Finance, Assets, Loans and future modules.
 /// The existing loan database and party table are retained without schema changes.
@@ -175,14 +175,8 @@ class PartyService {
       final currentCurrency =
           (currentRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
       if (currentCurrency != normalizedCurrency) {
-        final linkedLoans = await txn.query(
-          'loans',
-          columns: ['id'],
-          where: 'party_id = ?',
-          whereArgs: [id],
-          limit: 1,
-        );
-        if (linkedLoans.isNotEmpty) {
+        final hasLinkedLoans = await LoansService.hasLoansForParty(txn, id);
+        if (hasLinkedLoans) {
           throw Exception(
             'Party currency cannot be changed while loan history is linked to this party.',
           );
@@ -239,23 +233,8 @@ class PartyService {
     await RecycleBinArchiveService.ensureTable();
 
     await db.transaction((txn) async {
-      // Loans are created lazily by LoansService. A party can be created
-      // and archived before the loan module has initialized its table.
-      // If the table does not exist, there cannot be linked loan rows yet.
-      final loanTable = await txn.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
-        ['loans'],
-      );
-      final linkedLoans = loanTable.isEmpty
-          ? <Map<String, Object?>>[]
-          : await txn.query(
-              'loans',
-              columns: ['id'],
-              where: 'party_id = ?',
-              whereArgs: [partyId],
-              limit: 1,
-            );
-      if (linkedLoans.isNotEmpty) {
+      final hasLinkedLoans = await LoansService.hasLoansForParty(txn, partyId);
+      if (hasLinkedLoans) {
         throw Exception(
           'This party has loan history. Delete is blocked to protect linked loans and ledger records.',
         );
@@ -332,40 +311,10 @@ class PartyService {
     await txn.insert('loan_parties', record);
   }
 
-  static Future<List<LoansModel>> getLoansForParty(int partyId) async {
-    await ensureTables();
-    final db = DatabaseManager.instance.database;
-    final rows = await db.query('loans', where: 'party_id = ?', whereArgs: [partyId], orderBy: 'lending_date DESC, id DESC');
-    return rows.map(LoansModel.fromMap).toList();
-  }
+  static Future<List<LoansModel>> getLoansForParty(int partyId) =>
+      LoansService.getLoansForParty(partyId);
 
-  static Future<Map<String, dynamic>> getPartySummary(int partyId) async {
-    await ensureTables();
-    final db = DatabaseManager.instance.database;
-    final rows = await db.rawQuery('''
-      SELECT
-        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))) AS currency,
-        loans.loan_type AS loan_type,
-        COALESCE(SUM(loans.remaining_amount), 0) AS outstanding,
-        COUNT(*) AS loan_count
-      FROM loans
-      LEFT JOIN wallets ON wallets.id = loans.wallet_id AND loans.wallet_id > 0
-      WHERE loans.party_id = ?
-      GROUP BY
-        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
-        loans.loan_type
-      ORDER BY
-        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
-        loans.loan_type
-    ''', [partyId]);
-    return {
-      'loan_count': rows.fold<int>(0, (sum, row) => sum + ((row['loan_count'] as num?)?.toInt() ?? 0)),
-      'balances': rows.map((row) => {
-        'currency': row['currency'],
-        'loan_type': row['loan_type'],
-        'outstanding': row['outstanding'],
-      }).toList(),
-    };
-  }
+  static Future<Map<String, dynamic>> getPartySummary(int partyId) =>
+      LoansService.getPartySummary(partyId);
 
  }

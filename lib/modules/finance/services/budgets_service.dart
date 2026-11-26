@@ -3,6 +3,7 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
+/// Budgets create, update, spending calculation aur limit alerts manage karta hai.
 class BudgetsService {
 
   static Future<Database> get _database async {
@@ -87,8 +88,8 @@ class BudgetsService {
     bool activeOnly = false,
   }) async {
     final db = await _database;
-    // Ensure the budget table exists on this service connection without
-    // changing database versions or migrating existing records.
+    // Is service connection par budget table ensure karein; database version
+    // change ya existing records ki migration ki zaroorat nahi.
     await _createTables(db);
     final rows = await db.query(
       'budgets',

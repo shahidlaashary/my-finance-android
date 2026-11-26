@@ -23,6 +23,62 @@ class PropertiesService {
     ''');
   }
 
+
+  static Future<List<Map<String, dynamic>>> maintenance({int? propertyId, String? status}) async {
+    final clauses=<String>[],args=<Object?>[];
+    if(propertyId!=null){clauses.add('m.property_id = ?');args.add(propertyId);}
+    if(status!=null){clauses.add('m.status = ?');args.add(status);}
+    return DatabaseManager.instance.database.rawQuery('''
+      SELECT m.*, p.name AS property_name
+      FROM properties_maintenance m
+      LEFT JOIN properties p ON p.id = m.property_id
+      ${clauses.isEmpty?'':'WHERE ${clauses.join(' AND ')}'}
+      ORDER BY CASE m.priority WHEN 'Urgent' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
+        CASE WHEN m.due_date = '' THEN 1 ELSE 0 END, m.due_date ASC, m.id DESC
+    ''',args);
+  }
+
+  static Future<int> saveMaintenance({
+    int? id,
+    required int propertyId,
+    required String title,
+    required String description,
+    required String category,
+    required String priority,
+    required String assignedTo,
+    required double estimatedCost,
+    required double actualCost,
+    required String status,
+    required String dueDate,
+    required String completedDate,
+    required String photoPath,
+  }) async {
+    if(title.trim().isEmpty || !estimatedCost.isFinite || estimatedCost<0 ||
+       !actualCost.isFinite || actualCost<0) {
+      throw ArgumentError('Enter valid maintenance details.');
+    }
+    final db=DatabaseManager.instance.database;
+    final property=await db.query('properties',columns:['id'],where:'id = ?',whereArgs:[propertyId],limit:1);
+    if(property.isEmpty)throw StateError('Select a valid property.');
+    final values=<String,Object?>{
+      'property_id':propertyId,'title':title.trim(),'description':description.trim(),
+      'category':category,'priority':priority,'assigned_to':assignedTo.trim(),
+      'estimated_cost':estimatedCost,'actual_cost':actualCost,'status':status,
+      'due_date':dueDate,'completed_date':completedDate,'photo_path':photoPath,
+    };
+    final result=id==null
+      ? await db.insert('properties_maintenance',{...values,'created_at':DateTime.now().toIso8601String()})
+      : await db.update('properties_maintenance',values,where:'id = ?',whereArgs:[id]);
+    if(id!=null&&result==0)throw StateError('Maintenance record not found.');
+    AppRefreshController.notifyChanged();
+    return id??result;
+  }
+
+  static Future<void> deleteMaintenance(int id) async {
+    await DatabaseManager.instance.database.delete('properties_maintenance',where:'id = ?',whereArgs:[id]);
+    AppRefreshController.notifyChanged();
+  }
+
   static Future<List<Map<String, dynamic>>> documents(int propertyId) async {
     return DatabaseManager.instance.database.query(
       'properties_documents',

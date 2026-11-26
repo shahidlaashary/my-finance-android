@@ -5,8 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
-/// Owns base-currency and exchange-rate data operations on the shared
-/// my_finance.db connection. DatabaseManager remains the connection owner.
+/// Shared my_finance.db connection par base currency aur exchange rates ke data operations manage karta hai.
+/// Database connection ki ownership DatabaseManager ke paas hi rehti hai.
 class CurrencyService {
   CurrencyService._();
 

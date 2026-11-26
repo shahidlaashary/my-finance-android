@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
@@ -64,13 +65,10 @@ class GoalsService {
     required int walletId,
     required double amount,
   }) async {
-    await txn.rawUpdate(
-      '''
-      UPDATE wallets
-      SET balance = balance + ?
-      WHERE id = ?
-      ''',
-      [amount, walletId],
+    await TransactionsService.applyWalletBalanceDelta(
+      txn,
+      walletId: walletId,
+      delta: amount,
     );
     AppRefreshController.notifyChanged();
   }

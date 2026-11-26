@@ -549,32 +549,86 @@ class PropertiesService {
       throw ArgumentError('Enter a valid payment date.');
     }
     final db = DatabaseManager.instance.database;
-    final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
-    if (contract.isEmpty) throw StateError('Select a valid contract.');
-    if (scheduleId != null) {
-      final schedule = await db.query('properties_rent_schedules', columns: ['id'], where: 'id = ? AND contract_id = ?', whereArgs: [scheduleId, contractId], limit: 1);
-      if (schedule.isEmpty) throw StateError('Rent schedule does not belong to this contract.');
-    }
-    if (id != null) {
-      final existing = await db.query('properties_rent_payments', columns: ['id'], where: 'id = ? AND contract_id = ?', whereArgs: [id, contractId], limit: 1);
-      if (existing.isEmpty) throw StateError('Rent payment does not belong to this contract.');
-    }
-    final today = DateTime.now();
-    final isPastDue = parsedDue != null && DateTime(parsedDue.year, parsedDue.month, parsedDue.day).isBefore(DateTime(today.year, today.month, today.day));
-    final status = amountPaid >= amountDue ? 'Paid' : isPastDue ? 'Overdue' : amountPaid > 0 ? 'Partial' : 'Pending';
-    final values = <String, Object?>{
-      'contract_id': contractId, 'schedule_id': scheduleId,
-      'due_date': dueDate, 'amount_due': amountDue,
-      'amount_paid': amountPaid, 'paid_date': paidDate,
-      'status': status, 'payment_method': paymentMethod.trim(),
-      'reference': reference.trim(), 'notes': notes.trim(),
-    };
-    final result = id == null
-        ? await db.insert('properties_rent_payments', {...values, 'created_at': DateTime.now().toIso8601String()})
-        : await db.update('properties_rent_payments', values, where: 'id = ?', whereArgs: [id]);
-    if (id != null && result == 0) throw StateError('Rent payment not found.');
+    final result = await db.transaction<int>((txn) async {
+      final contract = await txn.query(
+        'properties_contracts',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [contractId],
+        limit: 1,
+      );
+      if (contract.isEmpty) throw StateError('Select a valid contract.');
+
+      if (scheduleId != null) {
+        final schedule = await txn.query(
+          'properties_rent_schedules',
+          columns: ['id'],
+          where: 'id = ? AND contract_id = ?',
+          whereArgs: [scheduleId, contractId],
+          limit: 1,
+        );
+        if (schedule.isEmpty) {
+          throw StateError('Rent schedule does not belong to this contract.');
+        }
+      }
+
+      if (id != null) {
+        final existing = await txn.query(
+          'properties_rent_payments',
+          columns: ['id'],
+          where: 'id = ? AND contract_id = ?',
+          whereArgs: [id, contractId],
+          limit: 1,
+        );
+        if (existing.isEmpty) {
+          throw StateError('Rent payment does not belong to this contract.');
+        }
+      }
+
+      final today = DateTime.now();
+      final isPastDue = DateTime(
+        parsedDue.year,
+        parsedDue.month,
+        parsedDue.day,
+      ).isBefore(DateTime(today.year, today.month, today.day));
+      final status = amountPaid >= amountDue
+          ? 'Paid'
+          : isPastDue
+              ? 'Overdue'
+              : amountPaid > 0
+                  ? 'Partial'
+                  : 'Pending';
+      final values = <String, Object?>{
+        'contract_id': contractId,
+        'schedule_id': scheduleId,
+        'due_date': dueDate,
+        'amount_due': amountDue,
+        'amount_paid': amountPaid,
+        'paid_date': paidDate,
+        'status': status,
+        'payment_method': paymentMethod.trim(),
+        'reference': reference.trim(),
+        'notes': notes.trim(),
+      };
+
+      if (id == null) {
+        return txn.insert('properties_rent_payments', {
+          ...values,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      final updated = await txn.update(
+        'properties_rent_payments',
+        values,
+        where: 'id = ? AND contract_id = ?',
+        whereArgs: [id, contractId],
+      );
+      if (updated == 0) throw StateError('Rent payment not found.');
+      return id;
+    });
     AppRefreshController.notifyChanged();
-    return id ?? result;
+    return result;
   }
 
   static Future<void> deleteRentSchedule(int id) async {

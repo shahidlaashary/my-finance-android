@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
@@ -22,7 +23,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   final _nameController = TextEditingController();
   // Country-to-currency suggestion is evaluated only when first-time setup
   // is created. The selected value is then saved as the user's Base Currency.
-  String _currency = _detectInitialCurrency();
+  String _currency = 'PKR';
   bool _saving = false;
 
   static const Map<String, String> _countryCurrency = {
@@ -58,19 +59,67 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     'NL': 'EUR', 'PT': 'EUR', 'SI': 'EUR', 'SK': 'EUR',
   };
 
-  static String _detectInitialCurrency() {
-    // Use the device's configured regional locale; no location permission,
-    // SIM access, or network request is required.
-    for (final locale in WidgetsBinding.instance.platformDispatcher.locales) {
-      final countryCode = locale.countryCode?.toUpperCase();
-      final currency = countryCode == null
-          ? null
-          : _countryCurrency[countryCode];
-      if (currency != null && CurrencyCatalog.supported.contains(currency)) {
-        return currency;
+  static const MethodChannel _deviceInfoChannel = MethodChannel('my_finance/sound');
+
+  static const Map<String, String> _timeZoneCountry = {
+    'Asia/Karachi': 'PK', 'Asia/Riyadh': 'SA', 'Asia/Dubai': 'AE',
+    'Asia/Kuwait': 'KW', 'Asia/Qatar': 'QA', 'Asia/Bahrain': 'BH',
+    'Asia/Muscat': 'OM', 'Asia/Kolkata': 'IN', 'Asia/Calcutta': 'IN',
+    'Asia/Singapore': 'SG', 'Asia/Tokyo': 'JP', 'Asia/Shanghai': 'CN',
+    'Asia/Hong_Kong': 'HK', 'Asia/Seoul': 'KR', 'Asia/Bangkok': 'TH',
+    'Asia/Kuala_Lumpur': 'MY', 'Asia/Jakarta': 'ID', 'Europe/London': 'GB',
+    'Europe/Zurich': 'CH', 'Europe/Berlin': 'DE', 'Europe/Paris': 'FR',
+    'Europe/Rome': 'IT', 'Europe/Madrid': 'ES', 'Europe/Amsterdam': 'NL',
+    'Europe/Brussels': 'BE', 'Europe/Vienna': 'AT', 'Europe/Dublin': 'IE',
+    'Europe/Lisbon': 'PT', 'Europe/Athens': 'GR', 'Europe/Helsinki': 'FI',
+    'Europe/Oslo': 'NO', 'Europe/Stockholm': 'SE', 'Europe/Copenhagen': 'DK',
+    'America/Toronto': 'CA', 'America/Vancouver': 'CA',
+    'America/New_York': 'US', 'America/Chicago': 'US',
+    'America/Denver': 'US', 'America/Los_Angeles': 'US',
+    'America/Phoenix': 'US', 'Australia/Sydney': 'AU',
+    'Australia/Melbourne': 'AU', 'Pacific/Auckland': 'NZ',
+    'Africa/Johannesburg': 'ZA',
+  };
+
+  Future<void> _loadInitialCurrency() async {
+    String? countryCode;
+    try {
+      final signals = await _deviceInfoChannel.invokeMapMethod<String, String>(
+        'getCountrySignals',
+      );
+      // A registered mobile network identifies the country currently being
+      // visited. This works without mobile data or internet access.
+      countryCode = signals?['networkCountry'];
+      // The time zone is a useful offline indicator of the device's current
+      // country when cellular registration is unavailable.
+      if (countryCode == null || countryCode.isEmpty) {
+        final zone = signals?['timeZone'];
+        countryCode = zone == null ? null : _timeZoneCountry[zone];
       }
+      // SIM country is available offline and is a useful next-best signal.
+      if (countryCode == null || countryCode.isEmpty) {
+        countryCode = signals?['simCountry'];
+      }
+      // Finally use the configured device region.
+      if (countryCode == null || countryCode.isEmpty) {
+        countryCode = signals?['localeCountry'];
+      }
+    } catch (_) {
+      // Keep the locale fallback below if native country signals are absent.
     }
-    return 'PKR';
+
+    countryCode ??= WidgetsBinding.instance.platformDispatcher.locales
+        .map((locale) => locale.countryCode)
+        .firstWhere((code) => code != null && code.isNotEmpty, orElse: () => null);
+
+    final detected = countryCode == null
+        ? null
+        : _countryCurrency[countryCode.toUpperCase()];
+    if (!mounted || detected == null ||
+        !CurrencyCatalog.supported.contains(detected)) {
+      return;
+    }
+    setState(() => _currency = detected);
   }
 
   static const _completedKey = 'first_time_setup_completed';
@@ -91,6 +140,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   void initState() {
     super.initState();
     _nameController.text = 'Shahzain Khan';
+    _loadInitialCurrency();
   }
 
   @override

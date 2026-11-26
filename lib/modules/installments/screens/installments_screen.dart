@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/modules/installments/services/installment_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
+/// Installment plans aur un ki paid ya pending entries manage karne ki screen.
 class InstallmentsScreen extends StatefulWidget {
   const InstallmentsScreen({super.key});
   @override
@@ -26,6 +27,7 @@ class _InstallmentsScreenState extends State<InstallmentsScreen> {
   @override
   void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); super.dispose(); }
 
+  /// Installment service se latest plans aur payment status load karta hai.
   Future<void> _load() async {
     try {
       final values = await Future.wait<dynamic>([

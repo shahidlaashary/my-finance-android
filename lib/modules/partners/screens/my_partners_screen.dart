@@ -4,6 +4,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/modules/partners/services/my_partners_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
+/// Business partners aur un ke shared financial records manage karne ki screen.
 class MyPartnersScreen extends StatefulWidget {
   const MyPartnersScreen({super.key});
   @override
@@ -24,6 +25,7 @@ class _MyPartnersScreenState extends State<MyPartnersScreen> {
   @override
   void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); super.dispose(); }
 
+  /// Partners service se latest partner records load karta hai.
   Future<void> _load() async {
     try {
       final rows = await _service.getPartners();

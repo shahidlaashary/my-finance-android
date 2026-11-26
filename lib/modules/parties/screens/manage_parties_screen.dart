@@ -10,6 +10,7 @@ import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 
+/// Parties ke contacts, details aur linked finance records manage karne ki screen.
 class ManageParties extends StatefulWidget {
   final bool hideBalances;
   final ValueChanged<LoansModel> onLoanTap;

@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-/// Silently authenticates this app installation with Firebase Anonymous Auth.
+/// App installation ko Firebase Anonymous Auth ke zariye background mein authenticate karta hai.
 ///
-/// No login/signup UI is shown. If Firebase project configuration has not
-/// been supplied yet, the Finance app continues working locally.
+/// Login ya signup UI nahi dikhata. Firebase project configuration na ho to
+/// Finance app local mode mein kaam jari rakhti hai.
 class FirebaseInstallationAuthService {
   FirebaseInstallationAuthService._();
 
@@ -19,6 +19,7 @@ class FirebaseInstallationAuthService {
   String? get installationUid =>
       _available ? FirebaseAuth.instance.currentUser?.uid : null;
 
+  /// Firebase configuration check karke anonymous installation session shuru karta hai.
   Future<void> initialize() async {
     const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
     const appId = String.fromEnvironment('FIREBASE_APP_ID');

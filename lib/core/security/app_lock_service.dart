@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 
+/// PIN, biometric authentication aur temporary lockout ka security flow manage karta hai.
 class AppLockService {
   AppLockService._();
 
@@ -17,8 +18,8 @@ class AppLockService {
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
   static final LocalAuthentication _localAuth = LocalAuthentication();
 
-  // Versioned keys prevent old, previously tested settings from unexpectedly
-  // locking the app after this feature is re-enabled.
+  // Versioned keys purani test settings ko feature dobara enable hone par
+  // ghalti se app lock lagane se rokti hain.
   static const String _enabledKey = 'app_lock_pin_enabled_v1';
   static const String _timeoutKey = 'app_lock_pin_timeout_v1';
   static const String _biometricEnabledKey = 'app_lock_biometric_enabled_v1';
@@ -37,10 +38,10 @@ class AppLockService {
     revision.value++;
   }
 
+  /// Check karta hai ke app lock enabled hai ya nahi.
   static Future<bool> isEnabled() async {
-    // Do not access secure storage during normal startup unless App Lock
-    // has explicitly been enabled. Once enabled, keep the gate active even
-    // if the PIN is temporarily unavailable: security checks must fail closed.
+    // Normal startup par secure storage tabhi access karein jab App Lock enable ho.
+    // Enable hone ke baad PIN temporary unavailable ho tab bhi security gate active rahe.
     return await _getSetting(_enabledKey) == '1';
   }
 

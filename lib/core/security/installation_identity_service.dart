@@ -2,11 +2,10 @@ import 'dart:math';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Stable, random identity for this app installation.
+/// Is app installation ki stable aur random pehchan.
 ///
-/// This is not a hardware identifier. It is generated once, stored in the
-/// platform secure storage, and used to keep backend records isolated per
-/// installation without requiring an app login.
+/// Ye hardware identifier nahi. Aik martaba generate hoti hai, secure storage
+/// mein save hoti hai aur login ke baghair backend records ko installation-wise alag rakhti hai.
 class InstallationIdentityService {
   InstallationIdentityService._();
 
@@ -18,6 +17,7 @@ class InstallationIdentityService {
 
   String? _installationId;
 
+  /// Secure storage se installation ID load karta hai ya nayi ID generate karta hai.
   Future<void> initialize() async {
     _installationId = await _storage.read(key: _storageKey);
     if (_installationId != null && _installationId!.isNotEmpty) return;
@@ -27,7 +27,7 @@ class InstallationIdentityService {
     _installationId = id;
   }
 
-  /// Returns the installation ID after [initialize] has completed.
+  /// [initialize] mukammal hone ke baad installation ID return karta hai.
   String get installationId {
     final value = _installationId;
     if (value == null || value.isEmpty) {
@@ -42,7 +42,7 @@ class InstallationIdentityService {
     final random = Random.secure();
     final bytes = List<int>.generate(16, (_) => random.nextInt(256));
 
-    // RFC 4122 version 4 and variant bits.
+    // UUID ko RFC 4122 version 4 aur variant format ke mutabiq set karta hai.
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// App mein available theme presets ki list.
 enum AppThemePreset {
   emeraldGreen,
   lightMode,
@@ -7,6 +8,7 @@ enum AppThemePreset {
   midnightGold,
 }
 
+/// Selected theme preset load, apply aur persist karta hai.
 class AppearanceSettingsService {
   AppearanceSettingsService._();
 
@@ -19,6 +21,7 @@ class AppearanceSettingsService {
   final ValueNotifier<AppThemePreset> themePreset =
       ValueNotifier<AppThemePreset>(AppThemePreset.emeraldGreen);
 
+  /// Theme service ko settings read aur write callbacks ke sath connect karta hai.
   void configure({
     required Future<String?> Function(String key) readSetting,
     required Future<void> Function(String key, String value) writeSetting,
@@ -27,6 +30,7 @@ class AppearanceSettingsService {
     _writeSetting = writeSetting;
   }
 
+  /// Saved theme preset load karta hai aur purani light/dark setting ko samajhta hai.
   Future<void> load() async {
     final read = _readSetting;
     if (read == null) return;
@@ -43,7 +47,7 @@ class AppearanceSettingsService {
       return;
     }
 
-    // Preserve the user's previously saved Light/Dark preference on upgrade.
+    // Upgrade ke baad user ki pehle se saved Light/Dark preference barqarar rakhta hai.
     final oldMode = await read('theme_mode');
     themePreset.value = switch (oldMode) {
       'light' => AppThemePreset.lightMode,
@@ -52,6 +56,7 @@ class AppearanceSettingsService {
     };
   }
 
+  /// Naya theme foran apply karta hai aur configured storage mein save karta hai.
   Future<void> setThemePreset(AppThemePreset preset) async {
     final previous = themePreset.value;
     themePreset.value = preset;

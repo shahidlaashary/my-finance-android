@@ -553,20 +553,17 @@ class CurrencyService {
 
   static Future<double> getTotalBalanceInBaseCurrency() async {
     final baseCurrency = await getBaseCurrency();
-    final baseRate = await getExchangeRate(baseCurrency);
-    if (baseRate == null || baseRate <= 0) {
-      throw Exception('Base currency ka exchange rate available nahi.');
-    }
+    final online = await isOnline();
     final wallets = await _db.query('wallets', where: 'exclude_total = 0');
     double total = 0;
     for (final wallet in wallets) {
       final currency = (wallet['currency'] as String).toUpperCase();
       final balance = (wallet['balance'] as num).toDouble();
-      final rate = await getExchangeRate(currency);
+      final rate = await getEffectivePairRate(currency, baseCurrency, online: online);
       if (rate == null) {
-        throw Exception('Exchange rate for $currency is missing.');
+        throw Exception('Manual/automatic rate for $currency → $baseCurrency is missing.');
       }
-      total += balance * rate / baseRate;
+      total += balance * rate;
     }
     return total;
   }

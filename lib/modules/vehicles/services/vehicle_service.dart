@@ -8,12 +8,13 @@ import 'package:my_finance/core/settings/app_settings_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
-/// Vehicle data uses the existing app_settings key-value table.
-/// No database schema changes or migrations are required.
+/// Vehicle ka data existing app_settings key-value table mein JSON ki surat mein save hota hai.
+/// Is service ke liye database schema ya migration change ki zaroorat nahi.
 class VehicleService {
   VehicleService._();
   static const String _storageKey = 'vehicle_manager_data_v1';
 
+  /// Saved vehicle data read karke tamam expected lists ko validate karta hai.
   static Future<Map<String, dynamic>> _read() async {
     final saved = await AppSettingsService.get(_storageKey);
     if (saved == null) {
@@ -28,12 +29,14 @@ class VehicleService {
     return data;
   }
 
+  /// Vehicle data JSON mein save karke app refresh notify karta hai.
   static Future<void> _write(Map<String, dynamic> data) async {
     await AppSettingsService.set(_storageKey, jsonEncode(data));
     AppRefreshController.notifyChanged();
   }
 
   static int newId() => DateTime.now().microsecondsSinceEpoch;
+  /// Tamam vehicles ko naam ke mutabiq sort karke return karta hai.
   static Future<List<Map<String, dynamic>>> getVehicles() async {
     final data = await _read();
     final rows = (data['vehicles'] as List).whereType<Map>()
@@ -43,6 +46,7 @@ class VehicleService {
     return rows;
   }
 
+  /// Diye gaye record type ke rows optional vehicle filter ke saath load karta hai.
   static Future<List<Map<String, dynamic>>> _getRows(String key, int? vehicleId) async {
     final data = await _read();
     final rows = (data[key] as List).whereType<Map>()
@@ -55,6 +59,7 @@ class VehicleService {
   static Future<List<Map<String, dynamic>>> getFuelLogs({int? vehicleId}) => _getRows('fuel_logs', vehicleId);
   static Future<List<Map<String, dynamic>>> getExpenses({int? vehicleId}) => _getRows('expenses', vehicleId);
   static Future<List<Map<String, dynamic>>> getReminders({int? vehicleId}) => _getRows('reminders', vehicleId);
+  /// Vehicle expense ke liye central TransactionsService mein ledger entry banata hai.
   static Future<int> _createExpenseTransaction({
     required double amount,
     required int walletId,
@@ -78,6 +83,7 @@ class VehicleService {
     return id;
   }
 
+  /// Existing vehicle expense ki central ledger entry update karta hai.
   static Future<void> _updateExpenseTransaction({
     required int id,
     required double amount,
@@ -102,6 +108,7 @@ class VehicleService {
     AppRefreshController.notifyChanged();
   }
 
+  /// Linked expense ko archive karke central ledger se delete karta hai.
   static Future<void> _deleteExpenseTransaction(int id) async {
     final db = DatabaseManager.instance.database;
     final rows = await db.query('transactions',
@@ -129,6 +136,7 @@ class VehicleService {
     }
   }
 
+  /// Vehicle ko naya record ya existing record ki update ke taur par save karta hai.
   static Future<void> saveVehicle(Map<String, dynamic> vehicle) async {
     final data = await _read();
     final rows = (data['vehicles'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -146,6 +154,7 @@ class VehicleService {
     await _write(data);
   }
 
+  /// Linked records na hon to vehicle ko recycle bin mein archive karke delete karta hai.
   static Future<void> deleteVehicle(int id) async {
     final data = await _read();
     bool linked(String key) => (data[key] as List).any((e) => e is Map && e['vehicle_id'] == id);
@@ -160,6 +169,7 @@ class VehicleService {
     await _write(data);
   }
 
+  /// Odometer reading ko pehle se saved readings ke against validate karta hai.
   static Future<void> _validateOdometer(int vehicleId, double reading, {int? ignoreFuelId, int? ignoreExpenseId}) async {
     if (!reading.isFinite || reading < 0) throw Exception('Enter a valid odometer reading.');
     final data = await _read();
@@ -178,6 +188,7 @@ class VehicleService {
     }
   }
 
+  /// Fuel log save karke uska expense ledger entry ke saath link banata hai.
   static Future<int> addFuel({
     required int vehicleId, required String vehicleName, required DateTime date,
     required double odometer, required double quantity, required double unitPrice,
@@ -210,6 +221,7 @@ class VehicleService {
     }
   }
 
+  /// Vehicle expense aur uski finance ledger entry ko link karke save karta hai.
   static Future<int> addExpense({
     required int vehicleId, required String vehicleName, required DateTime date,
     required double amount, required double odometer, required int walletId,
@@ -237,6 +249,7 @@ class VehicleService {
     }
   }
 
+  /// Fuel log update karta hai aur failure par purani ledger values restore karta hai.
   static Future<void> updateFuel({
     required int id, required int vehicleId, required String vehicleName,
     required DateTime date, required double odometer, required double quantity,
@@ -287,6 +300,7 @@ class VehicleService {
     }
   }
 
+  /// Vehicle expense update karta hai aur failure par purani ledger values restore karta hai.
   static Future<void> updateExpense({
     required int id, required int vehicleId, required String vehicleName,
     required DateTime date, required double amount, required double odometer,
@@ -332,6 +346,7 @@ class VehicleService {
     }
   }
 
+  /// Fuel ya expense record ko archive karke linked finance entry safely remove karta hai.
   static Future<void> _deleteLinked(String key, int id) async {
     final data = await _read();
     final rows = (data[key] as List).whereType<Map>().toList();
@@ -357,6 +372,7 @@ class VehicleService {
   static Future<void> deleteFuel(int id) => _deleteLinked('fuel_logs', id);
   static Future<void> deleteExpense(int id) => _deleteLinked('expenses', id);
 
+  /// Vehicle reminder ko create ya update karke saved list mein rakhta hai.
   static Future<void> saveReminder(Map<String, dynamic> reminder) async {
     final data = await _read();
     final rows = (data['reminders'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -373,6 +389,7 @@ class VehicleService {
     data['reminders'] = rows;
     await _write(data);
   }
+  /// Vehicle reminder ko recycle bin ke liye archive karke remove karta hai.
   static Future<void> deleteReminder(int id) async {
     final data = await _read();
     final rows = (data['reminders'] as List).whereType<Map>().toList();
@@ -385,6 +402,7 @@ class VehicleService {
     data['reminders'] = rows.where((e) => e['id'] != id).toList();
     await _write(data);
   }
+  /// Archived vehicle-related record ko validated collection mein restore karta hai.
   static Future<void> restoreArchivedRecord(
     Transaction txn, {
     required String table,

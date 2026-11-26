@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/settings/app_settings_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 /// Dashboard ke read models aur alert state my_finance.db mein save/manage karta hai.
 class DashboardDataService {
@@ -15,7 +16,37 @@ class DashboardDataService {
     required bool useManualRates,
     required DateTime monthStart,
     required DateTime nextMonth,
-  }) {
+  }) async {
+    if (useManualRates) {
+      final grouped = await _db.rawQuery('''
+        SELECT UPPER(t.type) AS type, UPPER(w.currency) AS currency,
+          COALESCE(SUM(t.amount), 0) AS amount
+        FROM transactions t
+        INNER JOIN wallets w ON w.id = t.wallet_id
+        WHERE UPPER(t.type) IN ('INCOME', 'EXPENSE')
+          AND date(t.date) >= date(?)
+          AND date(t.date) < date(?)
+        GROUP BY UPPER(t.type), UPPER(w.currency)
+      ''', [
+        monthStart.toIso8601String(),
+        nextMonth.toIso8601String(),
+      ]);
+      final totals = <String, double>{'INCOME': 0, 'EXPENSE': 0};
+      for (final row in grouped) {
+        final type = row['type']?.toString().toUpperCase() ?? '';
+        final currency = row['currency']?.toString().toUpperCase() ?? '';
+        final amount = (row['amount'] as num?)?.toDouble() ?? 0;
+        final rate = await CurrencyService.getManualPairRate(currency, baseCurrency);
+        if (rate == null) {
+          throw Exception('Manual rate for $currency → $baseCurrency is missing.');
+        }
+        if (totals.containsKey(type)) totals[type] = totals[type]! + amount * rate;
+      }
+      return [
+        {'type': 'INCOME', 'total': totals['INCOME']!},
+        {'type': 'EXPENSE', 'total': totals['EXPENSE']!},
+      ];
+    }
     return _db.rawQuery('''
       SELECT UPPER(t.type) AS type,
         COALESCE(SUM(

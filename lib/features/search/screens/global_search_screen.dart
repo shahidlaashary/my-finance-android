@@ -35,6 +35,7 @@ class _SearchRecord {
   });
 }
 
+/// Finance app ke mukhtalif modules mein aik jagah se search karne ki screen.
 class GlobalSearchScreen extends StatefulWidget {
   const GlobalSearchScreen({super.key});
 
@@ -128,6 +129,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     }
   }
 
+  /// Search query ke mutabiq relevant module records hasil karta hai.
   Future<void> _searchRecords(String rawQuery, int request) async {
     final query = rawQuery.trim().toLowerCase();
     if (!mounted || query.length < 2 || request != _searchRequest) return;

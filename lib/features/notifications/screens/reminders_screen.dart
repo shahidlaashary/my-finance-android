@@ -4,6 +4,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:intl/intl.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
 
+/// Saved reminders ko list, refresh aur manage karne wali screen.
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
 
@@ -24,6 +25,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     _load();
   }
 
+  /// App ke kisi module mein data update ho to reminders dobara load karta hai.
   void _onAppDataChanged() {
     if (mounted) _load();
   }
@@ -34,6 +36,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     super.dispose();
   }
 
+  /// Reminder service se latest reminders hasil karta hai.
   Future<void> _load() async {
     try {
       await _service.initialize();

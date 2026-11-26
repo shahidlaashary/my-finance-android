@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 
-/// Backup and restore are intentionally unavailable during the testing phase.
+/// Testing phase ke dauran backup aur restore screen filhal intentionally unavailable hai.
 class BackupRestoreScreen extends StatelessWidget {
   const BackupRestoreScreen({super.key});
 

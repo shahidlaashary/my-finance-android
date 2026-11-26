@@ -8,6 +8,7 @@ import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dar
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'dart:convert';
 
+/// Deleted finance aur module records ko restore ya permanently remove karne ki screen.
 class RecycleBinScreen extends StatefulWidget {
   const RecycleBinScreen({super.key});
   @override
@@ -29,6 +30,7 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
     });
   }
   @override
+  /// App data change hone par Recycle Bin ki list refresh karta hai.
   void _onAppDataChanged() { if (mounted) _load(); }
   void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); _countdownTimer?.cancel(); super.dispose(); }
   String _remaining(Map<String, dynamic> item) {
@@ -45,6 +47,7 @@ class _RecycleBinScreenState extends State<RecycleBinScreen> {
     if (hours > 0) return '$hours ${tr('hours')} $minutes ${tr('minutes')} ${tr('remaining')}';
     return '$minutes ${tr('minutes')} ${tr('remaining')}';
   }
+  /// Recycle Bin service se archived records load karta hai.
   Future<void> _load() async {
     try {
       final rows = await RecycleBinService.getItems();

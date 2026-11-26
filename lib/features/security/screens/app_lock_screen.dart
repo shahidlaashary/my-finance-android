@@ -4,6 +4,7 @@ import 'package:local_auth/local_auth.dart';
 
 import 'package:my_finance/core/security/app_lock_service.dart';
 
+/// PIN aur biometric app lock ki settings manage karne wali screen.
 class AppLockScreen extends StatefulWidget {
   const AppLockScreen({super.key});
 
@@ -26,6 +27,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     _load();
   }
 
+  /// App lock, PIN, timeout aur available biometrics ki current settings load karta hai.
   Future<void> _load() async {
     try {
       final values = await Future.wait([

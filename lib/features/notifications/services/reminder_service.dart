@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+/// Local reminders schedule, save, delete aur restore karne ki service hai.
 class ReminderService {
   ReminderService._();
   static final ReminderService instance = ReminderService._();
@@ -17,8 +18,10 @@ class ReminderService {
       FlutterLocalNotificationsPlugin();
   Future<void>? _initializing;
 
+  /// Timezone aur local notifications ko sirf aik martaba initialize karta hai.
   Future<void> initialize() => _initializing ??= _initialize();
 
+  /// Pakistan timezone set karke Android/iOS notification permissions tayyar karta hai.
   Future<void> _initialize() async {
     tz_data.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Karachi'));
@@ -32,6 +35,7 @@ class ReminderService {
     await android?.requestNotificationsPermission();
   }
 
+  /// Saved reminders load karke due time ke mutabiq sort karta hai.
   Future<List<Map<String, dynamic>>> getReminders() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_storageKey);
@@ -50,11 +54,13 @@ class ReminderService {
     }
   }
 
+  /// Reminder list ko local preferences mein JSON format mein save karta hai.
   Future<void> _save(List<Map<String, dynamic>> reminders) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_storageKey, jsonEncode(reminders));
   }
 
+  /// Future reminder validate, schedule aur local storage mein save karta hai.
   Future<int> addReminder({
     required String title,
     required String note,
@@ -101,6 +107,7 @@ class ReminderService {
     return id;
   }
 
+  /// Reminder ko archive karke scheduled notification cancel aur record delete karta hai.
   Future<void> deleteReminder(int id) async {
     await initialize();
     final reminders = await getReminders();
@@ -120,6 +127,7 @@ class ReminderService {
     AppRefreshController.notifyChanged();
   }
 
+  /// Archived reminder restore karta hai aur future time ho to notification dobara schedule karta hai.
   Future<void> restoreReminder(Map<String, dynamic> record) async {
     await initialize();
     final id = (record['id'] as num).toInt();

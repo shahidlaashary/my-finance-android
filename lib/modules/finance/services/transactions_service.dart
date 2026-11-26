@@ -6,9 +6,9 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
 
 class TransactionsService {
-  /// Inserts a ledger row inside the caller's database transaction.
-  /// Module services may coordinate their own records while ledger writes
-  /// remain centralized here; the caller retains atomic transaction control.
+  /// Caller ki database transaction ke andar ledger row insert karta hai.
+  /// Module services apne records coordinate kar sakti hain, lekin ledger writes
+  /// yahin centralized rehti hain; atomic transaction ka control caller ke paas hota hai.
   static Future<int> insertLedgerEntry(
     Transaction txn,
     Map<String, Object?> entry,
@@ -16,7 +16,7 @@ class TransactionsService {
     return txn.insert('transactions', entry);
   }
 
-  /// Applies a wallet balance change through the central finance service.
+  /// Central finance service ke zariye wallet balance change apply karta hai.
   static Future<void> applyWalletBalanceDelta(
     Transaction txn, {
     required int walletId,
@@ -33,7 +33,7 @@ class TransactionsService {
     await _changeBalance(txn, walletId, delta);
   }
 
-  /// Creates a module-owned ledger row and applies wallet effects atomically.
+  /// Module ki ledger row create karke wallet par uska effect aik saath apply karta hai.
   static Future<int> createModuleLedgerEntry(
     Transaction txn, {
     required String type,
@@ -69,7 +69,7 @@ class TransactionsService {
     return id;
   }
 
-  /// Reverses and removes module-owned ledger rows inside the caller transaction.
+  /// Caller transaction ke andar module ledger rows ka balance effect reverse karke rows remove karta hai.
   static Future<void> deleteModuleLedgerEntries(
     Transaction txn,
     List<Map<String, dynamic>> rows,
@@ -85,7 +85,7 @@ class TransactionsService {
     }
   }
 
-  /// Restores module-owned ledger rows and wallet effects atomically.
+  /// Module ledger rows aur wallet effects ko aik transaction mein restore karta hai.
   static Future<void> restoreModuleLedgerEntries(
     Transaction txn,
     List<Map<String, dynamic>> rows,
@@ -111,7 +111,7 @@ class TransactionsService {
     }
   }
 
-  /// Checks whether the transaction ledger contains entries for a wallet.
+  /// Check karta hai ke transaction ledger mein is wallet ki entries mojood hain ya nahi.
   static Future<bool> hasWalletReferences(
     DatabaseExecutor db,
     int walletId,
@@ -126,7 +126,7 @@ class TransactionsService {
     return rows.isNotEmpty;
   }
 
-  /// Adds a wallet balance adjustment to the transaction ledger.
+  /// Wallet balance adjustment ko transaction ledger mein record karta hai.
   static Future<void> addWalletBalanceAdjustment(
     Transaction txn, {
     required int walletId,
@@ -149,7 +149,7 @@ class TransactionsService {
     });
   }
 
-  /// Loads transaction-ledger rows for a set of IDs.
+  /// Diye gaye IDs ki transaction-ledger rows load karta hai.
   static Future<List<Map<String, Object?>>> getLedgerEntriesByIds(
     DatabaseExecutor db,
     List<int> ids,
@@ -162,7 +162,7 @@ class TransactionsService {
     );
   }
 
-  /// Reverses and removes committee-owned ledger rows inside the caller transaction.
+  /// Caller transaction ke andar committee ledger rows ka balance effect reverse karke rows remove karta hai.
   static Future<void> deleteCommitteeLedgerEntries(
     Transaction txn,
     List<Map<String, dynamic>> rows,
@@ -190,7 +190,7 @@ class TransactionsService {
     }
   }
 
-  /// Restores archived committee ledger rows and their wallet balance effects.
+  /// Archived committee ledger rows aur unke wallet balance effects restore karta hai.
   static Future<void> restoreCommitteeLedgerEntries(
     Transaction txn,
     List<Map<String, dynamic>> rows,
@@ -220,7 +220,7 @@ class TransactionsService {
     }
   }
 
-  /// Creates a module-owned expense while keeping ledger and wallet balance atomic.
+  /// Module expense create karta hai aur ledger aur wallet balance ko aik transaction mein rakhta hai.
   static Future<int> createExpenseLedgerEntry(
     Transaction txn, {
     required double amount,
@@ -244,7 +244,7 @@ class TransactionsService {
     });
   }
 
-  /// Updates an existing module-owned expense and reverses/reapplies its balance effect.
+  /// Existing module expense update karke pehle purana aur phir naya wallet effect apply karta hai.
   static Future<void> updateExpenseLedgerEntry(
     Transaction txn, {
     required int id,
@@ -279,7 +279,7 @@ class TransactionsService {
     }, where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Removes a module-owned expense after restoring its wallet balance.
+  /// Wallet balance restore karne ke baad module expense remove karta hai.
   static Future<void> deleteExpenseLedgerEntry(Transaction txn, int id) async {
     final rows = await txn.query('transactions', where: 'id = ?', whereArgs: [id], limit: 1);
     if (rows.isEmpty) return;
@@ -294,8 +294,8 @@ class TransactionsService {
     await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Converts all ledger-owned values affected by a wallet currency change.
-  /// Must run inside the caller's transaction to keep balances and history atomic.
+  /// Wallet currency change se mutasir tamam ledger-owned amounts convert karta hai.
+  /// Balance aur history ko consistent rakhne ke liye isay caller transaction ke andar chalana zaroori hai.
   static Future<void> convertWalletCurrencyAmounts(
     Transaction txn,
     int walletId,
@@ -392,7 +392,7 @@ class TransactionsService {
     if (changed == 0) throw Exception('Wallet not found: $walletId');
   }
 
-  // Edit ya delete se pehle purani transaction ka balance impact reverse karta hai.
+  // Edit ya delete se pehle purani transaction ka balance effect reverse karta hai.
   static Future<void> _reverse(Transaction txn, Map<String, dynamic> row) async {
     final rawType = row['type'].toString().trim().toLowerCase();
     final amount = (row['amount'] as num).toDouble();
@@ -433,7 +433,7 @@ class TransactionsService {
     }
   }
 
-  // Nayi transaction validate karke wallet balances ko database transaction mein update karta hai.
+  // Nayi transaction validate karke wallet balances ko aik database transaction mein update karta hai.
   static Future<void> _apply(
     Transaction txn, {
     required String type,
@@ -472,8 +472,8 @@ class TransactionsService {
     final received = toAmount ?? amount;
     if (!received.isFinite || received <= 0) throw Exception('Enter a valid destination amount.');
 
-    // Aik currency ke wallets mein transfer amount dono taraf barabar rehni chahiye.
-    // Mukhtalif currencies hon to user ka diya hua received amount aur exchange rate use hota hai.
+    // Same currency wallets ke darmiyan transfer amount dono taraf barabar rehni chahiye.
+    // Different currencies hon to user ka diya hua received amount aur exchange rate use hota hai.
     final sourceCurrency = (source['currency'] ?? 'PKR').toString().toUpperCase();
     final destinationCurrency = (destination['currency'] ?? 'PKR').toString().toUpperCase();
     if (sourceCurrency == destinationCurrency && received != amount) {
@@ -667,7 +667,7 @@ class TransactionsService {
     """, args);
   }
 
-  /// Restores the archived transactions record and related ledger entries atomically.
+  /// Archived transaction record aur related ledger entries aik hi transaction mein restore karta hai.
   static Future<void> restoreArchivedTransaction(
     Transaction txn, {
     required Map<String, dynamic> record,

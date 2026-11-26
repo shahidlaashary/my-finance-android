@@ -276,7 +276,7 @@ class TransactionsService {
           whereArgs: ['transaction_transfer_fee_$id']);
       });
     } catch (_) {
-      await RecycleBinService.discardArchive(recycleId);
+      await RecycleBinArchiveService.discardArchive(recycleId);
       rethrow;
     }
     AppRefreshController.notifyChanged();

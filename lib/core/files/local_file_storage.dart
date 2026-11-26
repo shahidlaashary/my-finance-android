@@ -4,10 +4,10 @@ import 'package:path_provider/path_provider.dart';
 
 import 'file_storage.dart';
 
-/// Native filesystem adapter for Android, iOS, Windows and macOS.
+/// Android, iOS, Windows aur macOS ke liye native filesystem adapter.
 ///
-/// Directory providers are injectable so filesystem behavior can be tested
-/// without depending on the host platform's application directories.
+/// Directory providers inject kiye ja sakte hain taake tests host platform ke
+/// asal application folders par depend kiye baghair filesystem check kar sakein.
 class LocalFileStorage implements FileStorage {
   LocalFileStorage({
     Future<Directory> Function()? documentsDirectoryProvider,
@@ -20,19 +20,23 @@ class LocalFileStorage implements FileStorage {
   final Future<Directory> Function() _documentsDirectoryProvider;
   final Future<Directory> Function() _temporaryDirectoryProvider;
 
+  /// App documents folder ka path return karta hai.
   @override
   Future<String> getApplicationDocumentsPath() async =>
       (await _documentsDirectoryProvider()).path;
 
+  /// Temporary files ke folder ka path return karta hai.
   @override
   Future<String> getTemporaryPath() async =>
       (await _temporaryDirectoryProvider()).path;
 
+  /// Diye gaye path par zaroorat ke mutabiq parent folders bhi banata hai.
   @override
   Future<void> createDirectory(String path) async {
     await Directory(path).create(recursive: true);
   }
 
+  /// Source file ko destination par copy karke naya path return karta hai.
   @override
   Future<String> copyFile({
     required String sourcePath,

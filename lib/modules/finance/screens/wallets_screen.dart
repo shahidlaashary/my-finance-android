@@ -1759,31 +1759,31 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       SizedBox(height: 10),
 
                       // Pehli row mein wallet ka naam aur qisam.
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 6,
-                            child: TextFormField(
-                              controller: nameController,
-                              decoration: _fieldDecoration(
-                                'Wallet Name',
-                                icon: Icons.account_balance_wallet_outlined,
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              flex: 6,
+                              child: TextFormField(
+                                controller: nameController,
+                                decoration: _fieldDecoration(
+                                  'Wallet Name',
+                                  icon: Icons.account_balance_wallet_outlined,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Name required';
+                                  }
+                                  return null;
+                                },
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Name required';
-                                }
-                                return null;
-                              },
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            flex: 3,
-                            child: SizedBox(
-                              key: _walletTypePickerKey,
-                              height: 56,
+                            SizedBox(width: 10),
+                            Expanded(
+                              flex: 3,
                               child: InkWell(
+                                key: _walletTypePickerKey,
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: saving ? null : _showWalletTypePicker,
                                 child: InputDecorator(
@@ -1800,8 +1800,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
 
                       if (selectedType == 'Custom') ...[

@@ -6,6 +6,83 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
 
 class TransactionsService {
+  /// Converts all ledger-owned values affected by a wallet currency change.
+  /// Must run inside the caller's transaction to keep balances and history atomic.
+  static Future<void> convertWalletCurrencyAmounts(
+    Transaction txn,
+    int walletId,
+    double factor,
+  ) async {
+    await txn.rawUpdate('''
+      UPDATE transactions
+      SET amount = amount * ?
+      WHERE wallet_id = ?
+        AND type IN ('Income', 'Expense', 'Transfer')
+    ''', [factor, walletId]);
+
+    final feeTransactions = await txn.query(
+      'transactions',
+      columns: ['id'],
+      where: "wallet_id = ? AND type = 'Transfer'",
+      whereArgs: [walletId],
+    );
+    for (final transaction in feeTransactions) {
+      final transactionId = transaction['id'] as int;
+      final feeRows = await txn.query(
+        'app_settings',
+        columns: ['setting_value'],
+        where: 'setting_key = ?',
+        whereArgs: ['transaction_transfer_fee_$transactionId'],
+        limit: 1,
+      );
+      if (feeRows.isNotEmpty) {
+        final oldFee = double.tryParse(
+          feeRows.first['setting_value']?.toString() ?? '',
+        ) ?? 0;
+        await txn.update(
+          'app_settings',
+          {'setting_value': (oldFee * factor).toString()},
+          where: 'setting_key = ?',
+          whereArgs: ['transaction_transfer_fee_$transactionId'],
+        );
+      }
+    }
+
+    await txn.rawUpdate('''
+      UPDATE transactions
+      SET to_amount = COALESCE(to_amount, amount) * ?
+      WHERE to_wallet_id = ?
+        AND type = 'Transfer'
+    ''', [factor, walletId]);
+
+    await txn.rawUpdate('''
+      UPDATE transactions
+      SET exchange_rate = CASE
+        WHEN to_amount IS NULL OR amount = 0 THEN NULL
+        ELSE to_amount / amount
+      END
+      WHERE type = 'Transfer'
+        AND (wallet_id = ? OR to_wallet_id = ?)
+    ''', [walletId, walletId]);
+
+    await txn.rawUpdate('''
+      UPDATE transactions
+      SET balance_delta = balance_delta * ?
+      WHERE wallet_id = ?
+        AND type = 'Transfer'
+        AND category = 'Committee Transfer'
+        AND balance_delta IS NOT NULL
+    ''', [factor, walletId]);
+
+    await txn.rawUpdate('''
+      UPDATE transactions
+      SET amount = amount * ?,
+          balance_delta = balance_delta * ?
+      WHERE wallet_id = ?
+        AND type = 'Adjustment'
+    ''', [factor, factor, walletId]);
+  }
+
   static String _normalizeType(String type) {
     switch (type.trim().toLowerCase()) {
       case 'income': return 'Income';

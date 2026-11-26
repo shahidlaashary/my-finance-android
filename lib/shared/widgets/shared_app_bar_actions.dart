@@ -29,7 +29,10 @@ List<Widget> buildSharedAppBarActions(BuildContext context) {
         context,
         MaterialPageRoute(builder: (_) => const ModulesToolsPage()),
       ),
-      icon: const _CombineIcon(),
+      icon: Transform.translate(
+        offset: const Offset(-2, 0),
+        child: const _CombineIcon(),
+      ),
     ),
   ];
 }
@@ -249,7 +252,10 @@ List<Widget> buildMainSectionAppBarActions(BuildContext context) {
     IconButton(
       tooltip: 'Modules & Tools',
       onPressed: () => Navigator.pushNamed(context, '/modules-tools'),
-      icon: const _CombineIcon(),
+      icon: Transform.translate(
+        offset: const Offset(-2, 0),
+        child: const _CombineIcon(),
+      ),
     ),
   ];
 }

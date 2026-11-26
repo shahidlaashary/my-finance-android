@@ -173,19 +173,24 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     for(final c in [title,description,assigned,estimated,actual]){c.dispose();}
   }
 
-  Future<void> rentScheduleForm(Map<String,dynamic> contract) async {
-    DateTime start=DateTime.now(),next=DateTime.now();DateTime? end;
-    String frequency='Monthly';
-    final amount=TextEditingController(text:contract['rent']?.toString()??''),notes=TextEditingController();
+  Future<void> rentScheduleForm(Map<String,dynamic> contract,{Map<String,dynamic>? row}) async {
+    DateTime start=DateTime.tryParse(row?['start_date']?.toString()??'')??DateTime.now();
+    DateTime next=DateTime.tryParse(row?['next_due_date']?.toString()??'')??start;
+    DateTime? end=DateTime.tryParse(row?['end_date']?.toString()??'');
+    String frequency=row?['frequency']?.toString()??'Monthly';
+    String status=row?['status']?.toString()??'Active';
+    final amount=TextEditingController(text:row?['amount']?.toString()??contract['rent']?.toString()??'');
+    final notes=TextEditingController(text:row?['notes']?.toString()??'');
     await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>StatefulBuilder(builder:(ctx,refresh)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SingleChildScrollView(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[
-      Text(tr('Create Rent Schedule'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
+      Text(tr(row==null?'Create Rent Schedule':'Edit Rent Schedule'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
       field(amount,'Rent Amount',keyboard:TextInputType.number),const SizedBox(height:10),
-      DropdownButtonFormField<String>(value:frequency,decoration:InputDecoration(labelText:tr('Frequency'),border:const OutlineInputBorder()),items:['Weekly','Monthly','Quarterly','Yearly'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>frequency=v);}),
+      DropdownButtonFormField<String>(value:frequency,decoration:InputDecoration(labelText:tr('Frequency'),border:const OutlineInputBorder()),items:['Weekly','Monthly','Quarterly','Yearly','One-time'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>frequency=v);}),
       ListTile(title:Text(tr('Start Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(start)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:start,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>start=d);}),
       ListTile(title:Text(tr('End Date')),subtitle:Text(end==null?tr('No end date'):MaterialLocalizations.of(ctx).formatMediumDate(end!)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:end??start,firstDate:start,lastDate:DateTime(2100));if(d!=null)refresh(()=>end=d);}),
       ListTile(title:Text(tr('Next Due Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(next)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:next,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>next=d);}),
+      if(row!=null)DropdownButtonFormField<String>(value:status,decoration:InputDecoration(labelText:tr('Status'),border:const OutlineInputBorder()),items:['Active','Paused','Completed'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>status=v);}),
       field(notes,'Notes',lines:2),const SizedBox(height:16),
-      FilledButton(onPressed:()async{try{await PropertiesService.saveRentSchedule(contractId:contract['id'] as int,amount:double.parse(amount.text),frequency:frequency,startDate:start.toIso8601String(),endDate:end?.toIso8601String()??'',nextDueDate:next.toIso8601String(),status:'Active',notes:notes.text);if(s.mounted)Navigator.pop(s);message(tr('Rent schedule saved.'));}catch(e){message(e.toString());}},child:Text(tr('Save Schedule'))),
+      FilledButton(onPressed:()async{try{await PropertiesService.saveRentSchedule(id:row?['id'] as int?,contractId:contract['id'] as int,amount:double.parse(amount.text),frequency:frequency,startDate:start.toIso8601String(),endDate:end?.toIso8601String()??'',nextDueDate:next.toIso8601String(),status:status,notes:notes.text);if(s.mounted)Navigator.pop(s);await load();message(tr(row==null?'Rent schedule saved.':'Rent schedule updated.'));}catch(e){message(e.toString());}},child:Text(tr(row==null?'Save Schedule':'Update Schedule'))),
     ])))));
     amount.dispose();notes.dispose();
   }
@@ -201,24 +206,45 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       const SizedBox(height:12),
       Expanded(child:ListView(children:[
         Text(tr('Schedules'),style:const TextStyle(fontWeight:FontWeight.bold)),
-        if(schedules.isEmpty)Text(tr('No rent schedules yet.')) else ...schedules.map((r)=>ListTile(leading:const Icon(Icons.event_repeat),title:Text('${r['amount']} • ${r['frequency']}'),subtitle:Text('${r['status']} • Next due: ${r['next_due_date']}'))),
+        if(schedules.isEmpty)Text(tr('No rent schedules yet.')) else ...schedules.map((r)=>ListTile(
+          leading:const Icon(Icons.event_repeat),
+          title:Text('${r['amount']} • ${r['frequency']}'),
+          subtitle:Text('${r['status']} • Next due: ${r['next_due_date']}'),
+          trailing:PopupMenuButton<String>(onSelected:(v)async{
+            if(v=='edit'){Navigator.pop(s);await rentScheduleForm(contract,row:r);}
+            if(v=='delete'){try{await PropertiesService.deleteRentSchedule(r['id'] as int);await load();if(s.mounted)Navigator.pop(s);message(tr('Schedule deleted. Payment history retained.'));}catch(e){message(e.toString());}}
+          },itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))]),
+        )),
         const Divider(),Text(tr('Payments'),style:const TextStyle(fontWeight:FontWeight.bold)),
-        if(payments.isEmpty)Text(tr('No rent payments recorded.')) else ...payments.map((r)=>ListTile(leading:Icon(r['status']=='Paid'?Icons.check_circle_outline:r['status']=='Overdue'?Icons.warning_amber:Icons.schedule),title:Text('${r['amount_paid']} / ${r['amount_due']}'),subtitle:Text('${r['status']} • Due: ${r['due_date']}'))),
+        if(payments.isEmpty)Text(tr('No rent payments recorded.')) else ...payments.map((r)=>ListTile(
+          leading:Icon(r['status']=='Paid'?Icons.check_circle_outline:r['status']=='Overdue'?Icons.warning_amber:Icons.schedule),
+          title:Text('${r['amount_paid']} / ${r['amount_due']}'),
+          subtitle:Text('${r['status']} • Due: ${r['due_date']}'),
+          trailing:PopupMenuButton<String>(onSelected:(v)async{
+            if(v=='edit'){Navigator.pop(s);await rentPaymentForm(contract,row:r);}
+            if(v=='delete'){try{await PropertiesService.deleteRentPayment(r['id'] as int);await load();if(s.mounted)Navigator.pop(s);message(tr('Rent payment deleted.'));}catch(e){message(e.toString());}}
+          },itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))]),
+        )),
       ])),
       Row(children:[Expanded(child:OutlinedButton.icon(onPressed:(){Navigator.pop(s);rentScheduleForm(contract);},icon:const Icon(Icons.event_repeat),label:Text(tr('Schedule')))),const SizedBox(width:8),Expanded(child:FilledButton.icon(onPressed:(){Navigator.pop(s);rentPaymentForm(contract);},icon:const Icon(Icons.payments_outlined),label:Text(tr('Record Payment'))))]),
     ]))));
   }
 
-  Future<void> rentPaymentForm(Map<String,dynamic> contract) async {
-    DateTime due=DateTime.now(),paid=DateTime.now();
-    final dueAmount=TextEditingController(text:contract['rent']?.toString()??''),paidAmount=TextEditingController(text:'0'),method=TextEditingController(),reference=TextEditingController(),notes=TextEditingController();
+  Future<void> rentPaymentForm(Map<String,dynamic> contract,{Map<String,dynamic>? row}) async {
+    DateTime due=DateTime.tryParse(row?['due_date']?.toString()??'')??DateTime.now();
+    DateTime paid=DateTime.tryParse(row?['paid_date']?.toString()??'')??DateTime.now();
+    final dueAmount=TextEditingController(text:row?['amount_due']?.toString()??contract['rent']?.toString()??'');
+    final paidAmount=TextEditingController(text:row?['amount_paid']?.toString()??'0');
+    final method=TextEditingController(text:row?['payment_method']?.toString()??'');
+    final reference=TextEditingController(text:row?['reference']?.toString()??'');
+    final notes=TextEditingController(text:row?['notes']?.toString()??'');
     await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>StatefulBuilder(builder:(ctx,refresh)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SingleChildScrollView(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[
-      Text(tr('Record Rent Payment'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
+      Text(tr(row==null?'Record Rent Payment':'Edit Rent Payment'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
       ListTile(title:Text(tr('Due Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(due)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:due,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>due=d);}),
       field(dueAmount,'Amount Due',keyboard:TextInputType.number),const SizedBox(height:10),field(paidAmount,'Amount Paid',keyboard:TextInputType.number),const SizedBox(height:10),
       ListTile(title:Text(tr('Paid Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(paid)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:paid,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>paid=d);}),
       field(method,'Payment Method'),const SizedBox(height:10),field(reference,'Reference / Cheque Number'),const SizedBox(height:10),field(notes,'Notes',lines:2),const SizedBox(height:16),
-      FilledButton(onPressed:()async{try{await PropertiesService.saveRentPayment(contractId:contract['id'] as int,dueDate:due.toIso8601String(),amountDue:double.parse(dueAmount.text),amountPaid:double.parse(paidAmount.text),paidDate:double.parse(paidAmount.text)>0?paid.toIso8601String():'',paymentMethod:method.text,reference:reference.text,notes:notes.text);if(s.mounted)Navigator.pop(s);message(tr('Rent payment saved.'));}catch(e){message(e.toString());}},child:Text(tr('Save Payment'))),
+      FilledButton(onPressed:()async{try{await PropertiesService.saveRentPayment(id:row?['id'] as int?,contractId:contract['id'] as int,scheduleId:row?['schedule_id'] as int?,dueDate:due.toIso8601String(),amountDue:double.parse(dueAmount.text),amountPaid:double.parse(paidAmount.text),paidDate:double.parse(paidAmount.text)>0?paid.toIso8601String():'',paymentMethod:method.text,reference:reference.text,notes:notes.text);if(s.mounted)Navigator.pop(s);await load();message(tr(row==null?'Rent payment saved.':'Rent payment updated.'));}catch(e){message(e.toString());}},child:Text(tr(row==null?'Save Payment':'Update Payment'))),
     ])))));
     for(final c in [dueAmount,paidAmount,method,reference,notes]){c.dispose();}
   }

@@ -35,7 +35,13 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     final parsed=DateTime.tryParse(raw);
     if(parsed==null)return null;
     final date=DateTime(parsed.year,parsed.month,parsed.day).subtract(Duration(days:daysBefore));
-    return DateTime(date.year,date.month,date.day,9);
+    final scheduled=DateTime(date.year,date.month,date.day,9);
+    final now=DateTime.now();
+    if(!scheduled.isAfter(now) &&
+        date.year==now.year && date.month==now.month && date.day==now.day) {
+      return now.add(const Duration(minutes:2));
+    }
+    return scheduled;
   }
 
   Future<void> _syncPropertyReminders({

@@ -595,6 +595,8 @@ class PropertiesService {
       paymentArgs.add(toDate.substring(0, 10));
       maintenanceArgs.add(toDate.substring(0, 10));
     }
+    final today = DateTime.now();
+    final todayKey = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     return db.rawQuery('''
       SELECT p.*,
         (SELECT COALESCE(SUM(rp.amount_paid), 0)
@@ -605,10 +607,12 @@ class PropertiesService {
          FROM properties_maintenance m
          WHERE m.property_id = p.id AND ${maintenanceFilter.join(' AND ')}) AS maintenance_expense,
         (SELECT COUNT(*) FROM properties_contracts c
-         WHERE c.property_id = p.id AND c.status = 'Active') AS active_contract_count
+         WHERE c.property_id = p.id AND c.status = 'Active'
+           AND substr(c.start_date, 1, 10) <= ?
+           AND (c.end_date = '' OR substr(c.end_date, 1, 10) >= ?)) AS active_contract_count
       FROM properties p
       ORDER BY p.name COLLATE NOCASE
-    ''', [...paymentArgs, ...maintenanceArgs]);
+    ''', [...paymentArgs, ...maintenanceArgs, todayKey, todayKey]);
   }
 
   static Future<void> deleteContract(int id) async {

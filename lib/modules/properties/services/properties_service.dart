@@ -324,6 +324,27 @@ class PropertiesService {
     required String notes,
   }) async {
     if (!amount.isFinite || amount <= 0) throw ArgumentError('Rent amount must be greater than zero.');
+    const supportedFrequencies = {'Weekly', 'Monthly', 'Quarterly', 'Yearly', 'One-time'};
+    if (!supportedFrequencies.contains(frequency)) {
+      throw ArgumentError('Select a valid rent frequency.');
+    }
+    final parsedStart = DateTime.tryParse(startDate);
+    final parsedNext = DateTime.tryParse(nextDueDate);
+    final parsedEnd = endDate.trim().isEmpty ? null : DateTime.tryParse(endDate);
+    if (parsedStart == null || parsedNext == null ||
+        (endDate.trim().isNotEmpty && parsedEnd == null)) {
+      throw ArgumentError('Enter valid rent schedule dates.');
+    }
+    DateTime dateOnly(DateTime value) => DateTime(value.year, value.month, value.day);
+    final start = dateOnly(parsedStart);
+    final next = dateOnly(parsedNext);
+    final end = parsedEnd == null ? null : dateOnly(parsedEnd);
+    if (end != null && end.isBefore(start)) {
+      throw ArgumentError('Schedule end date cannot be before its start date.');
+    }
+    if (next.isBefore(start) || (end != null && next.isAfter(end))) {
+      throw ArgumentError('Next due date must be within the schedule date range.');
+    }
     final db = DatabaseManager.instance.database;
     final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
     if (contract.isEmpty) throw StateError('Select a valid contract.');

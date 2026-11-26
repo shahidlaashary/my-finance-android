@@ -8,6 +8,25 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 /// Committee funds are maintained in a private ledger. Personal wallets are
 /// touched only when the user explicitly chooses one for an installment/payout.
 class CommitteeService {
+  /// Converts committee entry wallet snapshots for a wallet currency change.
+  static Future<void> convertWalletAmounts(
+    Transaction txn,
+    int walletId,
+    double factor,
+    String currency,
+  ) async {
+    final table = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'committee_entries'",
+    );
+    if (table.isEmpty) return;
+    await txn.rawUpdate('''
+      UPDATE committee_entries
+      SET wallet_amount = wallet_amount * ?,
+          wallet_currency = ?
+      WHERE wallet_id = ?
+    ''', [factor, currency, walletId]);
+  }
+
   static Future<void> _ensureSchema() async {
     final db = DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS committees (

@@ -19,6 +19,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   bool _loading = true;
   bool _saving = false;
   String _selected = 'PKR';
+  String _referenceCurrency = 'PKR';
   // Live PKR-based rate provider ki taraf se supported international currencies.
   static const List<String> _available = CurrencyCatalog.supported;
   Map<String, double> _rates = {};
@@ -41,7 +42,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
 
       // Missing ya 24 ghantay se puranay rates ko online refresh karein.
       final now = DateTime.now();
-      final needsRefresh = _available.where((code) => code != 'PKR').any((code) {
+      final needsRefresh = _available.where((code) => code != selected).any((code) {
         final row = rows.where(
           (item) => item['currency'].toString().toUpperCase() == code,
         );
@@ -63,6 +64,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
       if (!mounted) return;
       setState(() {
         _selected = selected;
+        _referenceCurrency = selected;
         _rates = rates;
         if (!_available.contains(_selected) ||
             (_selected != 'PKR' && !_rates.containsKey(_selected))) {
@@ -232,7 +234,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                         final code = filtered[index];
                         final selected = code == _selected;
                         final rate = _rates[code];
-                        final enabled = code == 'PKR' || rate != null;
+                        final enabled = code == _referenceCurrency || rate != null;
                         return Material(
                           color: selected
                               ? theme.colorScheme.primaryContainer.withOpacity(0.65)
@@ -259,8 +261,8 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                                           color: theme.colorScheme.onSurfaceVariant)),
                                     ],
                                   )),
-                                  if (code != 'PKR' && rate != null)
-                                    Text('PKR ${NumberFormat('#,##0.0000').format(rate)}',
+                                  if (code != _referenceCurrency && rate != null)
+                                    Text('$_referenceCurrency ${NumberFormat('#,##0.0000').format(rate)}',
                                       style: theme.textTheme.labelSmall?.copyWith(
                                         color: theme.colorScheme.onSurfaceVariant)),
                                   if (selected) ...[

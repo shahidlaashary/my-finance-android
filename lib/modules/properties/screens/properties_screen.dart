@@ -84,7 +84,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       DropdownButtonFormField<String>(value:status,decoration:InputDecoration(labelText:tr('Status'),border:const OutlineInputBorder()),items:['Draft','Active','Expired','Terminated'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>status=v);}),
       const SizedBox(height:10),field(notes,'Notes',lines:2),const SizedBox(height:16),
       FilledButton(onPressed:()async{try{await PropertiesService.saveContract(propertyId:propertyId,tenantId:tenantId,contractType:kind,startDate:start.toIso8601String(),endDate:end?.toIso8601String()??'',rent:double.tryParse(rent.text)??0,frequency:frequency,deposit:double.tryParse(deposit.text)??0,status:status,notes:notes.text);if(s.mounted)Navigator.pop(s);await load();}catch(err){message(err.toString());}},child:Text(tr('Save Contract'))),
-    ]))));
+    ])))));
     rent.dispose();deposit.dispose();notes.dispose();
   }
   Future<void> showProperty(Map<String,dynamic> row) async {

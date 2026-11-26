@@ -211,6 +211,28 @@ class FinanceDB {
     await db.execute('CREATE INDEX idx_properties_rent_payments_due ON properties_rent_payments(due_date, status)');
     await db.execute('CREATE UNIQUE INDEX idx_properties_rent_schedule_due_unique ON properties_rent_payments(schedule_id, due_date)');
 
+    await db.execute('''
+      CREATE TABLE properties_maintenance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        property_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'General',
+        priority TEXT NOT NULL DEFAULT 'Medium',
+        assigned_to TEXT NOT NULL DEFAULT '',
+        estimated_cost REAL NOT NULL DEFAULT 0,
+        actual_cost REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'Open',
+        due_date TEXT NOT NULL DEFAULT '',
+        completed_date TEXT NOT NULL DEFAULT '',
+        photo_path TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_properties_maintenance_property ON properties_maintenance(property_id)');
+    await db.execute('CREATE INDEX idx_properties_maintenance_status_due ON properties_maintenance(status, due_date)');
+
+
   }
 
   // ----------------------------------------------------------

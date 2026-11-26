@@ -1833,13 +1833,14 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                       SizedBox(height: 8),
 
                       // Currency aur amount aik hi row mein.
-                      Row(
-                        children: [
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                           Expanded(
                             flex: 1,
                             child: SizedBox(
                               key: _currencyPickerKey,
-                              height: 56,
                               child: Material(
                               color: Theme.of(context).colorScheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(14),
@@ -1893,7 +1894,8 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                               },
                             ),
                           ),
-                        ],
+                          ],
+                        ),
                       ),
 
                       SizedBox(height: 7),

@@ -346,10 +346,26 @@ class RecurringTransactionService {
     final amount = (recurring['amount'] as num).toDouble();
     final transferFee = type == 'Transfer'
         ? ((recurring['transfer_fee'] as num?)?.toDouble() ?? 0.0) : 0.0;
+    final walletId = recurring['wallet_id'] as int;
+    final toWalletId = recurring['to_wallet_id'] as int?;
+    if (type == 'Transfer') {
+      if (toWalletId == null || toWalletId == walletId) {
+        throw Exception('Invalid destination wallet.');
+      }
+      final sourceRows = await txn.query('wallets',
+        columns: ['currency'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+      final destinationRows = await txn.query('wallets',
+        columns: ['currency'], where: 'id = ?', whereArgs: [toWalletId], limit: 1);
+      if (sourceRows.isEmpty) throw Exception('Recurring transaction wallet not found.');
+      if (destinationRows.isEmpty) throw Exception('Destination wallet not found.');
+      if (destinationRows.first['currency'] != sourceRows.first['currency']) {
+        throw Exception('Transfer wallets must have the same currency.');
+      }
+    }
     final transactionId = await TransactionsService.createModuleLedgerEntry(
       txn, type: type, amount: amount,
-      walletId: recurring['wallet_id'] as int,
-      toWalletId: type == 'Transfer' ? recurring['to_wallet_id'] as int? : null,
+      walletId: walletId,
+      toWalletId: type == 'Transfer' ? toWalletId : null,
       toAmount: type == 'Transfer' ? amount : null,
       transferFee: transferFee,
       category: type == 'Transfer' ? '' : (recurring['category'] ?? '').toString(),

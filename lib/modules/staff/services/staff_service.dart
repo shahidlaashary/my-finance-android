@@ -165,6 +165,30 @@ class StaffService {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     AppRefreshController.notifyChanged();
   }
+  /// Restores an archived salary row while keeping Staff as its table owner.
+  static Future<void> restoreArchivedSalary(
+    Transaction txn,
+    Map<String, dynamic> salary,
+  ) async {
+    final staffId = (salary['staff_id'] as num?)?.toInt();
+    if (staffId == null) {
+      throw Exception('The archived salary has an invalid staff reference.');
+    }
+    final staff = await txn.query(
+      'staff',
+      columns: ['id'],
+      where: 'id = ?',
+      whereArgs: [staffId],
+      limit: 1,
+    );
+    if (staff.isEmpty) {
+      throw Exception(
+        'Restore the related staff member before restoring this salary transaction.',
+      );
+    }
+    await txn.insert('staff_salaries', salary);
+  }
+
   static Future<void> restoreArchivedStaff(
     Transaction txn, {
     required Map<String, dynamic> record,

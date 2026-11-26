@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:my_finance/core/database/database_manager.dart';
 
-/// Writes archive envelopes for the shared Recycle Bin.
-/// Domain services depend on this small persistence helper, not on the
-/// RecycleBinService UI/coordinator implementation.
+/// Shared Recycle Bin ke archive envelopes save karta hai.
+/// Domain services is choti persistence helper par depend karti hain, RecycleBinService
+/// ke UI ya coordinator implementation par nahi.
 class RecycleBinArchiveService {
   RecycleBinArchiveService._();
 

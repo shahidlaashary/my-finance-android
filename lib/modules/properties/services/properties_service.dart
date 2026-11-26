@@ -274,6 +274,90 @@ class PropertiesService {
     return id ?? result;
   }
 
+
+  static DateTime _nextRentDate(DateTime date, String frequency) {
+    switch (frequency) {
+      case 'Weekly': return date.add(const Duration(days: 7));
+      case 'Quarterly': return _addMonthsClamped(date, 3);
+      case 'Yearly': return _addMonthsClamped(date, 12);
+      case 'Monthly': return _addMonthsClamped(date, 1);
+      case 'One-time': return date;
+      default: throw ArgumentError('Unsupported rent frequency: $frequency');
+    }
+  }
+
+  static DateTime _addMonthsClamped(DateTime date, int months) {
+    final monthIndex = date.year * 12 + date.month - 1 + months;
+    final year = monthIndex ~/ 12;
+    final month = monthIndex % 12 + 1;
+    final lastDay = DateTime(year, month + 1, 0).day;
+    return DateTime(year, month, date.day > lastDay ? lastDay : date.day);
+  }
+
+  /// Idempotently creates payment entries for active schedules through the
+  /// selected horizon, then advances each schedule's next due date.
+  static Future<int> generateScheduledRentPayments({DateTime? throughDate}) async {
+    final db = DatabaseManager.instance.database;
+    final horizon = throughDate ?? DateTime.now().add(const Duration(days: 30));
+    final horizonDate = DateTime(horizon.year, horizon.month, horizon.day);
+    var created = 0;
+    await db.transaction((txn) async {
+      final schedules = await txn.query('properties_rent_schedules', where: "status = 'Active'");
+      for (final schedule in schedules) {
+        final contractId = schedule['contract_id'] as int;
+        final scheduleId = schedule['id'] as int;
+        final amount = (schedule['amount'] as num).toDouble();
+        final frequency = schedule['frequency'] as String;
+        final end = DateTime.tryParse(schedule['end_date']?.toString() ?? '');
+        final endDate = end == null ? null : DateTime(end.year, end.month, end.day);
+        final next = DateTime.tryParse(schedule['next_due_date']?.toString() ?? '');
+        if (next == null) continue;
+        var due = DateTime(next.year, next.month, next.day);
+        while (!due.isAfter(horizonDate) && (endDate == null || !due.isAfter(endDate))) {
+          final dueKey = '${due.year.toString().padLeft(4, '0')}-${due.month.toString().padLeft(2, '0')}-${due.day.toString().padLeft(2, '0')}';
+          final existing = await txn.query(
+            'properties_rent_payments',
+            columns: ['id'],
+            where: 'schedule_id = ? AND substr(due_date, 1, 10) = ?',
+            whereArgs: [scheduleId, dueKey],
+            limit: 1,
+          );
+          if (existing.isEmpty) {
+            await txn.insert('properties_rent_payments', {
+              'contract_id': contractId,
+              'schedule_id': scheduleId,
+              'due_date': dueKey,
+              'amount_due': amount,
+              'amount_paid': 0,
+              'paid_date': '',
+              'status': due.isBefore(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)) ? 'Overdue' : 'Pending',
+              'payment_method': '',
+              'reference': '',
+              'notes': '',
+              'created_at': DateTime.now().toIso8601String(),
+            });
+            created++;
+          }
+          if (frequency == 'One-time') {
+            due = DateTime(9999);
+            break;
+          }
+          final following = _nextRentDate(due, frequency);
+          if (!following.isAfter(due)) throw StateError('Rent schedule frequency did not advance its due date.');
+          due = following;
+        }
+        await txn.update(
+          'properties_rent_schedules',
+          {'next_due_date': due.toIso8601String()},
+          where: 'id = ?',
+          whereArgs: [scheduleId],
+        );
+      }
+    });
+    if (created > 0) AppRefreshController.notifyChanged();
+    return created;
+  }
+
   static Future<List<Map<String, dynamic>>> rentPayments({int? contractId, String? status}) async {
     final db = DatabaseManager.instance.database;
     final today = DateTime.now();

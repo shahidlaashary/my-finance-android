@@ -380,29 +380,58 @@ class PropertiesService {
       throw ArgumentError('Next due date must be within the schedule date range.');
     }
     final db = DatabaseManager.instance.database;
-    final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
-    if (contract.isEmpty) throw StateError('Select a valid contract.');
-    if (id != null) {
-      final existing = await db.query(
-        'properties_rent_schedules',
+    final result = await db.transaction<int>((txn) async {
+      final contract = await txn.query(
+        'properties_contracts',
         columns: ['id'],
-        where: 'id = ? AND contract_id = ?',
-        whereArgs: [id, contractId],
+        where: 'id = ?',
+        whereArgs: [contractId],
         limit: 1,
       );
-      if (existing.isEmpty) throw StateError('Rent schedule does not belong to this contract.');
-    }
-    final values = <String, Object?>{
-      'contract_id': contractId, 'amount': amount, 'frequency': frequency,
-      'start_date': startDate, 'end_date': endDate,
-      'next_due_date': nextDueDate, 'status': status, 'notes': notes.trim(),
-    };
-    final result = id == null
-        ? await db.insert('properties_rent_schedules', {...values, 'created_at': DateTime.now().toIso8601String()})
-        : await db.update('properties_rent_schedules', values, where: 'id = ?', whereArgs: [id]);
-    if (id != null && result == 0) throw StateError('Rent schedule not found.');
+      if (contract.isEmpty) throw StateError('Select a valid contract.');
+
+      if (id != null) {
+        final existing = await txn.query(
+          'properties_rent_schedules',
+          columns: ['id'],
+          where: 'id = ? AND contract_id = ?',
+          whereArgs: [id, contractId],
+          limit: 1,
+        );
+        if (existing.isEmpty) {
+          throw StateError('Rent schedule does not belong to this contract.');
+        }
+      }
+
+      final values = <String, Object?>{
+        'contract_id': contractId,
+        'amount': amount,
+        'frequency': frequency,
+        'start_date': startDate,
+        'end_date': endDate,
+        'next_due_date': nextDueDate,
+        'status': status,
+        'notes': notes.trim(),
+      };
+
+      if (id == null) {
+        return txn.insert('properties_rent_schedules', {
+          ...values,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      final updated = await txn.update(
+        'properties_rent_schedules',
+        values,
+        where: 'id = ? AND contract_id = ?',
+        whereArgs: [id, contractId],
+      );
+      if (updated == 0) throw StateError('Rent schedule not found.');
+      return id;
+    });
     AppRefreshController.notifyChanged();
-    return id ?? result;
+    return result;
   }
 
 

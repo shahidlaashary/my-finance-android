@@ -12,7 +12,7 @@ import 'package:my_finance/modules/installments/screens/installments_screen.dart
 import 'package:my_finance/modules/committee/screens/committee_screen.dart';
 import 'package:my_finance/modules/partners/screens/my_partners_screen.dart';
 import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
-import 'package:my_finance/modules/property/screens/property_screen.dart';
+import 'package:my_finance/modules/properties/screens/properties_screen.dart';
 
 /// App ke tamam additional modules aur tools tak rasai dene wala hub.
 class ModulesToolsPage extends StatelessWidget {
@@ -34,7 +34,7 @@ class ModulesToolsPage extends StatelessWidget {
         'icon': Icons.folder_special_outlined,
       },
       {
-        'title': 'Property Manager',
+        'title': 'Properties Manager',
         'subtitle': 'Manage properties, tenants, contracts and documents',
         'icon': Icons.home_work_outlined,
       },
@@ -125,8 +125,8 @@ class ModulesToolsPage extends StatelessWidget {
                       if (feature['title'] == 'Exchange Rates') {
                         return const ExchangeRatesScreen();
                       }
-                      if (feature['title'] == 'Property Manager') {
-                        return const PropertyScreen();
+                      if (feature['title'] == 'Properties Manager') {
+                        return const PropertiesScreen();
                       }
                       if (feature['title'] == 'Staff Manager') {
                         return const StaffScreen();

@@ -151,6 +151,65 @@ class FinanceDB {
     await db.execute('CREATE INDEX idx_properties_contracts_property ON properties_contracts(property_id)');
     await db.execute('CREATE INDEX idx_properties_contracts_tenant ON properties_contracts(tenant_id)');
     await db.execute('CREATE INDEX idx_properties_documents_property ON properties_documents(property_id)');
+
+    await db.execute('''
+      CREATE TABLE properties_owners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL DEFAULT '',
+        email TEXT NOT NULL DEFAULT '',
+        identity_number TEXT NOT NULL DEFAULT '',
+        address TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE properties_owner_links (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        property_id INTEGER NOT NULL,
+        owner_id INTEGER NOT NULL,
+        ownership_share REAL NOT NULL DEFAULT 100,
+        created_at TEXT NOT NULL,
+        UNIQUE(property_id, owner_id)
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE properties_rent_schedules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contract_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        frequency TEXT NOT NULL DEFAULT 'Monthly',
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL DEFAULT '',
+        next_due_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Active',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE properties_rent_payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contract_id INTEGER NOT NULL,
+        schedule_id INTEGER,
+        due_date TEXT NOT NULL,
+        amount_due REAL NOT NULL,
+        amount_paid REAL NOT NULL DEFAULT 0,
+        paid_date TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'Pending',
+        payment_method TEXT NOT NULL DEFAULT '',
+        reference TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_properties_owner_links_property ON properties_owner_links(property_id)');
+    await db.execute('CREATE INDEX idx_properties_owner_links_owner ON properties_owner_links(owner_id)');
+    await db.execute('CREATE INDEX idx_properties_rent_schedules_contract ON properties_rent_schedules(contract_id)');
+    await db.execute('CREATE INDEX idx_properties_rent_payments_contract ON properties_rent_payments(contract_id)');
+    await db.execute('CREATE INDEX idx_properties_rent_payments_due ON properties_rent_payments(due_date, status)');
+
   }
 
   // ----------------------------------------------------------

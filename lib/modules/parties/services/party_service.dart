@@ -239,13 +239,22 @@ class PartyService {
     await RecycleBinArchiveService.ensureTable();
 
     await db.transaction((txn) async {
-      final linkedLoans = await txn.query(
-        'loans',
-        columns: ['id'],
-        where: 'party_id = ?',
-        whereArgs: [partyId],
-        limit: 1,
+      // Loans are created lazily by LoansService. A party can be created
+      // and archived before the loan module has initialized its table.
+      // If the table does not exist, there cannot be linked loan rows yet.
+      final loanTable = await txn.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        ['loans'],
       );
+      final linkedLoans = loanTable.isEmpty
+          ? <Map<String, Object?>>[]
+          : await txn.query(
+              'loans',
+              columns: ['id'],
+              where: 'party_id = ?',
+              whereArgs: [partyId],
+              limit: 1,
+            );
       if (linkedLoans.isNotEmpty) {
         throw Exception(
           'This party has loan history. Delete is blocked to protect linked loans and ledger records.',

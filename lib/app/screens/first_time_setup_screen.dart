@@ -23,8 +23,10 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   final _nameController = TextEditingController();
   // Country-to-currency suggestion is evaluated only when first-time setup
   // is created. The selected value is then saved as the user's Base Currency.
-  String _currency = 'PKR';
+  String _currency = 'USD';
   bool _saving = false;
+  bool _currencyManuallySelected = false;
+  late Future<void> _currencyDetection;
 
   static const Map<String, String> _countryCurrency = {
     'PK': 'PKR',
@@ -82,43 +84,45 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   };
 
   Future<void> _loadInitialCurrency() async {
-    String? countryCode;
+    final candidates = <String?>[];
     try {
       final signals = await _deviceInfoChannel.invokeMapMethod<String, String>(
         'getCountrySignals',
       );
-      // A registered mobile network identifies the country currently being
-      // visited. This works without mobile data or internet access.
-      countryCode = signals?['networkCountry'];
-      // The time zone is a useful offline indicator of the device's current
-      // country when cellular registration is unavailable.
-      if (countryCode == null || countryCode.isEmpty) {
-        final zone = signals?['timeZone'];
-        countryCode = zone == null ? null : _timeZoneCountry[zone];
-      }
-      // SIM country is available offline and is a useful next-best signal.
-      if (countryCode == null || countryCode.isEmpty) {
-        countryCode = signals?['simCountry'];
-      }
-      // Finally use the configured device region.
-      if (countryCode == null || countryCode.isEmpty) {
-        countryCode = signals?['localeCountry'];
-      }
+
+      // Fixed first-install priority: registered network, SIM, timezone,
+      // then the device's configured region. These signals do not require
+      // mobile data or an internet connection.
+      candidates.add(signals?['networkCountry']);
+      candidates.add(signals?['simCountry']);
+
+      final zone = signals?['timeZone'];
+      candidates.add(zone == null ? null : _timeZoneCountry[zone]);
+
+      candidates.add(signals?['localeCountry']);
     } catch (_) {
-      // Keep the locale fallback below if native country signals are absent.
+      // Native signals may be unavailable on some devices; use Flutter's
+      // configured locale as the final country signal.
     }
 
-    countryCode ??= WidgetsBinding.instance.platformDispatcher.locales
-        .map((locale) => locale.countryCode)
-        .firstWhere((code) => code != null && code.isNotEmpty, orElse: () => null);
+    candidates.addAll(
+      WidgetsBinding.instance.platformDispatcher.locales
+          .map((locale) => locale.countryCode),
+    );
 
-    final detected = countryCode == null
-        ? null
-        : _countryCurrency[countryCode.toUpperCase()];
-    if (!mounted || detected == null ||
-        !CurrencyCatalog.supported.contains(detected)) {
-      return;
+    // USD is the universal fallback when no detected country has a
+    // supported currency mapping.
+    var detected = 'USD';
+    for (final candidate in candidates) {
+      if (candidate == null || candidate.isEmpty) continue;
+      final mapped = _countryCurrency[candidate.toUpperCase()];
+      if (mapped != null && CurrencyCatalog.supported.contains(mapped)) {
+        detected = mapped;
+        break;
+      }
     }
+
+    if (!mounted || _currencyManuallySelected) return;
     setState(() => _currency = detected);
   }
 
@@ -140,7 +144,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
   void initState() {
     super.initState();
     _nameController.text = 'Shahzain Khan';
-    _loadInitialCurrency();
+    _currencyDetection = _loadInitialCurrency();
   }
 
   @override
@@ -187,7 +191,17 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
     }
     setState(() => _saving = true);
     try {
-      await _refreshSelectedRate();
+      // Do not save the temporary USD fallback before device detection ends.
+      await _currencyDetection;
+
+      // Exchange rates are refreshed when internet is available, but an
+      // offline first launch must still be allowed to complete setup.
+      try {
+        await _refreshSelectedRate();
+      } catch (_) {
+        // Keep the existing/default rate; the app can refresh it later.
+      }
+
       await GeneralPreferences.instance.setYourName(name);
       await CurrencyService.setBaseCurrency(_currency);
 
@@ -301,7 +315,12 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
           );
         });
       });
-    if (picked != null && mounted) setState(() => _currency = picked);
+    if (picked != null && mounted) {
+      setState(() {
+        _currency = picked;
+        _currencyManuallySelected = true;
+      });
+    }
   }
 
   @override

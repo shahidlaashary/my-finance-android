@@ -16,6 +16,7 @@ import 'package:my_finance/modules/finance/screens/transactions_screen.dart';
 import 'package:my_finance/modules/finance/screens/wallets_screen.dart' show WalletsPage;
 import 'package:my_finance/app/screens/simple_feature_page.dart' show SimpleFeaturePage;
 
+/// Main app navigation aur tamam primary sections ke darmiyan tab switching manage karta hai.
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -24,7 +25,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Build only the Home tab at startup. Other tabs are created on first visit.
+  // Startup par sirf Home tab build karein; baqi tabs pehli dafa open hone par create hon.
   int selectedIndex = 0;
   final Set<int> _visitedPages = {0};
   late final List<Widget> _pages;
@@ -184,7 +185,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // Har navigation item ko aik jaisi width milti hai.
-  // FittedBox labels ko aik hi line mein rakhne mein madad karta hai.
+  // FittedBox labels ko aik hi line mein fit rakhne mein madad deta hai.
   Widget _navItem({
     required int index,
     required IconData icon,
@@ -260,6 +261,7 @@ class _MainScreenState extends State<MainScreen> {
 // Plus button ke options ka panel
 // ============================================================
 
+/// Plus action sheet mein app ke quick actions display karta hai.
 class PlusActionSheet extends StatefulWidget {
   const PlusActionSheet({super.key});
 
@@ -365,7 +367,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   ),
                 ),
                 Padding(
-                  // Keep the five quick-action cards aligned with the form content edges.
+                  // Paanch quick-action cards ko form ke content edges ke saath align rakhein.
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: Row(
                     children: [

@@ -63,7 +63,7 @@ class FinanceDB {
       )
     ''');
 
-    // Har currency ke aik unit ki PKR mein qeemat.
+    // Har currency ke aik unit ki selected app Base Currency mein qeemat.
     await db.execute('''
       CREATE TABLE exchange_rates (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

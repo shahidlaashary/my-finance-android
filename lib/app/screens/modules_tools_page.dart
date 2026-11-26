@@ -6,7 +6,7 @@ import 'package:my_finance/modules/space/screens/my_space_screen.dart';
 import 'package:my_finance/modules/vehicles/screens/vehicles_screen.dart';
 import 'package:my_finance/modules/finance/screens/exchange_rates_screen.dart';
 import 'package:my_finance/modules/stock/screens/stock_manager_screen.dart';
-import 'package:my_finance/modules/staff/screens/staff_screen.dart';
+import 'package:my_finance/modules/staff/screens/staff_manager_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 import 'package:my_finance/modules/installments/screens/installments_screen.dart';
 import 'package:my_finance/modules/committee/screens/committee_screen.dart';
@@ -33,7 +33,7 @@ class ModulesToolsPage extends StatelessWidget {
         'icon': Icons.folder_special_outlined,
       },
       {
-        'title': 'Staff Management',
+        'title': 'Staff Manager',
         'subtitle': 'Manage staff details and related records',
         'icon': Icons.badge_outlined,
       },
@@ -119,8 +119,8 @@ class ModulesToolsPage extends StatelessWidget {
                       if (feature['title'] == 'Exchange Rates') {
                         return const ExchangeRatesScreen();
                       }
-                      if (feature['title'] == 'Staff Management') {
-                        return const StaffScreen();
+                      if (feature['title'] == 'Staff Manager') {
+                        return const StaffManagerScreen();
                       }
                       if (feature['title'] == 'Installment Manager') {
                         return const InstallmentsScreen();

@@ -6,6 +6,7 @@ import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/committee/services/committee_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
@@ -243,71 +244,10 @@ class WalletService {
         newOpening = oldOpening * factor;
         convertedOldBalance = oldBalance * factor;
 
-        // Income aur Expense amounts convert.
-        await txn.rawUpdate('''
-          UPDATE transactions
-          SET amount = amount * ?
-          WHERE wallet_id = ?
-          AND type IN ('Income', 'Expense')
-        ''', [factor, id]);
-
-        // Transfer source amounts convert.
-        await txn.rawUpdate('''
-          UPDATE transactions
-          SET amount = amount * ?
-          WHERE wallet_id = ?
-          AND type = 'Transfer'
-        ''', [factor, id]);
-
-        // Source wallet ki currency change hone par linked transfer fees bhi convert.
-        final feeTransactions = await txn.query(
-          'transactions',
-          columns: ['id'],
-          where: "wallet_id = ? AND type = 'Transfer'",
-          whereArgs: [id],
+        // Transaction ledger currency conversion is owned by TransactionsService.
+        await TransactionsService.convertWalletCurrencyAmounts(
+          txn, id, factor,
         );
-        for (final transaction in feeTransactions) {
-          final transactionId = transaction['id'] as int;
-          final feeRows = await txn.query(
-            'app_settings',
-            columns: ['setting_value'],
-            where: 'setting_key = ?',
-            whereArgs: ['transaction_transfer_fee_$transactionId'],
-            limit: 1,
-          );
-          if (feeRows.isNotEmpty) {
-            final oldFee = double.tryParse(
-                  feeRows.first['setting_value']?.toString() ?? '',
-                ) ??
-                0;
-            await txn.update(
-              'app_settings',
-              {'setting_value': (oldFee * factor).toString()},
-              where: 'setting_key = ?',
-              whereArgs: ['transaction_transfer_fee_$transactionId'],
-            );
-          }
-        }
-
-        // Transfer destination amounts convert.
-        await txn.rawUpdate('''
-          UPDATE transactions
-          SET to_amount = COALESCE(to_amount, amount) * ?
-          WHERE to_wallet_id = ?
-          AND type = 'Transfer'
-        ''', [factor, id]);
-
-        // Transfer exchange rates dobara calculate.
-        await txn.rawUpdate('''
-          UPDATE transactions
-          SET exchange_rate =
-            CASE
-              WHEN to_amount IS NULL OR amount = 0 THEN NULL
-              ELSE to_amount / amount
-            END
-          WHERE type = 'Transfer'
-          AND (wallet_id = ? OR to_wallet_id = ?)
-        ''', [id, id]);
 
         // Committee transfer ka amount pehle hi source Transfer query mein convert ho chuka hai.
         // Is ka balance_delta bhi convert hona zaroori hai warna committee delete par
@@ -330,14 +270,7 @@ class WalletService {
           txn, id, factor,
         );
 
-        // Adjustment amounts convert.
-        await txn.rawUpdate('''
-          UPDATE transactions
-          SET amount = amount * ?,
-              balance_delta = balance_delta * ?
-          WHERE wallet_id = ?
-          AND type = 'Adjustment'
-        ''', [factor, factor, id]);
+
       }
 
       // Current balance ki manual change calculate karna.

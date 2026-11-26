@@ -8,9 +8,9 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 class AssetsService {
-  /// Checks whether a wallet is referenced by an asset purchase or sale.
-  /// AssetsService owns the asset-table lookup.
-  /// Validates a linked loan reference without exposing the Asset table.
+  /// Check karta hai ke wallet kisi asset ki purchase ya sale mein linked hai ya nahi.
+  /// Asset table ki lookup AssetsService khud manage karta hai.
+  /// Asset table expose kiye baghair linked loan reference validate karta hai.
   static Future<bool> hasLinkedLoanReference(
     Transaction txn, {
     required int assetId,
@@ -102,7 +102,7 @@ class AssetsService {
   }
   Future<void> _ensureTables(Database db) async {
     await _createTables(db);
-    // Assets create linked loans; ensure LoansService owns and initializes that schema.
+    // Asset ke linked loans LoansService manage karta hai; uska schema bhi wahi initialize kare.
     await LoansService.ensureTables(db);
     await db.execute('CREATE INDEX IF NOT EXISTS idx_assets_linked_loan ON assets(linked_loan_id, sale_linked_loan_id)');
   }
@@ -181,8 +181,8 @@ class AssetsService {
     }
   }
   /// Asset, linked loan aur tamam attachments ko all-or-nothing save karta hai.
-  /// Files pehle temporary location mein prepare hoti hain; phir finance rows aur
-  /// attachment metadata ek hi SQLite transaction mein commit hotay hain.
+  /// Files pehle temporary location mein tayyar hoti hain; phir finance records aur
+  /// attachment metadata aik hi SQLite transaction mein commit hote hain.
   Future<int> addAssetWithAttachments(
     AssetsModel asset,
     List<Map<String, String>> attachmentSources,
@@ -457,8 +457,8 @@ class AssetsService {
     await _ensureTables(db);
 
     await db.transaction((txn) async {
-      // Read the current record inside the transaction so an intervening
-      // sale or deletion cannot leave this update working from stale data.
+      // Current record transaction ke andar dobara read karte hain taake darmiyan mein
+      // sale ya deletion hone par update purane data par apply na ho.
       final rows = await txn.query(
         'assets',
         where: 'id = ?',
@@ -622,7 +622,7 @@ class AssetsService {
         );
       }
 
-      // Reverse the old purchase first, then debit the selected wallet.
+      // Pehle purani purchase ka wallet effect reverse karein, phir selected wallet debit karein.
       await _changeBalance(
         txn,
         walletId: oldAsset.walletId,
@@ -688,8 +688,8 @@ class AssetsService {
         throw Exception('Purchase and sale cannot reference the same linked loan.');
       }
 
-      // Net all wallet effects first. This avoids temporary balance changes
-      // depending on whether the purchase or sale loan is processed first.
+      // Pehle tamam wallet effects ka net result calculate karein. Is se purchase ya
+      // sale loan process hone ki order ki wajah se temporary balance change nahi hota.
       final walletDeltas = <int, double>{};
       Future<void> validateWalletCurrency(int walletId, String expectedCurrency) async {
         final walletRows = await txn.query(
@@ -863,9 +863,9 @@ class AssetsService {
             .toIso8601String(),
       });
 
-      // Reversing a sale or repayment must never push a wallet below
-      // zero when its proceeds have already been spent. Validate every net
-      // wallet effect before applying any of them.
+      // Sale ya repayment reverse karte waqt wallet zero se neeche nahi jana chahiye
+      // agar uski received raqam pehle hi spend ho chuki ho. Apply karne se pehle
+      // har wallet ka net effect validate karein.
       for (final entry in walletDeltas.entries) {
         final walletRows = await txn.query(
           'wallets',
@@ -972,7 +972,7 @@ class AssetsService {
       (double total, double value) => total + value,
     );
   }
-  /// Restores an asset and its linked loan/repayment ledger atomically.
+  /// Asset aur uske linked loans/repayments ko aik hi transaction mein restore karta hai.
   static Future<void> restoreArchivedAsset(
     Transaction txn, {
     required Map<String, dynamic> record,
@@ -1056,9 +1056,9 @@ class AssetsService {
           );
           addWalletDelta(saleWalletId, saleWalletAmount);
         }
-        // Restore the linked purchase/sale loans and their repayment history
-        // from the asset's grouped snapshot. Their base wallet effect is not
-        // replayed because asset-linked loans never move a wallet on creation.
+        // Asset ke grouped snapshot se linked purchase/sale loans aur repayment history
+        // restore karein. Inka base wallet effect dobara apply nahi hota kyun ke
+        // asset-linked loan create hone par wallet balance move nahi karta.
         final linkedRaw = relatedPayload;
         final linkedSnapshots = linkedRaw == null || linkedRaw.isEmpty
             ? <Map<String, dynamic>>[]
@@ -1186,9 +1186,9 @@ class AssetsService {
             !restoredLoanIds.containsAll(expectedLoanIds)) {
           throw Exception('The Asset archive is missing one or more linked loan records.');
         }
-        // Apply the complete restore as one net wallet movement per wallet.
-        // A sale receipt or repayment may fund the purchase reversal, so
-        // validating each effect in isolation can reject a valid restore.
+        // Puri restore ka net wallet movement har wallet par aik martaba apply karein.
+        // Sale receipt ya repayment purchase reversal ko cover kar sakti hai; is liye
+        // har effect ko alag validate karne se valid restore ghalti se reject ho sakti hai.
         for (final entry in walletDeltas.entries) {
           final wallets = await txn.query(
             'wallets',

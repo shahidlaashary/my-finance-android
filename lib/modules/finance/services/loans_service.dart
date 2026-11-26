@@ -6,6 +6,7 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
+import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
@@ -1053,25 +1054,16 @@ class LoansService {
         }
         if (linkedSource != null) {
           final sourceAssetId = (record['source_id'] as num?)?.toInt();
-          final sourceAsset = sourceAssetId == null
-              ? <Map<String, Object?>>[]
-              : await txn.query(
-                  'assets',
-                  columns: ['id', 'linked_loan_id', 'sale_linked_loan_id'],
-                  where: 'id = ?',
-                  whereArgs: [sourceAssetId],
-                  limit: 1,
-                );
-          if (sourceAsset.isEmpty) {
-            throw Exception('Restore the related Asset first. Its linked loan belongs to that Asset.');
-          }
           final expectedLoanId = (record['id'] as num).toInt();
-          final linkedId = (sourceAsset.first[
-              linkedSource == 'asset_purchase'
-                  ? 'linked_loan_id'
-                  : 'sale_linked_loan_id'] as num?)?.toInt();
-          if (linkedId != expectedLoanId) {
-            throw Exception('This loan is not the linked loan recorded by the related Asset.');
+          final isLinkedToAsset = sourceAssetId != null &&
+              await AssetsService.hasLinkedLoanReference(
+                txn,
+                assetId: sourceAssetId,
+                loanId: expectedLoanId,
+                sourceType: linkedSource,
+              );
+          if (!isLinkedToAsset) {
+            throw Exception('Restore the related Asset first. Its linked loan belongs to that Asset.');
           }
         }
         await txn.execute('''CREATE TABLE IF NOT EXISTS loans (

@@ -96,6 +96,25 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     amount.dispose();notes.dispose();
   }
 
+
+  Future<void> rentRecordsSheet(Map<String,dynamic> contract) async {
+    final schedules=await PropertiesService.rentSchedules(contractId:contract['id'] as int);
+    final payments=await PropertiesService.rentPayments(contractId:contract['id'] as int);
+    if(!mounted)return;
+    await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>SizedBox(height:MediaQuery.sizeOf(s).height*.78,child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Text(tr('Rent Records'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
+      Text('${contract['property_name']} • ${contract['tenant_name']}'),
+      const SizedBox(height:12),
+      Expanded(child:ListView(children:[
+        Text(tr('Schedules'),style:const TextStyle(fontWeight:FontWeight.bold)),
+        if(schedules.isEmpty)Text(tr('No rent schedules yet.')) else ...schedules.map((r)=>ListTile(leading:const Icon(Icons.event_repeat),title:Text('${r['amount']} • ${r['frequency']}'),subtitle:Text('${r['status']} • Next due: ${r['next_due_date']}'))),
+        const Divider(),Text(tr('Payments'),style:const TextStyle(fontWeight:FontWeight.bold)),
+        if(payments.isEmpty)Text(tr('No rent payments recorded.')) else ...payments.map((r)=>ListTile(leading:Icon(r['status']=='Paid'?Icons.check_circle_outline:r['status']=='Overdue'?Icons.warning_amber:Icons.schedule),title:Text('${r['amount_paid']} / ${r['amount_due']}'),subtitle:Text('${r['status']} • Due: ${r['due_date']}'))),
+      ])),
+      Row(children:[Expanded(child:OutlinedButton.icon(onPressed:(){Navigator.pop(s);rentScheduleForm(contract);},icon:const Icon(Icons.event_repeat),label:Text(tr('Schedule')))),const SizedBox(width:8),Expanded(child:FilledButton.icon(onPressed:(){Navigator.pop(s);rentPaymentForm(contract);},icon:const Icon(Icons.payments_outlined),label:Text(tr('Record Payment'))))]),
+    ]))));
+  }
+
   Future<void> rentPaymentForm(Map<String,dynamic> contract) async {
     DateTime due=DateTime.now(),paid=DateTime.now();
     final dueAmount=TextEditingController(text:contract['rent']?.toString()??''),paidAmount=TextEditingController(text:'0'),method=TextEditingController(),reference=TextEditingController(),notes=TextEditingController();
@@ -167,7 +186,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       if(kind=='Properties')return propertyTile(r);
       if(kind=='Tenants')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.person_outline)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>tenantForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){try{await PropertiesService.deleteTenant(r['id'] as int);await load();}catch(e){message(e.toString());}}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
       if(kind=='Owners')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.badge_outlined)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>ownerForm(row:r),trailing:IconButton(icon:const Icon(Icons.edit_outlined),onPressed:()=>ownerForm(row:r))));
-      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='schedule'){rentScheduleForm(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'schedule',child:Text(tr('Create Rent Schedule'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
+      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='schedule'){rentScheduleForm(r);}if(v=='records'){rentRecordsSheet(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'schedule',child:Text(tr('Create Rent Schedule'))),PopupMenuItem(value:'records',child:Text(tr('View Rent Records'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }
   Widget overview()=>RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[

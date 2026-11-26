@@ -4,8 +4,9 @@ import 'package:my_finance/modules/finance/models/recurring_transaction_model.da
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
+/// Recurring income, expense aur transfer schedules process aur manage karta hai.
 class RecurringTransactionService {
-  /// Checks wallet references without forcing lazy table creation.
+  /// Lazy table creation force kiye baghair wallet references check karta hai.
   static Future<bool> hasWalletReferences(
     Transaction txn,
     int walletId,
@@ -24,8 +25,8 @@ class RecurringTransactionService {
     return rows.isNotEmpty;
   }
 
-  /// Converts income/expense schedules after a wallet currency change.
-  /// Linked transfers block currency changes to preserve same-currency rules.
+  /// Wallet currency change hone par income aur expense schedules convert karta hai.
+  /// Same-currency transfer rule ko barqarar rakhne ke liye linked transfers currency change rok dete hain.
   static Future<void> convertWalletAmounts(
     Transaction txn,
     int walletId,
@@ -317,7 +318,7 @@ class RecurringTransactionService {
     if (count > 0) AppRefreshController.notifyChanged();
     return count;
   }
-  /// Rollback helper used only when a newly created schedule fails attachment persistence.
+  /// Naya schedule save hone ke baad attachment persistence fail ho to sirf rollback ke liye use hota hai.
   Future<int> rollbackNewRecurringTransaction(int id) async {
     final db = await _database;
     final count = await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
@@ -454,9 +455,9 @@ class RecurringTransactionService {
         final message = '$title: $error';
         lastProcessingErrors.add(message);
 
-        // Ek schedule fail ho to doosre schedules rollback na hon.
-        // Failed schedule pause hota hai taake har app launch par duplicate
-        // retries/continuous errors na hon; user usay edit karke resume kar sakta hai.
+        // Aik schedule fail ho to baqi schedules ke changes rollback nahi hone chahiye.
+        // Failed schedule pause kar dete hain taake har app launch par duplicate
+        // retries ya lagatar errors na hon; user edit karke dobara resume kar sakta hai.
         await db.update(
           _tableName,
           {'is_active': 0},

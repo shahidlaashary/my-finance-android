@@ -3,6 +3,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/stock/services/stock_service.dart';
 
+/// Stock items, quantities aur low-stock status manage karne ki screen.
 class StockManagerScreen extends StatefulWidget {
   const StockManagerScreen({super.key});
   @override State<StockManagerScreen> createState()=>_StockManagerScreenState();
@@ -12,6 +13,7 @@ class _StockManagerScreenState extends State<StockManagerScreen>{
   @override void initState(){super.initState();AppRefreshController.revision.addListener(_onAppDataChanged);_load();}
   void _onAppDataChanged(){if(mounted)_load();}
   @override void dispose(){AppRefreshController.revision.removeListener(_onAppDataChanged);super.dispose();}
+  /// Stock service se items aur current stock quantities load karta hai.
   Future<void> _load() async {try{final v=await StockService.getItems();if(mounted)setState(()=>_items=v);}catch(e){_msg('Unable to load stock: $e');}finally{if(mounted)setState(()=>_loading=false);}}
   void _msg(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _qty(double n)=>n==n.roundToDouble()?n.toStringAsFixed(0):n.toStringAsFixed(2);

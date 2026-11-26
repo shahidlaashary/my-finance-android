@@ -6,6 +6,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
+/// Staff members, attendance, salary aur staff records manage karne ki screen.
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
   @override
@@ -25,6 +26,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
   void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); _tabs.dispose(); super.dispose(); }
 
   String tr(String value) => appText(context, value, value);
+  /// Staff service se employees aur un ki summary load karta hai.
   Future<void> _load() async {
     setState(() => _loading = true);
     try {

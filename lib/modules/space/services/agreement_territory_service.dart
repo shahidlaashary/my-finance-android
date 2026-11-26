@@ -1,6 +1,5 @@
-/// Built-in agreement territory catalogue. Region membership is used only
-/// for selection; PDFs store and print the selected display names, never the
-/// expanded country membership.
+/// Agreements ke liye built-in territory catalogue. Region membership sirf
+/// selection ke liye hai; PDF mein selected display names print hote hain.
 class AgreementTerritoryService {
   AgreementTerritoryService._();
 

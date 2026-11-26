@@ -3,6 +3,7 @@ import 'package:my_finance/modules/space/services/my_space_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
+/// My Space document ka metadata, dates, reminder aur favorite status represent karta hai.
 class SpaceDocumentModel {
   final int? id;
   final String title;
@@ -77,6 +78,7 @@ class SpaceDocumentModel {
 
 /// Document metadata is stored in the My Space database (space.db).
 /// The module shares MySpaceService's connection and backup/restore lifecycle.
+/// My Space documents ka metadata aur document-related operations manage karta hai.
 class SpaceDocumentsService {
   SpaceDocumentsService._();
   static final SpaceDocumentsService instance = SpaceDocumentsService._();

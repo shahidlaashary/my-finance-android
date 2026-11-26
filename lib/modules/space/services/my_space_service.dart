@@ -5,8 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
-/// Independent local data store for My Space.
-/// Finance database and finance records are never opened or modified here.
+/// My Space ka independent local data store.
+/// Finance database aur finance records yahan kabhi open ya modify nahi hote.
 class MySpaceService {
   MySpaceService._();
   static final MySpaceService instance = MySpaceService._();

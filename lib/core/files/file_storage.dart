@@ -1,7 +1,8 @@
-/// Shared file operations used by app-wide services.
+/// App-wide services ke liye common file operations ka contract.
 ///
-/// Keep native filesystem objects and operations inside the implementation.
-/// Callers may compose child paths, but must not use dart:io directly.
+/// Native filesystem objects aur operations implementation ke andar rakhein.
+/// Callers child paths bana sakte hain, lekin dart:io ko seedha use na karein.
+/// File storage ke liye platform-independent operations define karta hai.
 abstract interface class FileStorage {
   Future<String> getApplicationDocumentsPath();
 

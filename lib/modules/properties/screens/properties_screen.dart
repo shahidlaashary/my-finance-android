@@ -55,7 +55,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
         ...newDocs.asMap().entries.map((entry)=>ListTile(dense:true,title:Text(entry.value.name),trailing:IconButton(icon:const Icon(Icons.close),onPressed:()=>refresh(()=>newDocs.removeAt(entry.key))))),
       ],
       const SizedBox(height:18),FilledButton(onPressed:()async{if(!key.currentState!.validate())return;try{final id=await PropertiesService.saveProperty(id:row?['id'] as int?,name:name.text,type:type,address:address.text,ownership:ownership,area:area.text,purchasePrice:double.tryParse(price.text)??0,purchaseDate:date?.toIso8601String()??'',currentValue:double.tryParse(value.text)??0,status:status,notes:notes.text);if(row==null){for(final file in newDocs){final path=await FileStorageService.storePickedFile(file,directory:'properties/documents');if(path!=null)await PropertiesService.addDocument(propertyId:id,title:p.basenameWithoutExtension(file.name),fileName:file.name,filePath:path,mimeType:file.extension??'');}}if(sheet.mounted)Navigator.pop(sheet);await load();}catch(e){message(e.toString());}},child:Text(row==null?tr('Save Property'):tr('Update Property'))),
-    ])))));
+    ]))))));
     for(final c in [name,address,area,price,value,notes]){c.dispose();}
   }
   Future<void> tenantForm({Map<String,dynamic>? row}) async {

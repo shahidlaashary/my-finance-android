@@ -495,6 +495,15 @@ class PropertiesService {
     if (!amountDue.isFinite || amountDue <= 0 || !amountPaid.isFinite || amountPaid < 0 || amountPaid > amountDue) {
       throw ArgumentError('Enter a valid rent due and paid amount.');
     }
+    final parsedDue = DateTime.tryParse(dueDate);
+    if (parsedDue == null) throw ArgumentError('Enter a valid rent due date.');
+    final parsedPaid = paidDate.trim().isEmpty ? null : DateTime.tryParse(paidDate);
+    if (amountPaid > 0 && parsedPaid == null) {
+      throw ArgumentError('Enter a valid payment date for the received amount.');
+    }
+    if (paidDate.trim().isNotEmpty && parsedPaid == null) {
+      throw ArgumentError('Enter a valid payment date.');
+    }
     final db = DatabaseManager.instance.database;
     final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
     if (contract.isEmpty) throw StateError('Select a valid contract.');
@@ -502,7 +511,10 @@ class PropertiesService {
       final schedule = await db.query('properties_rent_schedules', columns: ['id'], where: 'id = ? AND contract_id = ?', whereArgs: [scheduleId, contractId], limit: 1);
       if (schedule.isEmpty) throw StateError('Rent schedule does not belong to this contract.');
     }
-    final parsedDue = DateTime.tryParse(dueDate);
+    if (id != null) {
+      final existing = await db.query('properties_rent_payments', columns: ['id'], where: 'id = ? AND contract_id = ?', whereArgs: [id, contractId], limit: 1);
+      if (existing.isEmpty) throw StateError('Rent payment does not belong to this contract.');
+    }
     final today = DateTime.now();
     final isPastDue = parsedDue != null && DateTime(parsedDue.year, parsedDue.month, parsedDue.day).isBefore(DateTime(today.year, today.month, today.day));
     final status = amountPaid >= amountDue ? 'Paid' : isPastDue ? 'Overdue' : amountPaid > 0 ? 'Partial' : 'Pending';

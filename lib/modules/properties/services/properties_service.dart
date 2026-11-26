@@ -657,9 +657,10 @@ class PropertiesService {
         limit: 1,
       );
       if (schedule.isNotEmpty || payment.isNotEmpty) {
-        throw StateError('Delete this contract\\'s rent schedules and payments before deleting the contract.');
+        throw StateError('Delete this contract\'s rent schedules and payments before deleting the contract.');
       }
       await txn.delete('properties_contracts', where: 'id = ?', whereArgs: [id]);
     });
     AppRefreshController.notifyChanged();
-  }}
+  }
+}

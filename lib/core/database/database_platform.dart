@@ -5,11 +5,11 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/platform/platform_info.dart';
 
-/// Selects the SQLite implementation before the app opens its database.
+/// Database open hone se pehle munasib SQLite implementation select karta hai.
 ///
-/// Android and iOS continue to use the native sqflite implementation.
-/// Windows, macOS and Linux use the FFI implementation and store the
-/// database under the app's writable Application Support directory.
+/// Android aur iOS native sqflite istemal karte hain. Windows, macOS aur Linux
+/// FFI istemal karte hain aur database writable Application Support folder mein rakhte hain.
+/// Desktop par SQLite FFI initialize karta hai; mobile par native setup barqarar rakhta hai.
 Future<void> initializeDatabasePlatform() async {
   if (PlatformInfo.current.isDesktop) {
     sqfliteFfiInit();

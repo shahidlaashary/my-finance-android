@@ -1,4 +1,5 @@
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:my_finance/core/services/app_refresh_service.dart';
@@ -107,36 +108,14 @@ class StaffService {
     if (wallets.isEmpty) throw Exception('Select an available wallet.');
     final name = staff.first['name'].toString();
     final id = await db.transaction((txn) async {
-      final walletRows = await txn.query(
-        'wallets',
-        columns: ['balance'],
-        where: 'id = ?',
-        whereArgs: [walletId],
-        limit: 1,
+      final transactionId = await TransactionsService.createExpenseLedgerEntry(
+        txn,
+        amount: amount,
+        walletId: walletId,
+        category: 'Staff Salary',
+        note: 'Salary • $name${note.trim().isEmpty ? '' : ' • ${note.trim()}'}',
+        date: date.toIso8601String(),
       );
-      if (walletRows.isEmpty) throw Exception('Select an available wallet.');
-      final balance = (walletRows.first['balance'] as num).toDouble();
-      if (balance < amount) throw Exception('Insufficient wallet balance.');
-
-      await txn.update(
-        'wallets',
-        {'balance': balance - amount},
-        where: 'id = ?',
-        whereArgs: [walletId],
-      );
-      final transactionId = await txn.insert('transactions', {
-        'type': 'Expense',
-        'amount': amount,
-        'wallet_id': walletId,
-        'to_wallet_id': null,
-        'to_amount': null,
-        'exchange_rate': null,
-        'balance_delta': null,
-        'category': 'Staff Salary',
-        'note': 'Salary • $name${note.trim().isEmpty ? '' : ' • ${note.trim()}'}',
-        'date': date.toIso8601String(),
-        'created_at': DateTime.now().toIso8601String(),
-      });
       return txn.insert('staff_salaries', {
         'staff_id': staffId,
         'amount': amount,

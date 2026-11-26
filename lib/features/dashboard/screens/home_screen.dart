@@ -84,11 +84,14 @@ class _HomePageState extends State<HomePage> {
       final format = await GeneralPreferences.instance.numberFormat;
       final selectedBaseCurrency = await CurrencyService.getBaseCurrency();
       final baseRate = await CurrencyService.getExchangeRate(selectedBaseCurrency) ?? 1.0;
+      final useManualRates = !await CurrencyService.isOnline();
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
       final totals = await DashboardDataService.getMonthlyIncomeExpense(
         baseRate: baseRate,
+        baseCurrency: selectedBaseCurrency,
+        useManualRates: useManualRates,
         monthStart: monthStart,
         nextMonth: nextMonth,
       );

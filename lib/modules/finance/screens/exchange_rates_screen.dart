@@ -547,7 +547,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   Text(currency, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
                                   const SizedBox(height: 2),
-                                  Text(_rateFor(currency) == null ? 'Not available' : _numberFormat.format(_rateFor(currency)) + ' $_baseCurrency',
+                                  Text(_rateFor(currency) == null ? 'Not available' : _numberFormat.format(_rateFor(currency)!) + ' $_baseCurrency',
                                     maxLines: 2, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
                                   if (_rateFor(currency) != null)
                                     Text(_dateLabel(_rates.firstWhere((r) => r['currency'].toString().toUpperCase() == currency)['updated_at']),

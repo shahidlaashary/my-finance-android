@@ -275,11 +275,25 @@ class PropertiesService {
   }
 
   static Future<List<Map<String, dynamic>>> rentPayments({int? contractId, String? status}) async {
+    final db = DatabaseManager.instance.database;
+    final today = DateTime.now();
+    final todayKey = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    await db.rawUpdate('''
+      UPDATE properties_rent_payments
+      SET status = CASE WHEN amount_paid > 0 THEN 'Partial' ELSE 'Pending' END
+      WHERE status = 'Overdue' AND substr(due_date, 1, 10) >= ?
+    ''', [todayKey]);
+    await db.rawUpdate('''
+      UPDATE properties_rent_payments SET status = 'Overdue'
+      WHERE status IN ('Pending', 'Partial')
+        AND amount_paid < amount_due
+        AND substr(due_date, 1, 10) < ?
+    ''', [todayKey]);
     final clauses = <String>[];
     final args = <Object?>[];
     if (contractId != null) { clauses.add('contract_id = ?'); args.add(contractId); }
     if (status != null) { clauses.add('status = ?'); args.add(status); }
-    return DatabaseManager.instance.database.query(
+    return db.query(
       'properties_rent_payments',
       where: clauses.isEmpty ? null : clauses.join(' AND '),
       whereArgs: args.isEmpty ? null : args,
@@ -309,7 +323,10 @@ class PropertiesService {
       final schedule = await db.query('properties_rent_schedules', columns: ['id'], where: 'id = ? AND contract_id = ?', whereArgs: [scheduleId, contractId], limit: 1);
       if (schedule.isEmpty) throw StateError('Rent schedule does not belong to this contract.');
     }
-    final status = amountPaid >= amountDue ? 'Paid' : amountPaid > 0 ? 'Partial' : (DateTime.tryParse(dueDate)?.isBefore(DateTime.now()) ?? false) ? 'Overdue' : 'Pending';
+    final parsedDue = DateTime.tryParse(dueDate);
+    final today = DateTime.now();
+    final isPastDue = parsedDue != null && DateTime(parsedDue.year, parsedDue.month, parsedDue.day).isBefore(DateTime(today.year, today.month, today.day));
+    final status = amountPaid >= amountDue ? 'Paid' : isPastDue ? 'Overdue' : amountPaid > 0 ? 'Partial' : 'Pending';
     final values = <String, Object?>{
       'contract_id': contractId, 'schedule_id': scheduleId,
       'due_date': dueDate, 'amount_due': amountDue,
@@ -331,7 +348,13 @@ class PropertiesService {
   }
 
   static Future<void> deleteContract(int id) async {
-    await DatabaseManager.instance.database.delete('properties_contracts', where: 'id = ?', whereArgs: [id]);
+    final db = DatabaseManager.instance.database;
+    final schedule = await db.query('properties_rent_schedules', columns: ['id'], where: 'contract_id = ?', whereArgs: [id], limit: 1);
+    final payment = await db.query('properties_rent_payments', columns: ['id'], where: 'contract_id = ?', whereArgs: [id], limit: 1);
+    if (schedule.isNotEmpty || payment.isNotEmpty) {
+      throw StateError('Delete this contract\'s rent schedules and payments before deleting the contract.');
+    }
+    await db.delete('properties_contracts', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }
 }

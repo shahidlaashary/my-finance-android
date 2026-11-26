@@ -5,6 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
+import 'package:my_finance/modules/committee/services/committee_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
 /// Owns wallet data operations while sharing the application's single
@@ -319,45 +321,14 @@ class WalletService {
             AND balance_delta IS NOT NULL
         ''', [factor, id]);
 
-        final committeeEntriesTable = await txn.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'committee_entries'",
+        await CommitteeService.convertWalletAmounts(
+          txn, id, factor, currency,
         );
-        if (committeeEntriesTable.isNotEmpty) {
-          await txn.rawUpdate('''
-            UPDATE committee_entries
-            SET wallet_amount = wallet_amount * ?,
-                wallet_currency = ?
-            WHERE wallet_id = ?
-          ''', [factor, currency, id]);
-        }
 
-        // Recurring transfer schedules ko currency change ke baad same-currency
-        // rule todne se bachane ke liye block karein. Income/Expense schedules
-        // source wallet ki nayi currency mein convert ho jate hain.
-        final recurringTable = await txn.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+        // Recurring schedules own their currency-conversion rules.
+        await RecurringTransactionService.convertWalletAmounts(
+          txn, id, factor,
         );
-        if (recurringTable.isNotEmpty) {
-          final linkedRecurringTransfers = await txn.rawQuery('''
-            SELECT id FROM recurring_transactions
-            WHERE LOWER(type) = 'transfer'
-              AND (wallet_id = ? OR to_wallet_id = ?)
-            LIMIT 1
-          ''', [id, id]);
-          if (linkedRecurringTransfers.isNotEmpty) {
-            throw Exception(
-              'Wallet currency cannot be changed while a recurring transfer is linked. '
-              'Update or remove that schedule first.',
-            );
-          }
-          await txn.rawUpdate('''
-            UPDATE recurring_transactions
-            SET amount = amount * ?,
-                transfer_fee = transfer_fee * ?
-            WHERE wallet_id = ?
-              AND LOWER(type) IN ('income', 'expense')
-          ''', [factor, factor, id]);
-        }
 
         // Adjustment amounts convert.
         await txn.rawUpdate('''
@@ -437,23 +408,13 @@ class WalletService {
   // ----------------------------------------------------------
 
   static Future<void> deleteWallet(int id) async {
-    final recurringTable = await DatabaseManager.instance.database.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
-    );
-    if (recurringTable.isNotEmpty) {
-      final linkedRecurring = await DatabaseManager.instance.database.query(
-        'recurring_transactions',
-        columns: ['id'],
-        where: 'wallet_id = ? OR to_wallet_id = ?',
-        whereArgs: [id, id],
-        limit: 1,
+    final hasRecurringReferences = await DatabaseManager.instance.database
+        .transaction((txn) => RecurringTransactionService.hasWalletReferences(txn, id));
+    if (hasRecurringReferences) {
+      throw Exception(
+        'This wallet is linked to a recurring transaction. '
+        'Update or delete that schedule before deleting the wallet.',
       );
-      if (linkedRecurring.isNotEmpty) {
-        throw Exception(
-          'This wallet is linked to a recurring transaction. '
-          'Update or delete that schedule before deleting the wallet.',
-        );
-      }
     }
 
     final linked = await DatabaseManager.instance.database.query(

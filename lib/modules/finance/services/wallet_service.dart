@@ -249,18 +249,6 @@ class WalletService {
           txn, id, factor,
         );
 
-        // Committee transfer ka amount pehle hi source Transfer query mein convert ho chuka hai.
-        // Is ka balance_delta bhi convert hona zaroori hai warna committee delete par
-        // purana delta wallet balance ko ghalat rollback karega.
-        await txn.rawUpdate('''
-          UPDATE transactions
-          SET balance_delta = balance_delta * ?
-          WHERE wallet_id = ?
-            AND type = 'Transfer'
-            AND category = 'Committee Transfer'
-            AND balance_delta IS NOT NULL
-        ''', [factor, id]);
-
         await CommitteeService.convertWalletAmounts(
           txn, id, factor, currency,
         );

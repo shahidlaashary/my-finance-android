@@ -130,10 +130,26 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     ])))));
     rent.dispose();deposit.dispose();notes.dispose();
   }
+
+  Future<void> linkOwnerForm(Map<String,dynamic> property) async {
+    if(owners.isEmpty){message(tr('Add an owner first.'));return;}
+    int ownerId=owners.first['id'] as int;
+    final share=TextEditingController(text:'100');
+    await showDialog<void>(context:context,builder:(dialog)=>AlertDialog(
+      title:Text(tr('Link Owner')),
+      content:Column(mainAxisSize:MainAxisSize.min,children:[
+        DropdownButtonFormField<int>(value:ownerId,decoration:InputDecoration(labelText:tr('Owner')),items:owners.map((o)=>DropdownMenuItem(value:o['id'] as int,child:Text(o['name'].toString()))).toList(),onChanged:(v){if(v!=null)ownerId=v;}),
+        const SizedBox(height:10),field(share,'Ownership Share (%)',keyboard:const TextInputType.numberWithOptions(decimal:true)),
+      ]),
+      actions:[TextButton(onPressed:()=>Navigator.pop(dialog),child:Text(tr('Cancel'))),FilledButton(onPressed:()async{try{await PropertiesService.linkOwner(propertyId:property['id'] as int,ownerId:ownerId,ownershipShare:double.parse(share.text));if(dialog.mounted)Navigator.pop(dialog);await load();message(tr('Owner linked.'));}catch(e){message(e.toString());}},child:Text(tr('Link')))],
+    ));
+    share.dispose();
+  }
+
   Future<void> showProperty(Map<String,dynamic> row) async {
-    final docs=await PropertiesService.documents(row['id'] as int);if(!mounted)return;
+    final docs=await PropertiesService.documents(row['id'] as int);final linkedOwners=await PropertiesService.ownersForProperty(row['id'] as int);if(!mounted)return;
     await showModalBottomSheet<void>(context:context,useSafeArea:true,builder:(s)=>Padding(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
-      Text(row['name'].toString(),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),Text('${row['type']} • ${row['ownership']}'),Text(row['address']?.toString()??''),Text('${tr('Current Value')}: ${row['current_value']}'),const Divider(),Text(tr('Documents'),style:const TextStyle(fontWeight:FontWeight.bold)),
+      Text(row['name'].toString(),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),Text('${row['type']} • ${row['ownership']}'),Text(row['address']?.toString()??''),Text('${tr('Current Value')}: ${row['current_value']}'),const Divider(),Text(tr('Owners'),style:const TextStyle(fontWeight:FontWeight.bold)),if(linkedOwners.isEmpty)Text(tr('No owners linked')) else ...linkedOwners.map((o)=>ListTile(dense:true,title:Text(o['name'].toString()),subtitle:Text('${o['ownership_share']}%'),trailing:IconButton(icon:const Icon(Icons.link_off),onPressed:()async{await PropertiesService.unlinkOwner(o['link_id'] as int);if(s.mounted)Navigator.pop(s);await showProperty(row);},tooltip:tr('Unlink Owner')))),TextButton.icon(onPressed:()async{Navigator.pop(s);await linkOwnerForm(row);},icon:const Icon(Icons.person_add_alt_1),label:Text(tr('Link Owner'))),const Divider(),Text(tr('Documents'),style:const TextStyle(fontWeight:FontWeight.bold)),
       if(docs.isEmpty)Text(tr('No documents attached')) else ...docs.map((d)=>ListTile(title:Text(d['title'].toString()),subtitle:Text(d['file_name'].toString()),leading:const Icon(Icons.description_outlined),onTap:()async{final opened=await FileStorageService.openFile(d['file_path'].toString());if(!opened)message(tr('Unable to open this document.'));})),
       Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:(){Navigator.pop(s);propertyForm(row:row);},icon:const Icon(Icons.edit),label:Text(tr('Edit Property')))),
     ])));
@@ -150,6 +166,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     return ListView.builder(padding:const EdgeInsets.all(12),itemCount:rows.length,itemBuilder:(ctx,i){final r=rows[i];
       if(kind=='Properties')return propertyTile(r);
       if(kind=='Tenants')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.person_outline)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>tenantForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){try{await PropertiesService.deleteTenant(r['id'] as int);await load();}catch(e){message(e.toString());}}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
+      if(kind=='Owners')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.badge_outlined)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>ownerForm(row:r),trailing:IconButton(icon:const Icon(Icons.edit_outlined),onPressed:()=>ownerForm(row:r))));
       return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='schedule'){rentScheduleForm(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'schedule',child:Text(tr('Create Rent Schedule'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }

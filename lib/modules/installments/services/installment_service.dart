@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
+/// Installment contracts, payments aur unke finance ledger records manage karta hai.
 class InstallmentService {
   static Future<Database> get _db async {
     final db = DatabaseManager.instance.database;
@@ -29,6 +30,7 @@ class InstallmentService {
     return db;
   }
 
+  /// Optional direction filter ke saath installment contracts load karta hai.
   static Future<List<Map<String, dynamic>>> getContracts({String? direction}) async {
     final db = await _db;
     return db.query('installment_contracts',
@@ -37,12 +39,14 @@ class InstallmentService {
       orderBy: 'created_at DESC, id DESC');
   }
 
+  /// Contract ki payment history newest-first return karta hai.
   static Future<List<Map<String, dynamic>>> getPayments(int id) async {
     final db = await _db;
     return db.query('installment_payments', where: 'contract_id = ?',
       whereArgs: [id], orderBy: 'payment_date DESC, id DESC');
   }
 
+  /// Naya installment contract aur optional advance payment aik transaction mein save karta hai.
   static Future<int> addContract({
     required String direction, required String itemName, required String partyName,
     String? phone, required double totalAmount, required double advance,
@@ -75,6 +79,7 @@ class InstallmentService {
     return id;
   }
 
+  /// Contract, payments aur linked ledger records archive karke delete karta hai.
   static Future<void> deleteContract(int contractId) async {
     final db = await _db;
     final contracts = await db.query('installment_contracts',
@@ -106,8 +111,9 @@ class InstallmentService {
     AppRefreshController.notifyChanged();
   }
 
-  // Qist record aur wallet balance aik hi transaction mein update karte hain.
-  // Agar payment save na ho to wallet ka balance bhi rollback ho jata hai.
+  /// Qist record aur wallet balance aik hi database transaction mein update hote hain.
+  /// Payment fail ho to wallet aur qist dono changes rollback ho jate hain.
+  /// Remaining amount aur wallet balance validate karke payment save karta hai.
   static Future<void> addPayment({
     required int contractId, required double amount, required String date, required String note,
   }) async {
@@ -137,7 +143,7 @@ class InstallmentService {
     AppRefreshController.notifyChanged();
   }
 
-  // Payment ke direction ke mutabiq wallet mein amount add ya deduct hoti hai.
+  /// Payment ki direction ke mutabiq wallet balance update karke ledger entry banata hai.
   static Future<void> _applyPayment(Transaction txn, int id, double amount, int walletId,
       String date, String note, String direction, String now) async {
     await txn.insert('installment_payments', {
@@ -152,7 +158,8 @@ class InstallmentService {
       date: date,
     );
   }
-  /// Restores the archived installment_contracts record and related ledger entries atomically.
+  /// Archived installment contract, payments aur related ledger entries aik transaction mein restore karta hai.
+  /// Archived contract, payment history aur finance ledger entries restore karta hai.
   static Future<void> restoreArchivedContract(
     Transaction txn, {
     required Map<String, dynamic> record,

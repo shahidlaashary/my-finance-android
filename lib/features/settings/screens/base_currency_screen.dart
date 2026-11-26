@@ -31,52 +31,50 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   }
 
   Future<void> _load() async {
+    // Base currency ko rates se alag load karein. Dono queries ko Future.wait
+    // mein rakhne se aik slow query poori screen ka spinner roke rakhti thi.
+    String selected = 'PKR';
     try {
-      // Pehle local database se screen render karein. Network refresh ko
-      // loading state ke saath block na karein, taake offline mein spinner
-      // continuously na chalta rahe.
-      final values = await Future.wait([
-        CurrencyService.getBaseCurrency(),
-        CurrencyService.getExchangeRates(),
-      ]);
-      final selected = values[0] as String;
-      final rows = values[1] as List<Map<String, dynamic>>;
-      final rates = _parseRates(rows);
+      selected = await CurrencyService.getBaseCurrency()
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // Offline/slow database read ki surat mein screen phir bhi open hogi.
+    }
 
+    if (!mounted) return;
+    setState(() {
+      _selected = _available.contains(selected) ? selected : 'PKR';
+      _referenceCurrency = _selected;
+      _loading = false;
+    });
+
+    // Cached rates optional hain: unki query screen render hone ke baad chale.
+    try {
+      final rows = await CurrencyService.getExchangeRates()
+          .timeout(const Duration(seconds: 5));
+      final rates = _parseRates(rows);
       final now = DateTime.now();
-      final needsRefresh = _available.where((code) => code != selected).any((code) {
+      final needsRefresh = _available
+          .where((code) => code != _referenceCurrency)
+          .any((code) {
         final row = rows.where(
           (item) => item['currency'].toString().toUpperCase() == code,
         );
         if (row.isEmpty) return true;
-        final updatedAt = DateTime.tryParse(row.first['updated_at']?.toString() ?? '');
+        final updatedAt =
+            DateTime.tryParse(row.first['updated_at']?.toString() ?? '');
         return updatedAt == null ||
             now.difference(updatedAt) >= const Duration(hours: 24);
       });
 
       if (!mounted) return;
-      setState(() {
-        _selected = selected;
-        _referenceCurrency = selected;
-        _rates = rates;
-        if (!_available.contains(_selected) ||
-            (_selected != 'PKR' && !_rates.containsKey(_selected))) {
-          _selected = 'PKR';
-        }
-        _loading = false;
-      });
+      setState(() => _rates = rates);
 
-      // Rates ko background mein refresh karein. Offline ya slow network
-      // screen ko loading state mein nahi rakhega.
       if (needsRefresh) {
         _refreshRatesInBackground();
       }
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Base currency load nahi ho saki: $error')),
-      );
+    } catch (_) {
+      // Rates read fail ho to bhi currency picker aur page usable rehte hain.
     }
   }
 

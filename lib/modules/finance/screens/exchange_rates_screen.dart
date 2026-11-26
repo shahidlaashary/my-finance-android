@@ -42,23 +42,29 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     if (from == to) return 1.0;
     final direct = _manualPairs.where((row) =>
         row['from_currency'] == from && row['to_currency'] == to);
-    if (direct.isNotEmpty) return (direct.first['rate'] as num).toDouble();
-    final reverse = _manualPairs.where((row) =>
-        row['from_currency'] == to && row['to_currency'] == from);
-    if (reverse.isNotEmpty) {
-      final rate = (reverse.first['rate'] as num).toDouble();
-      return rate > 0 ? 1 / rate : null;
+    if (direct.isNotEmpty) {
+      final rate = (direct.first['rate'] as num).toDouble();
+      return rate.isFinite && rate > 0 ? rate : null;
     }
-    // Direct/reverse pair na ho to shared currency ke zariye cross-rate.
+    final graph = <String, List<MapEntry<String, double>>>{};
     for (final pair in _manualPairs) {
-      final pivot = pair['to_currency']?.toString() ?? '';
-      if (pair['from_currency'] == from && pivot.isNotEmpty) {
-        final onward = _manualPairs.where((row) =>
-            row['from_currency'] == pivot && row['to_currency'] == to);
-        if (onward.isNotEmpty) {
-          return (pair['rate'] as num).toDouble() *
-              (onward.first['rate'] as num).toDouble();
-        }
+      final a = pair['from_currency'].toString();
+      final b = pair['to_currency'].toString();
+      final rate = (pair['rate'] as num).toDouble();
+      if (!rate.isFinite || rate <= 0) continue;
+      graph.putIfAbsent(a, () => []).add(MapEntry(b, rate));
+      graph.putIfAbsent(b, () => []).add(MapEntry(a, 1 / rate));
+    }
+    final queue = <(String, double)>[(from, 1.0)];
+    final visited = <String>{from};
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      for (final edge in graph[current.$1] ?? const <MapEntry<String, double>>[]) {
+        if (!visited.add(edge.key)) continue;
+        final combined = current.$2 * edge.value;
+        if (!combined.isFinite || combined <= 0) continue;
+        if (edge.key == to) return combined;
+        queue.add((edge.key, combined));
       }
     }
     return null;

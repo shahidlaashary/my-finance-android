@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/space/services/agreement_template_service.dart';
 
+/// My Space agreements ke reusable templates manage karne ki screen.
 class AgreementTemplatesScreen extends StatefulWidget {
   const AgreementTemplatesScreen({super.key});
   @override

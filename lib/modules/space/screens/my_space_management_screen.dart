@@ -3,6 +3,7 @@ import 'package:my_finance/modules/space/services/my_space_service.dart';
 import 'package:my_finance/modules/space/screens/agreement_templates_screen.dart';
 import 'package:my_finance/features/recycle_bin/screens/recycle_bin_screen.dart';
 
+/// My Space ki management settings aur related tools tak rasai deta hai.
 class ManagementScreen extends StatefulWidget {
   const ManagementScreen({super.key});
   @override

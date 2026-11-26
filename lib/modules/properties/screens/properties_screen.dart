@@ -19,7 +19,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Future<void> load() async {
     setState(()=>loading=true);
     try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance()]);
-      await _syncPropertyReminders(contracts:v[2],payments:v[4],maintenance:v[5]);
+      try { await _syncPropertyReminders(contracts:v[2],payments:v[4],maintenance:v[5]); } catch (_) { /* Reminder permission/service errors must not block Properties data. */ }
       if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; maintenanceItems=v[5]; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }

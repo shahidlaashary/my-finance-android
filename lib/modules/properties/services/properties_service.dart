@@ -178,24 +178,49 @@ class PropertiesService {
       throw ArgumentError('Contract end date cannot be before its start date.');
     }
     final db = DatabaseManager.instance.database;
-    final property = await db.query('properties', columns: ['id'], where: 'id = ?', whereArgs: [propertyId], limit: 1);
-    final tenant = await db.query('properties_tenants', columns: ['id'], where: 'id = ?', whereArgs: [tenantId], limit: 1);
-    if (property.isEmpty || tenant.isEmpty) throw StateError('Select a valid property and tenant.');
     final values = <String, Object?>{
       'property_id': propertyId, 'tenant_id': tenantId,
       'contract_type': contractType, 'start_date': startDate,
       'end_date': endDate, 'rent': rent, 'frequency': frequency,
       'deposit': deposit, 'status': status, 'notes': notes.trim(),
     };
-    final result = id == null
-        ? await db.insert('properties_contracts', {
-            ...values,
-            'created_at': DateTime.now().toIso8601String(),
-          })
-        : await db.update('properties_contracts', values, where: 'id = ?', whereArgs: [id]);
-    if (id != null && result == 0) throw StateError('Contract not found.');
+    final result = await db.transaction<int>((txn) async {
+      final property = await txn.query(
+        'properties',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [propertyId],
+        limit: 1,
+      );
+      final tenant = await txn.query(
+        'properties_tenants',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [tenantId],
+        limit: 1,
+      );
+      if (property.isEmpty || tenant.isEmpty) {
+        throw StateError('Select a valid property and tenant.');
+      }
+
+      if (id == null) {
+        return txn.insert('properties_contracts', {
+          ...values,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      final updated = await txn.update(
+        'properties_contracts',
+        values,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (updated == 0) throw StateError('Contract not found.');
+      return id;
+    });
     AppRefreshController.notifyChanged();
-    return id ?? result;
+    return result;
   }
 
   static Future<int> addDocument({

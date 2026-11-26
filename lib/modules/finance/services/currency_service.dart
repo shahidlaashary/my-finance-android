@@ -47,29 +47,36 @@ class CurrencyService {
     final currentBase = await getBaseCurrency();
     if (normalized == currentBase) return;
 
-    // Saved rates current Base Currency ke mutabiq hain. Nayi base currency
-    // par switch karte waqt tamam rates ko usi reference mein rebase karein.
+    // Agar selected currency ka cached rate mojood ho to existing rates
+    // ko naye base ke mutabiq rebase karein. Offline aur missing-rate ki
+    // surat mein purane reference ke rates ko ghalat samajhne ke bajaye
+    // unhein clear karein; online refresh baad mein fresh rates la sakta hai.
     final newBaseRate = await getExchangeRate(normalized);
-    if (newBaseRate == null || newBaseRate <= 0) {
-      throw Exception('Is currency ka exchange rate pehle set karein.');
-    }
+    final canRebase = newBaseRate != null && newBaseRate.isFinite &&
+        newBaseRate > 0;
 
     await _db.transaction((txn) async {
-      final rows = await txn.query('exchange_rates');
-      for (final row in rows) {
-        final code = row['currency'].toString().toUpperCase();
-        final oldRate = (row['rate'] as num).toDouble();
-        final rebasedRate = oldRate / newBaseRate;
-        if (!rebasedRate.isFinite || rebasedRate <= 0) continue;
-        await txn.update(
-          'exchange_rates',
-          {
-            'rate': code == normalized ? 1.0 : rebasedRate,
-            'updated_at': DateTime.now().toIso8601String(),
-          },
-          where: 'UPPER(currency) = ?',
-          whereArgs: [code],
-        );
+      if (canRebase) {
+        final rows = await txn.query('exchange_rates');
+        for (final row in rows) {
+          final code = row['currency'].toString().toUpperCase();
+          final oldRate = (row['rate'] as num).toDouble();
+          final rebasedRate = oldRate / newBaseRate!;
+          if (!rebasedRate.isFinite || rebasedRate <= 0) continue;
+          await txn.update(
+            'exchange_rates',
+            {
+              'rate': code == normalized ? 1.0 : rebasedRate,
+              'updated_at': DateTime.now().toIso8601String(),
+            },
+            where: 'UPPER(currency) = ?',
+            whereArgs: [code],
+          );
+        }
+      } else {
+        // Old rates purani base currency ke reference mein thay; unhein
+        // naye base ke rates ke taur par reuse karna incorrect conversion dega.
+        await txn.delete('exchange_rates');
       }
       await txn.insert(
         'exchange_rates',

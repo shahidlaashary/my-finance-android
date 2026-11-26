@@ -1685,7 +1685,7 @@ const Map<String, Map<String, String>> _translations = {
 /// Existing English/Urdu call sites remain source-compatible.
 const Map<String, Map<String, String>> _staffRecycleTranslations = {
   'ur': {
-    'Staff Management':'اسٹاف مینجمنٹ','Staff':'اسٹاف','Salary':'تنخواہ','Attendance':'حاضری',
+    'Staff Manager':'اسٹاف منیجر','Staff':'اسٹاف','Salary':'تنخواہ','Attendance':'حاضری',
     'Add Staff':'اسٹاف شامل کریں','Edit Staff':'اسٹاف میں ترمیم','Save Staff':'اسٹاف محفوظ کریں',
     'Staff Name':'اسٹاف کا نام','Phone':'فون','Job Title':'عہدہ','Monthly Salary':'ماہانہ تنخواہ',
     'Joining Date':'شمولیت کی تاریخ','Notes':'نوٹس','Required':'ضروری ہے','Pay Salary':'تنخواہ ادا کریں',
@@ -1744,7 +1744,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     "Add your first document to keep important files in one place.": "اہم فائلیں ایک جگہ رکھنے کے لیے اپنی پہلی دستاویز شامل کریں۔",
   },
   'ar': {
-    'Staff Management':'إدارة الموظفين','Staff':'الموظفون','Salary':'الراتب','Attendance':'الحضور',
+    'Staff Manager':'مدير الموظفين','Staff':'الموظفون','Salary':'الراتب','Attendance':'الحضور',
     'Add Staff':'إضافة موظف','Edit Staff':'تعديل الموظف','Save Staff':'حفظ الموظف',
     'Staff Name':'اسم الموظف','Phone':'الهاتف','Job Title':'المسمى الوظيفي','Monthly Salary':'الراتب الشهري',
     'Joining Date':'تاريخ الانضمام','Notes':'ملاحظات','Required':'مطلوب','Pay Salary':'دفع الراتب',
@@ -1804,7 +1804,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     'Delete this staff member and their attendance history?': 'क्या आप इस स्टाफ सदस्य और उसकी उपस्थिति का रिकॉर्ड हटाना चाहते हैं?',
   },
   'hi': {
-    'Staff Management':'कर्मचारी प्रबंधन','Staff':'कर्मचारी','Salary':'वेतन','Attendance':'उपस्थिति',
+    'Staff Manager':'स्टाफ मैनेजर','Staff':'कर्मचारी','Salary':'वेतन','Attendance':'उपस्थिति',
     'Add Staff':'कर्मचारी जोड़ें','Edit Staff':'कर्मचारी संपादित करें','Save Staff':'कर्मचारी सहेजें',
     'Staff Name':'कर्मचारी का नाम','Phone':'फ़ोन','Job Title':'पद','Monthly Salary':'मासिक वेतन',
     'Joining Date':'जुड़ने की तारीख','Notes':'नोट्स','Required':'आवश्यक','Pay Salary':'वेतन भुगतान',
@@ -1864,7 +1864,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     'Delete this staff member and their attendance history?': 'کیا تُساں ایں اسٹاف ممبر کوں اوں دی حاضری دے ریکارڈ سمیت حذف کرنا چاہندے او؟',
   },
   'pa': {
-    'Staff Management':'اسٹاف دا انتظام','Staff':'اسٹاف','Salary':'تنخواہ','Attendance':'حاضری',
+    'Staff Manager':'اسٹاف منیجر','Staff':'اسٹاف','Salary':'تنخواہ','Attendance':'حاضری',
     'Add Staff':'اسٹاف شامل کرو','Edit Staff':'اسٹاف وچ تبدیلی','Save Staff':'اسٹاف محفوظ کرو',
     'Staff Name':'اسٹاف دا ناں','Phone':'فون','Job Title':'عہدہ','Monthly Salary':'ماہانہ تنخواہ',
     'Joining Date':'شمولیت دی تاریخ','Notes':'نوٹس','Required':'ضروری اے','Pay Salary':'تنخواہ ادا کرو',
@@ -1924,7 +1924,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     'Delete this staff member and their attendance history?': 'کیا تُساں ایں اسٹاف ممبر کوں اوں دی حاضری دے ریکارڈ سمیت ختم کرنا چاہندے او؟',
   },
   'skr': {
-    'Staff Management':'اسٹاف دا انتظام','Staff':'اسٹاف','Salary':'تنخواہ','Attendance':'حاضری',
+    'Staff Manager':'اسٹاف منیجر','Staff':'اسٹاف','Salary':'تنخواہ','Attendance':'حاضری',
     'Add Staff':'اسٹاف شامل کرو','Edit Staff':'اسٹاف وچ تبدیلی کرو','Save Staff':'اسٹاف محفوظ کرو',
     'Staff Name':'اسٹاف دا ناں','Phone':'فون','Job Title':'عہدہ','Monthly Salary':'ماہانہ تنخواہ',
     'Joining Date':'شمولیت دی تاریخ','Notes':'نوٹس','Required':'ضروری اے','Pay Salary':'تنخواہ ادا کرو',
@@ -1984,7 +1984,7 @@ const Map<String, Map<String, String>> _staffRecycleTranslations = {
     'Delete this staff member and their attendance history?': 'کیا تُساں ایں اسٹاف ممبر کوں اوں دی حاضری دے ریکارڈ سمیت ختم کرنا چاہندے او؟',
   },
   'sd': {
-    'Staff Management':'اسٽاف جو انتظام','Staff':'اسٽاف','Salary':'پگهار','Attendance':'حاضري',
+    'Staff Manager':'اسٽاف مئنيجر','Staff':'اسٽاف','Salary':'پگهار','Attendance':'حاضري',
     'Add Staff':'اسٽاف شامل ڪريو','Edit Staff':'اسٽاف ۾ ترميم ڪريو','Save Staff':'اسٽاف محفوظ ڪريو',
     'Staff Name':'اسٽاف جو نالو','Phone':'فون','Job Title':'عهدو','Monthly Salary':'ماهوار پگهار',
     'Joining Date':'شموليت جي تاريخ','Notes':'نوٽس','Required':'ضروري','Pay Salary':'پگهار ادا ڪريو',

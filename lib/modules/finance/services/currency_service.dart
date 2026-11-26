@@ -14,7 +14,7 @@ class CurrencyService {
 
   static Future<double?> getExchangeRate(String currency) async {
     final normalized = currency.trim().toUpperCase();
-    if (normalized == 'PKR') return 1.0;
+    if (normalized == await getBaseCurrency()) return 1.0;
     final rows = await _db.query(
       'exchange_rates',
       columns: ['rate'],
@@ -44,14 +44,48 @@ class CurrencyService {
   static Future<void> setBaseCurrency(String currency) async {
     final normalized = currency.trim().toUpperCase();
     if (normalized.isEmpty) throw Exception('Base currency select karein.');
-    if (normalized != 'PKR' && await getExchangeRate(normalized) == null) {
+    final currentBase = await getBaseCurrency();
+    if (normalized == currentBase) return;
+
+    // Saved rates current Base Currency ke mutabiq hain. Nayi base currency
+    // par switch karte waqt tamam rates ko usi reference mein rebase karein.
+    final newBaseRate = await getExchangeRate(normalized);
+    if (newBaseRate == null || newBaseRate <= 0) {
       throw Exception('Is currency ka exchange rate pehle set karein.');
     }
-    await _db.insert(
-      'app_settings',
-      {'setting_key': 'main_currency', 'setting_value': normalized},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+
+    await _db.transaction((txn) async {
+      final rows = await txn.query('exchange_rates');
+      for (final row in rows) {
+        final code = row['currency'].toString().toUpperCase();
+        final oldRate = (row['rate'] as num).toDouble();
+        final rebasedRate = oldRate / newBaseRate;
+        if (!rebasedRate.isFinite || rebasedRate <= 0) continue;
+        await txn.update(
+          'exchange_rates',
+          {
+            'rate': code == normalized ? 1.0 : rebasedRate,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+          where: 'UPPER(currency) = ?',
+          whereArgs: [code],
+        );
+      }
+      await txn.insert(
+        'exchange_rates',
+        {
+          'currency': normalized,
+          'rate': 1.0,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await txn.insert(
+        'app_settings',
+        {'setting_key': 'main_currency', 'setting_value': normalized},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
     AppRefreshController.notifyChanged();
   }
 
@@ -64,7 +98,7 @@ class CurrencyService {
     String source = 'manual',
   }) async {
     final normalized = currency.trim().toUpperCase();
-    if (normalized == 'PKR' ||
+    if (normalized == await getBaseCurrency() ||
         normalized.isEmpty ||
         !rate.isFinite ||
         rate <= 0) {
@@ -85,9 +119,10 @@ class CurrencyService {
   static Future<bool> refreshMissingExchangeRatesOnline({
     required List<String> currencies,
   }) async {
+    final baseCurrency = await getBaseCurrency();
     final required = currencies
         .map((code) => code.trim().toUpperCase())
-        .where((code) => code.isNotEmpty && code != 'PKR')
+        .where((code) => code.isNotEmpty && code != baseCurrency)
         .toSet();
     final missing = <String>[];
     for (final currency in required) {
@@ -111,12 +146,15 @@ class CurrencyService {
       final rates = payload['rates'] as Map<String, dynamic>?;
       if (rates == null) return false;
 
+      final baseProviderRate = baseCurrency == 'PKR' ? 1.0 : rates[baseCurrency];
+      if (baseProviderRate is! num || baseProviderRate <= 0) return false;
       for (final currency in missing) {
         final providerRate = rates[currency];
         if (providerRate is! num || providerRate <= 0) continue;
-        final pkrPerUnit = 1 / providerRate.toDouble();
-        if (pkrPerUnit.isFinite && pkrPerUnit > 0) {
-          await saveExchangeRate(currency, pkrPerUnit, source: 'automatic');
+        // Provider PKR reference deta hai; isay app ki Base Currency mein badlein.
+        final basePerUnit = baseProviderRate.toDouble() / providerRate.toDouble();
+        if (basePerUnit.isFinite && basePerUnit > 0) {
+          await saveExchangeRate(currency, basePerUnit, source: 'automatic');
         }
       }
       for (final currency in missing) {

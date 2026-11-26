@@ -225,6 +225,122 @@ class LoansService {
 
   }
 
+  /// Creates a loan record linked to an Asset. LoansService owns the loans table.
+  static Future<int> createAssetLinkedLoan(
+    Transaction txn, {
+    required int partyId,
+    required String loanType,
+    required double amount,
+    required String currency,
+    required String sourceType,
+    required int sourceId,
+    required DateTime lendingDate,
+    required String notes,
+  }) async {
+    _validateLoanType(loanType);
+    if (partyId <= 0 ||
+        sourceId <= 0 ||
+        !amount.isFinite ||
+        amount <= 0 ||
+        (sourceType != 'asset_purchase' && sourceType != 'asset_sale')) {
+      throw Exception('The linked Asset loan details are invalid.');
+    }
+    return txn.insert('loans', {
+      'party_id': partyId,
+      'loan_type': loanType,
+      'amount': amount,
+      'remaining_amount': amount,
+      'wallet_id': 0,
+      'currency': currency.trim().toUpperCase(),
+      'source_type': sourceType,
+      'source_id': sourceId,
+      'lending_date': lendingDate.toIso8601String().split('T').first,
+      'notes': notes,
+      'status': 'active',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Reads one Asset-linked loan through the owning LoansService.
+  static Future<Map<String, Object?>?> getAssetLinkedLoan(
+    Transaction txn,
+    int loanId,
+  ) async {
+    final rows = await txn.query(
+      'loans',
+      where: 'id = ?',
+      whereArgs: [loanId],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Reads repayments belonging to an Asset-linked loan.
+  static Future<List<Map<String, Object?>>> getAssetLinkedRepayments(
+    Transaction txn,
+    int loanId, {
+    List<String>? columns,
+    int? limit,
+  }) {
+    return txn.query(
+      'loan_repayments',
+      columns: columns,
+      where: 'loan_id = ?',
+      whereArgs: [loanId],
+      limit: limit,
+    );
+  }
+
+  static Future<bool> hasAssetLinkedLoan(Transaction txn, int loanId) async =>
+      (await txn.query(
+        'loans',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [loanId],
+        limit: 1,
+      )).isNotEmpty;
+
+  static Future<int> updateAssetLinkedLoan(
+    Transaction txn, {
+    required int loanId,
+    required int assetId,
+    required Map<String, Object?> values,
+  }) {
+    return txn.update(
+      'loans',
+      values,
+      where: 'id = ? AND source_type = ? AND source_id = ?',
+      whereArgs: [loanId, 'asset_purchase', assetId],
+    );
+  }
+
+  static Future<void> deleteAssetLinkedLoan(Transaction txn, int loanId) async {
+    await txn.delete(
+      'loan_repayments',
+      where: 'loan_id = ?',
+      whereArgs: [loanId],
+    );
+    await txn.delete('loans', where: 'id = ?', whereArgs: [loanId]);
+  }
+
+  static Future<void> restoreAssetLinkedLoan(
+    Transaction txn, {
+    required Map<String, dynamic> loan,
+    required List<Map<String, dynamic>> repayments,
+  }) async {
+    final sourceType = loan['source_type']?.toString();
+    final loanType = loan['loan_type']?.toString().toLowerCase() ?? '';
+    if ((sourceType != 'asset_purchase' && sourceType != 'asset_sale') ||
+        (sourceType == 'asset_purchase' && loanType != 'taken') ||
+        (sourceType == 'asset_sale' && loanType != 'given')) {
+      throw Exception('The archived Asset-linked loan has an invalid source or direction.');
+    }
+    await txn.insert('loans', loan);
+    for (final repayment in repayments) {
+      await txn.insert('loan_repayments', repayment);
+    }
+  }
+
   static Future<Map<String, dynamic>> _getWallet(
     Transaction txn,
     int walletId,
@@ -435,17 +551,15 @@ class LoansService {
     }
 
     final loanId = await db.transaction((txn) async {
-      final party = await txn.query(
-        'loan_parties',
+      final party = await PartyService.getPartyById(
+        txn,
+        loan.partyId!,
         columns: ['id', 'currency'],
-        where: 'id = ?',
-        whereArgs: [loan.partyId],
-        limit: 1,
       );
-      if (party.isEmpty) {
+      if (party == null) {
         throw Exception('Selected party was not found.');
       }
-      final partyCurrency = (party.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+      final partyCurrency = (party['currency']?.toString() ?? 'PKR').trim().toUpperCase();
       final walletCurrency = await _getWalletCurrency(txn, loan.walletId);
       if (partyCurrency != walletCurrency) {
         throw Exception('Selected wallet currency ($walletCurrency) does not match this party currency ($partyCurrency).');
@@ -898,21 +1012,13 @@ class LoansService {
       );
 
       final partyId = (loanRecord['party_id'] as num?)?.toInt();
-      final partyRows = partyId == null
-          ? <Map<String, Object?>>[]
-          : await txn.query(
-              'loan_parties',
-              columns: ['name'],
-              where: 'id = ?',
-              whereArgs: [partyId],
-              limit: 1,
-            );
+      final party = partyId == null
+          ? null
+          : await PartyService.getPartyById(txn, partyId, columns: ['name']);
 
       await txn.insert('recycle_bin', {
         'entity_type': 'Loan',
-        'entity_title': partyRows.isEmpty
-            ? 'Loan'
-            : partyRows.first['name']?.toString() ?? 'Loan',
+        'entity_title': party?['name']?.toString() ?? 'Loan',
         'source_table': 'loans',
         'source_id': loanId.toString(),
         'payload': jsonEncode(loanRecord),
@@ -1009,18 +1115,16 @@ class LoansService {
           if (partyId == null || partyId <= 0) {
             throw Exception('The archived loan is missing its linked party. Restore is blocked.');
           }
-          final partyRows = await txn.query(
-            'loan_parties',
+          final party = await PartyService.getPartyById(
+            txn,
+            partyId,
             columns: ['id', 'currency'],
-            where: 'id = ?',
-            whereArgs: [partyId],
-            limit: 1,
           );
-          if (partyRows.isEmpty) {
+          if (party == null) {
             throw Exception('Restore the linked party before restoring this loan.');
           }
           final partyCurrency =
-              (partyRows.first['currency']?.toString() ?? 'PKR').trim().toUpperCase();
+              (party['currency']?.toString() ?? 'PKR').trim().toUpperCase();
           final archivedLoanCurrency =
               (record['currency']?.toString() ?? 'PKR').trim().toUpperCase();
           if (partyCurrency != archivedLoanCurrency) {

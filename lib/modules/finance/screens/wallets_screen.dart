@@ -1786,19 +1786,22 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                 key: _walletTypePickerKey,
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: saving ? null : _showWalletTypePicker,
-                                child: InputDecorator(
-                                  decoration: _fieldDecoration('Wallet Type').copyWith(
-                                    contentPadding: const EdgeInsets.fromLTRB(11, 13, 11, 15),
-                                  ),
-                                  child: Row(children: [
+                                child: Transform.translate(
+                                  offset: const Offset(0, 1),
+                                  child: InputDecorator(
+                                    decoration: _fieldDecoration('Wallet Type').copyWith(
+                                      contentPadding: const EdgeInsets.fromLTRB(11, 13, 11, 15),
+                                    ),
+                                    child: Row(children: [
                                     Icon(_walletTypeIcons[selectedType] ?? Icons.wallet_outlined,
                                       size: 19, color: AppColors.primary),
                                     const SizedBox(width: 7),
                                     Expanded(child: Text(selectedType,
                                       maxLines: 1, overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontSize: 13))),
-                                    const Icon(Icons.arrow_drop_down_rounded, size: 21),
-                                  ]),
+                                      const Icon(Icons.arrow_drop_down_rounded, size: 21),
+                                    ]),
+                                  ),
                                 ),
                               ),
                             ),

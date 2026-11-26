@@ -806,7 +806,7 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 0),
                                   Text(
                                     appText(context, "Add fee (Optional)", "Add fee (Optional)"),
                                     style: TextStyle(

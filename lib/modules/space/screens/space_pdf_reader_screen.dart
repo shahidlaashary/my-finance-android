@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:my_finance/modules/space/services/my_space_service.dart';
 
+/// My Space ki PDF file ko app ke andar open aur read karne ka reader.
 class SpacePdfReaderScreen extends StatefulWidget {
   final Map<String, Object?>? item;
   final String? filePath;

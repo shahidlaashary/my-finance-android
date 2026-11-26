@@ -4,7 +4,7 @@ import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/space/services/my_space_service.dart';
 
-/// Native in-app EPUB reader for books stored in My Space.
+/// My Space mein saved EPUB books ko app ke andar parhne ka reader.
 class SpaceEpubReaderScreen extends StatefulWidget {
   const SpaceEpubReaderScreen({super.key, required this.item});
 

@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
+import 'package:my_finance/modules/staff/services/staff_service.dart';
 
 class TransactionsService {
   static String _normalizeType(String type) {
@@ -342,17 +343,12 @@ class TransactionsService {
         await txn.insert('transactions', record);
         final salaryRaw = relatedPayload;
         if (salaryRaw != null && salaryRaw.isNotEmpty) {
-          await txn.execute('''CREATE TABLE IF NOT EXISTS staff_salaries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, staff_id INTEGER NOT NULL,
-            amount REAL NOT NULL, wallet_id INTEGER NOT NULL, paid_at TEXT NOT NULL,
-            note TEXT NOT NULL DEFAULT '', transaction_id INTEGER)''');
           final salaryRows = (jsonDecode(salaryRaw) as List).whereType<Map>();
           for (final row in salaryRows) {
-            final salary = Map<String, dynamic>.from(row);
-            final staffId = (salary['staff_id'] as num).toInt();
-            final staff = await txn.query('staff', columns: ['id'], where: 'id = ?', whereArgs: [staffId], limit: 1);
-            if (staff.isEmpty) throw Exception('Restore the related staff member before restoring this salary transaction.');
-            await txn.insert('staff_salaries', salary);
+            await StaffService.restoreArchivedSalary(
+              txn,
+              Map<String, dynamic>.from(row),
+            );
           }
         }
         if (fee > 0) {

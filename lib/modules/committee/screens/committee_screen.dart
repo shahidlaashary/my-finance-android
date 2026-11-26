@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/modules/committee/services/committee_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 
+/// Committee plans, members aur un ki payment entries manage karne ki screen.
 class CommitteeScreen extends StatefulWidget {
   const CommitteeScreen({super.key});
   @override
@@ -17,10 +18,12 @@ class _CommitteeScreenState extends State<CommitteeScreen> {
   final money = NumberFormat('#,##0.##');
   @override
   void initState() { super.initState(); AppRefreshController.revision.addListener(_onAppDataChanged); _load(); }
+  /// Shared finance data update hone par committee list refresh karta hai.
   void _onAppDataChanged() { if (mounted) _load(); }
   @override
   void dispose() { AppRefreshController.revision.removeListener(_onAppDataChanged); super.dispose(); }
 
+  /// Committee service se latest committee records load karta hai.
   Future<void> _load() async {
     try {
       final rows = await CommitteeService.getCommittees();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/general_preferences.dart';
 
 import 'package:my_finance/core/localization/app_text.dart';
+/// Date, number, wallet selection aur privacy jaisi general preferences ki screen.
 class GeneralAppPreferencesScreen extends StatefulWidget {
   const GeneralAppPreferencesScreen({super.key});
 
@@ -27,6 +28,7 @@ class _GeneralAppPreferencesScreenState extends State<GeneralAppPreferencesScree
     _load();
   }
 
+  /// Saved general preferences load karke controls ki initial values set karta hai.
   Future<void> _load() async {
     final values = await Future.wait<Object>([
       _preferences.dateFormat, _preferences.weekStart, _preferences.numberFormat,

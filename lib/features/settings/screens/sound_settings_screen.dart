@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/core/preferences/sound_settings_service.dart';
 
+/// App ke sound effects aur playback preferences control karne ki screen.
 class SoundSettingsScreen extends StatelessWidget {
   const SoundSettingsScreen({super.key});
   @override

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 
+/// App ki base currency aur exchange rates select karne ki screen.
 class BaseCurrencyScreen extends StatefulWidget {
   const BaseCurrencyScreen({super.key});
 
@@ -18,7 +19,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   bool _loading = true;
   bool _saving = false;
   String _selected = 'PKR';
-  // International currencies supported by the live PKR-based rate provider.
+  // Live PKR-based rate provider ki taraf se supported international currencies.
   static const List<String> _available = CurrencyCatalog.supported;
   Map<String, double> _rates = {};
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/core/preferences/language_settings_service.dart';
 
+/// App ki supported languages mein se active language select karne ki screen.
 class LanguageSettingsScreen extends StatelessWidget {
   const LanguageSettingsScreen({super.key});
 

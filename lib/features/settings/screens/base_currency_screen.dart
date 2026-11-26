@@ -243,7 +243,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                         final code = filtered[index];
                         final selected = code == _selected;
                         final rate = _rates[code];
-                        final enabled = code == _referenceCurrency || rate != null;
+                        // Base currency selection rate availability se independent hai.
                         return Material(
                           color: selected
                               ? theme.colorScheme.primaryContainer.withOpacity(0.65)
@@ -251,10 +251,8 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                           borderRadius: BorderRadius.circular(15),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(15),
-                            onTap: enabled ? () => Navigator.pop(sheetContext, code) : null,
-                            child: Opacity(
-                              opacity: enabled ? 1 : 0.45,
-                              child: Padding(
+                            onTap: () => Navigator.pop(sheetContext, code),
+                            child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 child: Row(children: [
                                   Text(_currencyFlags[code] ?? '🌐',
@@ -282,7 +280,6 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                                     const Icon(Icons.cloud_off_rounded, size: 18),
                                 ]),
                               ),
-                            ),
                           ),
                         );
                       },
@@ -386,7 +383,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: _saving || (_selected != 'PKR' && !_rates.containsKey(_selected)) ? null : _save,
+                    onPressed: _saving ? null : _save,
                     child: _saving
                         ? const SizedBox(
                             width: 18, height: 18,

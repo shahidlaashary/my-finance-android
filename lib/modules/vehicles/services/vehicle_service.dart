@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'dart:convert';
 
 
@@ -63,33 +64,16 @@ class VehicleService {
   }) async {
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid expense amount.');
     final db = DatabaseManager.instance.database;
-    final id = await db.transaction((txn) async {
-      final wallets = await txn.query(
-        'wallets',
-        columns: ['balance'],
-        where: 'id = ?',
-        whereArgs: [walletId],
-        limit: 1,
-      );
-      if (wallets.isEmpty) throw Exception('Selected wallet was not found.');
-      final balance = (wallets.first['balance'] as num).toDouble();
-      if (balance < amount) throw Exception('Insufficient wallet balance.');
-      await txn.update('wallets', {'balance': balance - amount},
-        where: 'id = ?', whereArgs: [walletId]);
-      return txn.insert('transactions', {
-        'type': 'Expense',
-        'amount': amount,
-        'wallet_id': walletId,
-        'to_wallet_id': null,
-        'to_amount': null,
-        'exchange_rate': null,
-        'balance_delta': null,
-        'category': category,
-        'note': note,
-        'date': date.toIso8601String(),
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    });
+    final id = await db.transaction((txn) =>
+      TransactionsService.createExpenseLedgerEntry(
+        txn,
+        amount: amount,
+        walletId: walletId,
+        category: category,
+        note: note,
+        date: date.toIso8601String(),
+      ),
+    );
     AppRefreshController.notifyChanged();
     return id;
   }
@@ -104,41 +88,17 @@ class VehicleService {
   }) async {
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid expense amount.');
     final db = DatabaseManager.instance.database;
-    await db.transaction((txn) async {
-      final rows = await txn.query('transactions',
-        where: 'id = ?', whereArgs: [id], limit: 1);
-      if (rows.isEmpty || rows.first['type']?.toString().toLowerCase() != 'expense') {
-        throw Exception('Linked vehicle expense transaction was not found.');
-      }
-      final oldAmount = (rows.first['amount'] as num).toDouble();
-      final oldWalletId = (rows.first['wallet_id'] as num).toInt();
-      final oldWallets = await txn.query('wallets',
-        columns: ['balance'], where: 'id = ?', whereArgs: [oldWalletId], limit: 1);
-      if (oldWallets.isEmpty) throw Exception('Original wallet was not found.');
-      final restoredBalance = (oldWallets.first['balance'] as num).toDouble() + oldAmount;
-      await txn.update('wallets', {'balance': restoredBalance},
-        where: 'id = ?', whereArgs: [oldWalletId]);
-
-      final newWallets = await txn.query('wallets',
-        columns: ['balance'], where: 'id = ?', whereArgs: [walletId], limit: 1);
-      if (newWallets.isEmpty) throw Exception('Selected wallet was not found.');
-      final newBalance = (newWallets.first['balance'] as num).toDouble();
-      if (newBalance < amount) throw Exception('Insufficient wallet balance.');
-      await txn.update('wallets', {'balance': newBalance - amount},
-        where: 'id = ?', whereArgs: [walletId]);
-      await txn.update('transactions', {
-        'type': 'Expense',
-        'amount': amount,
-        'wallet_id': walletId,
-        'to_wallet_id': null,
-        'to_amount': null,
-        'exchange_rate': null,
-        'balance_delta': null,
-        'category': category,
-        'note': note,
-        'date': date.toIso8601String(),
-      }, where: 'id = ?', whereArgs: [id]);
-    });
+    await db.transaction((txn) =>
+      TransactionsService.updateExpenseLedgerEntry(
+        txn,
+        id: id,
+        amount: amount,
+        walletId: walletId,
+        category: category,
+        note: note,
+        date: date.toIso8601String(),
+      ),
+    );
     AppRefreshController.notifyChanged();
   }
 
@@ -159,16 +119,9 @@ class VehicleService {
       record: record,
     );
     try {
-      await db.transaction((txn) async {
-        final walletId = (record['wallet_id'] as num).toInt();
-        final amount = (record['amount'] as num).toDouble();
-        final changed = await txn.rawUpdate(
-          'UPDATE wallets SET balance = balance + ? WHERE id = ?',
-          [amount, walletId],
-        );
-        if (changed == 0) throw Exception('Linked wallet was not found.');
-        await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
-      });
+      await db.transaction((txn) =>
+        TransactionsService.deleteExpenseLedgerEntry(txn, id),
+      );
       AppRefreshController.notifyChanged();
     } catch (_) {
       await RecycleBinArchiveService.discardArchive(archiveId);

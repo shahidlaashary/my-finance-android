@@ -93,8 +93,26 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Future<void> addDocs(int id) async {
     final result=await FilePicker.platform.pickFiles(allowMultiple:true);
     if(result==null)return;
-    for(final f in result.files){final path=await FileStorageService.storePickedFile(f,directory:'properties/documents');if(path!=null)await PropertiesService.addDocument(propertyId:id,title:p.basenameWithoutExtension(f.name),fileName:f.name,filePath:path,mimeType:f.extension??'');}
+    var added=0;
+    for(final file in result.files){
+      final storedPath=await FileStorageService.storePickedFile(file,directory:'properties/documents');
+      if(storedPath==null)continue;
+      try {
+        await PropertiesService.addDocument(
+          propertyId:id,
+          title:p.basenameWithoutExtension(file.name),
+          fileName:file.name,
+          filePath:storedPath,
+          mimeType:file.extension??'',
+        );
+        added++;
+      } catch (_) {
+        try { await FileStorageService.deleteStoredFile(storedPath); } catch (_) {}
+        rethrow;
+      }
+    }
     await load();
+    if(added>0)message(tr('Documents added.'));
   }
   Future<void> propertyForm({Map<String,dynamic>? row}) async {
     final name=TextEditingController(text:row?['name']?.toString()??''),address=TextEditingController(text:row?['address']?.toString()??''),area=TextEditingController(text:row?['area']?.toString()??''),price=TextEditingController(text:(row?['purchase_price']??0).toString()),value=TextEditingController(text:(row?['current_value']??0).toString()),notes=TextEditingController(text:row?['notes']?.toString()??'');
@@ -115,13 +133,13 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       const SizedBox(height:10),field(notes,'Notes',lines:2),
       if(row!=null) ...[
         const SizedBox(height:18),Text(tr('Property Documents'),style:const TextStyle(fontWeight:FontWeight.bold)),
-        FutureBuilder<List<Map<String,dynamic>>>(future:PropertiesService.documents(row['id'] as int),builder:(ctx,s)=>Column(children:(s.data??[]).map((d)=>ListTile(title:Text(d['title'].toString()),subtitle:Text(d['file_name'].toString()),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){await PropertiesService.deleteDocument(d['id'] as int);final oldPath=d['file_path']?.toString()??'';if(oldPath.isNotEmpty){try{await FileStorageService.deleteStoredFile(oldPath);}catch(_){}}}if(v=='edit'){final title=TextEditingController(text:d['title'].toString());final ok=await showDialog<bool>(context:ctx,builder:(dialog)=>AlertDialog(title:Text(tr('Edit Document Name')),content:TextField(controller:title,decoration:InputDecoration(labelText:tr('Document Name'))),actions:[TextButton(onPressed:()=>Navigator.pop(dialog,false),child:Text(tr('Cancel'))),FilledButton(onPressed:()=>Navigator.pop(dialog,true),child:Text(tr('Save')))]));if(ok==true&&title.text.trim().isNotEmpty)await PropertiesService.updateDocument(d['id'] as int,title:title.text);title.dispose();}if(v=='replace'){final pick=await FilePicker.platform.pickFiles();if(pick!=null&&pick.files.isNotEmpty){final f=pick.files.first,path=await FileStorageService.storePickedFile(pick.files.first,directory:'properties/documents');if(path!=null){await PropertiesService.updateDocument(d['id'] as int,title:d['title'].toString(),fileName:f.name,filePath:path,mimeType:f.extension??'');final oldPath=d['file_path']?.toString()??'';if(oldPath.isNotEmpty){try{await FileStorageService.deleteStoredFile(oldPath);}catch(_){}}}}}refresh((){});},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'replace',child:Text(tr('Replace'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))]))).toList())),
+        FutureBuilder<List<Map<String,dynamic>>>(future:PropertiesService.documents(row['id'] as int),builder:(ctx,s)=>Column(children:(s.data??[]).map((d)=>ListTile(title:Text(d['title'].toString()),subtitle:Text(d['file_name'].toString()),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){await PropertiesService.deleteDocument(d['id'] as int);final oldPath=d['file_path']?.toString()??'';if(oldPath.isNotEmpty){try{await FileStorageService.deleteStoredFile(oldPath);}catch(_){}}}if(v=='edit'){final title=TextEditingController(text:d['title'].toString());final ok=await showDialog<bool>(context:ctx,builder:(dialog)=>AlertDialog(title:Text(tr('Edit Document Name')),content:TextField(controller:title,decoration:InputDecoration(labelText:tr('Document Name'))),actions:[TextButton(onPressed:()=>Navigator.pop(dialog,false),child:Text(tr('Cancel'))),FilledButton(onPressed:()=>Navigator.pop(dialog,true),child:Text(tr('Save')))]));if(ok==true&&title.text.trim().isNotEmpty)await PropertiesService.updateDocument(d['id'] as int,title:title.text);title.dispose();}if(v=='replace'){final pick=await FilePicker.platform.pickFiles();if(pick!=null&&pick.files.isNotEmpty){final file=pick.files.first,newPath=await FileStorageService.storePickedFile(file,directory:'properties/documents');if(newPath!=null){try{await PropertiesService.updateDocument(d['id'] as int,title:d['title'].toString(),fileName:file.name,filePath:newPath,mimeType:file.extension??'');}catch(_){try{await FileStorageService.deleteStoredFile(newPath);}catch(_){} rethrow;}final oldPath=d['file_path']?.toString()??'';if(oldPath.isNotEmpty){try{await FileStorageService.deleteStoredFile(oldPath);}catch(_){}}}}}refresh((){});},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'replace',child:Text(tr('Replace'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))]))).toList())),
         OutlinedButton.icon(onPressed:()=>addDocs(row['id'] as int),icon:const Icon(Icons.attach_file),label:Text(tr('Add Documents'))),
       ] else ...[
         OutlinedButton.icon(onPressed:()async{final picked=await FilePicker.platform.pickFiles(allowMultiple:true);if(picked!=null)refresh(()=>newDocs.addAll(picked.files));},icon:const Icon(Icons.attach_file),label:Text(tr('Attach Documents'))),
         ...newDocs.asMap().entries.map((entry)=>ListTile(dense:true,title:Text(entry.value.name),trailing:IconButton(icon:const Icon(Icons.close),onPressed:()=>refresh(()=>newDocs.removeAt(entry.key))))),
       ],
-      const SizedBox(height:18),FilledButton(onPressed:()async{if(!key.currentState!.validate())return;try{final id=await PropertiesService.saveProperty(id:row?['id'] as int?,name:name.text,type:type,address:address.text,ownership:ownership,area:area.text,purchasePrice:double.tryParse(price.text)??0,purchaseDate:date?.toIso8601String()??'',currentValue:double.tryParse(value.text)??0,status:status,notes:notes.text);if(row==null){for(final file in newDocs){final path=await FileStorageService.storePickedFile(file,directory:'properties/documents');if(path!=null)await PropertiesService.addDocument(propertyId:id,title:p.basenameWithoutExtension(file.name),fileName:file.name,filePath:path,mimeType:file.extension??'');}}if(sheet.mounted)Navigator.pop(sheet);await load();}catch(e){message(e.toString());}},child:Text(row==null?tr('Save Property'):tr('Update Property'))),
+      const SizedBox(height:18),FilledButton(onPressed:()async{if(!key.currentState!.validate())return;try{final id=await PropertiesService.saveProperty(id:row?['id'] as int?,name:name.text,type:type,address:address.text,ownership:ownership,area:area.text,purchasePrice:double.tryParse(price.text)??0,purchaseDate:date?.toIso8601String()??'',currentValue:double.tryParse(value.text)??0,status:status,notes:notes.text);if(row==null){for(final file in newDocs){final storedPath=await FileStorageService.storePickedFile(file,directory:'properties/documents');if(storedPath!=null){try{await PropertiesService.addDocument(propertyId:id,title:p.basenameWithoutExtension(file.name),fileName:file.name,filePath:storedPath,mimeType:file.extension??'');}catch(_){try{await FileStorageService.deleteStoredFile(storedPath);}catch(_){} rethrow;}}}}if(sheet.mounted)Navigator.pop(sheet);await load();}catch(e){message(e.toString());}},child:Text(row==null?tr('Save Property'):tr('Update Property'))),
     ]))))));
     for(final c in [name,address,area,price,value,notes]){c.dispose();}
   }

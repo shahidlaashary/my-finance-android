@@ -291,8 +291,7 @@ class CommitteeService {
     final members = await db.query('committee_members', where: 'committee_id=?', whereArgs: [committeeId]);
     final entries = await db.query('committee_entries', where: 'committee_id=?', whereArgs: [committeeId]);
     final txIds = entries.map((e) => e['transaction_id']).whereType<int>().toList();
-    final finance = txIds.isEmpty ? <Map<String,Object?>>[] :
-      await db.query('transactions', where: 'id IN (${List.filled(txIds.length, '?').join(',')})', whereArgs: txIds);
+    final finance = await TransactionsService.getLedgerEntriesByIds(db, txIds);
     await RecycleBinArchiveService.archive(
       type: 'Committee', title: committee['name']?.toString() ?? 'Committee',
       table: 'committees', id: committeeId, record: committee,
@@ -303,16 +302,10 @@ class CommitteeService {
       ],
     );
     await db.transaction((txn) async {
-      for (final row in finance) {
-        final walletId = (row['wallet_id'] as num?)?.toInt();
-        final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
-        if (walletId != null && delta != 0) {
-          await txn.rawUpdate('UPDATE wallets SET balance=balance-? WHERE id=?', [delta,walletId]);
-        }
-      }
-      if (txIds.isNotEmpty) {
-        await txn.delete('transactions', where: 'id IN (${List.filled(txIds.length, '?').join(',')})', whereArgs: txIds);
-      }
+      await TransactionsService.deleteCommitteeLedgerEntries(
+        txn,
+        finance.map((row) => Map<String, dynamic>.from(row)).toList(),
+      );
       await txn.delete('committee_entries', where: 'committee_id=?', whereArgs: [committeeId]);
       await txn.delete('committee_members', where: 'committee_id=?', whereArgs: [committeeId]);
       await txn.delete('committees', where: 'id=?', whereArgs: [committeeId]);
@@ -356,22 +349,10 @@ class CommitteeService {
         final members = related.where((e) => e['_related_table']=='committee_members').toList();
         final entries = related.where((e) => e['_related_table']=='committee_entries').toList();
         final finance = related.where((e) => e['_related_table']=='transactions').toList();
-        for (final row in finance) {
-          final walletId = (row['wallet_id'] as num?)?.toInt();
-          final delta = (row['balance_delta'] as num?)?.toDouble() ?? 0;
-          if (walletId != null && delta != 0) {
-            final wallet = await txn.query('wallets', columns: ['balance'],
-              where: 'id=?', whereArgs: [walletId], limit: 1);
-            if (wallet.isEmpty) throw Exception('A committee wallet no longer exists.');
-            if (delta < 0 && (wallet.first['balance'] as num).toDouble() < -delta) {
-              throw Exception('Insufficient wallet balance to restore committee activity.');
-            }
-            await txn.rawUpdate('UPDATE wallets SET balance=balance+? WHERE id=?', [delta,walletId]);
-          }
-        }
+        await TransactionsService.restoreCommitteeLedgerEntries(txn, finance);
         await txn.insert('committees', record);
         for (final row in members) { row.remove('_related_table'); await txn.insert('committee_members', row); }
-        for (final row in finance) { row.remove('_related_table'); await TransactionsService.insertLedgerEntry(txn, Map<String, Object?>.from(row)); }
+
         for (final row in entries) { row.remove('_related_table'); await txn.insert('committee_entries', row); }
         return;
   }

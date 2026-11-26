@@ -374,125 +374,136 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                   Card(
                     clipBehavior: Clip.antiAlias,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                      padding: const EdgeInsets.all(12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.currency_exchange_rounded,
-                                  size: 19, color: Theme.of(context).colorScheme.primary),
+                              Icon(Icons.currency_exchange_rounded, size: 19,
+                                  color: Theme.of(context).colorScheme.primary),
                               const SizedBox(width: 8),
                               const Text('Currency Converter',
                                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                               const Spacer(),
-                              Text('${_baseCurrency} base',
-                                  style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: (_online ? Colors.green : Colors.orange).withValues(alpha: .12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(_online ? 'Automatic' : 'Manual • Offline',
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
+                                      color: _online ? Colors.green.shade700 : Colors.orange.shade800)),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 9),
+                          const SizedBox(height: 12),
                           TextField(
                             controller: _convertAmount,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                             decoration: InputDecoration(
                               labelText: 'Amount',
+                              prefixIcon: const Icon(Icons.payments_outlined, size: 19),
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             onChanged: (_) => setState(() {}),
                           ),
-                          const SizedBox(height: 8),
-                          Row(children: [
-                            Expanded(child: DropdownButtonFormField<String>(
-                              value: _convertFrom,
-                              isExpanded: true,
-                              isDense: true,
-                              style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
-                              decoration: InputDecoration(
-                                labelText: 'From',
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          const SizedBox(height: 10),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(child: DropdownButtonFormField<String>(
+                                value: _convertFrom,
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  labelText: 'From',
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(11)),
+                                ),
+                                items: CurrencyCatalog.supported.map((code) =>
+                                  DropdownMenuItem(value: code, child: Text(code,
+                                    style: const TextStyle(fontWeight: FontWeight.w700)))).toList(),
+                                onChanged: (value) { if (value != null) setState(() => _convertFrom = value); },
+                              )),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 7),
+                                child: IconButton.filledTonal(
+                                  tooltip: 'Swap currencies',
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => setState(() {
+                                    final oldFrom = _convertFrom;
+                                    _convertFrom = _convertTo;
+                                    _convertTo = oldFrom;
+                                  }),
+                                  icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                                ),
                               ),
-                              items: CurrencyCatalog.supported.map((code) =>
-                                DropdownMenuItem(value: code, child: Text(code))).toList(),
-                              onChanged: (value) {
-                                if (value != null) setState(() => _convertFrom = value);
-                              },
-                            )),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 6),
-                              child: Icon(Icons.swap_horiz_rounded, size: 19),
-                            ),
-                            Expanded(child: DropdownButtonFormField<String>(
-                              value: _convertTo,
-                              isExpanded: true,
-                              isDense: true,
-                              style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
-                              decoration: InputDecoration(
-                                labelText: 'To',
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              items: CurrencyCatalog.supported.map((code) =>
-                                DropdownMenuItem(value: code, child: Text(code))).toList(),
-                              onChanged: (value) {
-                                if (value != null) setState(() => _convertTo = value);
-                              },
-                            )),
-                          ]),
-                          const SizedBox(height: 9),
+                              Expanded(child: DropdownButtonFormField<String>(
+                                value: _convertTo,
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  labelText: 'To',
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(11)),
+                                ),
+                                items: CurrencyCatalog.supported.map((code) =>
+                                  DropdownMenuItem(value: code, child: Text(code,
+                                    style: const TextStyle(fontWeight: FontWeight.w700)))).toList(),
+                                onChanged: (value) { if (value != null) setState(() => _convertTo = value); },
+                              )),
+                            ],
+                          ),
+                          const SizedBox(height: 11),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.45),
-                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .72),
+                                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .28),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: .12)),
                             ),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text('Converted amount',
-                                          style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _convertedAmount == null
-                                            ? 'Rate unavailable'
-                                            : '$_convertTo ${NumberFormat('#,##0.####').format(_convertedAmount)}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w800,
-                                          color: _convertedAmount == null
-                                              ? Theme.of(context).hintColor
-                                              : Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                Text('CONVERTED AMOUNT',
+                                  style: TextStyle(fontSize: 9, letterSpacing: .8,
+                                    fontWeight: FontWeight.w800, color: Theme.of(context).hintColor)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _convertedAmount == null
+                                      ? 'Rate unavailable'
+                                      : _convertTo + '  ' + NumberFormat('#,##0.####').format(_convertedAmount),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900,
+                                    color: _convertedAmount == null
+                                      ? Theme.of(context).hintColor
+                                      : Theme.of(context).colorScheme.primary),
                                 ),
-                                const SizedBox(width: 8),
-                                Icon(Icons.check_circle_outline_rounded,
-                                    size: 18, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(height: 3),
+                                Text(_online
+                                    ? 'Live saved automatic rate'
+                                    : 'Saved manual currency-pair rate',
+                                  style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text('Rates relative to $_baseCurrency.',
-                              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   if (_message != null) ...[
                     SizedBox(height: 8),
                     Material(

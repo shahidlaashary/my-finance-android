@@ -20,6 +20,7 @@ import 'package:my_finance/modules/finance/screens/recurring_transactions_screen
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
+/// Transaction history, filters, summaries aur transaction details display karta hai.
 class TransactionsScreen extends StatefulWidget {
   final int? walletId;
   final String? walletName;
@@ -76,8 +77,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final week = await GeneralPreferences.instance.weekStart;
       final result = await TransactionsService.getTransactions(walletId: widget.walletId);
 
-      // Include asset and loan activity in the existing Others filter.
-      // These are read-only source records; wallet transactions remain editable.
+      // Existing Others filter mein asset aur loan activity bhi include karein.
+      // Ye source records read-only hain; wallet transactions editable rehti hain.
       final assetModels = await AssetsService().getAssets();
       final loanModels = await LoansService.getLoans();
       final otherRows = <Map<String, dynamic>>[];
@@ -110,8 +111,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         }
       }
       for (final loan in loanModels) {
-        // Asset-linked loans are represented by their asset purchase/sale row,
-        // but their repayments must still appear in the Others transaction filter.
+        // Asset-linked loans asset ki purchase/sale row se represent hote hain,
+        // lekin unki repayments Others transaction filter mein phir bhi show honi chahiye.
         final isAssetLinked =
             loan.sourceType == 'asset_purchase' || loan.sourceType == 'asset_sale';
         if (!isAssetLinked) {
@@ -134,8 +135,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               'id': 'loan_repayment_${repayment.id}',
               'source_record': true,
               'type': 'loan',
-              // Wallet history must use the exact saved wallet-side snapshot.
-              // Loan/Asset Details continue to use repayment.amount in loan currency.
+              // Wallet history mein exact saved wallet-side snapshot use karein.
+              // Loan/Asset Details repayment.amount ko loan currency mein hi use karte hain.
               'amount': repayment.walletAmount,
               'wallet_id': repayment.walletId,
               'category': 'Loan Repayment',
@@ -150,8 +151,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         }
       }
       if (widget.walletId != null) {
-        // Loan-financed asset purchases/sales are source records, not wallet cash flows.
-        // Keep them in the global Others list, but hide them from wallet-specific history.
+        // Loan-financed asset purchase/sale source records hain, wallet cash flows nahi.
+        // Inhein global Others list mein rakhein, lekin wallet-specific history se hide karein.
         otherRows.removeWhere((row) =>
             row['wallet_id'] != widget.walletId ||
             (row['type'] == 'asset' &&
@@ -159,7 +160,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       }
       final wallet = widget.walletId == null ? null : await WalletService.getWallet(widget.walletId!);
 
-      // Upcoming recurring schedules are display-only; they do not affect balances.
+      // Upcoming recurring schedules sirf display ke liye hain; ye balances affect nahi karte.
       final recurringItems = await RecurringTransactionService().getRecurringTransactions(activeOnly: true);
       final currencyByWallet = await WalletService.getWalletCurrencyMap();
       final now = DateTime.now();
@@ -817,7 +818,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return bDate.compareTo(aDate);
       });
 
-    // Show a compact first page, then paginate the complete history in View All.
+    // Pehle compact page show karein; View All mein complete history paginate karein.
     const transactionsPerPage = 10;
     final pageCount = (filteredTransactions.length / transactionsPerPage).ceil();
     final safePage = currentPage.clamp(0, pageCount > 0 ? pageCount - 1 : 0).toInt();
@@ -833,9 +834,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
     final displayRows = <Map<String, dynamic>>[];
     for (final entry in groupedByDate.entries) {
-      // Daily net is calculated independently per currency. Income adds,
-      // expenses subtract; transfers and balance adjustments are excluded
-      // because they are not income/expense activity.
+      // Daily net har currency ke liye alag calculate hota hai. Income add aur
+      // expenses subtract hote hain; transfers aur balance adjustments exclude hain
+      // kyun ke ye income/expense activity nahi hain.
       final dailyNetByCurrency = <String, double>{};
       for (final item in entry.value) {
         final type = normalizeType(item['type']?.toString() ?? '');
@@ -1434,6 +1435,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 }
 
 
+/// Selected transaction ki complete details aur available actions show karta hai.
 class TransactionDetailScreen extends StatelessWidget {
   const TransactionDetailScreen({super.key, required this.transaction});
 

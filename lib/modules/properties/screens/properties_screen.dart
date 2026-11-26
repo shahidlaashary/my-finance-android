@@ -16,11 +16,13 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   int tab=0; bool loading=true;
   List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[], rentPayments=[], maintenanceItems=[], reportRows=[];
   String reportCurrency='PKR';
+  DateTimeRange? reportRange;
+  String _dateKey(DateTime date)=>'${date.year.toString().padLeft(4,'0')}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}';
   String tr(String s)=>appText(context,s,s);
   @override void initState(){super.initState();load();}
   Future<void> load() async {
     setState(()=>loading=true);
-    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance(),PropertiesService.financialReport()]);
+    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance(),PropertiesService.financialReport(fromDate:reportRange==null?null:_dateKey(reportRange!.start),toDate:reportRange==null?null:_dateKey(reportRange!.end))]);
       final baseCurrency=await CurrencyService.getBaseCurrency();
       try { await _syncPropertyReminders(contracts:v[2],payments:v[4],maintenance:v[5]); } catch (_) { /* Reminder permission/service errors must not block Properties data. */ }
       if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; maintenanceItems=v[5]; reportRows=v[6]; reportCurrency=baseCurrency; loading=false; });
@@ -287,6 +289,13 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     final amount=(value as num?)?.toDouble()??0;
     return '$reportCurrency ${amount.toStringAsFixed(2)}';
   }
+  Future<void> _chooseReportRange() async {
+    final now=DateTime.now();
+    final selected=await showDateRangePicker(context:context,firstDate:DateTime(1990),lastDate:DateTime(now.year+20),initialDateRange:reportRange);
+    if(selected==null)return;
+    setState(()=>reportRange=selected);
+    await load();
+  }
   Widget reports() {
     final rent=reportRows.fold<double>(0,(sum,row)=>sum+((row['rent_received'] as num?)?.toDouble()??0));
     final maintenance=reportRows.fold<double>(0,(sum,row)=>sum+((row['maintenance_expense'] as num?)?.toDouble()??0));
@@ -294,7 +303,8 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     final vacant=reportRows.length-occupied;
     return RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[
       Text(tr('Portfolio Financial Report'),style:const TextStyle(fontSize:19,fontWeight:FontWeight.bold)),
-      Text(tr('All-time totals in the current app base currency: $reportCurrency')),
+      Text(tr('Amounts are shown in the current app base currency: $reportCurrency')),
+      Card(child:ListTile(leading:const Icon(Icons.date_range_outlined),title:Text(reportRange==null?tr('All dates'):'${MaterialLocalizations.of(context).formatMediumDate(reportRange!.start)} – ${MaterialLocalizations.of(context).formatMediumDate(reportRange!.end)}'),subtitle:Text(tr('Report Period')),onTap:_chooseReportRange,trailing:reportRange==null?const Icon(Icons.edit_calendar_outlined):IconButton(tooltip:tr('Clear date filter'),icon:const Icon(Icons.clear),onPressed:()async{setState(()=>reportRange=null);await load();}))),
       const SizedBox(height:12),
       GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,childAspectRatio:1.55,crossAxisSpacing:10,mainAxisSpacing:10,children:[
         reportStat(tr('Rent Received'),reportAmount(rent),Icons.payments_outlined),

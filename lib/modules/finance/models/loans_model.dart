@@ -1,3 +1,4 @@
+/// Loan ki amount, outstanding balance, party aur linked asset details represent karta hai.
 class LoansModel {
   final int? id;
   final int? partyId;
@@ -34,6 +35,7 @@ class LoansModel {
   bool get isPaid => remainingAmount <= 0;
   bool get isAssetLinked => sourceType == 'asset_purchase' || sourceType == 'asset_sale';
 
+  /// Unpaid loan ki due date guzarne par true deta hai.
   bool get isOverdue {
     if (isPaid || dueDate == null || dueDate!.isEmpty) return false;
     final due = DateTime.tryParse(dueDate!);
@@ -42,8 +44,10 @@ class LoansModel {
     return due.isBefore(DateTime(today.year, today.month, today.day));
   }
 
+  /// Total amount mein se outstanding minus karke repaid amount deta hai.
   double get repaidAmount => (amount - remainingAmount).clamp(0, amount).toDouble();
 
+  /// Loan model ko database record mein convert karta hai.
   Map<String, dynamic> toMap() => {
     'id': id, 'party_id': partyId, 'loan_type': loanType,
     'amount': amount, 'remaining_amount': remainingAmount,

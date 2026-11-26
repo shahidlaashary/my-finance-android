@@ -5,17 +5,16 @@ import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 
-/// Central SQLite database for the My Finance application.
+/// My Finance app ka central SQLite schema aur compatibility facade.
 ///
-/// Version 1 creates the complete fresh finance database schema.
+/// Fresh install par version 1 ka mukammal finance database schema banata hai.
 class FinanceDB {
   FinanceDB._();
 
   static final FinanceDB instance = FinanceDB._();
 
-  /// Initializes the shared finance database connection. FinanceDB keeps
-  /// ownership of the fresh-install schema while DatabaseManager owns the
-  /// single connection lifecycle used by all finance modules.
+  /// Shared finance connection initialize karta hai. Fresh-install schema
+  /// FinanceDB ke paas rehta hai aur DatabaseManager aik connection manage karta hai.
   Future<void> init() async {
     await DatabaseManager.instance.initialize(onCreate: _createDatabase);
   }
@@ -145,8 +144,8 @@ class FinanceDB {
     );
   }
 
-  // Currency operations are owned by CurrencyService. These forwarding
-  // methods remain only as a compatibility facade for older callers.
+  // Currency operations CurrencyService own karta hai. Ye forwarding methods
+  // purane callers ke liye compatibility facade ke taur par mojood hain.
   Future<double?> getExchangeRate(String currency) =>
       CurrencyService.getExchangeRate(currency);
 

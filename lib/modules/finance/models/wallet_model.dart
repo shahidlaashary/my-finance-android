@@ -1,3 +1,4 @@
+/// Wallet ka type, currency, balance aur display settings represent karta hai.
 class WalletModel {
   final int? id;
   final String name;
@@ -25,6 +26,7 @@ class WalletModel {
     required this.createdAt,
   });
 
+  /// Database row ko typed wallet model mein convert karta hai.
   factory WalletModel.fromMap(Map<String, dynamic> map) => WalletModel(
     id: (map['id'] as num?)?.toInt(),
     name: (map['name'] ?? '').toString(),
@@ -39,6 +41,7 @@ class WalletModel {
     createdAt: (map['created_at'] ?? '').toString(),
   );
 
+  /// Wallet model ko database record mein convert karta hai.
   Map<String, dynamic> toMap() => {
     if (id != null) 'id': id,
     'name': name,

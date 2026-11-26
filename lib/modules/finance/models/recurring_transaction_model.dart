@@ -1,3 +1,4 @@
+/// Schedule par chalne wali income, expense ya transfer details represent karta hai.
 class RecurringTransactionModel {
   final int? id;
   final String title;
@@ -35,6 +36,7 @@ class RecurringTransactionModel {
 
   bool get isTransfer => type.toLowerCase() == 'transfer';
 
+  /// Check karta hai ke recurring schedule ki end date guzar chuki hai.
   bool get hasEnded {
     if (endDate == null) return false;
 
@@ -44,6 +46,7 @@ class RecurringTransactionModel {
         .isBefore(DateTime(now.year, now.month, now.day));
   }
 
+  /// Database row se recurring transaction model tayyar karta hai.
   factory RecurringTransactionModel.fromMap(
     Map<String, dynamic> map,
   ) {

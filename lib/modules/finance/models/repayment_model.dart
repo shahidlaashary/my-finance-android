@@ -1,4 +1,5 @@
 
+/// Loan repayment aur wallet currency conversion ki details represent karta hai.
 class RepaymentModel {
   final int? id;
   final int loanId;
@@ -28,6 +29,7 @@ class RepaymentModel {
     this.isManualRate = false,
   }) : walletAmount = walletAmount ?? amount;
 
+  /// Repayment model ko database columns ke mutabiq map mein convert karta hai.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -45,6 +47,7 @@ class RepaymentModel {
     };
   }
 
+  /// Database row se repayment model tayyar karta hai.
   factory RepaymentModel.fromMap(Map<String, dynamic> map) {
     return RepaymentModel(
       id: map['id'] as int?,

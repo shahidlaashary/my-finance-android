@@ -5,9 +5,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-/// Creates a printable Legal-size agreement PDF from the saved template
-/// snapshot. The user's saved document is never re-rendered from a later edit
-/// to the template library.
+/// Saved template snapshot se print ke liye Legal-size agreement PDF banata hai.
+/// User ka saved document template library ki baad wali tabdeeli se dobara render nahi hota.
 class AgreementPdfService {
   AgreementPdfService._();
   static final instance = AgreementPdfService._();

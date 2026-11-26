@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/space/screens/agreements_screen.dart';
 
-/// Agreements workspace shown under the My Space Work tab.
+/// My Space ke Work tab mein agreements workspace dikhata hai.
 class WorkScreen extends StatefulWidget {
   const WorkScreen({super.key});
 

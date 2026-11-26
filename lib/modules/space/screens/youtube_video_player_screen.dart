@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+/// Selected YouTube video ko app ke andar play karne ki screen.
 class YouTubeVideoPlayerScreen extends StatefulWidget {
   const YouTubeVideoPlayerScreen({
     super.key,

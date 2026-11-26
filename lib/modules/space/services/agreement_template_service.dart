@@ -1,7 +1,7 @@
 import 'package:my_finance/modules/space/services/my_space_service.dart';
 
-/// Local editable templates for Agreements. The built-in Music Rights Agreement
-/// follows the user's supplied LOR samples; clauses remain editable by the user.
+/// Agreements ke local editable templates manage karta hai. Built-in Music Rights
+/// Agreement user ke diye hue LOR samples par mabni hai aur clauses editable rehte hain.
 class AgreementTemplateService {
   AgreementTemplateService._();
   static final instance = AgreementTemplateService._();

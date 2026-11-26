@@ -241,12 +241,28 @@ class PropertiesService {
 
   static Future<void> deleteTenant(int id) async {
     final db = DatabaseManager.instance.database;
-    final linked = await db.query('properties_contracts', columns: ['id'], where: 'tenant_id = ?', whereArgs: [id], limit: 1);
-    if (linked.isNotEmpty) throw StateError('Remove this tenant\'s contracts before deleting the tenant.');
-    await db.delete('properties_tenants', where: 'id = ?', whereArgs: [id]);
+    await db.transaction((txn) async {
+      final tenant = await txn.query('properties_tenants', columns: ['id'], where: 'id = ?', whereArgs: [id], limit: 1);
+      if (tenant.isEmpty) throw StateError('Tenant not found.');
+      final linked = await txn.query('properties_contracts', columns: ['id'], where: 'tenant_id = ?', whereArgs: [id], limit: 1);
+      if (linked.isNotEmpty) throw StateError('Remove this tenant\'s contracts before deleting the tenant.');
+      await txn.delete('properties_tenants', where: 'id = ?', whereArgs: [id]);
+    });
     AppRefreshController.notifyChanged();
   }
 
+
+  static Future<void> deleteOwner(int id) async {
+    final db = DatabaseManager.instance.database;
+    await db.transaction((txn) async {
+      final owner = await txn.query('properties_owners', columns: ['id'], where: 'id = ?', whereArgs: [id], limit: 1);
+      if (owner.isEmpty) throw StateError('Owner not found.');
+      final linked = await txn.query('properties_owner_links', columns: ['id'], where: 'owner_id = ?', whereArgs: [id], limit: 1);
+      if (linked.isNotEmpty) throw StateError('Unlink this owner from all properties before deleting the owner.');
+      await txn.delete('properties_owners', where: 'id = ?', whereArgs: [id]);
+    });
+    AppRefreshController.notifyChanged();
+  }
 
   static Future<List<Map<String, dynamic>>> owners() async {
     return DatabaseManager.instance.database.query('properties_owners', orderBy: 'name COLLATE NOCASE');

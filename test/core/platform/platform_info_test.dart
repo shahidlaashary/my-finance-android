@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_finance/core/platform/platform_info.dart';
 
+// Ye tests mukhtalif Flutter targets ki platform mapping aur capability flags verify karte hain.
 void main() {
   group('PlatformInfo.fromTarget', () {
     test('maps Android and iOS as mobile platforms', () {

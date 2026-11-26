@@ -7,6 +7,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 
+// Ye tests category service ki fresh database setup aur category operations verify karte hain.
 void main() {
   late Directory databaseDirectory;
 

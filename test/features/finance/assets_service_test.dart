@@ -16,6 +16,7 @@ import 'package:my_finance/modules/parties/services/party_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/features/recycle_bin/services/recycle_bin_service.dart';
 
+// Ye tests asset service ke database, linked loan aur recycle bin workflows verify karte hain.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

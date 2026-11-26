@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 class RecurringTransactionService {
@@ -409,7 +410,7 @@ class RecurringTransactionService {
         whereArgs: [toWalletId],
       );
     }
-    final transactionId = await txn.insert('transactions', {
+    final transactionId = await TransactionsService.insertLedgerEntry(txn, {
       'type': type == 'income' ? 'Income' : type == 'expense' ? 'Expense' : 'Transfer',
       'amount': amount,
       'wallet_id': walletId,

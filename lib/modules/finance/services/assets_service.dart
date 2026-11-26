@@ -6,6 +6,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/parties/services/party_service.dart';
 class AssetsService {
   /// Checks whether a wallet is referenced by an asset purchase or sale.
   /// AssetsService owns the asset-table lookup.
@@ -181,15 +182,13 @@ class AssetsService {
 
       final assetId = await db.transaction((txn) async {
         if (isLoan) {
-          final parties = await txn.query(
-            'loan_parties',
+          final party = await PartyService.getPartyById(
+            txn,
+            asset.partyId!,
             columns: ['id', 'currency'],
-            where: 'id = ?',
-            whereArgs: [asset.partyId],
-            limit: 1,
           );
-          if (parties.isEmpty) throw Exception('Selected party was not found.');
-          currency = (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+          if (party == null) throw Exception('Selected party was not found.');
+          currency = (party['currency']?.toString() ?? 'PKR').toUpperCase();
         } else {
           final wallet = await _getWallet(txn, assetWalletId);
           currency = (wallet['currency'] ?? 'PKR').toString().toUpperCase();
@@ -213,20 +212,17 @@ class AssetsService {
             amount: -asset.purchasePrice,
           );
         } else {
-          final loanId = await txn.insert('loans', {
-            'party_id': asset.partyId,
-            'loan_type': 'taken',
-            'amount': asset.purchasePrice,
-            'remaining_amount': asset.purchasePrice,
-            'wallet_id': 0,
-            'currency': currency,
-            'source_type': 'asset_purchase',
-            'source_id': id,
-            'lending_date': asset.purchaseDate.toIso8601String().split('T').first,
-            'notes': 'Asset purchase: ${asset.name}',
-            'status': 'active',
-            'created_at': DateTime.now().toIso8601String(),
-          });
+          final loanId = await LoansService.createAssetLinkedLoan(
+            txn,
+            partyId: asset.partyId!,
+            loanType: 'taken',
+            amount: asset.purchasePrice,
+            currency: currency,
+            sourceType: 'asset_purchase',
+            sourceId: id,
+            lendingDate: asset.purchaseDate,
+            notes: 'Asset purchase: ${asset.name}',
+          );
           await txn.update('assets', {'linked_loan_id': loanId}, where: 'id = ?', whereArgs: [id]);
         }
 
@@ -340,15 +336,14 @@ class AssetsService {
 
       if (isLoan) {
         if (partyId == null) throw Exception('Please select the buyer party.');
-        final parties = await txn.query(
-          'loan_parties',
-          where: 'id = ?',
-          whereArgs: [partyId],
-          limit: 1,
+        final party = await PartyService.getPartyById(
+          txn,
+          partyId,
+          columns: ['id', 'currency'],
         );
-        if (parties.isEmpty) throw Exception('Selected buyer party was not found.');
+        if (party == null) throw Exception('Selected buyer party was not found.');
         final buyerCurrency =
-            (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+            (party['currency']?.toString() ?? 'PKR').toUpperCase();
         if (buyerCurrency != asset.currency.toUpperCase()) {
           throw Exception(
             'Buyer party currency must match the asset currency (${asset.currency}).',
@@ -359,20 +354,17 @@ class AssetsService {
         actualWalletAmount = 0;
         actualWalletCurrency = asset.currency.toUpperCase();
         appliedExchangeRate = 1.0;
-        linkedLoanId = await txn.insert('loans', {
-          'party_id': partyId,
-          'loan_type': 'given',
-          'amount': salePrice,
-          'remaining_amount': salePrice,
-          'wallet_id': 0,
-          'currency': buyerCurrency,
-          'source_type': 'asset_sale',
-          'source_id': assetId,
-          'lending_date': saleDate.toIso8601String().split('T').first,
-          'notes': 'Asset sale: ${asset.name}',
-          'status': 'active',
-          'created_at': DateTime.now().toIso8601String(),
-        });
+        linkedLoanId = await LoansService.createAssetLinkedLoan(
+          txn,
+          partyId: partyId,
+          loanType: 'given',
+          amount: salePrice,
+          currency: buyerCurrency,
+          sourceType: 'asset_sale',
+          sourceId: assetId,
+          lendingDate: saleDate,
+          notes: 'Asset sale: ${asset.name}',
+        );
       } else {
         final saleWallet = await _getWallet(txn, anchorWalletId);
         final saleCurrency =
@@ -473,36 +465,27 @@ class AssetsService {
             !updatedAsset.purchaseDate.isAtSameMomentAs(oldAsset.purchaseDate) ||
             updatedAsset.name != oldAsset.name;
 
-        final parties = await txn.query(
-          'loan_parties',
+        final party = await PartyService.getPartyById(
+          txn,
+          updatedAsset.partyId!,
           columns: ['id', 'currency'],
-          where: 'id = ?',
-          whereArgs: [updatedAsset.partyId],
-          limit: 1,
         );
-        if (parties.isEmpty) throw Exception('Selected party was not found.');
+        if (party == null) throw Exception('Selected party was not found.');
         final currency =
-            (parties.first['currency']?.toString() ?? 'PKR').toUpperCase();
+            (party['currency']?.toString() ?? 'PKR').toUpperCase();
         if (currency != oldAsset.currency.toUpperCase()) {
           throw Exception(
             'Party currency must remain ${oldAsset.currency} for this asset.',
           );
         }
 
-        final loanRows = await txn.query(
-          'loans',
-          columns: [
-            'id', 'source_type', 'source_id', 'loan_type', 'party_id',
-            'amount', 'remaining_amount', 'wallet_id', 'currency',
-          ],
-          where: 'id = ?',
-          whereArgs: [oldAsset.linkedLoanId],
-          limit: 1,
+        final linkedLoan = await LoansService.getAssetLinkedLoan(
+          txn,
+          oldAsset.linkedLoanId!,
         );
-        if (loanRows.isEmpty) {
+        if (linkedLoan == null) {
           throw Exception('Linked asset loan was not found.');
         }
-        final linkedLoan = loanRows.first;
         final linkedAmount = (linkedLoan['amount'] as num?)?.toDouble();
         final linkedRemaining =
             (linkedLoan['remaining_amount'] as num?)?.toDouble();
@@ -523,11 +506,11 @@ class AssetsService {
           throw Exception('Linked asset loan does not match the saved Asset details.');
         }
 
-        final linkedRepayments = await txn.query(
-          'loan_repayments',
+        final linkedRepayments =
+            await LoansService.getAssetLinkedRepayments(
+          txn,
+          oldAsset.linkedLoanId!,
           columns: ['amount'],
-          where: 'loan_id = ?',
-          whereArgs: [oldAsset.linkedLoanId],
         );
         var repaidTotal = 0.0;
         for (final repayment in linkedRepayments) {
@@ -551,22 +534,24 @@ class AssetsService {
         }
 
         if (loanTermsChanged) {
-          final repayments = await txn.query(
-            'loan_repayments',
+          final hasRepayments =
+              (await LoansService.getAssetLinkedRepayments(
+            txn,
+            oldAsset.linkedLoanId!,
             columns: ['id'],
-            where: 'loan_id = ?',
-            whereArgs: [oldAsset.linkedLoanId],
             limit: 1,
-          );
-          if (repayments.isNotEmpty) {
+          )).isNotEmpty;
+          if (hasRepayments) {
             throw Exception(
               'This asset already has loan repayments. Its linked loan details cannot be changed.',
             );
           }
 
-          final loanUpdated = await txn.update(
-            'loans',
-            {
+          final loanUpdated = await LoansService.updateAssetLinkedLoan(
+            txn,
+            loanId: oldAsset.linkedLoanId!,
+            assetId: updatedAsset.id!,
+            values: {
               'party_id': updatedAsset.partyId,
               'loan_type': 'taken',
               'amount': updatedAsset.purchasePrice,
@@ -578,8 +563,6 @@ class AssetsService {
               'notes': 'Asset purchase: ${updatedAsset.name}',
               'status': 'active',
             },
-            where: 'id = ? AND source_type = ? AND source_id = ?',
-            whereArgs: [oldAsset.linkedLoanId, 'asset_purchase', updatedAsset.id],
           );
           if (loanUpdated != 1) {
             throw Exception('Linked asset loan could not be updated.');
@@ -727,16 +710,11 @@ class AssetsService {
         final expectedAmount = isPurchaseLoan ? asset.purchasePrice : asset.salePrice;
         final expectedPartyId = isPurchaseLoan ? asset.partyId : asset.salePartyId;
 
-        final loanRows = await txn.query(
-          'loans',
-          where: 'id = ?',
-          whereArgs: [loanId],
-          limit: 1,
-        );
-        if (loanRows.isEmpty) {
+        final loanRecord =
+            await LoansService.getAssetLinkedLoan(txn, loanId);
+        if (loanRecord == null) {
           throw Exception('A linked asset loan is missing. Asset deletion was cancelled.');
         }
-        final loanRecord = loanRows.first;
         final loanAmount = (loanRecord['amount'] as num?)?.toDouble();
         if (loanRecord['source_type'] != expectedSource ||
             (loanRecord['source_id'] as num?)?.toInt() != assetId ||
@@ -754,11 +732,8 @@ class AssetsService {
           throw Exception('The linked asset loan does not match this asset. Asset deletion was cancelled.');
         }
 
-        final repaymentRows = await txn.query(
-          'loan_repayments',
-          where: 'loan_id = ?',
-          whereArgs: [loanId],
-        );
+        final repaymentRows =
+            await LoansService.getAssetLinkedRepayments(txn, loanId);
         final loanRemaining =
             (loanRecord['remaining_amount'] as num?)?.toDouble();
         final repaidTotal = repaymentRows.fold<double>(
@@ -895,12 +870,7 @@ class AssetsService {
       }
 
       for (final loanId in linkedLoanIds) {
-        await txn.delete(
-          'loan_repayments',
-          where: 'loan_id = ?',
-          whereArgs: [loanId],
-        );
-        await txn.delete('loans', where: 'id = ?', whereArgs: [loanId]);
+        await LoansService.deleteAssetLinkedLoan(txn, loanId);
       }
 
       final deleted = await txn.delete(
@@ -1092,18 +1062,16 @@ class AssetsService {
             if (expectedPartyId == null || expectedPartyId <= 0) {
               throw Exception('The archived Asset is missing its linked party. Restore was cancelled.');
             }
-            final partyRows = await txn.query(
-              'loan_parties',
+            final party = await PartyService.getPartyById(
+              txn,
+              expectedPartyId,
               columns: ['id', 'currency'],
-              where: 'id = ?',
-              whereArgs: [expectedPartyId],
-              limit: 1,
             );
-            if (partyRows.isEmpty) {
+            if (party == null) {
               throw Exception('Restore the linked party before restoring this Asset.');
             }
             final partyCurrency =
-                (partyRows.first['currency']?.toString() ?? 'PKR').toUpperCase();
+                (party['currency']?.toString() ?? 'PKR').toUpperCase();
             final loanAmount = (loan['amount'] as num).toDouble();
             final loanRemaining = (loan['remaining_amount'] as num).toDouble();
             final repaidTotal = repayments.fold<double>(
@@ -1136,10 +1104,9 @@ class AssetsService {
                 loanRemaining > loanAmount + 0.000001) {
               throw Exception('The archived linked loan does not match this Asset.');
             }
-            final alreadyExists = await txn.query(
-              'loans', columns: ['id'], where: 'id = ?', whereArgs: [loanId], limit: 1,
-            );
-            if (alreadyExists.isNotEmpty) {
+            final alreadyExists =
+                await LoansService.hasAssetLinkedLoan(txn, loanId);
+            if (alreadyExists) {
               throw Exception('A linked asset loan already exists. Resolve it before restoring this asset.');
             }
             final loanType = (loan['loan_type']?.toString() ?? 'given').toLowerCase();
@@ -1181,10 +1148,11 @@ class AssetsService {
               final delta = loanType == 'given' ? walletAmount : -walletAmount;
               addWalletDelta(repaymentWalletId, delta);
             }
-            await txn.insert('loans', loan);
-            for (final repayment in repayments) {
-              await txn.insert('loan_repayments', repayment);
-            }
+            await LoansService.restoreAssetLinkedLoan(
+              txn,
+              loan: loan,
+              repayments: repayments,
+            );
         }
         final expectedLoanIds = <int>{
           if (purchaseLoanId != null) purchaseLoanId,

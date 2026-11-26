@@ -60,8 +60,8 @@ class RecycleBinService {
     await ensureTable();
     final db = DatabaseManager.instance.database;
 
-    // Space Documents live in space.db; only the app-wide archive envelope
-    // remains in the central Recycle Bin database.
+    // Space Documents space.db mein rehte hain; sirf app-wide archive envelope
+    // central Recycle Bin database mein store hota hai.
     final archivedRows = await db.query(
       'recycle_bin',
       where: 'id = ?',
@@ -309,7 +309,7 @@ class RecycleBinService {
               );
             }
           }
-          // Grouped asset deletion owns these child loan archive records.
+          // Ye child loan archive records grouped asset deletion ke under manage hote hain.
           await db.delete(
             'recycle_bin',
             where: "source_table = 'loans' AND source_id = ?",

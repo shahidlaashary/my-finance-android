@@ -841,7 +841,7 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                 ],
               ),
               if (transferFeeEnabled) ...[
-                SizedBox(height: 12),
+                SizedBox(height: 10),
                 TextFormField(
                   controller: transferFeeController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -864,7 +864,7 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                   ),
                 ),
               ],
-              SizedBox(height: 12),
+              SizedBox(height: 10),
               _notesField(),
             ] else ...[
               Row(

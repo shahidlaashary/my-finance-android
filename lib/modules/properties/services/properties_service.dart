@@ -172,6 +172,164 @@ class PropertiesService {
     AppRefreshController.notifyChanged();
   }
 
+
+  static Future<List<Map<String, dynamic>>> owners() async {
+    return DatabaseManager.instance.database.query('properties_owners', orderBy: 'name COLLATE NOCASE');
+  }
+
+  static Future<List<Map<String, dynamic>>> ownersForProperty(int propertyId) async {
+    return DatabaseManager.instance.database.rawQuery('''
+      SELECT o.*, l.ownership_share, l.id AS link_id
+      FROM properties_owner_links l
+      JOIN properties_owners o ON o.id = l.owner_id
+      WHERE l.property_id = ?
+      ORDER BY o.name COLLATE NOCASE
+    ''', [propertyId]);
+  }
+
+  static Future<int> saveOwner({
+    int? id,
+    required String name,
+    required String phone,
+    required String email,
+    required String identityNumber,
+    required String address,
+    required String notes,
+  }) async {
+    if (name.trim().isEmpty) throw ArgumentError('Owner name is required.');
+    final db = DatabaseManager.instance.database;
+    final values = <String, Object?>{
+      'name': name.trim(), 'phone': phone.trim(), 'email': email.trim(),
+      'identity_number': identityNumber.trim(), 'address': address.trim(),
+      'notes': notes.trim(),
+    };
+    final result = id == null
+        ? await db.insert('properties_owners', {...values, 'created_at': DateTime.now().toIso8601String()})
+        : await db.update('properties_owners', values, where: 'id = ?', whereArgs: [id]);
+    if (id != null && result == 0) throw StateError('Owner not found.');
+    AppRefreshController.notifyChanged();
+    return id ?? result;
+  }
+
+  static Future<void> linkOwner({
+    required int propertyId,
+    required int ownerId,
+    double ownershipShare = 100,
+  }) async {
+    if (!ownershipShare.isFinite || ownershipShare <= 0 || ownershipShare > 100) {
+      throw ArgumentError('Ownership share must be between 0 and 100.');
+    }
+    final db = DatabaseManager.instance.database;
+    await db.transaction((txn) async {
+      final property = await txn.query('properties', columns: ['id'], where: 'id = ?', whereArgs: [propertyId], limit: 1);
+      final owner = await txn.query('properties_owners', columns: ['id'], where: 'id = ?', whereArgs: [ownerId], limit: 1);
+      if (property.isEmpty || owner.isEmpty) throw StateError('Select a valid property and owner.');
+      await txn.insert('properties_owner_links', {
+        'property_id': propertyId, 'owner_id': ownerId,
+        'ownership_share': ownershipShare, 'created_at': DateTime.now().toIso8601String(),
+      });
+    });
+    AppRefreshController.notifyChanged();
+  }
+
+  static Future<void> unlinkOwner(int linkId) async {
+    await DatabaseManager.instance.database.delete('properties_owner_links', where: 'id = ?', whereArgs: [linkId]);
+    AppRefreshController.notifyChanged();
+  }
+
+  static Future<List<Map<String, dynamic>>> rentSchedules({int? contractId}) async {
+    return DatabaseManager.instance.database.query(
+      'properties_rent_schedules',
+      where: contractId == null ? null : 'contract_id = ?',
+      whereArgs: contractId == null ? null : [contractId],
+      orderBy: 'next_due_date ASC, id DESC',
+    );
+  }
+
+  static Future<int> saveRentSchedule({
+    int? id,
+    required int contractId,
+    required double amount,
+    required String frequency,
+    required String startDate,
+    required String endDate,
+    required String nextDueDate,
+    required String status,
+    required String notes,
+  }) async {
+    if (!amount.isFinite || amount <= 0) throw ArgumentError('Rent amount must be greater than zero.');
+    final db = DatabaseManager.instance.database;
+    final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
+    if (contract.isEmpty) throw StateError('Select a valid contract.');
+    final values = <String, Object?>{
+      'contract_id': contractId, 'amount': amount, 'frequency': frequency,
+      'start_date': startDate, 'end_date': endDate,
+      'next_due_date': nextDueDate, 'status': status, 'notes': notes.trim(),
+    };
+    final result = id == null
+        ? await db.insert('properties_rent_schedules', {...values, 'created_at': DateTime.now().toIso8601String()})
+        : await db.update('properties_rent_schedules', values, where: 'id = ?', whereArgs: [id]);
+    if (id != null && result == 0) throw StateError('Rent schedule not found.');
+    AppRefreshController.notifyChanged();
+    return id ?? result;
+  }
+
+  static Future<List<Map<String, dynamic>>> rentPayments({int? contractId, String? status}) async {
+    final clauses = <String>[];
+    final args = <Object?>[];
+    if (contractId != null) { clauses.add('contract_id = ?'); args.add(contractId); }
+    if (status != null) { clauses.add('status = ?'); args.add(status); }
+    return DatabaseManager.instance.database.query(
+      'properties_rent_payments',
+      where: clauses.isEmpty ? null : clauses.join(' AND '),
+      whereArgs: args.isEmpty ? null : args,
+      orderBy: 'due_date ASC, id DESC',
+    );
+  }
+
+  static Future<int> saveRentPayment({
+    int? id,
+    required int contractId,
+    int? scheduleId,
+    required String dueDate,
+    required double amountDue,
+    required double amountPaid,
+    required String paidDate,
+    required String paymentMethod,
+    required String reference,
+    required String notes,
+  }) async {
+    if (!amountDue.isFinite || amountDue <= 0 || !amountPaid.isFinite || amountPaid < 0 || amountPaid > amountDue) {
+      throw ArgumentError('Enter a valid rent due and paid amount.');
+    }
+    final db = DatabaseManager.instance.database;
+    final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
+    if (contract.isEmpty) throw StateError('Select a valid contract.');
+    if (scheduleId != null) {
+      final schedule = await db.query('properties_rent_schedules', columns: ['id'], where: 'id = ? AND contract_id = ?', whereArgs: [scheduleId, contractId], limit: 1);
+      if (schedule.isEmpty) throw StateError('Rent schedule does not belong to this contract.');
+    }
+    final status = amountPaid >= amountDue ? 'Paid' : amountPaid > 0 ? 'Partial' : (DateTime.tryParse(dueDate)?.isBefore(DateTime.now()) ?? false) ? 'Overdue' : 'Pending';
+    final values = <String, Object?>{
+      'contract_id': contractId, 'schedule_id': scheduleId,
+      'due_date': dueDate, 'amount_due': amountDue,
+      'amount_paid': amountPaid, 'paid_date': paidDate,
+      'status': status, 'payment_method': paymentMethod.trim(),
+      'reference': reference.trim(), 'notes': notes.trim(),
+    };
+    final result = id == null
+        ? await db.insert('properties_rent_payments', {...values, 'created_at': DateTime.now().toIso8601String()})
+        : await db.update('properties_rent_payments', values, where: 'id = ?', whereArgs: [id]);
+    if (id != null && result == 0) throw StateError('Rent payment not found.');
+    AppRefreshController.notifyChanged();
+    return id ?? result;
+  }
+
+  static Future<void> deleteRentPayment(int id) async {
+    await DatabaseManager.instance.database.delete('properties_rent_payments', where: 'id = ?', whereArgs: [id]);
+    AppRefreshController.notifyChanged();
+  }
+
   static Future<void> deleteContract(int id) async {
     await DatabaseManager.instance.database.delete('properties_contracts', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();

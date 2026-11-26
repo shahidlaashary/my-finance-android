@@ -87,6 +87,7 @@ class PropertiesService {
   }
 
   static Future<int> saveContract({
+    int? id,
     required int propertyId,
     required int tenantId,
     required String contractType,
@@ -105,15 +106,21 @@ class PropertiesService {
     final property = await db.query('properties', columns: ['id'], where: 'id = ?', whereArgs: [propertyId], limit: 1);
     final tenant = await db.query('properties_tenants', columns: ['id'], where: 'id = ?', whereArgs: [tenantId], limit: 1);
     if (property.isEmpty || tenant.isEmpty) throw StateError('Select a valid property and tenant.');
-    final id = await db.insert('properties_contracts', {
+    final values = <String, Object?>{
       'property_id': propertyId, 'tenant_id': tenantId,
       'contract_type': contractType, 'start_date': startDate,
       'end_date': endDate, 'rent': rent, 'frequency': frequency,
       'deposit': deposit, 'status': status, 'notes': notes.trim(),
-      'created_at': DateTime.now().toIso8601String(),
-    });
+    };
+    final result = id == null
+        ? await db.insert('properties_contracts', {
+            ...values,
+            'created_at': DateTime.now().toIso8601String(),
+          })
+        : await db.update('properties_contracts', values, where: 'id = ?', whereArgs: [id]);
+    if (id != null && result == 0) throw StateError('Contract not found.');
     AppRefreshController.notifyChanged();
-    return id;
+    return id ?? result;
   }
 
   static Future<int> addDocument({

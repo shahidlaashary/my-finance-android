@@ -17,7 +17,8 @@ class ExchangeRatesScreen extends StatefulWidget {
 }
 
 class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
-  static final List<String> _currencies = CurrencyCatalog.supported.where((code) => code != 'PKR').toList();
+  List<String> get _currencies => CurrencyCatalog.supported.where((code) => code != _baseCurrency).toList();
+  String _baseCurrency = 'PKR';
   final NumberFormat _numberFormat = NumberFormat('#,##0.0000');
   List<Map<String, dynamic>> _rates = [];
   bool _loading = true;
@@ -37,8 +38,8 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
   double? get _convertedAmount {
     final amount = double.tryParse(_convertAmount.text.trim());
-    final fromRate = _convertFrom == 'PKR' ? 1.0 : _rateFor(_convertFrom);
-    final toRate = _convertTo == 'PKR' ? 1.0 : _rateFor(_convertTo);
+    final fromRate = _rateFor(_convertFrom);
+    final toRate = _rateFor(_convertTo);
     if (amount == null || !amount.isFinite || amount < 0 ||
         fromRate == null || toRate == null || toRate <= 0) return null;
     return amount * fromRate / toRate;
@@ -57,9 +58,15 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
   Future<void> _loadData({bool autoUpdateIfStale = false}) async {
     try {
-      final rates = await CurrencyService.getExchangeRates();
+      final results = await Future.wait([
+        CurrencyService.getExchangeRates(),
+        CurrencyService.getBaseCurrency(),
+      ]);
+      final rates = results[0] as List<Map<String, dynamic>>;
+      final baseCurrency = results[1] as String;
       if (!mounted) return;
       setState(() {
+        _baseCurrency = baseCurrency;
         _rates = rates;
         _loading = false;
       });
@@ -90,6 +97,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   }
 
   double? _rateFor(String currency) {
+    if (currency == _baseCurrency) return 1.0;
     for (final row in _rates) {
       if (row['currency'].toString().toUpperCase() == currency) {
         return (row['rate'] as num).toDouble();
@@ -107,6 +115,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
     try {
+      final baseCurrency = await CurrencyService.getBaseCurrency();
       final request = await client
           .getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))
           .timeout(const Duration(seconds: 20));
@@ -124,17 +133,20 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       final rates = payload['rates'] as Map<String, dynamic>?;
       if (rates == null) throw const FormatException('Currency rates missing hain.');
 
+      final baseProviderRate = baseCurrency == 'PKR' ? 1.0 : rates[baseCurrency];
+      if (baseProviderRate is! num || baseProviderRate <= 0) {
+        throw const FormatException('Selected Base Currency ka rate missing hai.');
+      }
       var saved = 0;
       for (final currency in _currencies) {
         final rawRate = rates[currency];
         if (rawRate is! num || rawRate <= 0) continue;
-        // Provider PKR ke muqable mein foreign currency deta hai.
-        // App ko 1 foreign currency ki PKR value chahiye.
-        final pkrPerUnit = 1 / rawRate.toDouble();
-        if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
+        // Provider PKR reference deta hai; app ke selected Base Currency mein convert karein.
+        final basePerUnit = baseProviderRate.toDouble() / rawRate.toDouble();
+        if (!basePerUnit.isFinite || basePerUnit <= 0) continue;
         await CurrencyService.saveExchangeRate(
           currency,
-          pkrPerUnit,
+          basePerUnit,
           source: 'automatic',
         );
         saved++;
@@ -167,14 +179,14 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     final value = await showDialog<double>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('1 $currency ki PKR value'),
+        title: Text('1 $currency ki $_baseCurrency value'),
         content: TextField(
           controller: controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(
-            labelText: 'PKR exchange rate',
-            hintText: 'e.g. 278.50',
+            labelText: '$_baseCurrency exchange rate',
+            hintText: 'Enter rate in $_baseCurrency',
           ),
         ),
         actions: [
@@ -200,7 +212,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       await _loadData();
       if (!mounted) return;
       setState(() {
-        _message = '1 $currency = PKR ${_numberFormat.format(value)} save ho gaya.';
+        _message = '1 $currency = $_baseCurrency ${_numberFormat.format(value)} save ho gaya.';
         _messageIsError = false;
       });
     } catch (error) {
@@ -267,9 +279,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               value: _convertFrom,
                               isExpanded: true,
                               decoration: const InputDecoration(labelText: 'From'),
-                              items: ['PKR', ..._currencies].map((code) =>
+                              items: CurrencyCatalog.supported.map((code) =>
                                 DropdownMenuItem(value: code, child: Text(code))).toList(),
-                              onChanged: (value) => setState(() => _convertFrom = value ?? 'PKR'),
+                              onChanged: (value) => setState(() => _convertFrom = value ?? _baseCurrency),
                             )),
                             const Padding(padding: EdgeInsets.symmetric(horizontal: 8),
                               child: Icon(Icons.swap_horiz_rounded)),
@@ -277,9 +289,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               value: _convertTo,
                               isExpanded: true,
                               decoration: const InputDecoration(labelText: 'To'),
-                              items: ['PKR', ..._currencies].map((code) =>
+                              items: CurrencyCatalog.supported.map((code) =>
                                 DropdownMenuItem(value: code, child: Text(code))).toList(),
-                              onChanged: (value) => setState(() => _convertTo = value ?? 'PKR'),
+                              onChanged: (value) => setState(() => _convertTo = value ?? _baseCurrency),
                             )),
                           ]),
                           SizedBox(height: 12),
@@ -291,7 +303,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               color: _convertedAmount == null ? Theme.of(context).hintColor : Theme.of(context).colorScheme.primary),
                           ),
                           const SizedBox(height: 4),
-                          Text('Calculated from the latest saved PKR-based rates.',
+                          Text('Rates are shown relative to $_baseCurrency.',
                             style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
                         ],
                       ),
@@ -322,11 +334,11 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                     child: Column(
                       children: [
                         ListTile(
-                          leading: CircleAvatar(child: Text('PKR')),
-                          title: Text(appText(context, 'Pakistani Rupee', 'پاکستانی روپیہ'),
+                          leading: CircleAvatar(child: Text(_baseCurrency)),
+                          title: Text('$_baseCurrency',
                               style: TextStyle(fontWeight: FontWeight.w700)),
                           subtitle: Text('Base currency'),
-                          trailing: Text('1.0000 PKR',
+                          trailing: Text('1.0000 $_baseCurrency',
                               style: TextStyle(fontWeight: FontWeight.w800)),
                         ),
                         const Divider(height: 1),
@@ -350,7 +362,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                     Text(
                                       _rateFor(currency) == null
                                           ? '—'
-                                          : 'PKR ${_numberFormat.format(_rateFor(currency)!)}',
+                                          : '$_baseCurrency ${_numberFormat.format(_rateFor(currency)!)}',
                                       style: TextStyle(fontWeight: FontWeight.w800),
                                     ),
                                     IconButton(

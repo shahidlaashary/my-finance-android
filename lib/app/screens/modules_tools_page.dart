@@ -13,6 +13,7 @@ import 'package:my_finance/modules/committee/screens/committee_screen.dart';
 import 'package:my_finance/modules/partners/screens/my_partners_screen.dart';
 import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
 
+/// App ke tamam additional modules aur tools tak rasai dene wala hub.
 class ModulesToolsPage extends StatelessWidget {
   const ModulesToolsPage({super.key});
 

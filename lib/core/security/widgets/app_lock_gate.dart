@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:my_finance/core/security/app_lock_service.dart';
 
+/// App lock enabled hone par protected content ko authentication ke peechay rakhta hai.
 class AppLockGate extends StatefulWidget {
   final Widget child;
 

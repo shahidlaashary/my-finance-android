@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 
-/// Semantic colors used by finance-specific widgets in addition to Material
-/// ColorScheme. Read these from Theme.of(context).extension<FinanceThemeColors>().
+/// Material ColorScheme ke ilawa finance widgets ke semantic colors provide karta hai.
+/// Inhein Theme.of(context).extension<FinanceThemeColors>() se hasil karein.
 @immutable
 class FinanceThemeColors extends ThemeExtension<FinanceThemeColors> {
   final Color income;

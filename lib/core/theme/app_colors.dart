@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/app/theme/app_theme.dart';
 
-/// Legacy defaults plus theme-aware semantic colors for feature widgets.
-/// Prefer AppColors.primaryOf(context) over the legacy static constants.
+/// Purane defaults aur feature widgets ke liye theme-aware semantic colors.
+/// Naye UI mein legacy constants ke bajaye AppColors.primaryOf(context) use karein.
 class AppColors {
   AppColors._();
 
-  // Backward-compatible defaults for older call sites. New UI should use the
-  // theme-aware helpers below so changing the preset recolors every section.
+  // Purane call sites ki compatibility ke liye defaults. Naye UI mein neeche
+  // diye theme-aware helpers use karein taake preset change par har section recolor ho.
   static const Color primary = Color(0xFF087A55);
   static const Color background = Color(0xFFF1F7F3);
   static const Color income = Color(0xFF16865B);

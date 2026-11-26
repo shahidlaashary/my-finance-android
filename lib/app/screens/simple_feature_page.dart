@@ -3,6 +3,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
+/// Reusable placeholder screen jo selected feature ka title aur shared actions dikhata hai.
 class SimpleFeaturePage extends StatelessWidget {
   final String title;
 

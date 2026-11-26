@@ -4,11 +4,13 @@ import 'package:path/path.dart' as p;
 import 'package:my_finance/core/files/file_storage.dart';
 import 'package:my_finance/core/files/local_file_storage.dart';
 
+/// Vehicle data ki Excel aur PDF reports tayyar karke local storage mein save karta hai.
 class VehicleExportService {
   VehicleExportService._();
 
   static final FileStorage _fileStorage = LocalFileStorage();
 
+  /// Report bytes ko VehicleReports folder mein save karke file path return karta hai.
   static Future<String> _save(String name, List<int> bytes) async {
     final root = await _fileStorage.getApplicationDocumentsPath();
     final dir = p.join(root, 'VehicleReports');
@@ -19,11 +21,13 @@ class VehicleExportService {
   }
 
   static String _cell(dynamic value) => (value ?? '').toString();
+  /// XML ke special characters escape karta hai taake worksheet valid rahe.
   static String _xml(String value) => value
       .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
       .replaceAll("'", '&apos;');
 
+  /// Vehicles, fuel, expenses aur reminders ki multi-sheet Excel report banata hai.
   static Future<String> exportExcel({
     required List<Map<String, dynamic>> vehicles,
     required List<Map<String, dynamic>> fuel,
@@ -49,6 +53,7 @@ class VehicleExportService {
       ],
     };
 
+    // Numeric column index ko Excel ke A, B, C format mein convert karta hai.
     String column(int n) {
       var value = n + 1;
       var out = '';
@@ -104,6 +109,7 @@ class VehicleExportService {
     return _save('vehicle_report_${DateTime.now().millisecondsSinceEpoch}.xlsx', zipped);
   }
 
+  /// Vehicle records ko printable PDF report mein convert karke save karta hai.
   static Future<String> exportPdf({
     required List<Map<String, dynamic>> vehicles,
     required List<Map<String, dynamic>> fuel,

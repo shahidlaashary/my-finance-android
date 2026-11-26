@@ -186,15 +186,20 @@ class WalletService {
       whereArgs: [id],
       limit: 1,
     );
+    var useAutomaticRates = await CurrencyService.isOnline();
     if (currentWalletRows.isNotEmpty) {
       final currentCurrency = currentWalletRows.first['currency']
           ?.toString()
           .trim()
           .toUpperCase() ?? '';
       if (currentCurrency != currency) {
-        await CurrencyService.refreshMissingExchangeRatesOnline(
-          currencies: [currentCurrency, currency],
-        );
+        if (useAutomaticRates) {
+          await CurrencyService.refreshMissingExchangeRatesOnline(
+            currencies: [currentCurrency, currency],
+          );
+        }
+        // Internet check ke baad source ko aik martaba dobara confirm karein.
+        useAutomaticRates = await CurrencyService.isOnline();
       }
     }
 
@@ -228,17 +233,24 @@ class WalletService {
         if (await AssetsService.hasWalletReferences(txn, id)) {
           throw Exception('Wallet currency cannot be changed while assets are linked to it.');
         }
-        final oldRate = await _getRateInTransaction(txn, oldCurrency);
-        final newRate = await _getRateInTransaction(txn, currency);
-
-        if (oldRate == null || newRate == null) {
-          throw Exception(
-            'Currency change karne se pehle dono currencies ke '
-            'exchange rates set karein.',
+        double? factor;
+        if (useAutomaticRates) {
+          final oldRate = await _getRateInTransaction(txn, oldCurrency);
+          final newRate = await _getRateInTransaction(txn, currency);
+          if (oldRate != null && newRate != null && newRate > 0) {
+            factor = oldRate / newRate;
+          }
+        } else {
+          factor = await _getManualPairRateInTransaction(
+            txn, oldCurrency, currency,
           );
         }
 
-        final factor = oldRate / newRate;
+        if (factor == null || !factor.isFinite || factor <= 0) {
+          throw Exception(useAutomaticRates
+            ? 'Automatic exchange rates $oldCurrency → $currency available nahi.'
+            : 'Offline currency change ke liye Manual pair $oldCurrency → $currency add karein.');
+        }
 
         newOpening = oldOpening * factor;
         convertedOldBalance = oldBalance * factor;
@@ -291,6 +303,33 @@ class WalletService {
       }
     });
     AppRefreshController.notifyChanged();
+  }
+
+  static Future<double?> _getManualPairRateInTransaction(
+    Transaction txn,
+    String fromCurrency,
+    String toCurrency,
+  ) async {
+    final from = fromCurrency.trim().toUpperCase();
+    final to = toCurrency.trim().toUpperCase();
+    if (from == to) return 1.0;
+    final direct = await txn.query('manual_currency_pairs',
+      columns: ['rate'],
+      where: 'from_currency = ? AND to_currency = ?',
+      whereArgs: [from, to], limit: 1);
+    if (direct.isNotEmpty) {
+      final value = (direct.first['rate'] as num).toDouble();
+      return value.isFinite && value > 0 ? value : null;
+    }
+    final reverse = await txn.query('manual_currency_pairs',
+      columns: ['rate'],
+      where: 'from_currency = ? AND to_currency = ?',
+      whereArgs: [to, from], limit: 1);
+    if (reverse.isNotEmpty) {
+      final value = (reverse.first['rate'] as num).toDouble();
+      return value.isFinite && value > 0 ? 1 / value : null;
+    }
+    return null;
   }
 
   static Future<double?> _getRateInTransaction(

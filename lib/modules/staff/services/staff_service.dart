@@ -5,7 +5,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
+/// Staff members, salary payments aur attendance ka tamam data manage karta hai.
 class StaffService {
+  /// Staff, salary aur attendance ke liye zaroori tables tayyar karta hai.
   static Future<void> ensureTables() async {
     final db = DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS staff (
@@ -23,11 +25,13 @@ class StaffService {
       note TEXT NOT NULL DEFAULT '', UNIQUE(staff_id, attendance_date))''');
   }
 
+  /// Tamam staff members ko naam ke mutabiq hasil karta hai.
   static Future<List<Map<String, dynamic>>> getStaff() async {
     await ensureTables();
     return DatabaseManager.instance.database.query('staff', orderBy: 'name COLLATE NOCASE');
   }
 
+  /// Salary history hasil karta hai; staffId diya ho to sirf usi member ki.
   static Future<List<Map<String, dynamic>>> getSalaries({int? staffId}) async {
     await ensureTables();
     final staffFilter = staffId == null ? '' : 'AND s.staff_id = ?';
@@ -42,6 +46,7 @@ class StaffService {
     ''', args);
   }
 
+  /// Attendance records ko optional staff aur month filters ke saath deta hai.
   static Future<List<Map<String, dynamic>>> getAttendance({int? staffId, String? month}) async {
     await ensureTables();
     String? where;
@@ -52,6 +57,7 @@ class StaffService {
       whereArgs: args.isEmpty ? null : args, orderBy: 'attendance_date DESC, id DESC');
   }
 
+  /// Staff member ko validate karke naya save ya mojooda update karta hai.
   static Future<int> saveStaff({int? id, required String name, required String phone,
     required String role, required double salary, required DateTime joinedAt, required String notes}) async {
     await ensureTables();
@@ -66,6 +72,7 @@ class StaffService {
     return id ?? result;
   }
 
+  /// Staff aur uski related history ko recycle bin mein archive karke delete karta hai.
   static Future<void> deleteStaff(int id) async {
     await ensureTables();
     final db = DatabaseManager.instance.database;
@@ -97,6 +104,7 @@ class StaffService {
     }
     AppRefreshController.notifyChanged();
   }
+  /// Wallet se salary expense aur staff salary record aik transaction mein save karta hai.
   static Future<int> paySalary({required int staffId, required double amount,
     required int walletId, required DateTime date, required String note}) async {
     await ensureTables();
@@ -129,6 +137,7 @@ class StaffService {
     return id;
   }
 
+  /// Staff ki selected date wali attendance save ya replace karta hai.
   static Future<void> saveAttendance({required int staffId, required DateTime date,
     required String status, required String note}) async {
     await ensureTables();
@@ -144,7 +153,7 @@ class StaffService {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     AppRefreshController.notifyChanged();
   }
-  /// Restores an archived salary row while keeping Staff as its table owner.
+  /// Archived salary record ko restore karta hai; salary table ki ownership StaffService ke paas rehti hai.
   static Future<void> restoreArchivedSalary(
     Transaction txn,
     Map<String, dynamic> salary,
@@ -168,6 +177,7 @@ class StaffService {
     await txn.insert('staff_salaries', salary);
   }
 
+  /// Archived staff member aur uski salary/attendance history restore karta hai.
   static Future<void> restoreArchivedStaff(
     Transaction txn, {
     required Map<String, dynamic> record,

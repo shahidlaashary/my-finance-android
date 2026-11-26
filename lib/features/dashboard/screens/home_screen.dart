@@ -325,7 +325,7 @@ class _HomePageState extends State<HomePage> {
     final requiredCurrencies = <String>{
       ...entries.map((entry) => entry.key.trim().toUpperCase()),
       baseCurrency.trim().toUpperCase(),
-    }..remove('PKR');
+    }..remove(baseCurrency.trim().toUpperCase());
 
     final savedRates = await CurrencyService.getExchangeRates();
     final availableCurrencies = savedRates
@@ -391,12 +391,12 @@ class _HomePageState extends State<HomePage> {
         ratesByCurrency[code] = rate;
       }
     }
-    ratesByCurrency['PKR'] = 1.0;
+    ratesByCurrency[baseCurrency.trim().toUpperCase()] = 1.0;
 
     final selectedBaseRate = ratesByCurrency[baseCurrency.trim().toUpperCase()];
     final convertedByCurrency = <String, double>{};
     final missingRates = <String>[];
-    double foreignTotalPKR = 0;
+    double foreignTotalInBaseCurrency = 0;
     for (final entry in entries) {
       final currency = entry.key.trim().toUpperCase();
       final rate = ratesByCurrency[currency];
@@ -404,8 +404,8 @@ class _HomePageState extends State<HomePage> {
         missingRates.add(currency);
         continue;
       }
-      // Exchange rates aik currency unit ki PKR value ke taur par save hoti hain.
-      foreignTotalPKR += entry.value * rate;
+      // Exchange rates selected Base Currency ke mutabiq save hoti hain.
+      foreignTotalInBaseCurrency += entry.value * rate;
       if (selectedBaseRate != null && selectedBaseRate > 0) {
         convertedByCurrency[currency] =
             entry.value * rate / selectedBaseRate;
@@ -608,7 +608,7 @@ class _HomePageState extends State<HomePage> {
                                     ? '$baseCurrency —'
                                     : _currencyAmount(
                                         baseCurrency,
-                                        foreignTotalPKR / selectedBaseRate,
+                                        foreignTotalInBaseCurrency / selectedBaseRate,
                                       ),
                         style: TextStyle(
                           fontSize: 14,

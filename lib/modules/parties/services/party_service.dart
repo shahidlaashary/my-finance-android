@@ -41,6 +41,22 @@ class PartyService {
     ''');
   }
 
+  /// Reads a party through its owning service within a caller-owned transaction.
+  static Future<Map<String, Object?>?> getPartyById(
+    Transaction txn,
+    int partyId, {
+    List<String>? columns,
+  }) async {
+    final rows = await txn.query(
+      'loan_parties',
+      columns: columns,
+      where: 'id = ?',
+      whereArgs: [partyId],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
   /// Base-currency settings are owned by CurrencyService.
   static Future<String> getBaseCurrency() => CurrencyService.getBaseCurrency();
 

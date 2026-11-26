@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:my_finance/core/services/file_storage_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/properties/services/properties_service.dart';
+import 'package:my_finance/features/notifications/services/reminder_service.dart';
 
 class PropertiesScreen extends StatefulWidget {
   const PropertiesScreen({super.key});
@@ -18,10 +19,71 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Future<void> load() async {
     setState(()=>loading=true);
     try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance()]);
+      await _syncPropertyReminders(contracts:v[2],payments:v[4],maintenance:v[5]);
       if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; maintenanceItems=v[5]; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }
   void message(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
+
+  DateTime? _reminderAt(String? raw,{int daysBefore=0}) {
+    if(raw==null||raw.isEmpty)return null;
+    final parsed=DateTime.tryParse(raw);
+    if(parsed==null)return null;
+    final date=DateTime(parsed.year,parsed.month,parsed.day).subtract(Duration(days:daysBefore));
+    return DateTime(date.year,date.month,date.day,9);
+  }
+
+  Future<void> _syncPropertyReminders({
+    required List<Map<String,dynamic>> contracts,
+    required List<Map<String,dynamic>> payments,
+    required List<Map<String,dynamic>> maintenance,
+  }) async {
+    final now=DateTime.now();
+    final desired=<Map<String,dynamic>>[];
+    for(final payment in payments) {
+      if(payment['status']=='Paid')continue;
+      final due=_reminderAt(payment['due_date']?.toString());
+      if(due==null)continue;
+      desired.add({
+        'source_key':'properties:rent:${payment['id']}',
+        'title':'Rent payment due',
+        'note':'${payment['property_name']??'Property'} • Due ${payment['due_date']} • Amount ${payment['amount_due']}',
+        'category':'Property Rent','when':due,
+      });
+    }
+    for(final contract in contracts) {
+      if(contract['status']!='Active')continue;
+      final rawEnd=contract['end_date']?.toString()??'';
+      final expiry=DateTime.tryParse(rawEnd);
+      if(expiry==null||rawEnd.isEmpty)continue;
+      final expiryDate=DateTime(expiry.year,expiry.month,expiry.day);
+      if(!expiryDate.isAfter(DateTime(now.year,now.month,now.day)))continue;
+      var reminder=_reminderAt(rawEnd,daysBefore:7)!;
+      if(!reminder.isAfter(now))reminder=now.add(const Duration(minutes:2));
+      desired.add({
+        'source_key':'properties:contract:${contract['id']}',
+        'title':'Property contract ending soon',
+        'note':'${contract['property_name']??'Property'} • ${contract['tenant_name']??'Tenant'} • Ends $rawEnd',
+        'category':'Property Contract','when':reminder,
+      });
+    }
+    for(final item in maintenance) {
+      if(item['status']=='Completed'||item['status']=='Cancelled')continue;
+      final due=_reminderAt(item['due_date']?.toString());
+      if(due==null)continue;
+      desired.add({
+        'source_key':'properties:maintenance:${item['id']}',
+        'title':'Maintenance due',
+        'note':'${item['property_name']??'Property'} • ${item['title']} • Priority ${item['priority']}',
+        'category':'Property Maintenance','when':due,
+      });
+    }
+    await ReminderService.instance.syncLinkedReminders(
+      sourcePrefix:'properties:',desired:desired,
+    );
+  }
+
+
   Widget field(TextEditingController c,String label,{bool requiredField=false,TextInputType? keyboard,int lines=1})=>TextFormField(controller:c,maxLines:lines,keyboardType:keyboard,validator:requiredField?(v)=>(v==null||v.trim().isEmpty)?tr('Required'):null:null,decoration:InputDecoration(labelText:tr(label),border:const OutlineInputBorder()));
   Future<void> addDocs(int id) async {
     final result=await FilePicker.platform.pickFiles(allowMultiple:true);

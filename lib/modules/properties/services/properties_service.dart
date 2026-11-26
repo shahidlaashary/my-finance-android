@@ -528,17 +528,25 @@ class PropertiesService {
     final db = DatabaseManager.instance.database;
     final today = DateTime.now();
     final todayKey = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    await db.rawUpdate('''
-      UPDATE properties_rent_payments
-      SET status = CASE WHEN amount_paid > 0 THEN 'Partial' ELSE 'Pending' END
-      WHERE status = 'Overdue' AND substr(due_date, 1, 10) >= ?
-    ''', [todayKey]);
-    await db.rawUpdate('''
-      UPDATE properties_rent_payments SET status = 'Overdue'
-      WHERE status IN ('Pending', 'Partial')
-        AND amount_paid < amount_due
-        AND substr(due_date, 1, 10) < ?
-    ''', [todayKey]);
+    final changed = await db.transaction<int>((txn) async {
+      var updated = await txn.rawUpdate('''
+        UPDATE properties_rent_payments
+        SET status = CASE
+          WHEN amount_paid >= amount_due THEN 'Paid'
+          WHEN amount_paid > 0 THEN 'Partial'
+          ELSE 'Pending'
+        END
+        WHERE status = 'Overdue' AND substr(due_date, 1, 10) >= ?
+      ''', [todayKey]);
+      updated += await txn.rawUpdate('''
+        UPDATE properties_rent_payments SET status = 'Overdue'
+        WHERE status IN ('Pending', 'Partial')
+          AND amount_paid < amount_due
+          AND substr(due_date, 1, 10) < ?
+      ''', [todayKey]);
+      return updated;
+    });
+    if (changed > 0) AppRefreshController.notifyChanged();
     final clauses = <String>[];
     final args = <Object?>[];
     if (contractId != null) { clauses.add('rp.contract_id = ?'); args.add(contractId); }

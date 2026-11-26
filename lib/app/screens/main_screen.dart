@@ -270,7 +270,7 @@ class PlusActionSheet extends StatefulWidget {
 }
 
 class _PlusActionSheetState extends State<PlusActionSheet> {
-  String selectedType = 'Income';
+  String selectedType = 'Expense';
   void _selectType(String type) {
     setState(() => selectedType = type);
   }

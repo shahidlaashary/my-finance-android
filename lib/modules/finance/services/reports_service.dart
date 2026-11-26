@@ -3,9 +3,12 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:sqflite/sqflite.dart';
 
 
+/// Ye service finance reports ke liye date aur currency ke mutabiq data jama karti hai.
 class ReportsService {
+  /// Shared finance database ka active connection hasil karta hai.
   Future<Database> get _database async => DatabaseManager.instance.database;
 
+  /// Date ko database query ke liye YYYY-MM-DD format mein badalta hai.
   String _date(DateTime date) {
     final value = DateTime(date.year, date.month, date.day);
 
@@ -14,10 +17,12 @@ class ReportsService {
         '${value.day.toString().padLeft(2, '0')}';
   }
 
+  /// Inclusive end date ke aglay din ki boundary deta hai.
   String _nextDate(DateTime date) {
     return _date(date.add(const Duration(days: 1)));
   }
 
+  /// Ghalat date range ko query chalne se pehle reject karta hai.
   void _validateDateRange(
     DateTime startDate,
     DateTime endDate,
@@ -33,6 +38,7 @@ class ReportsService {
   // FINANCIAL SUMMARY BY CURRENCY
   // --------------------------------------------------
 
+  /// Selected period ka income, expense aur transfer summary currency-wise deta hai.
   Future<List<Map<String, dynamic>>> getSummary({
     required DateTime startDate,
     required DateTime endDate,
@@ -106,6 +112,7 @@ class ReportsService {
   // INCOME AND EXPENSE TOTALS
   // --------------------------------------------------
 
+  /// Selected period ke income aur expense totals calculate karta hai.
   Future<Map<String, double>> getIncomeExpenseTotals({
     required DateTime startDate,
     required DateTime endDate,
@@ -173,6 +180,7 @@ class ReportsService {
   // MONTHLY INCOME AND EXPENSE TREND
   // --------------------------------------------------
 
+  /// Mahana income aur expense trend currency ke hisaab se deta hai.
   Future<List<Map<String, dynamic>>> getMonthlyTrend({
     required DateTime startDate,
     required DateTime endDate,
@@ -252,6 +260,7 @@ class ReportsService {
   // CATEGORY-WISE INCOME / EXPENSE BREAKDOWN
   // --------------------------------------------------
 
+  /// Income ya expense ko category aur currency ke mutabiq group karta hai.
   Future<List<Map<String, dynamic>>> getCategoryBreakdown({
     required DateTime startDate,
     required DateTime endDate,

@@ -433,12 +433,14 @@ class PropertiesService {
     final args = <Object?>[];
     if (contractId != null) { clauses.add('contract_id = ?'); args.add(contractId); }
     if (status != null) { clauses.add('status = ?'); args.add(status); }
-    return db.query(
-      'properties_rent_payments',
-      where: clauses.isEmpty ? null : clauses.join(' AND '),
-      whereArgs: args.isEmpty ? null : args,
-      orderBy: 'due_date ASC, id DESC',
-    );
+    return db.rawQuery('''
+      SELECT rp.*, p.name AS property_name
+      FROM properties_rent_payments rp
+      LEFT JOIN properties_contracts c ON c.id = rp.contract_id
+      LEFT JOIN properties p ON p.id = c.property_id
+      ${clauses.isEmpty ? '' : 'WHERE ${clauses.map((clause) => clause.replaceAll(RegExp(r'\\b(contract_id|status)\\b'), (match) => 'rp.${match.group(0)}')).join(' AND ')}'}
+      ORDER BY rp.due_date ASC, rp.id DESC
+    ''', args);
   }
 
   static Future<int> saveRentPayment({

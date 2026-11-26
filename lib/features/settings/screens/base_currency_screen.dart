@@ -105,7 +105,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
   };
 
   Map<String, double> _parseRates(List<Map<String, dynamic>> rows) {
-    final rates = <String, double>{'PKR': 1};
+    final rates = <String, double>{};
     for (final row in rows) {
       final code = row['currency'].toString().toUpperCase();
       final rawRate = row['rate'];

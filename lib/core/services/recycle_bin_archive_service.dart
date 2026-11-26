@@ -26,6 +26,15 @@ class RecycleBinArchiveService {
     ''');
   }
 
+  static Future<void> discardArchive(int id) async {
+    await ensureTable();
+    await DatabaseManager.instance.database.delete(
+      'recycle_bin',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   static Future<int> archive({
     required String type,
     required String title,

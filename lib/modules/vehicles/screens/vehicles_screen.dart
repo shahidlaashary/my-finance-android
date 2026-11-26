@@ -921,14 +921,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
         gap(),TextFormField(controller:cs[16],maxLines:2,decoration:_decoration('Notes',Icons.notes)),
       ]));
     }
-    Future<void> saveTab(StateSetter upd)async{
+    Future<void> saveTab(StateSetter upd, BuildContext sheet)async{
       if(tab=='Fuel'&&(_vehicles.isEmpty||_wallets.isEmpty)){_message(_vehicles.isEmpty?'Please add a vehicle first.':'Please add a wallet first.');return;}
       if(tab=='Expense'&&(_vehicles.isEmpty||_wallets.isEmpty)){_message(_vehicles.isEmpty?'Please add a vehicle first.':'Please add a wallet first.');return;}
       if(tab=='Reminder'&&_vehicles.isEmpty){_message('Please add a vehicle first.');return;}
       if(!keys[tab]!.currentState!.validate())return;
       upd(()=>_saving=true);
       try{
-        if(tab=='Vehicle'){await VehicleService.saveVehicle({'name':cs[0].text.trim(),'type':vehicleType,'fuel_type':vehicleFuel,'model':cs[1].text.trim(),'registration':cs[2].text.trim(),'purchase_price':double.tryParse(cs[3].text)??0,'purchase_date':vehicleDate.toIso8601String(),'notes':cs[4].text.trim()});for(final i in [0,1,2,3,4])cs[i].clear();vehicleType='Car';vehicleFuel='Petrol';vehicleDate=DateTime.now();_message('Vehicle added.');}
+        if(tab=='Vehicle'){await VehicleService.saveVehicle({'name':cs[0].text.trim(),'type':vehicleType,'fuel_type':vehicleFuel,'model':cs[1].text.trim(),'registration':cs[2].text.trim(),'purchase_price':double.tryParse(cs[3].text)??0,'purchase_date':vehicleDate.toIso8601String(),'notes':cs[4].text.trim()});if(sheet.mounted)Navigator.pop(sheet);_message('Vehicle added.');}
         else if(tab=='Fuel'){final v=_vehicles.firstWhere((v)=>v['id']==fuelVehicle);await VehicleService.addFuel(vehicleId:fuelVehicle,vehicleName:v['name'].toString(),date:fuelDate,odometer:double.parse(cs[5].text),quantity:double.parse(cs[6].text),unitPrice:double.parse(cs[7].text),fullTank:fullTank,walletId:fuelWallet,station:cs[8].text.trim(),notes:cs[9].text.trim(),unit:unit);for(final i in [5,6,7,8,9])cs[i].clear();fuelDate=DateTime.now();fullTank=true;_message('Fuel entry saved and linked to Finance expenses.');}
         else if(tab=='Expense'){final v=_vehicles.firstWhere((v)=>v['id']==expenseVehicle);await VehicleService.addExpense(vehicleId:expenseVehicle,vehicleName:v['name'].toString(),date:expenseDate,amount:double.parse(cs[10].text),odometer:double.parse(cs[11].text),walletId:expenseWallet,category:category,vendor:cs[12].text.trim(),notes:cs[13].text.trim());for(final i in [10,11,12,13])cs[i].clear();expenseDate=DateTime.now();category=_expenseCategories.first;_message('Expense saved and linked to Finance transactions.');}
         else{await VehicleService.saveReminder({'vehicle_id':reminderVehicle,'title':cs[14].text.trim(),'due_date':reminderDate.toIso8601String(),'due_odometer':double.tryParse(cs[15].text),'notes':cs[16].text.trim()});for(final i in [14,15,16])cs[i].clear();reminderDate=DateTime.now().add(const Duration(days:30));_message('Reminder saved.');}
@@ -954,7 +954,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
             ]);
           }),
           const SizedBox(height:14),form(ctx,setSheet),const SizedBox(height:14),
-          Row(children:[Expanded(child:OutlinedButton(onPressed:()=>Navigator.pop(sheet),child:const Text('Cancel'))),const SizedBox(width:10),Expanded(child:ElevatedButton.icon(onPressed:_saving?null:()=>saveTab(setSheet),icon:const Icon(Icons.check_rounded),label:Text(tab=='Vehicle'?'Save Vehicle':tab=='Fuel'?'Save Fuel Entry':tab=='Expense'?'Save Expense':'Save Reminder'),style:ElevatedButton.styleFrom(backgroundColor:_green,foregroundColor:Theme.of(ctx).colorScheme.onPrimary,padding:const EdgeInsets.symmetric(vertical:13))))])
+          Row(children:[Expanded(child:OutlinedButton(onPressed:()=>Navigator.pop(sheet),child:const Text('Cancel'))),const SizedBox(width:10),Expanded(child:ElevatedButton.icon(onPressed:_saving?null:()=>saveTab(setSheet,sheet),icon:const Icon(Icons.check_rounded),label:Text(tab=='Vehicle'?'Save Vehicle':tab=='Fuel'?'Save Fuel Entry':tab=='Expense'?'Save Expense':'Save Reminder'),style:ElevatedButton.styleFrom(backgroundColor:_green,foregroundColor:Theme.of(ctx).colorScheme.onPrimary,padding:const EdgeInsets.symmetric(vertical:13))))])
         ])))));
       }));
     }finally{for(final ctrl in cs)ctrl.dispose();}

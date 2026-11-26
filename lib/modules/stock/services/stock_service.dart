@@ -3,6 +3,7 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
+/// Stock item ki basic details aur current quantity represent karta hai.
 class StockItem {
   final int? id;
   final String name, sku, category, unit, notes;
@@ -18,6 +19,7 @@ class StockItem {
   bool get isLowStock=>quantity<=lowStockAt;
 }
 
+/// Stock mein IN ya OUT movement ki history represent karta hai.
 class StockMovement {
   final int? id, itemId;
   final String type, date, note;
@@ -30,7 +32,9 @@ class StockMovement {
   );
 }
 
+/// Stock items, quantities aur movement history ka database logic manage karta hai.
 class StockService {
+  /// Archived stock item aur uski movement history restore karta hai.
   static Future<void> restoreArchivedItem(
     Transaction txn, {
     required Map<String, dynamic> record,
@@ -45,6 +49,7 @@ class StockService {
     }
   }
 
+  /// Stock ke tables aur movement lookup index ensure karta hai.
   static Future<void> _ensureTables() async {
     final db=DatabaseManager.instance.database;
     await db.execute('''CREATE TABLE IF NOT EXISTS stock_items(
@@ -59,11 +64,13 @@ class StockService {
       note TEXT NOT NULL DEFAULT '', FOREIGN KEY(item_id) REFERENCES stock_items(id))''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_stock_movements_item ON stock_movements(item_id, movement_date DESC)');
   }
+  /// Tamam stock items ko naam ke mutabiq load karta hai.
   static Future<List<StockItem>> getItems() async {
     await _ensureTables();
     final rows=await DatabaseManager.instance.database.query('stock_items',orderBy:'name COLLATE NOCASE ASC');
     return rows.map(StockItem.fromMap).toList();
   }
+  /// Stock item validate karke insert ya update karta hai; update par quantity alag rehti hai.
   static Future<int> saveItem(StockItem item) async {
     await _ensureTables();
     if(item.name.trim().isEmpty) throw Exception('Item name is required.');
@@ -75,6 +82,7 @@ class StockService {
     else {final editable=Map<String,dynamic>.from(values)..remove('quantity');await db.update('stock_items',editable,where:'id=?',whereArgs:[item.id]);id=item.id!;}
     AppRefreshController.notifyChanged(); return id;
   }
+  /// Stock IN/OUT movement validate karke quantity aur history atomically update karta hai.
   static Future<void> adjustStock({required int itemId,required String type,required double quantity,required double unitPrice,required String date,String note=''}) async {
     await _ensureTables();
     if(!quantity.isFinite||quantity<=0||!unitPrice.isFinite||unitPrice<0) throw Exception('Enter a valid quantity and price.');
@@ -91,11 +99,13 @@ class StockService {
     });
     AppRefreshController.notifyChanged();
   }
+  /// Diye gaye item ki movement history newest-first return karta hai.
   static Future<List<StockMovement>> getMovements(int itemId) async {
     await _ensureTables();
     final rows=await DatabaseManager.instance.database.query('stock_movements',where:'item_id=?',whereArgs:[itemId],orderBy:'movement_date DESC,id DESC');
     return rows.map(StockMovement.fromMap).toList();
   }
+  /// Item aur uski movements archive karke dono records delete karta hai.
   static Future<void> deleteItem(int id) async {
     await _ensureTables();
     final db = DatabaseManager.instance.database;

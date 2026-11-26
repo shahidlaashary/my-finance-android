@@ -783,17 +783,18 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                   ),
                   SizedBox(width: 10),
                   Expanded(
-                    child: SizedBox(
+                    child: Container(
                       height: 56,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAF9),
-                          borderRadius: BorderRadius.circular(13),
-                          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-                        ),
-                        child: Row(
-                          children: [
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAF9),
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
                             Expanded(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -830,8 +831,7 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                                 }),
                               ),
                             ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   ),

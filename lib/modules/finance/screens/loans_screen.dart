@@ -22,6 +22,7 @@ import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/screens/finance_graph_screens.dart';
 import 'package:my_finance/modules/parties/screens/manage_parties_screen.dart';
+/// Loans list, receivable/payable records aur loan actions ki main screen hai.
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
 
@@ -105,7 +106,7 @@ class LoansScreenState extends State<LoansScreen> {
       try {
         assetNames.addAll(await AssetsService().getAssetNames());
       } catch (_) {
-        // Asset table may not exist until the Asset section is first opened.
+        // Asset section pehli dafa open hone se pehle assets table shayad create na hui ho.
       }
       if (!mounted) return;
       setState(() {

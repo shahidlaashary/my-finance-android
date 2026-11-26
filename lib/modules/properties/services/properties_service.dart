@@ -75,7 +75,9 @@ class PropertiesService {
   }
 
   static Future<void> deleteMaintenance(int id) async {
-    await DatabaseManager.instance.database.delete('properties_maintenance',where:'id = ?',whereArgs:[id]);
+    final db=DatabaseManager.instance.database;
+    final result=await db.delete('properties_maintenance',where:'id = ?',whereArgs:[id]);
+    if(result==0)throw StateError('Maintenance record not found.');
     AppRefreshController.notifyChanged();
   }
 

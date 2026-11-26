@@ -840,7 +840,7 @@ class AssetsService {
             : jsonEncode(linkedLoanSnapshots),
         'deleted_at': now.toIso8601String(),
         'expires_at': now
-            .add(const Duration(days: RecycleBinService.retentionDays))
+            .add(const Duration(days: RecycleBinArchiveService.retentionDays))
             .toIso8601String(),
       });
 

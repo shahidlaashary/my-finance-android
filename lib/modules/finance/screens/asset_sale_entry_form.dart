@@ -9,6 +9,7 @@ typedef CreateAssetSaleParty = Future<Map<String, dynamic>?> Function({
   required bool lockCurrency,
 });
 
+/// Asset ki sale price, payment method aur receiving details enter karne ka form.
 class AssetSaleEntryForm extends StatefulWidget {
   final AssetsModel asset;
   final List<Map<String, dynamic>> wallets;

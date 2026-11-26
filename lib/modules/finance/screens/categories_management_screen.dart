@@ -4,6 +4,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 
+/// Income aur expense categories ko create, edit aur manage karne ki screen.
 class CategoriesPage extends StatefulWidget {
   final String initialType;
 

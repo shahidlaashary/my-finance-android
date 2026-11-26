@@ -9,7 +9,7 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/models/repayment_model.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 
-/// Dedicated form for repayments against ordinary or asset-linked loans.
+/// Aam ya asset-linked loans ki repayment add aur edit karne ka dedicated form.
 class AssetLoanRepaymentEntryForm extends StatefulWidget {
   final LoansModel loan;
   final RepaymentModel? existingRepayment;

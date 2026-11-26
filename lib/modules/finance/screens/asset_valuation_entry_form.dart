@@ -4,6 +4,7 @@ import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 
+/// Existing asset ki current market value update karne ka form.
 class AssetValuationEntryForm extends StatefulWidget {
   final AssetsModel asset;
   const AssetValuationEntryForm({super.key, required this.asset});
@@ -24,6 +25,7 @@ class _AssetValuationEntryFormState extends State<AssetValuationEntryForm> {
   @override
   void dispose() { _value.dispose(); super.dispose(); }
 
+  /// Validate karke asset ki current value service ke zariye update karta hai.
   Future<void> _save() async {
     final value = double.tryParse(_value.text.trim());
     if (value == null || !value.isFinite || value < 0) {

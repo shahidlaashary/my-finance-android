@@ -10,6 +10,7 @@ import 'package:my_finance/modules/finance/models/assets_model.dart';
 import 'package:my_finance/modules/finance/services/assets_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 
+/// Naya asset aur us ki purchase payment details enter karne ka form.
 class AssetPurchaseEntryForm extends StatefulWidget {
   const AssetPurchaseEntryForm({super.key});
   @override

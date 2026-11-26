@@ -32,15 +32,17 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
 
   Future<void> _load() async {
     try {
+      // Pehle local database se screen render karein. Network refresh ko
+      // loading state ke saath block na karein, taake offline mein spinner
+      // continuously na chalta rahe.
       final values = await Future.wait([
         CurrencyService.getBaseCurrency(),
         CurrencyService.getExchangeRates(),
       ]);
       final selected = values[0] as String;
-      var rows = values[1] as List<Map<String, dynamic>>;
-      var rates = _parseRates(rows);
+      final rows = values[1] as List<Map<String, dynamic>>;
+      final rates = _parseRates(rows);
 
-      // Missing ya 24 ghantay se puranay rates ko online refresh karein.
       final now = DateTime.now();
       final needsRefresh = _available.where((code) => code != selected).any((code) {
         final row = rows.where(
@@ -51,15 +53,6 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
         return updatedAt == null ||
             now.difference(updatedAt) >= const Duration(hours: 24);
       });
-      if (needsRefresh) {
-        try {
-          await _refreshRatesOnline();
-          rows = await CurrencyService.getExchangeRates();
-          rates = _parseRates(rows);
-        } catch (_) {
-          // Offline honay par pehle se saved rates available rehte hain.
-        }
-      }
 
       if (!mounted) return;
       setState(() {
@@ -72,12 +65,30 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
         }
         _loading = false;
       });
+
+      // Rates ko background mein refresh karein. Offline ya slow network
+      // screen ko loading state mein nahi rakhega.
+      if (needsRefresh) {
+        _refreshRatesInBackground();
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Base currency load nahi ho saki: $error')),
       );
+    }
+  }
+
+  Future<void> _refreshRatesInBackground() async {
+    try {
+      await _refreshRatesOnline().timeout(const Duration(seconds: 15));
+      final rows = await CurrencyService.getExchangeRates();
+      if (!mounted) return;
+      setState(() => _rates = _parseRates(rows));
+    } catch (_) {
+      // Offline honay par cached/local rates available rehte hain.
+      // Network failure ki wajah se Base Currency screen block nahi hoti.
     }
   }
 

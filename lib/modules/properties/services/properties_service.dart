@@ -358,8 +358,9 @@ class PropertiesService {
   }) async {
     if (!amount.isFinite || amount <= 0) throw ArgumentError('Rent amount must be greater than zero.');
     const supportedFrequencies = {'Weekly', 'Monthly', 'Quarterly', 'Yearly', 'One-time'};
-    if (!supportedFrequencies.contains(frequency)) {
-      throw ArgumentError('Select a valid rent frequency.');
+    const supportedStatuses = {'Active', 'Paused', 'Completed'};
+    if (!supportedFrequencies.contains(frequency) || !supportedStatuses.contains(status)) {
+      throw ArgumentError('Select a valid rent frequency and schedule status.');
     }
     final parsedStart = DateTime.tryParse(startDate);
     final parsedNext = DateTime.tryParse(nextDueDate);
@@ -381,6 +382,16 @@ class PropertiesService {
     final db = DatabaseManager.instance.database;
     final contract = await db.query('properties_contracts', columns: ['id'], where: 'id = ?', whereArgs: [contractId], limit: 1);
     if (contract.isEmpty) throw StateError('Select a valid contract.');
+    if (id != null) {
+      final existing = await db.query(
+        'properties_rent_schedules',
+        columns: ['id'],
+        where: 'id = ? AND contract_id = ?',
+        whereArgs: [id, contractId],
+        limit: 1,
+      );
+      if (existing.isEmpty) throw StateError('Rent schedule does not belong to this contract.');
+    }
     final values = <String, Object?>{
       'contract_id': contractId, 'amount': amount, 'frequency': frequency,
       'start_date': startDate, 'end_date': endDate,

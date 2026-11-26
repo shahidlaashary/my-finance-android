@@ -784,9 +784,9 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                   SizedBox(width: 10),
                   Expanded(
                     child: SizedBox(
-                      height: 56,
+                      height: 50,
                       child: Container(
-                      constraints: const BoxConstraints.tightFor(height: 56),
+                      constraints: const BoxConstraints.tightFor(height: 50),
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                       decoration: BoxDecoration(

@@ -4,6 +4,7 @@ import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
+/// Savings goals, contributions, withdrawals aur wallet balance effects manage karta hai.
 class GoalsService {
 
   static Future<Database> get _database async {
@@ -121,8 +122,8 @@ class GoalsService {
     bool includeCompleted = true,
   }) async {
     final db = await _database;
-    // Ensure the goals table exists on this connection without changing
-    // database versions or migrating existing records.
+    // Isi database connection par goals table ensure karein; database version
+    // change ya existing records ki migration ki zaroorat nahi.
     await db.execute('''
       CREATE TABLE IF NOT EXISTS goals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -458,8 +459,8 @@ class GoalsService {
     );
     return rows.map(GoalsModel.fromMap).toList();
   }
-  /// Restores a deleted savings goal and its history within the caller's
-  /// transaction. RecycleBinService owns removal of the archive envelope.
+  /// Deleted savings goal aur uski history caller ki transaction mein restore karta hai.
+  /// Archive envelope ko remove karne ki zimmedari RecycleBinService ki hai.
   static Future<void> restoreArchivedGoal(
     Transaction txn, {
     required Map<String, dynamic> record,

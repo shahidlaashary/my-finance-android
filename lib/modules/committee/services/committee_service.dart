@@ -237,12 +237,9 @@ class CommitteeService {
       }
 
       if (wallet != null) {
-        final current = (wallet['balance'] as num).toDouble();
-        if (entryType == 'Installment' && current + 0.000001 < walletAmount) {
-          throw Exception('Insufficient wallet balance. Available: $walletCurrency ${current.toStringAsFixed(2)}');
-        }
-        await txn.update('wallets', {'balance': current + (entryType == 'Installment' ? -walletAmount : walletAmount)},
-          where: 'id=?', whereArgs: [walletId]);
+        final delta = entryType == 'Installment' ? -walletAmount : walletAmount;
+        await TransactionsService.applyWalletBalanceDelta(
+          txn, walletId: walletId!, delta: delta);
       }
 
       final now = DateTime.now().toIso8601String();

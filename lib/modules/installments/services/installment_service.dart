@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
@@ -85,9 +86,6 @@ class InstallmentService {
     final transactions = await db.query('transactions',
       where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
       whereArgs: ['Installment #$contractId%']);
-    final walletId = (contract['wallet_id'] as num).toInt();
-    final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
-    final walletDelta = contract['direction'] == 'sell' ? -totalPaid : totalPaid;
     await RecycleBinArchiveService.archive(
       type: 'Installment Contract',
       title: contract['item_name']?.toString() ?? 'Installment',
@@ -100,10 +98,8 @@ class InstallmentService {
       ],
     );
     await db.transaction((txn) async {
-      await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [walletDelta, walletId]);
-      await txn.delete('transactions',
-        where: "category IN ('Installment Received','Installment Paid') AND note LIKE ?",
-        whereArgs: ['Installment #$contractId%']);
+      await TransactionsService.deleteModuleLedgerEntries(
+        txn, transactions.map((row) => Map<String, dynamic>.from(row)).toList());
       await txn.delete('installment_payments', where: 'contract_id = ?', whereArgs: [contractId]);
       await txn.delete('installment_contracts', where: 'id = ?', whereArgs: [contractId]);
     });
@@ -144,19 +140,17 @@ class InstallmentService {
   // Payment ke direction ke mutabiq wallet mein amount add ya deduct hoti hai.
   static Future<void> _applyPayment(Transaction txn, int id, double amount, int walletId,
       String date, String note, String direction, String now) async {
-    final delta = direction == 'sell' ? amount : -amount;
     await txn.insert('installment_payments', {
       'contract_id': id, 'amount': amount, 'payment_date': date, 'note': note, 'created_at': now,
     });
-    await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [delta, walletId]);
-    await txn.insert('transactions', {
-      'type': direction == 'sell' ? 'Income' : 'Expense', 'amount': amount,
-      'wallet_id': walletId, 'to_wallet_id': null, 'to_amount': null,
-      'exchange_rate': null, 'balance_delta': null,
-      'category': direction == 'sell' ? 'Installment Received' : 'Installment Paid',
-      'note': 'Installment #$id' + (note.isEmpty ? '' : ' • $note'),
-      'date': date, 'created_at': now,
-    });
+    await TransactionsService.createModuleLedgerEntry(
+      txn,
+      type: direction == 'sell' ? 'Income' : 'Expense',
+      amount: amount, walletId: walletId,
+      category: direction == 'sell' ? 'Installment Received' : 'Installment Paid',
+      note: 'Installment #$id' + (note.isEmpty ? '' : ' • $note'),
+      date: date,
+    );
   }
   /// Restores the archived installment_contracts record and related ledger entries atomically.
   static Future<void> restoreArchivedContract(
@@ -181,29 +175,15 @@ class InstallmentService {
             .whereType<Map>().map((e) => Map<String,dynamic>.from(e)).toList();
         final payments = related.where((e) => e['_related_table'] == 'installment_payments').toList();
         final transactions = related.where((e) => e['_related_table'] == 'transactions').toList();
-        final walletId = (record['wallet_id'] as num).toInt();
-        final totalPaid = payments.fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
-        final walletRows = await txn.query('wallets', columns: ['balance'],
-          where: 'id = ?', whereArgs: [walletId], limit: 1);
-        if (walletRows.isEmpty) throw Exception('The installment wallet no longer exists.');
-        final direction = record['direction']?.toString();
-        final delta = direction == 'sell' ? totalPaid : -totalPaid;
-        if (delta < 0 && (walletRows.first['balance'] as num).toDouble() < -delta) {
-          throw Exception('Insufficient wallet balance to restore this installment contract.');
-        }
         final duplicate = await txn.query('installment_contracts',
           columns: ['id'], where: 'id = ?', whereArgs: [record['id']], limit: 1);
         if (duplicate.isNotEmpty) throw Exception('This installment contract already exists.');
-        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id = ?', [delta, walletId]);
         await txn.insert('installment_contracts', record);
         for (final payment in payments) {
           payment.remove('_related_table');
           await txn.insert('installment_payments', payment);
         }
-        for (final transaction in transactions) {
-          transaction.remove('_related_table');
-          await txn.insert('transactions', transaction);
-        }
+        await TransactionsService.restoreModuleLedgerEntries(txn, transactions);
         return;
   }
 

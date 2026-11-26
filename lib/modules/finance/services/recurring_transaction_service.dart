@@ -338,101 +338,28 @@ class RecurringTransactionService {
     Map<String, Object?> recurring,
     DateTime transactionDate,
   ) async {
-    final type = recurring['type'].toString().toLowerCase();
+    final rawType = recurring['type'].toString().toLowerCase();
+    final type = rawType == 'income' ? 'Income'
+        : rawType == 'expense' ? 'Expense'
+        : rawType == 'transfer' ? 'Transfer'
+        : throw Exception('Invalid recurring transaction type.');
     final amount = (recurring['amount'] as num).toDouble();
-    final transferFee = type == 'transfer'
-        ? ((recurring['transfer_fee'] as num?)?.toDouble() ?? 0.0)
-        : 0.0;
-    final walletId = recurring['wallet_id'] as int;
-    final toWalletId = recurring['to_wallet_id'] as int?;
-    final wallets = await txn.query(
-      'wallets',
-      where: 'id = ?',
-      whereArgs: [walletId],
-      limit: 1,
+    final transferFee = type == 'Transfer'
+        ? ((recurring['transfer_fee'] as num?)?.toDouble() ?? 0.0) : 0.0;
+    final transactionId = await TransactionsService.createModuleLedgerEntry(
+      txn, type: type, amount: amount,
+      walletId: recurring['wallet_id'] as int,
+      toWalletId: type == 'Transfer' ? recurring['to_wallet_id'] as int? : null,
+      toAmount: type == 'Transfer' ? amount : null,
+      transferFee: transferFee,
+      category: type == 'Transfer' ? '' : (recurring['category'] ?? '').toString(),
+      note: (recurring['note'] ?? recurring['title'] ?? '').toString(),
+      date: _date(transactionDate),
     );
-    if (wallets.isEmpty) {
-      throw Exception('Recurring transaction wallet not found.');
-    }
-    final wallet = wallets.first;
-    final balance = (wallet['balance'] as num).toDouble();
-    Map<String, Object?>? destination;
-    if (type == 'transfer') {
-      if (toWalletId == null || toWalletId == walletId) {
-        throw Exception('Invalid destination wallet.');
-      }
-      final destinationWallets = await txn.query(
-        'wallets',
-        where: 'id = ?',
-        whereArgs: [toWalletId],
-        limit: 1,
-      );
-      if (destinationWallets.isEmpty) {
-        throw Exception('Destination wallet not found.');
-      }
-      destination = destinationWallets.first;
-      if (destination['currency'] != wallet['currency']) {
-        throw Exception(
-          'Transfer wallets must have the same currency.',
-        );
-      }
-    }
-    if (type == 'expense' || type == 'transfer') {
-      final requiredBalance = amount + (type == 'transfer' ? transferFee : 0.0);
-      if (balance < requiredBalance) {
-        throw Exception(
-          'Insufficient balance in wallet ${wallet['name']}.',
-        );
-      }
-    }
-    if (type == 'income') {
-      await txn.update(
-        'wallets',
-        {'balance': balance + amount},
-        where: 'id = ?',
-        whereArgs: [walletId],
-      );
-    } else {
-      await txn.update(
-        'wallets',
-        {'balance': balance - amount - (type == 'transfer' ? transferFee : 0.0)},
-        where: 'id = ?',
-        whereArgs: [walletId],
-      );
-    }
-    if (type == 'transfer') {
-      final destinationBalance =
-          (destination!['balance'] as num).toDouble();
-      await txn.update(
-        'wallets',
-        {'balance': destinationBalance + amount},
-        where: 'id = ?',
-        whereArgs: [toWalletId],
-      );
-    }
-    final transactionId = await TransactionsService.insertLedgerEntry(txn, {
-      'type': type == 'income' ? 'Income' : type == 'expense' ? 'Expense' : 'Transfer',
-      'amount': amount,
-      'wallet_id': walletId,
-      'to_wallet_id': toWalletId,
-      'to_amount': type == 'transfer' ? amount : null,
-      'exchange_rate': type == 'transfer' ? 1.0 : null,
-      'balance_delta': null,
-      'category': type == 'transfer' ? '' : (recurring['category'] ?? ''),
-      'note': recurring['note'] ?? recurring['title'],
-      'date': _date(transactionDate),
-      'created_at': DateTime.now().toIso8601String(),
-    });
     await txn.insert('app_settings', {
       'setting_key': 'recurring_transaction_$transactionId',
       'setting_value': (recurring['id'] ?? '').toString(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
-    if (type == 'transfer' && transferFee > 0) {
-      await txn.insert('app_settings', {
-        'setting_key': 'transaction_transfer_fee_$transactionId',
-        'setting_value': transferFee.toString(),
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
   }
   /// Jin recurring transactions ki date aa chuki ho un sab ko process karta hai.
   ///

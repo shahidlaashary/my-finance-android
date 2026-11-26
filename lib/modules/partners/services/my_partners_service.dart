@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:my_finance/core/database/database_manager.dart';
+import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
@@ -185,14 +186,8 @@ class MyPartnersService {
       ],
     );
     await db.transaction((txn) async {
-      for (final row in financeRows) {
-        final amount = (row['amount'] as num).toDouble();
-        final delta = row['type']?.toString().toLowerCase() == 'income' ? -amount : amount;
-        await txn.rawUpdate('UPDATE wallets SET balance = balance + ? WHERE id=?', [delta, row['wallet_id']]);
-      }
-      await txn.delete('transactions',
-        where: "category LIKE 'My Partner%' AND note IN (SELECT note FROM partners_transactions WHERE partner_id=?)",
-        whereArgs: [partnerId]);
+      await TransactionsService.deleteModuleLedgerEntries(
+        txn, financeRows.map((row) => Map<String, dynamic>.from(row)).toList());
       await txn.delete('partners_transactions', where: 'partner_id=?', whereArgs: [partnerId]);
       await txn.delete('partners_wallet_links', where: 'partner_id=?', whereArgs: [partnerId]);
       await txn.delete('partners', where: 'id=?', whereArgs: [partnerId]);
@@ -212,27 +207,13 @@ class MyPartnersService {
     if (!amount.isFinite || amount <= 0) throw Exception('Enter a valid transfer amount.');
     final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
-      final walletRows = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
-      if (walletRows.isEmpty) throw Exception('Selected wallet not found.');
-      final walletBalance = (walletRows.first['balance'] as num).toDouble();
-      final walletDelta = walletToPartner ? -amount : amount;
-      if (walletDelta < 0 && walletBalance + walletDelta < -0.000001) {
-        throw Exception('Insufficient wallet balance.');
-      }
-      await txn.update('wallets', {'balance': walletBalance + walletDelta}, where: 'id = ?', whereArgs: [walletId]);
-      await txn.insert('transactions', {
-        'type': walletToPartner ? 'Expense' : 'Income',
-        'amount': amount,
-        'wallet_id': walletId,
-        'to_wallet_id': null,
-        'to_amount': null,
-        'exchange_rate': null,
-        'balance_delta': null,
-        'category': walletToPartner ? 'My Partner Transfer Out' : 'My Partner Transfer In',
-        'note': note.trim(),
-        'date': date.toIso8601String(),
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      await TransactionsService.createModuleLedgerEntry(
+        txn,
+        type: walletToPartner ? 'Expense' : 'Income',
+        amount: amount, walletId: walletId,
+        category: walletToPartner ? 'My Partner Transfer Out' : 'My Partner Transfer In',
+        note: note.trim(), date: date.toIso8601String(),
+      );
       await txn.insert('partners_transactions', {
         'partner_id': partnerId,
         'wallet_id': walletId,
@@ -279,29 +260,15 @@ class MyPartnersService {
     final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
       if (walletId != null) {
-        final rows = await txn.query('wallets', where: 'id = ?', whereArgs: [walletId], limit: 1);
-        if (rows.isEmpty) throw Exception('Selected wallet not found.');
-        final current = (rows.first['balance'] as num).toDouble();
         final walletIn = walletInTypes.contains(type);
         if (!walletIn && !walletOutTypes.contains(type)) throw Exception('Invalid wallet transaction type.');
-        final walletDelta = walletIn ? amount : -amount;
-        if (walletDelta < 0 && current + walletDelta < -0.000001) {
-          throw Exception('Insufficient wallet balance.');
-        }
-        await txn.update('wallets', {'balance': current + walletDelta}, where: 'id = ?', whereArgs: [walletId]);
-        await txn.insert('transactions', {
-          'type': walletIn ? 'Income' : 'Expense',
-          'amount': amount,
-          'wallet_id': walletId,
-          'to_wallet_id': null,
-          'to_amount': null,
-          'exchange_rate': null,
-          'balance_delta': null,
-          'category': 'My Partner - ' + type,
-          'note': note.trim(),
-          'date': date.toIso8601String(),
-          'created_at': DateTime.now().toIso8601String(),
-        });
+        await TransactionsService.createModuleLedgerEntry(
+          txn,
+          type: walletIn ? 'Income' : 'Expense',
+          amount: amount, walletId: walletId,
+          category: 'My Partner - ' + type,
+          note: note.trim(), date: date.toIso8601String(),
+        );
       }
       await txn.insert('partners_transactions', {
         'partner_id': partnerId,
@@ -346,23 +313,10 @@ class MyPartnersService {
         final links = related.where((e) => e['_related_table']=='partners_wallet_links' || e['_related_table']=='partner_wallet_links').toList();
         final ledger = related.where((e) => e['_related_table']=='partners_transactions' || e['_related_table']=='partner_transactions').toList();
         final finance = related.where((e) => e['_related_table']=='transactions').toList();
-        for (final row in finance) {
-          final walletId = (row['wallet_id'] as num?)?.toInt();
-          if (walletId == null) continue;
-          final amount = (row['amount'] as num).toDouble();
-          final delta = row['type']?.toString().toLowerCase() == 'income' ? amount : -amount;
-          final wallet = await txn.query('wallets', columns: ['balance'],
-            where: 'id=?', whereArgs: [walletId], limit: 1);
-          if (wallet.isEmpty) throw Exception('A linked partner wallet no longer exists.');
-          if (delta < 0 && (wallet.first['balance'] as num).toDouble() < -delta) {
-            throw Exception('Insufficient wallet balance to restore partner transactions.');
-          }
-          await txn.rawUpdate('UPDATE wallets SET balance=balance+? WHERE id=?', [delta,walletId]);
-        }
         await txn.insert('partners', record);
         for (final row in links) { row.remove('_related_table'); await txn.insert('partners_wallet_links', row); }
         for (final row in ledger) { row.remove('_related_table'); await txn.insert('partners_transactions', row); }
-        for (final row in finance) { row.remove('_related_table'); await txn.insert('transactions', row); }
+        await TransactionsService.restoreModuleLedgerEntries(txn, finance);
         return;
   }
 

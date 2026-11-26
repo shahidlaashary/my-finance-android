@@ -16,6 +16,101 @@ class TransactionsService {
     return txn.insert('transactions', entry);
   }
 
+  /// Applies a wallet balance change through the central finance service.
+  static Future<void> applyWalletBalanceDelta(
+    Transaction txn, {
+    required int walletId,
+    required double delta,
+  }) async {
+    if (!delta.isFinite) throw Exception('Invalid wallet balance change.');
+    final rows = await txn.query('wallets', columns: ['balance'],
+      where: 'id = ?', whereArgs: [walletId], limit: 1);
+    if (rows.isEmpty) throw Exception('Wallet not found: $walletId');
+    final balance = (rows.first['balance'] as num).toDouble();
+    if (delta < 0 && balance + delta < -0.000001) {
+      throw Exception('Insufficient wallet balance.');
+    }
+    await _changeBalance(txn, walletId, delta);
+  }
+
+  /// Creates a module-owned ledger row and applies wallet effects atomically.
+  static Future<int> createModuleLedgerEntry(
+    Transaction txn, {
+    required String type,
+    required double amount,
+    required int walletId,
+    int? toWalletId,
+    double? toAmount,
+    double transferFee = 0,
+    String? category,
+    required String note,
+    required String date,
+  }) async {
+    final normalized = _normalizeType(type);
+    await _apply(txn, type: normalized, amount: amount, walletId: walletId,
+      toWalletId: normalized == 'Transfer' ? toWalletId : null,
+      toAmount: toAmount, transferFee: transferFee);
+    final id = await insertLedgerEntry(txn, {
+      'type': normalized, 'amount': amount, 'wallet_id': walletId,
+      'to_wallet_id': normalized == 'Transfer' ? toWalletId : null,
+      'to_amount': normalized == 'Transfer' ? (toAmount ?? amount) : null,
+      'exchange_rate': normalized == 'Transfer' ? ((toAmount ?? amount) / amount) : null,
+      'balance_delta': null,
+      'category': normalized == 'Transfer' ? '' : (category ?? ''),
+      'note': note, 'date': date,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    if (normalized == 'Transfer' && transferFee > 0) {
+      await txn.insert('app_settings', {
+        'setting_key': 'transaction_transfer_fee_$id',
+        'setting_value': transferFee.toString(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    return id;
+  }
+
+  /// Reverses and removes module-owned ledger rows inside the caller transaction.
+  static Future<void> deleteModuleLedgerEntries(
+    Transaction txn,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    for (final archived in rows) {
+      final row = Map<String, dynamic>.from(archived);
+      final id = (row['id'] as num?)?.toInt();
+      if (id == null) continue;
+      await _reverse(txn, row);
+      await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
+      await txn.delete('app_settings', where: 'setting_key = ?',
+        whereArgs: ['transaction_transfer_fee_$id']);
+    }
+  }
+
+  /// Restores module-owned ledger rows and wallet effects atomically.
+  static Future<void> restoreModuleLedgerEntries(
+    Transaction txn,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    for (final archived in rows) {
+      final row = Map<String, dynamic>.from(archived);
+      row.remove('_related_table');
+      final id = (row['id'] as num?)?.toInt();
+      if (id == null) throw Exception('Archived transaction ID is missing.');
+      final fee = (row.remove('_transfer_fee') as num?)?.toDouble() ?? 0.0;
+      final type = _normalizeType(row['type']?.toString() ?? '');
+      await _apply(txn, type: type, amount: (row['amount'] as num).toDouble(),
+        walletId: (row['wallet_id'] as num).toInt(),
+        toWalletId: (row['to_wallet_id'] as num?)?.toInt(),
+        toAmount: (row['to_amount'] as num?)?.toDouble(), transferFee: fee);
+      await txn.insert('transactions', row);
+      if (fee > 0) {
+        await txn.insert('app_settings', {
+          'setting_key': 'transaction_transfer_fee_$id',
+          'setting_value': fee.toString(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    }
+  }
+
   /// Checks whether the transaction ledger contains entries for a wallet.
   static Future<bool> hasWalletReferences(
     DatabaseExecutor db,

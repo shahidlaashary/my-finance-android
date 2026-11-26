@@ -671,6 +671,15 @@ class PropertiesService {
   static Future<void> deleteRentSchedule(int id) async {
     final db = DatabaseManager.instance.database;
     await db.transaction((txn) async {
+      final schedule = await txn.query(
+        'properties_rent_schedules',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (schedule.isEmpty) throw StateError('Rent schedule not found.');
+
       // Keep payment history when its recurring schedule is removed.
       await txn.update(
         'properties_rent_payments',
@@ -678,13 +687,26 @@ class PropertiesService {
         where: 'schedule_id = ?',
         whereArgs: [id],
       );
-      await txn.delete('properties_rent_schedules', where: 'id = ?', whereArgs: [id]);
+      final deleted = await txn.delete(
+        'properties_rent_schedules',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (deleted == 0) throw StateError('Rent schedule not found.');
     });
     AppRefreshController.notifyChanged();
   }
 
   static Future<void> deleteRentPayment(int id) async {
-    await DatabaseManager.instance.database.delete('properties_rent_payments', where: 'id = ?', whereArgs: [id]);
+    final db = DatabaseManager.instance.database;
+    await db.transaction((txn) async {
+      final deleted = await txn.delete(
+        'properties_rent_payments',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (deleted == 0) throw StateError('Rent payment not found.');
+    });
     AppRefreshController.notifyChanged();
   }
 

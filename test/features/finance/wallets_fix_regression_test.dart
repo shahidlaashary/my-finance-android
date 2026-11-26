@@ -8,6 +8,7 @@ import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
 
+// Ye regression tests recurring transaction processing aur wallet-related fixes check karte hain.
 void main() {
   late Directory databaseDirectory;
   final recurring = RecurringTransactionService();

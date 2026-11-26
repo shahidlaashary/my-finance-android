@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/installments/services/installment_service.dart';
 
+// Ye tests installment plans aur un ki payment service operations verify karte hain.
 void main() {
   late Directory databaseDirectory;
 

@@ -7,6 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 
+// Ye tests transaction ledger operations aur wallet balance updates verify karte hain.
 void main() {
   late Directory databaseDirectory;
 

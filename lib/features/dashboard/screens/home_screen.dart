@@ -353,17 +353,23 @@ class _HomePageState extends State<HomePage> {
           final payload = jsonDecode(body) as Map<String, dynamic>;
           final providerRates = payload['rates'] as Map<String, dynamic>?;
           if (payload['result'] == 'success' && providerRates != null) {
-            for (final currency in missingBeforeRefresh) {
-              final rawRate = providerRates[currency];
-              if (rawRate is! num || rawRate <= 0) continue;
-              // Provider foreign currency ki units per PKR deta hai; yahan PKR per aik unit save karein.
-              final pkrPerUnit = 1 / rawRate.toDouble();
-              if (!pkrPerUnit.isFinite || pkrPerUnit <= 0) continue;
-              await CurrencyService.saveExchangeRate(
-                currency,
-                pkrPerUnit,
-                source: 'automatic',
-              );
+            final baseProviderRate = selectedBaseCurrency == 'PKR'
+                ? 1.0
+                : providerRates[selectedBaseCurrency];
+            if (baseProviderRate is num && baseProviderRate > 0) {
+              for (final currency in missingBeforeRefresh) {
+                final rawRate = providerRates[currency];
+                if (rawRate is! num || rawRate <= 0) continue;
+                // Provider PKR reference deta hai; app ki Base Currency mein save karein.
+                final basePerUnit =
+                    baseProviderRate.toDouble() / rawRate.toDouble();
+                if (!basePerUnit.isFinite || basePerUnit <= 0) continue;
+                await CurrencyService.saveExchangeRate(
+                  currency,
+                  basePerUnit,
+                  source: 'automatic',
+                );
+              }
             }
           }
         }

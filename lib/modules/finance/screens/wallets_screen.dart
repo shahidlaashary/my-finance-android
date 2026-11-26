@@ -1787,7 +1787,9 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
                                 borderRadius: BorderRadius.circular(12),
                                 onTap: saving ? null : _showWalletTypePicker,
                                 child: InputDecorator(
-                                  decoration: _fieldDecoration('Wallet Type'),
+                                  decoration: _fieldDecoration('Wallet Type').copyWith(
+                                    contentPadding: const EdgeInsets.fromLTRB(11, 13, 11, 15),
+                                  ),
                                   child: Row(children: [
                                     Icon(_walletTypeIcons[selectedType] ?? Icons.wallet_outlined,
                                       size: 19, color: AppColors.primary),

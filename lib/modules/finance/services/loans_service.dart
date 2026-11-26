@@ -84,6 +84,65 @@ class LoansService {
     return db;
   }
 
+  /// Checks party-linked loan history inside an existing finance transaction.
+  /// LoansService owns all reads from the loans ledger.
+  static Future<bool> hasLoansForParty(Transaction txn, int partyId) async {
+    final table = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+    );
+    if (table.isEmpty) return false;
+    final rows = await txn.query(
+      'loans',
+      columns: ['id'],
+      where: 'party_id = ?',
+      whereArgs: [partyId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  static Future<List<LoansModel>> getLoansForParty(int partyId) async {
+    final db = await _database;
+    final rows = await db.query(
+      'loans',
+      where: 'party_id = ?',
+      whereArgs: [partyId],
+      orderBy: 'lending_date DESC, id DESC',
+    );
+    return rows.map(LoansModel.fromMap).toList();
+  }
+
+  static Future<Map<String, dynamic>> getPartySummary(int partyId) async {
+    final db = await _database;
+    final rows = await db.rawQuery('''
+      SELECT
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))) AS currency,
+        loans.loan_type AS loan_type,
+        COALESCE(SUM(loans.remaining_amount), 0) AS outstanding,
+        COUNT(*) AS loan_count
+      FROM loans
+      LEFT JOIN wallets ON wallets.id = loans.wallet_id AND loans.wallet_id > 0
+      WHERE loans.party_id = ?
+      GROUP BY
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
+        loans.loan_type
+      ORDER BY
+        UPPER(TRIM(COALESCE(loans.currency, wallets.currency, 'PKR'))),
+        loans.loan_type
+    ''', [partyId]);
+    return {
+      'loan_count': rows.fold<int>(
+        0,
+        (sum, row) => sum + ((row['loan_count'] as num?)?.toInt() ?? 0),
+      ),
+      'balances': rows.map((row) => {
+        'currency': row['currency'],
+        'loan_type': row['loan_type'],
+        'outstanding': row['outstanding'],
+      }).toList(),
+    };
+  }
+
   /// Public schema initializer for modules that create linked loan records.
   static Future<void> ensureTables(Database db) => _createTables(db);
 

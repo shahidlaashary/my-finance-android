@@ -8,10 +8,10 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 
-/// Owns party records shared by Finance, Assets, Loans and future modules.
-/// The existing loan database and party table are retained without schema changes.
+/// Finance, Assets, Loans aur future modules ke shared party records ka owner hai.
+/// Existing loan database aur party table ko schema change kiye baghair use karta hai.
 class PartyService {
-  /// Creates the shared party table. PartyService is its single owner.
+  /// Shared party table create karta hai; is table ki single ownership PartyService ke paas hai.
   static Future<void> ensureTables() async {
     final db = DatabaseManager.instance.database;
     await db.execute('''
@@ -41,7 +41,7 @@ class PartyService {
     ''');
   }
 
-  /// Reads a party through its owning service within a caller-owned transaction.
+  /// Caller ki transaction ke andar owning service ke zariye party record read karta hai.
   static Future<Map<String, Object?>?> getPartyById(
     Transaction txn,
     int partyId, {
@@ -57,7 +57,7 @@ class PartyService {
     return rows.isEmpty ? null : rows.first;
   }
 
-  /// Base-currency settings are owned by CurrencyService.
+  /// Base currency ki settings CurrencyService own karti hai.
   static Future<String> getBaseCurrency() => CurrencyService.getBaseCurrency();
 
   static Future<List<Map<String, dynamic>>> getParties({bool includeArchived = false}) async {
@@ -287,8 +287,8 @@ class PartyService {
     AppRefreshController.notifyChanged();
   }
 
-  /// Restores a deleted loan party inside the caller's active DB transaction.
-  /// The caller removes the Recycle Bin envelope in the same transaction.
+  /// Deleted loan party ko caller ki active database transaction mein restore karta hai.
+  /// Recycle Bin ka envelope caller isi transaction mein remove karta hai.
   static Future<void> restoreArchivedParty(
     Transaction txn,
     Map<String, dynamic> record,

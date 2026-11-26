@@ -17,14 +17,14 @@ import 'package:my_finance/core/startup/app_startup_service.dart';
 import 'package:my_finance/core/security/installation_identity_service.dart';
 import 'package:my_finance/core/security/firebase_installation_auth_service.dart';
 
-/// Prepares Flutter, the database platform and saved app preferences.
+/// Flutter, database platform aur saved app preferences ko startup ke liye tayyar karta hai.
 class AppBootstrapService {
   AppBootstrapService._();
 
   static const _testingDataResetKey = 'testing_fresh_data_reset_v1';
 
-  /// Clears data from earlier test builds once, while allowing new test data
-  /// to work normally until the app is uninstalled.
+  /// Purane test builds ka data sirf aik martaba clear karta hai; iske baad naya test data
+  /// app uninstall hone tak normal tarah use hota rehta hai.
   static Future<void> _clearPreviousTestingDataIfNeeded() async {
     final preferences = await SharedPreferences.getInstance();
     if (preferences.getBool(_testingDataResetKey) == true) return;
@@ -71,7 +71,7 @@ class AppBootstrapService {
       }
     }
 
-    // Remove all previously stored app preferences and secure app-lock data.
+    // Pehle se saved app preferences aur secure app-lock data clear karein.
     await preferences.clear();
     await const FlutterSecureStorage().deleteAll();
     await preferences.setBool(_testingDataResetKey, true);
@@ -82,8 +82,8 @@ class AppBootstrapService {
     await initializeDatabasePlatform();
     await _clearPreviousTestingDataIfNeeded();
     await InstallationIdentityService.instance.initialize();
-    // Firebase auth is optional until the owner supplies project configuration.
-    // Missing configuration must never block local Finance app startup.
+    // Owner ki Firebase project configuration milne tak Firebase auth optional hai.
+    // Configuration missing ho to local Finance app startup kabhi block nahi hona chahiye.
     await FirebaseInstallationAuthService.instance.initialize();
     await FinanceDB.instance.init();
 

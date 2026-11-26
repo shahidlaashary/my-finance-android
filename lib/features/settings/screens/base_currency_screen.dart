@@ -276,7 +276,7 @@ class _BaseCurrencyScreenState extends State<BaseCurrencyScreen> {
                                     const SizedBox(width: 8),
                                     Icon(Icons.check_circle_rounded,
                                       color: theme.colorScheme.primary),
-                                  ] else if (!enabled)
+                                  ] else if (code != _referenceCurrency && rate == null)
                                     const Icon(Icons.cloud_off_rounded, size: 18),
                                 ]),
                               ),

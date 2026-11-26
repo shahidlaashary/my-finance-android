@@ -85,8 +85,8 @@ class LoansService {
     return db;
   }
 
-  /// Checks whether a wallet is referenced by a loan or repayment.
-  /// LoansService owns both loan-table lookups.
+  /// Check karta hai ke wallet kisi loan ya repayment mein linked hai ya nahi.
+  /// Loan tables ki dono lookups LoansService manage karta hai.
   static Future<bool> hasWalletReferences(Transaction txn, int walletId) async {
     final loansTable = await txn.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
@@ -109,8 +109,8 @@ class LoansService {
     return linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty;
   }
 
-  /// Checks party-linked loan history inside an existing finance transaction.
-  /// LoansService owns all reads from the loans ledger.
+  /// Existing finance transaction ke andar party se linked loan history check karta hai.
+  /// Loans ledger ki tamam reads LoansService own karta hai.
   static Future<bool> hasLoansForParty(Transaction txn, int partyId) async {
     final table = await txn.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
@@ -168,7 +168,7 @@ class LoansService {
     };
   }
 
-  /// Public schema initializer for modules that create linked loan records.
+  /// Linked loan records create karne wale modules ke liye public schema initializer hai.
   static Future<void> ensureTables(Database db) => _createTables(db);
 
   static Future<void> _createTables(Database db) async {
@@ -226,7 +226,7 @@ class LoansService {
 
   }
 
-  /// Creates a loan record linked to an Asset. LoansService owns the loans table.
+  /// Asset se linked loan record create karta hai; loans table ki ownership LoansService ke paas hai.
   static Future<int> createAssetLinkedLoan(
     Transaction txn, {
     required int partyId,
@@ -262,7 +262,7 @@ class LoansService {
     });
   }
 
-  /// Reads one Asset-linked loan through the owning LoansService.
+  /// Owning LoansService ke zariye aik Asset-linked loan read karta hai.
   static Future<Map<String, Object?>?> getAssetLinkedLoan(
     Transaction txn,
     int loanId,
@@ -276,7 +276,7 @@ class LoansService {
     return rows.isEmpty ? null : rows.first;
   }
 
-  /// Reads repayments belonging to an Asset-linked loan.
+  /// Asset-linked loan ki tamam repayments read karta hai.
   static Future<List<Map<String, Object?>>> getAssetLinkedRepayments(
     Transaction txn,
     int loanId, {
@@ -437,8 +437,8 @@ class LoansService {
   }
 
 
-  /// Restores an archived repayment inside the caller's transaction.
-  /// Recycle Bin owns the archive envelope; LoansService owns loan accounting.
+  /// Archived repayment ko caller ki transaction ke andar restore karta hai.
+  /// Archive envelope Recycle Bin own karta hai; loan accounting LoansService manage karta hai.
   static Future<void> restoreArchivedRepayment(
     Transaction txn,
     Map<String, dynamic> record,
@@ -702,9 +702,9 @@ class LoansService {
       final newRemaining = (remainingAfterOld - snapshot.amount).clamp(0.0, loan.amount).toDouble();
       await txn.update('loan_repayments', snapshot.toMap()..remove('id'),
         where: 'id = ?', whereArgs: [repayment.id]);
-      // Reverse the old repayment and apply the replacement as one net
-      // movement per wallet. This avoids temporary negatives when both
-      // entries affect the same wallet and prevents a negative final balance.
+      // Purani repayment reverse karke replacement ka effect har wallet par aik net
+      // movement ki surat mein apply karein. Is se same wallet par dono entries hon to
+      // temporary negative balance aur final negative balance se bacha ja sakta hai.
       final walletDeltas = <int, double>{};
       void addWalletDelta(int walletId, double delta) {
         final next = (walletDeltas[walletId] ?? 0) + delta;
@@ -1040,7 +1040,7 @@ class LoansService {
 
     AppRefreshController.notifyChanged();
   }
-  /// Restores a loan and its repayment ledger within the caller's transaction.
+  /// Loan aur uski repayment ledger caller ki transaction ke andar restore karta hai.
   static Future<void> restoreArchivedLoan(
     Transaction txn, {
     required Map<String, dynamic> record,
@@ -1146,9 +1146,9 @@ class LoansService {
           }
         }
 
-        // Restore the original loan and every repayment as one net effect
-        // per wallet. For Loan Given, the original lending debit may be
-        // offset by repayments received into that same wallet.
+        // Original loan aur har repayment ka net effect har wallet par aik saath
+        // restore karein. Loan Given mein original lending debit ko usi wallet mein
+        // receive hui repayments offset kar sakti hain.
         final walletDeltas = <int, double>{};
         void addWalletDelta(int walletId, double delta) {
           if (walletId <= 0 || !delta.isFinite) {
@@ -1167,7 +1167,7 @@ class LoansService {
           );
         }
 
-        // Reapply each repayment using its saved wallet-side converted amount.
+        // Har repayment ko uski saved wallet-side converted amount ke saath dobara apply karein.
         for (final repayment in repayments) {
           final walletId = (repayment['wallet_id'] as num).toInt();
           final repaymentAmount = (repayment['amount'] as num).toDouble();

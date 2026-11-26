@@ -27,6 +27,20 @@ class FileStorageService {
     return (await File(sourcePath).copy(targetPath)).path;
   }
 
+  /// Deletes only files stored inside this app's private documents directory.
+  /// Returns false for paths outside the app-managed storage area.
+  static Future<bool> deleteStoredFile(String path) async {
+    if (path.trim().isEmpty) return false;
+    final root = await getApplicationDocumentsDirectory();
+    final rootPath = p.normalize(p.absolute(root.path));
+    final targetPath = p.normalize(p.absolute(path));
+    if (!p.isWithin(rootPath, targetPath)) return false;
+    final file = File(targetPath);
+    if (!await file.exists()) return true;
+    await file.delete();
+    return true;
+  }
+
   /// Opens a file using the platform's registered viewer.
   static Future<bool> openFile(String path) async {
     final result = await OpenFilex.open(path);

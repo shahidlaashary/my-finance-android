@@ -67,12 +67,12 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     ]))));
     for(final c in [n,p1,e,identity,notes]){c.dispose();}
   }
-  Future<void> contractForm() async {
+  Future<void> contractForm({Map<String,dynamic>? row}) async {
     if(properties.isEmpty||tenants.isEmpty){message(tr('Add a property and tenant first.'));return;}
-    int propertyId=properties.first['id'] as int,tenantId=tenants.first['id'] as int;String kind='Rental',frequency='Monthly',status='Active';DateTime start=DateTime.now();DateTime? end;
-    final rent=TextEditingController(),deposit=TextEditingController(),notes=TextEditingController();
+    int propertyId=(row?['property_id'] as int?)??(properties.first['id'] as int),tenantId=(row?['tenant_id'] as int?)??(tenants.first['id'] as int);String kind=row?['contract_type']?.toString()??'Rental',frequency=row?['frequency']?.toString()??'Monthly',status=row?['status']?.toString()??'Active';DateTime start=DateTime.tryParse(row?['start_date']?.toString()??'')??DateTime.now();DateTime? end=DateTime.tryParse(row?['end_date']?.toString()??'');
+    final rent=TextEditingController(text:row?['rent']?.toString()??''),deposit=TextEditingController(text:row?['deposit']?.toString()??''),notes=TextEditingController(text:row?['notes']?.toString()??'');
     await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>StatefulBuilder(builder:(ctx,refresh)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SingleChildScrollView(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[
-      Text(tr('Add Contract'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
+      Text(tr(row==null?'Add Contract':'Edit Contract'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
       DropdownButtonFormField<int>(value:propertyId,decoration:InputDecoration(labelText:tr('Property'),border:const OutlineInputBorder()),items:properties.map((v)=>DropdownMenuItem(value:v['id'] as int,child:Text(v['name'].toString()))).toList(),onChanged:(v){if(v!=null)refresh(()=>propertyId=v);}),
       const SizedBox(height:10),DropdownButtonFormField<int>(value:tenantId,decoration:InputDecoration(labelText:tr('Tenant'),border:const OutlineInputBorder()),items:tenants.map((v)=>DropdownMenuItem(value:v['id'] as int,child:Text(v['name'].toString()))).toList(),onChanged:(v){if(v!=null)refresh(()=>tenantId=v);}),
       const SizedBox(height:10),DropdownButtonFormField<String>(value:kind,decoration:InputDecoration(labelText:tr('Contract Type'),border:const OutlineInputBorder()),items:['Rental','Lease','Other'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>kind=v);}),
@@ -83,7 +83,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       const SizedBox(height:10),field(deposit,'Security Deposit',keyboard:TextInputType.number),const SizedBox(height:10),
       DropdownButtonFormField<String>(value:status,decoration:InputDecoration(labelText:tr('Status'),border:const OutlineInputBorder()),items:['Draft','Active','Expired','Terminated'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>status=v);}),
       const SizedBox(height:10),field(notes,'Notes',lines:2),const SizedBox(height:16),
-      FilledButton(onPressed:()async{try{await PropertiesService.saveContract(propertyId:propertyId,tenantId:tenantId,contractType:kind,startDate:start.toIso8601String(),endDate:end?.toIso8601String()??'',rent:double.tryParse(rent.text)??0,frequency:frequency,deposit:double.tryParse(deposit.text)??0,status:status,notes:notes.text);if(s.mounted)Navigator.pop(s);await load();}catch(err){message(err.toString());}},child:Text(tr('Save Contract'))),
+      FilledButton(onPressed:()async{try{await PropertiesService.saveContract(id:row?['id'] as int?,propertyId:propertyId,tenantId:tenantId,contractType:kind,startDate:start.toIso8601String(),endDate:end?.toIso8601String()??'',rent:double.tryParse(rent.text)??0,frequency:frequency,deposit:double.tryParse(deposit.text)??0,status:status,notes:notes.text);if(s.mounted)Navigator.pop(s);await load();}catch(err){message(err.toString());}},child:Text(tr(row==null?'Save Contract':'Update Contract'))),
     ])))));
     rent.dispose();deposit.dispose();notes.dispose();
   }
@@ -106,7 +106,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     return ListView.builder(padding:const EdgeInsets.all(12),itemCount:rows.length,itemBuilder:(ctx,i){final r=rows[i];
       if(kind=='Properties')return propertyTile(r);
       if(kind=='Tenants')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.person_outline)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>tenantForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){try{await PropertiesService.deleteTenant(r['id'] as int);await load();}catch(e){message(e.toString());}}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
-      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
+      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }
   Widget overview()=>RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[

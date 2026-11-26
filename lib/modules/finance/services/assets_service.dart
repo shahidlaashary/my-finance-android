@@ -10,6 +10,30 @@ import 'package:my_finance/modules/parties/services/party_service.dart';
 class AssetsService {
   /// Checks whether a wallet is referenced by an asset purchase or sale.
   /// AssetsService owns the asset-table lookup.
+  /// Validates a linked loan reference without exposing the Asset table.
+  static Future<bool> hasLinkedLoanReference(
+    Transaction txn, {
+    required int assetId,
+    required int loanId,
+    required String sourceType,
+  }) async {
+    if (sourceType != 'asset_purchase' && sourceType != 'asset_sale') {
+      return false;
+    }
+    final rows = await txn.query(
+      'assets',
+      columns: ['linked_loan_id', 'sale_linked_loan_id'],
+      where: 'id = ?',
+      whereArgs: [assetId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return false;
+    final column = sourceType == 'asset_purchase'
+        ? 'linked_loan_id'
+        : 'sale_linked_loan_id';
+    return (rows.first[column] as num?)?.toInt() == loanId;
+  }
+
   static Future<bool> hasWalletReferences(Transaction txn, int walletId) async {
     final table = await txn.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'assets'",

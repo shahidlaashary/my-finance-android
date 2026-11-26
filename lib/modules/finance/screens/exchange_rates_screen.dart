@@ -26,7 +26,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   String? _message;
   bool _messageIsError = false;
   final TextEditingController _convertAmount = TextEditingController(text: '1');
-  String _convertFrom = 'USD';
+  static const String _convertFrom = 'USD';
   String _convertTo = 'PKR';
 
   @override
@@ -67,6 +67,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       if (!mounted) return;
       setState(() {
         _baseCurrency = baseCurrency;
+        _convertTo = baseCurrency;
         _rates = rates;
         _loading = false;
       });
@@ -275,23 +276,21 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           ),
                           SizedBox(height: 10),
                           Row(children: [
-                            Expanded(child: DropdownButtonFormField<String>(
-                              value: _convertFrom,
-                              isExpanded: true,
-                              decoration: const InputDecoration(labelText: 'From'),
-                              items: CurrencyCatalog.supported.map((code) =>
-                                DropdownMenuItem(value: code, child: Text(code))).toList(),
-                              onChanged: (value) => setState(() => _convertFrom = value ?? _baseCurrency),
+                            Expanded(child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'From',
+                                border: OutlineInputBorder(),
+                              ),
+                              child: Text(_convertFrom),
                             )),
                             const Padding(padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(Icons.swap_horiz_rounded)),
-                            Expanded(child: DropdownButtonFormField<String>(
-                              value: _convertTo,
-                              isExpanded: true,
-                              decoration: const InputDecoration(labelText: 'To'),
-                              items: CurrencyCatalog.supported.map((code) =>
-                                DropdownMenuItem(value: code, child: Text(code))).toList(),
-                              onChanged: (value) => setState(() => _convertTo = value ?? _baseCurrency),
+                              child: Icon(Icons.arrow_forward_rounded)),
+                            Expanded(child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'To',
+                                border: OutlineInputBorder(),
+                              ),
+                              child: Text(_convertTo),
                             )),
                           ]),
                           SizedBox(height: 12),

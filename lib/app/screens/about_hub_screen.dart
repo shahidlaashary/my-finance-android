@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+/// App version, developer aur application information dikhane ki screen.
 class AboutHubScreen extends StatelessWidget {
   const AboutHubScreen({super.key});
   @override Widget build(BuildContext context){

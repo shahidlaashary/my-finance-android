@@ -6,7 +6,7 @@ import 'package:my_finance/app/theme/app_theme.dart';
 import 'package:my_finance/core/security/widgets/app_lock_gate.dart';
 import 'package:my_finance/core/theme/appearance_settings_service.dart';
 
-/// Root Material application configuration.
+/// App ka root Material configuration, localization aur theme setup.
 class MyFinanceApp extends StatelessWidget {
   const MyFinanceApp({
     super.key,

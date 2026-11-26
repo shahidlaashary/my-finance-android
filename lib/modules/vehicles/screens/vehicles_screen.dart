@@ -12,6 +12,7 @@ import 'package:my_finance/modules/vehicles/services/vehicle_export_service.dart
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
+/// Vehicles aur un ke fuel, expenses aur related records manage karne ki screen.
 class VehiclesScreen extends StatefulWidget {
   const VehiclesScreen({super.key});
 
@@ -73,6 +74,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
     }
   }
 
+  /// Vehicle service se vehicles aur un ki latest details load karta hai.
   Future<void> _load() async {
     try {
       final hideBalances = await GeneralPreferences.instance.hideBalances;

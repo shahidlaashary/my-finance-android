@@ -9,6 +9,7 @@ import 'package:my_finance/core/preferences/general_preferences.dart';
 import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/app/screens/main_screen.dart';
 
+/// Pehli dafa app setup aur initial preferences configure karne ka flow.
 /// First-install setup for the user's name and preferred base currency.
 class FirstTimeSetupScreen extends StatefulWidget {
   const FirstTimeSetupScreen({super.key});

@@ -14,6 +14,7 @@ import 'package:my_finance/features/notifications/screens/reminders_screen.dart'
 import 'package:my_finance/app/screens/about_hub_screen.dart';
 import 'package:my_finance/modules/finance/screens/whatsapp_automation_screen.dart';
 
+/// App appearance, security aur general settings tak rasai dene wali screen.
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
 

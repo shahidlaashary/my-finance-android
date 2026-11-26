@@ -5,79 +5,15 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 class PropertyService {
   PropertyService._();
 
-  static Future<void> ensureTables() async {
-    final db = DatabaseManager.instance.database;
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS properties (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL DEFAULT 'House',
-        address TEXT NOT NULL DEFAULT '',
-        ownership TEXT NOT NULL DEFAULT 'Owned',
-        area TEXT NOT NULL DEFAULT '',
-        purchase_price REAL NOT NULL DEFAULT 0,
-        purchase_date TEXT NOT NULL DEFAULT '',
-        current_value REAL NOT NULL DEFAULT 0,
-        status TEXT NOT NULL DEFAULT 'Active',
-        notes TEXT NOT NULL DEFAULT '',
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS property_tenants (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL DEFAULT '',
-        email TEXT NOT NULL DEFAULT '',
-        identity_number TEXT NOT NULL DEFAULT '',
-        notes TEXT NOT NULL DEFAULT '',
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS property_contracts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        property_id INTEGER NOT NULL,
-        tenant_id INTEGER NOT NULL,
-        contract_type TEXT NOT NULL DEFAULT 'Rental',
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL DEFAULT '',
-        rent REAL NOT NULL DEFAULT 0,
-        frequency TEXT NOT NULL DEFAULT 'Monthly',
-        deposit REAL NOT NULL DEFAULT 0,
-        status TEXT NOT NULL DEFAULT 'Draft',
-        notes TEXT NOT NULL DEFAULT '',
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS property_documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        property_id INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        file_name TEXT NOT NULL,
-        file_path TEXT NOT NULL,
-        mime_type TEXT NOT NULL DEFAULT '',
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_property_contracts_property ON property_contracts(property_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_property_contracts_tenant ON property_contracts(tenant_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_property_documents_property ON property_documents(property_id)');
-  }
-
   static Future<List<Map<String, dynamic>>> properties() async {
-    await ensureTables();
     return DatabaseManager.instance.database.query('properties', orderBy: 'name COLLATE NOCASE');
   }
 
   static Future<List<Map<String, dynamic>>> tenants() async {
-    await ensureTables();
     return DatabaseManager.instance.database.query('property_tenants', orderBy: 'name COLLATE NOCASE');
   }
 
   static Future<List<Map<String, dynamic>>> contracts() async {
-    await ensureTables();
     return DatabaseManager.instance.database.rawQuery('''
       SELECT c.*, p.name AS property_name, t.name AS tenant_name
       FROM property_contracts c
@@ -88,7 +24,6 @@ class PropertyService {
   }
 
   static Future<List<Map<String, dynamic>>> documents(int propertyId) async {
-    await ensureTables();
     return DatabaseManager.instance.database.query(
       'property_documents',
       where: 'property_id = ?',
@@ -110,7 +45,6 @@ class PropertyService {
     required String status,
     required String notes,
   }) async {
-    await ensureTables();
     if (name.trim().isEmpty || !purchasePrice.isFinite || purchasePrice < 0 ||
         !currentValue.isFinite || currentValue < 0) {
       throw ArgumentError('Enter valid property details.');
@@ -138,7 +72,6 @@ class PropertyService {
     required String identityNumber,
     required String notes,
   }) async {
-    await ensureTables();
     if (name.trim().isEmpty) throw ArgumentError('Tenant name is required.');
     final values = <String, Object?>{
       'name': name.trim(), 'phone': phone.trim(), 'email': email.trim(),
@@ -165,7 +98,6 @@ class PropertyService {
     required String status,
     required String notes,
   }) async {
-    await ensureTables();
     if (!rent.isFinite || rent < 0 || !deposit.isFinite || deposit < 0) {
       throw ArgumentError('Enter valid contract amounts.');
     }
@@ -191,7 +123,6 @@ class PropertyService {
     required String filePath,
     required String mimeType,
   }) async {
-    await ensureTables();
     final id = await DatabaseManager.instance.database.insert('property_documents', {
       'property_id': propertyId, 'title': title.trim(), 'file_name': fileName,
       'file_path': filePath, 'mime_type': mimeType,
@@ -208,7 +139,6 @@ class PropertyService {
     String? filePath,
     String? mimeType,
   }) async {
-    await ensureTables();
     final values = <String, Object?>{};
     if (title != null) values['title'] = title.trim();
     if (fileName != null) values['file_name'] = fileName;
@@ -223,13 +153,11 @@ class PropertyService {
   }
 
   static Future<void> deleteDocument(int id) async {
-    await ensureTables();
     await DatabaseManager.instance.database.delete('property_documents', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }
 
   static Future<void> deleteTenant(int id) async {
-    await ensureTables();
     final db = DatabaseManager.instance.database;
     final linked = await db.query('property_contracts', columns: ['id'], where: 'tenant_id = ?', whereArgs: [id], limit: 1);
     if (linked.isNotEmpty) throw StateError('Remove this tenant\'s contracts before deleting the tenant.');
@@ -238,7 +166,6 @@ class PropertyService {
   }
 
   static Future<void> deleteContract(int id) async {
-    await ensureTables();
     await DatabaseManager.instance.database.delete('property_contracts', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
   }

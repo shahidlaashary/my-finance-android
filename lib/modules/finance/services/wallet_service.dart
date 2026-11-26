@@ -313,21 +313,34 @@ class WalletService {
     final from = fromCurrency.trim().toUpperCase();
     final to = toCurrency.trim().toUpperCase();
     if (from == to) return 1.0;
-    final direct = await txn.query('manual_currency_pairs',
-      columns: ['rate'],
-      where: 'from_currency = ? AND to_currency = ?',
-      whereArgs: [from, to], limit: 1);
+    final rows = await txn.query('manual_currency_pairs');
+    final direct = rows.where((row) =>
+      row['from_currency'].toString().toUpperCase() == from &&
+      row['to_currency'].toString().toUpperCase() == to);
     if (direct.isNotEmpty) {
       final value = (direct.first['rate'] as num).toDouble();
       return value.isFinite && value > 0 ? value : null;
     }
-    final reverse = await txn.query('manual_currency_pairs',
-      columns: ['rate'],
-      where: 'from_currency = ? AND to_currency = ?',
-      whereArgs: [to, from], limit: 1);
-    if (reverse.isNotEmpty) {
-      final value = (reverse.first['rate'] as num).toDouble();
-      return value.isFinite && value > 0 ? 1 / value : null;
+    final graph = <String, List<MapEntry<String, double>>>{};
+    for (final row in rows) {
+      final a = row['from_currency'].toString().toUpperCase();
+      final b = row['to_currency'].toString().toUpperCase();
+      final rate = (row['rate'] as num).toDouble();
+      if (!rate.isFinite || rate <= 0) continue;
+      graph.putIfAbsent(a, () => []).add(MapEntry(b, rate));
+      graph.putIfAbsent(b, () => []).add(MapEntry(a, 1 / rate));
+    }
+    final queue = <(String, double)>[(from, 1.0)];
+    final visited = <String>{from};
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      for (final edge in graph[current.$1] ?? const <MapEntry<String, double>>[]) {
+        if (!visited.add(edge.key)) continue;
+        final combined = current.$2 * edge.value;
+        if (!combined.isFinite || combined <= 0) continue;
+        if (edge.key == to) return combined;
+        queue.add((edge.key, combined));
+      }
     }
     return null;
   }

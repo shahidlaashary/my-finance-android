@@ -280,6 +280,14 @@ class PropertiesService {
       final property = await txn.query('properties', columns: ['id'], where: 'id = ?', whereArgs: [propertyId], limit: 1);
       final owner = await txn.query('properties_owners', columns: ['id'], where: 'id = ?', whereArgs: [ownerId], limit: 1);
       if (property.isEmpty || owner.isEmpty) throw StateError('Select a valid property and owner.');
+      final current = await txn.rawQuery(
+        'SELECT COALESCE(SUM(ownership_share), 0) AS total FROM properties_owner_links WHERE property_id = ?',
+        [propertyId],
+      );
+      final total = (current.first['total'] as num?)?.toDouble() ?? 0;
+      if (total + ownershipShare > 100.000001) {
+        throw StateError('Total ownership share for a property cannot exceed 100%.');
+      }
       await txn.insert('properties_owner_links', {
         'property_id': propertyId, 'owner_id': ownerId,
         'ownership_share': ownershipShare, 'created_at': DateTime.now().toIso8601String(),
@@ -488,6 +496,21 @@ class PropertiesService {
     if (id != null && result == 0) throw StateError('Rent payment not found.');
     AppRefreshController.notifyChanged();
     return id ?? result;
+  }
+
+  static Future<void> deleteRentSchedule(int id) async {
+    final db = DatabaseManager.instance.database;
+    await db.transaction((txn) async {
+      // Keep payment history when its recurring schedule is removed.
+      await txn.update(
+        'properties_rent_payments',
+        {'schedule_id': null},
+        where: 'schedule_id = ?',
+        whereArgs: [id],
+      );
+      await txn.delete('properties_rent_schedules', where: 'id = ?', whereArgs: [id]);
+    });
+    AppRefreshController.notifyChanged();
   }
 
   static Future<void> deleteRentPayment(int id) async {

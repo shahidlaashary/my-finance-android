@@ -84,6 +84,30 @@ class LoansService {
     return db;
   }
 
+  /// Checks whether a wallet is referenced by a loan or repayment.
+  /// LoansService owns both loan-table lookups.
+  static Future<bool> hasWalletReferences(Transaction txn, int walletId) async {
+    final loansTable = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'loans'",
+    );
+    if (loansTable.isEmpty) return false;
+    final linkedLoans = await txn.query(
+      'loans',
+      columns: ['id'],
+      where: 'wallet_id = ?',
+      whereArgs: [walletId],
+      limit: 1,
+    );
+    final linkedRepayments = await txn.query(
+      'loan_repayments',
+      columns: ['id'],
+      where: 'wallet_id = ?',
+      whereArgs: [walletId],
+      limit: 1,
+    );
+    return linkedLoans.isNotEmpty || linkedRepayments.isNotEmpty;
+  }
+
   /// Checks party-linked loan history inside an existing finance transaction.
   /// LoansService owns all reads from the loans ledger.
   static Future<bool> hasLoansForParty(Transaction txn, int partyId) async {

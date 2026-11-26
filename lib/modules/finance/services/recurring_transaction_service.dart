@@ -4,6 +4,58 @@ import 'package:my_finance/modules/finance/models/recurring_transaction_model.da
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 class RecurringTransactionService {
+  /// Checks wallet references without forcing lazy table creation.
+  static Future<bool> hasWalletReferences(
+    Transaction txn,
+    int walletId,
+  ) async {
+    final table = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+    );
+    if (table.isEmpty) return false;
+    final rows = await txn.query(
+      'recurring_transactions',
+      columns: ['id'],
+      where: 'wallet_id = ? OR to_wallet_id = ?',
+      whereArgs: [walletId, walletId],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  /// Converts income/expense schedules after a wallet currency change.
+  /// Linked transfers block currency changes to preserve same-currency rules.
+  static Future<void> convertWalletAmounts(
+    Transaction txn,
+    int walletId,
+    double factor,
+  ) async {
+    final table = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recurring_transactions'",
+    );
+    if (table.isEmpty) return;
+    final linkedTransfers = await txn.query(
+      'recurring_transactions',
+      columns: ['id'],
+      where: "LOWER(type) = 'transfer' AND (wallet_id = ? OR to_wallet_id = ?)",
+      whereArgs: [walletId, walletId],
+      limit: 1,
+    );
+    if (linkedTransfers.isNotEmpty) {
+      throw Exception(
+        'Wallet currency cannot be changed while a recurring transfer is linked. '
+        'Update or remove that schedule first.',
+      );
+    }
+    await txn.rawUpdate('''
+      UPDATE recurring_transactions
+      SET amount = amount * ?,
+          transfer_fee = transfer_fee * ?
+      WHERE wallet_id = ?
+        AND LOWER(type) IN ('income', 'expense')
+    ''', [factor, factor, walletId]);
+  }
+
   static const String _tableName = 'recurring_transactions';
 
   final List<String> lastProcessingErrors = [];

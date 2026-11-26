@@ -82,8 +82,8 @@ class _HomePageState extends State<HomePage> {
     try {
       final hide = await GeneralPreferences.instance.hideBalances;
       final format = await GeneralPreferences.instance.numberFormat;
-      final selectedBaseCurrency = await CurrencyService.getBaseCurrency();
-      final baseRate = await CurrencyService.getExchangeRate(selectedBaseCurrency) ?? 1.0;
+      final baseCurrency = await CurrencyService.getBaseCurrency();
+      final baseRate = await CurrencyService.getExchangeRate(baseCurrency) ?? 1.0;
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
       final nextMonth = DateTime(now.year, now.month + 1, 1);
@@ -107,9 +107,9 @@ class _HomePageState extends State<HomePage> {
       final walletTotalsByCurrency =
           await DashboardDataService.getWalletTotalsByCurrency();
       final baseCurrencyBalance =
-          walletTotalsByCurrency[selectedBaseCurrency.trim().toUpperCase()] ?? 0;
+          walletTotalsByCurrency[baseCurrency.trim().toUpperCase()] ?? 0;
       final foreignBalances = Map<String, double>.from(walletTotalsByCurrency)
-        ..remove(selectedBaseCurrency.trim().toUpperCase());
+        ..remove(baseCurrency.trim().toUpperCase());
       final assetsByCurrency =
           await AssetsService().getTotalCurrentValueByCurrency();
       final outstandingLoans =
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         hideBalances = hide;
         numberFormat = format;
-        baseCurrency = selectedBaseCurrency;
+        baseCurrency = baseCurrency;
         totalBalance = balance + includedAssetsInBaseCurrency;
         baseCurrencyWalletTotal = baseCurrencyBalance;
         otherCurrencyTotals = foreignBalances;
@@ -353,9 +353,9 @@ class _HomePageState extends State<HomePage> {
           final payload = jsonDecode(body) as Map<String, dynamic>;
           final providerRates = payload['rates'] as Map<String, dynamic>?;
           if (payload['result'] == 'success' && providerRates != null) {
-            final baseProviderRate = selectedBaseCurrency == 'PKR'
+            final baseProviderRate = baseCurrency == 'PKR'
                 ? 1.0
-                : providerRates[selectedBaseCurrency];
+                : providerRates[baseCurrency];
             if (baseProviderRate is num && baseProviderRate > 0) {
               for (final currency in missingBeforeRefresh) {
                 final rawRate = providerRates[currency];

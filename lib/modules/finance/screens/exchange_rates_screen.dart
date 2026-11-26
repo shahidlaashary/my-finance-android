@@ -260,38 +260,71 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   Card(
+                    clipBehavior: Clip.antiAlias,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Currency Converter',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                          SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(Icons.currency_exchange_rounded,
+                                  size: 19, color: Theme.of(context).colorScheme.primary),
+                              const SizedBox(width: 8),
+                              const Text('Currency Converter',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                              const Spacer(),
+                              Text('${_baseCurrency} base',
+                                  style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                            ],
+                          ),
+                          const SizedBox(height: 9),
                           TextField(
                             controller: _convertAmount,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(labelText: 'Amount', border: OutlineInputBorder()),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                            decoration: InputDecoration(
+                              labelText: 'Amount',
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
                             onChanged: (_) => setState(() {}),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Row(children: [
                             Expanded(child: DropdownButtonFormField<String>(
                               value: _convertFrom,
                               isExpanded: true,
-                              decoration: const InputDecoration(labelText: 'From'),
+                              isDense: true,
+                              style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
+                              decoration: InputDecoration(
+                                labelText: 'From',
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
                               items: CurrencyCatalog.supported.map((code) =>
                                 DropdownMenuItem(value: code, child: Text(code))).toList(),
                               onChanged: (value) {
                                 if (value != null) setState(() => _convertFrom = value);
                               },
                             )),
-                            const Padding(padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(Icons.swap_horiz_rounded)),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              child: Icon(Icons.swap_horiz_rounded, size: 19),
+                            ),
                             Expanded(child: DropdownButtonFormField<String>(
                               value: _convertTo,
                               isExpanded: true,
-                              decoration: const InputDecoration(labelText: 'To'),
+                              isDense: true,
+                              style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodyLarge?.color),
+                              decoration: InputDecoration(
+                                labelText: 'To',
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
                               items: CurrencyCatalog.supported.map((code) =>
                                 DropdownMenuItem(value: code, child: Text(code))).toList(),
                               onChanged: (value) {
@@ -299,17 +332,50 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               },
                             )),
                           ]),
-                          SizedBox(height: 12),
-                          Text(
-                            _convertedAmount == null
-                                ? 'Rate unavailable. Update exchange rates first.'
-                                : _convertTo + ' ' + NumberFormat('#,##0.####').format(_convertedAmount),
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                              color: _convertedAmount == null ? Theme.of(context).hintColor : Theme.of(context).colorScheme.primary),
+                          const SizedBox(height: 9),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('Converted amount',
+                                          style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _convertedAmount == null
+                                            ? 'Rate unavailable'
+                                            : '$_convertTo ${NumberFormat('#,##0.####').format(_convertedAmount)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w800,
+                                          color: _convertedAmount == null
+                                              ? Theme.of(context).hintColor
+                                              : Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(Icons.check_circle_outline_rounded,
+                                    size: 18, color: Theme.of(context).colorScheme.primary),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 4),
-                          Text('Rates are shown relative to $_baseCurrency.',
-                            style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor)),
+                          Text('Rates relative to $_baseCurrency.',
+                              style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
                         ],
                       ),
                     ),

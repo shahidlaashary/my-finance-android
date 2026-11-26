@@ -73,6 +73,18 @@ class FinanceDB {
       )
     ''');
 
+    // Manual rates independent currency pairs hain; automatic refresh inhein touch nahi karta.
+    await db.execute('''
+      CREATE TABLE manual_currency_pairs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_currency TEXT NOT NULL,
+        to_currency TEXT NOT NULL,
+        rate REAL NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(from_currency, to_currency)
+      )
+    ''');
+
     await db.execute('''
       CREATE TABLE app_settings (
         setting_key TEXT PRIMARY KEY,

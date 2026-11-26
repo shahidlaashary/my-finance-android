@@ -87,15 +87,17 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     }
   }
 
-  Future<void> _addManualPair() async {
-    String from = 'USD';
-    String to = 'PKR';
-    final rateController = TextEditingController();
+  Future<void> _addManualPair([Map<String, dynamic>? existing]) async {
+    String from = existing?['from_currency']?.toString() ?? 'USD';
+    String to = existing?['to_currency']?.toString() ?? 'PKR';
+    final rateController = TextEditingController(
+      text: existing == null ? '' : (existing['rate'] as num).toString(),
+    );
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Add Manual Currency Pair'),
+          title: Text(existing == null ? 'Add Manual Currency Pair' : 'Edit Manual Currency Pair'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -584,19 +586,29 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 5),
                                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    Text('\${pair['from_currency']} → \${pair['to_currency']}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                                    Text('${pair['from_currency']} → ${pair['to_currency']}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
                                     const SizedBox(height: 3),
                                     Text(_numberFormat.format((pair['rate'] as num).toDouble()),
                                       style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700)),
                                   ])),
-                                  IconButton(
-                                    tooltip: 'Delete pair',
-                                    visualDensity: VisualDensity.compact,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                                    onPressed: () => _removeManualPair(pair['id'] as int),
-                                    icon: Icon(Icons.close_rounded, size: 15, color: Theme.of(context).hintColor),
-                                  ),
+                                  Column(children: [
+                                    IconButton(
+                                      tooltip: 'Edit pair',
+                                      visualDensity: VisualDensity.compact,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                      onPressed: () => _addManualPair(pair),
+                                      icon: Icon(Icons.edit_outlined, size: 14, color: Theme.of(context).hintColor),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Delete pair',
+                                      visualDensity: VisualDensity.compact,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                      onPressed: () => _removeManualPair(pair['id'] as int),
+                                      icon: Icon(Icons.close_rounded, size: 14, color: Theme.of(context).hintColor),
+                                    ),
+                                  ]),
                                 ]),
                               ),
                           ]),

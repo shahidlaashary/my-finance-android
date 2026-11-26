@@ -20,7 +20,7 @@ class _PropertyManagerScreenState extends State<PropertyManagerScreen> {
   Future<void> load() async {
     setState(()=>loading=true);
     try { final v=await Future.wait([PropertyManagerService.properties(),PropertyManagerService.tenants(),PropertyManagerService.contracts()]);
-      if(mounted)setState(()=>{properties=v[0],tenants=v[1],contracts=v[2],loading=false});
+      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }
   void message(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}

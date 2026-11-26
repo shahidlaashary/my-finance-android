@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-/// Shared translations for the application's commonly used UI labels.
-/// Add new UI copy here and use [appText] wherever a screen displays it.
+/// App mein aam istemal hone wale UI labels ki shared translations yahan hain.
+/// Naya UI text yahan add karein aur screens par [appText] istemal karein.
 const Map<String, String> _urduTranslations = {
     'Wallet': 'والٹ',
     'Destination Wallet': 'منزل والٹ',

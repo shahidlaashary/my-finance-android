@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persists the selected application language and exposes the canonical
-/// language catalogue shared by app localization and voice settings.
+/// Selected app language save karta hai aur localization aur voice settings
+/// ke liye mushtarka language catalogue provide karta hai.
 class LanguageSettingsService {
   LanguageSettingsService._();
   static final LanguageSettingsService instance = LanguageSettingsService._();
@@ -28,6 +28,7 @@ class LanguageSettingsService {
   bool get isRightToLeft => const {'ur', 'ar', 'pa', 'skr', 'sd', 'bal', 'ps'}
       .contains(locale.value.languageCode);
 
+  /// Saved language code load karke active locale set karta hai.
   Future<void> load() async {
     final preferences = await SharedPreferences.getInstance();
     final code = preferences.getString(_key) ?? 'en';
@@ -36,6 +37,7 @@ class LanguageSettingsService {
     );
   }
 
+  /// Supported language set karta hai; save fail ho to pehli locale restore karta hai.
   Future<void> setLanguage(String languageCode) async {
     if (!supportedLanguageCodes.contains(languageCode)) return;
     final previous = locale.value;

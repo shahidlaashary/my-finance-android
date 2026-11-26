@@ -1,4 +1,5 @@
 
+/// Attachment file aur us ke owner se mutaliq database record represent karta hai.
 class AttachmentModel {
   final int? id;
   final String ownerType;
@@ -20,6 +21,7 @@ class AttachmentModel {
     required this.createdAt,
   });
 
+  /// Model ko database columns ke mutabiq map mein convert karta hai.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -33,6 +35,7 @@ class AttachmentModel {
     };
   }
 
+  /// Database row se attachment model tayyar karta hai.
   factory AttachmentModel.fromMap(Map<String, dynamic> map) {
     return AttachmentModel(
       id: map['id'] as int?,
@@ -46,6 +49,7 @@ class AttachmentModel {
     );
   }
 
+  /// Maujooda model ki selected values badal kar naya model deta hai.
   AttachmentModel copyWith({
     int? id,
     String? filePath,

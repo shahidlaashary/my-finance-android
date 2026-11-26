@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// App ki aam preferences ko SharedPreferences mein save aur load karta hai.
 class GeneralPreferences {
   GeneralPreferences._();
   static final GeneralPreferences instance = GeneralPreferences._();
   final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
+  /// Preference update hone par UI listeners ko refresh signal deta hai.
   void _notifyChanged() => revision.value++;
 
   static const _dateFormatKey = 'general_date_format';

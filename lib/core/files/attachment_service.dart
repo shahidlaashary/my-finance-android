@@ -40,6 +40,7 @@ class AttachmentOwnerTypes {
   ];
 }
 
+/// Attachments ki file storage aur finance database records manage karta hai.
 class AttachmentService {
   static final FileStorage _fileStorage = LocalFileStorage();
 

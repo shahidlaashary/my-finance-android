@@ -402,9 +402,15 @@ class PropertiesService {
           if (!following.isAfter(due)) throw StateError('Rent schedule frequency did not advance its due date.');
           due = following;
         }
+        final scheduleUpdate = <String, Object?>{'next_due_date': due.toIso8601String()};
+        if (frequency == 'One-time' && due.year == 9999) {
+          scheduleUpdate['status'] = 'Completed';
+        } else if (endDate != null && due.isAfter(endDate)) {
+          scheduleUpdate['status'] = 'Completed';
+        }
         await txn.update(
           'properties_rent_schedules',
-          {'next_due_date': due.toIso8601String()},
+          scheduleUpdate,
           where: 'id = ?',
           whereArgs: [scheduleId],
         );
@@ -487,6 +493,47 @@ class PropertiesService {
   static Future<void> deleteRentPayment(int id) async {
     await DatabaseManager.instance.database.delete('properties_rent_payments', where: 'id = ?', whereArgs: [id]);
     AppRefreshController.notifyChanged();
+  }
+
+  /// Base-currency financial totals; rent and maintenance amounts are
+  /// recorded in the app's selected base currency by their entry forms.
+  static Future<List<Map<String, dynamic>>> financialReport({
+    String? fromDate,
+    String? toDate,
+  }) async {
+    final db = DatabaseManager.instance.database;
+    final paymentDate = "substr(CASE WHEN rp.paid_date = '' THEN rp.created_at ELSE rp.paid_date END, 1, 10)";
+    final maintenanceDate = "substr(CASE WHEN m.completed_date = '' THEN m.created_at ELSE m.completed_date END, 1, 10)";
+    final paymentFilter = <String>["rp.amount_paid > 0"];
+    final maintenanceFilter = <String>["m.actual_cost > 0"];
+    final paymentArgs = <Object?>[];
+    final maintenanceArgs = <Object?>[];
+    if (fromDate != null && fromDate.isNotEmpty) {
+      paymentFilter.add("$paymentDate >= ?");
+      maintenanceFilter.add("$maintenanceDate >= ?");
+      paymentArgs.add(fromDate.substring(0, 10));
+      maintenanceArgs.add(fromDate.substring(0, 10));
+    }
+    if (toDate != null && toDate.isNotEmpty) {
+      paymentFilter.add("$paymentDate <= ?");
+      maintenanceFilter.add("$maintenanceDate <= ?");
+      paymentArgs.add(toDate.substring(0, 10));
+      maintenanceArgs.add(toDate.substring(0, 10));
+    }
+    return db.rawQuery('''
+      SELECT p.*,
+        (SELECT COALESCE(SUM(rp.amount_paid), 0)
+         FROM properties_rent_payments rp
+         JOIN properties_contracts c ON c.id = rp.contract_id
+         WHERE c.property_id = p.id AND ${paymentFilter.join(' AND ')}) AS rent_received,
+        (SELECT COALESCE(SUM(m.actual_cost), 0)
+         FROM properties_maintenance m
+         WHERE m.property_id = p.id AND ${maintenanceFilter.join(' AND ')}) AS maintenance_expense,
+        (SELECT COUNT(*) FROM properties_contracts c
+         WHERE c.property_id = p.id AND c.status = 'Active') AS active_contract_count
+      FROM properties p
+      ORDER BY p.name COLLATE NOCASE
+    ''', [...paymentArgs, ...maintenanceArgs]);
   }
 
   static Future<void> deleteContract(int id) async {

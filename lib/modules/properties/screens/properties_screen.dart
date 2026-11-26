@@ -310,7 +310,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
         reportStat(tr('Rent Received'),reportAmount(rent),Icons.payments_outlined),
         reportStat(tr('Maintenance Expenses'),reportAmount(maintenance),Icons.handyman_outlined),
         reportStat(tr('Net Cash Flow'),reportAmount(rent-maintenance),Icons.account_balance_wallet_outlined),
-        reportStat(tr('Occupancy'),'$occupied / ${reportRows.length}',Icons.apartment_outlined),
+        reportStat(tr('Occupancy'),'$occupied / ${reportRows.length} • $vacant ${tr('Vacant')}',Icons.apartment_outlined),
       ]),
       const SizedBox(height:18),
       Text(tr('Property-wise Breakdown'),style:const TextStyle(fontSize:17,fontWeight:FontWeight.bold)),

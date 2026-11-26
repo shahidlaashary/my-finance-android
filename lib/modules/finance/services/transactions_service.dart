@@ -6,6 +6,16 @@ import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
 
 class TransactionsService {
+  /// Inserts a ledger row inside the caller's database transaction.
+  /// Module services may coordinate their own records while ledger writes
+  /// remain centralized here; the caller retains atomic transaction control.
+  static Future<int> insertLedgerEntry(
+    Transaction txn,
+    Map<String, Object?> entry,
+  ) async {
+    return txn.insert('transactions', entry);
+  }
+
   /// Checks whether the transaction ledger contains entries for a wallet.
   static Future<bool> hasWalletReferences(
     DatabaseExecutor db,

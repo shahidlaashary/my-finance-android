@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/settings/app_settings_service.dart';
 
-/// Dashboard-specific read models and alert state persisted in my_finance.db.
+/// Dashboard ke read models aur alert state my_finance.db mein save/manage karta hai.
 class DashboardDataService {
   DashboardDataService._();
 

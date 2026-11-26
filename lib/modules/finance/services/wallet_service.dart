@@ -10,8 +10,8 @@ import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/committee/services/committee_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
-/// Owns wallet data operations while sharing the application's single
-/// DatabaseManager connection.
+/// Wallet data operations manage karta hai aur application ka shared
+/// DatabaseManager connection use karta hai.
 class WalletService {
   WalletService._();
 
@@ -176,10 +176,9 @@ class WalletService {
         !requestedCurrentBalance.isFinite) {
       throw Exception('Wallet name, currency aur current balance durust enter karein.');
     }
-    // Refresh missing currency rates before starting the conversion transaction.
-    // This prevents wallet currency changes from requiring a manual visit to
-    // the Exchange Rates screen. Only missing rates are fetched; saved rates
-    // remain unchanged.
+    // Conversion transaction se pehle missing currency rates refresh karein.
+    // Is se wallet currency change karne ke liye Exchange Rates screen kholna zaroori nahi.
+    // Sirf missing rates fetch hoti hain; saved rates change nahi hoti.
     final currentWalletRows = await DatabaseManager.instance.database.query(
       'wallets',
       columns: ['currency'],

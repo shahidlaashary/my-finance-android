@@ -942,10 +942,10 @@ class _VehiclesScreenState extends State<VehiclesScreen> with SingleTickerProvid
           Center(child:Container(width:38,height:4,decoration:BoxDecoration(color:Theme.of(ctx).dividerColor,borderRadius:BorderRadius.circular(8)))),const SizedBox(height:12),
           Text(heading(),style:TextStyle(fontSize:19,fontWeight:FontWeight.w800,color:_ink)),const SizedBox(height:8),
           LayoutBuilder(builder:(context,constraints){
-            final cardWidth=constraints.maxWidth<376?(constraints.maxWidth-24)/4:88.0;
+            final cardWidth=constraints.maxWidth<376?(constraints.maxWidth-18)/4:88.0;
             return Row(mainAxisAlignment:MainAxisAlignment.center,children:[
               for(var i=0;i<cards.length;i++)...[
-                if(i>0)const SizedBox(width:8),
+                if(i>0)const SizedBox(width:6),
                 SizedBox(width:cardWidth,child:Builder(builder:(context){
                   final card=cards[i],active=tab==cards[i].$1;
                   return InkWell(onTap:()=>setSheet(()=>tab=card.$1),child:Container(height:50,padding:const EdgeInsets.symmetric(horizontal:2),alignment:Alignment.center,decoration:BoxDecoration(color:active?card.$3.withValues(alpha:.12):Theme.of(ctx).colorScheme.surfaceContainerHighest,borderRadius:BorderRadius.circular(12),border:Border.all(color:active?card.$3:Theme.of(ctx).colorScheme.outlineVariant,width:active?1.4:1)),child:Column(mainAxisAlignment:MainAxisAlignment.center,mainAxisSize:MainAxisSize.min,children:[Icon(card.$2,color:card.$3,size:20),const SizedBox(height:2),Text('Add '+card.$1,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(fontSize:11,fontWeight:FontWeight.w800,color:_ink))])));

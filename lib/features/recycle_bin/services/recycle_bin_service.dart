@@ -255,8 +255,7 @@ class RecycleBinService {
   }
 
   static Future<void> discardArchive(int id) async {
-    await ensureTable();
-    await DatabaseManager.instance.database.delete('recycle_bin', where: 'id = ?', whereArgs: [id]);
+    await RecycleBinArchiveService.discardArchive(id);
   }
 
   static Future<void> permanentlyDelete(int id) async {

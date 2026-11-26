@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:my_finance/core/services/file_storage_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/properties/services/properties_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/features/notifications/services/reminder_service.dart';
 
 class PropertiesScreen extends StatefulWidget {
@@ -13,14 +14,16 @@ class PropertiesScreen extends StatefulWidget {
 }
 class _PropertiesScreenState extends State<PropertiesScreen> {
   int tab=0; bool loading=true;
-  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[], rentPayments=[], maintenanceItems=[];
+  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[], rentPayments=[], maintenanceItems=[], reportRows=[];
+  String reportCurrency='PKR';
   String tr(String s)=>appText(context,s,s);
   @override void initState(){super.initState();load();}
   Future<void> load() async {
     setState(()=>loading=true);
-    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance()]);
+    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments(),PropertiesService.maintenance(),PropertiesService.financialReport()]);
+      final baseCurrency=await CurrencyService.getBaseCurrency();
       try { await _syncPropertyReminders(contracts:v[2],payments:v[4],maintenance:v[5]); } catch (_) { /* Reminder permission/service errors must not block Properties data. */ }
-      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; maintenanceItems=v[5]; loading=false; });
+      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; maintenanceItems=v[5]; reportRows=v[6]; reportCurrency=baseCurrency; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }
   void message(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
@@ -280,6 +283,48 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='schedule'){rentScheduleForm(r);}if(v=='records'){rentRecordsSheet(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'schedule',child:Text(tr('Create Rent Schedule'))),PopupMenuItem(value:'records',child:Text(tr('View Rent Records'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }
+  String reportAmount(Object? value) {
+    final amount=(value as num?)?.toDouble()??0;
+    return '$reportCurrency ${amount.toStringAsFixed(2)}';
+  }
+  Widget reports() {
+    final rent=reportRows.fold<double>(0,(sum,row)=>sum+((row['rent_received'] as num?)?.toDouble()??0));
+    final maintenance=reportRows.fold<double>(0,(sum,row)=>sum+((row['maintenance_expense'] as num?)?.toDouble()??0));
+    final occupied=reportRows.where((row)=>(row['active_contract_count'] as num? ?? 0)>0).length;
+    final vacant=reportRows.length-occupied;
+    return RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[
+      Text(tr('Portfolio Financial Report'),style:const TextStyle(fontSize:19,fontWeight:FontWeight.bold)),
+      Text(tr('All-time totals in the current app base currency: $reportCurrency')),
+      const SizedBox(height:12),
+      GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,childAspectRatio:1.55,crossAxisSpacing:10,mainAxisSpacing:10,children:[
+        reportStat(tr('Rent Received'),reportAmount(rent),Icons.payments_outlined),
+        reportStat(tr('Maintenance Expenses'),reportAmount(maintenance),Icons.handyman_outlined),
+        reportStat(tr('Net Cash Flow'),reportAmount(rent-maintenance),Icons.account_balance_wallet_outlined),
+        reportStat(tr('Occupancy'),'$occupied / ${reportRows.length}',Icons.apartment_outlined),
+      ]),
+      const SizedBox(height:18),
+      Text(tr('Property-wise Breakdown'),style:const TextStyle(fontSize:17,fontWeight:FontWeight.bold)),
+      if(reportRows.isEmpty) Padding(padding:const EdgeInsets.only(top:16),child:Text(tr('No properties added yet.')))
+      else ...reportRows.map((row){
+        final received=(row['rent_received'] as num?)?.toDouble()??0;
+        final expense=(row['maintenance_expense'] as num?)?.toDouble()??0;
+        final active=(row['active_contract_count'] as num? ?? 0)>0;
+        return Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text(row['name'].toString(),style:const TextStyle(fontWeight:FontWeight.bold)),
+          const SizedBox(height:6),
+          Text('${tr('Occupancy')}: ${active?tr('Occupied'):tr('Vacant')}'),
+          Text('${tr('Rent Received')}: ${reportAmount(received)}'),
+          Text('${tr('Maintenance Expenses')}: ${reportAmount(expense)}'),
+          Text('${tr('Net Cash Flow')}: ${reportAmount(received-expense)}',style:const TextStyle(fontWeight:FontWeight.w600)),
+        ])));
+      }),
+    ]));
+  }
+  Widget reportStat(String label,String value,IconData icon)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[
+    Icon(icon,color:Theme.of(context).colorScheme.primary),const SizedBox(height:7),
+    Text(value,style:const TextStyle(fontSize:17,fontWeight:FontWeight.bold),maxLines:1,overflow:TextOverflow.ellipsis),
+    Text(label,style:Theme.of(context).textTheme.bodySmall,maxLines:1,overflow:TextOverflow.ellipsis),
+  ])));
   Widget overview()=>RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[
     GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:2,childAspectRatio:1.7,crossAxisSpacing:10,mainAxisSpacing:10,children:[
       stat('Properties',properties.length,Icons.home_work_outlined),stat('Tenants',tenants.length,Icons.people_outline),
@@ -294,8 +339,8 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Widget stat(String title,int n,IconData icon)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,color:Theme.of(context).colorScheme.primary),const SizedBox(height:7),Text('$n',style:const TextStyle(fontSize:21,fontWeight:FontWeight.bold)),Text(tr(title),maxLines:1,overflow:TextOverflow.ellipsis,style:Theme.of(context).textTheme.bodySmall)])));
   Widget nav(int i,IconData icon,String label){final selected=tab==i;return Expanded(child:InkWell(onTap:()=>setState(()=>tab=i),child:SizedBox(height:66,child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,size:22,color:selected?Theme.of(context).colorScheme.primary:Theme.of(context).hintColor),const SizedBox(height:2),Text(tr(label),style:TextStyle(fontSize:10,fontWeight:FontWeight.w600,color:selected?Theme.of(context).colorScheme.primary:Theme.of(context).hintColor))]))));}
   @override Widget build(BuildContext context){
-    final pages=[overview(),listing(properties,'Properties'),listing(tenants,'Tenants'),listing(contracts,'Contracts'),listing(owners,'Owners'),listing(maintenanceItems,'Maintenance')];
-    return Scaffold(appBar:AppBar(title:Text(tr('Properties Manager')),actions:[IconButton(onPressed:load,icon:const Icon(Icons.refresh))]),
+    final pages=[overview(),listing(properties,'Properties'),listing(tenants,'Tenants'),listing(contracts,'Contracts'),listing(owners,'Owners'),listing(maintenanceItems,'Maintenance'),reports()];
+    return Scaffold(appBar:AppBar(title:Text(tr('Properties Manager')),actions:[IconButton(tooltip:tr('Financial Reports'),onPressed:()=>setState(()=>tab=6),icon:const Icon(Icons.assessment_outlined)),IconButton(onPressed:load,icon:const Icon(Icons.refresh))]),
       body:loading?const Center(child:CircularProgressIndicator()):IndexedStack(index:tab,children:pages),
       bottomNavigationBar:Container(color:Theme.of(context).colorScheme.surface,child:SafeArea(top:false,child:SizedBox(height:66,child:Row(children:[
         nav(0,Icons.dashboard_outlined,'Overview'),nav(1,Icons.home_work_outlined,'Properties'),

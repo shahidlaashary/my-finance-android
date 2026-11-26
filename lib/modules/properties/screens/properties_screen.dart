@@ -78,6 +78,24 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     for(final c in [n,phone,email,identity,address,notes]){c.dispose();}
   }
 
+
+  Future<void> rentScheduleForm(Map<String,dynamic> contract) async {
+    DateTime start=DateTime.now(),next=DateTime.now();DateTime? end;
+    String frequency='Monthly';
+    final amount=TextEditingController(text:contract['rent']?.toString()??''),notes=TextEditingController();
+    await showModalBottomSheet<void>(context:context,isScrollControlled:true,useSafeArea:true,builder:(s)=>StatefulBuilder(builder:(ctx,refresh)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.viewInsetsOf(ctx).bottom),child:SingleChildScrollView(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[
+      Text(tr('Create Rent Schedule'),style:const TextStyle(fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:14),
+      field(amount,'Rent Amount',keyboard:TextInputType.number),const SizedBox(height:10),
+      DropdownButtonFormField<String>(value:frequency,decoration:InputDecoration(labelText:tr('Frequency'),border:const OutlineInputBorder()),items:['Weekly','Monthly','Quarterly','Yearly'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v){if(v!=null)refresh(()=>frequency=v);}),
+      ListTile(title:Text(tr('Start Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(start)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:start,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>start=d);}),
+      ListTile(title:Text(tr('End Date')),subtitle:Text(end==null?tr('No end date'):MaterialLocalizations.of(ctx).formatMediumDate(end!)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:end??start,firstDate:start,lastDate:DateTime(2100));if(d!=null)refresh(()=>end=d);}),
+      ListTile(title:Text(tr('Next Due Date')),subtitle:Text(MaterialLocalizations.of(ctx).formatMediumDate(next)),onTap:()async{final d=await showDatePicker(context:ctx,initialDate:next,firstDate:DateTime(1990),lastDate:DateTime(2100));if(d!=null)refresh(()=>next=d);}),
+      field(notes,'Notes',lines:2),const SizedBox(height:16),
+      FilledButton(onPressed:()async{try{await PropertiesService.saveRentSchedule(contractId:contract['id'] as int,amount:double.parse(amount.text),frequency:frequency,startDate:start.toIso8601String(),endDate:end?.toIso8601String()??'',nextDueDate:next.toIso8601String(),status:'Active',notes:notes.text);if(s.mounted)Navigator.pop(s);message(tr('Rent schedule saved.'));}catch(e){message(e.toString());}},child:Text(tr('Save Schedule'))),
+    ])))));
+    amount.dispose();notes.dispose();
+  }
+
   Future<void> rentPaymentForm(Map<String,dynamic> contract) async {
     DateTime due=DateTime.now(),paid=DateTime.now();
     final dueAmount=TextEditingController(text:contract['rent']?.toString()??''),paidAmount=TextEditingController(text:'0'),method=TextEditingController(),reference=TextEditingController(),notes=TextEditingController();
@@ -132,7 +150,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     return ListView.builder(padding:const EdgeInsets.all(12),itemCount:rows.length,itemBuilder:(ctx,i){final r=rows[i];
       if(kind=='Properties')return propertyTile(r);
       if(kind=='Tenants')return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.person_outline)),title:Text(r['name'].toString()),subtitle:Text(r['phone']?.toString()??''),onTap:()=>tenantForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='delete'){try{await PropertiesService.deleteTenant(r['id'] as int);await load();}catch(e){message(e.toString());}}},itemBuilder:(_)=>[PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
-      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
+      return Card(child:ListTile(leading:const Icon(Icons.description_outlined),title:Text(r['property_name']?.toString()??''),subtitle:Text('${r['tenant_name']} • ${r['contract_type']} • ${r['status']}'),onTap:()=>contractForm(row:r),trailing:PopupMenuButton<String>(onSelected:(v)async{if(v=='edit'){contractForm(row:r);}if(v=='payment'){rentPaymentForm(r);}if(v=='schedule'){rentScheduleForm(r);}if(v=='delete'){await PropertiesService.deleteContract(r['id'] as int);await load();}},itemBuilder:(_)=>[PopupMenuItem(value:'edit',child:Text(tr('Edit'))),PopupMenuItem(value:'payment',child:Text(tr('Record Rent Payment'))),PopupMenuItem(value:'schedule',child:Text(tr('Create Rent Schedule'))),PopupMenuItem(value:'delete',child:Text(tr('Delete')))])));
     });
   }
   Widget overview()=>RefreshIndicator(onRefresh:load,child:ListView(padding:const EdgeInsets.all(16),children:[

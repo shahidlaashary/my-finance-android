@@ -6,10 +6,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
-/// Committee funds are maintained in a private ledger. Personal wallets are
-/// touched only when the user explicitly chooses one for an installment/payout.
+/// Committee ka apna ledger hota hai; personal wallet sirf tab affect hota hai
+/// jab user installment ya payout ke liye khud wallet select karta hai.
+/// Committee plans, members, entries aur unke wallet/ledger effects manage karta hai.
 class CommitteeService {
-  /// Converts committee entry wallet snapshots for a wallet currency change.
+  /// Wallet currency change hone par committee entries ke saved wallet amounts convert karta hai.
   static Future<void> convertWalletAmounts(
     Transaction txn,
     int walletId,
@@ -279,6 +280,7 @@ class CommitteeService {
     return result;
   }
 
+  /// Committee, members, entries aur linked ledger records archive karke delete karta hai.
   static Future<void> deleteCommittee(int committeeId) async {
     await _ensureSchema();
     final db = DatabaseManager.instance.database;
@@ -316,7 +318,7 @@ class CommitteeService {
     await DatabaseManager.instance.database.update('committees', {'status': status}, where: 'id=?', whereArgs: [committeeId]);
     AppRefreshController.notifyChanged();
   }
-  /// Restores the archived committees record and related ledger entries atomically.
+  /// Archived committee record aur related ledger entries aik hi transaction mein restore karta hai.
   static Future<void> restoreArchivedCommittee(
     Transaction txn, {
     required Map<String, dynamic> record,

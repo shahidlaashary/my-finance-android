@@ -12,13 +12,13 @@ class PropertiesScreen extends StatefulWidget {
 }
 class _PropertiesScreenState extends State<PropertiesScreen> {
   int tab=0; bool loading=true;
-  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[];
+  List<Map<String,dynamic>> properties=[], tenants=[], contracts=[], owners=[], rentPayments=[];
   String tr(String s)=>appText(context,s,s);
   @override void initState(){super.initState();load();}
   Future<void> load() async {
     setState(()=>loading=true);
-    try { final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners()]);
-      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; loading=false; });
+    try { await PropertiesService.generateScheduledRentPayments(); final v=await Future.wait([PropertiesService.properties(),PropertiesService.tenants(),PropertiesService.contracts(),PropertiesService.owners(),PropertiesService.rentPayments()]);
+      if(mounted)setState(() { properties=v[0]; tenants=v[1]; contracts=v[2]; owners=v[3]; rentPayments=v[4]; loading=false; });
     } catch(e){if(mounted)setState(()=>loading=false);message(e.toString());}
   }
   void message(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
@@ -194,6 +194,8 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
       stat('Properties',properties.length,Icons.home_work_outlined),stat('Tenants',tenants.length,Icons.people_outline),
       stat('Active Contracts',contracts.where((c)=>c['status']=='Active').length,Icons.description_outlined),
       stat('Vacant Properties',properties.where((p)=>p['status']=='Vacant').length,Icons.meeting_room_outlined),
+      stat('Overdue Rent',rentPayments.where((p)=>p['status']=='Overdue').length,Icons.warning_amber),
+      stat('Pending Rent',rentPayments.where((p)=>p['status']=='Pending'||p['status']=='Partial').length,Icons.schedule),
     ]),const SizedBox(height:18),Text(tr('Recent Properties'),style:const TextStyle(fontSize:17,fontWeight:FontWeight.bold)),
     if(properties.isEmpty)Text(tr('No properties added yet.')) else ...properties.take(5).map(propertyTile),
   ]));

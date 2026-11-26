@@ -171,7 +171,7 @@ class VehicleService {
       });
       AppRefreshController.notifyChanged();
     } catch (_) {
-      await RecycleBinService.discardArchive(archiveId);
+      await RecycleBinArchiveService.discardArchive(archiveId);
       rethrow;
     }
   }
@@ -397,7 +397,7 @@ class VehicleService {
     } catch (_) {
       data[key] = previous;
       await _write(data);
-      await RecycleBinService.discardArchive(archiveId);
+      await RecycleBinArchiveService.discardArchive(archiveId);
       rethrow;
     }
   }

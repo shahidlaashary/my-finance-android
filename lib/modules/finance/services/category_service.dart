@@ -7,10 +7,10 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/modules/finance/models/finance_category.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 
-/// Owns category persistence through the application's shared DatabaseManager connection.
+/// Application ke shared DatabaseManager connection ke zariye categories save karta hai.
 ///
-/// Categories are stored in app_settings and are shared by the category
-/// manager, transaction forms, budgets and recurring transactions.
+/// Categories app_settings mein store hoti hain aur category manager, transaction forms,
+/// budgets aur recurring transactions mein shared hoti hain.
 class CategoryService {
   CategoryService._();
 
@@ -97,7 +97,7 @@ class CategoryService {
             .toList();
       }
     } catch (_) {
-      // Invalid stored data is replaced with the original defaults.
+      // Agar saved data valid na ho to original default categories dobara use hoti hain.
     }
 
     final defaults = _defaultCategories(normalizedType);
@@ -229,8 +229,8 @@ class CategoryService {
     await _save(normalizedType, items);
     return 1;
   }
-  /// Restores a deleted category at its original position inside the caller's
-  /// transaction. The recycle-bin envelope is removed by its coordinator.
+  /// Deleted category ko caller ki transaction mein uski original position par restore karta hai.
+  /// Recycle Bin envelope uska coordinator remove karta hai.
   static Future<void> restoreArchivedCategory(
     Transaction txn, {
     required String settingKey,

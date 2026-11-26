@@ -5,6 +5,9 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import android.os.Bundle
 import android.os.StatFs
+import android.telephony.TelephonyManager
+import java.util.Locale
+import java.util.TimeZone
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -17,6 +20,20 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName).setMethodCallHandler { call, result ->
             when (call.method) {
+                "getCountrySignals" -> try {
+                    val telephony = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+                    result.success(mapOf(
+                        "networkCountry" to telephony.networkCountryIso.orEmpty().uppercase(Locale.ROOT),
+                        "simCountry" to telephony.simCountryIso.orEmpty().uppercase(Locale.ROOT),
+                        "localeCountry" to Locale.getDefault().country.orEmpty().uppercase(Locale.ROOT),
+                        "timeZone" to TimeZone.getDefault().id
+                    ))
+                } catch (error: Exception) {
+                    result.success(mapOf(
+                        "localeCountry" to Locale.getDefault().country.orEmpty().uppercase(Locale.ROOT),
+                        "timeZone" to TimeZone.getDefault().id
+                    ))
+                }
                 "getStorageInfo" -> try {
                     val stats = StatFs(filesDir.absolutePath)
                     result.success(mapOf("totalBytes" to stats.totalBytes, "freeBytes" to stats.availableBytes))

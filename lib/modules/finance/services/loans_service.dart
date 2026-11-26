@@ -661,7 +661,7 @@ class LoansService {
         'payload': jsonEncode(repaymentRecord),
         'deleted_at': DateTime.now().toIso8601String(),
         'expires_at': DateTime.now()
-            .add(const Duration(days: RecycleBinService.retentionDays))
+            .add(const Duration(days: RecycleBinArchiveService.retentionDays))
             .toIso8601String(),
       });
 
@@ -833,7 +833,7 @@ class LoansService {
         'related_payload': repayments.isEmpty ? null : jsonEncode(repayments),
         'deleted_at': DateTime.now().toIso8601String(),
         'expires_at': DateTime.now()
-            .add(const Duration(days: RecycleBinService.retentionDays))
+            .add(const Duration(days: RecycleBinArchiveService.retentionDays))
             .toIso8601String(),
       });
 

@@ -111,7 +111,7 @@ class FinanceDB {
       )
     ''');
     await db.execute('''
-      CREATE TABLE property_tenants (
+      CREATE TABLE properties_tenants (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         phone TEXT NOT NULL DEFAULT '',
@@ -122,7 +122,7 @@ class FinanceDB {
       )
     ''');
     await db.execute('''
-      CREATE TABLE property_contracts (
+      CREATE TABLE properties_contracts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         property_id INTEGER NOT NULL,
         tenant_id INTEGER NOT NULL,
@@ -138,7 +138,7 @@ class FinanceDB {
       )
     ''');
     await db.execute('''
-      CREATE TABLE property_documents (
+      CREATE TABLE properties_documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         property_id INTEGER NOT NULL,
         title TEXT NOT NULL,
@@ -148,9 +148,9 @@ class FinanceDB {
         created_at TEXT NOT NULL
       )
     ''');
-    await db.execute('CREATE INDEX idx_property_contracts_property ON property_contracts(property_id)');
-    await db.execute('CREATE INDEX idx_property_contracts_tenant ON property_contracts(tenant_id)');
-    await db.execute('CREATE INDEX idx_property_documents_property ON property_documents(property_id)');
+    await db.execute('CREATE INDEX idx_properties_contracts_property ON properties_contracts(property_id)');
+    await db.execute('CREATE INDEX idx_properties_contracts_tenant ON properties_contracts(tenant_id)');
+    await db.execute('CREATE INDEX idx_properties_documents_property ON properties_documents(property_id)');
   }
 
   // ----------------------------------------------------------

@@ -22,6 +22,7 @@ import 'package:my_finance/modules/finance/models/goals_model.dart';
 import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/shared/widgets/shared_app_bar_actions.dart';
 
+/// Finance data ke totals, trends aur summary statistics dikhata hai.
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
 

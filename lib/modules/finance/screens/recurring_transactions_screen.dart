@@ -15,6 +15,7 @@ import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 
+/// Scheduled income, expense aur transfer records manage karne ki screen.
 class RecurringTransactionsScreen extends StatefulWidget {
   const RecurringTransactionsScreen({super.key});
 

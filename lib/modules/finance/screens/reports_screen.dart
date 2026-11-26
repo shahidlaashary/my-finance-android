@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/modules/finance/services/reports_service.dart';
 
-/// Income, expenses aur financial trends ki reports display karta hai.
+/// Income, expenses aur financial trends ki reports dikhata hai.
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 

@@ -11,6 +11,7 @@ import 'package:my_finance/modules/finance/models/loans_model.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 
+/// Naya loan ya existing loan ki details add aur update karne ka form.
 class LoanEntryForm extends StatefulWidget {
   const LoanEntryForm({super.key});
   @override

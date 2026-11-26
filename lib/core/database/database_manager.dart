@@ -1,10 +1,10 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-/// Owns the single SQLite connection for my_finance.db.
+/// Ye class my_finance.db ka aik shared SQLite connection manage karti hai.
 ///
-/// Domain modules keep their own queries and business rules. This class only
-/// coordinates opening, sharing, and closing the common database connection.
+/// Har module apni queries aur business rules ka zimma khud rakhta hai.
+/// Ye class sirf common database connection ko open, share aur close karti hai.
 class DatabaseManager {
   DatabaseManager._();
 
@@ -16,6 +16,7 @@ class DatabaseManager {
   Future<Database>? _opening;
   Future<void> Function(Database, int)? _onCreate;
 
+  /// Database ko zaroorat par aik hi martaba open karke tamam modules ko deta hai.
   Future<Database> initialize({
     required Future<void> Function(Database, int) onCreate,
   }) async {
@@ -38,6 +39,7 @@ class DatabaseManager {
     }
   }
 
+  /// Fresh install ke liye version 1 database connection kholta hai.
   Future<Database> _openDatabase(
     Future<void> Function(Database, int) onCreate,
   ) async {
@@ -50,6 +52,7 @@ class DatabaseManager {
     );
   }
 
+  /// Pehle se initialized aur open finance database return karta hai.
   Database get database {
     final current = _database;
     if (current == null || !current.isOpen) {
@@ -60,6 +63,7 @@ class DatabaseManager {
     return current;
   }
 
+  /// Pending open mukammal hone ke baad shared connection band karta hai.
   Future<void> close() async {
     final pending = _opening;
     if (pending != null) {
@@ -77,6 +81,7 @@ class DatabaseManager {
     }
   }
 
+  /// Pehle se register schema callback ke sath connection dobara kholta hai.
   Future<void> reopen() async {
     final onCreate = _onCreate;
     if (onCreate == null) {

@@ -10,6 +10,7 @@ import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/core/localization/app_text.dart';
 import 'package:my_finance/shared/widgets/attachment_section.dart';
+/// Budget limits, spending progress aur budget alerts ki screen hai.
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
   @override

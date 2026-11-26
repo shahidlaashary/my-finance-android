@@ -97,14 +97,14 @@ class _BankCardPatternPainter extends CustomPainter {
     final path = Path();
     switch (design) {
       case 'ubl':
-        // UBL's deep-blue face, white wordmark area and curved cyan sweep.
+        // UBL ka deep-blue card face, white wordmark area aur curved cyan design.
         final cyan=Paint()..color=const Color(0xFF00A6E8).withValues(alpha:.95);
         path..reset()..moveTo(0,h*.38)..cubicTo(w*.28,h*.56,w*.62,h*.48,w,h*.62)..lineTo(w,h*.78)..cubicTo(w*.62,h*.62,w*.28,h*.74,0,h*.55)..close();
         canvas.drawPath(path,cyan);
         canvas.drawLine(Offset(w*.08,h*.17),Offset(w*.48,h*.17),stroke);
         break;
       case 'mcb':
-        // MCB's Visa family: black city-silhouette premium face with gold/silver variants.
+        // MCB Visa family: black city-silhouette premium face aur gold/silver variants.
         final skyline=Paint()..color=const Color(0xFFE3E6EA).withValues(alpha:.7);
         final buildings=[(0.40,.48,.06,.30),(0.47,.40,.08,.38),(0.56,.51,.06,.27),(0.63,.35,.08,.43),(0.72,.45,.07,.33),(0.81,.39,.06,.39),(0.89,.50,.07,.28)];
         for(final b in buildings) {
@@ -115,7 +115,7 @@ class _BankCardPatternPainter extends CustomPainter {
         canvas.drawRect(Rect.fromLTWH(w*.37,h*.81,w*.58,h*.012),skyline);
         break;
       case 'hbl':
-        // HBL's dark World/Gold card family: fine interlocking geometric lattice.
+        // HBL World/Gold card family: dark face par fine interlocking geometric pattern.
         for (var x = -h; x < w + h; x += 19) {
           path.reset();
           path.moveTo(x, 0); path.lineTo(x + h * .48, h * .5); path.lineTo(x, h);
@@ -124,7 +124,7 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'allied':
-        // Brushed silver field with layered angular graphite panels and orange edge.
+        // Brushed silver background, layered angular graphite panels aur orange edge.
         final p = Paint()..color = const Color(0xFF263442).withValues(alpha: .16);
         final p2 = Paint()..color = const Color(0xFFF58220).withValues(alpha: .92);
         path..moveTo(w*.42,0)..lineTo(w,0)..lineTo(w,h*.45)..lineTo(w*.62,h)..lineTo(w*.15,h)..close();
@@ -136,7 +136,7 @@ class _BankCardPatternPainter extends CustomPainter {
         canvas.drawRect(Rect.fromLTWH(0,h*.84, w*.035,h*.16),p2);
         break;
       case 'meezan':
-        // Dark premium face with fine gold Islamic star-and-tessellation motif.
+        // Dark premium face par gold Islamic stars aur tessellation ka fine design.
         final gold = Paint()..color = const Color(0xFFD5B66B).withValues(alpha:.34)..style=PaintingStyle.stroke..strokeWidth=1;
         for (var row=-1; row<5; row++) {
           for (var col=0; col<8; col++) {
@@ -148,7 +148,7 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'alfalah':
-        // Bank Alfalah grey/black world-map-inspired face and red folded geometry.
+        // Bank Alfalah ka grey/black world-map inspired face aur red folded geometry.
         final map = Paint()..color=const Color(0xFFBFC2C5).withValues(alpha:.16);
         for (var i=0;i<5;i++) {
           canvas.drawOval(Rect.fromCenter(center:Offset(w*.35+i*9,h*.54),width:48+i*8,height:25+i*5),map);
@@ -160,7 +160,7 @@ class _BankCardPatternPainter extends CustomPainter {
         canvas.drawPath(path,red);
         break;
       case 'askari':
-        // Askari's navy constellation / connected-dot visual.
+        // Askari ka navy constellation aur connected dots wala design.
         final dot=Paint()..color=const Color(0xFFB7D9E8).withValues(alpha:.72);
         for(var row=0;row<7;row++) {
           for(var col=0;col<12;col++) {
@@ -171,7 +171,7 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'faysal':
-        // Faysal Islami: deep teal field with interlocking Islamic geometry.
+        // Faysal Islami ka deep teal background aur interlocking Islamic geometry.
         final teal=Paint()..color=const Color(0xFF4DB7A7).withValues(alpha:.32)..style=PaintingStyle.stroke..strokeWidth=1.2;
         for(var row=-1;row<6;row++) {
           for(var col=0;col<9;col++) {
@@ -183,7 +183,7 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'bankislami':
-        // Minimal matte-black titanium face with restrained curved silver lines.
+        // Simple matte-black titanium face aur halki curved silver lines.
         final silver=Paint()..color=const Color(0xFFE6E6E6).withValues(alpha:.18)..style=PaintingStyle.stroke..strokeWidth=1.1;
         for(var i=0;i<6;i++) {
           path..reset()..moveTo(-w*.1,h*(.12+i*.14))..cubicTo(w*.25,h*(.02+i*.14),w*.42,h*(.28+i*.14),w*.7,h*(.12+i*.14));
@@ -191,7 +191,7 @@ class _BankCardPatternPainter extends CustomPainter {
         }
         break;
       case 'habibmetro':
-        // HabibMetro's emerald/gold/black faceted triangular tessellation.
+        // HabibMetro ka emerald, gold aur black faceted triangular pattern.
         final colors=[const Color(0xFF00A078),const Color(0xFFD2A63B),const Color(0xFF101820)];
         for(var row=0;row<5;row++) {
           for(var col=0;col<9;col++) {
@@ -280,6 +280,7 @@ class _BankCardPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant _BankCardPatternPainter oldDelegate) =>
       oldDelegate.pattern != pattern || oldDelegate.color != color || oldDelegate.design != design;
 }
+/// Wallet balances, wallet cards, currency filters aur wallet management show karta hai.
 class WalletsPage extends StatefulWidget {
   const WalletsPage({super.key});
 
@@ -438,8 +439,8 @@ class _WalletsPageState extends State<WalletsPage> {
     }
   }
 
-  // Bank-specific ATM-card themes. Names and aliases cover SBP-regulated
-  // commercial, Islamic, digital, foreign and specialized banks in Pakistan.
+  // Bank-specific ATM card themes. Names aur aliases Pakistan ke SBP-regulated
+  // commercial, Islamic, digital, foreign aur specialized banks cover karte hain.
   Future<void> _loadGlobalCardCatalog() async {
     const cacheKey = 'global_card_catalog_cache_v1';
     const catalogUrl = 'https://raw.githubusercontent.com/shahidlaashary/my-finance-android/main/assets/data/global_card_catalog.json';
@@ -514,8 +515,8 @@ class _WalletsPageState extends State<WalletsPage> {
     final name = bankName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     final catalogTheme = _globalVerifiedCardThemes[name];
     if (catalogTheme != null) return catalogTheme;
-    // Easypaisa Digital Bank is a licensed bank; keep it distinct from the
-    // Easypaisa wallet brand when the user enters the full bank name.
+    // Easypaisa Digital Bank aik licensed bank hai; full bank name enter hone par
+    // isay Easypaisa wallet brand se alag identify karein.
     if (name.contains('easypaisadigitalbank') || name.contains('easypaisabank')) {
       return {
         'brand': 'EASYPAISA BANK',
@@ -586,8 +587,8 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['asamicrofinance', 'asa'], 'brand': 'ASA MICROFINANCE', 'mark': 'ASA', 'colors': [const Color(0xFF146B69), const Color(0xFF4AA7A0)]},
       {'keys': ['telenormicrofinance', 'telenor'], 'brand': 'TELENOR MICROFINANCE', 'mark': 'TM', 'colors': [const Color(0xFF0876A8), const Color(0xFF43B4D4)]},
 
-      // International bank themes follow the Pakistan-specific registry above.
-      // Major international banks, grouped across the Americas, Europe, Middle East, Africa and Asia-Pacific.
+      // International bank themes Pakistan-specific registry ke baad rakhein.
+      // Major international banks ko Americas, Europe, Middle East, Africa aur Asia-Pacific groups mein rakha gaya hai.
       {'keys': ['jpmorganchase', 'chasebank', 'chase'], 'brand': 'CHASE', 'mark': 'CHASE', 'colors': [const Color(0xFF073B75), const Color(0xFF2784C7)]},
       {'keys': ['bankofamerica', 'bofa'], 'brand': 'BANK OF AMERICA', 'mark': 'BOA', 'colors': [const Color(0xFF092B61), const Color(0xFFB9273D)]},
       {'keys': ['wellsfargo'], 'brand': 'WELLS FARGO', 'mark': 'WF', 'colors': [const Color(0xFF9D1C28), const Color(0xFFE3A72F)]},
@@ -608,7 +609,7 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['hdfcbank', 'hdfc'], 'brand': 'HDFC BANK', 'mark': 'HDFC', 'colors': [const Color(0xFF004C8F), const Color(0xFF3E8BC5)]},
       {'keys': ['icicibank', 'icici'], 'brand': 'ICICI BANK', 'mark': 'ICICI', 'colors': [const Color(0xFF9B2738), const Color(0xFFE18A36)]},
       {'keys': ['axisbank', 'axis'], 'brand': 'AXIS BANK', 'mark': 'AXIS', 'colors': [const Color(0xFF6D1B70), const Color(0xFFB85CB2)]},
-      // India: RBI-listed public and private sector banks, small finance banks and payments banks.
+      // India ke RBI-listed public/private banks, small finance banks aur payments banks.
       {'keys': ['bankofbaroda', 'bobindia'], 'brand': 'BANK OF BARODA', 'mark': 'BOB', 'colors': [const Color(0xFFE86B24), const Color(0xFFF2A04A)]},
       {'keys': ['bankofindia', 'boiindia'], 'brand': 'BANK OF INDIA', 'mark': 'BOI', 'colors': [const Color(0xFF8B1E35), const Color(0xFFD05A66)]},
       {'keys': ['bankofmaharashtra', 'mahabank'], 'brand': 'BANK OF MAHARASHTRA', 'mark': 'BOM', 'colors': [const Color(0xFF8B1D35), const Color(0xFFD75A67)]},
@@ -714,8 +715,8 @@ class _WalletsPageState extends State<WalletsPage> {
       {'keys': ['nordea'], 'brand': 'NORDEA', 'mark': 'NORDEA', 'colors': [const Color(0xFF174B85), const Color(0xFF69A1CE)]},
       {'keys': ['pkobankpolski', 'pkobp'], 'brand': 'PKO BANK POLSKI', 'mark': 'PKO', 'colors': [const Color(0xFF174B85), const Color(0xFF69A1CE)]},
     ];
-    // Resolve the most specific bank alias first. Short aliases such as
-    // "hbl", "ubl" and "abl" must never steal a match from a longer name.
+    // Sab se pehle specific bank alias match karein. "hbl", "ubl" aur "abl" jaise
+    // short aliases kisi longer bank name ka match ghalat tor par capture na karein.
     var bankSeed = 0;
     for (final unit in name.codeUnits) {
       bankSeed = (bankSeed * 31 + unit) & 0x7fffffff;
@@ -1250,6 +1251,7 @@ class _WalletsPageState extends State<WalletsPage> {
 // Wallet add ya edit karne ka form
 // ============================================================
 
+/// Naya wallet create ya existing wallet edit karne ka form hai.
 class WalletFormDialog extends StatefulWidget {
   final Map<String, dynamic>? wallet;
 
@@ -1996,6 +1998,7 @@ class _WalletFormDialogState extends State<WalletFormDialog> {
 // ============================================================
 // Wallet management: ordering, archive/restore and delete
 // ============================================================
+/// Wallets ki detailed management aur bank-card presentation handle karta hai.
 class WalletManagementPage extends StatefulWidget {
   final bool hideBalances;
   final String numberFormat;

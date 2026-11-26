@@ -633,12 +633,33 @@ class PropertiesService {
 
   static Future<void> deleteContract(int id) async {
     final db = DatabaseManager.instance.database;
-    final schedule = await db.query('properties_rent_schedules', columns: ['id'], where: 'contract_id = ?', whereArgs: [id], limit: 1);
-    final payment = await db.query('properties_rent_payments', columns: ['id'], where: 'contract_id = ?', whereArgs: [id], limit: 1);
-    if (schedule.isNotEmpty || payment.isNotEmpty) {
-      throw StateError('Delete this contract\'s rent schedules and payments before deleting the contract.');
-    }
-    await db.delete('properties_contracts', where: 'id = ?', whereArgs: [id]);
+    await db.transaction((txn) async {
+      final contract = await txn.query(
+        'properties_contracts',
+        columns: ['id'],
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (contract.isEmpty) throw StateError('Contract not found.');
+      final schedule = await txn.query(
+        'properties_rent_schedules',
+        columns: ['id'],
+        where: 'contract_id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      final payment = await txn.query(
+        'properties_rent_payments',
+        columns: ['id'],
+        where: 'contract_id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (schedule.isNotEmpty || payment.isNotEmpty) {
+        throw StateError('Delete this contract\\'s rent schedules and payments before deleting the contract.');
+      }
+      await txn.delete('properties_contracts', where: 'id = ?', whereArgs: [id]);
+    });
     AppRefreshController.notifyChanged();
-  }
-}
+  }}

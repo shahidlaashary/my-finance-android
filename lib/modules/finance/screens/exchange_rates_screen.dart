@@ -43,11 +43,13 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     final direct = _manualPairs.where((row) =>
         row['from_currency'] == from && row['to_currency'] == to);
     if (direct.isNotEmpty) {
+      if ((direct.first['is_rate_pending'] as num?)?.toInt() == 1) return null;
       final rate = (direct.first['rate'] as num).toDouble();
       return rate.isFinite && rate > 0 ? rate : null;
     }
     final graph = <String, List<MapEntry<String, double>>>{};
     for (final pair in _manualPairs) {
+      if ((pair['is_rate_pending'] as num?)?.toInt() == 1) continue;
       final a = pair['from_currency'].toString();
       final b = pair['to_currency'].toString();
       final rate = (pair['rate'] as num).toDouble();
@@ -95,9 +97,11 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
   Future<void> _addManualPair([Map<String, dynamic>? existing]) async {
     String from = existing?['from_currency']?.toString() ?? 'USD';
-    String to = existing?['to_currency']?.toString() ?? 'PKR';
+    String to = existing?['to_currency']?.toString() ?? _baseCurrency;
     final rateController = TextEditingController(
-      text: existing == null ? '' : (existing['rate'] as num).toString(),
+      text: existing == null || (existing['is_rate_pending'] as num?)?.toInt() == 1
+          ? ''
+          : (existing['rate'] as num).toString(),
     );
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -409,18 +413,18 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     Widget columnHeader(String title, String subtitle, IconData icon,
         {Widget? action}) {
       return SizedBox(
-        height: 42,
+        height: 34,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 30,
-              height: 30,
+              width: 26,
+              height: 26,
               decoration: BoxDecoration(
                 color: colors.primary.withValues(alpha: .10),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 17, color: colors.primary),
+              child: Icon(icon, size: 15, color: colors.primary),
             ),
             const SizedBox(width: 7),
             Expanded(
@@ -430,9 +434,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                 children: [
                   Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w800)),
+                          fontSize: 12, fontWeight: FontWeight.w800)),
                   Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 9, color: muted)),
+                      style: TextStyle(fontSize: 8, color: muted)),
                 ],
               ),
             ),
@@ -453,9 +457,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
             children: [
               columnHeader('Automatic', 'Rates in $_baseCurrency',
                   Icons.cloud_sync_rounded),
-              const SizedBox(height: 3),
+              const SizedBox(height: 1),
               Divider(height: 1, color: theme.dividerColor),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               for (final currency in _currencies)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
@@ -466,7 +470,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(currency,
+                            Text('$currency → $_baseCurrency',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800)),
@@ -574,13 +580,17 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              _numberFormat.format(
-                                  (pair['rate'] as num).toDouble()),
+                              (pair['is_rate_pending'] as num?)?.toInt() == 1
+                                  ? 'Rate required — edit to enter'
+                                  : _numberFormat.format(
+                                      (pair['rate'] as num).toDouble()),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 11,
-                                  color: colors.primary,
+                                  fontSize: 10,
+                                  color: (pair['is_rate_pending'] as num?)?.toInt() == 1
+                                      ? Colors.orange.shade800
+                                      : colors.primary,
                                   fontWeight: FontWeight.w700),
                             ),
                           ],

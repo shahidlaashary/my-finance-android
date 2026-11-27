@@ -71,6 +71,7 @@ class StudioAudioFingerprintEngine {
       extension: 'bin',
     );
 
+    var catalogueRegistered = false;
     try {
       await artifact.writeAsBytes(output.bytes, flush: true);
       final checksum = await sha256.bind(artifact.openRead()).first;
@@ -94,6 +95,7 @@ class StudioAudioFingerprintEngine {
       );
 
       await _fingerprintCatalogue.register(fingerprint);
+      catalogueRegistered = true;
       final segments = output.segments
           .map(
             (segment) => StudioFingerprintSegment(
@@ -110,6 +112,13 @@ class StudioAudioFingerprintEngine {
       await _fingerprintCatalogue.replaceSegments(id, segments);
       return fingerprint;
     } catch (_) {
+      if (catalogueRegistered) {
+        try {
+          await _fingerprintCatalogue.remove(id);
+        } catch (_) {
+          // Preserve the original processing error if rollback also fails.
+        }
+      }
       if (await artifact.exists()) await artifact.delete();
       rethrow;
     }

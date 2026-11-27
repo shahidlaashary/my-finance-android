@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:my_finance/core/database/finance_database.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 // Ye tests transaction ledger operations aur wallet balance updates verify karte hain.
 void main() {
@@ -92,7 +93,7 @@ void main() {
       note: 'Historical USD expense',
       date: DateTime(2026, 11, 20).toIso8601String(),
     );
-    await FinanceDB.instance.saveManualCurrencyPair('USD', 'EUR', 0.9);
+    await CurrencyService.saveManualCurrencyPair('USD', 'EUR', 0.9);
 
     await FinanceDB.instance.updateWallet(
       id: walletId,

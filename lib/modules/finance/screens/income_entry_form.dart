@@ -179,7 +179,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     return InputDecoration(
       labelText: label,
       prefixIcon: icon == null ? null : Icon(icon),
-      prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 48),
+      prefixIconConstraints: const BoxConstraints(minWidth: 30, minHeight: 48),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(13),
       ),

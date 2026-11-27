@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import '../../domain/entities/studio_fingerprint.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../engines/audio_fingerprint/studio_audio_fingerprint_engine.dart';

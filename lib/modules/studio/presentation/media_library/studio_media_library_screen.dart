@@ -1,12 +1,8 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 
 import '../../application/services/studio_media_import_service.dart';
 import '../../application/services/studio_media_library_service.dart';
-import '../../application/services/studio_storage_health_service.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 
@@ -349,10 +345,7 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
                   ),
                 ),
               ],
-              child: FloatingActionButton(
-                onPressed: null,
-                child: const Icon(Icons.add_rounded),
-              ),
+              icon: const Icon(Icons.add_rounded),
             ),
     );
   }

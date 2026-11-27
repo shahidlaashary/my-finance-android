@@ -145,6 +145,31 @@ class StudioCatalogueRightsService {
       (await _db).query('studio_claim_events',
           where: 'claim_id = ?', whereArgs: [claimId], orderBy: 'created_at DESC');
 
+  Future<void> removeClaimEvidence(String evidenceId) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'studio_claim_evidence',
+        columns: ['claim_id'],
+        where: 'id = ?',
+        whereArgs: [evidenceId],
+        limit: 1,
+      );
+      if (rows.isEmpty) throw ArgumentError('Evidence record not found.');
+      final claimId = rows.first['claim_id'].toString();
+      await txn.delete('studio_claim_evidence',
+          where: 'id = ?', whereArgs: [evidenceId]);
+      await txn.insert('studio_claim_events', {
+        'claim_id': claimId,
+        'event_type': 'evidence_removed',
+        'note': 'Evidence attachment/record removed.',
+        'created_at': _now(),
+      });
+      await txn.update('studio_rights_claims', {'updated_at': _now()},
+          where: 'id = ?', whereArgs: [claimId]);
+    });
+  }
+
   Future<void> transitionClaim({
     required String claimId,
     required String status,

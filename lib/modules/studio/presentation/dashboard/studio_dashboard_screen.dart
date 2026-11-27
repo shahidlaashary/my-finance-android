@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/studio/services/studio_dashboard_service.dart';
 import 'package:my_finance/modules/studio/presentation/media_library/studio_media_library_screen.dart';
-import 'package:my_finance/modules/studio/presentation/studio_part_one_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_catalogue_rights_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
   const StudioDashboardScreen({super.key});
@@ -40,7 +40,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
     }
     if ({'Music ID', 'Compare', 'Catalogue', 'Rights Management'}.contains(section.title)) {
       Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => StudioPartOneScreen(section: section.title)),
+        MaterialPageRoute<void>(builder: (_) => StudioCatalogueRightsScreen(section: section.title)),
       );
       return;
     }

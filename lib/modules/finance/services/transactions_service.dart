@@ -518,6 +518,10 @@ class TransactionsService {
     required String note,
     required String date,
     double transferFee = 0,
+    String? foreignCurrency,
+    double? foreignAmount,
+    double? foreignExchangeRate,
+    String? foreignRateSource,
   }) async {
     final db = await _database;
     final normalized = _normalizeType(type);
@@ -538,6 +542,10 @@ class TransactionsService {
         'note': note,
         'date': date,
         'created_at': now,
+        'foreign_currency': foreignCurrency?.toUpperCase(),
+        'foreign_amount': foreignAmount,
+        'foreign_exchange_rate': foreignExchangeRate,
+        'foreign_rate_source': foreignRateSource,
       });
       if (normalized == 'Transfer' && transferFee > 0) {
         await txn.insert('app_settings', {

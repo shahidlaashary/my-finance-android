@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import '../application/services/studio_catalogue_rights_service.dart';
+import '../infrastructure/storage/studio_storage_manager.dart';
 
 class StudioCatalogueRightsScreen extends StatefulWidget {
   const StudioCatalogueRightsScreen({super.key, required this.section});
@@ -10,6 +14,7 @@ class StudioCatalogueRightsScreen extends StatefulWidget {
 
 class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScreen> with SingleTickerProviderStateMixin {
   final _service = StudioCatalogueRightsService();
+  final _storage = StudioStorageManager();
   late final TabController _tabs;
   bool _loading = true;
   String? _error;
@@ -81,13 +86,32 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
     final title = await _ask('Evidence title', 'Title or reference');
     if (title == null) return;
     final description = await _ask('Evidence details', 'Description (optional)');
+    String? storedPath;
     try {
+      final picked = await FilePicker.platform.pickFiles(
+        type: FileType.any, allowMultiple: false, withData: false,
+      );
+      if (picked != null && picked.files.isNotEmpty) {
+        final sourcePath = picked.files.single.path;
+        if (sourcePath == null || sourcePath.isEmpty) {
+          _toast('The selected evidence file could not be accessed.');
+          return;
+        }
+        final source = File(sourcePath);
+        final extension = p.extension(sourcePath);
+        final evidenceId = 'evidence${DateTime.now().microsecondsSinceEpoch}';
+        final destination = await _storage.allocateEvidenceFile(
+          evidenceId: evidenceId, extension: extension.isEmpty ? '.bin' : extension,
+        );
+        await source.copy(destination.path);
+        storedPath = destination.path;
+      }
       await _service.addClaimEvidence(
         claimId: claim['id'].toString(), evidenceType: evidenceType,
-        title: title, description: description,
+        title: title, description: description, filePath: storedPath,
       );
       await _reload();
-      _toast('Evidence record added.');
+      _toast(storedPath == null ? 'Evidence record added without an attachment.' : 'Evidence document securely stored in Studio.');
     } catch (e) { _toast('Evidence save failed: $e'); }
   }
 

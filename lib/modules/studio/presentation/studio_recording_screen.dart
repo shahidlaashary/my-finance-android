@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import 'package:record/record.dart';
 
 import '../application/services/studio_media_import_service.dart';

@@ -345,6 +345,66 @@ class StudioDatabaseSchema {
     await db.execute('CREATE INDEX idx_studio_licenses_asset ON studio_licenses(asset_type, asset_id)');
     await db.execute('CREATE INDEX idx_studio_compare_date ON studio_comparison_history(created_at DESC)');
     await db.execute('''
+      CREATE TABLE studio_rights_claims (
+        id TEXT PRIMARY KEY,
+        claim_type TEXT NOT NULL CHECK (claim_type IN ('ownership','copyright','license','content_match','other')),
+        asset_type TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        claimant_name TEXT NOT NULL,
+        respondent_name TEXT,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'draft'
+          CHECK (status IN ('draft','submitted','under_review','resolved','rejected','withdrawn')),
+        priority TEXT NOT NULL DEFAULT 'normal'
+          CHECK (priority IN ('low','normal','high','urgent')),
+        parent_claim_id TEXT,
+        submitted_at TEXT,
+        due_at TEXT,
+        resolution TEXT,
+        resolved_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (parent_claim_id) REFERENCES studio_rights_claims(id)
+          ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE studio_claim_evidence (
+        id TEXT PRIMARY KEY,
+        claim_id TEXT NOT NULL,
+        evidence_type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        file_path TEXT,
+        checksum_sha256 TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (claim_id) REFERENCES studio_rights_claims(id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE studio_claim_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        claim_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        from_status TEXT,
+        to_status TEXT,
+        note TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (claim_id) REFERENCES studio_rights_claims(id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('CREATE INDEX idx_studio_claims_status_date ON studio_rights_claims(status, updated_at DESC)');
+    await db.execute('CREATE INDEX idx_studio_claims_asset ON studio_rights_claims(asset_type, asset_id)');
+    await db.execute('CREATE INDEX idx_studio_claim_evidence_claim ON studio_claim_evidence(claim_id)');
+    await db.execute('CREATE INDEX idx_studio_claim_events_claim ON studio_claim_events(claim_id, created_at DESC)');
+
+    await db.execute('''
       CREATE TABLE studio_ai_voice_profiles (
         id TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,

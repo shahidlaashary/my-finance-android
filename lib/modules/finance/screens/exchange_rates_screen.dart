@@ -413,7 +413,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     Widget columnHeader(String title, String subtitle, IconData icon,
         {Widget? action}) {
       return SizedBox(
-        height: 34,
+        height: 42,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -451,7 +451,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -464,6 +464,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 6,
@@ -523,7 +524,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -531,18 +532,21 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                 'Manual',
                 'Saved currency pairs',
                 Icons.tune_rounded,
-                action: IconButton(
-                  tooltip: 'Add currency pair',
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 26, minHeight: 26),
-                  onPressed: _addManualPair,
-                  icon: Icon(Icons.add_circle_rounded,
-                      size: 18, color: colors.primary),
+                action: Transform.translate(
+                  offset: const Offset(5, 0),
+                  child: IconButton(
+                    tooltip: 'Add currency pair',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    onPressed: _addManualPair,
+                    icon: Icon(Icons.add_circle_rounded,
+                        size: 18, color: colors.primary),
+                  ),
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 1),
               Divider(height: 1, color: theme.dividerColor),
               const SizedBox(height: 3),
               if (_manualPairs.isEmpty)
@@ -565,7 +569,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 6,
@@ -610,10 +614,12 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: PopupMenuButton<String>(
+                      Transform.translate(
+                        offset: const Offset(5, 0),
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: PopupMenuButton<String>(
                           tooltip: 'More options',
                           padding: EdgeInsets.zero,
                           iconSize: 18,
@@ -646,6 +652,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               ),
                             ),
                           ],
+                          ),
                         ),
                       ),
                     ],

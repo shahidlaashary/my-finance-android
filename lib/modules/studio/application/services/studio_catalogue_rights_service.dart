@@ -35,4 +35,155 @@ class StudioCatalogueRightsService {
     await (await _db).insert('studio_comparison_history',{'id':_id('cmp'),'left_media_id':leftId,'right_media_id':rightId,'match_score':score,'matched_landmarks':matches,'offset_ms':offsetMs,'algorithm_key':algorithm,'algorithm_version':version,'result_json':result==null?null:jsonEncode(result),'created_at':_now()});
   }
   Future<List<Map<String,Object?>>> comparisonHistory() async => (await _db).rawQuery('SELECT c.*, l.original_name left_name, r.original_name right_name FROM studio_comparison_history c JOIN studio_media_files l ON l.id=c.left_media_id JOIN studio_media_files r ON r.id=c.right_media_id ORDER BY c.created_at DESC LIMIT 100');
+
+  /// Returns claims with evidence counts, newest activity first.
+  Future<List<Map<String,Object?>>> claims({String? status}) async {
+    final db = await _db;
+    return db.rawQuery('''
+      SELECT c.*, COUNT(e.id) AS evidence_count
+      FROM studio_rights_claims c
+      LEFT JOIN studio_claim_evidence e ON e.claim_id = c.id
+      WHERE (? IS NULL OR c.status = ?)
+      GROUP BY c.id
+      ORDER BY c.updated_at DESC
+    ''', [status, status]);
+  }
+
+  Future<Map<String,Object?>?> claim(String id) async {
+    final rows = await (await _db).query(
+      'studio_rights_claims', where: 'id = ?', whereArgs: [id], limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<String> createClaim({
+    required String claimType,
+    required String assetType,
+    required String assetId,
+    required String claimantName,
+    String? respondentName,
+    required String title,
+    required String description,
+    String priority = 'normal',
+    String? parentClaimId,
+  }) async {
+    const types = {'ownership','copyright','license','content_match','other'};
+    const priorities = {'low','normal','high','urgent'};
+    if (!types.contains(claimType)) throw ArgumentError('Invalid claim type.');
+    if (!priorities.contains(priority)) throw ArgumentError('Invalid priority.');
+    if (assetType.trim().isEmpty || assetId.trim().isEmpty ||
+        claimantName.trim().isEmpty || title.trim().isEmpty ||
+        description.trim().isEmpty) {
+      throw ArgumentError('Complete all required claim fields.');
+    }
+    final db = await _db;
+    final now = _now();
+    final id = _id('claim');
+    await db.transaction((txn) async {
+      if (parentClaimId != null) {
+        final parent = await txn.query('studio_rights_claims',
+            columns: ['id'], where: 'id = ?', whereArgs: [parentClaimId], limit: 1);
+        if (parent.isEmpty) throw ArgumentError('Original claim was not found.');
+      }
+      await txn.insert('studio_rights_claims', {
+        'id': id, 'claim_type': claimType, 'asset_type': assetType.trim(),
+        'asset_id': assetId.trim(), 'claimant_name': claimantName.trim(),
+        'respondent_name': respondentName?.trim(), 'title': title.trim(),
+        'description': description.trim(), 'priority': priority,
+        'parent_claim_id': parentClaimId, 'status': 'draft',
+        'created_at': now, 'updated_at': now,
+      });
+      await txn.insert('studio_claim_events', {
+        'claim_id': id, 'event_type': parentClaimId == null ? 'created' : 'counterclaim_created',
+        'to_status': 'draft', 'note': 'Claim created as draft.', 'created_at': now,
+      });
+    });
+    return id;
+  }
+
+  Future<void> addClaimEvidence({
+    required String claimId,
+    required String evidenceType,
+    required String title,
+    String? description,
+    String? filePath,
+    String? checksumSha256,
+  }) async {
+    if (title.trim().isEmpty || evidenceType.trim().isEmpty) {
+      throw ArgumentError('Evidence type and title are required.');
+    }
+    final db = await _db;
+    final now = _now();
+    await db.transaction((txn) async {
+      final rows = await txn.query('studio_rights_claims',
+          columns: ['status'], where: 'id = ?', whereArgs: [claimId], limit: 1);
+      if (rows.isEmpty) throw ArgumentError('Claim not found.');
+      if (rows.first['status'] == 'resolved' || rows.first['status'] == 'rejected' ||
+          rows.first['status'] == 'withdrawn') {
+        throw StateError('Evidence cannot be added to a closed claim.');
+      }
+      await txn.insert('studio_claim_evidence', {
+        'id': _id('evidence'), 'claim_id': claimId,
+        'evidence_type': evidenceType.trim(), 'title': title.trim(),
+        'description': description?.trim(), 'file_path': filePath,
+        'checksum_sha256': checksumSha256, 'created_at': now,
+      });
+      await txn.insert('studio_claim_events', {
+        'claim_id': claimId, 'event_type': 'evidence_added',
+        'note': 'Evidence added: ${title.trim()}', 'created_at': now,
+      });
+      await txn.update('studio_rights_claims', {'updated_at': now},
+          where: 'id = ?', whereArgs: [claimId]);
+    });
+  }
+
+  Future<List<Map<String,Object?>>> claimEvidence(String claimId) async =>
+      (await _db).query('studio_claim_evidence',
+          where: 'claim_id = ?', whereArgs: [claimId], orderBy: 'created_at DESC');
+
+  Future<List<Map<String,Object?>>> claimEvents(String claimId) async =>
+      (await _db).query('studio_claim_events',
+          where: 'claim_id = ?', whereArgs: [claimId], orderBy: 'created_at DESC');
+
+  Future<void> transitionClaim({
+    required String claimId,
+    required String status,
+    String? note,
+    String? resolution,
+    DateTime? dueAt,
+  }) async {
+    const allowed = {
+      'draft': {'submitted','withdrawn'},
+      'submitted': {'under_review','withdrawn'},
+      'under_review': {'resolved','rejected','withdrawn'},
+      'resolved': <String>{}, 'rejected': <String>{}, 'withdrawn': <String>{},
+    };
+    if (!allowed.containsKey(status)) throw ArgumentError('Invalid claim status.');
+    final db = await _db;
+    final now = _now();
+    await db.transaction((txn) async {
+      final rows = await txn.query('studio_rights_claims',
+          where: 'id = ?', whereArgs: [claimId], limit: 1);
+      if (rows.isEmpty) throw ArgumentError('Claim not found.');
+      final previous = rows.first['status'] as String;
+      if (!allowed[previous]!.contains(status)) {
+        throw StateError('Cannot move claim from $previous to $status.');
+      }
+      if (status == 'resolved' && (resolution == null || resolution.trim().isEmpty)) {
+        throw ArgumentError('A resolution note is required.');
+      }
+      await txn.update('studio_rights_claims', {
+        'status': status, 'updated_at': now,
+        if (status == 'submitted') 'submitted_at': now,
+        if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
+        if (status == 'resolved' || status == 'rejected') 'resolved_at': now,
+        if (resolution != null) 'resolution': resolution.trim(),
+      }, where: 'id = ?', whereArgs: [claimId]);
+      await txn.insert('studio_claim_events', {
+        'claim_id': claimId, 'event_type': 'status_changed',
+        'from_status': previous, 'to_status': status,
+        'note': note?.trim() ?? resolution?.trim(), 'created_at': now,
+      });
+    });
+  }
 }

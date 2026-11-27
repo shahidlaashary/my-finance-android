@@ -545,7 +545,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '\${pair['from_currency']} → \${pair['to_currency']}',
+                              '${pair['from_currency']} → ${pair['to_currency']}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(

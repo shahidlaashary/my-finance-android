@@ -32,6 +32,7 @@ class StudioStorageManager {
       'thumbnails',
       'fingerprints',
       'temporary',
+      'evidence',
     };
     if (!supported.contains(category)) {
       throw ArgumentError.value(category, 'category', 'Unsupported Studio storage category.');
@@ -75,6 +76,20 @@ class StudioStorageManager {
     final normalizedExtension =
         extension.startsWith('.') ? extension : '.$extension';
     return File(p.join(directory.path, '$fingerprintId$normalizedExtension'));
+  }
+
+  Future<File> allocateEvidenceFile({
+    required String evidenceId,
+    required String extension,
+  }) async {
+    if (evidenceId.trim().isEmpty ||
+        evidenceId.contains('/') ||
+        evidenceId.contains(r'\\')) {
+      throw ArgumentError.value(evidenceId, 'evidenceId', 'A safe evidence ID is required.');
+    }
+    final directory = await directoryFor('evidence');
+    final normalizedExtension = extension.startsWith('.') ? extension : '.$extension';
+    return File(p.join(directory.path, '$evidenceId$normalizedExtension'));
   }
 
   Future<int> calculateTotalBytes() async {

@@ -4,6 +4,8 @@ import 'package:my_finance/modules/studio/presentation/media_library/studio_medi
 import 'package:my_finance/modules/studio/presentation/studio_catalogue_rights_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_video_id_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_reports_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_management_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
   const StudioDashboardScreen({super.key});
@@ -38,6 +40,14 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
       Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => const StudioMediaLibraryScreen()),
       );
+      return;
+    }
+    if (section.title == 'Reports') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioReportsScreen()));
+      return;
+    }
+    if (section.title == 'Management') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioManagementScreen()));
       return;
     }
     if (section.title == 'Video ID') {

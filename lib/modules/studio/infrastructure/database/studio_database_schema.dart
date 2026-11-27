@@ -344,6 +344,49 @@ class StudioDatabaseSchema {
     await db.execute('CREATE INDEX idx_studio_ownership_asset ON studio_ownership_records(asset_type, asset_id)');
     await db.execute('CREATE INDEX idx_studio_licenses_asset ON studio_licenses(asset_type, asset_id)');
     await db.execute('CREATE INDEX idx_studio_compare_date ON studio_comparison_history(created_at DESC)');
+    await db.execute('''
+      CREATE TABLE studio_ai_voice_profiles (
+        id TEXT PRIMARY KEY,
+        display_name TEXT NOT NULL,
+        owner_name TEXT NOT NULL,
+        sample_path TEXT NOT NULL,
+        consent_granted INTEGER NOT NULL DEFAULT 0
+          CHECK (consent_granted IN (0, 1)),
+        consent_scope TEXT NOT NULL,
+        consent_recorded_at TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE studio_ai_music_projects (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        prompt TEXT NOT NULL DEFAULT '',
+        lyrics TEXT NOT NULL DEFAULT '',
+        genre TEXT NOT NULL,
+        language TEXT NOT NULL,
+        mood TEXT NOT NULL,
+        voice_profile_id TEXT,
+        status TEXT NOT NULL DEFAULT 'draft'
+          CHECK (status IN ('draft', 'queued', 'generating', 'completed', 'failed')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (voice_profile_id) REFERENCES studio_ai_voice_profiles(id)
+          ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute(
+      'CREATE INDEX idx_studio_ai_projects_updated '
+      'ON studio_ai_music_projects(updated_at DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_studio_ai_voice_consent '
+      'ON studio_ai_voice_profiles(consent_granted, created_at DESC)',
+    );
+
     final now = DateTime.now().toUtc().toIso8601String();
     await db.insert('studio_metadata', {
       'metadata_key': 'schema_version',

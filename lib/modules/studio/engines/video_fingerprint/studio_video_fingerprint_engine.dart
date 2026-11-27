@@ -32,7 +32,7 @@ class StudioVideoFingerprintEngine {
     final prior=await _catalogue.getForMedia(mediaFileId:source.id,algorithmKey:key,algorithmVersion:version);
     if(prior!=null)return prior;
     var duration=source.durationMs??0;
-    if(duration<=0){final controller=VideoPlayerController.file(File(source.storagePath));try{await controller.initialize();duration=controller.value.duration.inMilliseconds;}finally{await controller.dispose();}}
+    if(duration<=0){final controller=VideoPlayerController.file(File(source.storagePath));try{await controller.initialize();duration=controller.value.duration.inMilliseconds;}catch(_){duration=0;}finally{try{await controller.dispose();}catch(_){}}}
     final count=min(maxFrames,max(1,duration>0?(duration~/sampleIntervalMs)+1:1));
     final artifactBytes=BytesBuilder(copy:false);final segments=<StudioFingerprintSegment>[];
     for(var index=0;index<count;index++){

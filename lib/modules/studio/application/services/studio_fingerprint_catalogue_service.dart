@@ -98,6 +98,9 @@ class StudioFingerprintCatalogueService {
     String fingerprintId,
   ) async =>
       (await _readyRepository).getSegments(fingerprintId);
+ 
+  Future<void> remove(String id) async =>
+      (await _readyRepository).remove(id);
 
   Future<void> updateStatus(
     String id,

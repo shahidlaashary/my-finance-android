@@ -28,6 +28,8 @@ class StudioMusicIdentificationService {
     if(a.algorithmKey!=b.algorithmKey||a.algorithmVersion!=b.algorithmVersion)throw StateError('Fingerprints use incompatible algorithms.');
     final bytesA=await File(a.dataFilePath).readAsBytes();
     final bytesB=await File(b.dataFilePath).readAsBytes();
-    return const StudioAudioFingerprintMatcher().compare(query:bytesA,reference:bytesB);
+    final match=const StudioAudioFingerprintMatcher().compare(query:bytesA,reference:bytesB);
+    await StudioCatalogueRightsService().saveComparison(leftId:firstId,rightId:secondId,score:match.confidence,matches:match.matchedLandmarks,offsetMs:match.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':match.queryCoverage,'referenceCoverage':match.referenceCoverage,'queryLandmarks':match.queryLandmarks,'referenceLandmarks':match.referenceLandmarks});
+    return match;
   }
 }

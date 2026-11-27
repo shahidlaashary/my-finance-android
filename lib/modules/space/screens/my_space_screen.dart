@@ -14,6 +14,7 @@ import 'package:my_finance/modules/space/screens/work_screen.dart';
 import 'package:my_finance/modules/space/screens/agreements_screen.dart';
 import 'package:my_finance/modules/space/screens/my_space_management_screen.dart';
 import 'package:my_finance/modules/space/screens/youtube_explore_screen.dart';
+import 'package:my_finance/modules/studio/presentation/dashboard/studio_dashboard_screen.dart';
 import 'package:my_finance/modules/space/services/my_space_service.dart';
 import 'package:my_finance/modules/space/services/space_documents_service.dart';
 import 'package:open_filex/open_filex.dart';
@@ -361,7 +362,7 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
           SpaceDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your space.'),
           _buildItems(_photosItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
-          const SizedBox.shrink(),
+          const StudioDashboardScreen(),
           _buildItems(_videosItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
           WorkScreen(key: _workKey),
         ],

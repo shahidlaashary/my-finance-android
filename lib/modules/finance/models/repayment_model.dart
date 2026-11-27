@@ -13,6 +13,11 @@ class RepaymentModel {
   final double walletAmount;
   final double exchangeRate;
   final bool isManualRate;
+  final String rateSource;
+  final String baseCurrencyAtTime;
+  final double? baseExchangeRate;
+  final double? baseConvertedAmount;
+  final String baseRateSource;
 
   const RepaymentModel({
     this.id,
@@ -27,6 +32,11 @@ class RepaymentModel {
     double? walletAmount,
     this.exchangeRate = 1.0,
     this.isManualRate = false,
+    this.rateSource = 'Automatic',
+    this.baseCurrencyAtTime = 'PKR',
+    this.baseExchangeRate,
+    this.baseConvertedAmount,
+    this.baseRateSource = 'Unknown',
   }) : walletAmount = walletAmount ?? amount;
 
   /// Repayment model ko database columns ke mutabiq map mein convert karta hai.
@@ -44,6 +54,11 @@ class RepaymentModel {
       'wallet_amount': walletAmount,
       'exchange_rate': exchangeRate,
       'is_manual_rate': isManualRate ? 1 : 0,
+      'rate_source': rateSource,
+      'base_currency_at_time': baseCurrencyAtTime,
+      'base_exchange_rate': baseExchangeRate,
+      'base_converted_amount': baseConvertedAmount,
+      'base_rate_source': baseRateSource,
     };
   }
 
@@ -63,6 +78,11 @@ class RepaymentModel {
       walletAmount: (map['wallet_amount'] as num?)?.toDouble() ?? (map['amount'] as num).toDouble(),
       exchangeRate: (map['exchange_rate'] as num?)?.toDouble() ?? 1.0,
       isManualRate: (map['is_manual_rate'] as num?)?.toInt() == 1,
+      rateSource: map['rate_source']?.toString() ?? 'Unknown',
+      baseCurrencyAtTime: (map['base_currency_at_time']?.toString() ?? 'PKR').toUpperCase(),
+      baseExchangeRate: (map['base_exchange_rate'] as num?)?.toDouble(),
+      baseConvertedAmount: (map['base_converted_amount'] as num?)?.toDouble(),
+      baseRateSource: map['base_rate_source']?.toString() ?? 'Unknown',
     );
   }
 
@@ -79,6 +99,11 @@ class RepaymentModel {
     double? walletAmount,
     double? exchangeRate,
     bool? isManualRate,
+    String? rateSource,
+    String? baseCurrencyAtTime,
+    double? baseExchangeRate,
+    double? baseConvertedAmount,
+    String? baseRateSource,
   }) {
     return RepaymentModel(
       id: id ?? this.id,
@@ -93,6 +118,11 @@ class RepaymentModel {
       walletAmount: walletAmount ?? this.walletAmount,
       exchangeRate: exchangeRate ?? this.exchangeRate,
       isManualRate: isManualRate ?? this.isManualRate,
+      rateSource: rateSource ?? this.rateSource,
+      baseCurrencyAtTime: baseCurrencyAtTime ?? this.baseCurrencyAtTime,
+      baseExchangeRate: baseExchangeRate ?? this.baseExchangeRate,
+      baseConvertedAmount: baseConvertedAmount ?? this.baseConvertedAmount,
+      baseRateSource: baseRateSource ?? this.baseRateSource,
     );
   }
 }

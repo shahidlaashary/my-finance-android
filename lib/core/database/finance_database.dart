@@ -55,6 +55,8 @@ class FinanceDB {
         to_wallet_id INTEGER,
         to_amount REAL,
         exchange_rate REAL,
+        wallet_currency TEXT NOT NULL DEFAULT 'PKR',
+        to_wallet_currency TEXT,
         balance_delta REAL,
         category TEXT NOT NULL DEFAULT '',
         note TEXT NOT NULL DEFAULT '',

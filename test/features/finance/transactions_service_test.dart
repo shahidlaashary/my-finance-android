@@ -136,6 +136,14 @@ void main() {
     expect((record['base_exchange_rate'] as num).toDouble(), 280);
     expect((record['base_converted_amount'] as num).toDouble(), 5600);
     expect(record['base_rate_source'], 'Manual');
+
+    await CurrencyService.setBaseCurrency('EUR');
+    final afterBaseCurrencyChange = (await TransactionsService.getTransactions()).singleWhere(
+      (item) => item['note'] == 'Manual-rate snapshot',
+    );
+    expect(afterBaseCurrencyChange['base_currency_at_time'], 'PKR');
+    expect((afterBaseCurrencyChange['base_converted_amount'] as num).toDouble(), 5600);
+    expect(afterBaseCurrencyChange['base_rate_source'], 'Manual');
   });
 
   test('same-currency transfer cannot save a different received amount', () async {

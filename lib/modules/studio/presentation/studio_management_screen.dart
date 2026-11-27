@@ -93,7 +93,7 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(retry
-              ? 'Job returned to the queue. A worker must pick it up.'
+              ? 'Retry attempt finished. Check the updated job status.'
               : 'Job marked as cancelled.'),
         ),
       );

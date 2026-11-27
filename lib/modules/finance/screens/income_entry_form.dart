@@ -115,7 +115,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       wallets = result;
       foreignCurrencyOptions = currencySet.toList()..sort();
       selectedForeignCurrency ??= foreignCurrencyOptions.firstWhere(
-        (code) => code != (result.first['currency'] ?? 'PKR').toString().toUpperCase(),
+        (code) => code != (wallets.isEmpty ? 'PKR' : (wallets.first['currency'] ?? 'PKR').toString().toUpperCase()),
         orElse: () => foreignCurrencyOptions.first,
       );
       transactionCategories = categories;

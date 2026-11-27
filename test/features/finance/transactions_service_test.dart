@@ -113,6 +113,31 @@ void main() {
     expect(record['note'], 'Historical USD expense');
   });
 
+  test('expense persists its original currency and manual base-rate snapshot', () async {
+    final walletId = await createWallet('USD Wallet', 'USD', 100);
+    await CurrencyService.saveManualCurrencyPair('USD', 'PKR', 280);
+
+    await TransactionsService.addTransaction(
+      type: 'Expense',
+      amount: 20,
+      walletId: walletId,
+      category: 'Food',
+      note: 'Manual-rate snapshot',
+      date: DateTime(2026, 11, 21).toIso8601String(),
+    );
+
+    final record = (await TransactionsService.getTransactions()).singleWhere(
+      (item) => item['note'] == 'Manual-rate snapshot',
+    );
+    expect(record['from_currency'], 'USD');
+    expect(record['to_currency'], isNull);
+    expect(record['rate_source'], 'Manual');
+    expect(record['base_currency_at_time'], 'PKR');
+    expect((record['base_exchange_rate'] as num).toDouble(), 280);
+    expect((record['base_converted_amount'] as num).toDouble(), 5600);
+    expect(record['base_rate_source'], 'Manual');
+  });
+
   test('same-currency transfer cannot save a different received amount', () async {
     final sourceId = await createWallet('Source PKR', 'PKR', 1000);
     final destinationId = await createWallet('Destination PKR', 'PKR', 100);

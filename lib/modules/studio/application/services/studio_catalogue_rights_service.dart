@@ -10,6 +10,10 @@ class StudioCatalogueRightsService {
   String _now() => DateTime.now().toUtc().toIso8601String();
 
   Future<List<Map<String,Object?>>> tracks() async => (await _db).query('studio_tracks', orderBy:'title COLLATE NOCASE');
+  Future<List<Map<String,Object?>>> artists() async => (await _db).query('studio_artists', orderBy:'display_name COLLATE NOCASE');
+  Future<List<Map<String,Object?>>> releases() async => (await _db).query('studio_releases', orderBy:'title COLLATE NOCASE');
+  Future<void> addArtist(String displayName,{String? legalName,String? notes}) async { final now=_now(); await (await _db).insert('studio_artists',{'id':_id('artist'),'display_name':displayName.trim(),'legal_name':legalName,'notes':notes,'created_at':now,'updated_at':now}); }
+  Future<void> addRelease(String title,{required String releaseType,String? releaseDate,String? notes}) async { final now=_now(); await (await _db).insert('studio_releases',{'id':_id('release'),'title':title.trim(),'release_type':releaseType,'release_date':releaseDate,'notes':notes,'created_at':now,'updated_at':now}); }
   Future<void> addTrack(String title) async {
     final db=await _db; final now=_now();
     await db.insert('studio_tracks',{'id':_id('track'),'title':title.trim(),'created_at':now,'updated_at':now});

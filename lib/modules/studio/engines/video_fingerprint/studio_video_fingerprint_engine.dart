@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:image/image.dart' as img;
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:video_player/video_player.dart';
 import '../../application/services/studio_fingerprint_catalogue_service.dart';
 import '../../application/services/studio_media_library_service.dart';
 import '../../domain/entities/studio_fingerprint.dart';
@@ -30,7 +31,8 @@ class StudioVideoFingerprintEngine {
     if(!await File(source.storagePath).exists())throw FileSystemException('Managed video is missing.',source.storagePath);
     final prior=await _catalogue.getForMedia(mediaFileId:source.id,algorithmKey:key,algorithmVersion:version);
     if(prior!=null)return prior;
-    final duration=source.durationMs??0;
+    var duration=source.durationMs??0;
+    if(duration<=0){final controller=VideoPlayerController.file(File(source.storagePath));try{await controller.initialize();duration=controller.value.duration.inMilliseconds;}finally{await controller.dispose();}}
     final count=min(maxFrames,max(1,duration>0?(duration~/sampleIntervalMs)+1:1));
     final artifactBytes=BytesBuilder(copy:false);final segments=<StudioFingerprintSegment>[];
     for(var index=0;index<count;index++){

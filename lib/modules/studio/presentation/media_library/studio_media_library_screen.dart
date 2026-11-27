@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:flutter/material.dart';
 
 import '../../application/services/studio_media_import_service.dart';
@@ -134,6 +135,29 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 
+  Future<void> _deleteMedia(StudioMediaFile file) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete media file?'),
+        content: Text('Delete "${file.originalName}" and its generated fingerprints from Studio storage? This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Keep')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _library.deleteManagedMedia(file.id, storageManager: _storage);
+      if (!mounted) return;
+      _showMessage('Media file and its fingerprints deleted.');
+      await _load();
+    } catch (error) {
+      if (mounted) _showMessage('Could not delete media: $error');
+    }
+  }
+
   void _showDetails(StudioMediaFile file) {
     showModalBottomSheet<void>(
       context: context,
@@ -176,6 +200,31 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
                 const SizedBox(height: 4),
                 SelectableText(file.storagePath,
                     style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: () async {
+                        final result = await OpenFilex.open(file.storagePath);
+                        if (result.type != ResultType.done && mounted) {
+                          _showMessage('Could not open media file: ${result.message}');
+                        }
+                      },
+                      icon: const Icon(Icons.open_in_new_rounded),
+                      label: const Text('Open file'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _deleteMedia(file);
+                      },
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Delete'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

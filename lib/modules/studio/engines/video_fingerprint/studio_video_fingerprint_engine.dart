@@ -19,7 +19,7 @@ class StudioVideoFingerprintMatch {
 }
 
 class StudioVideoFingerprintEngine {
-  StudioVideoFingerprintEngine({required StudioStorageManager storage,required StudioMediaLibraryService media,required StudioFingerprintCatalogueService catalogue,this.sampleIntervalMs=5000,this.maxFrames=100})
+  StudioVideoFingerprintEngine({required StudioStorageManager storage,required StudioMediaLibraryService media,required StudioFingerprintCatalogueService catalogue,this.sampleIntervalMs=2000,this.maxFrames=300})
     :_storage=storage,_media=media,_catalogue=catalogue;
   final StudioStorageManager _storage;final StudioMediaLibraryService _media;final StudioFingerprintCatalogueService _catalogue;
   final int sampleIntervalMs,maxFrames;
@@ -33,10 +33,11 @@ class StudioVideoFingerprintEngine {
     if(prior!=null)return prior;
     var duration=source.durationMs??0;
     if(duration<=0){final controller=VideoPlayerController.file(File(source.storagePath));try{await controller.initialize();duration=controller.value.duration.inMilliseconds;}catch(_){duration=0;}finally{try{await controller.dispose();}catch(_){}}}
-    final count=min(maxFrames,max(1,duration>0?(duration~/sampleIntervalMs)+1:1));
+    final effectiveInterval=duration>0?max(sampleIntervalMs,(duration/(maxFrames-1)).ceil()):sampleIntervalMs;
+    final count=min(maxFrames,max(1,duration>0?(duration~/effectiveInterval)+1:1));
     final artifactBytes=BytesBuilder(copy:false);final segments=<StudioFingerprintSegment>[];
     for(var index=0;index<count;index++){
-      final timestamp=index*sampleIntervalMs;
+      final timestamp=index*effectiveInterval;
       final data=await VideoThumbnail.thumbnailData(video:source.storagePath,imageFormat:ImageFormat.JPEG,maxWidth:144,timeMs:timestamp,quality:70);
       if(data==null||data.isEmpty)continue;
       final decoded=img.decodeImage(data);if(decoded==null)continue;
@@ -44,7 +45,7 @@ class StudioVideoFingerprintEngine {
       final record=Uint8List(16);final view=ByteData.sublistView(record);
       view.setInt64(0,timestamp,Endian.little);for(var byte=0;byte<8;byte++){record[8+byte]=(hash>>(byte*8))&0xff;}
       final start=artifactBytes.length;artifactBytes.add(record);
-      segments.add(StudioFingerprintSegment(fingerprintId:'',segmentIndex:segments.length,startMs:timestamp,endMs:min(duration>0?duration:timestamp+sampleIntervalMs,timestamp+sampleIntervalMs).toInt(),dataOffsetBytes:start,dataLengthBytes:record.length,signatureHash:hash.toRadixString(16)));
+      segments.add(StudioFingerprintSegment(fingerprintId:'',segmentIndex:segments.length,startMs:timestamp,endMs:min(duration>0?duration:timestamp+effectiveInterval,timestamp+sampleIntervalMs).toInt(),dataOffsetBytes:start,dataLengthBytes:record.length,signatureHash:hash.toRadixString(16)));
     }
     final bytes=artifactBytes.takeBytes();if(bytes.isEmpty)throw StateError('No video frames could be sampled.');
     final id='fp_video_'+DateTime.now().microsecondsSinceEpoch.toString()+'_'+Random.secure().nextInt(999999).toString();

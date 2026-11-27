@@ -258,9 +258,8 @@ class WalletService {
         // Historical transaction amounts and currency snapshots are immutable.
         // Only the wallet's current balance/opening balance are converted here.
 
-        await CommitteeService.convertWalletAmounts(
-          txn, id, factor, currency,
-        );
+        // Committee ledger entries are historical records too; do not rewrite them
+        // when the wallet's current display currency changes.
 
         // Recurring schedules own their currency-conversion rules.
         await RecurringTransactionService.convertWalletAmounts(

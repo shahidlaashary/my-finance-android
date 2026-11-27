@@ -125,7 +125,7 @@ class _FakeDecoder implements StudioAudioDecoder {
 
 class _FakeAlgorithm implements StudioAudioFingerprintAlgorithm {
   int generateCount = 0;
-  StudioAudioFingerprintOutput output = const StudioAudioFingerprintOutput(
+  StudioAudioFingerprintOutput output = StudioAudioFingerprintOutput(
     bytes: Uint8List.fromList([1, 2, 3, 4]),
     frameCount: 1,
     segments: [

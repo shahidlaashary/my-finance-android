@@ -697,7 +697,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       controller: amountController,
       readOnly: _sameForeignWalletCurrency,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: decoration('Wallet Amount', icon: Icons.account_balance_wallet_outlined),
+      decoration: decoration('Wallet Amount', icon: Icons.payments_outlined),
       onChanged: (value) {
         if (!foreignIncomeEnabled || _sameForeignWalletCurrency) return;
         final foreign = double.tryParse(foreignAmountController.text.trim());

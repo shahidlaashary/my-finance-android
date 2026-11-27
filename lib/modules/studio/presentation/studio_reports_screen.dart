@@ -9,7 +9,7 @@ class StudioReportsScreen extends StatefulWidget {
 class _StudioReportsScreenState extends State<StudioReportsScreen>{
   late Future<StudioReportSummary> _future;
   @override void initState(){super.initState();_future=StudioReportsService().load();}
-  void _refresh(){setState(()=>_future=StudioReportsService().load());}
+  Future<void> _refresh()async{final next=StudioReportsService().load();setState(()=>_future=next);await next;}
   Widget _stat(BuildContext context,String title,int value,IconData icon){
     final colors=Theme.of(context).colorScheme;
     return Card(child:Padding(padding:const EdgeInsets.all(14),child:Row(children:[
@@ -22,7 +22,7 @@ class _StudioReportsScreenState extends State<StudioReportsScreen>{
         if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
         if(s.hasError)return Center(child:Text('Report loading failed: ${s.error}'));
         final d=s.data!;
-        return RefreshIndicator(onRefresh:()=>_future.then((_)=>_refresh()),child:ListView(padding:const EdgeInsets.all(16),children:[
+        return RefreshIndicator(onRefresh:_refresh,child:ListView(padding:const EdgeInsets.all(16),children:[
           Text('Media overview',style:Theme.of(context).textTheme.titleMedium),
           _stat(context,'Total media files',d.media,Icons.perm_media_outlined),
           _stat(context,'Audio files',d.audio,Icons.music_note),

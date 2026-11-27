@@ -16,6 +16,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   List<StudioAudioCandidate> _candidates=[];
   List<Map<String,Object?>> _history=[];
   bool _loading=true,_processing=false;
+  String? _scanSummary;
   String? _error,_first,_second;
   StudioAudioFingerprintMatch? _result;
   bool get _isCompareMode=>widget.section=='Compare';
@@ -38,10 +39,13 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
     setState(()=>_processing=true);
     try{
       await StudioProcessingQueueService().runFingerprintJob(mediaId: file.id, mediaType: 'audio');
-      final matches=await _service.identifyMatches(file.id);
+      final scan=await _service.scanMatches(file.id);
+      final matches=scan.matches;
       if(!mounted)return;
       setState(()=>_candidates=matches);
-      _toast(matches.isEmpty?'No other compatible audio files found.':'Scan completed. '+matches.length.toString()+' local candidates compared.');
+      final summary='Compared ${scan.comparedCount} files; skipped ${scan.skippedCount} unreadable/unsupported files.';
+      setState(()=>_scanSummary=summary);
+      _toast(matches.isEmpty?'No matching candidates. $summary':'Scan completed. ${matches.length} candidates. $summary');
     }catch(e){_toast('Music ID failed: $e');}
     if(mounted)setState(()=>_processing=false);
   }
@@ -62,6 +66,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
     const SizedBox(height:10),
     if(_files.isEmpty)const Padding(padding:EdgeInsets.symmetric(vertical:50),child:Text('Import audio files in Media Library first.')),
     ..._files.map((f)=>ListTile(leading:const Icon(Icons.audio_file),title:Text(f.originalName),subtitle:Text(f.fileExtension??'Audio'),trailing:IconButton(onPressed:_processing?null:()=>_identify(f),icon:const Icon(Icons.fingerprint),tooltip:'Identify in library'))),
+    if(_scanSummary!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(_scanSummary!,style:Theme.of(context).textTheme.bodySmall)),
     if(_candidates.isNotEmpty)...[
       const Divider(height:30),
       Text('Candidate matches',style:Theme.of(context).textTheme.titleMedium),

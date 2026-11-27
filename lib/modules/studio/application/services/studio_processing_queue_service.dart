@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../infrastructure/database/studio_database_manager.dart';
+import 'studio_music_identification_service.dart';
+import 'studio_video_identification_service.dart';
 
 /// Read/write boundary for the Studio processing queue.
 ///
@@ -30,6 +32,72 @@ class StudioProcessingQueueService {
       statuses,
     );
     return (rows.first['total'] as num).toInt();
+  }
+
+  Future<void> runFingerprintJob({required String mediaId, required String mediaType}) async {
+    if (mediaType != 'audio' && mediaType != 'video') {
+      throw ArgumentError('Unsupported fingerprint media type.');
+    }
+    final db = await _db;
+    final now = DateTime.now().toUtc().toIso8601String();
+    final id = 'job_${DateTime.now().microsecondsSinceEpoch}_${mediaId.hashCode.abs()}';
+    await db.insert('studio_processing_jobs', {
+      'id': id,
+      'job_type': mediaType == 'audio' ? 'audio_fingerprint' : 'video_fingerprint',
+      'target_type': 'media',
+      'target_id': mediaId,
+      'status': 'queued',
+      'progress': 0,
+      'attempts': 0,
+      'created_at': now,
+      'updated_at': now,
+    });
+    await _execute(id);
+    final rows = await db.query('studio_processing_jobs', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isNotEmpty && rows.first['status'] == 'failed') {
+      throw StateError(rows.first['error_message']?.toString() ?? 'Fingerprint job failed.');
+    }
+  }
+
+  Future<void> _execute(String id) async {
+    final db = await _db;
+    final rows = await db.query('studio_processing_jobs', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) throw ArgumentError('Processing job not found.');
+    final job = rows.first;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.update('studio_processing_jobs', {
+      'status': 'running', 'progress': 5,
+      'attempts': (job['attempts'] as num? ?? 0).toInt() + 1,
+      'started_at': now, 'completed_at': null, 'error_message': null,
+      'updated_at': now,
+    }, where: 'id = ?', whereArgs: [id]);
+    try {
+      final targetId = job['target_id']?.toString();
+      if (targetId == null || targetId.isEmpty) throw StateError('Job target is missing.');
+      switch (job['job_type']) {
+        case 'audio_fingerprint':
+          await StudioMusicIdentificationService().identify(targetId);
+          break;
+        case 'video_fingerprint':
+          await StudioVideoIdentificationService().fingerprint(targetId);
+          break;
+        default:
+          throw StateError('No worker is registered for ${job['job_type']}.');
+      }
+      final current = await db.query('studio_processing_jobs', columns: ['status'], where: 'id = ?', whereArgs: [id], limit: 1);
+      if (current.isNotEmpty && current.first['status'] != 'cancelled') {
+        final finished = DateTime.now().toUtc().toIso8601String();
+        await db.update('studio_processing_jobs', {
+          'status': 'completed', 'progress': 100,
+          'completed_at': finished, 'updated_at': finished,
+        }, where: 'id = ?', whereArgs: [id]);
+      }
+    } catch (error) {
+      final failed = DateTime.now().toUtc().toIso8601String();
+      await db.update('studio_processing_jobs', {
+        'status': 'failed', 'error_message': error.toString(), 'updated_at': failed,
+      }, where: 'id = ?', whereArgs: [id,]);
+    }
   }
 
   Future<void> retry(String id) async {
@@ -67,6 +135,7 @@ class StudioProcessingQueueService {
         'created_at': now,
       });
     });
+    await _execute(id);
   }
 
   /// Marks an unfinished job cancelled. This is a persisted queue-state

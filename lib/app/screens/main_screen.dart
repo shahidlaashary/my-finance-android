@@ -344,7 +344,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
+                  padding: const EdgeInsets.fromLTRB(18, 5, 12, 5),
                   child: Row(
                     children: [
                       Expanded(

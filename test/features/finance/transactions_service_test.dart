@@ -82,6 +82,34 @@ void main() {
     expect(record['note'], 'Updated transfer');
   });
 
+  test('wallet currency change preserves historical transaction amount and currency', () async {
+    final walletId = await createWallet('USD Wallet', 'USD', 100);
+    await TransactionsService.addTransaction(
+      type: 'Expense',
+      amount: 20,
+      walletId: walletId,
+      category: 'Food',
+      note: 'Historical USD expense',
+      date: DateTime(2026, 11, 20).toIso8601String(),
+    );
+    await FinanceDB.instance.saveManualCurrencyPair('USD', 'EUR', 0.9);
+
+    await FinanceDB.instance.updateWallet(
+      id: walletId,
+      name: 'EUR Wallet',
+      type: 'Cash',
+      currency: 'EUR',
+      requestedCurrentBalance: 72,
+      iconCode: 1,
+      excludeTotal: false,
+    );
+
+    final record = (await TransactionsService.getTransactions()).single;
+    expect((record['amount'] as num).toDouble(), 20);
+    expect(record['wallet_currency'], 'USD');
+    expect(record['note'], 'Historical USD expense');
+  });
+
   test('same-currency transfer cannot save a different received amount', () async {
     final sourceId = await createWallet('Source PKR', 'PKR', 1000);
     final destinationId = await createWallet('Destination PKR', 'PKR', 100);

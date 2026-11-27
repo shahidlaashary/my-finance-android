@@ -12,6 +12,8 @@ import 'package:my_finance/modules/finance/screens/expense_entry_form.dart' show
 import 'package:my_finance/modules/finance/screens/transfer_entry_form.dart' show TransferEntryForm;
 import 'package:my_finance/modules/finance/screens/loan_entry_form.dart' show LoanEntryForm;
 import 'package:my_finance/modules/finance/screens/asset_purchase_entry_form.dart' show AssetPurchaseEntryForm;
+import 'package:my_finance/modules/finance/screens/budget_entry_form.dart' show BudgetEntryForm;
+import 'package:my_finance/modules/finance/screens/goal_entry_form.dart' show GoalEntryForm;
 import 'package:my_finance/modules/finance/screens/transactions_screen.dart';
 import 'package:my_finance/modules/finance/screens/wallets_screen.dart' show WalletsPage;
 import 'package:my_finance/app/screens/simple_feature_page.dart' show SimpleFeaturePage;
@@ -287,6 +289,10 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
         return appText(context, 'Add Loan', 'قرض شامل کریں');
       case 'Asset':
         return appText(context, 'Add Asset', 'اثاثہ شامل کریں');
+      case 'Budget':
+        return appText(context, 'Create Budget', 'بجٹ بنائیں');
+      case 'Goal':
+        return appText(context, 'New Goal', 'نیا ہدف');
       default:
         return appText(context, 'Add Income', 'آمدنی شامل کریں');
     }
@@ -304,6 +310,10 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
         return const LoanEntryForm(key: ValueKey('Loan'));
       case 'Asset':
         return const AssetPurchaseEntryForm(key: ValueKey('Asset'));
+      case 'Budget':
+        return const BudgetEntryForm(key: ValueKey('Budget'));
+      case 'Goal':
+        return const GoalEntryForm(key: ValueKey('Goal'));
       default:
         return const IncomeEntryForm(key: ValueKey('Income'));
     }
@@ -367,45 +377,25 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                   ),
                 ),
                 Padding(
-                  // Paanch quick-action cards ko form ke content edges ke saath align rakhein.
+                  // Seven quick actions remain in one consistent, horizontally scrollable row.
                   padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: Row(
-                    children: [
-                      _transactionTab(
-                        title: appText(context, 'Income', 'آمدنی'),
-                        value: 'Income',
-                        icon: Icons.south_west_rounded,
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(children: [
+                      _transactionTab(title: appText(context, 'Income', 'آمدنی'), value: 'Income', icon: Icons.south_west_rounded, color: Theme.of(context).colorScheme.secondary),
                       const SizedBox(width: 5),
-                      _transactionTab(
-                        title: appText(context, 'Expense', 'اخراجات'),
-                        value: 'Expense',
-                        icon: Icons.north_east_rounded,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      _transactionTab(title: appText(context, 'Expense', 'اخراجات'), value: 'Expense', icon: Icons.north_east_rounded, color: Theme.of(context).colorScheme.error),
                       const SizedBox(width: 5),
-                      _transactionTab(
-                        title: appText(context, 'Transfer', 'منتقلی'),
-                        value: 'Transfer',
-                        icon: Icons.swap_horiz_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      _transactionTab(title: appText(context, 'Transfer', 'منتقلی'), value: 'Transfer', icon: Icons.swap_horiz_rounded, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 5),
-                      _transactionTab(
-                        title: appText(context, 'Loan', 'قرض'),
-                        value: 'Loan',
-                        icon: Icons.handshake_outlined,
-                        color: Theme.of(context).colorScheme.tertiary,
-                      ),
+                      _transactionTab(title: appText(context, 'Loan', 'قرض'), value: 'Loan', icon: Icons.handshake_outlined, color: Theme.of(context).colorScheme.tertiary),
                       const SizedBox(width: 5),
-                      _transactionTab(
-                        title: appText(context, 'Asset', 'اثاثہ'),
-                        value: 'Asset',
-                        icon: Icons.real_estate_agent_outlined,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
+                      _transactionTab(title: appText(context, 'Asset', 'اثاثہ'), value: 'Asset', icon: Icons.real_estate_agent_outlined, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 5),
+                      _transactionTab(title: appText(context, 'Budget', 'بجٹ'), value: 'Budget', icon: Icons.pie_chart_outline_rounded, color: Theme.of(context).colorScheme.secondary),
+                      const SizedBox(width: 5),
+                      _transactionTab(title: appText(context, 'Goal', 'ہدف'), value: 'Goal', icon: Icons.flag_outlined, color: Theme.of(context).colorScheme.tertiary),
+                    ]),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -425,7 +415,8 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
     required String value,
   }) {
     final selected = selectedType == value;
-    return Expanded(
+    return SizedBox(
+      width: 68,
       child: InkWell(
         onTap: () => _selectType(value),
         borderRadius: BorderRadius.circular(12),
@@ -448,22 +439,14 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: 19, color: selected ? color : Theme.of(context).hintColor),
-              const SizedBox(height: 2),
-              Text(
-                title,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  color: selected ? color : Theme.of(context).hintColor,
-                ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(title, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800,
+                    color: selected ? color : Theme.of(context).hintColor)),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

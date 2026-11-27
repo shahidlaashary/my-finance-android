@@ -153,7 +153,7 @@ void main() {
     expect((await FinanceDB.instance.getWallet(source))!['currency'], 'USD');
   });
 
-  test('converts committee rollback delta and linked entry wallet amount', () async {
+  test('keeps committee ledger history and linked entry amounts unchanged on wallet currency change', () async {
     final id = await wallet('USD', 'USD', 100);
     await setRate('USD', 280);
     final db = DatabaseManager.instance.database;
@@ -200,9 +200,9 @@ void main() {
       where: "category = 'Committee Transfer'",
     )).single;
     final entry = (await db.query('committee_entries')).single;
-    expect((transaction['amount'] as num).toDouble(), closeTo(5600, 0.001));
-    expect((transaction['balance_delta'] as num).toDouble(), closeTo(-5600, 0.001));
-    expect((entry['wallet_amount'] as num).toDouble(), closeTo(5600, 0.001));
-    expect(entry['wallet_currency'], 'PKR');
+    expect((transaction['amount'] as num).toDouble(), closeTo(20, 0.001));
+    expect((transaction['balance_delta'] as num).toDouble(), closeTo(-20, 0.001));
+    expect((entry['wallet_amount'] as num).toDouble(), closeTo(20, 0.001));
+    expect(entry['wallet_currency'], 'USD');
   });
 }

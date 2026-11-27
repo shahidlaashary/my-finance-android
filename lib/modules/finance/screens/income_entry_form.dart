@@ -515,15 +515,12 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: SizedBox(
-            height: 56,
-            child: _categoryField(),
-          ),
+          child: _categoryField(),
         ),
         const SizedBox(width: 7),
         SizedBox(
           width: 98,
-          height: 56,
+          height: 50,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(

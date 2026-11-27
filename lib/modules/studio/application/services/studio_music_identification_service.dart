@@ -11,7 +11,7 @@ import 'studio_media_library_service.dart';
 import 'studio_fingerprint_catalogue_service.dart';
 import 'studio_catalogue_rights_service.dart';
 
-class StudioMusicIdentificationService {
+class StudioAudioCandidate {\n  const StudioAudioCandidate({required this.media,required this.match});\n  final StudioMediaFile media;\n  final StudioAudioFingerprintMatch match;\n}\n\nclass StudioMusicIdentificationService {
   StudioMusicIdentificationService({StudioMediaLibraryService? mediaLibrary, StudioFingerprintCatalogueService? fingerprints, StudioStorageManager? storage})
       : mediaLibrary=mediaLibrary??StudioMediaLibraryService(), fingerprints=fingerprints??StudioFingerprintCatalogueService(), storage=storage??StudioStorageManager();
   final StudioMediaLibraryService mediaLibrary;
@@ -21,7 +21,7 @@ class StudioMusicIdentificationService {
   Future<List<StudioMediaFile>> audioFiles() => mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:500);
   Future<StudioFingerprint?> fingerprintFor(String mediaId) => fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:'studio.audio.spectral-landmark',algorithmVersion:'1.0.0');
   Future<List<Map<String,Object?>>> comparisonHistory() => StudioCatalogueRightsService().comparisonHistory();
-  Future<StudioFingerprint> identify(String mediaId) => _engine.generateForMedia(mediaId);
+  Future<StudioFingerprint> identify(String mediaId) => _engine.generateForMedia(mediaId);\n  Future<List<StudioAudioCandidate>> identifyMatches(String mediaId) async {\n    await identify(mediaId);\n    final files=await audioFiles();\n    final candidates=<StudioAudioCandidate>[];\n    for(final file in files){\n      if(file.id==mediaId)continue;\n      try{final match=await compare(mediaId,file.id);candidates.add(StudioAudioCandidate(media:file,match:match));}catch(_){/* Unsupported file/decoder failures do not block remaining candidates. */}\n    }\n    candidates.sort((a,b)=>b.match.confidence.compareTo(a.match.confidence));\n    return candidates;\n  }
   Future<StudioAudioFingerprintMatch> compare(String firstId,String secondId) async {
     final a=await fingerprintFor(firstId)??await identify(firstId);
     final b=await fingerprintFor(secondId)??await identify(secondId);

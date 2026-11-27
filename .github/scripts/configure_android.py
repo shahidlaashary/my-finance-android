@@ -31,6 +31,26 @@ if f'applicationId = "{APP_ID}"' not in text or f'namespace = "{APP_ID}"' not in
     raise SystemExit("Could not enforce stable Android application ID")
 gradle.write_text(text)
 
+# video_thumbnail 0.5.6 ships a legacy Android/Kotlin buildscript.
+# Use the host AGP and ensure the Android library plugin is applied first.
+video_gradle_files = list(pub_cache.glob("hosted/pub.dev/video_thumbnail-*/android/build.gradle"))
+video_gradle_files += list(pub_cache.glob("hosted/pub.dartlang.org/video_thumbnail-*/android/build.gradle"))
+for video_gradle in video_gradle_files:
+    plugin_text = video_gradle.read_text()
+    plugin_text = re.sub(r"\\nbuildscript\\s*\\{.*?\\n\\}\\s*\\n", "\\n", plugin_text, count=1, flags=re.DOTALL)
+    plugin_text = plugin_text.replace("jcenter()", "mavenCentral()")
+    android_apply = "apply plugin: 'com.android.library'"
+    kotlin_apply = "apply plugin: 'kotlin-android'"
+    if kotlin_apply in plugin_text and android_apply not in plugin_text:
+        plugin_text = plugin_text.replace(kotlin_apply, android_apply + "\\n" + kotlin_apply, 1)
+    elif android_apply in plugin_text and kotlin_apply in plugin_text:
+        plugin_text = plugin_text.replace(kotlin_apply, "", 1)
+        plugin_text = plugin_text.rstrip() + "\\n" + kotlin_apply + "\\n"
+    if kotlin_apply not in plugin_text:
+        raise SystemExit(f"Could not locate Kotlin Android plugin declaration in {video_gradle}")
+    video_gradle.write_text(plugin_text)
+    print(f"Aligned {video_gradle.parent.parent.name} with the host Android Gradle Plugin.")
+
 # The printing plugin ships an obsolete AGP 7.3.0 buildscript classpath.
 # The host app already provides AGP 9.3.1 through settings.gradle.kts.
 # Remove only that redundant plugin-local classpath so the plugin uses the

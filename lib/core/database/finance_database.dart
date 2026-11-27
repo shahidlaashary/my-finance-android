@@ -90,6 +90,10 @@ class FinanceDB {
         to_currency TEXT NOT NULL,
         rate REAL NOT NULL,
         updated_at TEXT NOT NULL,
+        reference_base_currency TEXT NOT NULL DEFAULT 'PKR',
+        reference_rate REAL NOT NULL DEFAULT 0,
+        is_base_linked INTEGER NOT NULL DEFAULT 0,
+        is_rate_pending INTEGER NOT NULL DEFAULT 0,
         UNIQUE(from_currency, to_currency)
       )
     ''');

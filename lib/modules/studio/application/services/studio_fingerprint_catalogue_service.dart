@@ -1,5 +1,6 @@
 import '../../domain/entities/studio_fingerprint.dart';
 import '../../domain/entities/studio_media_file.dart';
+import 'studio_media_library_service.dart';
 import '../../domain/repositories/studio_fingerprint_repository.dart';
 import '../../infrastructure/database/studio_database_manager.dart';
 import '../../infrastructure/repositories/sqlite_studio_fingerprint_repository.dart';
@@ -11,9 +12,12 @@ import '../../infrastructure/repositories/sqlite_studio_fingerprint_repository.d
 class StudioFingerprintCatalogueService {
   StudioFingerprintCatalogueService({
     StudioFingerprintRepository? repository,
-  }) : _repository = repository;
+    StudioMediaLibraryService? mediaLibrary,
+  })  : _repository = repository,
+        _mediaLibrary = mediaLibrary;
 
   final StudioFingerprintRepository? _repository;
+  final StudioMediaLibraryService? _mediaLibrary;
 
   Future<StudioFingerprintRepository> get _readyRepository async {
     final supplied = _repository;
@@ -39,20 +43,12 @@ class StudioFingerprintCatalogueService {
       throw ArgumentError('Fingerprint technical values are invalid.');
     }
 
-    final mediaLibrary = await StudioDatabaseManager.instance.initialize();
-    final mediaRows = await mediaLibrary.query(
-      'studio_media_files',
-      columns: ['id', 'media_type'],
-      where: 'id = ?',
-      whereArgs: [fingerprint.mediaFileId],
-      limit: 1,
-    );
-    if (mediaRows.isEmpty) {
+    final source = await (_mediaLibrary ?? StudioMediaLibraryService())
+        .getById(fingerprint.mediaFileId);
+    if (source == null) {
       throw StateError('Source Studio media file not found: ${fingerprint.mediaFileId}');
     }
-    final sourceType = StudioMediaType.fromDatabase(
-      mediaRows.first['media_type'] as String,
-    );
+    final sourceType = source.mediaType;
     if (sourceType != fingerprint.mediaType) {
       throw ArgumentError('Fingerprint media type must match its source media.');
     }

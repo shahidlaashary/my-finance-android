@@ -8,7 +8,6 @@ import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/models/goals_model.dart';
 import 'package:my_finance/modules/finance/services/goals_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
-import 'package:my_finance/shared/widgets/attachment_section.dart';
 
 /// Savings goal create form hosted inside the shared PlusActionSheet.
 class GoalEntryForm extends StatefulWidget {

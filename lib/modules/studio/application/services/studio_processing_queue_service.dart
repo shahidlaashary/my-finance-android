@@ -6,9 +6,7 @@ import 'studio_video_identification_service.dart';
 
 /// Read/write boundary for the Studio processing queue.
 ///
-/// Retrying a failed job returns it to the queued state. A worker must claim
-/// queued jobs before doing work; this service never pretends that a retry has
-/// already executed.
+/// Executes the supported fingerprint jobs and persists their lifecycle.
 class StudioProcessingQueueService {
   Future<Database> get _db => StudioDatabaseManager.instance.initialize();
 
@@ -40,7 +38,7 @@ class StudioProcessingQueueService {
     }
     final db = await _db;
     final now = DateTime.now().toUtc().toIso8601String();
-    final id = 'job_${DateTime.now().microsecondsSinceEpoch}_${mediaId.hashCode.abs()}';
+    final id = 'job_${DateTime.now().microsecondsSinceEpoch}';
     await db.insert('studio_processing_jobs', {
       'id': id,
       'job_type': mediaType == 'audio' ? 'audio_fingerprint' : 'video_fingerprint',

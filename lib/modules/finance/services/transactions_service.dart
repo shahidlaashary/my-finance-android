@@ -85,6 +85,8 @@ class TransactionsService {
     }
     final fromCurrency = (snapshot['wallet_currency']?.toString() ?? 'PKR').toUpperCase();
     final toCurrency = (snapshot['to_wallet_currency']?.toString() ?? '').toUpperCase();
+    snapshot['from_currency'] = fromCurrency;
+    snapshot['to_currency'] = toCurrency.isEmpty ? null : toCurrency;
     final transferAutomatic = toCurrency.isNotEmpty && toCurrency != fromCurrency &&
         await _snapshotPairRate(txn, fromCurrency, toCurrency, automatic: true) != null;
     final transferManual = toCurrency.isNotEmpty && toCurrency != fromCurrency &&
@@ -107,6 +109,9 @@ class TransactionsService {
     snapshot['base_rate_source'] = fromCurrency == baseCurrency
         ? 'Same Currency'
         : (baseRate == null ? 'Unavailable' : (automaticBaseRate != null ? 'Automatic' : 'Manual'));
+    if (toCurrency.isEmpty || toCurrency == fromCurrency) {
+      snapshot['rate_source'] = snapshot['base_rate_source'];
+    }
     return txn.insert('transactions', snapshot);
   }
 
@@ -588,6 +593,10 @@ class TransactionsService {
         'wallet_currency': sourceCurrencyRows.isEmpty ? 'PKR' :
             sourceCurrencyRows.first['currency']?.toString().toUpperCase() ?? 'PKR',
         'to_wallet_currency': destinationCurrencyRows.isEmpty ? null :
+            destinationCurrencyRows.first['currency']?.toString().toUpperCase(),
+        'from_currency': sourceCurrencyRows.isEmpty ? 'PKR' :
+            sourceCurrencyRows.first['currency']?.toString().toUpperCase() ?? 'PKR',
+        'to_currency': destinationCurrencyRows.isEmpty ? null :
             destinationCurrencyRows.first['currency']?.toString().toUpperCase(),
         'wallet_id': walletId,
         'to_wallet_id': normalized == 'Transfer' ? toWalletId : null,

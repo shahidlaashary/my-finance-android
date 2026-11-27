@@ -6,6 +6,7 @@ import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.da
 import 'package:my_finance/modules/studio/presentation/studio_video_id_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_reports_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_management_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_recording_screen.dart';
 import 'package:my_finance/modules/studio/presentation/ai_music/studio_ai_music_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
     _StudioSection('Compare', 'Compare two or more media files', Icons.compare_arrows_rounded),
     _StudioSection('Catalogue', 'Browse and organize registered content', Icons.library_music_outlined),
     _StudioSection('Rights Management', 'Manage ownership and licensing records', Icons.verified_user_outlined),
-    _StudioSection('Recording', 'Recording workspace', Icons.mic_none_rounded, placeholder: true),
+    _StudioSection('Recording', 'Record clean audio directly into your Studio library', Icons.mic_none_rounded),
     _StudioSection('Reports', 'Analysis and activity reports', Icons.analytics_outlined),
     _StudioSection('Management', 'Studio administration and system controls', Icons.settings_outlined),
   ];
@@ -50,6 +51,10 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
     }
     if (section.title == 'Management') {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioManagementScreen()));
+      return;
+    }
+    if (section.title == 'Recording') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioRecordingScreen()));
       return;
     }
     if (section.title == 'AI Music') {
@@ -351,7 +356,7 @@ class _StudioSectionCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                section.placeholder ? 'Coming later' : section.description,
+                section.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(

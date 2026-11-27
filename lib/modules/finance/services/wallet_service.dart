@@ -255,10 +255,8 @@ class WalletService {
         newOpening = oldOpening * factor;
         convertedOldBalance = oldBalance * factor;
 
-        // Transaction ledger currency conversion is owned by TransactionsService.
-        await TransactionsService.convertWalletCurrencyAmounts(
-          txn, id, factor,
-        );
+        // Historical transaction amounts and currency snapshots are immutable.
+        // Only the wallet's current balance/opening balance are converted here.
 
         await CommitteeService.convertWalletAmounts(
           txn, id, factor, currency,

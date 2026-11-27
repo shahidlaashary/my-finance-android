@@ -2,6 +2,8 @@ import '../../domain/entities/studio_media_file.dart';
 import '../../domain/repositories/studio_media_repository.dart';
 import '../../infrastructure/database/studio_database_manager.dart';
 import '../../infrastructure/repositories/sqlite_studio_media_repository.dart';
+import '../../infrastructure/storage/studio_storage_manager.dart';
+import 'studio_fingerprint_catalogue_service.dart';
 
 /// Application boundary for Studio's media catalogue.
 ///
@@ -59,8 +61,27 @@ class StudioMediaLibraryService {
     await (await _readyRepository).updateImportStatus(id, status);
   }
 
-  /// Removes only the database record. Physical-file cleanup belongs to the
-  /// future managed-storage service and is intentionally not performed here.
+  /// Removes a media item and its generated fingerprint artifacts from
+  /// Studio-managed storage before deleting the catalogue record.
+  Future<void> deleteManagedMedia(
+    String id, {
+    StudioStorageManager? storageManager,
+  }) async {
+    final media = await getById(id);
+    if (media == null) throw ArgumentError('Studio media item not found.');
+    final storage = storageManager ?? StudioStorageManager();
+    final fingerprints = await StudioFingerprintCatalogueService(
+      mediaLibrary: this,
+    ).getForMediaFile(id);
+    for (final fingerprint in fingerprints) {
+      await storage.deleteManagedFile(fingerprint.dataFilePath);
+    }
+    await storage.deleteManagedFile(media.storagePath);
+    await (await _readyRepository).removeRecord(id);
+  }
+
+  /// Removes only the database record. Use deleteManagedMedia when the
+  /// corresponding managed files should also be removed.
   Future<void> removeRecord(String id) async {
     await (await _readyRepository).removeRecord(id);
   }

@@ -398,7 +398,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     return TextFormField(
       controller: amountController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: decoration('Wallet Amount', icon: Icons.payments_outlined),
+      decoration: decoration('Amount', icon: Icons.payments_outlined),
       validator: (value) {
         final amount = double.tryParse(value?.trim() ?? '');
         if (amount == null || !amount.isFinite || amount <= 0) {
@@ -560,7 +560,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                       onChanged: (value) async {
                         setState(() {
                           foreignIncomeEnabled = value;
-                          // The same Wallet Amount field is used in both modes.
+                          // The same Amount field is used in both modes.
                           // Clear any normal/manual amount when switching modes.
                           amountController.clear();
                           if (value) {
@@ -697,7 +697,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       controller: amountController,
       readOnly: _sameForeignWalletCurrency,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: decoration('Wallet Amount', icon: Icons.payments_outlined),
+      decoration: decoration('Amount', icon: Icons.payments_outlined),
       onChanged: (value) {
         if (!foreignIncomeEnabled || _sameForeignWalletCurrency) return;
         final foreign = double.tryParse(foreignAmountController.text.trim());

@@ -235,6 +235,77 @@ class StudioDatabaseSchema {
     );
 
 
+    await db.execute('''
+      CREATE TABLE studio_fingerprints (
+        id TEXT PRIMARY KEY,
+        media_file_id TEXT NOT NULL,
+        media_type TEXT NOT NULL CHECK (media_type IN ('audio', 'video')),
+        algorithm_key TEXT NOT NULL,
+        algorithm_version TEXT NOT NULL,
+        fingerprint_format TEXT NOT NULL,
+        data_file_path TEXT NOT NULL UNIQUE,
+        checksum_sha256 TEXT,
+        sample_rate INTEGER CHECK (sample_rate IS NULL OR sample_rate > 0),
+        channels INTEGER CHECK (channels IS NULL OR channels > 0),
+        duration_ms INTEGER CHECK (duration_ms IS NULL OR duration_ms >= 0),
+        frame_count INTEGER NOT NULL DEFAULT 0 CHECK (frame_count >= 0),
+        status TEXT NOT NULL DEFAULT 'generated'
+          CHECK (status IN ('pending', 'generated', 'indexed', 'failed', 'stale')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE (media_file_id, algorithm_key, algorithm_version),
+        FOREIGN KEY (media_file_id) REFERENCES studio_media_files(id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE studio_fingerprint_segments (
+        fingerprint_id TEXT NOT NULL,
+        segment_index INTEGER NOT NULL CHECK (segment_index >= 0),
+        start_ms INTEGER NOT NULL CHECK (start_ms >= 0),
+        end_ms INTEGER NOT NULL CHECK (end_ms > start_ms),
+        data_offset_bytes INTEGER NOT NULL CHECK (data_offset_bytes >= 0),
+        data_length_bytes INTEGER NOT NULL CHECK (data_length_bytes > 0),
+        signature_hash TEXT,
+        PRIMARY KEY (fingerprint_id, segment_index),
+        FOREIGN KEY (fingerprint_id) REFERENCES studio_fingerprints(id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE studio_fingerprint_indexes (
+        id TEXT PRIMARY KEY,
+        algorithm_key TEXT NOT NULL,
+        algorithm_version TEXT NOT NULL,
+        index_file_path TEXT NOT NULL UNIQUE,
+        checksum_sha256 TEXT,
+        item_count INTEGER NOT NULL DEFAULT 0 CHECK (item_count >= 0),
+        status TEXT NOT NULL DEFAULT 'pending'
+          CHECK (status IN ('pending', 'ready', 'failed', 'stale')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute(
+      'CREATE INDEX idx_studio_fingerprints_media '
+      'ON studio_fingerprints(media_file_id, algorithm_key, algorithm_version)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_studio_fingerprints_status '
+      'ON studio_fingerprints(status, media_type)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_studio_fingerprint_segments_time '
+      'ON studio_fingerprint_segments(fingerprint_id, start_ms, end_ms)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_studio_fingerprint_indexes_status '
+      'ON studio_fingerprint_indexes(status, algorithm_key)',
+    );
+
     final now = DateTime.now().toUtc().toIso8601String();
     await db.insert('studio_metadata', {
       'metadata_key': 'schema_version',

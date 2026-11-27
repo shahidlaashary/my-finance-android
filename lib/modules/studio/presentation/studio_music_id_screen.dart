@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../application/services/studio_music_identification_service.dart';
+import '../application/services/studio_processing_queue_service.dart';
 import '../domain/entities/studio_media_file.dart';
 import '../engines/audio_fingerprint/studio_audio_fingerprint_matcher.dart';
 
@@ -36,6 +37,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   Future<void> _identify(StudioMediaFile file)async{
     setState(()=>_processing=true);
     try{
+      await StudioProcessingQueueService().runFingerprintJob(mediaId: file.id, mediaType: 'audio');
       final matches=await _service.identifyMatches(file.id);
       if(!mounted)return;
       setState(()=>_candidates=matches);

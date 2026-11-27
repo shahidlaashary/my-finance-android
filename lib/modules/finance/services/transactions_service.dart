@@ -4,7 +4,6 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
-import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 class TransactionsService {
   /// Caller ki database transaction ke andar ledger row insert karta hai.
@@ -86,17 +85,17 @@ class TransactionsService {
     }
     final fromCurrency = (snapshot['wallet_currency']?.toString() ?? 'PKR').toUpperCase();
     final toCurrency = (snapshot['to_wallet_currency']?.toString() ?? '').toUpperCase();
-    final online = await CurrencyService.isOnline();
-    final transferRate = snapshot['exchange_rate'] is num
-        ? (snapshot['exchange_rate'] as num).toDouble()
-        : (toCurrency.isEmpty ? null : await _snapshotPairRate(txn, fromCurrency, toCurrency, automatic: online));
+    final transferAutomatic = toCurrency.isNotEmpty && toCurrency != fromCurrency &&
+        await _snapshotPairRate(txn, fromCurrency, toCurrency, automatic: true) != null;
     snapshot['rate_source'] = toCurrency.isEmpty || toCurrency == fromCurrency
         ? 'Same Currency'
-        : (online ? 'Automatic' : 'Manual');
+        : (transferAutomatic ? 'Automatic' : 'Manual');
     final settings = await txn.query('app_settings', columns: ['setting_value'],
       where: 'setting_key = ?', whereArgs: ['main_currency'], limit: 1);
     final baseCurrency = (settings.isEmpty ? 'PKR' : settings.first['setting_value']?.toString() ?? 'PKR').toUpperCase();
-    final baseRate = await _snapshotPairRate(txn, fromCurrency, baseCurrency, automatic: online);
+    final automaticBaseRate = await _snapshotPairRate(txn, fromCurrency, baseCurrency, automatic: true);
+    final baseRate = automaticBaseRate ??
+        await _snapshotPairRate(txn, fromCurrency, baseCurrency, automatic: false);
     snapshot['base_currency_at_time'] = baseCurrency;
     snapshot['base_exchange_rate'] = baseRate;
     snapshot['base_converted_amount'] = baseRate == null
@@ -104,7 +103,7 @@ class TransactionsService {
         : ((snapshot['amount'] as num).toDouble() * baseRate);
     snapshot['base_rate_source'] = fromCurrency == baseCurrency
         ? 'Same Currency'
-        : (baseRate == null ? 'Unavailable' : (online ? 'Automatic' : 'Manual'));
+        : (baseRate == null ? 'Unavailable' : (automaticBaseRate != null ? 'Automatic' : 'Manual'));
     return txn.insert('transactions', snapshot);
   }
 

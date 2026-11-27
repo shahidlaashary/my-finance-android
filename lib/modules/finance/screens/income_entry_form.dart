@@ -681,7 +681,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     return TextFormField(
       controller: foreignAmountController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: decoration('Foreign Amount', icon: Icons.payments_outlined),
+      decoration: decoration('Foreign Amount', icon: Icons.public),
       onChanged: (_) => _recalculateWalletAmount(),
       validator: (value) {
         if (!foreignIncomeEnabled) return null;

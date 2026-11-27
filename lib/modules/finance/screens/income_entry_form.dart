@@ -182,7 +182,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(13),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 13),
+      contentPadding: const EdgeInsetsDirectional.fromSTEB(3, 13, 11, 13),
     );
   }
 

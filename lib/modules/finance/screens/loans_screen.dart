@@ -1078,7 +1078,7 @@ class LoansScreenState extends State<LoansScreen> {
                           children: [
                             Icon(Icons.people_alt_outlined, size: 16),
                             const SizedBox(width: 3),
-                            Text('Manage Party (${_parties.length})'),
+                            Text('Parties (${_parties.length})'),
                           ],
                         ),
                       ),

@@ -4,11 +4,63 @@ import 'package:my_finance/core/database/database_manager.dart';
 import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/staff/services/staff_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 
 class TransactionsService {
   /// Caller ki database transaction ke andar ledger row insert karta hai.
   /// Module services apne records coordinate kar sakti hain, lekin ledger writes
   /// yahin centralized rehti hain; atomic transaction ka control caller ke paas hota hai.
+  static Future<double?> _snapshotPairRate(
+    Transaction txn,
+    String from,
+    String to, {
+    required bool automatic,
+  }) async {
+    if (from == to) return 1.0;
+    if (from.isEmpty || to.isEmpty) return null;
+    if (automatic) {
+      final settings = await txn.query('app_settings', columns: ['setting_value'],
+        where: 'setting_key = ?', whereArgs: ['main_currency'], limit: 1);
+      final base = (settings.isEmpty ? 'PKR' : settings.first['setting_value']?.toString() ?? 'PKR').toUpperCase();
+      Future<double?> rate(String code) async {
+        if (code == base) return 1.0;
+        final rows = await txn.query('exchange_rates', columns: ['rate'],
+          where: 'UPPER(currency) = ?', whereArgs: [code], limit: 1);
+        if (rows.isEmpty) return null;
+        final value = (rows.first['rate'] as num).toDouble();
+        return value.isFinite && value > 0 ? value : null;
+      }
+      final a = await rate(from);
+      final b = await rate(to);
+      if (a == null || b == null || b <= 0) return null;
+      final result = a / b;
+      return result.isFinite && result > 0 ? result : null;
+    }
+    final rows = await txn.query('manual_currency_pairs');
+    final graph = <String, List<MapEntry<String, double>>>{};
+    for (final row in rows) {
+      final a = row['from_currency'].toString().toUpperCase();
+      final b = row['to_currency'].toString().toUpperCase();
+      final value = (row['rate'] as num).toDouble();
+      if (!value.isFinite || value <= 0) continue;
+      graph.putIfAbsent(a, () => []).add(MapEntry(b, value));
+      graph.putIfAbsent(b, () => []).add(MapEntry(a, 1 / value));
+    }
+    final queue = <(String, double)>[(from, 1.0)];
+    final visited = <String>{from};
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      for (final edge in graph[current.$1] ?? const <MapEntry<String, double>>[]) {
+        if (!visited.add(edge.key)) continue;
+        final combined = current.$2 * edge.value;
+        if (!combined.isFinite || combined <= 0) continue;
+        if (edge.key == to) return combined;
+        queue.add((edge.key, combined));
+      }
+    }
+    return null;
+  }
+
   static Future<int> insertLedgerEntry(
     Transaction txn,
     Map<String, Object?> entry,
@@ -32,6 +84,27 @@ class TransactionsService {
             rows.first['currency']?.toString().trim().toUpperCase() ?? 'PKR';
       }
     }
+    final fromCurrency = (snapshot['wallet_currency']?.toString() ?? 'PKR').toUpperCase();
+    final toCurrency = (snapshot['to_wallet_currency']?.toString() ?? '').toUpperCase();
+    final online = await CurrencyService.isOnline();
+    final transferRate = snapshot['exchange_rate'] is num
+        ? (snapshot['exchange_rate'] as num).toDouble()
+        : (toCurrency.isEmpty ? null : await _snapshotPairRate(txn, fromCurrency, toCurrency, automatic: online));
+    snapshot['rate_source'] = toCurrency.isEmpty || toCurrency == fromCurrency
+        ? 'Same Currency'
+        : (online ? 'Automatic' : 'Manual');
+    final settings = await txn.query('app_settings', columns: ['setting_value'],
+      where: 'setting_key = ?', whereArgs: ['main_currency'], limit: 1);
+    final baseCurrency = (settings.isEmpty ? 'PKR' : settings.first['setting_value']?.toString() ?? 'PKR').toUpperCase();
+    final baseRate = await _snapshotPairRate(txn, fromCurrency, baseCurrency, automatic: online);
+    snapshot['base_currency_at_time'] = baseCurrency;
+    snapshot['base_exchange_rate'] = baseRate;
+    snapshot['base_converted_amount'] = baseRate == null
+        ? null
+        : ((snapshot['amount'] as num).toDouble() * baseRate);
+    snapshot['base_rate_source'] = fromCurrency == baseCurrency
+        ? 'Same Currency'
+        : (baseRate == null ? 'Unavailable' : (online ? 'Automatic' : 'Manual'));
     return txn.insert('transactions', snapshot);
   }
 

@@ -408,34 +408,37 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
     Widget columnHeader(String title, String subtitle, IconData icon,
         {Widget? action}) {
-      return Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: .10),
-              borderRadius: BorderRadius.circular(8),
+      return SizedBox(
+        height: 42,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 17, color: colors.primary),
             ),
-            child: Icon(icon, size: 16, color: colors.primary),
-          ),
-          const SizedBox(width: 7),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w800)),
-                Text(subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 8, color: muted)),
-              ],
+            const SizedBox(width: 7),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w800)),
+                  Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 9, color: muted)),
+                ],
+              ),
             ),
-          ),
-          if (action != null) action,
-        ],
+            if (action != null) action,
+          ],
+        ),
       );
     }
 
@@ -464,7 +467,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           children: [
                             Text(currency,
                                 style: const TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w800)),
                             if (_rateFor(currency) != null)
                               Text(
@@ -475,7 +478,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                                     currency)['updated_at']),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 7, color: muted),
+                                style: TextStyle(fontSize: 8, color: muted),
                               ),
                           ],
                         ),
@@ -490,7 +493,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: _rateFor(currency) == null
                                 ? muted
@@ -564,7 +567,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 9,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 3),
@@ -574,7 +577,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontSize: 9,
+                                  fontSize: 11,
                                   color: colors.primary,
                                   fontWeight: FontWeight.w700),
                             ),
@@ -683,107 +686,88 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 5,
-                                child: TextField(
-                                  controller: _convertAmount,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                          decimal: true),
-                                  onChanged: (_) => setState(() {}),
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800),
-                                  decoration: compactDecoration('Amount'),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                flex: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 9),
-                                  decoration: BoxDecoration(
-                                    color: colors.primaryContainer
-                                        .withValues(alpha: .48),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('YOU RECEIVE',
-                                          style: TextStyle(
-                                              fontSize: 8,
-                                              letterSpacing: .6,
-                                              fontWeight: FontWeight.w800,
-                                              color: muted)),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        resultText,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w900,
-                                          color: converted == null
-                                              ? muted
-                                              : colors.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                          TextField(
+                            controller: _convertAmount,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            onChanged: (_) => setState(() {}),
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w800),
+                            decoration: compactDecoration('Amount'),
                           ),
-                          const SizedBox(height: 9),
+                          const SizedBox(height: 7),
                           Row(
                             children: [
                               Expanded(
-                                child: currencyDropdown(
-                                  'From',
-                                  _convertFrom,
-                                  (value) {
-                                    if (value != null) {
-                                      setState(() => _convertFrom = value);
-                                    }
-                                  },
-                                ),
+                                child: currencyDropdown('From', _convertFrom,
+                                    (value) {
+                                  if (value != null) {
+                                    setState(() => _convertFrom = value);
+                                  }
+                                }),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 5),
+                                padding: const EdgeInsets.symmetric(horizontal: 5),
                                 child: IconButton.filledTonal(
                                   tooltip: 'Swap currencies',
                                   visualDensity: VisualDensity.compact,
                                   constraints: const BoxConstraints(
-                                      minWidth: 34, minHeight: 34),
+                                      minWidth: 32, minHeight: 32),
                                   padding: EdgeInsets.zero,
                                   onPressed: () => setState(() {
                                     final previous = _convertFrom;
                                     _convertFrom = _convertTo;
                                     _convertTo = previous;
                                   }),
-                                  icon: const Icon(
-                                      Icons.swap_horiz_rounded,
-                                      size: 19),
+                                  icon: const Icon(Icons.swap_horiz_rounded,
+                                      size: 18),
                                 ),
                               ),
                               Expanded(
-                                child: currencyDropdown(
-                                  'To',
-                                  _convertTo,
-                                  (value) {
-                                    if (value != null) {
-                                      setState(() => _convertTo = value);
-                                    }
-                                  },
-                                ),
+                                child: currencyDropdown('To', _convertTo,
+                                    (value) {
+                                  if (value != null) {
+                                    setState(() => _convertTo = value);
+                                  }
+                                }),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 7),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: colors.primaryContainer.withValues(alpha: .48),
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: Row(
+                              children: [
+                                Text('RESULT',
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        letterSpacing: .5,
+                                        fontWeight: FontWeight.w800,
+                                        color: muted)),
+                                const Spacer(),
+                                Flexible(
+                                  child: Text(
+                                    '$resultText $_convertTo',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
+                                      color: converted == null
+                                          ? muted
+                                          : colors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Text(

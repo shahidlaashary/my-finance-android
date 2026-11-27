@@ -514,13 +514,18 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(child: _categoryField()),
-        const SizedBox(width: 8),
+        Expanded(
+          child: SizedBox(
+            height: 56,
+            child: _categoryField(),
+          ),
+        ),
+        const SizedBox(width: 7),
         SizedBox(
-          width: 112,
+          width: 98,
           height: 56,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAF9),
               borderRadius: BorderRadius.circular(13),
@@ -531,9 +536,9 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  height: 29,
+                  height: 26,
                   child: Transform.scale(
-                    scale: 0.72,
+                    scale: 0.66,
                     child: Switch.adaptive(
                       value: foreignIncomeEnabled,
                       activeColor: scheme.primary,
@@ -556,7 +561,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                   'Foreign Income',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -1108,6 +1113,8 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                   Expanded(child: _walletField()),
                 ],
               ),
+              const SizedBox(height: 12),
+              _categoryAndForeignToggleRow(),
               if (foreignIncomeEnabled) ...[
                 const SizedBox(height: 12),
                 Row(
@@ -1122,8 +1129,6 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                   _foreignRateField(),
                 ],
               ],
-              const SizedBox(height: 12),
-              _categoryAndForeignToggleRow(),
               const SizedBox(height: 12),
               _notesField(),
             ],

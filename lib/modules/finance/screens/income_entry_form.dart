@@ -91,6 +91,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   Future<void> loadWallets({bool preserveSelections = false}) async {
     final previousWalletId = selectedWalletId;
     final previousDestinationWalletId = selectedDestinationWalletId;
+    final previousWalletCurrency = selectedWallet?['currency']?.toString().toUpperCase();
     final previousDate = selectedDate;
     final prefs = await SharedPreferences.getInstance();
     final rememberWallet = await GeneralPreferences.instance.rememberWallet;
@@ -116,10 +117,6 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     setState(() {
       wallets = result;
       foreignCurrencyOptions = currencySet.toList()..sort();
-      selectedForeignCurrency ??= foreignCurrencyOptions.firstWhere(
-        (code) => code != (wallets.isEmpty ? 'PKR' : (wallets.first['currency'] ?? 'PKR').toString().toUpperCase()),
-        orElse: () => foreignCurrencyOptions.first,
-      );
       transactionCategories = categories;
       loading = false;
 
@@ -141,6 +138,18 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
           selectedDestinationWalletId = wallets.any((w) => w['id'] == preferredDestinationId)
               ? preferredDestinationId : wallets.firstWhere((w) => w['id'] != selectedWalletId)['id'] as int;
         }
+      }
+
+      final selectedWalletCode =
+          (selectedWallet?['currency'] ?? 'PKR').toString().toUpperCase();
+      final walletCurrencyChanged =
+          previousWalletCurrency != null && previousWalletCurrency != selectedWalletCode;
+      if (!preserveSelections ||
+          previousWalletId != selectedWalletId ||
+          walletCurrencyChanged ||
+          selectedForeignCurrency == null ||
+          !foreignCurrencyOptions.contains(selectedForeignCurrency)) {
+        selectedForeignCurrency = selectedWalletCode;
       }
 
       if (transactionCategories.isNotEmpty &&
@@ -389,7 +398,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     return TextFormField(
       controller: amountController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: decoration('Amount', icon: Icons.payments_outlined),
+      decoration: decoration('Wallet Amount', icon: Icons.payments_outlined),
       validator: (value) {
         final amount = double.tryParse(value?.trim() ?? '');
         if (amount == null || !amount.isFinite || amount <= 0) {
@@ -416,7 +425,14 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
         ),
       )).toList(),
       onChanged: (value) {
-        setState(() => selectedWalletId = value);
+        setState(() {
+          selectedWalletId = value;
+          if (value != null) {
+            final wallet = wallets.firstWhere((item) => item['id'] == value);
+            selectedForeignCurrency =
+                (wallet['currency'] ?? 'PKR').toString().toUpperCase();
+          }
+        });
         if (foreignIncomeEnabled) _refreshForeignConversion();
       },
     );
@@ -542,10 +558,16 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                       onChanged: (value) async {
                         setState(() {
                           foreignIncomeEnabled = value;
-                          if (!value) {
+                          // The same Wallet Amount field is used in both modes.
+                          // Clear any normal/manual amount when switching modes.
+                          amountController.clear();
+                          if (value) {
                             foreignAmountController.clear();
                             exchangeRateController.clear();
-                            amountController.clear();
+                            selectedForeignCurrency = _walletCurrency;
+                          } else {
+                            foreignAmountController.clear();
+                            exchangeRateController.clear();
                           }
                         });
                         if (value) await _refreshForeignConversion();
@@ -581,7 +603,10 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
         ? 1.0
         : double.tryParse(exchangeRateController.text.trim());
     if (foreign == null || !foreign.isFinite || foreign <= 0 ||
-        rate == null || !rate.isFinite || rate <= 0) return;
+        rate == null || !rate.isFinite || rate <= 0) {
+      amountController.clear();
+      return;
+    }
     final value = foreign * rate;
     amountController.value = TextEditingValue(
       text: value.toStringAsFixed(2),
@@ -602,7 +627,11 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       _recalculateWalletAmount();
       return;
     }
-    setState(() => loadingForeignRate = true);
+    setState(() {
+      loadingForeignRate = true;
+      exchangeRateController.clear();
+      amountController.clear();
+    });
     try {
       await CurrencyService.refreshMissingExchangeRatesOnline(currencies: [from, to]);
       final online = await CurrencyService.isOnline();
@@ -666,7 +695,7 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       controller: amountController,
       readOnly: _sameForeignWalletCurrency,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: decoration('Wallet Amount (${_walletCurrency})', icon: Icons.account_balance_wallet_outlined),
+      decoration: decoration('Wallet Amount', icon: Icons.account_balance_wallet_outlined),
       onChanged: (value) {
         if (!foreignIncomeEnabled || _sameForeignWalletCurrency) return;
         final foreign = double.tryParse(foreignAmountController.text.trim());

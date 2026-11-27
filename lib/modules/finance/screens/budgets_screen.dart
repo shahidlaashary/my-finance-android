@@ -456,13 +456,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, "My Budgets", "My Budgets"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showBudgetDialog(),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: Icon(Icons.add),
-        label: Text(appText(context, 'New Budget', 'نیا بجٹ')),
-      ),
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(

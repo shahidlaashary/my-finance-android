@@ -55,7 +55,7 @@ void main() {
       samples: _tone(22050, 440),
     ));
     final decoded = await decoder.decode(file.path);
-    const algorithm = StudioSpectralLandmarkFingerprint();
+    const algorithm = StudioSpectralLandmarkFingerprint(segmentDurationMs: 1000);
 
     final first = await algorithm.generate(decoded);
     final second = await algorithm.generate(decoded);

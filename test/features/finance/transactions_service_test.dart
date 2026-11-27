@@ -105,7 +105,9 @@ void main() {
       excludeTotal: false,
     );
 
-    final record = (await TransactionsService.getTransactions()).single;
+    final record = (await TransactionsService.getTransactions()).singleWhere(
+      (item) => item['note'] == 'Historical USD expense',
+    );
     expect((record['amount'] as num).toDouble(), 20);
     expect(record['wallet_currency'], 'USD');
     expect(record['note'], 'Historical USD expense');

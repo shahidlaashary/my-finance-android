@@ -87,7 +87,8 @@ class StudioSpectralLandmarkFingerprint
         // Eight-byte record: frame index, FFT bin, and normalized peak strength.
         final strength = (math.log(1 + magnitudes[bin]) * 4096)
             .round()
-            .clamp(0, 65535);
+            .clamp(0, 65535)
+            .toInt();
         final record = Uint8List(8);
         final view = ByteData.sublistView(record);
         view.setUint32(0, frameIndex, Endian.little);
@@ -109,7 +110,7 @@ class StudioSpectralLandmarkFingerprint
       final endMs = math.min(
         audio.durationMs,
         startMs + segmentDurationMs,
-      );
+      ).toInt();
       segments.add(
         StudioAudioFingerprintSegmentData(
           segmentIndex: segmentIndex++,

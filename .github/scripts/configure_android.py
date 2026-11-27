@@ -31,21 +31,30 @@ if f'applicationId = "{APP_ID}"' not in text or f'namespace = "{APP_ID}"' not in
     raise SystemExit("Could not enforce stable Android application ID")
 gradle.write_text(text)
 
+# Resolve the package cache before patching dependency Gradle files.
+pub_cache = Path(os.environ.get("PUB_CACHE", str(Path.home() / ".pub-cache")))
+
 # video_thumbnail 0.5.6 ships a legacy Android/Kotlin buildscript.
-# Use the host AGP and ensure the Android library plugin is applied first.
+# Remove its obsolete plugin-local classpath and use the host Android Gradle Plugin.
 video_gradle_files = list(pub_cache.glob("hosted/pub.dev/video_thumbnail-*/android/build.gradle"))
 video_gradle_files += list(pub_cache.glob("hosted/pub.dartlang.org/video_thumbnail-*/android/build.gradle"))
 for video_gradle in video_gradle_files:
     plugin_text = video_gradle.read_text()
-    plugin_text = re.sub(r"\\nbuildscript\\s*\\{.*?\\n\\}\\s*\\n", "\\n", plugin_text, count=1, flags=re.DOTALL)
+    plugin_text, removed = re.subn(
+        r"\nbuildscript\s*\{.*?\n\}\s*\n",
+        "\n",
+        plugin_text,
+        count=1,
+        flags=re.DOTALL,
+    )
     plugin_text = plugin_text.replace("jcenter()", "mavenCentral()")
     android_apply = "apply plugin: 'com.android.library'"
     kotlin_apply = "apply plugin: 'kotlin-android'"
     if kotlin_apply in plugin_text and android_apply not in plugin_text:
-        plugin_text = plugin_text.replace(kotlin_apply, android_apply + "\\n" + kotlin_apply, 1)
+        plugin_text = plugin_text.replace(kotlin_apply, android_apply + "\n" + kotlin_apply, 1)
     elif android_apply in plugin_text and kotlin_apply in plugin_text:
         plugin_text = plugin_text.replace(kotlin_apply, "", 1)
-        plugin_text = plugin_text.rstrip() + "\\n" + kotlin_apply + "\\n"
+        plugin_text = plugin_text.rstrip() + "\n" + kotlin_apply + "\n"
     if kotlin_apply not in plugin_text:
         raise SystemExit(f"Could not locate Kotlin Android plugin declaration in {video_gradle}")
     video_gradle.write_text(plugin_text)

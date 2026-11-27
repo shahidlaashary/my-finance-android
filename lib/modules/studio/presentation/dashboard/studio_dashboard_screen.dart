@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/studio/services/studio_dashboard_service.dart';
+import 'package:my_finance/modules/studio/presentation/media_library/studio_media_library_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
   const StudioDashboardScreen({super.key});
@@ -12,6 +13,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
   late Future<StudioDashboardSummary> _summary;
 
   static const _sections = <_StudioSection>[
+    _StudioSection('Media Library', 'Import and browse managed audio and video files', Icons.perm_media_outlined),
     _StudioSection('Music ID', 'Audio identification and fingerprinting', Icons.music_note_rounded),
     _StudioSection('Video ID', 'Video identification and fingerprinting', Icons.video_library_outlined),
     _StudioSection('Compare', 'Compare two or more media files', Icons.compare_arrows_rounded),
@@ -29,6 +31,12 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
   }
 
   void _openSection(_StudioSection section) {
+    if (section.title == 'Media Library') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const StudioMediaLibraryScreen()),
+      );
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => _StudioSectionPlaceholderScreen(section: section),

@@ -56,6 +56,21 @@ void main() {
     expect(await library.getById(imported.id), isNotNull);
   });
 
+
+  test('imports MP3 files as audio/mpeg managed media', () async {
+    final source = File('${temporaryDirectory.path}/reference-track.mp3');
+    await source.writeAsBytes([0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00]);
+    final imported = await importer.importFile(
+      sourcePath: source.path,
+      mediaType: StudioMediaType.audio,
+    );
+
+    expect(imported.fileExtension, 'mp3');
+    expect(imported.mimeType, 'audio/mpeg');
+    expect(imported.mediaType, StudioMediaType.audio);
+    expect(await File(imported.storagePath).exists(), isTrue);
+  });
+
   test('rejects missing and empty source files', () async {
     await expectLater(
       importer.importFile(

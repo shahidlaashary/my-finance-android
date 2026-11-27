@@ -42,7 +42,7 @@ class StudioVideoFingerprintEngine {
       final record=Uint8List(16);final view=ByteData.sublistView(record);
       view.setInt64(0,timestamp,Endian.little);view.setUint64(8,hash,Endian.little);
       final start=artifactBytes.length;artifactBytes.add(record);
-      segments.add(StudioFingerprintSegment(fingerprintId:'',segmentIndex:segments.length,startMs:timestamp,endMs:min(duration>0?duration:timestamp+sampleIntervalMs,timestamp+sampleIntervalMs),dataOffsetBytes:start,dataLengthBytes:record.length,signatureHash:hash.toRadixString(16)));
+      segments.add(StudioFingerprintSegment(fingerprintId:'',segmentIndex:segments.length,startMs:timestamp,endMs:min(duration>0?duration:timestamp+sampleIntervalMs,timestamp+sampleIntervalMs).toInt(),dataOffsetBytes:start,dataLengthBytes:record.length,signatureHash:hash.toRadixString(16)));
     }
     final bytes=artifactBytes.takeBytes();if(bytes.isEmpty)throw StateError('No video frames could be sampled.');
     final id='fp_video_'+DateTime.now().microsecondsSinceEpoch.toString()+'_'+Random.secure().nextInt(999999).toString();
@@ -69,7 +69,7 @@ class StudioVideoFingerprintEngine {
     final qrec=_records(qbytes),rrec=_records(rbytes);
     final offsets=<int,int>{};var matches=0;
     for(final qa in qrec)for(final rb in rrec)if(_distance(qa.hash,rb.hash)<=8){final off=rb.time-qa.time;offsets.update(off,(n)=>n+1,ifAbsent:()=>1);}
-    if(offsets.isNotEmpty){matches=offsets.values.reduce(max);}
+    if(offsets.isNotEmpty){matches=offsets.values.reduce((a,b)=>a>b?a:b);}
     final confidence=qrec.isEmpty||rrec.isEmpty?0.0:2*matches/(qrec.length+rrec.length);
     final offset=offsets.entries.isEmpty?0:offsets.entries.reduce((a,b)=>a.value>=b.value?a:b).key;
     return StudioVideoFingerprintMatch(matches:matches,queryFrames:qrec.length,referenceFrames:rrec.length,confidence:confidence,offsetMs:offset);

@@ -143,10 +143,13 @@ class AssetsService {
     final base = (await CurrencyService.getBaseCurrency()).toUpperCase();
     final code = currency.toUpperCase();
     if (code == base) return {'currency': base, 'rate': 1.0, 'amount': amount, 'source': 'Same Currency'};
-    final online = await CurrencyService.isOnline();
-    final rate = await CurrencyService.getEffectivePairRate(code, base, online: online);
-    if (rate == null) return {'currency': base, 'rate': null, 'amount': null, 'source': 'Unavailable'};
-    return {'currency': base, 'rate': rate, 'amount': amount * rate, 'source': online ? 'Automatic' : 'Manual'};
+    final automaticRate = await CurrencyService.getEffectivePairRate(code, base, online: true);
+    if (automaticRate != null) {
+      return {'currency': base, 'rate': automaticRate, 'amount': amount * automaticRate, 'source': 'Automatic'};
+    }
+    final manualRate = await CurrencyService.getEffectivePairRate(code, base, online: false);
+    if (manualRate == null) return {'currency': base, 'rate': null, 'amount': null, 'source': 'Unavailable'};
+    return {'currency': base, 'rate': manualRate, 'amount': amount * manualRate, 'source': 'Manual'};
   }
 
   Future<void> _changeBalance(

@@ -25,7 +25,7 @@ The main bottom navigation currently contains:
 7. Txns
 8. Wallets
 
-The central **+** action provides shortcuts for creating Income, Expense, Transfer, Loan and Asset records.
+The central **+** action provides shortcuts for creating **Income, Expense, Transfer, Loan, Asset, Budget and Goal** records. Each action opens its corresponding entry form in the shared action sheet.
 
 ## Implemented Application Features
 
@@ -74,6 +74,7 @@ The central **+** action provides shortcuts for creating Income, Expense, Transf
 - Track outstanding amounts, repayment progress and entry history.
 - View party ledgers and supported loan attachments.
 - Receivable/payable summaries and loan analytics.
+- Centralized party management is provided through the separate Parties module and shared by relevant modules.
 
 ### 6. Assets
 
@@ -125,6 +126,17 @@ The central **+** action provides shortcuts for creating Income, Expense, Transf
 - View currency-wise balances without treating different currencies as one amount.
 - Refresh exchange rates online where the configured provider is available.
 - Manually manage exchange rates and view conversion information.
+- Continue using locally saved exchange-rate information when an online refresh is unavailable; rates may become outdated while offline.
+- Change wallet currencies with the exchange-rate information required by the currency conversion flow.
+
+#### First-Install Base Currency Selection
+
+- Suggest a base currency during first-time setup using device country signals.
+- Detection priority: mobile network country, SIM country, device timezone, then device region/locale.
+- Use USD as the fallback when no detected country maps to a supported currency.
+- Country detection is designed to work without an internet connection.
+- Save the selected base currency after setup; it is not automatically re-detected on subsequent launches.
+- Allow the user to select a different base currency manually during setup or later in Settings.
 
 ### 12. My Space
 
@@ -147,6 +159,7 @@ Additional My Space capabilities include:
 - Store document details such as category, document number, issue date, expiry date, notes and favorites.
 - Add supported document attachments.
 - Use the dedicated PDF and EPUB readers.
+- Manage agreement records in the Work area.
 
 File extensions currently listed by the My Space import filters:
 
@@ -203,20 +216,29 @@ Actual playback or preview may also depend on the Android device and its media/c
 - Record partner-related transactions.
 - Review supported partner transaction history and summaries.
 
-### 19. Global Search
+### 19. Properties Manager
+
+- Manage property records and owner information.
+- Maintain tenant records.
+- Create and manage property contracts.
+- Record and manage rent payments.
+- Track property maintenance items.
+- Review property-related reports and summaries.
+
+### 20. Global Search
 
 - Search supported records across the application.
 - Filter results by record type.
 - Open matching records and supported details.
 
-### 20. Reminders and Notifications
+### 21. Reminders and Notifications
 
 - Create and manage personal reminders.
 - Schedule local device notifications for reminder dates and times.
 - Delete reminders and cancel their scheduled notifications.
 - Vehicle-related reminders are available in Vehicle Manager.
 
-### 21. Settings, Appearance and Sound
+### 22. Settings, Appearance and Sound
 
 - Configure display name and general app preferences.
 - Configure date, week-start and number formats.
@@ -227,7 +249,7 @@ Actual playback or preview may also depend on the Android device and its media/c
 - Configure delete confirmation and haptic feedback.
 - Control app sound effects and the app-launch sound through Sound Settings.
 
-### 22. App Lock
+### 23. App Lock
 
 - Optional PIN-based app lock.
 - PIN secret handling using secure storage and salted hashing.
@@ -235,7 +257,7 @@ Actual playback or preview may also depend on the Android device and its media/c
 - Configurable automatic lock timeout.
 - Temporary lockout after repeated failed PIN attempts.
 
-### 23. Recycle Bin
+### 24. Recycle Bin
 
 - Move supported deleted records into the Recycle Bin.
 - Review archived record details.

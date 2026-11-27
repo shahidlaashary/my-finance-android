@@ -6,7 +6,6 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
-import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 class AssetsService {
   /// Check karta hai ke wallet kisi asset ki purchase ya sale mein linked hai ya nahi.
@@ -139,17 +138,95 @@ class AssetsService {
     final wallet = await _getWallet(txn, walletId);
     return (wallet['balance'] as num).toDouble();
   }
-  Future<Map<String, Object?>> _baseSnapshot(String currency, double amount) async {
-    final base = (await CurrencyService.getBaseCurrency()).toUpperCase();
-    final code = currency.toUpperCase();
-    if (code == base) return {'currency': base, 'rate': 1.0, 'amount': amount, 'source': 'Same Currency'};
-    final automaticRate = await CurrencyService.getEffectivePairRate(code, base, online: true);
-    if (automaticRate != null) {
-      return {'currency': base, 'rate': automaticRate, 'amount': amount * automaticRate, 'source': 'Automatic'};
+  /// Transaction ke andar sirf usi transaction handle se currency snapshot read karta hai.
+  /// Separate DatabaseManager queries transaction lock ko dobara acquire karne ki koshish
+  /// kar sakti hain aur SQLite "database is locked" / timeout ka sabab ban sakti hain.
+  Future<Map<String, Object?>> _baseSnapshot(
+    Transaction txn,
+    String currency,
+    double amount,
+  ) async {
+    final settings = await txn.query(
+      'app_settings',
+      columns: ['setting_value'],
+      where: 'setting_key = ?',
+      whereArgs: ['main_currency'],
+      limit: 1,
+    );
+    final base = (settings.isEmpty
+            ? 'PKR'
+            : settings.first['setting_value']?.toString() ?? 'PKR')
+        .toUpperCase();
+    final code = currency.trim().toUpperCase();
+    if (code == base) {
+      return {'currency': base, 'rate': 1.0, 'amount': amount, 'source': 'Same Currency'};
     }
-    final manualRate = await CurrencyService.getEffectivePairRate(code, base, online: false);
-    if (manualRate == null) return {'currency': base, 'rate': null, 'amount': null, 'source': 'Unavailable'};
-    return {'currency': base, 'rate': manualRate, 'amount': amount * manualRate, 'source': 'Manual'};
+
+    final automaticRows = await txn.query(
+      'exchange_rates',
+      columns: ['currency', 'rate'],
+      where: 'UPPER(currency) IN (?, ?)',
+      whereArgs: [code, base],
+    );
+    double? rateFor(String target) {
+      for (final row in automaticRows) {
+        if (row['currency'].toString().toUpperCase() == target) {
+          final value = (row['rate'] as num?)?.toDouble();
+          if (value != null && value.isFinite && value > 0) return value;
+        }
+      }
+      return null;
+    }
+    final sourceRate = rateFor(code);
+    final baseRate = rateFor(base);
+    if (sourceRate != null && baseRate != null && baseRate > 0) {
+      final automaticRate = sourceRate / baseRate;
+      if (automaticRate.isFinite && automaticRate > 0) {
+        return {
+          'currency': base,
+          'rate': automaticRate,
+          'amount': amount * automaticRate,
+          'source': 'Automatic',
+        };
+      }
+    }
+
+    final pairRows = await txn.query('manual_currency_pairs');
+    final graph = <String, List<MapEntry<String, double>>>{};
+    for (final row in pairRows) {
+      final from = row['from_currency'].toString().toUpperCase();
+      final to = row['to_currency'].toString().toUpperCase();
+      final pairRate = (row['rate'] as num?)?.toDouble();
+      if (pairRate == null || !pairRate.isFinite || pairRate <= 0) continue;
+      graph.putIfAbsent(from, () => []).add(MapEntry(to, pairRate));
+      graph.putIfAbsent(to, () => []).add(MapEntry(from, 1 / pairRate));
+    }
+    final queue = <(String, double)>[(code, 1.0)];
+    final visited = <String>{code};
+    double? manualRate;
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      for (final edge in graph[current.$1] ?? const <MapEntry<String, double>>[]) {
+        if (!visited.add(edge.key)) continue;
+        final combined = current.$2 * edge.value;
+        if (!combined.isFinite || combined <= 0) continue;
+        if (edge.key == base) {
+          manualRate = combined;
+          queue.clear();
+          break;
+        }
+        queue.add((edge.key, combined));
+      }
+    }
+    if (manualRate == null) {
+      return {'currency': base, 'rate': null, 'amount': null, 'source': 'Unavailable'};
+    }
+    return {
+      'currency': base,
+      'rate': manualRate,
+      'amount': amount * manualRate,
+      'source': 'Manual',
+    };
   }
 
   Future<void> _changeBalance(
@@ -244,7 +321,7 @@ class AssetsService {
           }
         }
 
-        final purchaseSnapshot = await _baseSnapshot(currency, asset.purchasePrice);
+        final purchaseSnapshot = await _baseSnapshot(txn, currency, asset.purchasePrice);
         final assetMap = asset.copyWith(
           purchaseBaseCurrencyAtTime: purchaseSnapshot['currency'] as String,
           purchaseBaseExchangeRate: purchaseSnapshot['rate'] as double?,
@@ -446,7 +523,7 @@ class AssetsService {
         );
       }
 
-      final saleSnapshot = await _baseSnapshot(isLoan ? asset.currency : actualWalletCurrency, isLoan ? salePrice : actualWalletAmount);
+      final saleSnapshot = await _baseSnapshot(txn, isLoan ? asset.currency : actualWalletCurrency, isLoan ? salePrice : actualWalletAmount);
       final updated = await txn.update(
         'assets',
         {

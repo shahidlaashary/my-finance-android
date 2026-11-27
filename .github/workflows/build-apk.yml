@@ -125,20 +125,20 @@ jobs:
           source = re.sub(r"(?m)^\s*apply plugin:\s*['\"]com\.android\.library['\"]\s*\n?", "", source)
           source = re.sub(r"(?m)^\s*apply plugin:\s*['\"]kotlin-android['\"]\s*\n?", "", source)
           marker = "apply plugin: 'com.android.library'\napply plugin: 'kotlin-android'\n"
-          android_block = re.search(r"(?m)^android\\s*\\{", source)
+          android_block = re.search(r"(?m)^android\s*\{", source)
           if not android_block:
               raise SystemExit(f"Android configuration block missing in {gradle_file}")
-          source = source[:android_block.start()] + marker + "\\n" + source[android_block.start():]
-          android_block = re.search(r"(?m)^android\\s*\\{", source)
+          source = source[:android_block.start()] + marker + "\n" + source[android_block.start():]
+          android_block = re.search(r"(?m)^android\s*\{", source)
           block_start = android_block.end()
-          block_end = source.find("\\n}", block_start)
+          block_end = source.find("\n}", block_start)
           if block_end < 0:
               raise SystemExit(f"Could not locate end of Android block in {gradle_file}")
           android_config = source[block_start:block_end]
-          if re.search(r"(?m)^\\s*compileSdk(?:Version)?\\s+", android_config):
-              android_config = re.sub(r"(?m)^(\\s*)compileSdk(?:Version)?\\s+\\d+", r"\\g<1>compileSdkVersion 35", android_config, count=1)
+          if re.search(r"(?m)^\s*compileSdk(?:Version)?\s+", android_config):
+              android_config = re.sub(r"(?m)^(\s*)compileSdk(?:Version)?\s+\d+", r"\g<1>compileSdkVersion 35", android_config, count=1)
           else:
-              android_config = "\\n    compileSdkVersion 35" + android_config
+              android_config = "\n    compileSdkVersion 35" + android_config
           source = source[:block_start] + android_config + source[block_end:]
           if "jcenter()" in source or source.count("apply plugin: 'com.android.library'") != 1:
               raise SystemExit(f"Could not normalize video_thumbnail Gradle plugins in {gradle_file}")

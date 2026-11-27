@@ -6,6 +6,7 @@ import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.da
 import 'package:my_finance/modules/studio/presentation/studio_video_id_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_reports_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_management_screen.dart';
+import 'package:my_finance/modules/studio/presentation/ai_music/studio_ai_music_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
   const StudioDashboardScreen({super.key});
@@ -20,6 +21,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
   static const _sections = <_StudioSection>[
     _StudioSection('Media Library', 'Import and browse managed audio and video files', Icons.perm_media_outlined),
     _StudioSection('Music ID', 'Audio identification and fingerprinting', Icons.music_note_rounded),
+    _StudioSection('AI Music', 'Create song projects and manage authorized voice profiles', Icons.auto_awesome_rounded),
     _StudioSection('Video ID', 'Video identification and fingerprinting', Icons.video_library_outlined),
     _StudioSection('Compare', 'Compare two or more media files', Icons.compare_arrows_rounded),
     _StudioSection('Catalogue', 'Browse and organize registered content', Icons.library_music_outlined),
@@ -48,6 +50,10 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
     }
     if (section.title == 'Management') {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioManagementScreen()));
+      return;
+    }
+    if (section.title == 'AI Music') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioAiMusicScreen()));
       return;
     }
     if (section.title == 'Video ID') {

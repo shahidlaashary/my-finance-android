@@ -1,43 +1,460 @@
 import 'package:flutter/material.dart';
+
+import '../application/services/studio_processing_queue_service.dart';
 import '../application/services/studio_reports_service.dart';
+import '../application/services/studio_storage_health_service.dart';
+import '../application/services/studio_media_library_service.dart';
 import '../infrastructure/storage/studio_storage_manager.dart';
 import '../infrastructure/database/studio_database_manager.dart';
 
-class StudioManagementScreen extends StatefulWidget{
+class StudioManagementScreen extends StatefulWidget {
   const StudioManagementScreen({super.key});
-  @override State<StudioManagementScreen> createState()=>_StudioManagementScreenState();
+
+  @override
+  State<StudioManagementScreen> createState() => _StudioManagementScreenState();
 }
-class _StudioManagementScreenState extends State<StudioManagementScreen>{
-  late Future<_Diagnostics> _future;
-  @override void initState(){super.initState();_future=_load();}
-  Future<_Diagnostics> _load()async{
-    final summary=await StudioReportsService().load();
-    final bytes=await StudioStorageManager().calculateTotalBytes();
-    final db=await StudioDatabaseManager.instance.initialize();
-    return _Diagnostics(summary,bytes,db.isOpen);
+
+class _StudioManagementScreenState extends State<StudioManagementScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+  late Future<_Diagnostics> _diagnostics;
+  late Future<List<Map<String, Object?>>> _jobs;
+  final _queue = StudioProcessingQueueService();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = TabController(length: 2, vsync: this);
+    _diagnostics = _loadDiagnostics();
+    _jobs = _queue.jobs();
   }
-  void _refresh(){setState(()=>_future=_load());}
-  String _size(int bytes){if(bytes<1024)return '$bytes B';if(bytes<1024*1024)return (bytes/1024).toStringAsFixed(1)+' KB';if(bytes<1024*1024*1024)return (bytes/(1024*1024)).toStringAsFixed(1)+' MB';return (bytes/(1024*1024*1024)).toStringAsFixed(2)+' GB';}
-  Widget _item(BuildContext context,String label,String value,IconData icon){final color=Theme.of(context).colorScheme;return Card(child:ListTile(leading:Icon(icon,color:color.primary),title:Text(label),subtitle:Text(value)));}
-  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Studio Management'),actions:[IconButton(onPressed:_refresh,icon:const Icon(Icons.refresh))]),body:FutureBuilder<_Diagnostics>(future:_future,builder:(context,s){
-    if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
-    if(s.hasError)return Center(child:Text('Diagnostics failed: ${s.error}'));
-    final d=s.data!;final r=d.summary;
-    return RefreshIndicator(onRefresh:()=>_future.then((_)=>_refresh()),child:ListView(padding:const EdgeInsets.all(16),children:[
-      Text('System Diagnostics',style:Theme.of(context).textTheme.titleMedium),
-      _item(context,'Studio database',d.databaseOpen?'Connected':'Not connected',Icons.storage),
-      _item(context,'Database version','V1',Icons.data_object),
-      _item(context,'Managed storage used',_size(d.storageBytes),Icons.folder_open),
-      _item(context,'Total media',r.media.toString(),Icons.perm_media),
-      _item(context,'Fingerprint artifacts',r.fingerprints.toString(),Icons.fingerprint),
-      _item(context,'Active processing jobs',r.pendingJobs.toString(),Icons.pending_actions),
-      _item(context,'Failed processing jobs',r.failedJobs.toString(),Icons.error_outline),
-      const SizedBox(height:12),
-      const Text('Management controls for queue retry/cancel, storage cleanup, database reset, and algorithm configuration will be enabled as their respective operations are implemented. No destructive controls are exposed in this diagnostic screen.'),
-    ]));
-  }));
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  Future<_Diagnostics> _loadDiagnostics() async {
+    final summary = await StudioReportsService().load();
+    final storage = StudioStorageManager();
+    final health = await StudioStorageHealthService(
+      storageManager: storage,
+      mediaLibrary: StudioMediaLibraryService(),
+    ).inspect();
+    final db = await StudioDatabaseManager.instance.initialize();
+    return _Diagnostics(summary, health, db.isOpen);
+  }
+
+  Future<void> _refreshDiagnostics() async {
+    final next = _loadDiagnostics();
+    setState(() => _diagnostics = next);
+    await next;
+  }
+
+  Future<void> _refreshJobs() async {
+    final next = _queue.jobs();
+    setState(() => _jobs = next);
+    await next;
+  }
+
+  Future<void> _runJobAction(
+    Map<String, Object?> job, {
+    required bool retry,
+  }) async {
+    final id = job['id'].toString();
+    try {
+      if (retry) {
+        await _queue.retry(id);
+      } else {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Cancel processing job?'),
+            content: const Text(
+              'The job will be marked as cancelled in Studio. This does not interrupt a native operation that is already executing.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Keep job'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Cancel job'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true) return;
+        await _queue.cancel(id);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(retry
+              ? 'Job returned to the queue. A worker must pick it up.'
+              : 'Job marked as cancelled.'),
+        ),
+      );
+      await _refreshJobs();
+      await _refreshDiagnostics();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Queue action failed: $error')),
+      );
+    }
+  }
+
+  String _size(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  }
+
+  Color _statusColor(BuildContext context, String status) {
+    final colors = Theme.of(context).colorScheme;
+    switch (status) {
+      case 'failed':
+        return colors.error;
+      case 'completed':
+        return Colors.green;
+      case 'running':
+      case 'queued':
+        return colors.primary;
+      case 'cancelled':
+        return colors.onSurfaceVariant;
+      default:
+        return colors.tertiary;
+    }
+  }
+
+  Widget _metric(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        child: Row(
+          children: [
+            Icon(icon, color: colors.primary, size: 21),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            ),
+            Text(
+              value,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Studio Management'),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            onPressed: () {
+              _refreshDiagnostics();
+              _refreshJobs();
+            },
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabs,
+          tabs: const [
+            Tab(text: 'System'),
+            Tab(text: 'Processing Queue'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabs,
+        children: [
+          _systemTab(),
+          _queueTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _systemTab() {
+    return FutureBuilder<_Diagnostics>(
+      future: _diagnostics,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return _errorState('Diagnostics failed: ${snapshot.error}',
+              onRetry: _refreshDiagnostics);
+        }
+        final data = snapshot.data!;
+        final report = data.summary;
+        final health = data.health;
+        return RefreshIndicator(
+          onRefresh: _refreshDiagnostics,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+            children: [
+              Text('System health',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 9),
+              _metric(context, 'Studio database',
+                  data.databaseOpen ? 'Connected' : 'Disconnected',
+                  Icons.storage_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Database schema', 'Fresh V1',
+                  Icons.data_object_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Managed storage', _size(health.totalManagedBytes),
+                  Icons.folder_open_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Media records',
+                  health.registeredMediaCount.toString(),
+                  Icons.perm_media_outlined),
+              const SizedBox(height: 8),
+              _metric(context, 'Healthy media',
+                  health.healthyMediaCount.toString(),
+                  Icons.verified_outlined),
+              const SizedBox(height: 8),
+              _metric(context, 'Missing media files',
+                  health.missingMediaIds.length.toString(),
+                  Icons.link_off_rounded),
+              if (health.unavailableMediaIds.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _metric(context, 'Unavailable media records',
+                    health.unavailableMediaIds.length.toString(),
+                    Icons.warning_amber_rounded),
+              ],
+              if (health.missingMediaIds.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Card(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      'Missing media IDs: ${health.missingMediaIds.take(10).join(', ')}${health.missingMediaIds.length > 10 ? '…' : ''}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              Text('Studio activity',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 9),
+              _metric(context, 'Total media', report.media.toString(),
+                  Icons.perm_media_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Fingerprints', report.fingerprints.toString(),
+                  Icons.fingerprint_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Catalogue tracks', report.tracks.toString(),
+                  Icons.library_music_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Rights claims & licences',
+                  '${report.licenses} licences',
+                  Icons.gavel_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Active processing jobs',
+                  report.pendingJobs.toString(),
+                  Icons.pending_actions_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Failed processing jobs',
+                  report.failedJobs.toString(),
+                  Icons.error_outline_rounded),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _queueTab() {
+    return FutureBuilder<List<Map<String, Object?>>>(
+      future: _jobs,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return _errorState('Queue could not be loaded: ${snapshot.error}',
+              onRetry: _refreshJobs);
+        }
+        final jobs = snapshot.data ?? const [];
+        if (jobs.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: _refreshJobs,
+            child: ListView(
+              children: const [
+                SizedBox(height: 130),
+                Icon(Icons.task_alt_rounded, size: 48),
+                SizedBox(height: 12),
+                Center(child: Text('No processing jobs yet')),
+                SizedBox(height: 5),
+                Center(child: Text('Studio processing activity will appear here.')),
+              ],
+            ),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: _refreshJobs,
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+            itemCount: jobs.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final job = jobs[index];
+              final status = job['status'].toString();
+              final progress = (job['progress'] as num?)?.toDouble() ?? 0;
+              final canRetry = status == 'failed';
+              final canCancel = {'pending', 'queued', 'running'}.contains(status);
+              return Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              job['job_type'].toString().replaceAll('_', ' '),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          PopupMenuButton<String>(
+                            enabled: canRetry || canCancel,
+                            onSelected: (value) => _runJobAction(job,
+                                retry: value == 'retry'),
+                            itemBuilder: (_) => [
+                              if (canRetry)
+                                const PopupMenuItem(
+                                  value: 'retry',
+                                  child: Text('Return to queue'),
+                                ),
+                              if (canCancel)
+                                const PopupMenuItem(
+                                  value: 'cancel',
+                                  child: Text('Mark cancelled'),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '${job['target_type'] ?? 'Task'}: ${job['target_id'] ?? job['id']}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 9),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _statusColor(context, status)
+                                  .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              status.toUpperCase(),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                color: _statusColor(context, status),
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 9),
+                          Text('Attempt ${job['attempts'] ?? 0}',
+                              style: Theme.of(context).textTheme.bodySmall),
+                          const Spacer(),
+                          Text('${progress.toStringAsFixed(0)}%',
+                              style: Theme.of(context).textTheme.labelMedium),
+                        ],
+                      ),
+                      if (status == 'running' || progress > 0) ...[
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(value: progress / 100),
+                      ],
+                      if ((job['error_message'] as String?)?.isNotEmpty == true) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          job['error_message'].toString(),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
+                        ),
+                      ],
+                      const SizedBox(height: 5),
+                      Text(
+                        'Updated: ${job['updated_at']}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _errorState(String message, {required Future<void> Function() onRetry}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded, size: 42),
+            const SizedBox(height: 10),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
-class _Diagnostics{
-  const _Diagnostics(this.summary,this.storageBytes,this.databaseOpen);
-  final StudioReportSummary summary;final int storageBytes;final bool databaseOpen;
+
+class _Diagnostics {
+  const _Diagnostics(this.summary, this.health, this.databaseOpen);
+
+  final StudioReportSummary summary;
+  final StudioStorageHealthReport health;
+  final bool databaseOpen;
 }

@@ -25,12 +25,12 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
     try{
       if(_rights){
         final data=await Future.wait([_service.holders(),_service.ownerships(),_service.licenses()]);
-        if(!mounted)return;setState(()=>_holders=data[0];_ownerships=data[1];_licenses=data[2];_loading=false);
+        if(!mounted)return;setState((){_holders=data[0];_ownerships=data[1];_licenses=data[2];_loading=false;});
       }else{
         final data=await Future.wait([_service.tracks(),_service.artists(),_service.releases()]);
-        if(!mounted)return;setState(()=>_tracks=data[0];_artists=data[1];_releases=data[2];_loading=false);
+        if(!mounted)return;setState((){_tracks=data[0];_artists=data[1];_releases=data[2];_loading=false;});
       }
-    }catch(e){if(!mounted)return;setState(()=>_error=e.toString();_loading=false);}
+    }catch(e){if(!mounted)return;setState(()=>_error=e.toString());setState(()=>_loading=false);}
   }
   Future<String?> _ask(String title,String label,{String initial=''})async{
     final c=TextEditingController(text:initial);

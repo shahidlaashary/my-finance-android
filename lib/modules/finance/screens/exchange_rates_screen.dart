@@ -363,7 +363,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
   String _dateLabel(Object? value) {
     final date = DateTime.tryParse(value?.toString() ?? '');
     if (date == null) return 'Not updated';
-    return DateFormat('dd MMM yyyy, hh:mm a').format(date.toLocal());
+    return DateFormat('dd MMM, hh:mm a').format(date.toLocal());
   }
 
   @override
@@ -453,7 +453,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
             children: [
               columnHeader('Automatic', 'Rates in $_baseCurrency',
                   Icons.cloud_sync_rounded),
-              const SizedBox(height: 8),
+              const SizedBox(height: 3),
               Divider(height: 1, color: theme.dividerColor),
               const SizedBox(height: 3),
               for (final currency in _currencies)
@@ -462,6 +462,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                   child: Row(
                     children: [
                       Expanded(
+                        flex: 6,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -483,8 +484,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      Flexible(
+                      const SizedBox(width: 3),
+                      Expanded(
+                        flex: 4,
                         child: Text(
                           _rateFor(currency) == null
                               ? '—'
@@ -534,7 +536,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       size: 18, color: colors.primary),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 3),
               Divider(height: 1, color: theme.dividerColor),
               const SizedBox(height: 3),
               if (_manualPairs.isEmpty)
@@ -589,21 +591,21 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
                         constraints:
-                            const BoxConstraints(minWidth: 23, minHeight: 23),
+                            const BoxConstraints(minWidth: 22, minHeight: 24),
                         onPressed: () => _addManualPair(pair),
                         icon: Icon(Icons.edit_outlined,
-                            size: 13, color: muted),
+                            size: 16, color: muted),
                       ),
                       IconButton(
                         tooltip: 'Delete pair',
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
                         constraints:
-                            const BoxConstraints(minWidth: 23, minHeight: 23),
+                            const BoxConstraints(minWidth: 22, minHeight: 24),
                         onPressed: () =>
                             _removeManualPair(pair['id'] as int),
                         icon: Icon(Icons.delete_outline_rounded,
-                            size: 13, color: muted),
+                            size: 16, color: muted),
                       ),
                     ],
                   ),
@@ -686,83 +688,107 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          TextField(
-                            controller: _convertAmount,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            onChanged: (_) => setState(() {}),
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w800),
-                            decoration: compactDecoration('Amount'),
-                          ),
-                          const SizedBox(height: 7),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: currencyDropdown('From', _convertFrom,
-                                    (value) {
-                                  if (value != null) {
-                                    setState(() => _convertFrom = value);
-                                  }
-                                }),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 5),
-                                child: IconButton.filledTonal(
-                                  tooltip: 'Swap currencies',
-                                  visualDensity: VisualDensity.compact,
-                                  constraints: const BoxConstraints(
-                                      minWidth: 32, minHeight: 32),
-                                  padding: EdgeInsets.zero,
-                                  onPressed: () => setState(() {
-                                    final previous = _convertFrom;
-                                    _convertFrom = _convertTo;
-                                    _convertTo = previous;
-                                  }),
-                                  icon: const Icon(Icons.swap_horiz_rounded,
-                                      size: 18),
-                                ),
-                              ),
-                              Expanded(
-                                child: currencyDropdown('To', _convertTo,
-                                    (value) {
-                                  if (value != null) {
-                                    setState(() => _convertTo = value);
-                                  }
-                                }),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 7),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: colors.primaryContainer.withValues(alpha: .48),
-                              borderRadius: BorderRadius.circular(9),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
                             child: Row(
                               children: [
-                                Text('RESULT',
-                                    style: TextStyle(
-                                        fontSize: 9,
-                                        letterSpacing: .5,
-                                        fontWeight: FontWeight.w800,
-                                        color: muted)),
-                                const Spacer(),
-                                Flexible(
-                                  child: Text(
-                                    '$resultText $_convertTo',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.end,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                      color: converted == null
-                                          ? muted
-                                          : colors.primary,
+                                Expanded(
+                                  child: currencyDropdown('From', _convertFrom,
+                                      (value) {
+                                    if (value != null) {
+                                      setState(() => _convertFrom = value);
+                                    }
+                                  }),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                                  child: IconButton.filledTonal(
+                                    tooltip: 'Swap currencies',
+                                    visualDensity: VisualDensity.compact,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 32, minHeight: 32),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () => setState(() {
+                                      final previous = _convertFrom;
+                                      _convertFrom = _convertTo;
+                                      _convertTo = previous;
+                                    }),
+                                    icon: const Icon(Icons.swap_horiz_rounded,
+                                        size: 18),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: currencyDropdown('To', _convertTo,
+                                      (value) {
+                                    if (value != null) {
+                                      setState(() => _convertTo = value);
+                                    }
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 48,
+                                    child: TextField(
+                                      controller: _convertAmount,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      onChanged: (_) => setState(() {}),
+                                      style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800),
+                                      decoration: compactDecoration('Amount'),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Container(
+                                    height: 48,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 9, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: colors.primaryContainer
+                                          .withValues(alpha: .48),
+                                      border: Border.all(
+                                          color: colors.outlineVariant),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('RESULT',
+                                            style: TextStyle(
+                                                fontSize: 9,
+                                                letterSpacing: .5,
+                                                fontWeight: FontWeight.w800,
+                                                color: muted)),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          '$resultText $_convertTo',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w900,
+                                            color: converted == null
+                                                ? muted
+                                                : colors.primary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -780,12 +806,10 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                       ),
                     ),
                   ),
-                  if (_message != null) ...[
+                  if (_message != null && _messageIsError) ...[
                     const SizedBox(height: 9),
                     Material(
-                      color: _messageIsError
-                          ? Colors.red.withValues(alpha: .08)
-                          : colors.primary.withValues(alpha: .08),
+                      color: Colors.red.withValues(alpha: .08),
                       borderRadius: BorderRadius.circular(10),
                       child: Padding(
                         padding: const EdgeInsets.all(10),
@@ -793,15 +817,13 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                           _message!,
                           style: TextStyle(
                             fontSize: 11,
-                            color: _messageIsError
-                                ? Colors.red.shade700
-                                : colors.primary,
+                            color: Colors.red.shade700,
                           ),
                         ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 9),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 2),
                     child: Row(

@@ -6,6 +6,7 @@ import 'package:my_finance/core/services/app_refresh_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/core/services/recycle_bin_archive_service.dart';
 import 'package:my_finance/modules/finance/services/loans_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/parties/services/party_service.dart';
 class AssetsService {
   /// Check karta hai ke wallet kisi asset ki purchase ya sale mein linked hai ya nahi.
@@ -85,6 +86,15 @@ class AssetsService {
         sale_wallet_currency TEXT NOT NULL DEFAULT 'PKR',
         sale_exchange_rate REAL NOT NULL DEFAULT 1,
         sale_is_manual_rate INTEGER NOT NULL DEFAULT 0,
+        sale_rate_source TEXT NOT NULL DEFAULT 'Unknown',
+        sale_base_currency_at_time TEXT,
+        sale_base_exchange_rate REAL,
+        sale_base_converted_amount REAL,
+        sale_base_rate_source TEXT,
+        purchase_base_currency_at_time TEXT,
+        purchase_base_exchange_rate REAL,
+        purchase_base_converted_amount REAL,
+        purchase_base_rate_source TEXT,
         sale_payment_type TEXT NOT NULL DEFAULT 'Wallet',
         sale_party_id INTEGER,
         sale_linked_loan_id INTEGER,
@@ -129,6 +139,16 @@ class AssetsService {
     final wallet = await _getWallet(txn, walletId);
     return (wallet['balance'] as num).toDouble();
   }
+  Future<Map<String, Object?>> _baseSnapshot(String currency, double amount) async {
+    final base = (await CurrencyService.getBaseCurrency()).toUpperCase();
+    final code = currency.toUpperCase();
+    if (code == base) return {'currency': base, 'rate': 1.0, 'amount': amount, 'source': 'Same Currency'};
+    final online = await CurrencyService.isOnline();
+    final rate = await CurrencyService.getEffectivePairRate(code, base, online: online);
+    if (rate == null) return {'currency': base, 'rate': null, 'amount': null, 'source': 'Unavailable'};
+    return {'currency': base, 'rate': rate, 'amount': amount * rate, 'source': online ? 'Automatic' : 'Manual'};
+  }
+
   Future<void> _changeBalance(
     Transaction txn, {
     required int walletId,
@@ -221,7 +241,12 @@ class AssetsService {
           }
         }
 
+        final purchaseSnapshot = await _baseSnapshot(currency, asset.purchasePrice);
         final assetMap = asset.copyWith(
+          purchaseBaseCurrencyAtTime: purchaseSnapshot['currency'] as String,
+          purchaseBaseExchangeRate: purchaseSnapshot['rate'] as double?,
+          purchaseBaseConvertedAmount: purchaseSnapshot['amount'] as double?,
+          purchaseBaseRateSource: purchaseSnapshot['source'] as String,
           walletId: assetWalletId,
           currency: currency,
           name: asset.name.trim(),
@@ -418,6 +443,7 @@ class AssetsService {
         );
       }
 
+      final saleSnapshot = await _baseSnapshot(isLoan ? asset.currency : actualWalletCurrency, isLoan ? salePrice : actualWalletAmount);
       final updated = await txn.update(
         'assets',
         {
@@ -429,6 +455,11 @@ class AssetsService {
           'sale_wallet_currency': actualWalletCurrency,
           'sale_exchange_rate': appliedExchangeRate,
           'sale_is_manual_rate': isManualRate ? 1 : 0,
+          'sale_rate_source': isLoan ? 'Same Currency' : (actualWalletCurrency == asset.currency ? 'Same Currency' : (isManualRate ? 'Manual' : 'Automatic')),
+          'sale_base_currency_at_time': saleSnapshot['currency'],
+          'sale_base_exchange_rate': saleSnapshot['rate'],
+          'sale_base_converted_amount': saleSnapshot['amount'],
+          'sale_base_rate_source': saleSnapshot['source'],
           'sale_payment_type': paymentType,
           'sale_party_id': isLoan ? partyId : null,
           'sale_linked_loan_id': linkedLoanId,

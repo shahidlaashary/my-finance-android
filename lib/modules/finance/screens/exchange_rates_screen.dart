@@ -353,276 +353,483 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final muted = theme.hintColor;
+    final converted = _convertedAmount;
+    final resultText = converted == null
+        ? 'Rate unavailable'
+        : NumberFormat('#,##0.####').format(converted);
+
+    InputDecoration compactDecoration(String label) => InputDecoration(
+          labelText: label,
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10)),
+        );
+
+    Widget currencyDropdown(String label, String value,
+        ValueChanged<String?> onChanged) {
+      return DropdownButtonFormField<String>(
+        value: value,
+        isExpanded: true,
+        isDense: true,
+        decoration: compactDecoration(label),
+        style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: theme.textTheme.bodyLarge?.color),
+        items: CurrencyCatalog.supported
+            .map((code) => DropdownMenuItem(
+                  value: code,
+                  child: Text(code, overflow: TextOverflow.ellipsis),
+                ))
+            .toList(),
+        onChanged: onChanged,
+      );
+    }
+
+    Widget columnHeader(String title, String subtitle, IconData icon,
+        {Widget? action}) {
+      return Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: colors.primary),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w800)),
+                Text(subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 8, color: muted)),
+              ],
+            ),
+          ),
+          if (action != null) action,
+        ],
+      );
+    }
+
+    Widget automaticColumn() {
+      return Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              columnHeader('Automatic', 'Rates in $_baseCurrency',
+                  Icons.cloud_sync_rounded),
+              const SizedBox(height: 8),
+              Divider(height: 1, color: theme.dividerColor),
+              const SizedBox(height: 3),
+              for (final currency in _currencies)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(currency,
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800)),
+                            if (_rateFor(currency) != null)
+                              Text(
+                                _dateLabel(_rates.firstWhere((r) =>
+                                    r['currency']
+                                        .toString()
+                                        .toUpperCase() ==
+                                    currency)['updated_at']),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 7, color: muted),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Flexible(
+                        child: Text(
+                          _rateFor(currency) == null
+                              ? '—'
+                              : _numberFormat.format(_rateFor(currency)),
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: _rateFor(currency) == null
+                                ? muted
+                                : colors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget manualColumn() {
+      return Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              columnHeader(
+                'Manual',
+                'Saved currency pairs',
+                Icons.tune_rounded,
+                action: IconButton(
+                  tooltip: 'Add currency pair',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 26, minHeight: 26),
+                  onPressed: _addManualPair,
+                  icon: Icon(Icons.add_circle_rounded,
+                      size: 18, color: colors.primary),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Divider(height: 1, color: theme.dividerColor),
+              const SizedBox(height: 3),
+              if (_manualPairs.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.swap_horiz_rounded,
+                            size: 21, color: muted),
+                        const SizedBox(height: 5),
+                        Text('No pairs added',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 8, color: muted)),
+                      ],
+                    ),
+                  ),
+                ),
+              for (final pair in _manualPairs)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\${pair['from_currency']} → \${pair['to_currency']}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _numberFormat.format(
+                                  (pair['rate'] as num).toDouble()),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Edit pair',
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 23, minHeight: 23),
+                        onPressed: () => _addManualPair(pair),
+                        icon: Icon(Icons.edit_outlined,
+                            size: 13, color: muted),
+                      ),
+                      IconButton(
+                        tooltip: 'Delete pair',
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 23, minHeight: 23),
+                        onPressed: () =>
+                            _removeManualPair(pair['id'] as int),
+                        icon: Icon(Icons.delete_outline_rounded,
+                            size: 13, color: muted),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(appText(context, 'Exchange Rates', 'زرِ مبادلہ کی شرحیں'),
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(
+          appText(context, 'Exchange Rates', 'زرِ مبادلہ کی شرحیں'),
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
         actions: [
           IconButton(
             tooltip: 'Update rates',
             onPressed: _updating ? null : () => _refreshRates(),
             icon: _updating
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
+                ? const SizedBox(
+                    width: 19,
+                    height: 19,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Icon(Icons.sync_rounded),
+                : const Icon(Icons.sync_rounded),
           ),
         ],
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () => _loadData(),
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 18),
                 children: [
                   Card(
+                    margin: EdgeInsets.zero,
                     clipBehavior: Clip.antiAlias,
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(11),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.currency_exchange_rounded, size: 19,
-                                  color: Theme.of(context).colorScheme.primary),
-                              const SizedBox(width: 8),
-                              const Text('Currency Converter',
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-                              const Spacer(),
+                              Icon(Icons.currency_exchange_rounded,
+                                  size: 18, color: colors.primary),
+                              const SizedBox(width: 7),
+                              const Expanded(
+                                child: Text('Currency Converter',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800)),
+                              ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: (_online ? Colors.green : Colors.orange).withValues(alpha: .12),
+                                  color: (_online
+                                          ? Colors.green
+                                          : Colors.orange)
+                                      .withValues(alpha: .10),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: Text(_online ? 'Automatic' : 'Manual • Offline',
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
-                                      color: _online ? Colors.green.shade700 : Colors.orange.shade800)),
+                                child: Text(
+                                  _online ? 'ONLINE' : 'OFFLINE',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    letterSpacing: .3,
+                                    fontWeight: FontWeight.w800,
+                                    color: _online
+                                        ? Colors.green.shade700
+                                        : Colors.orange.shade800,
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _convertAmount,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                            decoration: InputDecoration(
-                              labelText: 'Amount',
-                              prefixIcon: const Icon(Icons.payments_outlined, size: 19),
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            onChanged: (_) => setState(() {}),
                           ),
                           const SizedBox(height: 10),
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Expanded(child: DropdownButtonFormField<String>(
-                                value: _convertFrom,
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  labelText: 'From',
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(11)),
+                              Expanded(
+                                flex: 5,
+                                child: TextField(
+                                  controller: _convertAmount,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  onChanged: (_) => setState(() {}),
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800),
+                                  decoration: compactDecoration('Amount'),
                                 ),
-                                items: CurrencyCatalog.supported.map((code) =>
-                                  DropdownMenuItem(value: code, child: Text(code,
-                                    style: const TextStyle(fontWeight: FontWeight.w700)))).toList(),
-                                onChanged: (value) { if (value != null) setState(() => _convertFrom = value); },
-                              )),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 9),
+                                  decoration: BoxDecoration(
+                                    color: colors.primaryContainer
+                                        .withValues(alpha: .48),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('YOU RECEIVE',
+                                          style: TextStyle(
+                                              fontSize: 8,
+                                              letterSpacing: .6,
+                                              fontWeight: FontWeight.w800,
+                                              color: muted)),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        resultText,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900,
+                                          color: converted == null
+                                              ? muted
+                                              : colors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 9),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: currencyDropdown(
+                                  'From',
+                                  _convertFrom,
+                                  (value) {
+                                    if (value != null) {
+                                      setState(() => _convertFrom = value);
+                                    }
+                                  },
+                                ),
+                              ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 7),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 5),
                                 child: IconButton.filledTonal(
                                   tooltip: 'Swap currencies',
                                   visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints(
+                                      minWidth: 34, minHeight: 34),
+                                  padding: EdgeInsets.zero,
                                   onPressed: () => setState(() {
-                                    final oldFrom = _convertFrom;
+                                    final previous = _convertFrom;
                                     _convertFrom = _convertTo;
-                                    _convertTo = oldFrom;
+                                    _convertTo = previous;
                                   }),
-                                  icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                                  icon: const Icon(
+                                      Icons.swap_horiz_rounded,
+                                      size: 19),
                                 ),
                               ),
-                              Expanded(child: DropdownButtonFormField<String>(
-                                value: _convertTo,
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  labelText: 'To',
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(11)),
+                              Expanded(
+                                child: currencyDropdown(
+                                  'To',
+                                  _convertTo,
+                                  (value) {
+                                    if (value != null) {
+                                      setState(() => _convertTo = value);
+                                    }
+                                  },
                                 ),
-                                items: CurrencyCatalog.supported.map((code) =>
-                                  DropdownMenuItem(value: code, child: Text(code,
-                                    style: const TextStyle(fontWeight: FontWeight.w700)))).toList(),
-                                onChanged: (value) { if (value != null) setState(() => _convertTo = value); },
-                              )),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 11),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .72),
-                                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .28),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: .12)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('CONVERTED AMOUNT',
-                                  style: TextStyle(fontSize: 9, letterSpacing: .8,
-                                    fontWeight: FontWeight.w800, color: Theme.of(context).hintColor)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _convertedAmount == null
-                                      ? 'Rate unavailable'
-                                      : _convertTo + '  ' + NumberFormat('#,##0.####').format(_convertedAmount),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900,
-                                    color: _convertedAmount == null
-                                      ? Theme.of(context).hintColor
-                                      : Theme.of(context).colorScheme.primary),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(_online
-                                    ? 'Live saved automatic rate'
-                                    : 'Saved manual currency-pair rate',
-                                  style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
-                              ],
-                            ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _online
+                                ? 'Using saved automatic rates'
+                                : 'Using saved manual currency-pair rates',
+                            style: TextStyle(fontSize: 9, color: muted),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
                   if (_message != null) ...[
-                    SizedBox(height: 8),
+                    const SizedBox(height: 9),
                     Material(
                       color: _messageIsError
-                          ? Colors.red.withValues(alpha: 0.08)
-                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
+                          ? Colors.red.withValues(alpha: .08)
+                          : colors.primary.withValues(alpha: .08),
+                      borderRadius: BorderRadius.circular(10),
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(_message!,
-                            style: TextStyle(
-                              color: _messageIsError ? Colors.red.shade700 : Theme.of(context).colorScheme.primary,
-                            )),
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          _message!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: _messageIsError
+                                ? Colors.red.shade700
+                                : colors.primary,
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                  SizedBox(height: 18),
-                  Text('Exchange Rate Sources',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 14),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text('Rate Sources',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900)),
+                        ),
+                        Text('Base: $_baseCurrency',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: muted)),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: Card(
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(9, 10, 9, 8),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Row(children: [
-                              Expanded(child: Text('Automatic', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800))),
-                              Icon(Icons.cloud_sync_outlined, size: 16, color: Theme.of(context).colorScheme.primary),
-                            ]),
-                            const SizedBox(height: 3),
-                            Text('1 currency → $_baseCurrency', style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor)),
-                            const Divider(height: 14),
-                            for (final currency in _currencies)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 5),
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(currency, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-                                  const SizedBox(height: 2),
-                                  Text(_rateFor(currency) == null ? 'Not available' : _numberFormat.format(_rateFor(currency)!) + ' $_baseCurrency',
-                                    maxLines: 2, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
-                                  if (_rateFor(currency) != null)
-                                    Text(_dateLabel(_rates.firstWhere((r) => r['currency'].toString().toUpperCase() == currency)['updated_at']),
-                                      maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 8, color: Theme.of(context).hintColor)),
-                                ]),
-                              ),
-                          ]),
-                        ),
-                      )),
+                      Expanded(child: automaticColumn()),
                       const SizedBox(width: 8),
-                      Expanded(child: Card(
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(9, 10, 9, 8),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Row(children: [
-                              Expanded(child: Text('Manual', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800))),
-                              IconButton(
-                                tooltip: 'Add currency pair',
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                onPressed: _addManualPair,
-                                icon: Icon(Icons.add_circle_outline_rounded, size: 19, color: Theme.of(context).colorScheme.primary),
-                              ),
-                            ]),
-                            Text('Independent pairs', style: TextStyle(fontSize: 9, color: Theme.of(context).hintColor)),
-                            const Divider(height: 14),
-                            if (_manualPairs.isEmpty)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                child: Text('No manual pairs yet', style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
-                              ),
-                            for (final pair in _manualPairs)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 5),
-                                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    Text('${pair['from_currency']} → ${pair['to_currency']}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
-                                    const SizedBox(height: 3),
-                                    Text(_numberFormat.format((pair['rate'] as num).toDouble()),
-                                      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w700)),
-                                  ])),
-                                  Column(children: [
-                                    IconButton(
-                                      tooltip: 'Edit pair',
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                                      onPressed: () => _addManualPair(pair),
-                                      icon: Icon(Icons.edit_outlined, size: 14, color: Theme.of(context).hintColor),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Delete pair',
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                                      onPressed: () => _removeManualPair(pair['id'] as int),
-                                      icon: Icon(Icons.close_rounded, size: 14, color: Theme.of(context).hintColor),
-                                    ),
-                                  ]),
-                                ]),
-                              ),
-                          ]),
-                        ),
-                      )),
+                      Expanded(child: manualColumn()),
                     ],
                   ),
-
                 ],
               ),
             ),

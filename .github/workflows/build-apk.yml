@@ -116,19 +116,19 @@ jobs:
           gradle_file = candidates[0]
           source = gradle_file.read_text()
           source, removed = re.subn(
-              r"(?ms)^buildscript\\s*\\{.*?^\\}\\s*",
+              r"(?ms)^buildscript\s*\{.*?^\}\s*",
               "",
               source,
               count=1,
           )
-          source = re.sub(r"(?im)^\\s*jcenter\\s*\\(\\s*\\)\\s*$", "        mavenCentral()", source)
-          source = re.sub(r"(?m)^\\s*apply plugin:\\s*['\\"]com\\.android\\.library['\\"]\\s*\\n?", "", source)
-          source = re.sub(r"(?m)^\\s*apply plugin:\\s*['\\"]kotlin-android['\\"]\\s*\\n?", "", source)
-          marker = "apply plugin: 'com.android.library'\\napply plugin: 'kotlin-android'\\n"
-          android_block = re.search(r"(?m)^android\\s*\\{", source)
+          source = re.sub(r"(?im)^\s*jcenter\s*\(\s*\)\s*$", "        mavenCentral()", source)
+          source = re.sub(r"(?m)^\s*apply plugin:\s*['\"]com\.android\.library['\"]\s*\n?", "", source)
+          source = re.sub(r"(?m)^\s*apply plugin:\s*['\"]kotlin-android['\"]\s*\n?", "", source)
+          marker = "apply plugin: 'com.android.library'\napply plugin: 'kotlin-android'\n"
+          android_block = re.search(r"(?m)^android\s*\{", source)
           if not android_block:
               raise SystemExit(f"Android configuration block missing in {gradle_file}")
-          source = source[:android_block.start()] + marker + "\\n" + source[android_block.start():]
+          source = source[:android_block.start()] + marker + "\n" + source[android_block.start():]
           if "jcenter()" in source or source.count("apply plugin: 'com.android.library'") != 1:
               raise SystemExit(f"Could not normalize video_thumbnail Gradle plugins in {gradle_file}")
           gradle_file.write_text(source)

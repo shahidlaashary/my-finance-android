@@ -47,37 +47,92 @@ class CurrencyService {
     final currentBase = await getBaseCurrency();
     if (normalized == currentBase) return;
 
-    // Agar selected currency ka cached rate mojood ho to existing rates
-    // ko naye base ke mutabiq rebase karein. Offline aur missing-rate ki
-    // surat mein purane reference ke rates ko ghalat samajhne ke bajaye
-    // unhein clear karein; online refresh baad mein fresh rates la sakta hai.
-    final newBaseRate = await getExchangeRate(normalized);
-    final canRebase = newBaseRate != null && newBaseRate.isFinite &&
-        newBaseRate > 0;
+    // Saved rates are currently expressed in currentBase per one currency unit.
+    final existingRates = await _db.query('exchange_rates');
+    final rateInCurrentBase = <String, double>{currentBase: 1.0};
+    for (final row in existingRates) {
+      final code = row['currency'].toString().toUpperCase();
+      final value = (row['rate'] as num).toDouble();
+      if (value.isFinite && value > 0) rateInCurrentBase[code] = value;
+    }
+    final newBaseRate = rateInCurrentBase[normalized];
+    final canRebaseAutomatic =
+        newBaseRate != null && newBaseRate.isFinite && newBaseRate > 0;
 
     await _db.transaction((txn) async {
-      if (canRebase) {
-        final rows = await txn.query('exchange_rates');
-        for (final row in rows) {
-          final code = row['currency'].toString().toUpperCase();
-          final oldRate = (row['rate'] as num).toDouble();
-          final rebasedRate = oldRate / newBaseRate!;
+      if (canRebaseAutomatic) {
+        for (final entry in rateInCurrentBase.entries) {
+          final rebasedRate = entry.value / newBaseRate!;
           if (!rebasedRate.isFinite || rebasedRate <= 0) continue;
-          await txn.update(
+          await txn.insert(
             'exchange_rates',
             {
-              'rate': code == normalized ? 1.0 : rebasedRate,
+              'currency': entry.key,
+              'rate': entry.key == normalized ? 1.0 : rebasedRate,
               'updated_at': DateTime.now().toIso8601String(),
             },
-            where: 'UPPER(currency) = ?',
-            whereArgs: [code],
+            conflictAlgorithm: ConflictAlgorithm.replace,
           );
         }
       } else {
-        // Old rates purani base currency ke reference mein thay; unhein
-        // naye base ke rates ke taur par reuse karna incorrect conversion dega.
         await txn.delete('exchange_rates');
       }
+
+      // Rebase only manual pairs linked to the old Base Currency.
+      // reference_rate/reference_base_currency remain the original user input.
+      final manualRows = await txn.query(
+        'manual_currency_pairs',
+        where: 'is_base_linked = 1',
+      );
+      for (final row in manualRows) {
+        final id = row['id'] as int;
+        final from = row['from_currency'].toString().toUpperCase();
+        final referenceBase =
+            row['reference_base_currency'].toString().toUpperCase();
+        final referenceRate = (row['reference_rate'] as num).toDouble();
+        final referenceBaseRate = rateInCurrentBase[referenceBase] ??
+            (referenceBase == currentBase ? 1.0 : null);
+        final canConvertManual = canRebaseAutomatic &&
+            referenceBaseRate != null &&
+            referenceBaseRate.isFinite &&
+            referenceBaseRate > 0;
+        final convertedRate = canConvertManual
+            ? referenceRate * referenceBaseRate / newBaseRate!
+            : null;
+
+        final collision = await txn.query(
+          'manual_currency_pairs',
+          columns: ['id'],
+          where: 'from_currency = ? AND to_currency = ? AND id != ?',
+          whereArgs: [from, normalized, id],
+          limit: 1,
+        );
+        if (collision.isNotEmpty) {
+          // Keep an explicitly-entered pair for the destination untouched.
+          continue;
+        }
+
+        await txn.update(
+          'manual_currency_pairs',
+          {
+            'to_currency': normalized,
+            'rate': convertedRate != null &&
+                    convertedRate.isFinite &&
+                    convertedRate > 0
+                ? convertedRate
+                : (row['rate'] as num).toDouble(),
+            'is_rate_pending': convertedRate != null &&
+                    convertedRate.isFinite &&
+                    convertedRate > 0
+                ? 0
+                : 1,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+
       await txn.insert(
         'exchange_rates',
         {
@@ -111,10 +166,12 @@ class CurrencyService {
   ) async {
     final from = fromCurrency.trim().toUpperCase();
     final to = toCurrency.trim().toUpperCase();
+    final baseCurrency = await getBaseCurrency();
     if (from.isEmpty || to.isEmpty || from == to ||
         !rate.isFinite || rate <= 0) {
       throw Exception('Currency pair ya exchange rate durust nahi hai.');
     }
+    final isBaseLinked = to == baseCurrency;
     await _db.insert(
       'manual_currency_pairs',
       {
@@ -122,6 +179,10 @@ class CurrencyService {
         'to_currency': to,
         'rate': rate,
         'updated_at': DateTime.now().toIso8601String(),
+        'reference_base_currency': to,
+        'reference_rate': rate,
+        'is_base_linked': isBaseLinked ? 1 : 0,
+        'is_rate_pending': 0,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -142,11 +203,13 @@ class CurrencyService {
     final direct = rows.where((row) =>
         row['from_currency'] == from && row['to_currency'] == to);
     if (direct.isNotEmpty) {
+      if ((direct.first['is_rate_pending'] as num?)?.toInt() == 1) return null;
       final value = (direct.first['rate'] as num).toDouble();
       return value.isFinite && value > 0 ? value : null;
     }
     final graph = <String, List<MapEntry<String, double>>>{};
     for (final row in rows) {
+      if ((row['is_rate_pending'] as num?)?.toInt() == 1) continue;
       final a = row['from_currency'].toString().toUpperCase();
       final b = row['to_currency'].toString().toUpperCase();
       final rate = (row['rate'] as num).toDouble();

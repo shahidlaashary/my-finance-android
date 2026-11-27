@@ -8,24 +8,19 @@ class StudioReportSummary{
 class StudioReportsService{
   Future<StudioReportSummary> load()async{
     final db=await StudioDatabaseManager.instance.initialize();
-    Future<int> count(String table)=>_count(db,table);
     final counts=await Future.wait([
-      count('studio_media_files'),count('studio_media_files_audio'),count('studio_media_files_video'),
-      count('studio_fingerprints'),count('studio_tracks'),count('studio_artists'),count('studio_releases'),
-      count('studio_rights_holders'),count('studio_ownership_records'),count('studio_licenses'),count('studio_comparison_history'),
-      count('studio_jobs_pending'),count('studio_jobs_failed'),
+      _count(db,'studio_media_files'),_count(db,'studio_fingerprints'),_count(db,'studio_tracks'),_count(db,'studio_artists'),_count(db,'studio_releases'),_count(db,'studio_rights_holders'),_count(db,'studio_ownership_records'),_count(db,'studio_licenses'),_count(db,'studio_comparison_history'),
     ]);
     final audio=await db.rawQuery("SELECT COUNT(*) AS c FROM studio_media_files WHERE media_type='audio'");
     final video=await db.rawQuery("SELECT COUNT(*) AS c FROM studio_media_files WHERE media_type='video'");
     final pending=await db.rawQuery("SELECT COUNT(*) AS c FROM studio_processing_jobs WHERE status IN ('pending','queued','running')");
     final failed=await db.rawQuery("SELECT COUNT(*) AS c FROM studio_processing_jobs WHERE status='failed'");
-    return StudioReportSummary(media:counts[0],audio:(audio.first['c'] as int),video:(video.first['c'] as int),fingerprints:counts[3],tracks:counts[4],artists:counts[5],releases:counts[6],holders:counts[7],ownerships:counts[8],licenses:counts[9],comparisons:counts[10],pendingJobs:pending.first['c'] as int,failedJobs:failed.first['c'] as int);
+    return StudioReportSummary(media:counts[0],audio:audio.first['c'] as int,video:video.first['c'] as int,fingerprints:counts[1],tracks:counts[2],artists:counts[3],releases:counts[4],holders:counts[5],ownerships:counts[6],licenses:counts[7],comparisons:counts[8],pendingJobs:pending.first['c'] as int,failedJobs:failed.first['c'] as int);
   }
   Future<int> _count(Database db,String table)async{
-    final safe=<String>{'studio_media_files','studio_fingerprints','studio_tracks','studio_artists','studio_releases','studio_rights_holders','studio_ownership_records','studio_licenses','studio_comparison_history','studio_jobs_pending','studio_jobs_failed','studio_media_files_audio','studio_media_files_video'};
-    if(!safe.contains(table))throw ArgumentError('Unsupported report table');
-    if(table=='studio_jobs_pending'||table=='studio_jobs_failed'||table=='studio_media_files_audio'||table=='studio_media_files_video')return 0;
-    final result=await db.rawQuery('SELECT COUNT(*) AS c FROM $table');
-    return result.first['c'] as int;
+    const allowed={'studio_media_files','studio_fingerprints','studio_tracks','studio_artists','studio_releases','studio_rights_holders','studio_ownership_records','studio_licenses','studio_comparison_history'};
+    if(!allowed.contains(table))throw ArgumentError('Unsupported report table');
+    final rows=await db.rawQuery('SELECT COUNT(*) AS c FROM $table');
+    return rows.first['c'] as int;
   }
 }

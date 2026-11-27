@@ -1078,24 +1078,38 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
               SizedBox(height: 12),
               _notesField(),
             ] else ...[
-              Row(
-                children: [
-                  Expanded(child: _amountField()),
-                  SizedBox(width: 10),
-                  Expanded(child: _walletField()),
-                ],
-              ),
-              if (foreignIncomeEnabled) ...[
-                Row(children: [Expanded(child: _foreignCurrencyField()), const SizedBox(width: 10), Expanded(child: _foreignAmountField())]),
-                const SizedBox(height: 12),
-                Row(children: [Expanded(child: _walletAmountField()), const SizedBox(width: 10), Expanded(child: _walletField())]),
-                if (!_sameForeignWalletCurrency) ...[const SizedBox(height: 10), _foreignRateField()],
-              ] else ...[
-                Row(children: [Expanded(child: _amountField()), const SizedBox(width: 10), Expanded(child: _walletField())]),
-              ],
-              SizedBox(height: 12),
               _categoryAndForeignToggleRow(),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
+              if (foreignIncomeEnabled) ...[
+                Row(
+                  children: [
+                    Expanded(child: _foreignCurrencyField()),
+                    const SizedBox(width: 10),
+                    Expanded(child: _foreignAmountField()),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _walletAmountField()),
+                    const SizedBox(width: 10),
+                    Expanded(child: _walletField()),
+                  ],
+                ),
+                if (!_sameForeignWalletCurrency) ...[
+                  const SizedBox(height: 10),
+                  _foreignRateField(),
+                ],
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(child: _amountField()),
+                    const SizedBox(width: 10),
+                    Expanded(child: _walletField()),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 12),
               _notesField(),
             ],
             SizedBox(height: 20),

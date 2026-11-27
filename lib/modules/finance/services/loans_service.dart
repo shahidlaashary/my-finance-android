@@ -603,12 +603,42 @@ class LoansService {
 
   static Future<double?> _getCurrencyRate(Transaction txn, String currency) async {
     final normalized = currency.trim().toUpperCase();
-    if (normalized == 'PKR') return 1.0;
+    final settings = await txn.query('app_settings', columns: ['setting_value'],
+      where: 'setting_key = ?', whereArgs: ['main_currency'], limit: 1);
+    final base = (settings.isEmpty ? 'PKR' : settings.first['setting_value']?.toString() ?? 'PKR').toUpperCase();
+    if (normalized == base) return 1.0;
     final rows = await txn.query('exchange_rates', columns: ['rate'],
       where: 'UPPER(currency) = ?', whereArgs: [normalized], limit: 1);
     if (rows.isEmpty) return null;
     final rate = (rows.first['rate'] as num).toDouble();
     return rate.isFinite && rate > 0 ? rate : null;
+  }
+
+  static Future<double?> _getManualPairRate(Transaction txn, String from, String to) async {
+    if (from == to) return 1.0;
+    final rows = await txn.query('manual_currency_pairs');
+    final graph = <String, List<MapEntry<String, double>>>{};
+    for (final row in rows) {
+      final a = row['from_currency'].toString().toUpperCase();
+      final b = row['to_currency'].toString().toUpperCase();
+      final rate = (row['rate'] as num).toDouble();
+      if (!rate.isFinite || rate <= 0) continue;
+      graph.putIfAbsent(a, () => []).add(MapEntry(b, rate));
+      graph.putIfAbsent(b, () => []).add(MapEntry(a, 1 / rate));
+    }
+    final queue = <(String, double)>[(from, 1.0)];
+    final visited = <String>{from};
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      for (final edge in graph[current.$1] ?? const <MapEntry<String, double>>[]) {
+        if (!visited.add(edge.key)) continue;
+        final combined = current.$2 * edge.value;
+        if (!combined.isFinite || combined <= 0) continue;
+        if (edge.key == to) return combined;
+        queue.add((edge.key, combined));
+      }
+    }
+    return null;
   }
 
   static Future<RepaymentModel> _snapshotRepayment(
@@ -648,12 +678,14 @@ class LoansService {
     if (walletCurrency == baseCurrency) {
       baseRate = 1.0;
     } else {
-      final rows = await txn.query('exchange_rates', columns: ['rate'],
-        where: 'UPPER(currency) = ?', whereArgs: [walletCurrency], limit: 1);
-      if (rows.isNotEmpty) {
-        final value = (rows.first['rate'] as num).toDouble();
-        if (value.isFinite && value > 0) baseRate = value;
-      }
+      baseRate = await _getCurrencyRate(txn, walletCurrency);
+    }
+    final automaticBaseRate = baseRate;
+    var baseRateSource = walletCurrency == baseCurrency ? 'Same Currency' :
+        (baseRate == null ? 'Unavailable' : 'Automatic');
+    if (baseRate == null) {
+      baseRate = await _getManualPairRate(txn, walletCurrency, baseCurrency);
+      baseRateSource = baseRate == null ? 'Unavailable' : 'Manual';
     }
     final source = loanCurrency.trim().toUpperCase() == walletCurrency
         ? 'Same Currency'
@@ -666,8 +698,7 @@ class LoansService {
       baseCurrencyAtTime: baseCurrency,
       baseExchangeRate: baseRate,
       baseConvertedAmount: baseRate == null ? null : walletAmount * baseRate,
-      baseRateSource: baseRate == null ? 'Unavailable' :
-          (walletCurrency == baseCurrency ? 'Same Currency' : 'Automatic'),
+      baseRateSource: baseRateSource,
     );
   }
 

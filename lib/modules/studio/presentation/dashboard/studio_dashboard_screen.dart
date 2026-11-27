@@ -86,12 +86,14 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
       builder: (context, snapshot) {
         final summary = snapshot.data;
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
-            Text('Studio', style: Theme.of(context).textTheme.headlineSmall),
+            Text('STUDIO WORKSPACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colors.primary, fontWeight: FontWeight.w800, letterSpacing: 1.15)),
+            const SizedBox(height: 5),
+            Text('Studio', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.7)),
             const SizedBox(height: 5),
             Text(
-              'Your media identification and rights workspace',
+              'Manage media, discover matches and protect your creative rights',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
@@ -141,9 +143,12 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
                 ),
               ),
             ],
-            const SizedBox(height: 22),
-            Text('Studio Systems', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(child: Text('Your Studio', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.35))),
+              Text('${_sections.length} systems', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant)),
+            ]),
+            const SizedBox(height: 11),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -152,7 +157,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 1.48,
+                childAspectRatio: 1.30,
               ),
               itemBuilder: (context, index) {
                 final section = _sections[index];
@@ -183,27 +188,54 @@ class _StudioStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 20, color: colors.primary),
-            const SizedBox(height: 6),
-            Text(value, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(11),
             ),
-          ],
-        ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: colors.onPrimaryContainer),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -221,6 +253,33 @@ class _StudioSection {
   final String description;
   final IconData icon;
   final bool placeholder;
+
+  Color accent(ColorScheme colors) {
+    switch (title) {
+      case 'Media Library':
+        return const Color(0xFF3978B8);
+      case 'Music ID':
+        return const Color(0xFF8B5BC2);
+      case 'AI Music':
+        return const Color(0xFFB66A35);
+      case 'Video ID':
+        return const Color(0xFF258B83);
+      case 'Compare':
+        return const Color(0xFF5576B8);
+      case 'Catalogue':
+        return const Color(0xFF9A6B38);
+      case 'Rights Management':
+        return const Color(0xFF43845D);
+      case 'Recording':
+        return const Color(0xFFB34F64);
+      case 'Reports':
+        return const Color(0xFF6476A5);
+      case 'Management':
+        return colors.primary;
+      default:
+        return colors.primary;
+    }
+  }
 }
 
 class _StudioSectionCard extends StatelessWidget {
@@ -236,30 +295,49 @@ class _StudioSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final accent = section.accent(colors);
     return Material(
       color: colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 10, 11),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.55)),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: accent.withValues(alpha: 0.25)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accent.withValues(alpha: 0.105),
+                colors.surfaceContainerLow,
+              ],
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(section.icon, size: 21, color: colors.onPrimaryContainer),
+              Row(
+                children: [
+                  Container(
+                    width: 39,
+                    height: 39,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(section.icon, size: 21, color: accent),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 17,
+                    color: colors.onSurfaceVariant.withValues(alpha: 0.75),
+                  ),
+                ],
               ),
               const Spacer(),
               Text(
@@ -267,18 +345,19 @@ class _StudioSectionCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.25,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(
                 section.placeholder ? 'Coming later' : section.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.onSurfaceVariant,
-                  height: 1.2,
+                  height: 1.22,
+                  fontSize: 11,
                 ),
               ),
             ],

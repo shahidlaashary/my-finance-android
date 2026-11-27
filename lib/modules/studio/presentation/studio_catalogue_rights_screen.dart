@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:crypto/crypto.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
@@ -87,6 +89,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
     if (title == null) return;
     final description = await _ask('Evidence details', 'Description (optional)');
     String? storedPath;
+    String? checksumSha256;
     try {
       final picked = await FilePicker.platform.pickFiles(
         type: FileType.any, allowMultiple: false, withData: false,
@@ -105,14 +108,113 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
         );
         await source.copy(destination.path);
         storedPath = destination.path;
+        checksumSha256 = (await sha256.bind(File(destination.path).openRead()).first).toString();
       }
       await _service.addClaimEvidence(
         claimId: claim['id'].toString(), evidenceType: evidenceType,
         title: title, description: description, filePath: storedPath,
+        checksumSha256: checksumSha256,
       );
       await _reload();
       _toast(storedPath == null ? 'Evidence record added without an attachment.' : 'Evidence document securely stored in Studio.');
-    } catch (e) { _toast('Evidence save failed: $e'); }
+    } catch (e) {
+      if (storedPath != null) {
+        try { await _storage.deleteManagedFile(storedPath); } catch (_) {}
+      }
+      _toast('Evidence save failed: $e');
+    }
+  }
+
+  Future<void> _showClaimDetails(Map<String,Object?> claim) async {
+    final claimId = claim['id'].toString();
+    final evidenceFuture = _service.claimEvidence(claimId);
+    final eventsFuture = _service.claimEvents(claimId);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(sheetContext).size.height * 0.78,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            child: ListView(
+              children: [
+                Text(claim['title'].toString(), style: Theme.of(sheetContext).textTheme.titleLarge),
+                const SizedBox(height: 6),
+                Text(claim['description'].toString()),
+                const SizedBox(height: 18),
+                Text('Evidence', style: Theme.of(sheetContext).textTheme.titleMedium),
+                FutureBuilder<List<Map<String,Object?>>>(
+                  future: evidenceFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) return const LinearProgressIndicator();
+                    if (snapshot.hasError) return Text('Could not load evidence: ${snapshot.error}');
+                    final rows = snapshot.data ?? const [];
+                    if (rows.isEmpty) return const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text('No evidence attached yet.'));
+                    return Column(children: rows.map((item) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.attach_file_rounded),
+                      title: Text(item['title'].toString()),
+                      subtitle: Text('${item['evidence_type']} • ${item['file_path'] == null ? 'Record only' : 'Private attachment'}'),
+                      onTap: item['file_path'] == null ? null : () async {
+                        final result = await OpenFilex.open(item['file_path'].toString());
+                        if (result.type != ResultType.done && mounted) _toast('Could not open attachment: ${result.message}');
+                      },
+                      trailing: IconButton(
+                        tooltip: 'Delete evidence',
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        onPressed: () async {
+                          final yes = await showDialog<bool>(
+                            context: sheetContext,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('Delete evidence?'),
+                              content: const Text('This removes the evidence record and its managed attachment, if present.'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Keep')),
+                                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Delete')),
+                              ],
+                            ),
+                          );
+                          if (yes != true) return;
+                          try {
+                            final filePath = item['file_path']?.toString();
+                            if (filePath != null && filePath.isNotEmpty) await _storage.deleteManagedFile(filePath);
+                            await _service.removeClaimEvidence(item['id'].toString());
+                            if (sheetContext.mounted) Navigator.pop(sheetContext);
+                            await _reload();
+                            _showClaimDetails(claim);
+                          } catch (error) { _toast('Could not delete evidence: $error'); }
+                        },
+                      ),
+                    )).toList());
+                  },
+                ),
+                const SizedBox(height: 18),
+                Text('Claim history', style: Theme.of(sheetContext).textTheme.titleMedium),
+                FutureBuilder<List<Map<String,Object?>>>(
+                  future: eventsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) return const LinearProgressIndicator();
+                    if (snapshot.hasError) return Text('Could not load history: ${snapshot.error}');
+                    final rows = snapshot.data ?? const [];
+                    if (rows.isEmpty) return const Text('No activity recorded.');
+                    return Column(children: rows.map((event) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.history_rounded),
+                      title: Text(event['event_type'].toString().replaceAll('_', ' ')),
+                      subtitle: Text(event['note']?.toString() ?? '${event['from_status'] ?? ''} → ${event['to_status'] ?? ''}'),
+                      trailing: Text(event['created_at'].toString().split('T').first, style: Theme.of(sheetContext).textTheme.labelSmall),
+                    )).toList());
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _changeClaimStatus(Map<String,Object?> claim, String status) async {
@@ -151,6 +253,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
               title: Text(claim['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text('${claim['claim_type']} • ${claim['asset_type']}: ${claim['asset_id']}\n${claim['claimant_name']} → ${claim['respondent_name'] ?? 'Unspecified'}'),
               isThreeLine: true,
+              onTap: () => _showClaimDetails(claim),
               trailing: PopupMenuButton<String>(
                 enabled: !closed,
                 onSelected: (value) {

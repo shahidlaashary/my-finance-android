@@ -106,6 +106,15 @@ class SqliteStudioFingerprintRepository
   }
 
   @override
+  Future<void> remove(String id) async {
+    await _database.delete(
+      'studio_fingerprints',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
   Future<void> updateStatus(
     String id,
     StudioFingerprintStatus status,

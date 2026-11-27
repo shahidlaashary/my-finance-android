@@ -14,6 +14,7 @@ import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
 import 'package:my_finance/modules/finance/services/currency_service.dart';
+import 'package:my_finance/core/currency/currency_catalog.dart';
 import 'package:my_finance/modules/finance/screens/categories_management_screen.dart' show CategoriesPage;
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
@@ -107,7 +108,8 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       ...rates.map((r) => (r['currency'] ?? '').toString().toUpperCase()),
       ...pairs.expand((p) => [p['from_currency'], p['to_currency']].map((v) => (v ?? '').toString().toUpperCase())),
       await CurrencyService.getBaseCurrency(),
-    }..removeWhere((code) => code.isEmpty);
+    }..addAll(CurrencyCatalog.supported)
+      ..removeWhere((code) => code.isEmpty);
 
     if (!mounted) return;
 

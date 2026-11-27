@@ -3,6 +3,7 @@ import 'package:my_finance/modules/studio/services/studio_dashboard_service.dart
 import 'package:my_finance/modules/studio/presentation/media_library/studio_media_library_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_catalogue_rights_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_video_id_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
   const StudioDashboardScreen({super.key});
@@ -37,6 +38,10 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
       Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => const StudioMediaLibraryScreen()),
       );
+      return;
+    }
+    if (section.title == 'Video ID') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioVideoIdScreen()));
       return;
     }
     if (section.title == 'Music ID' || section.title == 'Compare') {

@@ -11,7 +11,8 @@ class StudioMusicIdScreen extends StatefulWidget {
 }
 class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   final _service=StudioMusicIdentificationService();
-  List<StudioMediaFile> _files=[];\n  List<Map<String,Object?>> _history=[];
+  List<StudioMediaFile> _files=[];
+  List<Map<String,Object?>> _history=[];
   bool _loading=true;
   String? _error;
   String? _first,_second;
@@ -21,7 +22,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   @override void initState(){super.initState();_load();}
   Future<void> _load()async{
     setState(()=>_loading=true);
-    try{final data=await _service.audioFiles();final history=await _service.comparisonHistory();if(!mounted)return;setState(()=>_files=data..sort((a,b)=>a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase())));_history=history;_first??=data.isNotEmpty?data.first.id:null;_second??=data.length>1?data[1].id:null;setState(()=>_loading=false);}
+    try{final data=await _service.audioFiles();final history=await _service.comparisonHistory();if(!mounted)return;setState(()=>_files=data..sort((a,b)=>a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase())));setState(()=>_history=history);_first??=data.isNotEmpty?data.first.id:null;_second??=data.length>1?data[1].id:null;setState(()=>_loading=false);}
     catch(e){if(!mounted)return;setState(()=>_error=e.toString());setState(()=>_loading=false);}
   }
   Future<void> _runId(StudioMediaFile file)async{

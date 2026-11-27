@@ -205,7 +205,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
           return updatedAt == null ||
               now.difference(updatedAt) >= const Duration(hours: 24);
         });
-        if (isStale) await _refreshRates(showSuccess: false);
+        if (isStale) await _refreshAll(showSuccess: false);
       }
     } catch (error) {
       if (!mounted) return;
@@ -227,7 +227,9 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     return null;
   }
 
-  Future<void> _refreshRates({bool showSuccess = true}) async {
+  /// Shared refresh action for both the AppBar button and pull-to-refresh.
+  /// First reload saved data, then fetch fresh automatic rates when online.
+  Future<void> _refreshAll({bool showSuccess = true}) async {
     if (_updating) return;
     setState(() {
       _updating = true;
@@ -236,7 +238,19 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
 
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
     try {
-      final baseCurrency = await CurrencyService.getBaseCurrency();
+      // Always reload locally saved automatic/manual rates and connectivity first.
+      await _loadData();
+      if (!mounted) return;
+
+      if (!_online) {
+        setState(() {
+          _message = 'Offline: saved exchange rates and manual pairs reload ho gaye.';
+          _messageIsError = false;
+        });
+        return;
+      }
+
+      final baseCurrency = _baseCurrency;
       final request = await client
           .getUrl(Uri.parse('https://open.er-api.com/v6/latest/PKR'))
           .timeout(const Duration(seconds: 20));
@@ -273,6 +287,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         saved++;
       }
       if (saved == 0) throw const FormatException('Koi supported rate receive nahi hua.');
+
       await _loadData();
       if (!mounted) return;
       setState(() {
@@ -284,7 +299,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = 'Automatic update nahi ho saka. Internet check karein. ($error)';
+        _message = 'Online rates update nahi ho sake; saved rates available hain. ($error)';
         _messageIsError = true;
       });
     } finally {
@@ -606,7 +621,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
         actions: [
           IconButton(
             tooltip: 'Update rates',
-            onPressed: _updating ? null : () => _refreshRates(),
+            onPressed: _updating ? null : () => _refreshAll(),
             icon: _updating
                 ? const SizedBox(
                     width: 19,
@@ -620,7 +635,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () => _loadData(),
+              onRefresh: () => _refreshAll(),
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 18),
                 children: [

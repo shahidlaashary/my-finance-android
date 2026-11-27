@@ -383,17 +383,17 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     scrollDirection: Axis.horizontal,
                     child: Row(children: [
                       _transactionTab(title: appText(context, 'Income', 'آمدنی'), value: 'Income', icon: Icons.south_west_rounded, color: Theme.of(context).colorScheme.secondary),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1.5),
                       _transactionTab(title: appText(context, 'Expense', 'اخراجات'), value: 'Expense', icon: Icons.north_east_rounded, color: Theme.of(context).colorScheme.error),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1.5),
                       _transactionTab(title: appText(context, 'Transfer', 'منتقلی'), value: 'Transfer', icon: Icons.swap_horiz_rounded, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1.5),
                       _transactionTab(title: appText(context, 'Loan', 'قرض'), value: 'Loan', icon: Icons.handshake_outlined, color: Theme.of(context).colorScheme.tertiary),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1.5),
                       _transactionTab(title: appText(context, 'Asset', 'اثاثہ'), value: 'Asset', icon: Icons.real_estate_agent_outlined, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1.5),
                       _transactionTab(title: appText(context, 'Budget', 'بجٹ'), value: 'Budget', icon: Icons.pie_chart_outline_rounded, color: Theme.of(context).colorScheme.secondary),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 1.5),
                       _transactionTab(title: appText(context, 'Goal', 'ہدف'), value: 'Goal', icon: Icons.flag_outlined, color: Theme.of(context).colorScheme.tertiary),
                     ]),
                   ),
@@ -416,7 +416,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
   }) {
     final selected = selectedType == value;
     return SizedBox(
-      width: 52,
+      width: 51.5,
       child: InkWell(
         onTap: () => _selectType(value),
         borderRadius: BorderRadius.circular(12),
@@ -441,7 +441,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 Icon(icon, size: 19, color: selected ? color : Theme.of(context).hintColor),
                 const SizedBox(height: 2),
                 Text(title, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
                     color: selected ? color : Theme.of(context).hintColor)),
               ],
             ),

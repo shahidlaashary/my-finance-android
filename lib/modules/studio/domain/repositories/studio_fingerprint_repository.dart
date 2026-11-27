@@ -21,4 +21,6 @@ abstract interface class StudioFingerprintRepository {
   Future<List<StudioFingerprintSegment>> getSegments(String fingerprintId);
 
   Future<void> updateStatus(String id, StudioFingerprintStatus status);
+
+  Future<void> remove(String id);
 }

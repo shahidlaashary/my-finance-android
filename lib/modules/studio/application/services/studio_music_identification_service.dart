@@ -20,6 +20,7 @@ class StudioMusicIdentificationService {
   StudioAudioFingerprintEngine get _engine=>StudioAudioFingerprintEngine(decoder:const StudioWavPcm16Decoder(),algorithm:const StudioSpectralLandmarkFingerprint(),storageManager:storage,mediaLibrary:mediaLibrary,fingerprintCatalogue:fingerprints);
   Future<List<StudioMediaFile>> audioFiles() => mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:500);
   Future<StudioFingerprint?> fingerprintFor(String mediaId) => fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:'studio.audio.spectral-landmark',algorithmVersion:'1.0.0');
+  Future<List<Map<String,Object?>>> comparisonHistory() => StudioCatalogueRightsService().comparisonHistory();
   Future<StudioFingerprint> identify(String mediaId) => _engine.generateForMedia(mediaId);
   Future<StudioAudioFingerprintMatch> compare(String firstId,String secondId) async {
     final a=await fingerprintFor(firstId)??await identify(firstId);

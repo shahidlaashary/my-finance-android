@@ -82,6 +82,11 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
     }
   }
 
+  void _changeFilter(_MediaFilter filter) {
+    setState(() => _filter = filter);
+    _load();
+  }
+
   Future<void> _pickAndImport(StudioMediaType type) async {
     if (_importing) return;
     try {
@@ -220,28 +225,19 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
                 ChoiceChip(
                   label: const Text('All'),
                   selected: _filter == _MediaFilter.all,
-                  onSelected: (_) => setState(() {
-                    _filter = _MediaFilter.all;
-                    _load();
-                  }),
+                  onSelected: (_) => _changeFilter(_MediaFilter.all),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Audio'),
                   selected: _filter == _MediaFilter.audio,
-                  onSelected: (_) => setState(() {
-                    _filter = _MediaFilter.audio;
-                    _load();
-                  }),
+                  onSelected: (_) => _changeFilter(_MediaFilter.audio),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Video'),
                   selected: _filter == _MediaFilter.video,
-                  onSelected: (_) => setState(() {
-                    _filter = _MediaFilter.video;
-                    _load();
-                  }),
+                  onSelected: (_) => _changeFilter(_MediaFilter.video),
                 ),
               ],
             ),

@@ -298,8 +298,8 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
               children: [
                 _navItem(0, books_space_outlined, 'All'),
                 _navItem(1, Icons.menu_book_outlined, 'Books'),
-                _navItem(2, Icons.headphones_outlined, 'Music'),
-                _navItem(3, Icons.photo_outlined, 'Photos'),
+                _navItem(2, Icons.description_outlined, 'Docs'),
+                _navItem(3, Icons.headphones_outlined, 'Music'),
                 Expanded(
                   child: PopupMenuButton<String>(
                     tooltip: 'Add to My Space',
@@ -344,9 +344,9 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
                     ],
                   ),
                 ),
-                _navItem(4, Icons.video_library_outlined, 'Videos'),
-                _navItem(5, Icons.description_outlined, 'Docs'),
-                _navItem(6, Icons.fingerprint, 'Studio'),
+                _navItem(4, Icons.photo_outlined, 'Photos'),
+                _navItem(5, Icons.fingerprint, 'Studio'),
+                _navItem(6, Icons.video_library_outlined, 'Videos'),
                 _navItem(7, Icons.work_outline_rounded, 'Work'),
               ],
             ),
@@ -358,11 +358,11 @@ class _MySpaceScreenState extends State<MySpaceScreen> {
         children: [
           _buildItems(_allItems, 'Your space is empty', 'Add books, agreements, docs, music, photos and videos.'),
           _buildItems(_bookItems, 'No books yet', 'Add PDF or EPUB books to your space.'),
+          SpaceDocumentsScreen(key: _documentsKey),
           _buildItems(_audioItems, 'No music yet', 'Add audio files to your space.'),
           _buildItems(_photosItems, 'No photos yet', 'Add JPG, PNG, WEBP, GIF or BMP photos.'),
-          _buildItems(_videosItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
-          SpaceDocumentsScreen(key: _documentsKey),
           const SizedBox.shrink(),
+          _buildItems(_videosItems, 'No videos yet', 'Add MP4, MOV, MKV, AVI or WEBM videos.'),
           WorkScreen(key: _workKey),
         ],
       ),

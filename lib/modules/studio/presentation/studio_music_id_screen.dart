@@ -48,7 +48,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
       if(_files.length<2)const Text('Import at least two audio files in Media Library to compare.'),
       DropdownButtonFormField<String>(value:_files.any((f)=>f.id==_first)?_first:null,items:choices,decoration:const InputDecoration(labelText:'First audio',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_first=v)),
       const SizedBox(height:12),
-      DropdownButtonFormField<String>(value:_files.any((f)=>f.id==_second)?_second:null,items:choices,decoration:const InputDecoration(labelText:'Second audio',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_second=v),
+      DropdownButtonFormField<String>(value:_files.any((f)=>f.id==_second)?_second:null,items:choices,decoration:const InputDecoration(labelText:'Second audio',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_second=v)),
       const SizedBox(height:18),FilledButton.icon(onPressed:_processing||_files.length<2?null:onPressedCompare,icon:const Icon(Icons.compare_arrows),label:Text(_processing?'Processing…':'Compare audio')),
       if(_result!=null)Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text(_result!.isMatch?'Potential audio match':'No strong match found',style:Theme.of(context).textTheme.titleMedium),

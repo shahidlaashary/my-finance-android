@@ -510,35 +510,56 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   }
 
   Widget _categoryAndForeignToggleRow() {
+    final scheme = Theme.of(context).colorScheme;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(flex: 5, child: _categoryField()),
+        Expanded(child: _categoryField()),
         const SizedBox(width: 8),
-        Expanded(
-          flex: 4,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(child: Text('Foreign Income', maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-              Transform.scale(
-                scale: 0.82,
-                child: Switch.adaptive(
-                  value: foreignIncomeEnabled,
-                  onChanged: (value) async {
-                    setState(() {
-                      foreignIncomeEnabled = value;
-                      if (!value) {
-                        foreignAmountController.clear();
-                        exchangeRateController.clear();
-                        amountController.clear();
-                      }
-                    });
-                    if (value) await _refreshForeignConversion();
-                  },
+        SizedBox(
+          width: 112,
+          height: 56,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAF9),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 29,
+                  child: Transform.scale(
+                    scale: 0.72,
+                    child: Switch.adaptive(
+                      value: foreignIncomeEnabled,
+                      activeColor: scheme.primary,
+                      onChanged: (value) async {
+                        setState(() {
+                          foreignIncomeEnabled = value;
+                          if (!value) {
+                            foreignAmountController.clear();
+                            exchangeRateController.clear();
+                            amountController.clear();
+                          }
+                        });
+                        if (value) await _refreshForeignConversion();
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 1),
+                const Text(
+                  'Foreign Income',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -1078,9 +1099,17 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
               SizedBox(height: 12),
               _notesField(),
             ] else ...[
-              _categoryAndForeignToggleRow(),
-              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: foreignIncomeEnabled ? _walletAmountField() : _amountField(),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: _walletField()),
+                ],
+              ),
               if (foreignIncomeEnabled) ...[
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(child: _foreignCurrencyField()),
@@ -1088,27 +1117,13 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                     Expanded(child: _foreignAmountField()),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _walletAmountField()),
-                    const SizedBox(width: 10),
-                    Expanded(child: _walletField()),
-                  ],
-                ),
                 if (!_sameForeignWalletCurrency) ...[
                   const SizedBox(height: 10),
                   _foreignRateField(),
                 ],
-              ] else ...[
-                Row(
-                  children: [
-                    Expanded(child: _amountField()),
-                    const SizedBox(width: 10),
-                    Expanded(child: _walletField()),
-                  ],
-                ),
               ],
+              const SizedBox(height: 12),
+              _categoryAndForeignToggleRow(),
               const SizedBox(height: 12),
               _notesField(),
             ],

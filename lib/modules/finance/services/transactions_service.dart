@@ -87,9 +87,12 @@ class TransactionsService {
     final toCurrency = (snapshot['to_wallet_currency']?.toString() ?? '').toUpperCase();
     final transferAutomatic = toCurrency.isNotEmpty && toCurrency != fromCurrency &&
         await _snapshotPairRate(txn, fromCurrency, toCurrency, automatic: true) != null;
+    final transferManual = toCurrency.isNotEmpty && toCurrency != fromCurrency &&
+        !transferAutomatic &&
+        await _snapshotPairRate(txn, fromCurrency, toCurrency, automatic: false) != null;
     snapshot['rate_source'] = toCurrency.isEmpty || toCurrency == fromCurrency
         ? 'Same Currency'
-        : (transferAutomatic ? 'Automatic' : 'Manual');
+        : (transferAutomatic ? 'Automatic' : (transferManual ? 'Manual' : 'Unavailable'));
     final settings = await txn.query('app_settings', columns: ['setting_value'],
       where: 'setting_key = ?', whereArgs: ['main_currency'], limit: 1);
     final baseCurrency = (settings.isEmpty ? 'PKR' : settings.first['setting_value']?.toString() ?? 'PKR').toUpperCase();

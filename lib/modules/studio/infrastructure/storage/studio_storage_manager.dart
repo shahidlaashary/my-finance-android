@@ -58,6 +58,25 @@ class StudioStorageManager {
     return File(p.join(directory.path, '$id$normalizedExtension'));
   }
 
+  Future<File> allocateFingerprintFile({
+    required String fingerprintId,
+    required String extension,
+  }) async {
+    if (fingerprintId.trim().isEmpty ||
+        fingerprintId.contains('/') ||
+        fingerprintId.contains(r'\\')) {
+      throw ArgumentError.value(
+        fingerprintId,
+        'fingerprintId',
+        'A safe, non-empty fingerprint ID is required.',
+      );
+    }
+    final directory = await directoryFor('fingerprints');
+    final normalizedExtension =
+        extension.startsWith('.') ? extension : '.$extension';
+    return File(p.join(directory.path, '$fingerprintId$normalizedExtension'));
+  }
+
   Future<int> calculateTotalBytes() async {
     final root = await rootDirectory;
     if (!await root.exists()) return 0;

@@ -109,7 +109,7 @@ class TransactionsService {
     snapshot['base_rate_source'] = fromCurrency == baseCurrency
         ? 'Same Currency'
         : (baseRate == null ? 'Unavailable' : (automaticBaseRate != null ? 'Automatic' : 'Manual'));
-    if (toCurrency.isEmpty || toCurrency == fromCurrency) {
+    if (toCurrency.isEmpty) {
       snapshot['rate_source'] = snapshot['base_rate_source'];
     }
     return txn.insert('transactions', snapshot);

@@ -3,8 +3,8 @@ import '../../domain/entities/studio_fingerprint.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../engines/audio_fingerprint/studio_audio_fingerprint_engine.dart';
 import '../../engines/audio_fingerprint/studio_audio_fingerprint_matcher.dart';
+import '../../engines/audio_fingerprint/studio_auto_audio_decoder.dart';
 import '../../engines/audio_fingerprint/studio_spectral_landmark_fingerprint.dart';
-import '../../engines/audio_fingerprint/studio_wav_pcm16_decoder.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 import 'studio_media_library_service.dart';
 import 'studio_fingerprint_catalogue_service.dart';
@@ -14,6 +14,17 @@ class StudioAudioCandidate {
   const StudioAudioCandidate({required this.media, required this.match});
   final StudioMediaFile media;
   final StudioAudioFingerprintMatch match;
+}
+
+class StudioAudioScanResult {
+  const StudioAudioScanResult({
+    required this.matches,
+    required this.comparedCount,
+    required this.skippedCount,
+  });
+  final List<StudioAudioCandidate> matches;
+  final int comparedCount;
+  final int skippedCount;
 }
 
 class StudioMusicIdentificationService {
@@ -27,36 +38,53 @@ class StudioMusicIdentificationService {
   final StudioMediaLibraryService mediaLibrary;
   final StudioFingerprintCatalogueService fingerprints;
   final StudioStorageManager storage;
+  static const algorithmKey='studio.audio.spectral-landmark';
+  static const algorithmVersion='1.1.0';
   StudioAudioFingerprintEngine get _engine=>StudioAudioFingerprintEngine(
-    decoder:const StudioWavPcm16Decoder(),
+    decoder:const StudioAutoAudioDecoder(),
     algorithm:const StudioSpectralLandmarkFingerprint(),
     storageManager:storage,
     mediaLibrary:mediaLibrary,
     fingerprintCatalogue:fingerprints,
   );
   Future<List<StudioMediaFile>> audioFiles()=>mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:500);
-  Future<StudioFingerprint?> fingerprintFor(String mediaId)=>fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:'studio.audio.spectral-landmark',algorithmVersion:'1.0.0');
+  Future<StudioFingerprint?> fingerprintFor(String mediaId)=>fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:algorithmKey,algorithmVersion:algorithmVersion);
   Future<List<Map<String,Object?>>> comparisonHistory()=>StudioCatalogueRightsService().comparisonHistory();
   Future<StudioFingerprint> identify(String mediaId)=>_engine.generateForMedia(mediaId);
-  Future<List<StudioAudioCandidate>> identifyMatches(String mediaId)async{
+
+  Future<StudioAudioScanResult> scanMatches(String mediaId) async {
     await identify(mediaId);
     final files=await audioFiles();
     final candidates=<StudioAudioCandidate>[];
+    var skipped=0;
+    var compared=0;
     for(final file in files){
       if(file.id==mediaId)continue;
-      try{final result=await compare(mediaId,file.id);candidates.add(StudioAudioCandidate(media:file,match:result));}
-      catch(_){/* An unsupported or unreadable file should not stop the rest of the scan. */}
+      try{
+        final result=await compare(mediaId,file.id);
+        compared++;
+        candidates.add(StudioAudioCandidate(media:file,match:result));
+      } catch (_) {
+        // Keep scanning other items, but surface skipped files in the result.
+        skipped++;
+      }
     }
     candidates.sort((a,b)=>b.match.confidence.compareTo(a.match.confidence));
-    return candidates;
+    return StudioAudioScanResult(matches:candidates,comparedCount:compared,skippedCount:skipped);
   }
+
+  Future<List<StudioAudioCandidate>> identifyMatches(String mediaId) async =>
+      (await scanMatches(mediaId)).matches;
+
   Future<StudioAudioFingerprintMatch> compare(String firstId,String secondId)async{
     final a=await fingerprintFor(firstId)??await identify(firstId);
     final b=await fingerprintFor(secondId)??await identify(secondId);
     if(a.algorithmKey!=b.algorithmKey||a.algorithmVersion!=b.algorithmVersion)throw StateError('Fingerprints use incompatible algorithms.');
-    if(a.sampleRate!=b.sampleRate)throw StateError('Audio files use different sample rates. Resampling is not available yet.');
+    if(a.sampleRate!=StudioAutoAudioDecoder.fingerprintSampleRate||b.sampleRate!=StudioAutoAudioDecoder.fingerprintSampleRate) {
+      throw StateError('Fingerprint audio profile is not normalized. Regenerate it with the current algorithm.');
+    }
     final bytesA=await File(a.dataFilePath).readAsBytes(),bytesB=await File(b.dataFilePath).readAsBytes();
-    final result=StudioAudioFingerprintMatcher(sampleRate:a.sampleRate??11025).compare(query:bytesA,reference:bytesB);
+    final result=StudioAudioFingerprintMatcher(sampleRate:StudioAutoAudioDecoder.fingerprintSampleRate).compare(query:bytesA,reference:bytesB);
     await StudioCatalogueRightsService().saveComparison(leftId:firstId,rightId:secondId,score:result.confidence,matches:result.matchedLandmarks,offsetMs:result.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':result.queryCoverage,'referenceCoverage':result.referenceCoverage,'queryLandmarks':result.queryLandmarks,'referenceLandmarks':result.referenceLandmarks});
     return result;
   }

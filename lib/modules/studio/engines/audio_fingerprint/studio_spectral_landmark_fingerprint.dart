@@ -31,7 +31,7 @@ class StudioSpectralLandmarkFingerprint
   String get algorithmKey => 'studio.audio.spectral-landmark';
 
   @override
-  String get algorithmVersion => '1.0.0';
+  String get algorithmVersion => '1.1.0';
 
   @override
   String get fingerprintFormat => 'studio-audio-landmarks-v1';

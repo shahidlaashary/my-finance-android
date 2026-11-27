@@ -35,7 +35,7 @@ class StudioVideoFingerprintEngine {
     final artifactBytes=BytesBuilder(copy:false);final segments=<StudioFingerprintSegment>[];
     for(var index=0;index<count;index++){
       final timestamp=index*sampleIntervalMs;
-      final data=await VideoThumbnail.thumbnailData(video:source.storagePath,imageFormat:ImageFormat.JPEG,maxWidth:144,maxHeight:144,timeMs:timestamp,quality:70);
+      final data=await VideoThumbnail.thumbnailData(video:source.storagePath,imageFormat:ImageFormat.JPEG,maxWidth:144,timeMs:timestamp,quality:70);
       if(data==null||data.isEmpty)continue;
       final decoded=img.decodeImage(data);if(decoded==null)continue;
       final hash=_differenceHash(decoded);
@@ -52,7 +52,7 @@ class StudioVideoFingerprintEngine {
     try{await _catalogue.register(fingerprint);await _catalogue.replaceSegments(id,segments.map((s)=>StudioFingerprintSegment(fingerprintId:id,segmentIndex:s.segmentIndex,startMs:s.startMs,endMs:s.endMs,dataOffsetBytes:s.dataOffsetBytes,dataLengthBytes:s.dataLengthBytes,signatureHash:s.signatureHash)).toList());return fingerprint;}catch(_){if(await file.exists())await file.delete();rethrow;}
   }
   int _differenceHash(img.Image image){
-    final small=img.copyResize(image,width:9,height:8,interpolation:img.Interpolation.average);
+    final small=img.copyResize(image,width:9,height:8);
     var hash=0;var bit=0;
     for(var y=0;y<8;y++)for(var x=0;x<8;x++){
       final a=small.getPixel(x,y),b=small.getPixel(x+1,y);
@@ -67,12 +67,14 @@ class StudioVideoFingerprintEngine {
     final r=await _catalogue.getForMedia(mediaFileId:referenceId,algorithmKey:key,algorithmVersion:version)??await generate(referenceId);
     final qbytes=await File(q.dataFilePath).readAsBytes(),rbytes=await File(r.dataFilePath).readAsBytes();
     final qrec=_records(qbytes),rrec=_records(rbytes);
-    final offsets=<int,int>{};var matches=0;
+    final offsets=<int,int>{};
     for(final qa in qrec)for(final rb in rrec)if(_distance(qa.hash,rb.hash)<=8){final off=rb.time-qa.time;offsets.update(off,(n)=>n+1,ifAbsent:()=>1);}
-    if(offsets.isNotEmpty){matches=offsets.values.reduce((a,b)=>a>b?a:b);}
+    final bestOffset=offsets.entries.isEmpty?0:offsets.entries.reduce((a,b)=>a.value>=b.value?a:b).key;
+    final matchedQuery=<int>{};
+    for(final qa in qrec)for(final rb in rrec)if(rb.time-qa.time==bestOffset&&_distance(qa.hash,rb.hash)<=8){matchedQuery.add(qa.time);}
+    final matches=matchedQuery.length;
     final confidence=qrec.isEmpty||rrec.isEmpty?0.0:2*matches/(qrec.length+rrec.length);
-    final offset=offsets.entries.isEmpty?0:offsets.entries.reduce((a,b)=>a.value>=b.value?a:b).key;
-    return StudioVideoFingerprintMatch(matches:matches,queryFrames:qrec.length,referenceFrames:rrec.length,confidence:confidence,offsetMs:offset);
+    return StudioVideoFingerprintMatch(matches:matches,queryFrames:qrec.length,referenceFrames:rrec.length,confidence:confidence,offsetMs:bestOffset);
   }
   List<_FrameRecord> _records(Uint8List bytes){if(bytes.length%16!=0)throw const FormatException('Video fingerprint artifact is corrupt.');final d=ByteData.sublistView(bytes);return List.generate(bytes.length~/16,(i)=>_FrameRecord(d.getInt64(i*16,Endian.little),d.getUint64(i*16+8,Endian.little)));}
   int _distance(int a,int b){var x=a^b;var n=0;while(x!=0){n++;x&=x-1;}return n;}

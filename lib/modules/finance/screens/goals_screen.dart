@@ -725,13 +725,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
         title: GeneralPreferences.instance.personalizedHeaderTitle(context, Text(appText(context, 'My Goals', 'میرے اہداف'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface))),
         actions: buildSharedAppBarActions(context),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showGoalDialog(),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        icon: Icon(Icons.add),
-        label: Text(appText(context, 'New Goal', 'نیا ہدف')),
-      ),
       body: _loading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(

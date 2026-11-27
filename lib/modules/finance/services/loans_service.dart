@@ -680,7 +680,6 @@ class LoansService {
     } else {
       baseRate = await _getCurrencyRate(txn, walletCurrency);
     }
-    final automaticBaseRate = baseRate;
     var baseRateSource = walletCurrency == baseCurrency ? 'Same Currency' :
         (baseRate == null ? 'Unavailable' : 'Automatic');
     if (baseRate == null) {

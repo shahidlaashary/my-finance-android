@@ -17,7 +17,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
   bool get _rights => widget.section == 'Rights Management';
 
   @override
-  void initState(){super.initState();_tabs=TabController(length:4,vsync:this);_reload();}
+  void initState(){super.initState();_tabs=TabController(length:widget.section == 'Rights Management' ? 4 : 3,vsync:this);_reload();}
   @override
   void dispose(){_tabs.dispose();super.dispose();}
   Future<void> _reload() async {

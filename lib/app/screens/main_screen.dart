@@ -416,14 +416,14 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
   }) {
     final selected = selectedType == value;
     return SizedBox(
-      width: 65,
+      width: 60,
       child: InkWell(
         onTap: () => _selectType(value),
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           height: 43,
-          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 1),
+          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 0.5),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
@@ -441,7 +441,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                 Icon(icon, size: 19, color: selected ? color : Theme.of(context).hintColor),
                 const SizedBox(height: 2),
                 Text(title, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
                     color: selected ? color : Theme.of(context).hintColor)),
               ],
             ),

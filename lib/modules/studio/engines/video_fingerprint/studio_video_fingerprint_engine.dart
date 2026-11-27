@@ -42,7 +42,7 @@ class StudioVideoFingerprintEngine {
       final decoded=img.decodeImage(data);if(decoded==null)continue;
       final hash=_differenceHash(decoded);
       final record=Uint8List(16);final view=ByteData.sublistView(record);
-      view.setInt64(0,timestamp,Endian.little);view.setUint64(8,hash,Endian.little);
+      view.setInt64(0,timestamp,Endian.little);for(var byte=0;byte<8;byte++){record[8+byte]=(hash>>(byte*8))&0xff;}
       final start=artifactBytes.length;artifactBytes.add(record);
       segments.add(StudioFingerprintSegment(fingerprintId:'',segmentIndex:segments.length,startMs:timestamp,endMs:min(duration>0?duration:timestamp+sampleIntervalMs,timestamp+sampleIntervalMs).toInt(),dataOffsetBytes:start,dataLengthBytes:record.length,signatureHash:hash.toRadixString(16)));
     }
@@ -78,7 +78,7 @@ class StudioVideoFingerprintEngine {
     final confidence=qrec.isEmpty||rrec.isEmpty?0.0:2*matches/(qrec.length+rrec.length);
     return StudioVideoFingerprintMatch(matches:matches,queryFrames:qrec.length,referenceFrames:rrec.length,confidence:confidence,offsetMs:bestOffset);
   }
-  List<_FrameRecord> _records(Uint8List bytes){if(bytes.length%16!=0)throw const FormatException('Video fingerprint artifact is corrupt.');final d=ByteData.sublistView(bytes);return List.generate(bytes.length~/16,(i)=>_FrameRecord(d.getInt64(i*16,Endian.little),d.getUint64(i*16+8,Endian.little)));}
+  List<_FrameRecord> _records(Uint8List bytes){if(bytes.length%16!=0)throw const FormatException('Video fingerprint artifact is corrupt.');final d=ByteData.sublistView(bytes);return List.generate(bytes.length~/16,(i){var hash=0;for(var byte=0;byte<8;byte++){hash|=bytes[i*16+8+byte]<<(byte*8);}return _FrameRecord(d.getInt64(i*16,Endian.little),hash);});}
   int _distance(int a,int b){var x=a^b;var n=0;while(x!=0){n++;x&=x-1;}return n;}
 }
 class _FrameRecord{const _FrameRecord(this.time,this.hash);final int time,hash;}

@@ -383,17 +383,17 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
                     scrollDirection: Axis.horizontal,
                     child: Row(children: [
                       _transactionTab(title: appText(context, 'Income', 'آمدنی'), value: 'Income', icon: Icons.south_west_rounded, color: Theme.of(context).colorScheme.secondary),
-                      const SizedBox(width: 1.25),
+                      const SizedBox(width: 1),
                       _transactionTab(title: appText(context, 'Expense', 'اخراجات'), value: 'Expense', icon: Icons.north_east_rounded, color: Theme.of(context).colorScheme.error),
-                      const SizedBox(width: 1.25),
+                      const SizedBox(width: 1),
                       _transactionTab(title: appText(context, 'Transfer', 'منتقلی'), value: 'Transfer', icon: Icons.swap_horiz_rounded, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 1.25),
+                      const SizedBox(width: 1),
                       _transactionTab(title: appText(context, 'Loan', 'قرض'), value: 'Loan', icon: Icons.handshake_outlined, color: Theme.of(context).colorScheme.tertiary),
-                      const SizedBox(width: 1.25),
+                      const SizedBox(width: 1),
                       _transactionTab(title: appText(context, 'Asset', 'اثاثہ'), value: 'Asset', icon: Icons.real_estate_agent_outlined, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 1.25),
+                      const SizedBox(width: 1),
                       _transactionTab(title: appText(context, 'Budget', 'بجٹ'), value: 'Budget', icon: Icons.pie_chart_outline_rounded, color: Theme.of(context).colorScheme.secondary),
-                      const SizedBox(width: 1.25),
+                      const SizedBox(width: 1),
                       _transactionTab(title: appText(context, 'Goal', 'ہدف'), value: 'Goal', icon: Icons.flag_outlined, color: Theme.of(context).colorScheme.tertiary),
                     ]),
                   ),
@@ -416,14 +416,14 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
   }) {
     final selected = selectedType == value;
     return SizedBox(
-      width: 51,
+      width: 50.5,
       child: InkWell(
         onTap: () => _selectType(value),
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          height: 41,
-          padding: const EdgeInsets.symmetric(vertical: 1.5, horizontal: 0.5),
+          height: 40,
+          padding: const EdgeInsets.symmetric(vertical: 1.75, horizontal: 0.5),
           decoration: BoxDecoration(
             color: selected ? color.withValues(alpha: 0.11) : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
@@ -439,9 +439,9 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: 21, color: selected ? color : Theme.of(context).hintColor),
-                const SizedBox(height: 1.5),
+                const SizedBox(height: 1),
                 Text(title, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800,
                     color: selected ? color : Theme.of(context).hintColor)),
               ],
             ),

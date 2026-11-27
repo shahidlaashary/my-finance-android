@@ -244,16 +244,27 @@ class _AssetPurchaseEntryFormState extends State<AssetPurchaseEntryForm> {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Row(
-            children: [
-              const Expanded(
-                child: Text('Add Asset In Consolidated', style: TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
+          child: SizedBox(
+            height: 50,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAF9),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
-              Switch(
-                value: _includeBalance,
-                onChanged: (v) => setState(() => _includeBalance = v),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text('Add Asset In Consolidated', style: TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ),
+                  Switch(
+                    value: _includeBalance,
+                    onChanged: (v) => setState(() => _includeBalance = v),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ]),

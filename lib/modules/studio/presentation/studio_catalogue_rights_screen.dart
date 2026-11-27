@@ -55,12 +55,13 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
       ),
     );
     final name = nameController.text.trim();
+    final holderType = typeController.text.trim();
     nameController.dispose();
     typeController.dispose();
     if (ok != true || name.isEmpty) return;
     try {
       if (_rights) {
-        await _service.addHolder(name: name, type: typeController.text.trim().isEmpty ? 'individual' : typeController.text.trim());
+        await _service.addHolder(name: name, type: holderType.isEmpty ? 'individual' : holderType);
       } else {
         await _service.addTrack(name);
       }

@@ -33,12 +33,10 @@ class StudioAudioFingerprintMatcher {
   const StudioAudioFingerprintMatcher({
     this.hopSize = 1024,
     this.sampleRate = 11025,
-    this.minimumLandmarks = 8,
   });
 
   final int hopSize;
   final int sampleRate;
-  final int minimumLandmarks;
 
   StudioAudioFingerprintMatch compare({
     required Uint8List query,
@@ -56,8 +54,6 @@ class StudioAudioFingerprintMatcher {
     }
 
     final votes = <int, int>{};
-    final matchedQueryFrames = <int>{};
-    final matchedReferenceFrames = <int>{};
     for (final record in queryRecords) {
       final referenceFrames = referenceFramesByBin[record.bin];
       if (referenceFrames == null) continue;
@@ -72,18 +68,20 @@ class StudioAudioFingerprintMatcher {
       ..sort((a, b) => b.value.compareTo(a.value));
     final bestOffset = ranked.first.key;
 
+    final matchedQueryLandmarks = <(int, int)>{};
+    final matchedReferenceLandmarks = <(int, int)>{};
     for (final record in queryRecords) {
       final frames = referenceFramesByBin[record.bin];
       if (frames == null) continue;
       if (frames.any((frame) => frame - record.frame == bestOffset)) {
-        matchedQueryFrames.add(record.frame);
-        matchedReferenceFrames.add(record.frame + bestOffset);
+        matchedQueryLandmarks.add((record.frame, record.bin));
+        matchedReferenceLandmarks.add((record.frame + bestOffset, record.bin));
       }
     }
 
-    final matched = matchedQueryFrames.length;
+    final matched = matchedQueryLandmarks.length;
     final queryCoverage = matched / queryRecords.length;
-    final referenceCoverage = matchedReferenceFrames.length / referenceRecords.length;
+    final referenceCoverage = matchedReferenceLandmarks.length / referenceRecords.length;
     final denominator = queryRecords.length + referenceRecords.length;
     final confidence = denominator == 0 ? 0.0 : (2 * matched / denominator);
 
@@ -112,7 +110,8 @@ class StudioAudioFingerprintMatcher {
       );
 
   List<_Landmark> _decode(Uint8List bytes) {
-    if (bytes.isEmpty || bytes.length % 8 != 0) {
+    if (bytes.isEmpty) return const <_Landmark>[];
+    if (bytes.length % 8 != 0) {
       throw const FormatException('Fingerprint artifact has an invalid record length.');
     }
     final data = ByteData.sublistView(bytes);

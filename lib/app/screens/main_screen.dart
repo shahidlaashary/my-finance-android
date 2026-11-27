@@ -416,7 +416,7 @@ class _PlusActionSheetState extends State<PlusActionSheet> {
   }) {
     final selected = selectedType == value;
     return SizedBox(
-      width: 68,
+      width: 65,
       child: InkWell(
         onTap: () => _selectType(value),
         borderRadius: BorderRadius.circular(12),

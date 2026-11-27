@@ -164,6 +164,7 @@ jobs:
             timeout --signal=TERM --kill-after=30s 5m flutter test --timeout=2m "${test_file}"
             echo "TEST PASS: ${test_file}"
             echo "::endgroup::"
+          done
       - name: Build APK with increasing version code
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}

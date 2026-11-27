@@ -1990,4 +1990,41 @@ void main() {
     expect((await FinanceDB.instance.getWallet(ids['walletId']!))!['balance'], walletBefore);
   });
 
+  test('asset purchase and sale currency snapshots survive model serialization', () async {
+    final original = AssetsModel(
+      name: 'Snapshot Asset',
+      purchasePrice: 100,
+      currentValue: 100,
+      purchaseDate: DateTime(2026, 11, 1),
+      walletId: 1,
+      currency: 'USD',
+      purchaseBaseCurrencyAtTime: 'PKR',
+      purchaseBaseExchangeRate: 280,
+      purchaseBaseConvertedAmount: 28000,
+      purchaseBaseRateSource: 'Manual',
+      isSold: true,
+      saleDate: DateTime(2026, 11, 20),
+      salePrice: 120,
+      saleWalletId: 2,
+      saleWalletAmount: 33600,
+      saleWalletCurrency: 'PKR',
+      saleExchangeRate: 280,
+      saleIsManualRate: true,
+      saleRateSource: 'Manual',
+      saleBaseCurrencyAtTime: 'PKR',
+      saleBaseExchangeRate: 1,
+      saleBaseConvertedAmount: 33600,
+      saleBaseRateSource: 'Same Currency',
+    );
+    final restored = AssetsModel.fromMap(original.toMap());
+    expect(restored.purchaseBaseCurrencyAtTime, 'PKR');
+    expect(restored.purchaseBaseExchangeRate, 280);
+    expect(restored.purchaseBaseConvertedAmount, 28000);
+    expect(restored.purchaseBaseRateSource, 'Manual');
+    expect(restored.saleRateSource, 'Manual');
+    expect(restored.saleBaseCurrencyAtTime, 'PKR');
+    expect(restored.saleBaseConvertedAmount, 33600);
+    expect(restored.saleBaseRateSource, 'Same Currency');
+  });
+
 }

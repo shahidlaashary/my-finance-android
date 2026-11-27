@@ -827,6 +827,8 @@ class _TransferEntryFormState extends State<TransferEntryForm> {
                               child: Switch.adaptive(
                                 value: transferFeeEnabled,
                                 activeColor: Theme.of(context).colorScheme.primary,
+                                activeTrackColor: Theme.of(context).colorScheme.primary,
+                                activeThumbColor: Colors.white,
                                 onChanged: (value) => setState(() {
                                   transferFeeEnabled = value;
                                   if (!value) transferFeeController.clear();

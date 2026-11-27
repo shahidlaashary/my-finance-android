@@ -17,7 +17,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   bool _loading=true,_processing=false;
   String? _error,_first,_second;
   StudioAudioFingerprintMatch? _result;
-  bool get _compare=>widget.section=='Compare';
+  bool get _isCompareMode=>widget.section=='Compare';
   @override void initState(){super.initState();_load();}
   Future<void> _load()async{
     setState(()=>_loading=true);
@@ -43,7 +43,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
     }catch(e){_toast('Music ID failed: $e');}
     if(mounted)setState(()=>_processing=false);
   }
-  Future<void> _compare()async{
+  Future<void> _runComparison()async{
     if(_first==null||_second==null||_first==_second){_toast('Select two different audio files.');return;}
     setState(()=>_processing=true);
     try{final result=await _service.compare(_first!,_second!);final history=await _service.comparisonHistory();if(!mounted)return;setState(()=>_result=result);setState(()=>_history=history);}
@@ -53,7 +53,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   void _toast(String text){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(text)));}
   String _pct(double value)=>(value*100).toStringAsFixed(1)+'%';
   @override Widget build(BuildContext context){
-    return Scaffold(appBar:AppBar(title:Text(widget.section)),body:_loading?const Center(child:CircularProgressIndicator()):_error!=null?Center(child:Text(_error!)):RefreshIndicator(onRefresh:_load,child:_compare?_compareBody():_musicBody()));
+    return Scaffold(appBar:AppBar(title:Text(widget.section)),body:_loading?const Center(child:CircularProgressIndicator()):_error!=null?Center(child:Text(_error!)):RefreshIndicator(onRefresh:_load,child:_isCompareMode?_compareBody():_musicBody()));
   }
   Widget _musicBody()=>ListView(padding:const EdgeInsets.all(16),children:[
     const Text('Scan a selected audio file against other compatible files in the local Studio library.'),
@@ -75,7 +75,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
       const SizedBox(height:12),
       DropdownButtonFormField<String>(value:_files.any((f)=>f.id==_second)?_second:null,items:choices,decoration:const InputDecoration(labelText:'Second audio',border:OutlineInputBorder()),onChanged:(v)=>setState(()=>_second=v)),
       const SizedBox(height:18),
-      FilledButton.icon(onPressed:_processing||_files.length<2?null:_compare,icon:const Icon(Icons.compare_arrows),label:Text(_processing?'Processing…':'Compare audio')),
+      FilledButton.icon(onPressed:_processing||_files.length<2?null:_runComparison,icon:const Icon(Icons.compare_arrows),label:Text(_processing?'Processing…':'Compare audio')),
       if(_result!=null)Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Text(_result!.isMatch?'Potential audio match':'No strong match found',style:Theme.of(context).textTheme.titleMedium),
         Text('Confidence: '+_pct(_result!.confidence)),

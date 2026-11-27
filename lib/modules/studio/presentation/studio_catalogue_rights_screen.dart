@@ -13,7 +13,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
   late final TabController _tabs;
   bool _loading = true;
   String? _error;
-  List<Map<String,Object?>> _tracks = [];
+  List<Map<String,Object?>> _tracks = [];\n  List<Map<String,Object?>> _artists = [];\n  List<Map<String,Object?>> _releases = [];
   List<Map<String,Object?>> _holders = [];
   List<Map<String,Object?>> _ownerships = [];
   List<Map<String,Object?>> _licenses = [];
@@ -22,7 +22,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: _rights ? 3 : 1, vsync: this);
+    _tabs = TabController(length: _rights ? 3 : 3, vsync: this);
     _reload();
   }
   @override
@@ -93,7 +93,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
       floatingActionButton:FloatingActionButton(onPressed:()=>isCatalogue?_addTrack():_tabs.index==0?_addHolder():_tabs.index==1?_addOwnership():_addLicense(),child:const Icon(Icons.add)),
       body:_loading?const Center(child:CircularProgressIndicator()):_error!=null?Center(child:Text(_error!)):isCatalogue?_list(_tracks,(r)=>r['title']?.toString()??'',(r)=>r['id']?.toString()??''):_tabBody());
   }
-  Widget _tabBody()=>TabBarView(controller:_tabs,children:[
+  Widget _catalogueBody()=>TabBarView(controller:_tabs,children:[\n    _list(_tracks,(r)=>r['title']?.toString()??'',(r)=>r['id']?.toString()??''),\n    _list(_artists,(r)=>r['display_name']?.toString()??'',(r)=>r['legal_name']?.toString()??r['id']?.toString()??''),\n    _list(_releases,(r)=>r['title']?.toString()??'',(r)=>r['release_type']?.toString()??''),\n  ]);\n  Widget _tabBody()=>TabBarView(controller:_tabs,children:[
     _list(_holders,(r)=>r['name']?.toString()??'',(r)=>r['holder_type']?.toString()??''),
     _list(_ownerships,(r)=>(r['holder_name'].toString()+' — '+r['share_percent'].toString()+'%'),(r)=>(r['asset_type'].toString()+' / '+r['asset_id'].toString()+' • '+r['territory'].toString())),
     _list(_licenses,(r)=>(r['licensor'].toString()+' → '+r['licensee'].toString()),(r)=>(r['usage_type'].toString()+' • '+r['asset_type'].toString()+' '+r['asset_id'].toString()+' • '+r['territory'].toString())),

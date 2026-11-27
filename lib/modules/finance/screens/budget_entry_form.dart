@@ -5,6 +5,7 @@ import 'package:my_finance/modules/finance/models/budgets_model.dart';
 import 'package:my_finance/modules/finance/services/budgets_service.dart';
 import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
+import 'package:my_finance/shared/widgets/attachment_section.dart';
 
 /// Budget create form hosted inside the shared PlusActionSheet.
 class BudgetEntryForm extends StatefulWidget {
@@ -25,6 +26,7 @@ class _BudgetEntryFormState extends State<BudgetEntryForm> {
   DateTime _start = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _end = DateTime(DateTime.now().year, DateTime.now().month + 1, 0);
   bool _loading = true, _saving = false;
+  int? _savedBudgetId;
 
   @override
   void initState() { super.initState(); _load(); }
@@ -76,14 +78,14 @@ class _BudgetEntryFormState extends State<BudgetEntryForm> {
     }
     setState(() => _saving = true);
     try {
-      await BudgetsService.addBudget(BudgetsModel(
+      final id = await BudgetsService.addBudget(BudgetsModel(
         name: _name.text.trim(), category: _category,
         limitAmount: double.parse(_amount.text), period: _period,
         startDate: _start, endDate: _end, currency: _currency,
         createdAt: DateTime.now(),
       ));
       await SoundSettingsService.instance.play('save');
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) setState(() { _savedBudgetId = id; _saving = false; });
     } catch (e) {
       if (mounted) { _message('Error: $e'); setState(() => _saving = false); }
     }
@@ -136,10 +138,18 @@ class _BudgetEntryFormState extends State<BudgetEntryForm> {
               const SizedBox(height: 5), Text(DateFormat('dd MMM yyyy').format(_end), style: TextStyle(color: Theme.of(context).colorScheme.primary)),
             ])))),
         ]),
-        const SizedBox(height: 16),
-        FilledButton(onPressed: _saving ? null : _save,
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Create Budget')),
+        if (_savedBudgetId != null) ...[
+          const SizedBox(height: 8),
+          AttachmentSection(ownerType: 'budget', ownerId: _savedBudgetId!),
+          const SizedBox(height: 12),
+          FilledButton(onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)), child: const Text('Done')),
+        ] else ...[
+          const SizedBox(height: 16),
+          FilledButton(onPressed: _saving ? null : _save,
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+            child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Create Budget')),
+        ],
       ]),
     ));
   }

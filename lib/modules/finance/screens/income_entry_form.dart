@@ -555,6 +555,8 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                     child: Switch.adaptive(
                       value: foreignIncomeEnabled,
                       activeColor: scheme.primary,
+                      activeTrackColor: scheme.primary,
+                      activeThumbColor: Colors.white,
                       onChanged: (value) async {
                         setState(() {
                           foreignIncomeEnabled = value;

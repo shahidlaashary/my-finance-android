@@ -13,7 +13,26 @@ class TransactionsService {
     Transaction txn,
     Map<String, Object?> entry,
   ) async {
-    return txn.insert('transactions', entry);
+    final snapshot = Map<String, Object?>.from(entry);
+    final walletId = (snapshot['wallet_id'] as num?)?.toInt();
+    if (walletId != null && !snapshot.containsKey('wallet_currency')) {
+      final rows = await txn.query('wallets',
+        columns: ['currency'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+      if (rows.isNotEmpty) {
+        snapshot['wallet_currency'] =
+            rows.first['currency']?.toString().trim().toUpperCase() ?? 'PKR';
+      }
+    }
+    final toWalletId = (snapshot['to_wallet_id'] as num?)?.toInt();
+    if (toWalletId != null && !snapshot.containsKey('to_wallet_currency')) {
+      final rows = await txn.query('wallets',
+        columns: ['currency'], where: 'id = ?', whereArgs: [toWalletId], limit: 1);
+      if (rows.isNotEmpty) {
+        snapshot['to_wallet_currency'] =
+            rows.first['currency']?.toString().trim().toUpperCase() ?? 'PKR';
+      }
+    }
+    return txn.insert('transactions', snapshot);
   }
 
   /// Central finance service ke zariye wallet balance change apply karta hai.
@@ -294,83 +313,6 @@ class TransactionsService {
     await txn.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Wallet currency change se mutasir tamam ledger-owned amounts convert karta hai.
-  /// Balance aur history ko consistent rakhne ke liye isay caller transaction ke andar chalana zaroori hai.
-  static Future<void> convertWalletCurrencyAmounts(
-    Transaction txn,
-    int walletId,
-    double factor,
-  ) async {
-    await txn.rawUpdate('''
-      UPDATE transactions
-      SET amount = amount * ?
-      WHERE wallet_id = ?
-        AND type IN ('Income', 'Expense', 'Transfer')
-    ''', [factor, walletId]);
-
-    final feeTransactions = await txn.query(
-      'transactions',
-      columns: ['id'],
-      where: "wallet_id = ? AND type = 'Transfer'",
-      whereArgs: [walletId],
-    );
-    for (final transaction in feeTransactions) {
-      final transactionId = transaction['id'] as int;
-      final feeRows = await txn.query(
-        'app_settings',
-        columns: ['setting_value'],
-        where: 'setting_key = ?',
-        whereArgs: ['transaction_transfer_fee_$transactionId'],
-        limit: 1,
-      );
-      if (feeRows.isNotEmpty) {
-        final oldFee = double.tryParse(
-          feeRows.first['setting_value']?.toString() ?? '',
-        ) ?? 0;
-        await txn.update(
-          'app_settings',
-          {'setting_value': (oldFee * factor).toString()},
-          where: 'setting_key = ?',
-          whereArgs: ['transaction_transfer_fee_$transactionId'],
-        );
-      }
-    }
-
-    await txn.rawUpdate('''
-      UPDATE transactions
-      SET to_amount = COALESCE(to_amount, amount) * ?
-      WHERE to_wallet_id = ?
-        AND type = 'Transfer'
-    ''', [factor, walletId]);
-
-    await txn.rawUpdate('''
-      UPDATE transactions
-      SET exchange_rate = CASE
-        WHEN to_amount IS NULL OR amount = 0 THEN NULL
-        ELSE to_amount / amount
-      END
-      WHERE type = 'Transfer'
-        AND (wallet_id = ? OR to_wallet_id = ?)
-    ''', [walletId, walletId]);
-
-    await txn.rawUpdate('''
-      UPDATE transactions
-      SET balance_delta = balance_delta * ?
-      WHERE wallet_id = ?
-        AND type = 'Transfer'
-        AND category = 'Committee Transfer'
-        AND balance_delta IS NOT NULL
-    ''', [factor, walletId]);
-
-    await txn.rawUpdate('''
-      UPDATE transactions
-      SET amount = amount * ?,
-          balance_delta = balance_delta * ?
-      WHERE wallet_id = ?
-        AND type = 'Adjustment'
-    ''', [factor, factor, walletId]);
-  }
-
   static String _normalizeType(String type) {
     switch (type.trim().toLowerCase()) {
       case 'income': return 'Income';
@@ -504,7 +446,7 @@ class TransactionsService {
         toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount,
         transferFee: transferFee);
       final now = DateTime.now().toIso8601String();
-      final transactionId = await txn.insert('transactions', {
+      final transactionId = await insertLedgerEntry(txn, {
         'type': normalized,
         'amount': amount,
         'wallet_id': walletId,
@@ -559,9 +501,19 @@ class TransactionsService {
       await _apply(txn, type: normalized, amount: amount, walletId: walletId,
         toWalletId: normalized == 'Transfer' ? toWalletId : null, toAmount: toAmount,
         transferFee: effectiveFee);
+      final sourceCurrencyRows = await txn.query('wallets',
+        columns: ['currency'], where: 'id = ?', whereArgs: [walletId], limit: 1);
+      final destinationCurrencyRows = normalized == 'Transfer' && toWalletId != null
+          ? await txn.query('wallets', columns: ['currency'],
+              where: 'id = ?', whereArgs: [toWalletId], limit: 1)
+          : <Map<String, Object?>>[];
       await txn.update('transactions', {
         'type': normalized,
         'amount': amount,
+        'wallet_currency': sourceCurrencyRows.isEmpty ? 'PKR' :
+            sourceCurrencyRows.first['currency']?.toString().toUpperCase() ?? 'PKR',
+        'to_wallet_currency': destinationCurrencyRows.isEmpty ? null :
+            destinationCurrencyRows.first['currency']?.toString().toUpperCase(),
         'wallet_id': walletId,
         'to_wallet_id': normalized == 'Transfer' ? toWalletId : null,
         'to_amount': normalized == 'Transfer' ? (toAmount ?? amount) : null,
@@ -655,7 +607,7 @@ class TransactionsService {
     final args = walletId == null ? <Object>[] : <Object>[walletId, walletId];
     return db.rawQuery("""
       SELECT t.*, t.category AS category_name,
-        source.currency AS wallet_currency,
+        COALESCE(t.wallet_currency, source.currency, 'PKR') AS wallet_currency,
         COALESCE((SELECT CAST(s.setting_value AS REAL)
           FROM app_settings s
           WHERE s.setting_key = 'transaction_transfer_fee_' || t.id

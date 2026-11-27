@@ -13,6 +13,7 @@ import 'package:my_finance/modules/finance/services/category_service.dart';
 import 'package:my_finance/modules/finance/services/wallet_service.dart';
 import 'package:my_finance/core/files/attachment_service.dart';
 import 'package:my_finance/modules/finance/services/transactions_service.dart';
+import 'package:my_finance/modules/finance/services/currency_service.dart';
 import 'package:my_finance/modules/finance/screens/categories_management_screen.dart' show CategoriesPage;
 import 'package:my_finance/modules/finance/models/recurring_transaction_model.dart';
 import 'package:my_finance/modules/finance/services/recurring_transaction_service.dart';
@@ -31,12 +32,15 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   final amountController = TextEditingController();
   final destinationAmountController = TextEditingController();
   final transferFeeController = TextEditingController();
+  final foreignAmountController = TextEditingController();
+  final exchangeRateController = TextEditingController();
   final noteController = TextEditingController();
 
   final ImagePicker _imagePicker = ImagePicker();
 
   List<Map<String, dynamic>> wallets = [];
   List<Map<String, dynamic>> transactionCategories = [];
+  List<String> foreignCurrencyOptions = [];
 
   int? selectedWalletId;
   int? selectedDestinationWalletId;
@@ -49,6 +53,10 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
   bool saving = false;
   bool loading = true;
   bool transferFeeEnabled = false;
+  bool foreignIncomeEnabled = false;
+  bool loadingForeignRate = false;
+  String? selectedForeignCurrency;
+  String foreignRateSource = 'Automatic';
 
   String selectedCategory = '';
   String _dateFormat = 'dd/MM/yyyy';
@@ -73,6 +81,8 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     amountController.dispose();
     destinationAmountController.dispose();
     transferFeeController.dispose();
+    foreignAmountController.dispose();
+    exchangeRateController.dispose();
     noteController.dispose();
     super.dispose();
   }
@@ -90,11 +100,24 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
     final categories = isTransfer
         ? <Map<String, dynamic>>[]
         : await CategoryService.getCategoryMaps('Income');
+    final rates = await CurrencyService.getExchangeRates();
+    final pairs = await CurrencyService.getManualCurrencyPairs();
+    final currencySet = <String>{
+      ...result.map((w) => (w['currency'] ?? '').toString().toUpperCase()),
+      ...rates.map((r) => (r['currency'] ?? '').toString().toUpperCase()),
+      ...pairs.expand((p) => [p['from_currency'], p['to_currency']].map((v) => (v ?? '').toString().toUpperCase())),
+      await CurrencyService.getBaseCurrency(),
+    }..removeWhere((code) => code.isEmpty);
 
     if (!mounted) return;
 
     setState(() {
       wallets = result;
+      foreignCurrencyOptions = currencySet.toList()..sort();
+      selectedForeignCurrency ??= foreignCurrencyOptions.firstWhere(
+        (code) => code != (result.first['currency'] ?? 'PKR').toString().toUpperCase(),
+        orElse: () => foreignCurrencyOptions.first,
+      );
       transactionCategories = categories;
       loading = false;
 
@@ -390,7 +413,10 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
           overflow: TextOverflow.ellipsis,
         ),
       )).toList(),
-      onChanged: (value) => setState(() => selectedWalletId = value),
+      onChanged: (value) {
+        setState(() => selectedWalletId = value);
+        if (foreignIncomeEnabled) _refreshForeignConversion();
+      },
     );
   }
 
@@ -477,6 +503,180 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       }).toList(),
       onChanged: (value) {
         if (value != null) setState(() => selectedCategory = value);
+      },
+    );
+  }
+
+  Widget _categoryAndForeignToggleRow() {
+    return Row(
+      children: [
+        Expanded(flex: 5, child: _categoryField()),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 4,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(child: Text('Foreign Income', maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+              Transform.scale(
+                scale: 0.82,
+                child: Switch.adaptive(
+                  value: foreignIncomeEnabled,
+                  onChanged: (value) async {
+                    setState(() {
+                      foreignIncomeEnabled = value;
+                      if (!value) {
+                        foreignAmountController.clear();
+                        exchangeRateController.clear();
+                        amountController.clear();
+                      }
+                    });
+                    if (value) await _refreshForeignConversion();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String get _walletCurrency =>
+      (selectedWallet?['currency'] ?? 'PKR').toString().toUpperCase();
+
+  bool get _sameForeignWalletCurrency =>
+      selectedForeignCurrency != null &&
+      selectedForeignCurrency!.toUpperCase() == _walletCurrency;
+
+  void _recalculateWalletAmount() {
+    final foreign = double.tryParse(foreignAmountController.text.trim());
+    final rate = _sameForeignWalletCurrency
+        ? 1.0
+        : double.tryParse(exchangeRateController.text.trim());
+    if (foreign == null || !foreign.isFinite || foreign <= 0 ||
+        rate == null || !rate.isFinite || rate <= 0) return;
+    final value = foreign * rate;
+    amountController.value = TextEditingValue(
+      text: value.toStringAsFixed(2),
+      selection: TextSelection.collapsed(offset: value.toStringAsFixed(2).length),
+    );
+  }
+
+  Future<void> _refreshForeignConversion() async {
+    if (!foreignIncomeEnabled || selectedWallet == null ||
+        selectedForeignCurrency == null) return;
+    final from = selectedForeignCurrency!.toUpperCase();
+    final to = _walletCurrency;
+    if (from == to) {
+      setState(() {
+        exchangeRateController.text = '1';
+        foreignRateSource = 'Same Currency';
+      });
+      _recalculateWalletAmount();
+      return;
+    }
+    setState(() => loadingForeignRate = true);
+    try {
+      await CurrencyService.refreshMissingExchangeRatesOnline(currencies: [from, to]);
+      final online = await CurrencyService.isOnline();
+      var rate = await CurrencyService.getEffectivePairRate(from, to, online: online);
+      var source = online ? 'Automatic' : 'Manual';
+      if (rate == null) {
+        rate = await CurrencyService.getManualPairRate(from, to);
+        source = 'Manual';
+      }
+      if (!mounted) return;
+      setState(() {
+        if (rate != null && rate.isFinite && rate > 0) {
+          exchangeRateController.text = rate.toString();
+          foreignRateSource = source;
+        } else {
+          exchangeRateController.clear();
+          foreignRateSource = 'Manual';
+        }
+        loadingForeignRate = false;
+      });
+      _recalculateWalletAmount();
+    } catch (_) {
+      if (mounted) setState(() => loadingForeignRate = false);
+    }
+  }
+
+  Widget _foreignCurrencyField() {
+    return DropdownButtonFormField<String>(
+      value: foreignCurrencyOptions.contains(selectedForeignCurrency)
+          ? selectedForeignCurrency : null,
+      isExpanded: true,
+      decoration: decoration('Foreign Currency', icon: Icons.currency_exchange_rounded),
+      items: foreignCurrencyOptions.map((code) =>
+        DropdownMenuItem(value: code, child: Text(code))).toList(),
+      onChanged: (value) {
+        setState(() => selectedForeignCurrency = value);
+        _refreshForeignConversion();
+      },
+      validator: (value) => foreignIncomeEnabled && value == null
+          ? 'Select foreign currency.' : null,
+    );
+  }
+
+  Widget _foreignAmountField() {
+    return TextFormField(
+      controller: foreignAmountController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: decoration('Foreign Amount', icon: Icons.payments_outlined),
+      onChanged: (_) => _recalculateWalletAmount(),
+      validator: (value) {
+        if (!foreignIncomeEnabled) return null;
+        final amount = double.tryParse(value?.trim() ?? '');
+        return amount == null || !amount.isFinite || amount <= 0
+            ? 'Enter a valid foreign amount.' : null;
+      },
+    );
+  }
+
+  Widget _walletAmountField() {
+    return TextFormField(
+      controller: amountController,
+      readOnly: _sameForeignWalletCurrency,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: decoration('Wallet Amount (${_walletCurrency})', icon: Icons.account_balance_wallet_outlined),
+      onChanged: (value) {
+        if (!foreignIncomeEnabled || _sameForeignWalletCurrency) return;
+        final foreign = double.tryParse(foreignAmountController.text.trim());
+        final wallet = double.tryParse(value.trim());
+        if (foreign != null && foreign > 0 && wallet != null && wallet > 0) {
+          final rate = wallet / foreign;
+          exchangeRateController.text = rate.toString();
+          foreignRateSource = 'Manual';
+        }
+      },
+      validator: (value) {
+        final amount = double.tryParse(value?.trim() ?? '');
+        if (amount == null || !amount.isFinite || amount <= 0) return 'Valid amount enter karein.';
+        return null;
+      },
+    );
+  }
+
+  Widget _foreignRateField() {
+    if (!foreignIncomeEnabled || _sameForeignWalletCurrency) return const SizedBox.shrink();
+    return TextFormField(
+      controller: exchangeRateController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: decoration('Exchange Rate (1 ${selectedForeignCurrency ?? ''} = ${_walletCurrency})',
+        icon: Icons.swap_horiz_rounded).copyWith(
+          helperText: loadingForeignRate ? 'Fetching rate...' : '$foreignRateSource • Editable',
+        ),
+      onChanged: (_) {
+        foreignRateSource = 'Manual';
+        _recalculateWalletAmount();
+      },
+      validator: (value) {
+        if (!foreignIncomeEnabled || _sameForeignWalletCurrency) return null;
+        final rate = double.tryParse(value?.trim() ?? '');
+        return rate == null || !rate.isFinite || rate <= 0 ? 'Enter a valid exchange rate.' : null;
       },
     );
   }
@@ -653,6 +853,14 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
       if (await GeneralPreferences.instance.hapticFeedback) {
         await HapticFeedback.selectionClick();
       }
+      final foreignAmount = foreignIncomeEnabled
+          ? double.tryParse(foreignAmountController.text.trim()) : null;
+      final foreignRate = foreignIncomeEnabled
+          ? (_sameForeignWalletCurrency ? 1.0 : double.tryParse(exchangeRateController.text.trim())) : null;
+      if (foreignIncomeEnabled && (foreignAmount == null || foreignRate == null ||
+          !foreignAmount.isFinite || foreignAmount <= 0 || !foreignRate.isFinite || foreignRate <= 0)) {
+        throw Exception('Foreign income amount and exchange rate must be valid.');
+      }
       final transactionId = await TransactionsService.addTransaction(
         type: 'Income',
         amount: amount,
@@ -663,6 +871,10 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
         category: isTransfer ? '' : selectedCategory,
         note: noteController.text.trim(),
         date: selectedDate.toIso8601String(),
+        foreignCurrency: foreignIncomeEnabled ? selectedForeignCurrency : null,
+        foreignAmount: foreignAmount,
+        foreignExchangeRate: foreignRate,
+        foreignRateSource: foreignIncomeEnabled ? (_sameForeignWalletCurrency ? 'Same Currency' : foreignRateSource) : null,
       );
 
       String? scheduleWarning;
@@ -871,8 +1083,16 @@ class _IncomeEntryFormState extends State<IncomeEntryForm> {
                   Expanded(child: _walletField()),
                 ],
               ),
+              if (foreignIncomeEnabled) ...[
+                Row(children: [Expanded(child: _foreignCurrencyField()), const SizedBox(width: 10), Expanded(child: _foreignAmountField())]),
+                const SizedBox(height: 12),
+                Row(children: [Expanded(child: _walletAmountField()), const SizedBox(width: 10), Expanded(child: _walletField())]),
+                if (!_sameForeignWalletCurrency) ...[const SizedBox(height: 10), _foreignRateField()],
+              ] else ...[
+                Row(children: [Expanded(child: _amountField()), const SizedBox(width: 10), Expanded(child: _walletField())]),
+              ],
               SizedBox(height: 12),
-              _categoryField(),
+              _categoryAndForeignToggleRow(),
               SizedBox(height: 12),
               _notesField(),
             ],

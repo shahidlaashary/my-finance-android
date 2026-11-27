@@ -12,7 +12,6 @@ import 'package:my_finance/modules/studio/infrastructure/database/studio_databas
 import 'package:my_finance/modules/studio/infrastructure/repositories/sqlite_studio_fingerprint_repository.dart';
 import 'package:my_finance/modules/studio/infrastructure/repositories/sqlite_studio_media_repository.dart';
 import 'package:my_finance/modules/studio/infrastructure/storage/studio_storage_manager.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -90,24 +89,6 @@ void main() {
     expect(decoder.decodeCount, 0);
   });
 
-  test('removes generated artifact if catalogue registration fails', () async {
-    algorithm.output = const StudioAudioFingerprintOutput(
-      bytes: Uint8List.fromList([1, 2, 3, 4]),
-      frameCount: 1,
-      segments: [
-        StudioAudioFingerprintSegmentData(
-          segmentIndex: 0,
-          startMs: 0,
-          endMs: 500,
-          dataOffsetBytes: 0,
-          dataLengthBytes: 4,
-        ),
-      ],
-    );
-    await engine.generateForMedia('audio-source');
-    // The normal run is covered above; duplicate catalogue constraints are
-    // checked by the catalogue repository tests.
-  });
 }
 
 StudioMediaFile _media(

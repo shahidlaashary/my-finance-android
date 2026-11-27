@@ -209,6 +209,11 @@ class LoansService {
         wallet_amount REAL NOT NULL DEFAULT 0,
         exchange_rate REAL NOT NULL DEFAULT 1,
         is_manual_rate INTEGER NOT NULL DEFAULT 0,
+        rate_source TEXT NOT NULL DEFAULT 'Unknown',
+        base_currency_at_time TEXT NOT NULL DEFAULT 'PKR',
+        base_exchange_rate REAL,
+        base_converted_amount REAL,
+        base_rate_source TEXT NOT NULL DEFAULT 'Unknown',
         FOREIGN KEY (loan_id) REFERENCES loans(id)
           ON DELETE CASCADE
       )
@@ -634,10 +639,35 @@ class LoansService {
         !walletAmount.isFinite || walletAmount <= 0) {
       throw Exception('Converted wallet amount or exchange rate is invalid.');
     }
+    final settings = await txn.query('app_settings', columns: ['setting_value'],
+      where: 'setting_key = ?', whereArgs: ['main_currency'], limit: 1);
+    final baseCurrency = (settings.isEmpty
+        ? 'PKR'
+        : settings.first['setting_value']?.toString() ?? 'PKR').toUpperCase();
+    double? baseRate;
+    if (walletCurrency == baseCurrency) {
+      baseRate = 1.0;
+    } else {
+      final rows = await txn.query('exchange_rates', columns: ['rate'],
+        where: 'UPPER(currency) = ?', whereArgs: [walletCurrency], limit: 1);
+      if (rows.isNotEmpty) {
+        final value = (rows.first['rate'] as num).toDouble();
+        if (value.isFinite && value > 0) baseRate = value;
+      }
+    }
+    final source = loanCurrency.trim().toUpperCase() == walletCurrency
+        ? 'Same Currency'
+        : (repayment.isManualRate ? 'Manual' : 'Automatic');
     return repayment.copyWith(
       walletCurrency: walletCurrency,
       walletAmount: walletAmount,
       exchangeRate: appliedRate,
+      rateSource: source,
+      baseCurrencyAtTime: baseCurrency,
+      baseExchangeRate: baseRate,
+      baseConvertedAmount: baseRate == null ? null : walletAmount * baseRate,
+      baseRateSource: baseRate == null ? 'Unavailable' :
+          (walletCurrency == baseCurrency ? 'Same Currency' : 'Automatic'),
     );
   }
 
@@ -1077,7 +1107,12 @@ class LoansService {
           id INTEGER PRIMARY KEY AUTOINCREMENT, loan_id INTEGER NOT NULL,
           amount REAL NOT NULL, wallet_id INTEGER NOT NULL, repayment_date TEXT NOT NULL,
           payment_method TEXT NOT NULL DEFAULT 'cash', notes TEXT NOT NULL DEFAULT '',
-          created_at TEXT NOT NULL, FOREIGN KEY(loan_id) REFERENCES loans(id) ON DELETE CASCADE)''');
+          created_at TEXT NOT NULL, wallet_currency TEXT NOT NULL DEFAULT 'PKR',
+          wallet_amount REAL NOT NULL DEFAULT 0, exchange_rate REAL NOT NULL DEFAULT 1,
+          is_manual_rate INTEGER NOT NULL DEFAULT 0, rate_source TEXT NOT NULL DEFAULT 'Unknown',
+          base_currency_at_time TEXT NOT NULL DEFAULT 'PKR', base_exchange_rate REAL,
+          base_converted_amount REAL, base_rate_source TEXT NOT NULL DEFAULT 'Unknown',
+          FOREIGN KEY(loan_id) REFERENCES loans(id) ON DELETE CASCADE)''');
         final relatedRaw = relatedPayload ?? '[]';
         final repayments = (jsonDecode(relatedRaw) as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
         final loanType = record['loan_type']?.toString().toLowerCase() ?? 'given';

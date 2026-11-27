@@ -21,6 +21,15 @@ class AssetsModel {
   final String saleWalletCurrency;
   final double saleExchangeRate;
   final bool saleIsManualRate;
+  final String saleRateSource;
+  final String? saleBaseCurrencyAtTime;
+  final double? saleBaseExchangeRate;
+  final double? saleBaseConvertedAmount;
+  final String? saleBaseRateSource;
+  final String? purchaseBaseCurrencyAtTime;
+  final double? purchaseBaseExchangeRate;
+  final double? purchaseBaseConvertedAmount;
+  final String? purchaseBaseRateSource;
   final String salePaymentType;
   final int? salePartyId;
   final int? saleLinkedLoanId;
@@ -34,6 +43,9 @@ class AssetsModel {
     this.linkedLoanId, this.notes = '', this.isSold = false,
     this.saleDate, this.salePrice, this.saleWalletId,
     this.saleWalletAmount, this.saleWalletCurrency = 'PKR', this.saleExchangeRate = 1.0, this.saleIsManualRate = false,
+    this.saleRateSource = 'Unknown', this.saleBaseCurrencyAtTime, this.saleBaseExchangeRate,
+    this.saleBaseConvertedAmount, this.saleBaseRateSource, this.purchaseBaseCurrencyAtTime,
+    this.purchaseBaseExchangeRate, this.purchaseBaseConvertedAmount, this.purchaseBaseRateSource,
     this.salePaymentType = 'Wallet', this.salePartyId,
     this.saleLinkedLoanId, this.createdAt,
     this.includeInConsolidatedBalance = false,
@@ -65,6 +77,15 @@ class AssetsModel {
     saleWalletCurrency: (map['sale_wallet_currency'] ?? map['currency'] ?? 'PKR').toString().toUpperCase(),
     saleExchangeRate: (map['sale_exchange_rate'] as num?)?.toDouble() ?? 1.0,
     saleIsManualRate: (map['sale_is_manual_rate'] as num?)?.toInt() == 1,
+    saleRateSource: (map['sale_rate_source'] ?? 'Unknown').toString(),
+    saleBaseCurrencyAtTime: map['sale_base_currency_at_time']?.toString(),
+    saleBaseExchangeRate: (map['sale_base_exchange_rate'] as num?)?.toDouble(),
+    saleBaseConvertedAmount: (map['sale_base_converted_amount'] as num?)?.toDouble(),
+    saleBaseRateSource: map['sale_base_rate_source']?.toString(),
+    purchaseBaseCurrencyAtTime: map['purchase_base_currency_at_time']?.toString(),
+    purchaseBaseExchangeRate: (map['purchase_base_exchange_rate'] as num?)?.toDouble(),
+    purchaseBaseConvertedAmount: (map['purchase_base_converted_amount'] as num?)?.toDouble(),
+    purchaseBaseRateSource: map['purchase_base_rate_source']?.toString(),
     salePaymentType: (map['sale_payment_type'] ?? 'Wallet').toString(),
     salePartyId: (map['sale_party_id'] as num?)?.toInt(),
     saleLinkedLoanId: (map['sale_linked_loan_id'] as num?)?.toInt(),
@@ -81,6 +102,13 @@ class AssetsModel {
     'sale_price': salePrice, 'sale_wallet_id': saleWalletId,
     'sale_wallet_amount': saleWalletAmount, 'sale_wallet_currency': saleWalletCurrency.toUpperCase(),
     'sale_exchange_rate': saleExchangeRate, 'sale_is_manual_rate': saleIsManualRate ? 1 : 0,
+    'sale_rate_source': saleRateSource, 'sale_base_currency_at_time': saleBaseCurrencyAtTime,
+    'sale_base_exchange_rate': saleBaseExchangeRate, 'sale_base_converted_amount': saleBaseConvertedAmount,
+    'sale_base_rate_source': saleBaseRateSource,
+    'purchase_base_currency_at_time': purchaseBaseCurrencyAtTime,
+    'purchase_base_exchange_rate': purchaseBaseExchangeRate,
+    'purchase_base_converted_amount': purchaseBaseConvertedAmount,
+    'purchase_base_rate_source': purchaseBaseRateSource,
     'sale_payment_type': salePaymentType, 'sale_party_id': salePartyId,
     'sale_linked_loan_id': saleLinkedLoanId, 'created_at': createdAt?.toIso8601String(),
   };
@@ -92,7 +120,11 @@ class AssetsModel {
     String? notes, bool? isSold, bool? includeInConsolidatedBalance, Object? saleDate = _unset,
     Object? salePrice = _unset, Object? saleWalletId = _unset,
     Object? saleWalletAmount = _unset, String? saleWalletCurrency, double? saleExchangeRate, bool? saleIsManualRate,
-    String? salePaymentType, Object? salePartyId = _unset,
+    String? salePaymentType, String? saleRateSource, Object? saleBaseCurrencyAtTime = _unset,
+    Object? saleBaseExchangeRate = _unset, Object? saleBaseConvertedAmount = _unset,
+    Object? saleBaseRateSource = _unset, Object? purchaseBaseCurrencyAtTime = _unset,
+    Object? purchaseBaseExchangeRate = _unset, Object? purchaseBaseConvertedAmount = _unset,
+    Object? purchaseBaseRateSource = _unset, Object? salePartyId = _unset,
     Object? saleLinkedLoanId = _unset, Object? createdAt = _unset,
   }) => AssetsModel(
     id: id ?? this.id, name: name ?? this.name, category: category ?? this.category,
@@ -111,6 +143,15 @@ class AssetsModel {
     saleWalletCurrency: saleWalletCurrency ?? this.saleWalletCurrency,
     saleExchangeRate: saleExchangeRate ?? this.saleExchangeRate,
     saleIsManualRate: saleIsManualRate ?? this.saleIsManualRate,
+    saleRateSource: saleRateSource ?? this.saleRateSource,
+    saleBaseCurrencyAtTime: identical(saleBaseCurrencyAtTime, _unset) ? this.saleBaseCurrencyAtTime : saleBaseCurrencyAtTime as String?,
+    saleBaseExchangeRate: identical(saleBaseExchangeRate, _unset) ? this.saleBaseExchangeRate : saleBaseExchangeRate as double?,
+    saleBaseConvertedAmount: identical(saleBaseConvertedAmount, _unset) ? this.saleBaseConvertedAmount : saleBaseConvertedAmount as double?,
+    saleBaseRateSource: identical(saleBaseRateSource, _unset) ? this.saleBaseRateSource : saleBaseRateSource as String?,
+    purchaseBaseCurrencyAtTime: identical(purchaseBaseCurrencyAtTime, _unset) ? this.purchaseBaseCurrencyAtTime : purchaseBaseCurrencyAtTime as String?,
+    purchaseBaseExchangeRate: identical(purchaseBaseExchangeRate, _unset) ? this.purchaseBaseExchangeRate : purchaseBaseExchangeRate as double?,
+    purchaseBaseConvertedAmount: identical(purchaseBaseConvertedAmount, _unset) ? this.purchaseBaseConvertedAmount : purchaseBaseConvertedAmount as double?,
+    purchaseBaseRateSource: identical(purchaseBaseRateSource, _unset) ? this.purchaseBaseRateSource : purchaseBaseRateSource as String?,
     salePaymentType: salePaymentType ?? this.salePaymentType,
     salePartyId: identical(salePartyId, _unset) ? this.salePartyId : salePartyId as int?,
     saleLinkedLoanId: identical(saleLinkedLoanId, _unset) ? this.saleLinkedLoanId : saleLinkedLoanId as int?,

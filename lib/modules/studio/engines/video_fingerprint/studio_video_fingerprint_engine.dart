@@ -79,6 +79,6 @@ class StudioVideoFingerprintEngine {
     return StudioVideoFingerprintMatch(matches:matches,queryFrames:qrec.length,referenceFrames:rrec.length,confidence:confidence,offsetMs:bestOffset);
   }
   List<_FrameRecord> _records(Uint8List bytes){if(bytes.length%16!=0)throw const FormatException('Video fingerprint artifact is corrupt.');final d=ByteData.sublistView(bytes);return List.generate(bytes.length~/16,(i){var hash=0;for(var byte=0;byte<8;byte++){hash|=bytes[i*16+8+byte]<<(byte*8);}return _FrameRecord(d.getInt64(i*16,Endian.little),hash);});}
-  int _distance(int a,int b){var x=a^b;var n=0;while(x!=0){n++;x&=x-1;}return n;}
+  int _distance(int a,int b){final x=a^b;var n=0;for(var bit=0;bit<64;bit++){if(((x>>bit)&1)!=0)n++;}return n;}
 }
 class _FrameRecord{const _FrameRecord(this.time,this.hash);final int time,hash;}

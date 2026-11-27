@@ -100,6 +100,40 @@ jobs:
           cache-provider: basic
       - name: Install dependencies
         run: flutter pub get
+      - name: Align video_thumbnail Android plugin with host Gradle configuration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          cache = Path(os.environ.get("PUB_CACHE", str(Path.home() / ".pub-cache")))
+          candidates = list(cache.glob("hosted/pub.dev/video_thumbnail-*/android/build.gradle"))
+          candidates += list(cache.glob("hosted/pub.dartlang.org/video_thumbnail-*/android/build.gradle"))
+          if len(candidates) != 1:
+              raise SystemExit(f"Expected one resolved video_thumbnail Gradle file, found {len(candidates)}")
+
+          gradle_file = candidates[0]
+          source = gradle_file.read_text()
+          source, removed = re.subn(
+              r"(?ms)^buildscript\\s*\\{.*?^\\}\\s*",
+              "",
+              source,
+              count=1,
+          )
+          source = re.sub(r"(?im)^\\s*jcenter\\s*\\(\\s*\\)\\s*$", "        mavenCentral()", source)
+          source = re.sub(r"(?m)^\\s*apply plugin:\\s*['\\"]com\\.android\\.library['\\"]\\s*\\n?", "", source)
+          source = re.sub(r"(?m)^\\s*apply plugin:\\s*['\\"]kotlin-android['\\"]\\s*\\n?", "", source)
+          marker = "apply plugin: 'com.android.library'\\napply plugin: 'kotlin-android'\\n"
+          android_block = re.search(r"(?m)^android\\s*\\{", source)
+          if not android_block:
+              raise SystemExit(f"Android configuration block missing in {gradle_file}")
+          source = source[:android_block.start()] + marker + "\\n" + source[android_block.start():]
+          if "jcenter()" in source or source.count("apply plugin: 'com.android.library'") != 1:
+              raise SystemExit(f"Could not normalize video_thumbnail Gradle plugins in {gradle_file}")
+          gradle_file.write_text(source)
+          print(f"Normalized legacy Android/Kotlin plugin configuration in {gradle_file}")
+          PY
       - name: Patch EPUB parser for current image package API
         run: |
           python3 - <<'PY'

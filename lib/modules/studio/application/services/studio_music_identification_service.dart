@@ -54,8 +54,9 @@ class StudioMusicIdentificationService {
     final a=await fingerprintFor(firstId)??await identify(firstId);
     final b=await fingerprintFor(secondId)??await identify(secondId);
     if(a.algorithmKey!=b.algorithmKey||a.algorithmVersion!=b.algorithmVersion)throw StateError('Fingerprints use incompatible algorithms.');
+    if(a.sampleRate!=b.sampleRate)throw StateError('Audio files use different sample rates. Resampling is not available yet.');
     final bytesA=await File(a.dataFilePath).readAsBytes(),bytesB=await File(b.dataFilePath).readAsBytes();
-    final result=const StudioAudioFingerprintMatcher().compare(query:bytesA,reference:bytesB);
+    final result=StudioAudioFingerprintMatcher(sampleRate:a.sampleRate??11025).compare(query:bytesA,reference:bytesB);
     await StudioCatalogueRightsService().saveComparison(leftId:firstId,rightId:secondId,score:result.confidence,matches:result.matchedLandmarks,offsetMs:result.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':result.queryCoverage,'referenceCoverage':result.referenceCoverage,'queryLandmarks':result.queryLandmarks,'referenceLandmarks':result.referenceLandmarks});
     return result;
   }

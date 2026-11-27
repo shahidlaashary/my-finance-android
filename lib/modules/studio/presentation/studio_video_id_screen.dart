@@ -9,7 +9,8 @@ class StudioVideoIdScreen extends StatefulWidget{
 }
 class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
   final _service=StudioVideoIdentificationService();
-  List<StudioMediaFile> _videos=[];\n  List<Map<String,Object?>> _history=[];
+  List<StudioMediaFile> _videos=[];
+  List<Map<String,Object?>> _history=[];
   String? _first,_second;
   bool _loading=true,_busy=false;
   StudioVideoFingerprintMatch? _result;
@@ -32,7 +33,9 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
     DropdownButtonFormField<String>(value:_videos.any((v)=>v.id==_second)?_second:null,items:_videos.map((v)=>DropdownMenuItem(value:v.id,child:Text(v.originalName,overflow:TextOverflow.ellipsis))).toList(),decoration:const InputDecoration(labelText:'Second video'),onChanged:(v)=>setState(()=>_second=v)),
     const SizedBox(height:14),
     FilledButton.icon(onPressed:_busy||_videos.length<2?null:_compare,icon:const Icon(Icons.compare_arrows),label:Text(_busy?'Processing…':'Compare')),
-    if(_history.isNotEmpty)Padding(padding:const EdgeInsets.only(top:18),child:Text('Recent video comparisons',style:Theme.of(context).textTheme.titleMedium)),\n    ..._history.take(20).map((h)=>ListTile(dense:true,title:Text(h['left_name'].toString()+' vs '+h['right_name'].toString()),subtitle:Text('Score: '+((h['match_score'] as num).toDouble()*100).toStringAsFixed(1)+'% • '+h['matched_landmarks'].toString()+' frames'),leading:const Icon(Icons.history))),\n    if(_result!=null)Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    if(_history.isNotEmpty)Padding(padding:const EdgeInsets.only(top:18),child:Text('Recent video comparisons',style:Theme.of(context).textTheme.titleMedium)),
+    ..._history.take(20).map((h)=>ListTile(dense:true,title:Text(h['left_name'].toString()+' vs '+h['right_name'].toString()),subtitle:Text('Score: '+((h['match_score'] as num).toDouble()*100).toStringAsFixed(1)+'% • '+h['matched_landmarks'].toString()+' frames'),leading:const Icon(Icons.history))),
+    if(_result!=null)Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       Text(_result!.isMatch?'Potential visual match':'No strong visual match',style:Theme.of(context).textTheme.titleMedium),
       Text('Confidence: ${_pct(_result!.confidence)}'),
       Text('Matched frames: ${_result!.matches} / ${_result!.queryFrames} query frames'),

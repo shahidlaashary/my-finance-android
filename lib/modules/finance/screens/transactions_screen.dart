@@ -1253,6 +1253,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               final exchangeRate = (item['exchange_rate'] as num?)?.toDouble();
                               final showOriginalAmount = isLoanRecord && originalAmount != null &&
                                   originalCurrency.isNotEmpty && originalCurrency.toUpperCase() != currency.toUpperCase();
+                              final foreignIncomeAmount = (item['foreign_amount'] as num?)?.toDouble();
+                              final foreignIncomeCurrency = item['foreign_currency']?.toString() ?? '';
+                              final foreignIncomeRate = (item['foreign_exchange_rate'] as num?)?.toDouble();
+                              final foreignIncomeRateSource = item['foreign_rate_source']?.toString() ?? '';
+                              final showForeignIncomeDetails = isIncome &&
+                                  foreignIncomeAmount != null &&
+                                  foreignIncomeCurrency.isNotEmpty;
                               final fee = (item['transfer_fee'] as num?)?.toDouble() ?? 0.0;
                               final parsedDate = DateTime.tryParse(item['date']?.toString() ?? '');
                               final dateLabel = parsedDate == null
@@ -1342,6 +1349,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                               if (exchangeRate != null && exchangeRate > 0)
                                                 Text(
                                                   'Rate: 1 $originalCurrency = $currency ${exchangeRate.toStringAsFixed(4)}',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(fontSize: 9.5, color: Theme.of(context).hintColor),
+                                                ),
+                                              const SizedBox(height: 2),
+                                            ],
+                                            if (showForeignIncomeDetails) ...[
+                                              Text(
+                                                'Foreign: $foreignIncomeCurrency ${money(foreignIncomeAmount)}',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(fontSize: 10.5, color: Theme.of(context).hintColor),
+                                              ),
+                                              if (foreignIncomeRate != null && foreignIncomeRate > 0)
+                                                Text(
+                                                  'Rate: 1 $foreignIncomeCurrency = $currency ${foreignIncomeRate.toStringAsFixed(4)} • $foreignIncomeRateSource',
                                                   maxLines: 1,
                                                   overflow: TextOverflow.ellipsis,
                                                   style: TextStyle(fontSize: 9.5, color: Theme.of(context).hintColor),
@@ -1510,6 +1533,15 @@ class TransactionDetailScreen extends StatelessWidget {
             if (transaction['exchange_rate'] is num && (transaction['original_currency']?.toString().toUpperCase() != currency.toUpperCase()))
               _detailRow(context, 'Applied rate',
                 '1 ${transaction['original_currency']} = $currency ${((transaction['exchange_rate'] as num).toDouble()).toStringAsFixed(4)}'),
+            if (isIncome && transaction['foreign_amount'] is num &&
+                (transaction['foreign_currency']?.toString().isNotEmpty ?? false))
+              _detailRow(context, 'Foreign amount',
+                '${transaction['foreign_currency']} ${((transaction['foreign_amount'] as num).toDouble()).toStringAsFixed(2)}'),
+            if (isIncome && transaction['foreign_exchange_rate'] is num)
+              _detailRow(context, 'Foreign exchange rate',
+                '1 ${transaction['foreign_currency']} = $currency ${((transaction['foreign_exchange_rate'] as num).toDouble()).toStringAsFixed(4)}'),
+            if (isIncome && (transaction['foreign_rate_source']?.toString().isNotEmpty ?? false))
+              _detailRow(context, 'Rate source', transaction['foreign_rate_source'].toString()),
           ];
 
           return ListView(

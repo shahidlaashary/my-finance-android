@@ -563,11 +563,14 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                 ),
               for (final pair in _manualPairs)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
+                        flex: 6,
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
@@ -575,47 +578,75 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w800),
                             ),
-                            const SizedBox(height: 3),
                             Text(
-                              (pair['is_rate_pending'] as num?)?.toInt() == 1
-                                  ? 'Rate required — edit to enter'
-                                  : _numberFormat.format(
-                                      (pair['rate'] as num).toDouble()),
+                              _dateLabel(pair['updated_at']),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  color: (pair['is_rate_pending'] as num?)?.toInt() == 1
-                                      ? Colors.orange.shade800
-                                      : colors.primary,
-                                  fontWeight: FontWeight.w700),
+                              style: TextStyle(fontSize: 8, color: muted),
                             ),
                           ],
                         ),
                       ),
-                      IconButton(
-                        tooltip: 'Edit pair',
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 22, minHeight: 24),
-                        onPressed: () => _addManualPair(pair),
-                        icon: Icon(Icons.edit_outlined,
-                            size: 16, color: muted),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        flex: 4,
+                        child: Text(
+                          (pair['is_rate_pending'] as num?)?.toInt() == 1
+                              ? 'Rate required'
+                              : _numberFormat.format(
+                                  (pair['rate'] as num).toDouble()),
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: (pair['is_rate_pending'] as num?)?.toInt() == 1
+                                ? Colors.orange.shade800
+                                : colors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                      IconButton(
-                        tooltip: 'Delete pair',
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 22, minHeight: 24),
-                        onPressed: () =>
-                            _removeManualPair(pair['id'] as int),
-                        icon: Icon(Icons.delete_outline_rounded,
-                            size: 16, color: muted),
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: PopupMenuButton<String>(
+                          tooltip: 'More options',
+                          padding: EdgeInsets.zero,
+                          iconSize: 18,
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _addManualPair(pair);
+                            } else if (value == 'delete') {
+                              _removeManualPair(pair['id'] as int);
+                            }
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 18),
+                                  SizedBox(width: 10),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline_rounded, size: 18),
+                                  SizedBox(width: 10),
+                                  Text('Delete'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

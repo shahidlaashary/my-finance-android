@@ -306,6 +306,44 @@ class StudioDatabaseSchema {
       'ON studio_fingerprint_indexes(status, algorithm_key)',
     );
 
+    await db.execute('''
+      CREATE TABLE studio_rights_holders (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, holder_type TEXT NOT NULL,
+        contact TEXT, notes TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE studio_ownership_records (
+        id TEXT PRIMARY KEY, holder_id TEXT NOT NULL, asset_type TEXT NOT NULL,
+        asset_id TEXT NOT NULL, share_percent REAL NOT NULL CHECK (share_percent > 0 AND share_percent <= 100),
+        territory TEXT NOT NULL DEFAULT 'Worldwide', start_date TEXT, end_date TEXT,
+        notes TEXT, created_at TEXT NOT NULL,
+        FOREIGN KEY(holder_id) REFERENCES studio_rights_holders(id) ON DELETE RESTRICT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE studio_licenses (
+        id TEXT PRIMARY KEY, asset_type TEXT NOT NULL, asset_id TEXT NOT NULL,
+        licensor TEXT NOT NULL, licensee TEXT NOT NULL, usage_type TEXT NOT NULL,
+        territory TEXT NOT NULL DEFAULT 'Worldwide', start_date TEXT, end_date TEXT,
+        exclusive INTEGER NOT NULL DEFAULT 0 CHECK(exclusive IN (0,1)),
+        status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','expired','terminated')),
+        document_path TEXT, notes TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE studio_comparison_history (
+        id TEXT PRIMARY KEY, left_media_id TEXT NOT NULL, right_media_id TEXT NOT NULL,
+        algorithm_key TEXT, algorithm_version TEXT, match_score REAL NOT NULL,
+        matched_landmarks INTEGER NOT NULL DEFAULT 0, offset_ms INTEGER,
+        result_json TEXT, created_at TEXT NOT NULL,
+        FOREIGN KEY(left_media_id) REFERENCES studio_media_files(id) ON DELETE CASCADE,
+        FOREIGN KEY(right_media_id) REFERENCES studio_media_files(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_studio_ownership_asset ON studio_ownership_records(asset_type, asset_id)');
+    await db.execute('CREATE INDEX idx_studio_licenses_asset ON studio_licenses(asset_type, asset_id)');
+    await db.execute('CREATE INDEX idx_studio_compare_date ON studio_comparison_history(created_at DESC)');
     final now = DateTime.now().toUtc().toIso8601String();
     await db.insert('studio_metadata', {
       'metadata_key': 'schema_version',

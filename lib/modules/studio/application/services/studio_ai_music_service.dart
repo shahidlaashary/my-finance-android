@@ -1,8 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 
-import '../domain/entities/studio_ai_music_project.dart';
-import '../domain/entities/studio_ai_voice_profile.dart';
-import '../infrastructure/database/studio_database_manager.dart';
+import '../../domain/entities/studio_ai_music_project.dart';
+import '../../domain/entities/studio_ai_voice_profile.dart';
+import '../../infrastructure/database/studio_database_manager.dart';
 
 /// Local application boundary for AI music projects and consented voice samples.
 ///

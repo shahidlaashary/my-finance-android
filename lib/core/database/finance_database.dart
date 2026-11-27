@@ -57,6 +57,8 @@ class FinanceDB {
         exchange_rate REAL,
         wallet_currency TEXT NOT NULL DEFAULT 'PKR',
         to_wallet_currency TEXT,
+        from_currency TEXT NOT NULL DEFAULT 'PKR',
+        to_currency TEXT,
         rate_source TEXT NOT NULL DEFAULT 'Unknown',
         base_currency_at_time TEXT,
         base_exchange_rate REAL,

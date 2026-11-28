@@ -19,6 +19,8 @@ void main() {
 
   setUp(() async {
     database = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
+    // Match StudioDatabaseManager.onConfigure so SQLite enforces ON DELETE CASCADE.
+    await database.execute('PRAGMA foreign_keys = ON');
     await StudioDatabaseSchema.create(database, StudioDatabaseSchema.version);
     mediaLibrary = StudioMediaLibraryService(
       repository: SqliteStudioMediaRepository(database),

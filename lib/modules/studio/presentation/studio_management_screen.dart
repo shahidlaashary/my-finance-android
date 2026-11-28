@@ -19,6 +19,8 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
   late Future<_Diagnostics> _diagnostics;
   late Future<List<Map<String, Object?>>> _jobs;
   final _queue = StudioProcessingQueueService();
+  bool _batchRunning = false;
+  String? _batchProgress;
 
   @override
   void initState() {
@@ -44,6 +46,41 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
     // Loading the report requires a successful database connection, so a
     // completed diagnostics snapshot confirms the database is connected.
     return _Diagnostics(summary, health);
+  }
+
+  Future<void> _runLibraryBatch() async {
+    if (_batchRunning) return;
+    setState(() {
+      _batchRunning = true;
+      _batchProgress = 'Preparing media library scan…';
+    });
+    try {
+      final result = await _queue.runLibraryBatch(
+        onProgress: (completed, total) {
+          if (!mounted) return;
+          setState(() => _batchProgress = total == 0
+              ? 'No media to process.'
+              : 'Processed $completed of $total items…');
+        },
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(
+          'Library batch finished: ${result.succeeded}/${result.total} successful, ${result.failed} failed.',
+        )),
+      );
+      await _refreshJobs();
+      await _refreshDiagnostics();
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Library batch failed: $error')),
+      );
+    } finally {
+      if (mounted) setState(() {
+        _batchRunning = false;
+        _batchProgress = null;
+      });
+    }
   }
 
   Future<void> _refreshDiagnostics() async {
@@ -171,6 +208,13 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
         title: const Text('Studio Management'),
         actions: [
           IconButton(
+            tooltip: 'Fingerprint entire media library',
+            onPressed: _batchRunning ? null : _runLibraryBatch,
+            icon: _batchRunning
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.library_add_check_rounded),
+          ),
+          IconButton(
             tooltip: 'Refresh',
             onPressed: () {
               _refreshDiagnostics();
@@ -187,11 +231,28 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
           ],
         ),
       ),
-      body: TabBarView(
+      body: Column(
+        children: [
+          if (_batchProgress != null)
+            Material(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                child: Row(children: [
+                  const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(_batchProgress!)),
+                ]),
+              ),
+            ),
+          Expanded(
+            child: TabBarView(
         controller: _tabs,
         children: [
           _systemTab(),
           _queueTab(),
+            ),
+          ),
         ],
       ),
     );

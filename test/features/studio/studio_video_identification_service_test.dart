@@ -79,7 +79,9 @@ void main() {
     final videos = await service.videos();
 
     expect(videos, hasLength(2));
-    expect(videos.map((item) => item.id).toSet(), {'video-old', 'video-new'});
+    // Both records share the same timestamp, so the repository's stable
+    // secondary ordering is ID ascending.
+    expect(videos.map((item) => item.id), ['video-new', 'video-old']);
   });
 
   test('returns an empty list when no videos are registered', () async {

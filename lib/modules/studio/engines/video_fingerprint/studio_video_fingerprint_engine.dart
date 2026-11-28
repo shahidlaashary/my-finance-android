@@ -11,12 +11,7 @@ import '../../domain/entities/studio_fingerprint.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 
-class StudioVideoFingerprintMatch {
-  const StudioVideoFingerprintMatch({required this.matches,required this.queryFrames,required this.referenceFrames,required this.confidence,required this.offsetMs});
-  final int matches,queryFrames,referenceFrames,offsetMs;
-  final double confidence;
-  bool get isMatch=>matches>=3&&confidence>=0.15;
-}
+import 'studio_video_fingerprint_match.dart';
 
 class StudioVideoFingerprintEngine {
   StudioVideoFingerprintEngine({required StudioStorageManager storage,required StudioMediaLibraryService media,required StudioFingerprintCatalogueService catalogue,this.sampleIntervalMs=2000,this.maxFrames=300})

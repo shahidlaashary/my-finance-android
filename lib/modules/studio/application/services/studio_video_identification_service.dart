@@ -5,8 +5,11 @@ import '../../application/services/studio_fingerprint_catalogue_service.dart';
 import '../../application/services/studio_catalogue_rights_service.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 import '../../engines/video_fingerprint/studio_video_fingerprint_engine.dart';
+import '../../domain/entities/studio_video_fingerprint_match.dart';
 
 class StudioVideoIdentificationService{
+  static const algorithmKey = StudioVideoFingerprintEngine.key;
+  static const algorithmVersion = StudioVideoFingerprintEngine.version;
   StudioVideoIdentificationService({StudioMediaLibraryService? mediaLibrary,StudioFingerprintCatalogueService? catalogue,StudioStorageManager? storage})
     :mediaLibrary=mediaLibrary??StudioMediaLibraryService(),catalogue=catalogue??StudioFingerprintCatalogueService(),storage=storage??StudioStorageManager();
   final StudioMediaLibraryService mediaLibrary;final StudioFingerprintCatalogueService catalogue;final StudioStorageManager storage;

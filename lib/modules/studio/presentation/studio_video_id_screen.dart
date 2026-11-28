@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../application/services/studio_video_identification_service.dart';
 import '../application/services/studio_processing_queue_service.dart';
 import '../domain/entities/studio_media_file.dart';
-import '../engines/video_fingerprint/studio_video_fingerprint_engine.dart';
+import '../domain/entities/studio_video_fingerprint_match.dart';
 
 class StudioVideoIdScreen extends StatefulWidget{
   const StudioVideoIdScreen({super.key});
@@ -29,7 +29,7 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
       data.sort((a,b)=>a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()));
       setState((){
         _videos=data;
-        _history=history.where((h)=>h['algorithm_key']==StudioVideoFingerprintEngine.key).toList();
+        _history=history.where((h)=>h['algorithm_key']==StudioVideoIdentificationService.algorithmKey).toList();
         _first??=data.isNotEmpty?data.first.id:null;
         _second??=data.length>1?data[1].id:null;
         _error=null;

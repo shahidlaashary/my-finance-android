@@ -262,8 +262,6 @@ class _StudioSection {
         return const Color(0xFF8B5BC2);
       case 'AI Music':
         return const Color(0xFFB66A35);
-      case 'Content ID':
-        return const Color(0xFF258B83);
       case 'Compare':
         return const Color(0xFF5576B8);
       case 'Catalogue':

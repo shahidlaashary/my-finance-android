@@ -179,6 +179,8 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
                 _detailRow(context, 'Reference coverage', percent(resultData['referenceCoverage'])),
                 _detailRow(context, 'Query landmarks', '${resultData['queryLandmarks'] ?? 'Not recorded'}'),
                 _detailRow(context, 'Reference landmarks', '${resultData['referenceLandmarks'] ?? 'Not recorded'}'),
+                _detailRow(context, 'Matched query timestamps', _timestampSummary(resultData['matchedQueryTimestampsMs'])),
+                _detailRow(context, 'Matched reference timestamps', _timestampSummary(resultData['matchedReferenceTimestampsMs'])),
               ] else ...[
                 _detailRow(context, 'Query frames', '${resultData['queryFrames'] ?? 'Not recorded'}'),
                 _detailRow(context, 'Reference frames', '${resultData['referenceFrames'] ?? 'Not recorded'}'),

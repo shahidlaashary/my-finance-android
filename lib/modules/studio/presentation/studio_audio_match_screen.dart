@@ -471,6 +471,8 @@ class _StudioAudioMatchScreenState extends State<StudioAudioMatchScreen> {
             _resultMetric('Query coverage', _pct(result.queryCoverage)),
             _resultMetric('Reference coverage', _pct(result.referenceCoverage)),
             _resultMetric('Estimated offset', '${result.offsetMs} ms'),
+            _resultMetric('Matched query timestamps', _timestampSummary(result.matchedQueryTimestampsMs)),
+            _resultMetric('Matched reference timestamps', _timestampSummary(result.matchedReferenceTimestampsMs)),
             const SizedBox(height: 9),
             _disclaimer(),
           ],
@@ -492,6 +494,16 @@ class _StudioAudioMatchScreenState extends State<StudioAudioMatchScreen> {
         subtitle: Text('Score: $score% • ${item['matched_landmarks']} landmarks'),
       ),
     );
+  }
+
+  String _timestampSummary(List<int> timestamps) {
+    if (timestamps.isEmpty) return 'Not recorded';
+    final visible = timestamps.take(5)
+        .map((ms) => '${(ms / 1000).toStringAsFixed(1)}s')
+        .join(', ');
+    return timestamps.length > 5
+        ? '$visible, … (${timestamps.length} total)'
+        : visible;
   }
 
   Widget _resultMetric(String label, String value) => Padding(

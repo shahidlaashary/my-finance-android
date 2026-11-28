@@ -11,6 +11,8 @@ class StudioAudioFingerprintMatch {
     required this.queryCoverage,
     required this.referenceCoverage,
     required this.confidence,
+    this.matchedQueryTimestampsMs = const [],
+    this.matchedReferenceTimestampsMs = const [],
   });
 
   final int matchedLandmarks;
@@ -21,6 +23,8 @@ class StudioAudioFingerprintMatch {
   final double queryCoverage;
   final double referenceCoverage;
   final double confidence;
+  final List<int> matchedQueryTimestampsMs;
+  final List<int> matchedReferenceTimestampsMs;
 
   bool get isMatch => matchedLandmarks >= 8 && confidence >= 0.12;
 }
@@ -94,6 +98,16 @@ class StudioAudioFingerprintMatcher {
       queryCoverage: queryCoverage,
       referenceCoverage: referenceCoverage,
       confidence: confidence,
+      matchedQueryTimestampsMs: matchedQueryLandmarks
+          .map((landmark) => landmark.$1)
+          .toSet()
+          .map((frame) => (frame * hopSize * 1000 / sampleRate).round())
+          .toList()..sort(),
+      matchedReferenceTimestampsMs: matchedReferenceLandmarks
+          .map((landmark) => landmark.$1)
+          .toSet()
+          .map((frame) => (frame * hopSize * 1000 / sampleRate).round())
+          .toList()..sort(),
     );
   }
 

@@ -20,6 +20,10 @@ void main() {
     expect(result.matchedLandmarks, greaterThanOrEqualTo(8));
     expect(result.offsetFrames, 5);
     expect(result.queryCoverage, 1);
+    expect(result.matchedQueryTimestampsMs, hasLength(16));
+    expect(result.matchedReferenceTimestampsMs, hasLength(16));
+    expect(result.matchedQueryTimestampsMs.first, 0);
+    expect(result.matchedReferenceTimestampsMs.first, result.offsetMs);
   });
 
   test('does not report a match for unrelated frequency landmarks', () {

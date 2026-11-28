@@ -103,7 +103,7 @@ class StudioAudioMatchService {
     }
     final bytesA=await File(a.dataFilePath).readAsBytes(),bytesB=await File(b.dataFilePath).readAsBytes();
     final result=StudioAudioFingerprintMatcher(sampleRate:StudioAutoAudioDecoder.fingerprintSampleRate).compare(query:bytesA,reference:bytesB);
-    await catalogueRights.saveComparison(leftId:firstId,rightId:secondId,score:result.confidence,matches:result.matchedLandmarks,offsetMs:result.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':result.queryCoverage,'referenceCoverage':result.referenceCoverage,'queryLandmarks':result.queryLandmarks,'referenceLandmarks':result.referenceLandmarks});
+    await catalogueRights.saveComparison(leftId:firstId,rightId:secondId,score:result.confidence,matches:result.matchedLandmarks,offsetMs:result.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':result.queryCoverage,'referenceCoverage':result.referenceCoverage,'queryLandmarks':result.queryLandmarks,'referenceLandmarks':result.referenceLandmarks,'matchedQueryTimestampsMs':result.matchedQueryTimestampsMs,'matchedReferenceTimestampsMs':result.matchedReferenceTimestampsMs});
     return result;
   }
 }

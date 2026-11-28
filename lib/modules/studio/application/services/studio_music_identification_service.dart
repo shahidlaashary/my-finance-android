@@ -63,7 +63,9 @@ class StudioMusicIdentificationService {
       try{
         final result=await compare(mediaId,file.id);
         compared++;
-        candidates.add(StudioAudioCandidate(media:file,match:result));
+        if (result.isMatch) {
+          candidates.add(StudioAudioCandidate(media:file,match:result));
+        }
       } catch (_) {
         // Keep scanning other items, but surface skipped files in the result.
         skipped++;

@@ -54,6 +54,22 @@ class StudioDatabaseSchema {
     ''');
 
     await db.execute('''
+      CREATE TABLE studio_media_metadata (
+        media_file_id TEXT PRIMARY KEY,
+        title TEXT,
+        artist TEXT,
+        album TEXT,
+        track TEXT,
+        year TEXT,
+        genre TEXT,
+        metadata_source TEXT NOT NULL DEFAULT 'unknown',
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (media_file_id) REFERENCES studio_media_files(id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE studio_artists (
         id TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,

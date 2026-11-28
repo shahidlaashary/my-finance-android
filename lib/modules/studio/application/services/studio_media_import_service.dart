@@ -6,7 +6,9 @@ import 'package:path/path.dart' as p;
 
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
+import 'studio_id3_metadata_reader.dart';
 import 'studio_media_library_service.dart';
+import 'studio_media_metadata_service.dart';
 
 /// Copies a user-selected source file into Studio-managed storage and
 /// registers its metadata in the independent Studio database.
@@ -14,17 +16,23 @@ class StudioMediaImportService {
   StudioMediaImportService({
     required StudioStorageManager storageManager,
     required StudioMediaLibraryService mediaLibrary,
+    StudioId3MetadataReader metadataReader = const StudioId3MetadataReader(),
+    StudioMediaMetadataService? metadataService,
   })  : _storageManager = storageManager,
-        _mediaLibrary = mediaLibrary;
+        _mediaLibrary = mediaLibrary,
+        _metadataReader = metadataReader,
+        _metadataService = metadataService ?? StudioMediaMetadataService();
 
   final StudioStorageManager _storageManager;
   final StudioMediaLibraryService _mediaLibrary;
+  final StudioId3MetadataReader _metadataReader;
+  final StudioMediaMetadataService _metadataService;
   final Random _random = Random.secure();
 
   String _newMediaId() {
     final timestamp = DateTime.now().toUtc().microsecondsSinceEpoch;
     final entropy = _random.nextInt(0x7fffffff).toRadixString(16);
-    return 'media_${timestamp}_$entropy';
+    return 'media_${timestamp}_${entropy}';
   }
 
   Future<StudioMediaFile> importFile({
@@ -35,7 +43,6 @@ class StudioMediaImportService {
     if (!await source.exists()) {
       throw FileSystemException('Selected media file does not exist.', sourcePath);
     }
-
     final sourceSize = await source.length();
     if (sourceSize <= 0) {
       throw FileSystemException('Empty media files cannot be imported.', sourcePath);
@@ -68,11 +75,17 @@ class StudioMediaImportService {
       );
 
       await _mediaLibrary.register(mediaFile);
+      if (mediaType == StudioMediaType.audio &&
+          const {'mp3'}.contains(extension.replaceFirst('.', ''))) {
+        final tags = await _metadataReader.readFile(copied.path);
+        if (!tags.isEmpty) {
+          await _metadataService.saveAudioTags(id, tags);
+        }
+      }
       return mediaFile;
     } catch (_) {
-      if (await destination.exists()) {
-        await destination.delete();
-      }
+      await _mediaLibrary.removeRecord(id).catchError((_) {});
+      if (await destination.exists()) await destination.delete();
       rethrow;
     }
   }
@@ -94,7 +107,6 @@ class StudioMediaImportService {
       'webm': 'video/webm',
       'avi': 'video/x-msvideo',
     };
-
     return type == StudioMediaType.audio
         ? audioTypes[normalized]
         : videoTypes[normalized];

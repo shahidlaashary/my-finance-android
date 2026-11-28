@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:my_finance/modules/studio/application/services/studio_audio_match_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_visual_match_service.dart';
@@ -131,6 +133,24 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
 
   void _showHistoryDetails(Map<String, Object?> row) {
     final isAudio = row['match_type'] == 'Audio Match';
+    final rawResult = row['result_json']?.toString();
+    Map<String, Object?> resultData = const {};
+    if (rawResult != null && rawResult.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawResult);
+        if (decoded is Map) {
+          resultData = decoded.map(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+        }
+      } on FormatException {
+        // Older or malformed result payloads should not block history details.
+      }
+    }
+    String percent(Object? value) {
+      final number = (value as num?)?.toDouble();
+      return number == null ? 'Not recorded' : '${(number * 100).toStringAsFixed(1)}%';
+    }
     final score = ((row['match_score'] as num?)?.toDouble() ?? 0) * 100;
     final date = DateTime.tryParse(row['created_at']?.toString() ?? '');
     final dateLabel = date == null ? 'Not available' : date.toLocal().toString();
@@ -154,6 +174,15 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
               Text('${row['left_name'] ?? 'Unknown media'}  vs  ${row['right_name'] ?? 'Unknown media'}', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 14),
               _detailRow(context, 'Confidence', '${score.toStringAsFixed(1)}%'),
+              if (isAudio) ...[
+                _detailRow(context, 'Query coverage', percent(resultData['queryCoverage'])),
+                _detailRow(context, 'Reference coverage', percent(resultData['referenceCoverage'])),
+                _detailRow(context, 'Query landmarks', '${resultData['queryLandmarks'] ?? 'Not recorded'}'),
+                _detailRow(context, 'Reference landmarks', '${resultData['referenceLandmarks'] ?? 'Not recorded'}'),
+              ] else ...[
+                _detailRow(context, 'Query frames', '${resultData['queryFrames'] ?? 'Not recorded'}'),
+                _detailRow(context, 'Reference frames', '${resultData['referenceFrames'] ?? 'Not recorded'}'),
+              ],
               _detailRow(context, isAudio ? 'Matched landmarks' : 'Matched frames', '${row['matched_landmarks'] ?? row['matched_frames'] ?? 'Not recorded'}'),
               _detailRow(context, 'Estimated offset', '${row['offset_ms'] ?? 'Not recorded'} ms'),
               _detailRow(context, 'Algorithm', '${row['algorithm_key'] ?? 'Not recorded'}'),

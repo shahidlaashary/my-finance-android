@@ -108,7 +108,7 @@ class StudioAudioFingerprintMatcher {
       matchedReferenceTimestampsMs: matchedReferenceLandmarks
           .map((landmark) => landmark.$1)
           .toSet()
-          .map((frame) => (frame * hopSize * 1000 / sampleRate).round())
+          .map((frame) => ((frame * hopSize + fftSize ~/ 2) * 1000 / sampleRate).round())
           .toList()..sort(),
     );
   }

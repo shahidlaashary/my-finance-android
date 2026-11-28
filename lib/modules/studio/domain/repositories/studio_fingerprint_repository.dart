@@ -5,6 +5,12 @@ abstract interface class StudioFingerprintRepository {
 
   Future<StudioFingerprint?> getById(String id);
 
+  Future<List<StudioFingerprint>> getAll({
+    StudioMediaType? mediaType,
+    int limit = 500,
+    int offset = 0,
+  });
+
   Future<StudioFingerprint?> getForMedia({
     required String mediaFileId,
     required String algorithmKey,

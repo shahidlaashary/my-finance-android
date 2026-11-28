@@ -59,6 +59,17 @@ class StudioFingerprintCatalogueService {
   Future<StudioFingerprint?> getById(String id) async =>
       (await _readyRepository).getById(id);
 
+  Future<List<StudioFingerprint>> getAll({
+    StudioMediaType? mediaType,
+    int limit = 500,
+    int offset = 0,
+  }) async =>
+      (await _readyRepository).getAll(
+        mediaType: mediaType,
+        limit: limit,
+        offset: offset,
+      );
+
   Future<StudioFingerprint?> getForMedia({
     required String mediaFileId,
     required String algorithmKey,

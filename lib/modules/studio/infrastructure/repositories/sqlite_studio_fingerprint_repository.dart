@@ -30,6 +30,26 @@ class SqliteStudioFingerprintRepository
   }
 
   @override
+  Future<List<StudioFingerprint>> getAll({
+    StudioMediaType? mediaType,
+    int limit = 500,
+    int offset = 0,
+  }) async {
+    if (limit < 1 || offset < 0) {
+      throw ArgumentError('limit must be positive and offset cannot be negative.');
+    }
+    final rows = await _database.query(
+      'studio_fingerprints',
+      where: mediaType == null ? null : 'media_type = ?',
+      whereArgs: mediaType == null ? null : [mediaType.name],
+      orderBy: 'created_at DESC, id ASC',
+      limit: limit,
+      offset: offset,
+    );
+    return rows.map(StudioFingerprint.fromMap).toList(growable: false);
+  }
+
+  @override
   Future<StudioFingerprint?> getForMedia({
     required String mediaFileId,
     required String algorithmKey,

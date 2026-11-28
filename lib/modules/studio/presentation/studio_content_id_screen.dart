@@ -5,6 +5,7 @@ import 'package:my_finance/modules/studio/application/services/studio_audio_matc
 import 'package:my_finance/modules/studio/application/services/studio_visual_match_service.dart';
 import 'package:my_finance/modules/studio/presentation/studio_audio_match_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_visual_match_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_reference_library_screen.dart';
 
 /// Unified Content ID hub: audio and visual matching tools live under one entry.
 class StudioContentIdScreen extends StatefulWidget {
@@ -62,6 +63,15 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
       appBar: AppBar(
         title: const Text('Content ID'),
         actions: [
+          IconButton(
+            tooltip: 'Reference Library',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const StudioReferenceLibraryScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.inventory_2_outlined),
+          ),
           IconButton(
             tooltip: 'Refresh comparison history',
             onPressed: _refreshHistory,

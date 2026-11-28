@@ -135,9 +135,70 @@ class StudioCatalogueRightsService {
       });
     });
   }
-  Future<List<Map<String,Object?>>> licenses() async => (await _db).query('studio_licenses',orderBy:'created_at DESC');
-  Future<void> addLicense({required String assetType,required String assetId,required String licensor,required String licensee,required String usage,required String territory,String? startDate,String? endDate,bool exclusive=false,String? notes}) async {
-    final now=_now(); await (await _db).insert('studio_licenses',{'id':_id('lic'),'asset_type':assetType,'asset_id':assetId,'licensor':licensor.trim(),'licensee':licensee.trim(),'usage_type':usage.trim(),'territory':territory,'start_date':startDate,'end_date':endDate,'exclusive':exclusive?1:0,'status':'active','notes':notes,'created_at':now,'updated_at':now});
+  Future<List<Map<String,Object?>>> licenses() async =>
+      (await _db).query('studio_licenses', orderBy: 'created_at DESC');
+
+  Future<void> addLicense({
+    required String assetType,
+    required String assetId,
+    required String licensor,
+    required String licensee,
+    required String usage,
+    required String territory,
+    String? startDate,
+    String? endDate,
+    bool exclusive = false,
+    String? notes,
+  }) async {
+    if (assetType.trim().isEmpty || assetId.trim().isEmpty ||
+        licensor.trim().isEmpty || licensee.trim().isEmpty ||
+        usage.trim().isEmpty || territory.trim().isEmpty) {
+      throw ArgumentError('Complete all required license fields.');
+    }
+    final start = _ownershipDate(startDate, 'license start date');
+    final end = _ownershipDate(endDate, 'license end date');
+    if (start != null && end != null && end.isBefore(start)) {
+      throw ArgumentError('License end date cannot be before its start date.');
+    }
+
+    final db = await _db;
+    await db.transaction((txn) async {
+      if (exclusive) {
+        final existing = await txn.query('studio_licenses',
+            where: "asset_type = ? AND asset_id = ? AND usage_type = ? AND exclusive = 1 AND status = 'active'",
+            whereArgs: [assetType.trim(), assetId.trim(), usage.trim()]);
+        for (final license in existing) {
+          final existingTerritory = license['territory']?.toString() ?? '';
+          if (!_territoriesOverlap(territory, existingTerritory)) continue;
+          final existingStart =
+              _ownershipDate(license['start_date'] as String?, 'license start date');
+          final existingEnd =
+              _ownershipDate(license['end_date'] as String?, 'license end date');
+          if (_dateRangesOverlap(start, end, existingStart, existingEnd)) {
+            throw StateError(
+              'An active exclusive license already overlaps this asset, usage, territory and date range.',
+            );
+          }
+        }
+      }
+      final now = _now();
+      await txn.insert('studio_licenses', {
+        'id': _id('lic'),
+        'asset_type': assetType.trim(),
+        'asset_id': assetId.trim(),
+        'licensor': licensor.trim(),
+        'licensee': licensee.trim(),
+        'usage_type': usage.trim(),
+        'territory': territory.trim(),
+        'start_date': startDate,
+        'end_date': endDate,
+        'exclusive': exclusive ? 1 : 0,
+        'status': 'active',
+        'notes': notes,
+        'created_at': now,
+        'updated_at': now,
+      });
+    });
   }
   Future<void> saveComparison({required String leftId,required String rightId,required double score,required int matches,required int offsetMs,required String algorithm,required String version,Map<String,Object?>? result}) async {
     await (await _db).insert('studio_comparison_history',{'id':_id('cmp'),'left_media_id':leftId,'right_media_id':rightId,'match_score':score,'matched_landmarks':matches,'offset_ms':offsetMs,'algorithm_key':algorithm,'algorithm_version':version,'result_json':result==null?null:jsonEncode(result),'created_at':_now()});

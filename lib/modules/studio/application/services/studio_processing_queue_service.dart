@@ -57,8 +57,17 @@ class StudioProcessingQueueService {
     });
     await _execute(id);
     final rows = await db.query('studio_processing_jobs', where: 'id = ?', whereArgs: [id], limit: 1);
-    if (rows.isNotEmpty && rows.first['status'] == 'failed') {
-      throw StateError(rows.first['error_message']?.toString() ?? 'Fingerprint job failed.');
+    if (rows.isEmpty) {
+      throw StateError('Fingerprint job disappeared before completion.');
+    }
+    final finalStatus = rows.first['status']?.toString();
+    if (finalStatus != 'completed') {
+      if (finalStatus == 'failed') {
+        throw StateError(
+          rows.first['error_message']?.toString() ?? 'Fingerprint job failed.',
+        );
+      }
+      throw StateError('Fingerprint job did not complete (status: $finalStatus).');
     }
   }
 

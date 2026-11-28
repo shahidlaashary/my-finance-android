@@ -28,6 +28,7 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
   String? _activePath;
   String? _error;
   StudioMediaFile? _lastRecording;
+  bool _leavePromptOpen = false;
 
   @override
   void dispose() {
@@ -113,19 +114,23 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         // The recorder may not have started; preserve the original error.
       }
       final path = _activePath;
+      var cleanupError;
       if (path != null) {
         try {
           final partial = File(path);
           if (await partial.exists()) await partial.delete();
-        } catch (_) {
-          // Keep the original start error visible; storage diagnostics can
-          // report any file that could not be cleaned up.
+          _activePath = null;
+        } catch (cleanupFailure) {
+          // Preserve the path so the user can retry saving or discard the
+          // partial recording instead of losing the only remaining copy.
+          cleanupError = cleanupFailure;
         }
       }
-      _activePath = null;
       if (mounted) setState(() {
         _recording = false;
-        _error = 'Could not start recording: $error';
+        _error = cleanupError == null
+            ? 'Could not start recording: $error'
+            : 'Could not start recording: $error. The partial file was kept because cleanup failed: $cleanupError';
       });
     }
   }
@@ -219,10 +224,57 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
     }
   }
 
+  Future<void> _handleBlockedPop() async {
+    if (_leavePromptOpen || !mounted) return;
+    _leavePromptOpen = true;
+    try {
+      final action = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(_saving ? 'Recording is being saved' : 'Unsaved recording'),
+          content: Text(_saving
+              ? 'Please wait until the current save operation finishes.'
+              : 'Leave this screen only after saving or discarding the current recording.'),
+          actions: [
+            if (!_saving)
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, 'discard'),
+                child: const Text('Discard & Leave'),
+              ),
+            if (!_saving)
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, 'save'),
+                child: const Text('Stop, Save & Leave'),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'stay'),
+              child: const Text('Stay'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (action == 'save') {
+        await _stopAndSave();
+        if (mounted && _activePath == null) Navigator.of(context).pop();
+      } else if (action == 'discard') {
+        await _discardRecording();
+        if (mounted && _activePath == null) Navigator.of(context).pop();
+      }
+    } finally {
+      _leavePromptOpen = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Scaffold(
+    return PopScope<void>(
+      canPop: !_recording && !_saving && _activePath == null,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _handleBlockedPop();
+      },
+      child: Scaffold(
       appBar: AppBar(title: const Text('Recording Workspace')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
@@ -352,6 +404,7 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
                 ),
           ),
         ],
+      ),
       ),
     );
   }

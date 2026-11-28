@@ -1,48 +1,298 @@
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
 import '../application/services/studio_reports_service.dart';
 
 class StudioReportsScreen extends StatefulWidget {
   const StudioReportsScreen({super.key});
+
   @override
-  State<StudioReportsScreen> createState()=>_StudioReportsScreenState();
+  State<StudioReportsScreen> createState() => _StudioReportsScreenState();
 }
-class _StudioReportsScreenState extends State<StudioReportsScreen>{
+
+class _StudioReportsScreenState extends State<StudioReportsScreen> {
   late Future<StudioReportSummary> _future;
-  @override void initState(){super.initState();_future=StudioReportsService().load();}
-  Future<void> _refresh()async{final next=StudioReportsService().load();setState(()=>_future=next);await next;}
-  Widget _stat(BuildContext context,String title,int value,IconData icon){
-    final colors=Theme.of(context).colorScheme;
-    return Card(child:Padding(padding:const EdgeInsets.all(14),child:Row(children:[
-      Icon(icon,color:colors.primary,size:24),const SizedBox(width:12),Expanded(child:Text(title)),Text(value.toString(),style:Theme.of(context).textTheme.titleLarge),
-    ])));
+  bool _exporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = StudioReportsService().load();
   }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar:AppBar(title:const Text('Studio Reports'),actions:[IconButton(onPressed:_refresh,icon:const Icon(Icons.refresh))]),
-      body:FutureBuilder<StudioReportSummary>(future:_future,builder:(context,s){
-        if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
-        if(s.hasError)return Center(child:Text('Report loading failed: ${s.error}'));
-        final d=s.data!;
-        return RefreshIndicator(onRefresh:_refresh,child:ListView(padding:const EdgeInsets.all(16),children:[
-          Text('Media overview',style:Theme.of(context).textTheme.titleMedium),
-          _stat(context,'Total media files',d.media,Icons.perm_media_outlined),
-          _stat(context,'Audio files',d.audio,Icons.music_note),
-          _stat(context,'Video files',d.video,Icons.video_library),
-          _stat(context,'Fingerprints generated',d.fingerprints,Icons.fingerprint),
-          const SizedBox(height:12),
-          Text('Catalogue & Rights',style:Theme.of(context).textTheme.titleMedium),
-          _stat(context,'Tracks',d.tracks,Icons.library_music),
-          _stat(context,'Artists',d.artists,Icons.person),
-          _stat(context,'Releases',d.releases,Icons.album),
-          _stat(context,'Rights holders',d.holders,Icons.people_alt),
-          _stat(context,'Ownership records',d.ownerships,Icons.verified_user),
-          _stat(context,'Licences',d.licenses,Icons.description),
-          _stat(context,'Comparisons saved',d.comparisons,Icons.compare_arrows),
-          const SizedBox(height:12),
-          Text('Processing',style:Theme.of(context).textTheme.titleMedium),
-          _stat(context,'Active jobs',d.pendingJobs,Icons.pending_actions),
-          _stat(context,'Failed jobs',d.failedJobs,Icons.error_outline),
-        ]));
-      }),
+
+  Future<void> _refresh() async {
+    final next = StudioReportsService().load();
+    setState(() => _future = next);
+    await next;
+  }
+
+  Future<void> _export(StudioReportSummary report) async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final document = pw.Document();
+      final generated = report.generatedAt.toLocal().toString().split('.').first;
+      final sections = <List<String>>[
+        ['MEDIA LIBRARY', 'Total files', report.media.toString()],
+        ['MEDIA LIBRARY', 'Audio files', report.audio.toString()],
+        ['MEDIA LIBRARY', 'Video files', report.video.toString()],
+        ['IDENTIFICATION', 'Fingerprints generated', report.fingerprints.toString()],
+        ['IDENTIFICATION', 'Saved comparisons', report.comparisons.toString()],
+        ['CATALOGUE', 'Tracks', report.tracks.toString()],
+        ['CATALOGUE', 'Artists', report.artists.toString()],
+        ['CATALOGUE', 'Releases', report.releases.toString()],
+        ['RIGHTS', 'Rights holders', report.holders.toString()],
+        ['RIGHTS', 'Ownership records', report.ownerships.toString()],
+        ['RIGHTS', 'Licences', report.licenses.toString()],
+        ['RIGHTS', 'Total claims', report.totalClaims.toString()],
+        ['RIGHTS', 'Open claims', report.openClaims.toString()],
+        ['RIGHTS', 'Resolved / closed claims', report.resolvedClaims.toString()],
+        ['RIGHTS', 'Evidence records', report.evidenceItems.toString()],
+        ['PROCESSING', 'Active jobs', report.pendingJobs.toString()],
+        ['PROCESSING', 'Failed jobs', report.failedJobs.toString()],
+      ];
+      document.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (context) => [
+            pw.Text('Studio Activity Report',
+                style: pw.TextStyle(
+                    fontSize: 22, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 5),
+            pw.Text('Generated: $generated',
+                style: const pw.TextStyle(fontSize: 9)),
+            pw.SizedBox(height: 18),
+            pw.Table(
+              border: pw.TableBorder.all(
+                  color: PdfColors.grey400, width: 0.5),
+              columnWidths: {
+                0: const pw.FlexColumnWidth(1.15),
+                1: const pw.FlexColumnWidth(2.5),
+                2: const pw.FlexColumnWidth(0.8),
+              },
+              children: [
+                _pdfRow(['SECTION', 'METRIC', 'COUNT'], header: true),
+                ...sections.map((row) => _pdfRow(row)),
+              ],
+            ),
+            pw.SizedBox(height: 14),
+            pw.Text(
+              'This report contains local Studio database totals. It does not verify ownership, legal status, or external platform claims.',
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+            ),
+          ],
+        ),
+      );
+      await Printing.layoutPdf(
+        onLayout: (_) async => document.save(),
+        name: 'studio-activity-report.pdf',
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('PDF export failed: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  pw.TableRow _pdfRow(List<String> values, {bool header = false}) {
+    return pw.TableRow(
+      decoration: header
+          ? const pw.BoxDecoration(color: PdfColors.grey300)
+          : null,
+      children: values
+          .map(
+            (value) => pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 7, vertical: 6),
+              child: pw.Text(
+                value,
+                style: pw.TextStyle(
+                  fontSize: 8,
+                  fontWeight:
+                      header ? pw.FontWeight.bold : pw.FontWeight.normal,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _section(
+    BuildContext context,
+    String title,
+    List<(String, int, IconData)> items,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, top: 15),
+          child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            mainAxisExtent: 76,
+          ),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                child: Row(
+                  children: [
+                    Icon(item.$3, size: 20, color: colors.primary),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        item.$1,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    Text(
+                      item.$2.toString(),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Studio Reports'),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh report',
+            onPressed: _refresh,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: FutureBuilder<StudioReportSummary>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline_rounded, size: 40),
+                    const SizedBox(height: 10),
+                    Text('Report loading failed: ${snapshot.error}',
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    FilledButton.tonal(
+                      onPressed: _refresh,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          final data = snapshot.data!;
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'All-time Studio overview',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: _exporting ? null : () => _export(data),
+                      icon: _exporting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                      label: Text(_exporting ? 'Preparing' : 'Export PDF'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Updated ${data.generatedAt.toLocal().toString().split('.').first}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                _section(context, 'Media library', [
+                  ('Total media', data.media, Icons.perm_media_outlined),
+                  ('Audio', data.audio, Icons.music_note_rounded),
+                  ('Video', data.video, Icons.video_library_outlined),
+                  ('Fingerprints', data.fingerprints, Icons.fingerprint_rounded),
+                ]),
+                _section(context, 'Catalogue & identification', [
+                  ('Tracks', data.tracks, Icons.library_music_outlined),
+                  ('Artists', data.artists, Icons.person_outline_rounded),
+                  ('Releases', data.releases, Icons.album_outlined),
+                  ('Comparisons', data.comparisons, Icons.compare_arrows_rounded),
+                ]),
+                _section(context, 'Rights management', [
+                  ('Rights holders', data.holders, Icons.people_outline_rounded),
+                  ('Ownership', data.ownerships, Icons.verified_user_outlined),
+                  ('Licences', data.licenses, Icons.description_outlined),
+                  ('All claims', data.totalClaims, Icons.gavel_rounded),
+                  ('Open claims', data.openClaims, Icons.pending_actions_rounded),
+                  ('Closed claims', data.resolvedClaims, Icons.task_alt_rounded),
+                  ('Evidence records', data.evidenceItems, Icons.attach_file_rounded),
+                ]),
+                _section(context, 'Processing', [
+                  ('Active jobs', data.pendingJobs, Icons.pending_actions_rounded),
+                  ('Failed jobs', data.failedJobs, Icons.error_outline_rounded),
+                ]),
+                const SizedBox(height: 14),
+                Text(
+                  'Counts are read from the local Studio database. They are activity indicators, not legal verification or proof of copyright ownership.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

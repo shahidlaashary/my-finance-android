@@ -67,8 +67,9 @@ class StudioVisualMatchService {
     void Function(int completed, int total)? onProgress,
   }) async {
     final library = await videos();
-    final query = library.where((file) => file.id == queryId).firstOrNull;
-    if (query == null) throw ArgumentError('Selected video is not in the Studio library.');
+    if (!library.any((file) => file.id == queryId)) {
+      throw ArgumentError('Selected video is not in the Studio library.');
+    }
     final references = library.where((file) => file.id != queryId).toList();
     final matches = <StudioVisualMatchCandidate>[];
     var compared = 0;

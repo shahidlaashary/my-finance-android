@@ -308,6 +308,22 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
               _metric(context, 'Missing media files',
                   health.missingMediaIds.length.toString(),
                   Icons.link_off_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Fingerprint records',
+                  health.registeredFingerprintCount.toString(),
+                  Icons.fingerprint_rounded),
+              const SizedBox(height: 8),
+              _metric(context, 'Healthy fingerprint artifacts',
+                  health.healthyFingerprintCount.toString(),
+                  Icons.verified_user_outlined),
+              const SizedBox(height: 8),
+              _metric(context, 'Missing fingerprint artifacts',
+                  health.missingFingerprintIds.length.toString(),
+                  Icons.broken_image_outlined),
+              const SizedBox(height: 8),
+              _metric(context, 'Orphaned fingerprint artifacts',
+                  health.orphanedFingerprintArtifactPaths.length.toString(),
+                  Icons.delete_sweep_outlined),
               if (health.unavailableMediaIds.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 _metric(context, 'Unavailable media records',
@@ -316,18 +332,17 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
               ],
               if (health.missingMediaIds.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Card(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      'Missing media IDs: ${health.missingMediaIds.take(10).join(', ')}${health.missingMediaIds.length > 10 ? '…' : ''}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-                ),
+                _issueCard(context, 'Missing media IDs', health.missingMediaIds),
+              ],
+              if (health.missingFingerprintIds.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _issueCard(context, 'Missing fingerprint IDs',
+                    health.missingFingerprintIds),
+              ],
+              if (health.orphanedFingerprintArtifactPaths.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _issueCard(context, 'Orphaned fingerprint files',
+                    health.orphanedFingerprintArtifactPaths),
               ],
               const SizedBox(height: 18),
               Text('Studio activity',
@@ -357,6 +372,35 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
           ),
         );
       },
+    );
+  }
+
+
+  Widget _issueCard(
+    BuildContext context,
+    String title,
+    List<String> values,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: colors.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: TextStyle(
+              color: colors.onErrorContainer,
+              fontWeight: FontWeight.w700,
+            )),
+            const SizedBox(height: 5),
+            Text(
+              '${values.take(10).join(', ')}${values.length > 10 ? '…' : ''}',
+              style: TextStyle(color: colors.onErrorContainer),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

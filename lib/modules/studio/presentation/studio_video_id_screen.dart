@@ -37,9 +37,9 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
       });
     }catch(e){
       if(!mounted||generation!=_loadGeneration)return;
-      setState(()=>{
-        _error=e.toString();
-        _loading=false;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
       });
     }
   }

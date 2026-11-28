@@ -57,6 +57,8 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         extension: '.wav',
         isVideo: false,
       );
+      // Keep the allocated path so a failed start can clean up its partial file.
+      _activePath = file.path;
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.wav,
@@ -65,7 +67,6 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         ),
         path: file.path,
       );
-      _activePath = file.path;
       _stopwatch
         ..reset()
         ..start();
@@ -81,7 +82,21 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         _lastRecording = null;
       });
     } catch (error) {
-      if (mounted) setState(() => _error = 'Could not start recording: $error');
+      final path = _activePath;
+      if (path != null) {
+        try {
+          final partial = File(path);
+          if (await partial.exists()) await partial.delete();
+        } catch (_) {
+          // Keep the original start error visible; storage diagnostics can
+          // report any file that could not be cleaned up.
+        }
+      }
+      _activePath = null;
+      if (mounted) setState(() {
+        _recording = false;
+        _error = 'Could not start recording: $error';
+      });
     }
   }
 

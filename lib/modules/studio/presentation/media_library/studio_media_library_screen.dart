@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../application/services/studio_media_import_service.dart';
 import '../../application/services/studio_media_library_service.dart';
+import '../../application/services/studio_media_metadata_service.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 
@@ -180,6 +181,48 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
                 _DetailRow(label: 'Format', value: file.fileExtension ?? 'Unknown'),
                 _DetailRow(label: 'Status', value: file.importStatus.name),
                 _DetailRow(label: 'MIME type', value: file.mimeType ?? 'Unknown'),
+                if (file.mediaType == StudioMediaType.audio)
+                  FutureBuilder<Map<String, Object?>?>(
+                    future: StudioMediaMetadataService().getForMedia(file.id),
+                    builder: (context, snapshot) {
+                      final tags = snapshot.data;
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: LinearProgressIndicator(),
+                        );
+                      }
+                      if (tags == null) {
+                        return const _DetailRow(
+                          label: 'Audio tags',
+                          value: 'No embedded ID3 tags found',
+                        );
+                      }
+                      final values = [
+                        ('Title', tags['title']),
+                        ('Artist', tags['artist']),
+                        ('Album', tags['album']),
+                        ('Track', tags['track']),
+                        ('Year', tags['year']),
+                        ('Genre', tags['genre']),
+                      ];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Text('Embedded audio metadata',
+                              style: Theme.of(context).textTheme.titleSmall),
+                          const SizedBox(height: 4),
+                          ...values.where((entry) =>
+                            entry.$2 != null && entry.$2.toString().trim().isNotEmpty
+                          ).map((entry) => _DetailRow(
+                            label: entry.$1,
+                            value: entry.$2.toString(),
+                          )),
+                        ],
+                      );
+                    },
+                  ),
                 _DetailRow(
                   label: 'Imported',
                   value: file.createdAt.toLocal().toString().split('.').first,

@@ -473,10 +473,135 @@ class _StudioAudioMatchScreenState extends State<StudioAudioMatchScreen> {
             _resultMetric('Estimated offset', '${result.offsetMs} ms'),
             _resultMetric('Matched query timestamps', _timestampSummary(result.matchedQueryTimestampsMs)),
             _resultMetric('Matched reference timestamps', _timestampSummary(result.matchedReferenceTimestampsMs)),
+            if (result.matchedQueryTimestampsMs.isNotEmpty &&
+                result.matchedReferenceTimestampsMs.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                'Matched segment timeline',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              _matchTimeline(
+                result.matchedQueryTimestampsMs,
+                result.matchedReferenceTimestampsMs,
+              ),
+            ],
             const SizedBox(height: 9),
             _disclaimer(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _matchTimeline(
+    List<int> queryTimestamps,
+    List<int> referenceTimestamps,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    final maxTimestamp = [
+      ...queryTimestamps,
+      ...referenceTimestamps,
+    ].fold<int>(1, (maximum, value) => value > maximum ? value : maximum);
+
+    Widget track(String label, List<int> timestamps, Color color) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 7),
+                Text(label, style: Theme.of(context).textTheme.labelMedium),
+                const Spacer(),
+                Text(
+                  '${timestamps.length} matched points',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                return SizedBox(
+                  height: 18,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 7,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: colors.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      for (final timestamp in timestamps)
+                        Positioned(
+                          left: (timestamp / maxTimestamp * width)
+                              .clamp(0.0, width - 7),
+                          top: 3,
+                          child: Tooltip(
+                            message: '${(timestamp / 1000).toStringAsFixed(2)}s',
+                            child: Container(
+                              width: 7,
+                              height: 11,
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          track('Query audio', queryTimestamps, colors.primary),
+          track('Reference audio', referenceTimestamps, colors.tertiary),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('0.0s', style: Theme.of(context).textTheme.labelSmall),
+              Text(
+                '${(maxTimestamp / 1000).toStringAsFixed(1)}s',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

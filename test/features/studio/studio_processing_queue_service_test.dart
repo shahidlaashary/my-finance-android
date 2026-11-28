@@ -104,6 +104,19 @@ void main() {
     expect(events.single['event_type'], 'processing_job_requeued');
   });
 
+  test('returns a clean result for an empty library batch', () async {
+    final progress = <(int, int)>[];
+    final result = await queue.runLibraryBatch(
+      onProgress: (completed, total) => progress.add((completed, total)),
+    );
+
+    expect(result.total, 0);
+    expect(result.succeeded, 0);
+    expect(result.failed, 0);
+    expect(progress, [(0, 0)]);
+    expect(await queue.jobs(), isEmpty);
+  });
+
   test('rejects unsupported media types before creating a job', () async {
     await expectLater(
       queue.runFingerprintJob(mediaId: 'media-1', mediaType: 'image'),

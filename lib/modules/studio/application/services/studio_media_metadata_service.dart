@@ -5,7 +5,12 @@ import 'studio_id3_metadata_reader.dart';
 
 /// Persists technical audio tags separately from the media-file record.
 class StudioMediaMetadataService {
-  Future<Database> get _db => StudioDatabaseManager.instance.initialize();
+  StudioMediaMetadataService({Database? database}) : _database = database;
+
+  final Database? _database;
+
+  Future<Database> get _db async =>
+      _database ?? await StudioDatabaseManager.instance.initialize();
 
   Future<void> saveAudioTags(String mediaFileId, StudioAudioMetadata metadata,
       {String source = 'id3'}) async {

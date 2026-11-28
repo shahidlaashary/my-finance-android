@@ -165,4 +165,93 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('normalizes claim type and priority before saving', () async {
+    final id = await rights.createClaim(
+      claimType: ' COPYRIGHT ',
+      assetType: 'track',
+      assetId: 'track-normalized',
+      claimantName: 'Claimant',
+      title: 'Copyright claim',
+      description: 'Description',
+      priority: ' HIGH ',
+    );
+    final saved = await rights.claim(id);
+    expect(saved!['claim_type'], 'copyright');
+    expect(saved['priority'], 'high');
+  });
+
+  test('rejects counterclaims against a different asset', () async {
+    final parentId = await rights.createClaim(
+      claimType: 'copyright',
+      assetType: 'track',
+      assetId: 'track-parent',
+      claimantName: 'Claimant A',
+      title: 'Original claim',
+      description: 'Description',
+    );
+    await expectLater(
+      rights.createClaim(
+        claimType: 'ownership',
+        assetType: 'track',
+        assetId: 'track-other',
+        claimantName: 'Claimant B',
+        title: 'Counterclaim',
+        description: 'Description',
+        parentClaimId: parentId,
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test('rejects evidence with malformed checksum or checksum without file', () async {
+    final claimId = await rights.createClaim(
+      claimType: 'copyright',
+      assetType: 'track',
+      assetId: 'track-evidence',
+      claimantName: 'Claimant',
+      title: 'Evidence claim',
+      description: 'Description',
+    );
+    await expectLater(
+      rights.addClaimEvidence(
+        claimId: claimId,
+        evidenceType: 'document',
+        title: 'Bad checksum',
+        filePath: '/tmp/evidence.pdf',
+        checksumSha256: 'not-a-sha256',
+      ),
+      throwsArgumentError,
+    );
+    await expectLater(
+      rights.addClaimEvidence(
+        claimId: claimId,
+        evidenceType: 'document',
+        title: 'Checksum without file',
+        checksumSha256: List.filled(64, 'a').join(),
+      ),
+      throwsArgumentError,
+    );
+    expect(await rights.claimEvidence(claimId), isEmpty);
+  });
+
+  test('requires a decision note when rejecting a claim', () async {
+    final claimId = await rights.createClaim(
+      claimType: 'copyright',
+      assetType: 'track',
+      assetId: 'track-reject',
+      claimantName: 'Claimant',
+      title: 'Claim to reject',
+      description: 'Description',
+    );
+    await rights.transitionClaim(claimId: claimId, status: 'submitted');
+    await rights.transitionClaim(claimId: claimId, status: 'under_review');
+    await expectLater(
+      rights.transitionClaim(claimId: claimId, status: 'rejected'),
+      throwsArgumentError,
+    );
+    final saved = await rights.claim(claimId);
+    expect(saved!['status'], 'under_review');
+  });
+
 }

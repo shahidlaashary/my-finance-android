@@ -238,6 +238,8 @@ class StudioCatalogueRightsService {
   }) async {
     const types = {'ownership','copyright','license','content_match','other'};
     const priorities = {'low','normal','high','urgent'};
+    claimType = claimType.trim().toLowerCase();
+    priority = priority.trim().toLowerCase();
     if (!types.contains(claimType)) throw ArgumentError('Invalid claim type.');
     if (!priorities.contains(priority)) throw ArgumentError('Invalid priority.');
     if (assetType.trim().isEmpty || assetId.trim().isEmpty ||
@@ -251,8 +253,17 @@ class StudioCatalogueRightsService {
     await db.transaction((txn) async {
       if (parentClaimId != null) {
         final parent = await txn.query('studio_rights_claims',
-            columns: ['id'], where: 'id = ?', whereArgs: [parentClaimId], limit: 1);
+            columns: ['id', 'asset_type', 'asset_id', 'status'],
+            where: 'id = ?', whereArgs: [parentClaimId], limit: 1);
         if (parent.isEmpty) throw ArgumentError('Original claim was not found.');
+        final original = parent.first;
+        if ({'resolved', 'rejected', 'withdrawn'}.contains(original['status'])) {
+          throw StateError('A counterclaim cannot be filed against a closed claim.');
+        }
+        if (original['asset_type'] != assetType.trim() ||
+            original['asset_id'] != assetId.trim()) {
+          throw ArgumentError('A counterclaim must refer to the same asset as its original claim.');
+        }
       }
       await txn.insert('studio_rights_claims', {
         'id': id, 'claim_type': claimType, 'asset_type': assetType.trim(),
@@ -280,6 +291,118 @@ class StudioCatalogueRightsService {
   }) async {
     if (title.trim().isEmpty || evidenceType.trim().isEmpty) {
       throw ArgumentError('Evidence type and title are required.');
+    }
+    if (filePath != null && filePath.trim().isEmpty) {
+      throw ArgumentError('Evidence file path cannot be blank.');
+    }
+    if (checksumSha256 != null &&
+        !RegExp(r'^[a-fA-F0-9]{64}
+    final db = await _db;
+    final now = _now();
+    await db.transaction((txn) async {
+      final rows = await txn.query('studio_rights_claims',
+          columns: ['status'], where: 'id = ?', whereArgs: [claimId], limit: 1);
+      if (rows.isEmpty) throw ArgumentError('Claim not found.');
+      if (rows.first['status'] == 'resolved' || rows.first['status'] == 'rejected' ||
+          rows.first['status'] == 'withdrawn') {
+        throw StateError('Evidence cannot be added to a closed claim.');
+      }
+      await txn.insert('studio_claim_evidence', {
+        'id': _id('evidence'), 'claim_id': claimId,
+        'evidence_type': evidenceType.trim(), 'title': title.trim(),
+        'description': description?.trim(), 'file_path': filePath,
+        'checksum_sha256': checksumSha256, 'created_at': now,
+      });
+      await txn.insert('studio_claim_events', {
+        'claim_id': claimId, 'event_type': 'evidence_added',
+        'note': 'Evidence added: ${title.trim()}', 'created_at': now,
+      });
+      await txn.update('studio_rights_claims', {'updated_at': now},
+          where: 'id = ?', whereArgs: [claimId]);
+    });
+  }
+
+  Future<List<Map<String,Object?>>> claimEvidence(String claimId) async =>
+      (await _db).query('studio_claim_evidence',
+          where: 'claim_id = ?', whereArgs: [claimId], orderBy: 'created_at DESC');
+
+  Future<List<Map<String,Object?>>> claimEvents(String claimId) async =>
+      (await _db).query('studio_claim_events',
+          where: 'claim_id = ?', whereArgs: [claimId], orderBy: 'created_at DESC');
+
+  Future<void> removeClaimEvidence(String evidenceId) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'studio_claim_evidence',
+        columns: ['claim_id'],
+        where: 'id = ?',
+        whereArgs: [evidenceId],
+        limit: 1,
+      );
+      if (rows.isEmpty) throw ArgumentError('Evidence record not found.');
+      final claimId = rows.first['claim_id'].toString();
+      await txn.delete('studio_claim_evidence',
+          where: 'id = ?', whereArgs: [evidenceId]);
+      await txn.insert('studio_claim_events', {
+        'claim_id': claimId,
+        'event_type': 'evidence_removed',
+        'note': 'Evidence attachment/record removed.',
+        'created_at': _now(),
+      });
+      await txn.update('studio_rights_claims', {'updated_at': _now()},
+          where: 'id = ?', whereArgs: [claimId]);
+    });
+  }
+
+  Future<void> transitionClaim({
+    required String claimId,
+    required String status,
+    String? note,
+    String? resolution,
+    DateTime? dueAt,
+  }) async {
+    const allowed = {
+      'draft': {'submitted','withdrawn'},
+      'submitted': {'under_review','withdrawn'},
+      'under_review': {'resolved','rejected','withdrawn'},
+      'resolved': <String>{}, 'rejected': <String>{}, 'withdrawn': <String>{},
+    };
+    if (!allowed.containsKey(status)) throw ArgumentError('Invalid claim status.');
+    final db = await _db;
+    final now = _now();
+    await db.transaction((txn) async {
+      final rows = await txn.query('studio_rights_claims',
+          where: 'id = ?', whereArgs: [claimId], limit: 1);
+      if (rows.isEmpty) throw ArgumentError('Claim not found.');
+      final previous = rows.first['status'] as String;
+      if (!allowed[previous]!.contains(status)) {
+        throw StateError('Cannot move claim from $previous to $status.');
+      }
+      if ((status == 'resolved' || status == 'rejected') &&
+          (resolution == null || resolution.trim().isEmpty)) {
+        throw ArgumentError('A decision note is required when resolving or rejecting a claim.');
+      }
+      await txn.update('studio_rights_claims', {
+        'status': status, 'updated_at': now,
+        if (status == 'submitted') 'submitted_at': now,
+        if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
+        if (status == 'resolved' || status == 'rejected') 'resolved_at': now,
+        if (resolution != null) 'resolution': resolution.trim(),
+      }, where: 'id = ?', whereArgs: [claimId]);
+      await txn.insert('studio_claim_events', {
+        'claim_id': claimId, 'event_type': 'status_changed',
+        'from_status': previous, 'to_status': status,
+        'note': note?.trim() ?? resolution?.trim(), 'created_at': now,
+      });
+    });
+  }
+}
+).hasMatch(checksumSha256.trim())) {
+      throw ArgumentError('Evidence SHA-256 checksum must contain exactly 64 hexadecimal characters.');
+    }
+    if (checksumSha256 != null && filePath == null) {
+      throw ArgumentError('A checksum requires an attached evidence file.');
     }
     final db = await _db;
     final now = _now();

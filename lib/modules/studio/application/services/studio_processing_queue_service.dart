@@ -92,9 +92,29 @@ class StudioProcessingQueueService {
       }
     } catch (error) {
       final failed = DateTime.now().toUtc().toIso8601String();
-      await db.update('studio_processing_jobs', {
-        'status': 'failed', 'error_message': error.toString(), 'updated_at': failed,
-      }, where: 'id = ?', whereArgs: [id,]);
+      // A user may mark a running job as cancelled while the native decoder
+      // is still executing. Preserve that explicit cancellation if the native
+      // operation subsequently throws instead of overwriting it as "failed".
+      await db.transaction((txn) async {
+        final current = await txn.query(
+          'studio_processing_jobs',
+          columns: ['status'],
+          where: 'id = ?',
+          whereArgs: [id],
+          limit: 1,
+        );
+        if (current.isEmpty || current.first['status'] == 'cancelled') return;
+        await txn.update(
+          'studio_processing_jobs',
+          {
+            'status': 'failed',
+            'error_message': error.toString(),
+            'updated_at': failed,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      });
     }
   }
 

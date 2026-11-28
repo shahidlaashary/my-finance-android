@@ -131,16 +131,39 @@ class StudioProcessingQueueService {
 
   Future<void> _execute(String id) async {
     final db = await _db;
-    final rows = await db.query('studio_processing_jobs', where: 'id = ?', whereArgs: [id], limit: 1);
-    if (rows.isEmpty) throw ArgumentError('Processing job not found.');
-    final job = rows.first;
+    Map<String, Object?>? job;
     final now = DateTime.now().toUtc().toIso8601String();
-    await db.update('studio_processing_jobs', {
-      'status': 'running', 'progress': 5,
-      'attempts': (job['attempts'] as num? ?? 0).toInt() + 1,
-      'started_at': now, 'completed_at': null, 'error_message': null,
-      'updated_at': now,
-    }, where: 'id = ?', whereArgs: [id]);
+
+    // Claim the job atomically. If cancellation wins while the job is still
+    // queued, the worker must not start decoding or overwrite that state.
+    final claimed = await db.transaction((txn) async {
+      final rows = await txn.query(
+        'studio_processing_jobs',
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (rows.isEmpty) throw ArgumentError('Processing job not found.');
+      job = rows.first;
+      if (!{'pending', 'queued'}.contains(job!['status'])) return false;
+      final changed = await txn.update(
+        'studio_processing_jobs',
+        {
+          'status': 'running',
+          'progress': 5,
+          'attempts': (job!['attempts'] as num? ?? 0).toInt() + 1,
+          'started_at': now,
+          'completed_at': null,
+          'error_message': null,
+          'updated_at': now,
+        },
+        where: "id = ? AND status IN ('pending', 'queued')",
+        whereArgs: [id],
+      );
+      return changed == 1;
+    });
+    if (!claimed) return;
+
     try {
       final targetId = job['target_id']?.toString();
       if (targetId == null || targetId.isEmpty) throw StateError('Job target is missing.');

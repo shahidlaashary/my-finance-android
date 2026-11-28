@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:flutter_test/flutter.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:my_finance/modules/studio/application/services/studio_id3_metadata_reader.dart';
 
 void main() {
@@ -66,5 +66,6 @@ void _synchsafeSet(Uint8List bytes, int offset, int value) {
 
 void _put(Uint8List bytes, int offset, String value, int length) {
   final data = value.codeUnits;
-  bytes.setRange(offset, offset + data.length, data);
+  final count = data.length < length ? data.length : length;
+  bytes.setRange(offset, offset + count, data.take(count));
 }

@@ -403,36 +403,6 @@ class StudioCatalogueRightsService {
     });
   }
 }
-).hasMatch(checksumSha256.trim())) {
-      throw ArgumentError('Evidence SHA-256 checksum must contain exactly 64 hexadecimal characters.');
-    }
-    if (checksumSha256 != null && filePath == null) {
-      throw ArgumentError('A checksum requires an attached evidence file.');
-    }
-    final db = await _db;
-    final now = _now();
-    await db.transaction((txn) async {
-      final rows = await txn.query('studio_rights_claims',
-          columns: ['status'], where: 'id = ?', whereArgs: [claimId], limit: 1);
-      if (rows.isEmpty) throw ArgumentError('Claim not found.');
-      if (rows.first['status'] == 'resolved' || rows.first['status'] == 'rejected' ||
-          rows.first['status'] == 'withdrawn') {
-        throw StateError('Evidence cannot be added to a closed claim.');
-      }
-      await txn.insert('studio_claim_evidence', {
-        'id': _id('evidence'), 'claim_id': claimId,
-        'evidence_type': evidenceType.trim(), 'title': title.trim(),
-        'description': description?.trim(), 'file_path': filePath,
-        'checksum_sha256': checksumSha256, 'created_at': now,
-      });
-      await txn.insert('studio_claim_events', {
-        'claim_id': claimId, 'event_type': 'evidence_added',
-        'note': 'Evidence added: ${title.trim()}', 'created_at': now,
-      });
-      await txn.update('studio_rights_claims', {'updated_at': now},
-          where: 'id = ?', whereArgs: [claimId]);
-    });
-  }
 
   Future<List<Map<String,Object?>>> claimEvidence(String claimId) async =>
       (await _db).query('studio_claim_evidence',

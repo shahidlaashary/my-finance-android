@@ -17,6 +17,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
   List<Map<String,Object?>> _history=[];
   bool _loading=true,_processing=false;
   String? _scanSummary;
+  String? _scanProgress;
   String? _error,_first,_second;
   StudioAudioFingerprintMatch? _result;
   bool get _isCompareMode=>widget.section=='Compare';
@@ -35,19 +36,26 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
       setState(()=>_loading=false);
     }catch(e){if(!mounted)return;setState(()=>_error=e.toString());setState(()=>_loading=false);}
   }
-  Future<void> _identify(StudioMediaFile file)async{
-    setState(()=>_processing=true);
-    try{
+  Future<void> _identify(StudioMediaFile file) async {
+    if (_processing) return;
+    setState(() { _processing = true; _scanProgress = 'Preparing fingerprint…'; _scanSummary = null; _candidates = []; });
+    try {
       await StudioProcessingQueueService().runFingerprintJob(mediaId: file.id, mediaType: 'audio');
-      final scan=await _service.scanMatches(file.id);
-      final matches=scan.matches;
-      if(!mounted)return;
-      setState(()=>_candidates=matches);
-      final summary='Compared ${scan.comparedCount} files; skipped ${scan.skippedCount} unreadable/unsupported files.';
-      setState(()=>_scanSummary=summary);
-      _toast(matches.isEmpty?'No matching candidates. $summary':'Scan completed. ${matches.length} candidates. $summary');
-    }catch(e){_toast('Music ID failed: $e');}
-    if(mounted)setState(()=>_processing=false);
+      if (!mounted) return;
+      setState(() => _scanProgress = 'Scanning local audio library…');
+      final scan = await _service.scanMatches(file.id, onProgress: (completed, total) {
+        if (!mounted) return;
+        setState(() => _scanProgress = total == 0 ? 'No other audio files to compare.' : 'Comparing $completed of $total files…');
+      });
+      if (!mounted) return;
+      final summary = 'Compared ${scan.comparedCount} files; skipped ${scan.skippedCount} unreadable/unsupported files.';
+      setState(() { _candidates = scan.matches; _scanSummary = summary; _scanProgress = null; });
+      _toast(scan.matches.isEmpty ? 'No matching candidates. $summary' : 'Scan completed. ${scan.matches.length} candidates. $summary');
+    } catch (error) {
+      if (mounted) { setState(() { _scanProgress = null; _error = 'Music ID failed: $error'; }); _toast('Music ID failed: $error'); }
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
   }
   Future<void> _runComparison()async{
     if(_first==null||_second==null||_first==_second){_toast('Select two different audio files.');return;}
@@ -66,6 +74,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen>{
     const SizedBox(height:10),
     if(_files.isEmpty)const Padding(padding:EdgeInsets.symmetric(vertical:50),child:Text('Import audio files in Media Library first.')),
     ..._files.map((f)=>ListTile(leading:const Icon(Icons.audio_file),title:Text(f.originalName),subtitle:Text(f.fileExtension??'Audio'),trailing:IconButton(onPressed:_processing?null:()=>_identify(f),icon:const Icon(Icons.fingerprint),tooltip:'Identify in library'))),
+    if(_scanProgress!=null)Padding(padding:const EdgeInsets.only(top:12),child:Row(children:[const SizedBox(width:16,height:16,child:CircularProgressIndicator(strokeWidth:2)),const SizedBox(width:10),Expanded(child:Text(_scanProgress!))])),
     if(_scanSummary!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(_scanSummary!,style:Theme.of(context).textTheme.bodySmall)),
     if(_candidates.isNotEmpty)...[
       const Divider(height:30),

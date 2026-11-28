@@ -47,19 +47,22 @@ class StudioMusicIdentificationService {
     mediaLibrary:mediaLibrary,
     fingerprintCatalogue:fingerprints,
   );
-  Future<List<StudioMediaFile>> audioFiles()=>mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:500);
+  static const int maxFilesPerScan = 100;
+  Future<List<StudioMediaFile>> audioFiles()=>mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:maxFilesPerScan);
   Future<StudioFingerprint?> fingerprintFor(String mediaId)=>fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:algorithmKey,algorithmVersion:algorithmVersion);
   Future<List<Map<String,Object?>>> comparisonHistory()=>StudioCatalogueRightsService().comparisonHistory();
   Future<StudioFingerprint> identify(String mediaId)=>_engine.generateForMedia(mediaId);
 
-  Future<StudioAudioScanResult> scanMatches(String mediaId) async {
+  Future<StudioAudioScanResult> scanMatches(String mediaId, {void Function(int completed, int total)? onProgress}) async {
     await identify(mediaId);
     final files=await audioFiles();
     final candidates=<StudioAudioCandidate>[];
     var skipped=0;
     var compared=0;
-    for(final file in files){
-      if(file.id==mediaId)continue;
+    final scanFiles = files.where((file) => file.id != mediaId).toList();
+    var completed = 0;
+    onProgress?.call(0, scanFiles.length);
+    for(final file in scanFiles){
       try{
         final result=await compare(mediaId,file.id);
         compared++;
@@ -69,6 +72,9 @@ class StudioMusicIdentificationService {
       } catch (_) {
         // Keep scanning other items, but surface skipped files in the result.
         skipped++;
+      } finally {
+        completed++;
+        onProgress?.call(completed, scanFiles.length);
       }
     }
     candidates.sort((a,b)=>b.match.confidence.compareTo(a.match.confidence));

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.dart';
-import 'package:my_finance/modules/studio/presentation/studio_video_id_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_audio_match_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_visual_match_screen.dart';
 
 /// Unified Content ID hub: audio and visual matching tools live under one entry.
 class StudioContentIdScreen extends StatelessWidget {
@@ -8,8 +8,8 @@ class StudioContentIdScreen extends StatelessWidget {
   final String? initialSection;
   void _open(BuildContext context, String option) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) =>
-      option == 'Visual Match' ? const StudioVideoIdScreen() :
-      StudioMusicIdScreen(section: option == 'Compare' ? 'Compare' : 'Audio Match')));
+      option == 'Visual Match' ? const StudioVisualMatchScreen() :
+      StudioAudioMatchScreen(section: option == 'Compare' ? 'Compare' : 'Audio Match')));
   }
   @override
   Widget build(BuildContext context) {

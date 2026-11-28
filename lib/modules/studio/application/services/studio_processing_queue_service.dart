@@ -1,8 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../infrastructure/database/studio_database_manager.dart';
-import 'studio_music_identification_service.dart';
-import 'studio_video_identification_service.dart';
+import 'studio_audio_match_service.dart';
+import 'studio_visual_match_service.dart';
 
 /// Read/write boundary for the Studio processing queue.
 ///
@@ -79,10 +79,10 @@ class StudioProcessingQueueService {
       if (targetId == null || targetId.isEmpty) throw StateError('Job target is missing.');
       switch (job['job_type']) {
         case 'audio_fingerprint':
-          await StudioMusicIdentificationService().identify(targetId);
+          await StudioAudioMatchService().identify(targetId);
           break;
         case 'video_fingerprint':
-          await StudioVideoIdentificationService().fingerprint(targetId);
+          await StudioVisualMatchService().fingerprint(targetId);
           break;
         default:
           throw StateError('No worker is registered for ${job['job_type']}.');

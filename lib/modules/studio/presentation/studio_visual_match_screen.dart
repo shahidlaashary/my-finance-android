@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../application/services/studio_video_identification_service.dart';
+import '../application/services/studio_visual_match_service.dart';
 import '../application/services/studio_processing_queue_service.dart';
 import '../domain/entities/studio_media_file.dart';
 import '../domain/entities/studio_video_fingerprint_match.dart';
 
-class StudioVideoIdScreen extends StatefulWidget{
-  const StudioVideoIdScreen({super.key});
-  @override State<StudioVideoIdScreen> createState()=>_StudioVideoIdScreenState();
+class StudioVisualMatchScreen extends StatefulWidget{
+  const StudioVisualMatchScreen({super.key});
+  @override State<StudioVisualMatchScreen> createState()=>_StudioVisualMatchScreenState();
 }
-class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
-  final _service=StudioVideoIdentificationService();
+class _StudioVisualMatchScreenState extends State<StudioVisualMatchScreen>{
+  final _service=StudioVisualMatchService();
   List<StudioMediaFile> _videos=[];
   List<Map<String,Object?>> _history=[];
   String? _first,_second;
@@ -29,7 +29,7 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
       data.sort((a,b)=>a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()));
       setState((){
         _videos=data;
-        _history=history.where((h)=>h['algorithm_key']==StudioVideoIdentificationService.algorithmKey).toList();
+        _history=history.where((h)=>h['algorithm_key']==StudioVisualMatchService.algorithmKey).toList();
         _first??=data.isNotEmpty?data.first.id:null;
         _second??=data.length>1?data[1].id:null;
         _error=null;
@@ -44,11 +44,11 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
     }
   }
   Future<void> _fingerprint(StudioMediaFile f)async{setState(()=>_busy=true);try{await StudioProcessingQueueService().runFingerprintJob(mediaId: f.id, mediaType: 'video');if(mounted)_toast('Video fingerprint generated.');}catch(e){if(mounted)_toast('Fingerprint failed: $e');}if(mounted)setState(()=>_busy=false);}
-  Future<void> _compare()async{if(_first==null||_second==null||_first==_second){_toast('Choose two different videos.');return;}setState(()=>_busy=true);try{final m=await _service.compare(_first!,_second!);final history=await _service.history();if(mounted)setState(()=>_result=m);if(mounted)setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVideoIdentificationService.algorithmKey).toList());}catch(e){if(mounted)_toast('Compare failed: $e');}if(mounted)setState(()=>_busy=false);}
+  Future<void> _compare()async{if(_first==null||_second==null||_first==_second){_toast('Choose two different videos.');return;}setState(()=>_busy=true);try{final m=await _service.compare(_first!,_second!);final history=await _service.history();if(mounted)setState(()=>_result=m);if(mounted)setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVisualMatchService.algorithmKey).toList());}catch(e){if(mounted)_toast('Compare failed: $e');}if(mounted)setState(()=>_busy=false);}
   void _toast(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _pct(double v)=>(v*100).toStringAsFixed(1)+'%';
   @override Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Video ID')),
+    appBar:AppBar(title:const Text('Visual Match')),
     body:_loading
       ?const Center(child:CircularProgressIndicator())
       :_error!=null
@@ -57,7 +57,7 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
           child:Column(mainAxisSize:MainAxisSize.min,children:[
             const Icon(Icons.error_outline_rounded,size:40),
             const SizedBox(height:12),
-            Text('Could not load Video ID: $_error',textAlign:TextAlign.center),
+            Text('Could not load Visual Match: $_error',textAlign:TextAlign.center),
             const SizedBox(height:12),
             FilledButton.tonalIcon(onPressed:_load,icon:const Icon(Icons.refresh_rounded),label:const Text('Retry')),
           ]),

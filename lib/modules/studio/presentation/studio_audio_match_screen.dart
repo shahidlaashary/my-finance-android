@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../application/services/studio_music_identification_service.dart';
+import '../application/services/studio_audio_match_service.dart';
 import '../application/services/studio_processing_queue_service.dart';
 import '../domain/entities/studio_media_file.dart';
 import '../engines/audio_fingerprint/studio_audio_fingerprint_matcher.dart';
 
-class StudioMusicIdScreen extends StatefulWidget {
-  const StudioMusicIdScreen({super.key, required this.section});
+class StudioAudioMatchScreen extends StatefulWidget {
+  const StudioAudioMatchScreen({super.key, required this.section});
 
   final String section;
 
   @override
-  State<StudioMusicIdScreen> createState() => _StudioMusicIdScreenState();
+  State<StudioAudioMatchScreen> createState() => _StudioAudioMatchScreenState();
 }
 
-class _StudioMusicIdScreenState extends State<StudioMusicIdScreen> {
-  final _service = StudioMusicIdentificationService();
+class _StudioAudioMatchScreenState extends State<StudioAudioMatchScreen> {
+  final _service = StudioAudioMatchService();
   List<StudioMediaFile> _files = [];
   List<StudioAudioCandidate> _candidates = [];
   List<Map<String, Object?>> _history = [];
@@ -105,9 +105,9 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen> {
       if (mounted) {
         setState(() {
           _scanProgress = null;
-          _error = 'Music ID failed: $error';
+          _error = 'Audio Match failed: $error';
         });
-        _toast('Music ID failed: $error');
+        _toast('Audio Match failed: $error');
       }
     } finally {
       if (mounted) setState(() => _processing = false);
@@ -170,7 +170,7 @@ class _StudioMusicIdScreenState extends State<StudioMusicIdScreen> {
           Icon(Icons.error_outline_rounded,
               size: 42, color: Theme.of(context).colorScheme.error),
           const SizedBox(height: 12),
-          Text('Studio Music ID could not load',
+          Text('Studio Audio Match could not load',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 6),

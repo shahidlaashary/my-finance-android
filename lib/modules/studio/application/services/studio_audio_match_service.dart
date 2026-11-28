@@ -27,8 +27,8 @@ class StudioAudioScanResult {
   final int skippedCount;
 }
 
-class StudioMusicIdentificationService {
-  StudioMusicIdentificationService({
+class StudioAudioMatchService {
+  StudioAudioMatchService({
     StudioMediaLibraryService? mediaLibrary,
     StudioFingerprintCatalogueService? fingerprints,
     StudioStorageManager? storage,

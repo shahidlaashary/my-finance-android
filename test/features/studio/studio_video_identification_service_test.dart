@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_finance/modules/studio/application/services/studio_catalogue_rights_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_media_library_service.dart';
-import 'package:my_finance/modules/studio/application/services/studio_video_identification_service.dart';
+import 'package:my_finance/modules/studio/application/services/studio_visual_match_service.dart';
 import 'package:my_finance/modules/studio/domain/entities/studio_media_file.dart';
 import 'package:my_finance/modules/studio/infrastructure/database/studio_database_schema.dart';
 import 'package:my_finance/modules/studio/infrastructure/repositories/sqlite_studio_media_repository.dart';
@@ -9,14 +9,14 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   late Database database;
-  late StudioVideoIdentificationService service;
+  late StudioVisualMatchService service;
 
   setUpAll(sqfliteFfiInit);
 
   setUp(() async {
     database = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
     await StudioDatabaseSchema.create(database, StudioDatabaseSchema.version);
-    service = StudioVideoIdentificationService(
+    service = StudioVisualMatchService(
       mediaLibrary: StudioMediaLibraryService(
         repository: SqliteStudioMediaRepository(database),
       ),

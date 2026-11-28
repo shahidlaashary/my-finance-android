@@ -7,15 +7,15 @@ import 'studio_catalogue_rights_service.dart';
 import 'studio_fingerprint_catalogue_service.dart';
 import 'studio_media_library_service.dart';
 
-/// Application-level entry point for Video ID workflows.
+/// Application-level entry point for Visual Match workflows.
 ///
 /// Keeps algorithm identity stable at the application boundary so UI and
 /// application code do not need to reference engine implementation details.
-class StudioVideoIdentificationService {
+class StudioVisualMatchService {
   static const algorithmKey = 'studio.video.frame-dhash';
   static const algorithmVersion = '1.0.0';
 
-  StudioVideoIdentificationService({
+  StudioVisualMatchService({
     StudioMediaLibraryService? mediaLibrary,
     StudioFingerprintCatalogueService? catalogue,
     StudioStorageManager? storage,

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
 
@@ -10,6 +9,26 @@ import '../../domain/entities/studio_fingerprint.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 import 'studio_audio_fingerprint_contracts.dart';
+import 'studio_auto_audio_decoder.dart';
+import 'studio_spectral_landmark_fingerprint.dart';
+
+
+Future<({int durationMs, int sampleRate, int channels, StudioAudioFingerprintOutput output})>
+    _decodeAndFingerprintInBackground(String path) async {
+  // Keep the isolate entry point top-level and pass only a path, never
+  // injected service/decoder objects across isolate boundaries.
+  const decoder = StudioAutoAudioDecoder();
+  const algorithm = StudioSpectralLandmarkFingerprint();
+  final decoded = await decoder.decode(path);
+  final output = await algorithm.generate(decoded);
+  return (
+    durationMs: decoded.durationMs,
+    sampleRate: decoded.sampleRate,
+    channels: decoded.channels,
+    output: output,
+  );
+}
+
 
 /// Coordinates decoding, algorithm execution, artifact storage and catalogue
 /// registration. It does not prescribe a codec or a fingerprint algorithm.
@@ -39,6 +58,18 @@ class StudioAudioFingerprintEngine {
     return 'fp_audio_${timestamp}_$entropy';
   }
 
+  Future<({int durationMs, int sampleRate, int channels, StudioAudioFingerprintOutput output})>
+      _decodeAndFingerprintLocally(String path) async {
+    final decoded = await _decoder.decode(path);
+    final output = await _algorithm.generate(decoded);
+    return (
+      durationMs: decoded.durationMs,
+      sampleRate: decoded.sampleRate,
+      channels: decoded.channels,
+      output: output,
+    );
+  }
+
   Future<StudioFingerprint> generateForMedia(String mediaFileId) async {
     final media = await _mediaLibrary.getById(mediaFileId);
     if (media == null) {
@@ -62,21 +93,11 @@ class StudioAudioFingerprintEngine {
     );
     if (existing != null) return existing;
 
-    // Decoding (including native FFI work) and spectral analysis contain
-    // long synchronous sections. Running them on the UI isolate can freeze
-    // the whole Music ID route, including the AppBar back button.
-    final decoder = _decoder;
-    final algorithm = _algorithm;
-    final computation = await Isolate.run(() async {
-      final decodedAudio = await decoder.decode(media.storagePath);
-      final fingerprintOutput = await algorithm.generate(decodedAudio);
-      return (
-        durationMs: decodedAudio.durationMs,
-        sampleRate: decodedAudio.sampleRate,
-        channels: decodedAudio.channels,
-        output: fingerprintOutput,
-      );
-    });
+    final computation =
+        _decoder.runtimeType == StudioAutoAudioDecoder &&
+                _algorithm.runtimeType == StudioSpectralLandmarkFingerprint
+            ? await _decodeAndFingerprintInBackground(media.storagePath)
+            : await _decodeAndFingerprintLocally(media.storagePath);
     final output = computation.output;
     _validateOutput(output, computation.durationMs);
 

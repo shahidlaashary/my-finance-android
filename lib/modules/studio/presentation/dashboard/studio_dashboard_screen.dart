@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:my_finance/modules/studio/application/services/studio_dashboard_service.dart';
 import 'package:my_finance/modules/studio/presentation/media_library/studio_media_library_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_catalogue_rights_screen.dart';
-import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.dart';
-import 'package:my_finance/modules/studio/presentation/studio_video_id_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_reports_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_management_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_recording_screen.dart';
 import 'package:my_finance/modules/studio/presentation/ai_music/studio_ai_music_screen.dart';
+import 'package:my_finance/modules/studio/presentation/studio_content_id_screen.dart';
 
 class StudioDashboardScreen extends StatefulWidget {
   const StudioDashboardScreen({super.key});
@@ -21,9 +20,9 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
 
   static const _sections = <_StudioSection>[
     _StudioSection('Media Library', 'Import and browse managed audio and video files', Icons.perm_media_outlined),
-    _StudioSection('Music ID', 'Audio identification and fingerprinting', Icons.music_note_rounded),
+    _StudioSection('Content ID', 'Audio Match and Visual Match identification tools', Icons.fingerprint_rounded),
     _StudioSection('AI Music', 'Create song projects and manage authorized voice profiles', Icons.auto_awesome_rounded),
-    _StudioSection('Video ID', 'Video identification and fingerprinting', Icons.video_library_outlined),
+    
     _StudioSection('Compare', 'Compare two or more media files', Icons.compare_arrows_rounded),
     _StudioSection('Catalogue', 'Browse and organize registered content', Icons.library_music_outlined),
     _StudioSection('Rights Management', 'Manage ownership and licensing records', Icons.verified_user_outlined),
@@ -61,12 +60,8 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioAiMusicScreen()));
       return;
     }
-    if (section.title == 'Video ID') {
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioVideoIdScreen()));
-      return;
-    }
-    if (section.title == 'Music ID' || section.title == 'Compare') {
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => StudioMusicIdScreen(section: section.title)));
+    if (section.title == 'Content ID' || section.title == 'Compare') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => StudioContentIdScreen(initialSection: section.title == 'Compare' ? 'Compare' : null)));
       return;
     }
     if (section.title == 'Catalogue' || section.title == 'Rights Management') {
@@ -263,11 +258,11 @@ class _StudioSection {
     switch (title) {
       case 'Media Library':
         return const Color(0xFF3978B8);
-      case 'Music ID':
+      case 'Content ID':
         return const Color(0xFF8B5BC2);
       case 'AI Music':
         return const Color(0xFFB66A35);
-      case 'Video ID':
+      case 'Content ID':
         return const Color(0xFF258B83);
       case 'Compare':
         return const Color(0xFF5576B8);

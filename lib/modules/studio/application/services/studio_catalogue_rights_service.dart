@@ -296,7 +296,12 @@ class StudioCatalogueRightsService {
       throw ArgumentError('Evidence file path cannot be blank.');
     }
     if (checksumSha256 != null &&
-        !RegExp(r'^[a-fA-F0-9]{64}
+        !RegExp(r'^[a-fA-F0-9]{64}$').hasMatch(checksumSha256.trim())) {
+      throw ArgumentError('Evidence SHA-256 checksum must contain exactly 64 hexadecimal characters.');
+    }
+    if (checksumSha256 != null && filePath == null) {
+      throw ArgumentError('A checksum requires an attached evidence file.');
+    }
     final db = await _db;
     final now = _now();
     await db.transaction((txn) async {

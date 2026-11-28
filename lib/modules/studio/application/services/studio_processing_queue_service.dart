@@ -76,6 +76,7 @@ class StudioProcessingQueueService {
   /// retryable and the caller receives progress as work completes.
   Future<StudioLibraryBatchResult> runLibraryBatch({
     void Function(int completed, int total)? onProgress,
+    bool Function()? shouldCancel,
   }) async {
     final db = await _db;
     final media = await db.query(
@@ -87,8 +88,13 @@ class StudioProcessingQueueService {
     var succeeded = 0;
     var failed = 0;
     var alreadyFingerprinted = 0;
+    var cancelled = false;
     onProgress?.call(0, media.length);
     for (final item in media) {
+      if (shouldCancel?.call() ?? false) {
+        cancelled = true;
+        break;
+      }
       final id = item['id']?.toString();
       final type = item['media_type']?.toString();
       try {
@@ -126,6 +132,8 @@ class StudioProcessingQueueService {
       succeeded: succeeded,
       failed: failed,
       alreadyFingerprinted: alreadyFingerprinted,
+      processed: completed,
+      cancelled: cancelled,
     );
   }
 
@@ -309,10 +317,14 @@ class StudioLibraryBatchResult {
     required this.succeeded,
     required this.failed,
     required this.alreadyFingerprinted,
+    required this.processed,
+    required this.cancelled,
   });
 
   final int total;
   final int succeeded;
   final int failed;
   final int alreadyFingerprinted;
+  final int processed;
+  final bool cancelled;
 }

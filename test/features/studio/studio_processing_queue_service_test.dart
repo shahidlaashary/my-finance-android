@@ -113,6 +113,8 @@ void main() {
     expect(result.total, 0);
     expect(result.succeeded, 0);
     expect(result.failed, 0);
+    expect(result.processed, 0);
+    expect(result.cancelled, isFalse);
     expect(progress, [(0, 0)]);
     expect(await queue.jobs(), isEmpty);
   });

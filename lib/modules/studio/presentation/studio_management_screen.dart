@@ -20,6 +20,7 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
   late Future<List<Map<String, Object?>>> _jobs;
   final _queue = StudioProcessingQueueService();
   bool _batchRunning = false;
+  bool _cancelBatchRequested = false;
   String? _batchProgress;
 
   @override
@@ -52,10 +53,12 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
     if (_batchRunning) return;
     setState(() {
       _batchRunning = true;
+      _cancelBatchRequested = false;
       _batchProgress = 'Preparing media library scan…';
     });
     try {
       final result = await _queue.runLibraryBatch(
+        shouldCancel: () => _cancelBatchRequested,
         onProgress: (completed, total) {
           if (!mounted) return;
           setState(() => _batchProgress = total == 0
@@ -66,7 +69,9 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(
-          'Library batch finished: ${result.succeeded} fingerprinted, ${result.alreadyFingerprinted} already ready, ${result.failed} failed (total ${result.total}).',
+          result.cancelled
+              ? 'Library batch stopped after ${result.processed} of ${result.total} items: ${result.succeeded} fingerprinted, ${result.failed} failed.'
+              : 'Library batch finished: ${result.succeeded} fingerprinted, ${result.alreadyFingerprinted} already ready, ${result.failed} failed (total ${result.total}).',
         )),
       );
       await _refreshJobs();
@@ -78,6 +83,7 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
     } finally {
       if (mounted) setState(() {
         _batchRunning = false;
+        _cancelBatchRequested = false;
         _batchProgress = null;
       });
     }

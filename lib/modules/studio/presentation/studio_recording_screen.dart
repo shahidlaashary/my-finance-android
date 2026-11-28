@@ -153,26 +153,35 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
   }
 
   Future<void> _discardRecording() async {
-    if (_recording) {
-      await _recorder.stop();
+    if (_saving) return;
+    try {
+      if (_recording) {
+        await _recorder.stop();
+      }
+      final path = _activePath;
+      if (path != null) {
+        final file = File(path);
+        if (await file.exists()) await file.delete();
+      }
+      _ticker?.cancel();
+      _stopwatch
+        ..stop()
+        ..reset();
+      if (!mounted) return;
+      setState(() {
+        _recording = false;
+        _activePath = null;
+        _elapsed = Duration.zero;
+        _error = null;
+      });
+    } catch (error) {
+      // Keep the path and recording controls available so a failed discard
+      // never silently loses the user's only remaining copy.
+      if (!mounted) return;
+      setState(() {
+        _error = 'Could not discard recording: $error';
+      });
     }
-    final path = _activePath;
-    if (path != null) {
-      final file = File(path);
-      if (await file.exists()) await file.delete();
-    }
-    _ticker?.cancel();
-    _stopwatch
-      ..stop()
-      ..reset();
-    if (!mounted) return;
-    setState(() {
-      _recording = false;
-      _saving = false;
-      _activePath = null;
-      _elapsed = Duration.zero;
-      _error = null;
-    });
   }
 
   @override

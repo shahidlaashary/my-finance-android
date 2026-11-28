@@ -132,3 +132,4 @@ void main() {
     expect(result.isMatch, isFalse);
     expect(result.matches, 0);
   });
+}

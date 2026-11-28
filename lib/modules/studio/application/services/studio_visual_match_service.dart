@@ -95,6 +95,8 @@ class StudioVisualMatchService {
     return result;
   }
 
-  Future<List<Map<String, Object?>>> history() =>
-      catalogueRights.comparisonHistory();
+  Future<List<Map<String, Object?>>> history() async =>
+      (await catalogueRights.comparisonHistory())
+          .where((row) => row['algorithm_key'] == algorithmKey)
+          .toList(growable: false);
 }

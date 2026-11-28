@@ -53,7 +53,10 @@ class StudioAudioMatchService {
   static const int maxFilesPerScan = 100;
   Future<List<StudioMediaFile>> audioFiles()=>mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:maxFilesPerScan);
   Future<StudioFingerprint?> fingerprintFor(String mediaId)=>fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:algorithmKey,algorithmVersion:algorithmVersion);
-  Future<List<Map<String,Object?>>> comparisonHistory()=>catalogueRights.comparisonHistory();
+  Future<List<Map<String,Object?>>> comparisonHistory() async =>
+      (await catalogueRights.comparisonHistory())
+          .where((row) => row['algorithm_key'] == algorithmKey)
+          .toList(growable: false);
   Future<StudioFingerprint> identify(String mediaId)=>_engine.generateForMedia(mediaId);
 
   Future<StudioAudioScanResult> scanMatches(String mediaId, {void Function(int completed, int total)? onProgress}) async {

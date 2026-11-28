@@ -44,7 +44,23 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
   Future<void> _compare()async{if(_first==null||_second==null||_first==_second){_toast('Choose two different videos.');return;}setState(()=>_busy=true);try{final m=await _service.compare(_first!,_second!);final history=await _service.history();if(mounted)setState(()=>_result=m);if(mounted)setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVideoFingerprintEngine.key).toList());}catch(e){if(mounted)_toast('Compare failed: $e');}if(mounted)setState(()=>_busy=false);}
   void _toast(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _pct(double v)=>(v*100).toStringAsFixed(1)+'%';
-  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Video ID')),body:_loading?const Center(child:CircularProgressIndicator()):_error!=null?Center(child:Text(_error!)):RefreshIndicator(onRefresh:_load,child:_body()));
+  @override Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(title:const Text('Video ID')),
+    body:_loading
+      ?const Center(child:CircularProgressIndicator())
+      :_error!=null
+        ?Center(child:Padding(
+          padding:const EdgeInsets.all(24),
+          child:Column(mainAxisSize:MainAxisSize.min,children:[
+            const Icon(Icons.error_outline_rounded,size:40),
+            const SizedBox(height:12),
+            Text('Could not load Video ID: $_error',textAlign:TextAlign.center),
+            const SizedBox(height:12),
+            FilledButton.tonalIcon(onPressed:_load,icon:const Icon(Icons.refresh_rounded),label:const Text('Retry')),
+          ]),
+        ))
+        :RefreshIndicator(onRefresh:_load,child:_body()),
+  );
   Widget _body()=>ListView(padding:const EdgeInsets.all(16),children:[
     if(_videos.isEmpty)const Padding(padding:EdgeInsets.symmetric(vertical:60),child:Text('Import video files in Media Library first.')),
     if(_videos.isNotEmpty)Text('Video Library',style:Theme.of(context).textTheme.titleMedium),

@@ -28,7 +28,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
+          cache: false
       - name: Create Android project only once
         run: |
           if [ ! -d android ]; then

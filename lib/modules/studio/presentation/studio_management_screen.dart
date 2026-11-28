@@ -247,13 +247,13 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
             ),
           Expanded(
             child: TabBarView(
-        controller: _tabs,
-        children: [
-          _systemTab(),
-          _queueTab(),
+              controller: _tabs,
+              children: [
+                _systemTab(),
+                _queueTab(),
+              ],
             ),
           ),
-        ],
       ),
     );
   }

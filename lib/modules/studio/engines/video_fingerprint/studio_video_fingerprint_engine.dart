@@ -12,6 +12,7 @@ import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 
 import '../../domain/entities/studio_video_fingerprint_match.dart';
+import 'studio_video_fingerprint_matcher.dart';
 
 class StudioVideoFingerprintEngine {
   StudioVideoFingerprintEngine({required StudioStorageManager storage,required StudioMediaLibraryService media,required StudioFingerprintCatalogueService catalogue,this.sampleIntervalMs=2000,this.maxFrames=300})
@@ -65,16 +66,15 @@ class StudioVideoFingerprintEngine {
     final r=await _catalogue.getForMedia(mediaFileId:referenceId,algorithmKey:key,algorithmVersion:version)??await generate(referenceId);
     final qbytes=await File(q.dataFilePath).readAsBytes(),rbytes=await File(r.dataFilePath).readAsBytes();
     final qrec=_records(qbytes),rrec=_records(rbytes);
-    final offsets=<int,int>{};
-    for(final qa in qrec)for(final rb in rrec)if(_distance(qa.hash,rb.hash)<=8){final off=rb.time-qa.time;offsets.update(off,(n)=>n+1,ifAbsent:()=>1);}
-    final bestOffset=offsets.entries.isEmpty?0:offsets.entries.reduce((a,b)=>a.value>=b.value?a:b).key;
-    final matchedQuery=<int>{};
-    for(final qa in qrec)for(final rb in rrec)if(rb.time-qa.time==bestOffset&&_distance(qa.hash,rb.hash)<=8){matchedQuery.add(qa.time);}
-    final matches=matchedQuery.length;
-    final confidence=qrec.isEmpty||rrec.isEmpty?0.0:2*matches/(qrec.length+rrec.length);
-    return StudioVideoFingerprintMatch(matches:matches,queryFrames:qrec.length,referenceFrames:rrec.length,confidence:confidence,offsetMs:bestOffset);
+    return const StudioVideoFingerprintMatcher().compare(
+      query: qrec.map((frame) => StudioVideoFrameSignature(
+        timeMs: frame.time, hash: frame.hash,
+      )).toList(),
+      reference: rrec.map((frame) => StudioVideoFrameSignature(
+        timeMs: frame.time, hash: frame.hash,
+      )).toList(),
+    );
   }
   List<_FrameRecord> _records(Uint8List bytes){if(bytes.length%16!=0)throw const FormatException('Video fingerprint artifact is corrupt.');final d=ByteData.sublistView(bytes);return List.generate(bytes.length~/16,(i){var hash=0;for(var byte=0;byte<8;byte++){hash|=bytes[i*16+8+byte]<<(byte*8);}return _FrameRecord(d.getInt64(i*16,Endian.little),hash);});}
-  int _distance(int a,int b){final x=a^b;var n=0;for(var bit=0;bit<64;bit++){if(((x>>bit)&1)!=0)n++;}return n;}
 }
 class _FrameRecord{const _FrameRecord(this.time,this.hash);final int time,hash;}

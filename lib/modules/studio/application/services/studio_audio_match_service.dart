@@ -57,7 +57,11 @@ class StudioAudioMatchService {
   Future<StudioFingerprint> identify(String mediaId)=>_engine.generateForMedia(mediaId);
 
   Future<StudioAudioScanResult> scanMatches(String mediaId, {void Function(int completed, int total)? onProgress}) async {
-    await identify(mediaId);
+    // Reuse the current algorithm fingerprint when it already exists. This
+    // keeps import-triggered scans and later manual scans from decoding the
+    // same source repeatedly; identify only when the current version is absent.
+    final existing = await fingerprintFor(mediaId);
+    if (existing == null) await identify(mediaId);
     final files=await audioFiles();
     final candidates=<StudioAudioCandidate>[];
     var skipped=0;

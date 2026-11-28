@@ -5,7 +5,12 @@ import '../../infrastructure/database/studio_database_manager.dart';
 
 /// Application service for Studio Catalogue and Rights persistent records.
 class StudioCatalogueRightsService {
-  Future<Database> get _db => StudioDatabaseManager.instance.initialize();
+  StudioCatalogueRightsService({Future<Database> Function()? databaseProvider})
+      : _databaseProvider = databaseProvider ??
+            StudioDatabaseManager.instance.initialize;
+
+  final Future<Database> Function() _databaseProvider;
+  Future<Database> get _db => _databaseProvider();
   String _id(String prefix) => '$prefix${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(99999)}';
   String _now() => DateTime.now().toUtc().toIso8601String();
 
@@ -23,9 +28,112 @@ class StudioCatalogueRightsService {
     final now=_now(); await (await _db).insert('studio_rights_holders',{'id':_id('holder'),'name':name.trim(),'holder_type':type,'contact':contact,'notes':notes,'created_at':now,'updated_at':now});
   }
   Future<List<Map<String,Object?>>> ownerships() async => (await _db).rawQuery('SELECT o.*, h.name holder_name FROM studio_ownership_records o JOIN studio_rights_holders h ON h.id=o.holder_id ORDER BY o.created_at DESC');
-  Future<void> addOwnership({required String holderId,required String assetType,required String assetId,required double share,required String territory,String? notes}) async {
-    if(share<=0||share>100) throw ArgumentError('Share must be greater than 0 and at most 100.');
-    await (await _db).insert('studio_ownership_records',{'id':_id('own'),'holder_id':holderId,'asset_type':assetType,'asset_id':assetId,'share_percent':share,'territory':territory,'notes':notes,'created_at':_now()});
+  DateTime? _ownershipDate(String? value, String field) {
+    if (value == null || value.trim().isEmpty) return null;
+    final parsed = DateTime.tryParse(value.trim());
+    if (parsed == null) throw ArgumentError('Invalid ownership $field.');
+    return DateTime.utc(parsed.year, parsed.month, parsed.day);
+  }
+
+  bool _territoriesOverlap(String first, String second) {
+    final a = first.trim().toLowerCase();
+    final b = second.trim().toLowerCase();
+    return a == b || a == 'worldwide' || b == 'worldwide';
+  }
+
+  bool _dateRangesOverlap(DateTime? aStart, DateTime? aEnd,
+      DateTime? bStart, DateTime? bEnd) {
+    return (aEnd == null || bStart == null || !aEnd.isBefore(bStart)) &&
+        (bEnd == null || aStart == null || !bEnd.isBefore(aStart));
+  }
+
+  Future<void> addOwnership({
+    required String holderId,
+    required String assetType,
+    required String assetId,
+    required double share,
+    required String territory,
+    String? startDate,
+    String? endDate,
+    String? notes,
+  }) async {
+    if (!share.isFinite || share <= 0 || share > 100) {
+      throw ArgumentError('Share must be greater than 0 and at most 100.');
+    }
+    if (assetType.trim().isEmpty || assetId.trim().isEmpty ||
+        territory.trim().isEmpty) {
+      throw ArgumentError('Asset type, asset ID and territory are required.');
+    }
+    final start = _ownershipDate(startDate, 'start date');
+    final end = _ownershipDate(endDate, 'end date');
+    if (start != null && end != null && end.isBefore(start)) {
+      throw ArgumentError('Ownership end date cannot be before its start date.');
+    }
+
+    final db = await _db;
+    await db.transaction((txn) async {
+      final holder = await txn.query('studio_rights_holders',
+          columns: ['id'], where: 'id = ?', whereArgs: [holderId], limit: 1);
+      if (holder.isEmpty) throw ArgumentError('Rights holder was not found.');
+
+      final existing = await txn.query('studio_ownership_records',
+          where: 'asset_type = ? AND asset_id = ?',
+          whereArgs: [assetType.trim(), assetId.trim()]);
+      final overlapping = <Map<String, Object?>>[];
+      final boundaries = <DateTime>{};
+      if (start != null) boundaries.add(start);
+      if (end != null) boundaries.add(end);
+
+      for (final record in existing) {
+        final recordStart = _ownershipDate(record['start_date'] as String?, 'start date');
+        final recordEnd = _ownershipDate(record['end_date'] as String?, 'end date');
+        if (!_territoriesOverlap(territory, record['territory']?.toString() ?? 'Worldwide') ||
+            !_dateRangesOverlap(start, end, recordStart, recordEnd)) {
+          continue;
+        }
+        overlapping.add(record);
+        if (recordStart != null) boundaries.add(recordStart);
+        if (recordEnd != null) boundaries.add(recordEnd);
+      }
+
+      // Ownership shares may not exceed 100% at any point in an overlapping
+      // territory. Checking every interval boundary catches staggered terms.
+      if (boundaries.isEmpty) boundaries.add(DateTime.utc(2000));
+      for (final point in boundaries) {
+        if ((start == null || !point.isBefore(start)) &&
+            (end == null || !point.isAfter(end))) {
+          var total = share;
+          for (final record in overlapping) {
+            final recordStart =
+                _ownershipDate(record['start_date'] as String?, 'start date');
+            final recordEnd =
+                _ownershipDate(record['end_date'] as String?, 'end date');
+            if ((recordStart == null || !point.isBefore(recordStart)) &&
+                (recordEnd == null || !point.isAfter(recordEnd))) {
+              total += (record['share_percent'] as num).toDouble();
+            }
+          }
+          if (total > 100.000001) {
+            throw StateError(
+              'Ownership shares would exceed 100% for this asset, territory and date range.',
+            );
+          }
+        }
+      }
+
+      await txn.insert('studio_ownership_records', {
+        'id': _id('own'),
+        'holder_id': holderId,
+        'asset_type': assetType.trim(),
+        'asset_id': assetId.trim(),
+        'share_percent': share,
+        'territory': territory.trim(),
+        'start_date': startDate,
+        'end_date': endDate,
+        'notes': notes,
+        'created_at': _now(),
+      });
+    });
   }
   Future<List<Map<String,Object?>>> licenses() async => (await _db).query('studio_licenses',orderBy:'created_at DESC');
   Future<void> addLicense({required String assetType,required String assetId,required String licensor,required String licensee,required String usage,required String territory,String? startDate,String? endDate,bool exclusive=false,String? notes}) async {

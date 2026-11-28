@@ -24,7 +24,7 @@ class StudioAutoAudioDecoder implements StudioAudioDecoder {
     final extension = managedMediaPath.split('.').last.toLowerCase();
     if (!supportedExtensions.contains(extension)) {
       throw FormatException(
-        'Unsupported audio format: .$extension. Music ID currently supports MP3, OGG and WAV.',
+        'Unsupported audio format: .$extension. Audio Match supports MP3, OGG and WAV.',
       );
     }
     final length = await file.length();

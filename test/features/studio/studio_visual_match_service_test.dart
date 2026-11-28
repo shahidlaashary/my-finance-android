@@ -88,6 +88,10 @@ void main() {
     expect(videos.map((item) => item.id), ['video-new', 'video-old']);
   });
 
+  test('rejects scan IDs not present in the library', () async {
+    expect(service.scanMatches('missing-video'), throwsArgumentError);
+  });
+
   test('returns an empty list when no videos are registered', () async {
     expect(await service.videos(), isEmpty);
   });

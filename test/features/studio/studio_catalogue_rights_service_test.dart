@@ -77,6 +77,79 @@ void main() {
     expect((await rights.ownerships()).length, 3);
   });
 
+  test('rejects overlapping active exclusive licenses', () async {
+    await rights.addLicense(
+      assetType: 'track',
+      assetId: 'track-license-1',
+      licensor: 'Owner A',
+      licensee: 'Platform A',
+      usage: 'streaming',
+      territory: 'Worldwide',
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      exclusive: true,
+    );
+
+    await expectLater(
+      rights.addLicense(
+        assetType: 'track',
+        assetId: 'track-license-1',
+        licensor: 'Owner A',
+        licensee: 'Platform B',
+        usage: 'streaming',
+        territory: 'United States',
+        startDate: '2025-06-01',
+        endDate: '2026-01-01',
+        exclusive: true,
+      ),
+      throwsA(isA<StateError>()),
+    );
+    expect((await rights.licenses()).length, 1);
+  });
+
+  test('allows non-overlapping exclusive license periods', () async {
+    await rights.addLicense(
+      assetType: 'track',
+      assetId: 'track-license-2',
+      licensor: 'Owner A',
+      licensee: 'Platform A',
+      usage: 'streaming',
+      territory: 'United States',
+      startDate: '2025-01-01',
+      endDate: '2025-06-30',
+      exclusive: true,
+    );
+    await rights.addLicense(
+      assetType: 'track',
+      assetId: 'track-license-2',
+      licensor: 'Owner A',
+      licensee: 'Platform B',
+      usage: 'streaming',
+      territory: 'United States',
+      startDate: '2025-07-01',
+      endDate: '2025-12-31',
+      exclusive: true,
+    );
+    expect((await rights.licenses()).length, 2);
+  });
+
+  test('rejects invalid license date ranges', () async {
+    await expectLater(
+      rights.addLicense(
+        assetType: 'track',
+        assetId: 'track-license-3',
+        licensor: 'Owner A',
+        licensee: 'Platform A',
+        usage: 'streaming',
+        territory: 'Worldwide',
+        startDate: '2025-12-31',
+        endDate: '2025-01-01',
+        exclusive: true,
+      ),
+      throwsArgumentError,
+    );
+  });
+
   test('rejects invalid ownership date ranges', () async {
     final ids = await holders();
     await expectLater(

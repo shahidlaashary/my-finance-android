@@ -111,7 +111,7 @@ class StudioProcessingQueueService {
         if (existing.isNotEmpty) {
           alreadyFingerprinted++;
         } else {
-          await runFingerprintJob(mediaId: id, mediaType: type);
+          await runFingerprintJob(mediaId: id, mediaType: type!);
           succeeded++;
         }
       } catch (_) {

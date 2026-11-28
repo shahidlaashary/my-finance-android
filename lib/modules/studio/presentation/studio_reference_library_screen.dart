@@ -120,6 +120,110 @@ class _StudioReferenceLibraryScreenState
     }
   }
 
+
+  Future<void> _showDetails(StudioFingerprint fingerprint) async {
+    try {
+      final segments = await _catalogue.getSegments(fingerprint.id);
+      if (!mounted) return;
+      final mediaName = _mediaById[fingerprint.mediaFileId]?.originalName ??
+          fingerprint.mediaFileId;
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (context) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Reference details',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 6),
+                  Text(mediaName),
+                  const SizedBox(height: 14),
+                  _detailRow('Type', fingerprint.mediaType.name),
+                  _detailRow('Algorithm', fingerprint.algorithmKey),
+                  _detailRow('Version', fingerprint.algorithmVersion),
+                  _detailRow('Format', fingerprint.fingerprintFormat),
+                  _detailRow('Status', fingerprint.status.name),
+                  _detailRow('Signatures / frames', fingerprint.frameCount.toString()),
+                  _detailRow('Segments', segments.length.toString()),
+                  _detailRow('Duration', fingerprint.durationMs == null
+                      ? 'Unknown'
+                      : '${(fingerprint.durationMs! / 1000).toStringAsFixed(1)} sec'),
+                  if (fingerprint.sampleRate != null)
+                    _detailRow('Sample rate', '${fingerprint.sampleRate} Hz'),
+                  if (fingerprint.channels != null)
+                    _detailRow('Channels', fingerprint.channels.toString()),
+                  _detailRow('SHA-256', fingerprint.checksumSha256 ?? 'Unavailable'),
+                  _detailRow('Created', fingerprint.createdAt.toLocal().toString()),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load reference details: $error')),
+      );
+    }
+  }
+
+  Widget _detailRow(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(width: 112, child: Text(label,
+                style: Theme.of(context).textTheme.bodySmall)),
+            Expanded(child: SelectableText(value,
+                style: Theme.of(context).textTheme.bodySmall)),
+          ],
+        ),
+      );
+
+  Future<void> _deleteReference(StudioFingerprint fingerprint) async {
+    final name = _mediaById[fingerprint.mediaFileId]?.originalName ??
+        fingerprint.mediaFileId;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove reference?'),
+        content: Text('Remove the fingerprint for "$name"? The imported media file will remain in Studio.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false),
+              child: const Text('Keep')),
+          FilledButton(onPressed: () => Navigator.pop(context, true),
+              child: const Text('Remove')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _catalogue.remove(fingerprint.id);
+      try {
+        await _storage.deleteManagedFile(fingerprint.dataFilePath);
+      } catch (_) {
+        // An orphaned managed artifact is harmless and can be cleaned later.
+      }
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reference removed. Original media was kept.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not remove reference: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final visible = _visibleFingerprints;
@@ -298,16 +402,30 @@ class _StudioReferenceLibraryScreenState
                           ),
                       ],
                     ),
-                    trailing: PopupMenuButton<StudioFingerprintStatus>(
-                      tooltip: 'Change reference status',
-                      onSelected: (status) =>
-                          _changeStatus(fingerprint, status),
-                      itemBuilder: (context) => StudioFingerprintStatus.values
-                          .map((status) => PopupMenuItem(
-                                value: status,
-                                child: Text(status.name),
-                              ))
-                          .toList(),
+                    onTap: () => _showDetails(fingerprint),
+                    trailing: PopupMenuButton<String>(
+                      tooltip: 'Reference actions',
+                      onSelected: (action) {
+                        if (action == 'details') {
+                          _showDetails(fingerprint);
+                        } else if (action == 'delete') {
+                          _deleteReference(fingerprint);
+                        } else {
+                          _changeStatus(fingerprint,
+                            StudioFingerprintStatus.values.firstWhere(
+                              (status) => status.name == action));
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'details',
+                            child: Text('View details')),
+                        ...StudioFingerprintStatus.values.map((status) =>
+                          PopupMenuItem(value: status.name,
+                              child: Text('Set ${status.name}'))),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(value: 'delete',
+                            child: Text('Remove reference')),
+                      ],
                     ),
                   ),
                 );

@@ -22,8 +22,13 @@ void main() {
     expect(result.queryCoverage, 1);
     expect(result.matchedQueryTimestampsMs, hasLength(16));
     expect(result.matchedReferenceTimestampsMs, hasLength(16));
-    expect(result.matchedQueryTimestampsMs.first, 0);
-    expect(result.matchedReferenceTimestampsMs.first, result.offsetMs);
+    expect(result.matchedQueryTimestampsMs.first, 93);
+    expect(result.matchedReferenceTimestampsMs.first, 557);
+    expect(
+      result.matchedReferenceTimestampsMs.first -
+          result.matchedQueryTimestampsMs.first,
+      result.offsetMs,
+    );
   });
 
   test('does not report a match for unrelated frequency landmarks', () {

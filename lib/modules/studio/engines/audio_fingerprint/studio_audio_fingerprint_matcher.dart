@@ -36,10 +36,12 @@ class StudioAudioFingerprintMatch {
 class StudioAudioFingerprintMatcher {
   const StudioAudioFingerprintMatcher({
     this.hopSize = 1024,
+    this.fftSize = 2048,
     this.sampleRate = 11025,
   });
 
   final int hopSize;
+  final int fftSize;
   final int sampleRate;
 
   StudioAudioFingerprintMatch compare({
@@ -101,7 +103,7 @@ class StudioAudioFingerprintMatcher {
       matchedQueryTimestampsMs: matchedQueryLandmarks
           .map((landmark) => landmark.$1)
           .toSet()
-          .map((frame) => (frame * hopSize * 1000 / sampleRate).round())
+          .map((frame) => ((frame * hopSize + fftSize ~/ 2) * 1000 / sampleRate).round())
           .toList()..sort(),
       matchedReferenceTimestampsMs: matchedReferenceLandmarks
           .map((landmark) => landmark.$1)

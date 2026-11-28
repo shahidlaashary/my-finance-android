@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_finance/modules/studio/application/services/studio_audio_match_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_processing_queue_service.dart';
 import 'package:my_finance/modules/studio/infrastructure/database/studio_database_schema.dart';
 import 'package:sqflite/sqflite.dart';
@@ -117,6 +118,61 @@ void main() {
     expect(result.cancelled, isFalse);
     expect(progress, [(0, 0)]);
     expect(await queue.jobs(), isEmpty);
+  });
+
+  test('stops a library batch when cancellation is requested mid-batch', () async {
+    final now = DateTime.utc(2026, 11, 28).toIso8601String();
+    for (final id in ['media-1', 'media-2']) {
+      await database.insert('studio_media_files', {
+        'id': id,
+        'media_type': 'audio',
+        'original_name': '$id.wav',
+        'storage_path': '/studio/audio/$id.wav',
+        'mime_type': 'audio/wav',
+        'file_extension': 'wav',
+        'file_size_bytes': 100,
+        'duration_ms': 1000,
+        'checksum_sha256': 'checksum-$id',
+        'import_status': 'imported',
+        'created_at': now,
+        'updated_at': now,
+      });
+      await database.insert('studio_fingerprints', {
+        'id': 'fp-$id',
+        'media_file_id': id,
+        'media_type': 'audio',
+        'algorithm_key': StudioAudioMatchService.algorithmKey,
+        'algorithm_version': StudioAudioMatchService.algorithmVersion,
+        'fingerprint_format': 'binary-v1',
+        'data_file_path': '/studio/fingerprints/fp-$id.bin',
+        'checksum_sha256': 'fingerprint-$id',
+        'sample_rate': 11025,
+        'channels': 1,
+        'duration_ms': 1000,
+        'frame_count': 10,
+        'status': 'generated',
+        'created_at': now,
+        'updated_at': now,
+      });
+    }
+
+    var cancelRequested = false;
+    final progress = <(int, int)>[];
+    final result = await queue.runLibraryBatch(
+      shouldCancel: () => cancelRequested,
+      onProgress: (completed, total) {
+        progress.add((completed, total));
+        if (completed == 1) cancelRequested = true;
+      },
+    );
+
+    expect(result.total, 2);
+    expect(result.processed, 1);
+    expect(result.alreadyFingerprinted, 1);
+    expect(result.succeeded, 0);
+    expect(result.failed, 0);
+    expect(result.cancelled, isTrue);
+    expect(progress, [(0, 2), (1, 2)]);
   });
 
   test('rejects unsupported media types before creating a job', () async {

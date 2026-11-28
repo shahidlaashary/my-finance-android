@@ -7,7 +7,8 @@ class StudioVideoFingerprintMatcher {
   const StudioVideoFingerprintMatcher({
     this.maxHammingDistance = 8,
     this.offsetToleranceMs = 1000,
-  });
+  }) : assert(maxHammingDistance >= 0 && maxHammingDistance <= 64),
+       assert(offsetToleranceMs > 0);
 
   final int maxHammingDistance;
   final int offsetToleranceMs;
@@ -27,8 +28,11 @@ class StudioVideoFingerprintMatcher {
 
     final queryFrequency = _frequencies(query);
     final referenceFrequency = _frequencies(reference);
-    final queryCommonLimit = max(3, query.length ~/ 3);
-    final referenceCommonLimit = max(3, reference.length ~/ 3);
+    // Repeated low-information frames are common in fades, title cards and
+    // static shots. Suppress them even in short clips so three identical
+    // frames cannot independently create a positive match.
+    final queryCommonLimit = max(2, query.length ~/ 3);
+    final referenceCommonLimit = max(2, reference.length ~/ 3);
     final buckets = <int, List<_FramePair>>{};
 
     for (var qi = 0; qi < query.length; qi++) {

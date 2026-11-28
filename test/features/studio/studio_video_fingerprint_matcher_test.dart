@@ -94,3 +94,43 @@ void main() {
     expect(result.matches, 0);
   });
 }
+
+
+  test('matches resized or re-encoded frames with small perceptual hash changes', () {
+    final query = [
+      for (var i = 0; i < _queryHashes.length; i++)
+        StudioVideoFrameSignature(timeMs: i * 2000, hash: _queryHashes[i]),
+    ];
+    final reference = [
+      for (var i = 0; i < _queryHashes.length; i++)
+        StudioVideoFrameSignature(
+          timeMs: 5000 + i * 2000,
+          // Simulate modest dHash variation introduced by scaling,
+          // compression and colour/brightness changes.
+          hash: _queryHashes[i] ^ (1 << (i % 8)) ^ (1 << ((i + 3) % 8)),
+        ),
+    ];
+
+    final result = matcher.compare(query: query, reference: reference);
+
+    expect(result.isMatch, isTrue);
+    expect(result.matches, _queryHashes.length);
+    expect(result.confidence, 1);
+    expect(result.offsetMs, 5000);
+  });
+
+  test('rejects a very short static shot repeated across both clips', () {
+    final query = [
+      for (var i = 0; i < 3; i++)
+        StudioVideoFrameSignature(timeMs: i * 2000, hash: 0x12345678),
+    ];
+    final reference = [
+      for (var i = 0; i < 3; i++)
+        StudioVideoFrameSignature(timeMs: 4000 + i * 2000, hash: 0x12345678),
+    ];
+
+    final result = matcher.compare(query: query, reference: reference);
+
+    expect(result.isMatch, isFalse);
+    expect(result.matches, 0);
+  });

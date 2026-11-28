@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
 
@@ -61,9 +62,23 @@ class StudioAudioFingerprintEngine {
     );
     if (existing != null) return existing;
 
-    final decoded = await _decoder.decode(media.storagePath);
-    final output = await _algorithm.generate(decoded);
-    _validateOutput(output, decoded.durationMs);
+    // Decoding (including native FFI work) and spectral analysis contain
+    // long synchronous sections. Running them on the UI isolate can freeze
+    // the whole Music ID route, including the AppBar back button.
+    final decoder = _decoder;
+    final algorithm = _algorithm;
+    final computation = await Isolate.run(() async {
+      final decodedAudio = await decoder.decode(media.storagePath);
+      final fingerprintOutput = await algorithm.generate(decodedAudio);
+      return (
+        durationMs: decodedAudio.durationMs,
+        sampleRate: decodedAudio.sampleRate,
+        channels: decodedAudio.channels,
+        output: fingerprintOutput,
+      );
+    });
+    final output = computation.output;
+    _validateOutput(output, computation.durationMs);
 
     final id = _newFingerprintId();
     final artifact = await _storageManager.allocateFingerprintFile(
@@ -85,9 +100,9 @@ class StudioAudioFingerprintEngine {
         fingerprintFormat: _algorithm.fingerprintFormat,
         dataFilePath: artifact.path,
         checksumSha256: checksum.toString(),
-        sampleRate: decoded.sampleRate,
-        channels: decoded.channels,
-        durationMs: decoded.durationMs,
+        sampleRate: computation.sampleRate,
+        channels: computation.channels,
+        durationMs: computation.durationMs,
         frameCount: output.frameCount,
         status: StudioFingerprintStatus.generated,
         createdAt: now,

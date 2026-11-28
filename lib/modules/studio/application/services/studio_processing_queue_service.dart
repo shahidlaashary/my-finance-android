@@ -62,6 +62,45 @@ class StudioProcessingQueueService {
     }
   }
 
+  /// Fingerprints every imported audio/video item in library order.
+  /// Each item gets its own persisted job so failures remain independently
+  /// retryable and the caller receives progress as work completes.
+  Future<StudioLibraryBatchResult> runLibraryBatch({
+    void Function(int completed, int total)? onProgress,
+  }) async {
+    final db = await _db;
+    final media = await db.query(
+      'studio_media_files',
+      columns: ['id', 'media_type'],
+      orderBy: 'created_at ASC',
+    );
+    var completed = 0;
+    var succeeded = 0;
+    var failed = 0;
+    onProgress?.call(0, media.length);
+    for (final item in media) {
+      final id = item['id']?.toString();
+      final type = item['media_type']?.toString();
+      try {
+        if (id == null || id.isEmpty || (type != 'audio' && type != 'video')) {
+          throw StateError('Library item has invalid media metadata.');
+        }
+        await runFingerprintJob(mediaId: id, mediaType: type);
+        succeeded++;
+      } catch (_) {
+        failed++;
+      } finally {
+        completed++;
+        onProgress?.call(completed, media.length);
+      }
+    }
+    return StudioLibraryBatchResult(
+      total: media.length,
+      succeeded: succeeded,
+      failed: failed,
+    );
+  }
+
   Future<void> _execute(String id) async {
     final db = await _db;
     final rows = await db.query('studio_processing_jobs', where: 'id = ?', whereArgs: [id], limit: 1);
@@ -209,4 +248,17 @@ class StudioProcessingQueueService {
       });
     });
   }
+}
+
+/// Outcome of a full-library fingerprint batch.
+class StudioLibraryBatchResult {
+  const StudioLibraryBatchResult({
+    required this.total,
+    required this.succeeded,
+    required this.failed,
+  });
+
+  final int total;
+  final int succeeded;
+  final int failed;
 }

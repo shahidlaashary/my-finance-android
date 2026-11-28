@@ -93,7 +93,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
-            Text('STUDIO WORKSPACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colors.primary, fontWeight: FontWeight.w800, letterSpacing: 1.15)),
+            Text('STUDIO WORKSPACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colors.primary, fontWeight: FontWeight.w800, letterSpacing: 1.35)),
             const SizedBox(height: 5),
             Text('Studio', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.7)),
             const SizedBox(height: 5),
@@ -162,7 +162,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 1.30,
+                childAspectRatio: 1.68,
               ),
               itemBuilder: (context, index) {
                 final section = _sections[index];
@@ -194,25 +194,25 @@ class _StudioStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
       decoration: BoxDecoration(
         color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.45)),
       ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: colors.primaryContainer.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(11),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: colors.onPrimaryContainer),
+            child: Icon(icon, size: 16, color: colors.onPrimaryContainer),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 7),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,12 +303,12 @@ class _StudioSectionCard extends StatelessWidget {
     final accent = section.accent(colors);
     return Material(
       color: colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(15),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 12, 10, 11),
+          padding: const EdgeInsets.fromLTRB(10, 9, 9, 9),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: accent.withValues(alpha: 0.25)),
@@ -327,14 +327,14 @@ class _StudioSectionCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 39,
-                    height: 39,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(13),
+                      borderRadius: BorderRadius.circular(11),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(section.icon, size: 21, color: accent),
+                    child: Icon(section.icon, size: 19, color: accent),
                   ),
                   const Spacer(),
                   Icon(

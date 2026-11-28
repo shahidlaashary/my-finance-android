@@ -20,6 +20,8 @@ class StudioVideoFingerprintMatcher {
       return const StudioVideoFingerprintMatch(
         matches: 0, queryFrames: 0, referenceFrames: 0,
         confidence: 0, offsetMs: 0,
+        matchedQueryTimestampsMs: const [],
+        matchedReferenceTimestampsMs: const [],
       );
     }
 
@@ -86,6 +88,8 @@ class StudioVideoFingerprintMatcher {
       referenceFrames: reference.length,
       confidence: confidence.clamp(0.0, 1.0).toDouble(),
       offsetMs: bestOffset,
+      matchedQueryTimestampsMs: best.map((pair) => query[pair.queryIndex].timeMs).toList(growable: false),
+      matchedReferenceTimestampsMs: best.map((pair) => reference[pair.referenceIndex].timeMs).toList(growable: false),
     );
   }
 

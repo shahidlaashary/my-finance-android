@@ -110,6 +110,8 @@ class _StudioVisualMatchScreenState extends State<StudioVisualMatchScreen>{
       Text('Matched frames: ${_result!.matches} / ${_result!.queryFrames} query frames'),
       Text('Reference frames: ${_result!.referenceFrames}'),
       Text('Estimated offset: ${_result!.offsetMs} ms'),
+      if (_result!.matchedQueryTimestampsMs.isNotEmpty) Text('Matched query timestamps: ${_result!.matchedQueryTimestampsMs.take(6).map((ms) => (ms / 1000).toStringAsFixed(1) + 's').join(', ')}'),
+      if (_result!.matchedReferenceTimestampsMs.isNotEmpty) Text('Matched reference timestamps: ${_result!.matchedReferenceTimestampsMs.take(6).map((ms) => (ms / 1000).toStringAsFixed(1) + 's').join(', ')}'),
       const SizedBox(height:8),const Text('Frame similarity is a candidate signal and may produce false positives, especially for static scenes.'),
     ]))),
   ]);

@@ -90,6 +90,8 @@ class StudioVisualMatchService {
       result: {
         'queryFrames': result.queryFrames,
         'referenceFrames': result.referenceFrames,
+        'matchedQueryTimestampsMs': result.matchedQueryTimestampsMs,
+        'matchedReferenceTimestampsMs': result.matchedReferenceTimestampsMs,
       },
     );
     return result;

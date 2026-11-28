@@ -182,6 +182,8 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
               ] else ...[
                 _detailRow(context, 'Query frames', '${resultData['queryFrames'] ?? 'Not recorded'}'),
                 _detailRow(context, 'Reference frames', '${resultData['referenceFrames'] ?? 'Not recorded'}'),
+                _detailRow(context, 'Matched query timestamps', _timestampSummary(resultData['matchedQueryTimestampsMs'])),
+                _detailRow(context, 'Matched reference timestamps', _timestampSummary(resultData['matchedReferenceTimestampsMs'])),
               ],
               _detailRow(context, isAudio ? 'Matched landmarks' : 'Matched frames', '${row['matched_landmarks'] ?? row['matched_frames'] ?? 'Not recorded'}'),
               _detailRow(context, 'Estimated offset', '${row['offset_ms'] ?? 'Not recorded'} ms'),
@@ -193,6 +195,16 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
         ),
       ),
     );
+  }
+
+  String _timestampSummary(Object? value) {
+    if (value is! List || value.isEmpty) return 'Not recorded';
+    final values = value.take(6).map((item) {
+      final ms = (item as num).toInt();
+      final seconds = ms / 1000;
+      return '${seconds.toStringAsFixed(1)}s';
+    }).join(', ');
+    return value.length > 6 ? '$values, … (${value.length} total)' : values;
   }
 
   Widget _detailRow(BuildContext context, String label, String value) => Padding(

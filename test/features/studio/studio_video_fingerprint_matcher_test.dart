@@ -55,6 +55,8 @@ void main() {
     expect(result.matches, 12);
     expect(result.confidence, 1);
     expect(result.offsetMs, closeTo(14625, 1000));
+    expect(result.matchedQueryTimestampsMs, [for (var i = 0; i < 12; i++) i * 2000]);
+    expect(result.matchedReferenceTimestampsMs, [for (var i = 7; i < 19; i++) i * 2050]);
   });
 
   test('rejects unrelated frame signatures', () {

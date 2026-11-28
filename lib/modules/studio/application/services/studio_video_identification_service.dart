@@ -19,13 +19,16 @@ class StudioVideoIdentificationService {
     StudioMediaLibraryService? mediaLibrary,
     StudioFingerprintCatalogueService? catalogue,
     StudioStorageManager? storage,
+    StudioCatalogueRightsService? catalogueRights,
   })  : mediaLibrary = mediaLibrary ?? StudioMediaLibraryService(),
         catalogue = catalogue ?? StudioFingerprintCatalogueService(),
-        storage = storage ?? StudioStorageManager();
+        storage = storage ?? StudioStorageManager(),
+        catalogueRights = catalogueRights ?? StudioCatalogueRightsService();
 
   final StudioMediaLibraryService mediaLibrary;
   final StudioFingerprintCatalogueService catalogue;
   final StudioStorageManager storage;
+  final StudioCatalogueRightsService catalogueRights;
 
   StudioVideoFingerprintEngine get _engine => StudioVideoFingerprintEngine(
         storage: storage,
@@ -42,7 +45,7 @@ class StudioVideoIdentificationService {
 
   Future<StudioVideoFingerprintMatch> compare(String first, String second) async {
     final result = await _engine.compare(first, second);
-    await StudioCatalogueRightsService().saveComparison(
+    await catalogueRights.saveComparison(
       leftId: first,
       rightId: second,
       score: result.confidence,
@@ -59,5 +62,5 @@ class StudioVideoIdentificationService {
   }
 
   Future<List<Map<String, Object?>>> history() =>
-      StudioCatalogueRightsService().comparisonHistory();
+      catalogueRights.comparisonHistory();
 }

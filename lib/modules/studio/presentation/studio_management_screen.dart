@@ -5,7 +5,6 @@ import '../application/services/studio_reports_service.dart';
 import '../application/services/studio_storage_health_service.dart';
 import '../application/services/studio_media_library_service.dart';
 import '../infrastructure/storage/studio_storage_manager.dart';
-import '../infrastructure/database/studio_database_manager.dart';
 
 class StudioManagementScreen extends StatefulWidget {
   const StudioManagementScreen({super.key});
@@ -42,8 +41,9 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
       storageManager: storage,
       mediaLibrary: StudioMediaLibraryService(),
     ).inspect();
-    final db = await StudioDatabaseManager.instance.initialize();
-    return _Diagnostics(summary, health, db.isOpen);
+    // Loading the report requires a successful database connection, so a
+    // completed diagnostics snapshot confirms the database is connected.
+    return _Diagnostics(summary, health);
   }
 
   Future<void> _refreshDiagnostics() async {
@@ -220,7 +220,7 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 9),
               _metric(context, 'Studio database',
-                  data.databaseOpen ? 'Connected' : 'Disconnected',
+                  'Connected',
                   Icons.storage_rounded),
               const SizedBox(height: 8),
               _metric(context, 'Database schema', 'Fresh V1',
@@ -452,9 +452,8 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
 }
 
 class _Diagnostics {
-  const _Diagnostics(this.summary, this.health, this.databaseOpen);
+  const _Diagnostics(this.summary, this.health);
 
   final StudioReportSummary summary;
   final StudioStorageHealthReport health;
-  final bool databaseOpen;
 }

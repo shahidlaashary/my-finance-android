@@ -83,6 +83,7 @@ class _StudioReferenceLibraryScreenState
   }
 
   List<StudioFingerprint> get _visibleFingerprints {
+    final duplicateCounts = _duplicateCounts();
     return _fingerprints.where((item) {
       final media = _mediaById[item.mediaFileId];
       if (_filter == 'Audio' && item.mediaType != StudioMediaType.audio) {
@@ -95,7 +96,7 @@ class _StudioReferenceLibraryScreenState
         final checksum = item.checksumSha256;
         if (checksum == null || checksum.isEmpty) return false;
         final key = '${item.algorithmKey}|${item.algorithmVersion}|$checksum';
-        if ((_duplicateCounts()[key] ?? 0) < 2) return false;
+        if ((duplicateCounts[key] ?? 0) < 2) return false;
       }
       if (_search.isEmpty) return true;
       final name = media?.originalName ?? item.mediaFileId;

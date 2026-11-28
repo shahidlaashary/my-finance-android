@@ -88,6 +88,18 @@ void main() {
     );
   });
 
+  test('removes a fingerprint and cascades its segment records', () async {
+    await fingerprints.register(_fingerprint());
+    await fingerprints.replaceSegments('fp-audio-1', [
+      _segment(index: 0, start: 0, end: 10000, offset: 0),
+    ]);
+
+    await fingerprints.remove('fp-audio-1');
+
+    expect(await fingerprints.getById('fp-audio-1'), isNull);
+    expect(await fingerprints.getSegments('fp-audio-1'), isEmpty);
+  });
+
   test('updates fingerprint processing status', () async {
     await fingerprints.register(_fingerprint());
     await fingerprints.updateStatus('fp-audio-1', StudioFingerprintStatus.indexed);

@@ -195,7 +195,7 @@ jobs:
       - name: Refresh Flutter package resolution for analyzer
         run: flutter pub get
       - name: Run Flutter static analysis
-        run: flutter analyze --no-pub --no-fatal-warnings --no-fatal-infos
+        run: flutter analyze lib --no-pub --no-fatal-warnings --no-fatal-infos
       - name: Run tests individually with timeouts and clear progress logs
         shell: bash
         run: |

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
 
@@ -96,7 +97,9 @@ class StudioAudioFingerprintEngine {
     final computation =
         _decoder.runtimeType == StudioAutoAudioDecoder &&
                 _algorithm.runtimeType == StudioSpectralLandmarkFingerprint
-            ? await _decodeAndFingerprintInBackground(media.storagePath)
+            ? await Isolate.run(
+                () => _decodeAndFingerprintInBackground(media.storagePath),
+              )
             : await _decodeAndFingerprintLocally(media.storagePath);
     final output = computation.output;
     _validateOutput(output, computation.durationMs);

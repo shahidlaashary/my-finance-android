@@ -49,9 +49,11 @@ class StudioStorageHealthService {
 
   Future<StudioStorageHealthReport> inspect() async {
     final media = await _mediaLibrary.browse(limit: 100000);
-    final fingerprints = await (_fingerprintCatalogue ??
-            StudioFingerprintCatalogueService())
-        .getAll(limit: 100000);
+    // Keep media-only callers independent from the fingerprint database.
+    // The Studio Management screen explicitly injects the catalogue when it
+    // needs the extended fingerprint artifact audit.
+    final fingerprints =
+        await _fingerprintCatalogue?.getAll(limit: 100000) ?? const [];
     final missingMedia = <String>[];
     final unavailable = <String>[];
     final missingFingerprints = <String>[];

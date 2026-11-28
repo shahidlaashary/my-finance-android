@@ -1,4 +1,5 @@
 import '../entities/studio_fingerprint.dart';
+import '../entities/studio_media_file.dart';
 
 abstract interface class StudioFingerprintRepository {
   Future<void> register(StudioFingerprint fingerprint);

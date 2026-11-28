@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../domain/entities/studio_fingerprint.dart';
+import '../../domain/entities/studio_media_file.dart';
 import '../../domain/repositories/studio_fingerprint_repository.dart';
 
 class SqliteStudioFingerprintRepository

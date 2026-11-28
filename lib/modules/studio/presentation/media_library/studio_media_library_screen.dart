@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../application/services/studio_media_import_service.dart';
 import '../../application/services/studio_media_library_service.dart';
 import '../../application/services/studio_media_metadata_service.dart';
+import '../../application/services/studio_processing_queue_service.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 
@@ -123,7 +124,22 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
         mediaType: type,
       );
       if (!mounted) return;
-      _showMessage('${imported.originalName} imported successfully.');
+
+      // Automatically create the Content ID fingerprint after the managed
+      // copy is safely registered. A scan failure must not undo a valid import.
+      try {
+        await StudioProcessingQueueService().runFingerprintJob(
+          mediaId: imported.id,
+          mediaType: type == StudioMediaType.audio ? 'audio' : 'video',
+        );
+        if (!mounted) return;
+        _showMessage('${imported.originalName} imported and Content ID scan completed.');
+      } catch (scanError) {
+        if (!mounted) return;
+        _showMessage(
+          '${imported.originalName} imported. Content ID scan failed: $scanError',
+        );
+      }
       await _load();
     } catch (error) {
       if (mounted) _showMessage('Import failed: $error');

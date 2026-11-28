@@ -123,8 +123,10 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
         final destination = await _storage.allocateEvidenceFile(
           evidenceId: evidenceId, extension: extension.isEmpty ? '.bin' : extension,
         );
-        await source.copy(destination.path);
+        // Record the destination before copying so the catch block can clean
+        // up a partially written file if the copy fails midway.
         storedPath = destination.path;
+        await source.copy(destination.path);
         checksumSha256 = (await sha256.bind(File(destination.path).openRead()).first).toString();
       }
       await _service.addClaimEvidence(

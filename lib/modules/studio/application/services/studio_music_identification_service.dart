@@ -32,12 +32,15 @@ class StudioMusicIdentificationService {
     StudioMediaLibraryService? mediaLibrary,
     StudioFingerprintCatalogueService? fingerprints,
     StudioStorageManager? storage,
+    StudioCatalogueRightsService? catalogueRights,
   }) : mediaLibrary=mediaLibrary??StudioMediaLibraryService(),
        fingerprints=fingerprints??StudioFingerprintCatalogueService(),
-       storage=storage??StudioStorageManager();
+       storage=storage??StudioStorageManager(),
+       catalogueRights=catalogueRights??StudioCatalogueRightsService();
   final StudioMediaLibraryService mediaLibrary;
   final StudioFingerprintCatalogueService fingerprints;
   final StudioStorageManager storage;
+  final StudioCatalogueRightsService catalogueRights;
   static const algorithmKey='studio.audio.spectral-landmark';
   static const algorithmVersion='1.1.0';
   StudioAudioFingerprintEngine get _engine=>StudioAudioFingerprintEngine(
@@ -50,7 +53,7 @@ class StudioMusicIdentificationService {
   static const int maxFilesPerScan = 100;
   Future<List<StudioMediaFile>> audioFiles()=>mediaLibrary.browse(mediaType:StudioMediaType.audio,limit:maxFilesPerScan);
   Future<StudioFingerprint?> fingerprintFor(String mediaId)=>fingerprints.getForMedia(mediaFileId:mediaId,algorithmKey:algorithmKey,algorithmVersion:algorithmVersion);
-  Future<List<Map<String,Object?>>> comparisonHistory()=>StudioCatalogueRightsService().comparisonHistory();
+  Future<List<Map<String,Object?>>> comparisonHistory()=>catalogueRights.comparisonHistory();
   Future<StudioFingerprint> identify(String mediaId)=>_engine.generateForMedia(mediaId);
 
   Future<StudioAudioScanResult> scanMatches(String mediaId, {void Function(int completed, int total)? onProgress}) async {
@@ -93,7 +96,7 @@ class StudioMusicIdentificationService {
     }
     final bytesA=await File(a.dataFilePath).readAsBytes(),bytesB=await File(b.dataFilePath).readAsBytes();
     final result=StudioAudioFingerprintMatcher(sampleRate:StudioAutoAudioDecoder.fingerprintSampleRate).compare(query:bytesA,reference:bytesB);
-    await StudioCatalogueRightsService().saveComparison(leftId:firstId,rightId:secondId,score:result.confidence,matches:result.matchedLandmarks,offsetMs:result.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':result.queryCoverage,'referenceCoverage':result.referenceCoverage,'queryLandmarks':result.queryLandmarks,'referenceLandmarks':result.referenceLandmarks});
+    await catalogueRights.saveComparison(leftId:firstId,rightId:secondId,score:result.confidence,matches:result.matchedLandmarks,offsetMs:result.offsetMs,algorithm:a.algorithmKey,version:a.algorithmVersion,result:{'queryCoverage':result.queryCoverage,'referenceCoverage':result.referenceCoverage,'queryLandmarks':result.queryLandmarks,'referenceLandmarks':result.referenceLandmarks});
     return result;
   }
 }

@@ -48,23 +48,25 @@ class StudioVideoFingerprintMatcher {
     List<_FramePair> best = const [];
     var bestOffset = 0;
     for (final bucket in buckets.keys) {
+      final centerOffset = bucket * offsetToleranceMs;
       final candidates = <_FramePair>[
         ...?buckets[bucket - 1],
         ...?buckets[bucket],
         ...?buckets[bucket + 1],
-      ];
+      ].where((pair) =>
+          (pair.offsetMs - centerOffset).abs() <= offsetToleranceMs).toList();
       candidates.sort((a, b) => a.distance.compareTo(b.distance));
       final usedQuery = <int>{};
       final usedReference = <int>{};
       final selected = <_FramePair>[];
       for (final pair in candidates) {
-        if (usedQuery.add(pair.queryIndex) &&
-            usedReference.add(pair.referenceIndex)) {
-          selected.add(pair);
-        } else {
-          usedQuery.remove(pair.queryIndex);
-          usedReference.remove(pair.referenceIndex);
+        if (usedQuery.contains(pair.queryIndex) ||
+            usedReference.contains(pair.referenceIndex)) {
+          continue;
         }
+        usedQuery.add(pair.queryIndex);
+        usedReference.add(pair.referenceIndex);
+        selected.add(pair);
       }
       final ordered = _longestOrderedSequence(selected);
       if (ordered.length > best.length) {

@@ -80,92 +80,61 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     return FutureBuilder<StudioDashboardSummary>(
       future: _summary,
       builder: (context, snapshot) {
         final summary = snapshot.data;
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
-            Text('STUDIO WORKSPACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colors.primary, fontWeight: FontWeight.w800, letterSpacing: 1.35)),
-            const SizedBox(height: 5),
-            Text('Studio', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.7)),
-            const SizedBox(height: 5),
-            Text(
-              'Manage media, discover matches and protect your creative rights',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: _StudioStatCard(
-                    label: 'Media Files',
-                    value: summary?.mediaFiles.toString() ?? (snapshot.hasError ? '—' : '…'),
-                    icon: Icons.perm_media_outlined,
-                  ),
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xFF10283C), Color(0xFF1F5667), Color(0xFF267B7A)],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _StudioStatCard(
-                    label: 'Active Jobs',
-                    value: summary?.pendingJobs.toString() ?? (snapshot.hasError ? '—' : '…'),
-                    icon: Icons.pending_actions_outlined,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _StudioStatCard(
-                    label: 'Failed Jobs',
-                    value: summary?.failedJobs.toString() ?? (snapshot.hasError ? '—' : '…'),
-                    icon: Icons.error_outline_rounded,
-                  ),
-                ),
-              ],
+                boxShadow: [BoxShadow(color: const Color(0xFF174A5A).withValues(alpha: .18), blurRadius: 24, offset: const Offset(0, 9))],
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(13)),
+                    child: const Icon(Icons.waves_rounded, color: Color(0xFF8FE1D1))),
+                  const SizedBox(width: 10),
+                  Text('CREATIVE WORKSPACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white70, fontWeight: FontWeight.w800, letterSpacing: 1.3)),
+                ]),
+                const SizedBox(height: 16),
+                Text('Studio', style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: -1.2)),
+                const SizedBox(height: 5),
+                Text('A dedicated space for your media, discovery and creative tools.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: .82))),
+                const SizedBox(height: 18),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  _StudioMetricPill(icon: Icons.folder_open_rounded, label: 'MEDIA', value: summary?.mediaFiles.toString() ?? (snapshot.hasError ? '—' : '…')),
+                  _StudioMetricPill(icon: Icons.pending_actions_rounded, label: 'QUEUED', value: summary?.pendingJobs.toString() ?? (snapshot.hasError ? '—' : '…')),
+                  _StudioMetricPill(icon: Icons.error_outline_rounded, label: 'FAILED', value: summary?.failedJobs.toString() ?? (snapshot.hasError ? '—' : '…')),
+                ]),
+              ]),
             ),
             if (snapshot.hasError) ...[
               const SizedBox(height: 10),
-              Text(
-                'Studio database could not be opened: ${snapshot.error}',
-                style: TextStyle(color: colors.error, fontSize: 12),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => setState(() {
-                    _summary = StudioDashboardService.instance.loadSummary();
-                  }),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Retry database connection'),
-                ),
-              ),
+              Text('Studio summary unavailable: ${snapshot.error}', style: TextStyle(color: colors.error, fontSize: 12)),
+              TextButton.icon(onPressed: () => setState(() => _summary = StudioDashboardService.instance.loadSummary()),
+                icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
             ],
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
+            _ContentIdSpotlight(onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioContentIdScreen()))),
+            const SizedBox(height: 22),
             Row(children: [
-              Expanded(child: Text('Your Studio', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.35))),
-              Text('${_sections.length} systems', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant)),
+              Expanded(child: Text('Workspace tools', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
+              Text('${_sections.length} tools', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant)),
             ]),
             const SizedBox(height: 11),
             GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _sections.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1.68,
-              ),
-              itemBuilder: (context, index) {
-                final section = _sections[index];
-                return _StudioSectionCard(
-                  section: section,
-                  onTap: () => _openSection(section),
-                );
-              },
+              shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: _sections.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 11, mainAxisSpacing: 11, childAspectRatio: 1.34),
+              itemBuilder: (context, index) => _StudioSectionCard(section: _sections[index], onTap: () => _openSection(_sections[index])),
             ),
           ],
         );
@@ -399,4 +368,66 @@ class _StudioSectionPlaceholderScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _StudioMetricPill extends StatelessWidget {
+  const _StudioMetricPill({required this.icon, required this.label, required this.value});
+  final IconData icon; final String label; final String value;
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .11), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white.withValues(alpha: .13))),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, color: Colors.white70, size: 15), const SizedBox(width: 7),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 9, letterSpacing: .6)),
+      ]),
+    ]),
+  );
+}
+
+class _ContentIdSpotlight extends StatelessWidget {
+  const _ContentIdSpotlight({required this.onTap});
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => Material(color: Colors.transparent, child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(25),
+    child: Ink(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25), border: Border.all(color: const Color(0xFF4B9B95).withValues(alpha: .35)),
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFE4F3F1), Color(0xFFF2F7FB)]),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF2A7479).withValues(alpha: .13), borderRadius: BorderRadius.circular(15)),
+            child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF267378), size: 25)),
+          const Spacer(), const Icon(Icons.arrow_outward_rounded, color: Color(0xFF267378)),
+        ]),
+        const SizedBox(height: 14),
+        const Text('CONTENT ID', style: TextStyle(color: Color(0xFF267378), fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 5),
+        Text('Find where your media matches', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, color: const Color(0xFF17394A))),
+        const SizedBox(height: 5),
+        const Text('Identify audio and visuals across your Studio library, compare results and review match evidence.',
+          style: TextStyle(color: Color(0xFF47626B), height: 1.3)),
+        const SizedBox(height: 14),
+        Wrap(spacing: 7, runSpacing: 7, children: const [
+          _StudioMatchChip(icon: Icons.graphic_eq_rounded, label: 'Audio Match'),
+          _StudioMatchChip(icon: Icons.video_camera_back_outlined, label: 'Visual Match'),
+        ]),
+      ]),
+    ),
+  ));
+}
+class _StudioMatchChip extends StatelessWidget {
+  const _StudioMatchChip({required this.icon, required this.label});
+  final IconData icon; final String label;
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .8), borderRadius: BorderRadius.circular(30)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 14, color: const Color(0xFF267378)), const SizedBox(width: 5),
+      Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Color(0xFF315B63)))]),
+  );
 }

@@ -19,6 +19,7 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
   final _storage = StudioStorageManager();
   late final TabController _tabs;
   bool _loading = true;
+  int _loadGeneration = 0;
   String? _error;
   List<Map<String,Object?>> _tracks = [], _artists = [], _releases = [], _holders = [], _ownerships = [], _licenses = [], _claims = [];
   bool get _rights => widget.section == 'Rights Management';
@@ -26,18 +27,34 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
   @override
   void initState(){super.initState();_tabs=TabController(length:widget.section == 'Rights Management' ? 4 : 3,vsync:this);_reload();}
   @override
-  void dispose(){_tabs.dispose();super.dispose();}
+  void dispose(){_loadGeneration++;_tabs.dispose();super.dispose();}
   Future<void> _reload() async {
-    setState(()=>_loading=true);
-    try{
-      if(_rights){
-        final data=await Future.wait([_service.holders(),_service.ownerships(),_service.licenses(),_service.claims()]);
-        if(!mounted)return;setState((){_holders=data[0];_ownerships=data[1];_licenses=data[2];_claims=data[3];_loading=false;_error=null;});
-      }else{
-        final data=await Future.wait([_service.tracks(),_service.artists(),_service.releases()]);
-        if(!mounted)return;setState((){_tracks=data[0];_artists=data[1];_releases=data[2];_loading=false;});
+    final generation = ++_loadGeneration;
+    if (mounted) setState(() { _loading = true; _error = null; });
+    try {
+      if (_rights) {
+        final data = await Future.wait([
+          _service.holders(), _service.ownerships(), _service.licenses(), _service.claims(),
+        ]);
+        if (!mounted || generation != _loadGeneration) return;
+        setState(() {
+          _holders = data[0]; _ownerships = data[1]; _licenses = data[2];
+          _claims = data[3]; _loading = false; _error = null;
+        });
+      } else {
+        final data = await Future.wait([
+          _service.tracks(), _service.artists(), _service.releases(),
+        ]);
+        if (!mounted || generation != _loadGeneration) return;
+        setState(() {
+          _tracks = data[0]; _artists = data[1]; _releases = data[2];
+          _loading = false; _error = null;
+        });
       }
-    }catch(e){if(!mounted)return;setState(()=>_error=e.toString());setState(()=>_loading=false);}
+    } catch (error) {
+      if (!mounted || generation != _loadGeneration) return;
+      setState(() { _error = error.toString(); _loading = false; });
+    }
   }
   Future<String?> _ask(String title,String label,{String initial=''})async{
     final c=TextEditingController(text:initial);
@@ -305,7 +322,32 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
   Widget build(BuildContext context){
     return Scaffold(appBar:AppBar(title:Text(widget.section),bottom:TabBar(controller:_tabs,tabs:_rights?const [Tab(text:'Holders'),Tab(text:'Ownership'),Tab(text:'Licenses'),Tab(text:'Claims')]:const [Tab(text:'Tracks'),Tab(text:'Artists'),Tab(text:'Releases')])),
       floatingActionButton:FloatingActionButton(onPressed:_addCurrent,child:const Icon(Icons.add)),
-      body:_loading?const Center(child:CircularProgressIndicator()):_error!=null?Center(child:Text(_error!)):_rights?_rightsBody():_catalogueBody());
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.cloud_off_rounded, size: 42),
+                        const SizedBox(height: 12),
+                        const Text('Could not load Studio records',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 6),
+                        Text(_error!, textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _reload,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : _rights ? _rightsBody() : _catalogueBody());
   }
   Widget _catalogueBody()=>TabBarView(controller:_tabs,children:[
     _list(_tracks,(r)=>r['title'].toString(),(r)=>r['id'].toString()),

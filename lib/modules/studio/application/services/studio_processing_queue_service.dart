@@ -162,12 +162,13 @@ class StudioProcessingQueueService {
       );
       return changed == 1;
     });
-    if (!claimed) return;
+    final claimedJob = job;
+    if (!claimed || claimedJob == null) return;
 
     try {
-      final targetId = job['target_id']?.toString();
+      final targetId = claimedJob['target_id']?.toString();
       if (targetId == null || targetId.isEmpty) throw StateError('Job target is missing.');
-      switch (job['job_type']) {
+      switch (claimedJob['job_type']) {
         case 'audio_fingerprint':
           await StudioAudioMatchService().identify(targetId);
           break;
@@ -175,7 +176,7 @@ class StudioProcessingQueueService {
           await StudioVisualMatchService().fingerprint(targetId);
           break;
         default:
-          throw StateError('No worker is registered for ${job['job_type']}.');
+          throw StateError('No worker is registered for ${claimedJob['job_type']}.');
       }
       // Make the final transition atomic with cancellation. A cancel request
       // that commits first must never be overwritten by this completion write.

@@ -86,6 +86,7 @@ class StudioProcessingQueueService {
     var completed = 0;
     var succeeded = 0;
     var failed = 0;
+    var alreadyFingerprinted = 0;
     onProgress?.call(0, media.length);
     for (final item in media) {
       final id = item['id']?.toString();
@@ -94,8 +95,25 @@ class StudioProcessingQueueService {
         if (id == null || id.isEmpty || (type != 'audio' && type != 'video')) {
           throw StateError('Library item has invalid media metadata.');
         }
-        await runFingerprintJob(mediaId: id, mediaType: type);
-        succeeded++;
+        final algorithmKey = type == 'audio'
+            ? StudioAudioMatchService.algorithmKey
+            : StudioVisualMatchService.algorithmKey;
+        final algorithmVersion = type == 'audio'
+            ? StudioAudioMatchService.algorithmVersion
+            : StudioVisualMatchService.algorithmVersion;
+        final existing = await db.query(
+          'studio_fingerprints',
+          columns: ['id'],
+          where: 'media_file_id = ? AND algorithm_key = ? AND algorithm_version = ? AND status IN (?, ?)',
+          whereArgs: [id, algorithmKey, algorithmVersion, 'generated', 'indexed'],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) {
+          alreadyFingerprinted++;
+        } else {
+          await runFingerprintJob(mediaId: id, mediaType: type);
+          succeeded++;
+        }
       } catch (_) {
         failed++;
       } finally {
@@ -107,6 +125,7 @@ class StudioProcessingQueueService {
       total: media.length,
       succeeded: succeeded,
       failed: failed,
+      alreadyFingerprinted: alreadyFingerprinted,
     );
   }
 
@@ -265,9 +284,11 @@ class StudioLibraryBatchResult {
     required this.total,
     required this.succeeded,
     required this.failed,
+    required this.alreadyFingerprinted,
   });
 
   final int total;
   final int succeeded;
   final int failed;
+  final int alreadyFingerprinted;
 }

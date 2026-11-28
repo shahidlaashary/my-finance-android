@@ -66,7 +66,7 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(
-          'Library batch finished: ${result.succeeded}/${result.total} successful, ${result.failed} failed.',
+          'Library batch finished: ${result.succeeded} fingerprinted, ${result.alreadyFingerprinted} already ready, ${result.failed} failed (total ${result.total}).',
         )),
       );
       await _refreshJobs();

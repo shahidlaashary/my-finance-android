@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_finance/modules/studio/application/services/studio_catalogue_rights_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_media_library_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_video_identification_service.dart';
 import 'package:my_finance/modules/studio/domain/entities/studio_media_file.dart';
@@ -18,6 +19,9 @@ void main() {
     service = StudioVideoIdentificationService(
       mediaLibrary: StudioMediaLibraryService(
         repository: SqliteStudioMediaRepository(database),
+      ),
+      catalogueRights: StudioCatalogueRightsService(
+        databaseProvider: () async => database,
       ),
     );
   });
@@ -86,5 +90,9 @@ void main() {
 
   test('returns an empty list when no videos are registered', () async {
     expect(await service.videos(), isEmpty);
+  });
+
+  test('uses the injected catalogue-rights service for comparison history', () async {
+    expect(await service.history(), isEmpty);
   });
 }

@@ -13,7 +13,7 @@ class StudioAutoAudioDecoder implements StudioAudioDecoder {
   // The previous 25 MB ceiling rejected ordinary long-form MP3 recordings.
   // audio_decode currently decodes a complete input buffer, so retain a
   // generous hard ceiling rather than allowing unbounded native allocations.
-  static const int maxEncodedFileBytes = 100 * 1024 * 1024;
+  static const int maxEncodedFileBytes = 200 * 1024 * 1024;
   static const Set<String> supportedExtensions = {'mp3', 'ogg', 'wav'};
 
   @override
@@ -32,7 +32,7 @@ class StudioAutoAudioDecoder implements StudioAudioDecoder {
     if (length == 0) throw const FormatException('Audio source is empty.');
     if (length > maxEncodedFileBytes) {
       throw const FormatException(
-        'Audio file exceeds the current 100 MB decoding limit. Import a smaller or segmented copy.',
+        'Audio file exceeds the current 200 MB decoding limit. Import a smaller or segmented copy.',
       );
     }
 

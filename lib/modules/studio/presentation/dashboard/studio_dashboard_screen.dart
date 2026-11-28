@@ -107,7 +107,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
                         borderRadius: BorderRadius.circular(11),
                       ),
                       child: const Icon(
-                        Icons.spatial_audio_off_rounded,
+                        Icons.graphic_eq_rounded,
                         color: Color(0xFF8FE1D1),
                         size: 20,
                       ),
@@ -402,47 +402,3 @@ class _StudioMetricPill extends StatelessWidget {
   );
 }
 
-class _ContentIdSpotlight extends StatelessWidget {
-  const _ContentIdSpotlight({required this.onTap});
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Material(color: Colors.transparent, child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(25),
-    child: Ink(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25), border: Border.all(color: const Color(0xFF4B9B95).withValues(alpha: .35)),
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFE4F3F1), Color(0xFFF2F7FB)]),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF2A7479).withValues(alpha: .13), borderRadius: BorderRadius.circular(15)),
-            child: const Icon(Icons.fingerprint_rounded, color: Color(0xFF267378), size: 25)),
-          const Spacer(), const Icon(Icons.arrow_outward_rounded, color: Color(0xFF267378)),
-        ]),
-        const SizedBox(height: 14),
-        const Text('CONTENT ID', style: TextStyle(color: Color(0xFF267378), fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 5),
-        Text('Find where your media matches', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, color: const Color(0xFF17394A))),
-        const SizedBox(height: 5),
-        const Text('Identify audio and visuals across your Studio library, compare results and review match evidence.',
-          style: TextStyle(color: Color(0xFF47626B), height: 1.3)),
-        const SizedBox(height: 14),
-        Wrap(spacing: 7, runSpacing: 7, children: const [
-          _StudioMatchChip(icon: Icons.graphic_eq_rounded, label: 'Audio Match'),
-          _StudioMatchChip(icon: Icons.video_camera_back_outlined, label: 'Visual Match'),
-        ]),
-      ]),
-    ),
-  ));
-}
-class _StudioMatchChip extends StatelessWidget {
-  const _StudioMatchChip({required this.icon, required this.label});
-  final IconData icon; final String label;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .8), borderRadius: BorderRadius.circular(30)),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 14, color: const Color(0xFF267378)), const SizedBox(width: 5),
-      Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Color(0xFF315B63)))]),
-  );
-}

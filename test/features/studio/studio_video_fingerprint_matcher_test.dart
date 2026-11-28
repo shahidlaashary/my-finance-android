@@ -93,8 +93,6 @@ void main() {
     expect(result.isMatch, isFalse);
     expect(result.matches, 0);
   });
-}
-
 
   test('matches resized or re-encoded frames with small perceptual hash changes', () {
     final query = [

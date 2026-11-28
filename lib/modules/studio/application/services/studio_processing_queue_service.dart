@@ -8,7 +8,12 @@ import 'studio_video_identification_service.dart';
 ///
 /// Executes the supported fingerprint jobs and persists their lifecycle.
 class StudioProcessingQueueService {
-  Future<Database> get _db => StudioDatabaseManager.instance.initialize();
+  StudioProcessingQueueService({Database? database}) : _database = database;
+
+  final Database? _database;
+
+  Future<Database> get _db async =>
+      _database ?? await StudioDatabaseManager.instance.initialize();
 
   Future<List<Map<String, Object?>>> jobs({String? status, int limit = 100}) async {
     final db = await _db;

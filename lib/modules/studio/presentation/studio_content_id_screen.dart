@@ -83,10 +83,10 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
         onRefresh: _refreshHistory,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 gradient: const LinearGradient(
@@ -98,23 +98,36 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.fingerprint_rounded, size: 34, color: Colors.white),
-                  const SizedBox(height: 12),
-                  Text('CONTENT IDENTIFICATION', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white70, letterSpacing: 1.4)),
-                  const SizedBox(height: 6),
-                  Text('Find matches for your work', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 8),
-                  const Text('Explore audio and visual similarity in your Studio media collection.', style: TextStyle(color: Colors.white70)),
+                  Row(
+                    children: [
+                      const Icon(Icons.fingerprint_rounded, size: 25, color: Colors.white),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          'Find matches for your work',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Explore audio and visual similarity in your Studio media collection.',
+                    style: TextStyle(color: Colors.white70, height: 1.25),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             _MatchToolCard(title: 'Audio Match', description: 'Identify audio fingerprints and search for similar audio across your media library.', icon: Icons.graphic_eq_rounded, accent: const Color(0xFF8758B7), onTap: () => _open(context, 'Audio Match')),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _MatchToolCard(title: 'Visual Match', description: 'Compare video frame fingerprints and explore visual similarities between clips.', icon: Icons.video_camera_back_outlined, accent: const Color(0xFF21867D), onTap: () => _open(context, 'Visual Match')),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             OutlinedButton.icon(onPressed: () => _open(context, 'Compare'), icon: const Icon(Icons.compare_arrows_rounded), label: const Text('Compare audio files')),
-            const SizedBox(height: 22),
+            const SizedBox(height: 15),
             Row(
               children: [
                 Expanded(child: Text('Shared comparison history', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
@@ -122,7 +135,7 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
               ],
             ),
             Text('Recent results from both matching tools', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             Wrap(
               spacing: 8,
               children: ['All', 'Audio Match', 'Visual Match'].map((filter) =>
@@ -133,7 +146,7 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
                 ),
               ).toList(),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             _historyList(),
           ],
         ),
@@ -308,11 +321,11 @@ class _MatchToolCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.all(17),
+        padding: const EdgeInsets.all(13),
         child: Row(
           children: [
-            Container(width: 48, height: 48, decoration: BoxDecoration(color: accent.withValues(alpha: .13), borderRadius: BorderRadius.circular(15)), child: Icon(icon, color: accent, size: 24)),
-            const SizedBox(width: 14),
+            Container(width: 42, height: 42, decoration: BoxDecoration(color: accent.withValues(alpha: .13), borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: accent, size: 22)),
+            const SizedBox(width: 11),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),

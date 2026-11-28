@@ -87,7 +87,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
             Container(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.fromLTRB(18, 15, 18, 16),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(28),
                 gradient: const LinearGradient(
@@ -97,19 +97,37 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
                 boxShadow: [BoxShadow(color: const Color(0xFF174A5A).withValues(alpha: .18), blurRadius: 24, offset: const Offset(0, 9))],
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Container(width: 38, height: 38, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(13)),
-                    child: const Icon(Icons.waves_rounded, color: Color(0xFF8FE1D1))),
-                  const SizedBox(width: 10),
-                  Text('CREATIVE WORKSPACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white70, fontWeight: FontWeight.w800, letterSpacing: 1.3)),
-                ]),
-                const SizedBox(height: 16),
-                Text('Studio', style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: -1.2)),
-                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .12),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Icon(
+                        Icons.spatial_audio_off_rounded,
+                        color: Color(0xFF8FE1D1),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Studio',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.8,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text('A dedicated space for your media, discovery and creative tools.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: .82))),
-                const SizedBox(height: 18),
-                Wrap(spacing: 8, runSpacing: 8, children: [
+                const SizedBox(height: 12),
+                Wrap(spacing: 8, runSpacing: 7, children: [
                   _StudioMetricPill(icon: Icons.folder_open_rounded, label: 'MEDIA', value: summary?.mediaFiles.toString() ?? (snapshot.hasError ? '—' : '…')),
                   _StudioMetricPill(icon: Icons.pending_actions_rounded, label: 'QUEUED', value: summary?.pendingJobs.toString() ?? (snapshot.hasError ? '—' : '…')),
                   _StudioMetricPill(icon: Icons.error_outline_rounded, label: 'FAILED', value: summary?.failedJobs.toString() ?? (snapshot.hasError ? '—' : '…')),
@@ -122,9 +140,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
               TextButton.icon(onPressed: () => setState(() => _summary = StudioDashboardService.instance.loadSummary()),
                 icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
             ],
-            const SizedBox(height: 18),
-            _ContentIdSpotlight(onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioContentIdScreen()))),
-            const SizedBox(height: 22),
+            const SizedBox(height: 14),
             Row(children: [
               Expanded(child: Text('Workspace tools', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
               Text('${_sections.length} tools', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant)),
@@ -132,7 +148,7 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
             const SizedBox(height: 11),
             GridView.builder(
               shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: _sections.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 11, mainAxisSpacing: 11, childAspectRatio: 1.34),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 9, childAspectRatio: 1.52),
               itemBuilder: (context, index) => _StudioSectionCard(section: _sections[index], onTap: () => _openSection(_sections[index])),
             ),
           ],
@@ -269,7 +285,7 @@ class _StudioSectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(10, 9, 9, 9),
+          padding: const EdgeInsets.fromLTRB(9, 7, 8, 7),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: accent.withValues(alpha: 0.25)),
@@ -288,14 +304,14 @@ class _StudioSectionCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(11),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(section.icon, size: 19, color: accent),
+                    child: Icon(section.icon, size: 17, color: accent),
                   ),
                   const Spacer(),
                   Icon(

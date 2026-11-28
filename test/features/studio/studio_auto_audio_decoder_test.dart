@@ -12,14 +12,14 @@ void main() {
   setUp(() async => directory = await Directory.systemTemp.createTemp('studio-auto-audio-'));
   tearDown(() async => directory.delete(recursive: true));
 
-  test('allows audio files larger than the former 25 MB ceiling', () {
+  test('allows audio files larger than the former 100 MB ceiling', () {
     expect(
       StudioAutoAudioDecoder.maxEncodedFileBytes,
-      greaterThan(25 * 1024 * 1024),
+      greaterThan(100 * 1024 * 1024),
     );
     expect(
       StudioAutoAudioDecoder.maxEncodedFileBytes,
-      100 * 1024 * 1024,
+      200 * 1024 * 1024,
     );
   });
 

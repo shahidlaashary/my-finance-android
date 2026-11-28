@@ -78,6 +78,51 @@ class _StudioReportsScreenState extends State<StudioReportsScreen> {
                 ...sections.map((row) => _pdfRow(row)),
               ],
             ),
+            if (report.recentComparisons.isNotEmpty) ...[
+              pw.SizedBox(height: 18),
+              pw.Text('RECENT CONTENT ID COMPARISONS',
+                  style: pw.TextStyle(
+                      fontSize: 11, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 6),
+              pw.Table(
+                border: pw.TableBorder.all(
+                    color: PdfColors.grey400, width: 0.5),
+                children: [
+                  _pdfRow(['QUERY', 'REFERENCE', 'CONFIDENCE', 'OFFSET'],
+                      header: true),
+                  ...report.recentComparisons.map((item) {
+                    final score = (item['match_score'] as num?)?.toDouble();
+                    return _pdfRow([
+                      item['left_name']?.toString() ?? 'Unknown',
+                      item['right_name']?.toString() ?? 'Unknown',
+                      score == null ? 'N/A' : '${score.toStringAsFixed(1)}%',
+                      item['offset_ms']?.toString() ?? 'N/A',
+                    ]);
+                  }),
+                ],
+              ),
+            ],
+            if (report.recentEvidence.isNotEmpty) ...[
+              pw.SizedBox(height: 18),
+              pw.Text('RECENT RIGHTS CLAIM EVIDENCE',
+                  style: pw.TextStyle(
+                      fontSize: 11, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 6),
+              pw.Table(
+                border: pw.TableBorder.all(
+                    color: PdfColors.grey400, width: 0.5),
+                children: [
+                  _pdfRow(['EVIDENCE', 'CLAIM', 'TYPE', 'STATUS'],
+                      header: true),
+                  ...report.recentEvidence.map((item) => _pdfRow([
+                        item['title']?.toString() ?? 'Untitled',
+                        item['claim_title']?.toString() ?? 'Unknown claim',
+                        item['evidence_type']?.toString() ?? 'Unknown',
+                        item['claim_status']?.toString() ?? 'Unknown',
+                      ])),
+                ],
+              ),
+            ],
             pw.SizedBox(height: 14),
             pw.Text(
               'This report contains local Studio database totals. It does not verify ownership, legal status, or external platform claims.',
@@ -224,7 +269,7 @@ class _StudioReportsScreenState extends State<StudioReportsScreen> {
         leading: Icon(icon, color: colors.primary),
         title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          [subtitle, if (timestamp != null) timestamp].join('\\n'),
+          [subtitle, if (timestamp != null) timestamp].join('\n'),
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
         ),

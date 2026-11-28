@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_finance/modules/studio/services/studio_dashboard_service.dart';
+import 'package:my_finance/modules/studio/application/services/studio_dashboard_service.dart';
 import 'package:my_finance/modules/studio/presentation/media_library/studio_media_library_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_catalogue_rights_screen.dart';
 import 'package:my_finance/modules/studio/presentation/studio_music_id_screen.dart';

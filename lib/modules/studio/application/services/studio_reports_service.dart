@@ -4,6 +4,8 @@ import '../../infrastructure/database/studio_database_manager.dart';
 
 class StudioReportSummary {
   const StudioReportSummary({
+    required this.recentComparisons,
+    required this.recentEvidence,
     required this.generatedAt,
     required this.media,
     required this.audio,
@@ -23,6 +25,9 @@ class StudioReportSummary {
     required this.resolvedClaims,
     required this.evidenceItems,
   });
+
+  final List<Map<String, Object?>> recentComparisons;
+  final List<Map<String, Object?>> recentEvidence;
 
   final DateTime generatedAt;
   final int media;
@@ -45,8 +50,14 @@ class StudioReportSummary {
 }
 
 class StudioReportsService {
+  StudioReportsService({Future<Database> Function()? databaseProvider})
+      : _databaseProvider = databaseProvider ??
+            StudioDatabaseManager.instance.initialize;
+
+  final Future<Database> Function() _databaseProvider;
+
   Future<StudioReportSummary> load() async {
-    final db = await StudioDatabaseManager.instance.initialize();
+    final db = await _databaseProvider();
     final counts = await Future.wait([
       _count(db, 'studio_media_files'),
       _count(db, 'studio_fingerprints'),
@@ -92,7 +103,30 @@ class StudioReportsService {
       "status IN ('resolved', 'rejected', 'withdrawn')",
     );
 
+    final recentComparisons = await db.rawQuery('''
+      SELECT c.id, c.algorithm_key, c.algorithm_version, c.match_score,
+             c.matched_landmarks, c.offset_ms, c.result_json, c.created_at,
+             l.original_name AS left_name, r.original_name AS right_name,
+             l.media_type AS left_media_type, r.media_type AS right_media_type
+      FROM studio_comparison_history c
+      INNER JOIN studio_media_files l ON l.id = c.left_media_id
+      INNER JOIN studio_media_files r ON r.id = c.right_media_id
+      ORDER BY c.created_at DESC
+      LIMIT 20
+    ''');
+    final recentEvidence = await db.rawQuery('''
+      SELECT e.id, e.evidence_type, e.title, e.description, e.file_path,
+             e.checksum_sha256, e.created_at, c.id AS claim_id,
+             c.title AS claim_title, c.claimant_name, c.status AS claim_status
+      FROM studio_claim_evidence e
+      INNER JOIN studio_rights_claims c ON c.id = e.claim_id
+      ORDER BY e.created_at DESC
+      LIMIT 20
+    ''');
+
     return StudioReportSummary(
+      recentComparisons: recentComparisons,
+      recentEvidence: recentEvidence,
       generatedAt: DateTime.now(),
       media: counts[0],
       audio: audio,

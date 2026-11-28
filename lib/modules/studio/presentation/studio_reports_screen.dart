@@ -182,6 +182,56 @@ class _StudioReportsScreenState extends State<StudioReportsScreen> {
     );
   }
 
+  Widget _detailSection(
+    BuildContext context,
+    String title,
+    List<Widget> children, {
+    required String emptyText,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, top: 15),
+          child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+        ),
+        if (children.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Text(emptyText,
+                  style: Theme.of(context).textTheme.bodySmall),
+            ),
+          )
+        else
+          ...children,
+      ],
+    );
+  }
+
+  Widget _detailTile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+    String? timestamp,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 7),
+      child: ListTile(
+        dense: true,
+        leading: Icon(icon, color: colors.primary),
+        title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
+        subtitle: Text(
+          [subtitle, if (timestamp != null) timestamp].join('\\n'),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,6 +327,36 @@ class _StudioReportsScreenState extends State<StudioReportsScreen> {
                   ('Closed claims', data.resolvedClaims, Icons.task_alt_rounded),
                   ('Evidence records', data.evidenceItems, Icons.attach_file_rounded),
                 ]),
+                _detailSection(
+                  context,
+                  'Recent Content ID comparisons',
+                  data.recentComparisons.map((item) {
+                    final score = (item['match_score'] as num?)?.toDouble();
+                    final scoreText = score == null ? 'Score unavailable' :
+                        '${score.toStringAsFixed(1)}% confidence';
+                    final offset = item['offset_ms'] as int?;
+                    return _detailTile(
+                      context,
+                      Icons.compare_arrows_rounded,
+                      '${item['left_name']}  ↔  ${item['right_name']}',
+                      '${item['algorithm_key'] ?? 'Unknown algorithm'} • $scoreText • ${item['matched_landmarks'] ?? 0} matched points${offset == null ? '' : ' • ${offset}ms offset'}',
+                      item['created_at']?.toString(),
+                    );
+                  }).toList(),
+                  emptyText: 'No Content ID comparisons have been saved yet.',
+                ),
+                _detailSection(
+                  context,
+                  'Recent claim evidence',
+                  data.recentEvidence.map((item) => _detailTile(
+                    context,
+                    Icons.attach_file_rounded,
+                    item['title']?.toString() ?? 'Untitled evidence',
+                    '${item['evidence_type']} • Claim: ${item['claim_title']} • ${item['claim_status']}',
+                    item['created_at']?.toString(),
+                  )).toList(),
+                  emptyText: 'No claim evidence has been attached yet.',
+                ),
                 _section(context, 'Processing', [
                   ('Active jobs', data.pendingJobs, Icons.pending_actions_rounded),
                   ('Failed jobs', data.failedJobs, Icons.error_outline_rounded),

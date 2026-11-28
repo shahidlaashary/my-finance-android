@@ -11,7 +11,7 @@ import '../../domain/entities/studio_fingerprint.dart';
 import '../../domain/entities/studio_media_file.dart';
 import '../../infrastructure/storage/studio_storage_manager.dart';
 
-import 'studio_video_fingerprint_match.dart';
+import '../../domain/entities/studio_video_fingerprint_match.dart';
 
 class StudioVideoFingerprintEngine {
   StudioVideoFingerprintEngine({required StudioStorageManager storage,required StudioMediaLibraryService media,required StudioFingerprintCatalogueService catalogue,this.sampleIntervalMs=2000,this.maxFrames=300})

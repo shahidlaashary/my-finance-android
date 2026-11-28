@@ -44,7 +44,7 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
     }
   }
   Future<void> _fingerprint(StudioMediaFile f)async{setState(()=>_busy=true);try{await StudioProcessingQueueService().runFingerprintJob(mediaId: f.id, mediaType: 'video');if(mounted)_toast('Video fingerprint generated.');}catch(e){if(mounted)_toast('Fingerprint failed: $e');}if(mounted)setState(()=>_busy=false);}
-  Future<void> _compare()async{if(_first==null||_second==null||_first==_second){_toast('Choose two different videos.');return;}setState(()=>_busy=true);try{final m=await _service.compare(_first!,_second!);final history=await _service.history();if(mounted)setState(()=>_result=m);if(mounted)setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVideoFingerprintEngine.key).toList());}catch(e){if(mounted)_toast('Compare failed: $e');}if(mounted)setState(()=>_busy=false);}
+  Future<void> _compare()async{if(_first==null||_second==null||_first==_second){_toast('Choose two different videos.');return;}setState(()=>_busy=true);try{final m=await _service.compare(_first!,_second!);final history=await _service.history();if(mounted)setState(()=>_result=m);if(mounted)setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVideoIdentificationService.algorithmKey).toList());}catch(e){if(mounted)_toast('Compare failed: $e');}if(mounted)setState(()=>_busy=false);}
   void _toast(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}
   String _pct(double v)=>(v*100).toStringAsFixed(1)+'%';
   @override Widget build(BuildContext context)=>Scaffold(

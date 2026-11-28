@@ -16,8 +16,9 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
   bool _loading=true,_busy=false;
   StudioVideoFingerprintMatch? _result;
   String? _error;
-  @override void initState(){super.initState();_load();}
   int _loadGeneration=0;
+  @override void initState(){super.initState();_load();}
+  @override void dispose(){_loadGeneration++;super.dispose();}
   Future<void> _load()async{
     final generation=++_loadGeneration;
     if(mounted)setState(()=>_loading=true);
@@ -36,8 +37,10 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
       });
     }catch(e){
       if(!mounted||generation!=_loadGeneration)return;
-      setState(()=>_error=e.toString());
-      setState(()=>_loading=false);
+      setState(()=>{
+        _error=e.toString();
+        _loading=false;
+      });
     }
   }
   Future<void> _fingerprint(StudioMediaFile f)async{setState(()=>_busy=true);try{await StudioProcessingQueueService().runFingerprintJob(mediaId: f.id, mediaType: 'video');if(mounted)_toast('Video fingerprint generated.');}catch(e){if(mounted)_toast('Fingerprint failed: $e');}if(mounted)setState(()=>_busy=false);}

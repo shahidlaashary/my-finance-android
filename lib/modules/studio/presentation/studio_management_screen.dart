@@ -254,6 +254,7 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
               ],
             ),
           ),
+        ],
       ),
     );
   }

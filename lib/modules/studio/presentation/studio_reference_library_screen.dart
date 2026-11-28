@@ -4,6 +4,7 @@ import '../application/services/studio_fingerprint_catalogue_service.dart';
 import '../application/services/studio_media_library_service.dart';
 import '../domain/entities/studio_fingerprint.dart';
 import '../domain/entities/studio_media_file.dart';
+import '../infrastructure/storage/studio_storage_manager.dart';
 
 /// Browse generated Content ID references and manage their catalogue status.
 class StudioReferenceLibraryScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _StudioReferenceLibraryScreenState
     extends State<StudioReferenceLibraryScreen> {
   final _catalogue = StudioFingerprintCatalogueService();
   final _mediaLibrary = StudioMediaLibraryService();
+  final _storage = StudioStorageManager();
   final _searchController = TextEditingController();
 
   List<StudioFingerprint> _fingerprints = [];
@@ -88,6 +90,12 @@ class _StudioReferenceLibraryScreenState
       }
       if (_filter == 'Visual' && item.mediaType != StudioMediaType.video) {
         return false;
+      }
+      if (_filter == 'Duplicates') {
+        final checksum = item.checksumSha256;
+        if (checksum == null || checksum.isEmpty) return false;
+        final key = '${item.algorithmKey}|${item.algorithmVersion}|$checksum';
+        if ((_duplicateCounts()[key] ?? 0) < 2) return false;
       }
       if (_search.isEmpty) return true;
       final name = media?.originalName ?? item.mediaFileId;
@@ -185,7 +193,7 @@ class _StudioReferenceLibraryScreenState
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
-              children: ['All', 'Audio', 'Visual'].map((filter) {
+              children: ['All', 'Audio', 'Visual', 'Duplicates'].map((filter) {
                 return FilterChip(
                   label: Text(filter),
                   selected: _filter == filter,

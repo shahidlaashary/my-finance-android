@@ -23,7 +23,6 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
     _StudioSection('Content ID', 'Audio Match and Visual Match identification tools', Icons.fingerprint_rounded),
     _StudioSection('AI Music', 'Create song projects and manage authorized voice profiles', Icons.auto_awesome_rounded),
     
-    _StudioSection('Compare', 'Compare two or more media files', Icons.compare_arrows_rounded),
     _StudioSection('Catalogue', 'Browse and organize registered content', Icons.library_music_outlined),
     _StudioSection('Rights Management', 'Manage ownership and licensing records', Icons.verified_user_outlined),
     _StudioSection('Recording', 'Record clean audio directly into your Studio library', Icons.mic_none_rounded),
@@ -60,8 +59,8 @@ class _StudioDashboardScreenState extends State<StudioDashboardScreen> {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioAiMusicScreen()));
       return;
     }
-    if (section.title == 'Content ID' || section.title == 'Compare') {
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => StudioContentIdScreen(initialSection: section.title == 'Compare' ? 'Compare' : null)));
+    if (section.title == 'Content ID') {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StudioContentIdScreen()));
       return;
     }
     if (section.title == 'Catalogue' || section.title == 'Rights Management') {

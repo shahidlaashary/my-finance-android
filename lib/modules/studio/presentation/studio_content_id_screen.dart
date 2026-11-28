@@ -15,6 +15,7 @@ class StudioContentIdScreen extends StatefulWidget {
 
 class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
   late Future<List<Map<String, Object?>>> _historyFuture;
+  String _historyFilter = 'All';
 
   @override
   void initState() {
@@ -109,6 +110,17 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
               ],
             ),
             Text('Recent results from both matching tools', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              children: ['All', 'Audio Match', 'Visual Match'].map((filter) =>
+                FilterChip(
+                  label: Text(filter),
+                  selected: _historyFilter == filter,
+                  onSelected: (_) => setState(() => _historyFilter = filter),
+                ),
+              ).toList(),
+            ),
             const SizedBox(height: 8),
             _historyList(),
           ],
@@ -116,6 +128,52 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
       ),
     );
   }
+
+  void _showHistoryDetails(Map<String, Object?> row) {
+    final isAudio = row['match_type'] == 'Audio Match';
+    final score = ((row['match_score'] as num?)?.toDouble() ?? 0) * 100;
+    final date = DateTime.tryParse(row['created_at']?.toString() ?? '');
+    final dateLabel = date == null ? 'Not available' : date.toLocal().toString();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(isAudio ? Icons.graphic_eq_rounded : Icons.video_camera_back_outlined),
+                const SizedBox(width: 10),
+                Text(row['match_type']?.toString() ?? 'Content ID', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              ]),
+              const SizedBox(height: 16),
+              Text('${row['left_name'] ?? 'Unknown media'}  vs  ${row['right_name'] ?? 'Unknown media'}', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 14),
+              _detailRow(context, 'Confidence', '${score.toStringAsFixed(1)}%'),
+              _detailRow(context, isAudio ? 'Matched landmarks' : 'Matched frames', '${row['matched_landmarks'] ?? row['matched_frames'] ?? 'Not recorded'}'),
+              _detailRow(context, 'Estimated offset', '${row['offset_ms'] ?? 'Not recorded'} ms'),
+              _detailRow(context, 'Algorithm', '${row['algorithm_key'] ?? 'Not recorded'}'),
+              _detailRow(context, 'Algorithm version', '${row['algorithm_version'] ?? 'Not recorded'}'),
+              _detailRow(context, 'Compared at', dateLabel),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(BuildContext context, String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(children: [
+      Expanded(child: Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+      const SizedBox(width: 12),
+      Flexible(child: Text(value, textAlign: TextAlign.end, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
+    ]),
+  );
 
   Widget _historyList() => FutureBuilder<List<Map<String, Object?>>>(
     future: _historyFuture,
@@ -136,7 +194,10 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
           ),
         );
       }
-      final rows = snapshot.data ?? const <Map<String, Object?>>[];
+      final allRows = snapshot.data ?? const <Map<String, Object?>>[];
+      final rows = _historyFilter == 'All'
+          ? allRows
+          : allRows.where((row) => row['match_type'] == _historyFilter).toList();
       if (rows.isEmpty) {
         return Card(
           child: Padding(
@@ -145,9 +206,9 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
               children: [
                 Icon(Icons.history_rounded, size: 30, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 const SizedBox(height: 8),
-                const Text('No comparisons yet'),
+                Text(allRows.isEmpty ? 'No comparisons yet' : 'No ${_historyFilter.toLowerCase()} results yet'),
                 const SizedBox(height: 4),
-                Text('Your Audio Match and Visual Match results will appear here.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+                Text(allRows.isEmpty ? 'Your Audio Match and Visual Match results will appear here.' : 'Choose another history filter to see saved comparisons.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),
@@ -164,6 +225,7 @@ class _StudioContentIdScreenState extends State<StudioContentIdScreen> {
           return Card(
             margin: const EdgeInsets.only(bottom: 7),
             child: ListTile(
+              onTap: () => _showHistoryDetails(row),
               leading: CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                 child: Icon(isAudio ? Icons.graphic_eq_rounded : Icons.video_camera_back_outlined),

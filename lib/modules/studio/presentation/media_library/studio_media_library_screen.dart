@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,8 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
   final _searchController = TextEditingController();
   final _library = StudioMediaLibraryService();
   final _storage = StudioStorageManager();
+  Timer? _searchDebounce;
+  int _loadGeneration = 0;
 
   _MediaFilter _filter = _MediaFilter.all;
   List<StudioMediaFile> _files = const [];
@@ -39,19 +43,26 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
   void initState() {
     super.initState();
     _load();
-    _searchController.addListener(_load);
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController
-      ..removeListener(_load)
+      ..removeListener(_onSearchChanged)
       ..dispose();
     super.dispose();
   }
 
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), _load);
+  }
+
   Future<void> _load() async {
     if (!mounted) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _loadError = null;
@@ -69,14 +80,14 @@ class _StudioMediaLibraryScreenState extends State<StudioMediaLibraryScreen> {
         limit: 200,
       );
       final bytes = await _storage.calculateTotalBytes();
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _files = results;
         _storageBytes = bytes;
         _loading = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _loading = false;
         _loadError = error.toString();

@@ -77,9 +77,13 @@ class StudioMediaImportService {
       await _mediaLibrary.register(mediaFile);
       if (mediaType == StudioMediaType.audio &&
           const {'mp3'}.contains(extension.replaceFirst('.', ''))) {
-        final tags = await _metadataReader.readFile(copied.path);
-        if (!tags.isEmpty) {
-          await _metadataService.saveAudioTags(id, tags);
+        // ID3 tags are optional enrichment; metadata failure must not roll back
+        // an otherwise successful media import.
+        try {
+          final tags = await _metadataReader.readFile(copied.path);
+          if (!tags.isEmpty) await _metadataService.saveAudioTags(id, tags);
+        } catch (_) {
+          // Keep the original media and checksum safely registered.
         }
       }
       return mediaFile;

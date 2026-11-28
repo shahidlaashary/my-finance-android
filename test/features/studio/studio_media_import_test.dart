@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_finance/modules/studio/application/services/studio_media_import_service.dart';
+import 'package:my_finance/modules/studio/application/services/studio_id3_metadata_reader.dart';
+import 'package:my_finance/modules/studio/application/services/studio_media_metadata_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_media_library_service.dart';
 import 'package:my_finance/modules/studio/application/services/studio_storage_health_service.dart';
 import 'package:my_finance/modules/studio/domain/entities/studio_media_file.dart';
@@ -71,6 +73,36 @@ void main() {
     expect(await File(imported.storagePath).exists(), isTrue);
   });
 
+  test('persists MP3 tags through the injected Studio database', () async {
+    final source = File('${temporaryDirectory.path}/tagged-track.mp3');
+    await source.writeAsBytes([0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00]);
+    final taggedImporter = StudioMediaImportService(
+      storageManager: storage,
+      mediaLibrary: library,
+      metadataReader: _FixedMetadataReader(),
+      metadataService: StudioMediaMetadataService(database: database),
+    );
+    final imported = await taggedImporter.importFile(sourcePath: source.path, mediaType: StudioMediaType.audio);
+    final saved = await database.query('studio_media_metadata', where: 'media_file_id = ?', whereArgs: [imported.id]);
+    expect(saved, hasLength(1));
+    expect(saved.single['title'], 'Test Track');
+    expect(saved.single['artist'], 'Test Artist');
+  });
+
+  test('keeps imported media when optional MP3 metadata storage fails', () async {
+    final source = File('${temporaryDirectory.path}/metadata-failure.mp3');
+    await source.writeAsBytes([0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00]);
+    final resilientImporter = StudioMediaImportService(
+      storageManager: storage,
+      mediaLibrary: library,
+      metadataReader: _FixedMetadataReader(),
+      metadataService: _FailingMetadataService(),
+    );
+    final imported = await resilientImporter.importFile(sourcePath: source.path, mediaType: StudioMediaType.audio);
+    expect(await File(imported.storagePath).exists(), isTrue);
+    expect(await library.getById(imported.id), isNotNull);
+  });
+
   test('rejects missing and empty source files', () async {
     await expectLater(
       importer.importFile(
@@ -118,4 +150,18 @@ void main() {
     );
     expect(await outside.exists(), isTrue);
   });
+}
+
+class _FixedMetadataReader extends StudioId3MetadataReader {
+  @override
+  Future<StudioAudioMetadata> readFile(String path) async =>
+      const StudioAudioMetadata(title: 'Test Track', artist: 'Test Artist');
+}
+
+class _FailingMetadataService extends StudioMediaMetadataService {
+  @override
+  Future<void> saveAudioTags(String mediaFileId, StudioAudioMetadata metadata,
+      {String source = 'id3'}) async {
+    throw StateError('Metadata database unavailable');
+  }
 }

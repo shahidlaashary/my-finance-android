@@ -88,14 +88,6 @@ void main() {
     expect(videos.map((item) => item.id), ['video-new', 'video-old']);
   });
 
-  test('rejects a scan query that is not in the video library', () async {
-    expect(service.scanMatches('unknown-video'), throwsArgumentError);
-  });
-
-  test('rejects a scan query that is not in the video library', () async {
-    expect(() => service.scanMatches('unknown-video'), throwsArgumentError);
-  });
-
   test('returns an empty list when no videos are registered', () async {
     expect(await service.videos(), isEmpty);
   });

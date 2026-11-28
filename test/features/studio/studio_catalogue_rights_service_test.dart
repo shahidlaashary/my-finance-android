@@ -235,6 +235,50 @@ void main() {
     expect(await rights.claimEvidence(claimId), isEmpty);
   });
 
+  test('removes evidence record and records removal event atomically', () async {
+    final claimId = await rights.createClaim(
+      claimType: 'copyright',
+      assetType: 'track',
+      assetId: 'track-evidence-remove',
+      claimantName: 'Claimant',
+      title: 'Evidence removal claim',
+      description: 'Description',
+    );
+    await rights.addClaimEvidence(
+      claimId: claimId,
+      evidenceType: 'document',
+      title: 'Signed agreement',
+      filePath: '/managed/evidence/agreement.pdf',
+    );
+    final evidence = await rights.claimEvidence(claimId);
+    final evidenceId = evidence.single['id']! as String;
+
+    await rights.removeClaimEvidence(evidenceId);
+
+    expect(await rights.claimEvidence(claimId), isEmpty);
+    final events = await rights.claimEvents(claimId);
+    expect(events.any((event) => event['event_type'] == 'evidence_removed'), isTrue);
+  });
+
+  test('does not create a removal event when evidence record is missing', () async {
+    final claimId = await rights.createClaim(
+      claimType: 'copyright',
+      assetType: 'track',
+      assetId: 'track-missing-evidence',
+      claimantName: 'Claimant',
+      title: 'Missing evidence claim',
+      description: 'Description',
+    );
+
+    await expectLater(
+      rights.removeClaimEvidence('missing-evidence-id'),
+      throwsArgumentError,
+    );
+
+    final events = await rights.claimEvents(claimId);
+    expect(events.any((event) => event['event_type'] == 'evidence_removed'), isFalse);
+  });
+
   test('requires a decision note when rejecting a claim', () async {
     final claimId = await rights.createClaim(
       claimType: 'copyright',

@@ -198,10 +198,22 @@ class _StudioCatalogueRightsScreenState extends State<StudioCatalogueRightsScree
                           if (yes != true) return;
                           try {
                             final filePath = item['file_path']?.toString();
-                            if (filePath != null && filePath.isNotEmpty) await _storage.deleteManagedFile(filePath);
+                            // Remove the database reference first. Attachment cleanup is
+                            // best-effort so a storage failure cannot leave a stale DB row.
                             await _service.removeClaimEvidence(item['id'].toString());
+                            var cleanupFailed = false;
+                            if (filePath != null && filePath.isNotEmpty) {
+                              try {
+                                await _storage.deleteManagedFile(filePath);
+                              } catch (_) {
+                                cleanupFailed = true;
+                              }
+                            }
                             if (sheetContext.mounted) Navigator.pop(sheetContext);
                             await _reload();
+                            if (cleanupFailed) {
+                              _toast('Evidence record removed, but its attachment could not be cleaned up.');
+                            }
                             _showClaimDetails(claim);
                           } catch (error) { _toast('Could not delete evidence: $error'); }
                         },

@@ -17,7 +17,29 @@ class _StudioVideoIdScreenState extends State<StudioVideoIdScreen>{
   StudioVideoFingerprintMatch? _result;
   String? _error;
   @override void initState(){super.initState();_load();}
-  Future<void> _load()async{setState(()=>_loading=true);try{final data=await _service.videos();final history=await _service.history();if(!mounted)return;setState(()=>_videos=data..sort((a,b)=>a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase())));setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVideoFingerprintEngine.key).toList());_first??=data.isNotEmpty?data.first.id:null;_second??=data.length>1?data[1].id:null;setState(()=>_loading=false);}catch(e){if(!mounted)return;setState(()=>_error=e.toString());setState(()=>_loading=false);}}
+  int _loadGeneration=0;
+  Future<void> _load()async{
+    final generation=++_loadGeneration;
+    if(mounted)setState(()=>_loading=true);
+    try{
+      final data=await _service.videos();
+      final history=await _service.history();
+      if(!mounted||generation!=_loadGeneration)return;
+      data.sort((a,b)=>a.originalName.toLowerCase().compareTo(b.originalName.toLowerCase()));
+      setState((){
+        _videos=data;
+        _history=history.where((h)=>h['algorithm_key']==StudioVideoFingerprintEngine.key).toList();
+        _first??=data.isNotEmpty?data.first.id:null;
+        _second??=data.length>1?data[1].id:null;
+        _error=null;
+        _loading=false;
+      });
+    }catch(e){
+      if(!mounted||generation!=_loadGeneration)return;
+      setState(()=>_error=e.toString());
+      setState(()=>_loading=false);
+    }
+  }
   Future<void> _fingerprint(StudioMediaFile f)async{setState(()=>_busy=true);try{await StudioProcessingQueueService().runFingerprintJob(mediaId: f.id, mediaType: 'video');if(mounted)_toast('Video fingerprint generated.');}catch(e){if(mounted)_toast('Fingerprint failed: $e');}if(mounted)setState(()=>_busy=false);}
   Future<void> _compare()async{if(_first==null||_second==null||_first==_second){_toast('Choose two different videos.');return;}setState(()=>_busy=true);try{final m=await _service.compare(_first!,_second!);final history=await _service.history();if(mounted)setState(()=>_result=m);if(mounted)setState(()=>_history=history.where((h)=>h['algorithm_key']==StudioVideoFingerprintEngine.key).toList());}catch(e){if(mounted)_toast('Compare failed: $e');}if(mounted)setState(()=>_busy=false);}
   void _toast(String s){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s)));}

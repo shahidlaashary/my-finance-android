@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../application/services/studio_processing_queue_service.dart';
+import '../application/services/studio_fingerprint_catalogue_service.dart';
 import '../application/services/studio_reports_service.dart';
 import '../application/services/studio_storage_health_service.dart';
 import '../application/services/studio_media_library_service.dart';
@@ -40,9 +41,13 @@ class _StudioManagementScreenState extends State<StudioManagementScreen>
   Future<_Diagnostics> _loadDiagnostics() async {
     final summary = await StudioReportsService().load();
     final storage = StudioStorageManager();
+    final mediaLibrary = StudioMediaLibraryService();
     final health = await StudioStorageHealthService(
       storageManager: storage,
-      mediaLibrary: StudioMediaLibraryService(),
+      mediaLibrary: mediaLibrary,
+      fingerprintCatalogue: StudioFingerprintCatalogueService(
+        mediaLibrary: mediaLibrary,
+      ),
     ).inspect();
     // Loading the report requires a successful database connection, so a
     // completed diagnostics snapshot confirms the database is connected.

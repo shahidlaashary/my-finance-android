@@ -10,9 +10,8 @@ class StudioAutoAudioDecoder implements StudioAudioDecoder {
 
   static const int fingerprintSampleRate = 11025;
 
-  // The previous 25 MB ceiling rejected ordinary long-form MP3 recordings.
-  // audio_decode currently decodes a complete input buffer, so retain a
-  // generous hard ceiling rather than allowing unbounded native allocations.
+  // audio_decode currently decodes a complete input buffer. Keep the
+  // temporary 200 MB ceiling until bounded-memory streaming is implemented.
   static const int maxEncodedFileBytes = 200 * 1024 * 1024;
   static const Set<String> supportedExtensions = {'mp3', 'ogg', 'wav'};
 

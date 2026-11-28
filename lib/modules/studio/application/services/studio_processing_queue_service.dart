@@ -87,14 +87,30 @@ class StudioProcessingQueueService {
         default:
           throw StateError('No worker is registered for ${job['job_type']}.');
       }
-      final current = await db.query('studio_processing_jobs', columns: ['status'], where: 'id = ?', whereArgs: [id], limit: 1);
-      if (current.isNotEmpty && current.first['status'] != 'cancelled') {
+      // Make the final transition atomic with cancellation. A cancel request
+      // that commits first must never be overwritten by this completion write.
+      await db.transaction((txn) async {
+        final current = await txn.query(
+          'studio_processing_jobs',
+          columns: ['status'],
+          where: 'id = ?',
+          whereArgs: [id],
+          limit: 1,
+        );
+        if (current.isEmpty || current.first['status'] == 'cancelled') return;
         final finished = DateTime.now().toUtc().toIso8601String();
-        await db.update('studio_processing_jobs', {
-          'status': 'completed', 'progress': 100,
-          'completed_at': finished, 'updated_at': finished,
-        }, where: 'id = ?', whereArgs: [id]);
-      }
+        await txn.update(
+          'studio_processing_jobs',
+          {
+            'status': 'completed',
+            'progress': 100,
+            'completed_at': finished,
+            'updated_at': finished,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      });
     } catch (error) {
       final failed = DateTime.now().toUtc().toIso8601String();
       // A user may mark a running job as cancelled while the native decoder

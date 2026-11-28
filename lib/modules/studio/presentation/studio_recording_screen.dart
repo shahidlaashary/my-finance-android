@@ -105,6 +105,13 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         _lastRecording = null;
       });
     } catch (error) {
+      // A native start can fail after partially opening the recorder. Stop it
+      // before deleting the output path so the file is not still being written.
+      try {
+        await _recorder.stop();
+      } catch (_) {
+        // The recorder may not have started; preserve the original error.
+      }
       final path = _activePath;
       if (path != null) {
         try {
@@ -180,6 +187,11 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
     try {
       if (_recording) {
         await _recorder.stop();
+        // Stop succeeded: even if file deletion fails below, expose Retry Save
+        // rather than leaving controls in a recording state.
+        _recording = false;
+        _ticker?.cancel();
+        _stopwatch.stop();
       }
       final path = _activePath;
       if (path != null) {

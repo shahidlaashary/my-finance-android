@@ -66,6 +66,24 @@ void main() {
     expect(result.confidence, greaterThanOrEqualTo(0.12));
   });
 
+  test('rejects an OGG file with an invalid container signature', () async {
+    final file = File('${directory.path}/broken.ogg');
+    await file.writeAsBytes([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0]);
+    await expectLater(
+      const StudioAutoAudioDecoder().decode(file.path),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('rejects unsupported audio extensions before decoding', () async {
+    final file = File('${directory.path}/unsupported.flac');
+    await file.writeAsBytes([0, 1, 2, 3]);
+    await expectLater(
+      const StudioAutoAudioDecoder().decode(file.path),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
   test('rejects invalid encoded audio rather than creating an empty fingerprint', () async {
     final file = File('${directory.path}/broken.mp3');
     await file.writeAsBytes([0, 1, 2, 3, 4, 5, 6]);

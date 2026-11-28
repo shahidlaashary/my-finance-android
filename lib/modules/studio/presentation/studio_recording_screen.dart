@@ -47,6 +47,7 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
     if (_recording || _saving) return;
     try {
       final allowed = await _recorder.hasPermission();
+      if (!mounted) return;
       if (!allowed) {
         setState(() => _error = 'Microphone permission is required to record audio.');
         return;
@@ -57,6 +58,14 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         extension: '.wav',
         isVideo: false,
       );
+      if (!mounted) {
+        try {
+          if (await file.exists()) await file.delete();
+        } catch (_) {
+          // Best-effort cleanup when the user leaves during file allocation.
+        }
+        return;
+      }
       // Keep the allocated path so a failed start can clean up its partial file.
       _activePath = file.path;
       await _recorder.start(
@@ -67,6 +76,20 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         ),
         path: file.path,
       );
+      if (!mounted) {
+        try {
+          await _recorder.stop();
+        } catch (_) {
+          // The recorder may already have been disposed during navigation.
+        }
+        try {
+          if (await file.exists()) await file.delete();
+        } catch (_) {
+          // Best-effort cleanup; diagnostics can report an orphaned file.
+        }
+        _activePath = null;
+        return;
+      }
       _stopwatch
         ..reset()
         ..start();

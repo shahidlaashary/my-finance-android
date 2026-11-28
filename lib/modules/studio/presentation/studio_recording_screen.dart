@@ -118,7 +118,14 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         sourcePath: sourcePath,
         mediaType: StudioMediaType.audio,
       );
-      await File(sourcePath).delete();
+      String? cleanupWarning;
+      try {
+        await File(sourcePath).delete();
+      } catch (error) {
+        // The imported Media Library copy is already registered. Do not treat
+        // temporary-file cleanup failure as an import failure or retry import.
+        cleanupWarning = 'Recording saved, but its temporary file could not be removed: $error';
+      }
       if (!mounted) return;
       setState(() {
         _lastRecording = imported;
@@ -126,9 +133,12 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
         _saving = false;
         _activePath = null;
         _elapsed = _stopwatch.elapsed;
+        _error = cleanupWarning;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recording saved to Media Library.')),
+        SnackBar(content: Text(cleanupWarning == null
+            ? 'Recording saved to Media Library.'
+            : 'Recording saved. Temporary cleanup needs attention.')),
       );
     } catch (error) {
       if (!mounted) return;

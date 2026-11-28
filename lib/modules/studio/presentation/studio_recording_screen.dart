@@ -101,12 +101,12 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
   }
 
   Future<void> _stopAndSave() async {
-    if (!_recording || _saving) return;
+    if (_saving || (!_recording && _activePath == null)) return;
     setState(() => _saving = true);
     _ticker?.cancel();
     _stopwatch.stop();
     try {
-      final path = await _recorder.stop();
+      final path = _recording ? await _recorder.stop() : null;
       final sourcePath = path ?? _activePath;
       if (sourcePath == null || !await File(sourcePath).exists()) {
         throw StateError('The recording file was not created.');
@@ -135,6 +135,8 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
       setState(() {
         _recording = false;
         _saving = false;
+        // Keep the managed recording path so the user can retry saving or
+        // explicitly discard it instead of losing access to the recording.
         _error = 'Recording could not be saved: $error';
       });
     }
@@ -213,7 +215,7 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
                       ),
                 ),
                 const SizedBox(height: 24),
-                if (!_recording)
+                if (!_recording && _activePath == null)
                   FilledButton.icon(
                     onPressed: _saving ? null : _startRecording,
                     icon: const Icon(Icons.fiber_manual_record_rounded),
@@ -227,8 +229,8 @@ class _StudioRecordingScreenState extends State<StudioRecordingScreen> {
                     children: [
                       FilledButton.icon(
                         onPressed: _saving ? null : _stopAndSave,
-                        icon: const Icon(Icons.stop_rounded),
-                        label: const Text('Stop & Save'),
+                        icon: Icon(_recording ? Icons.stop_rounded : Icons.save_rounded),
+                        label: Text(_recording ? 'Stop & Save' : 'Retry Save'),
                       ),
                       OutlinedButton.icon(
                         onPressed: _saving ? null : _discardRecording,
